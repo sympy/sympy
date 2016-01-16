@@ -24,7 +24,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, filldedent
 
 rnd = mlib.round_nearest
 
@@ -293,7 +293,17 @@ def mod_inverse(a, m):
                 c -= m
     except ValueError:
         a, m = sympify(a), sympify(m)
-        if not m.is_number or m > 1:
+        if not (a.is_number and m.is_number):
+            raise TypeError(filldedent('''
+                Expected numbers for arguments; symbolic `mod_inverse`
+                is not implemented
+                but symbolic expressions can be handled with the
+                similar function,
+                sympy.polys.polytools.invert'''))
+        big = (m > 1)
+        if not (big is S.true or big is S.false):
+            raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
+        elif big:
             c = 1/a
     if c is None:
         raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
@@ -345,7 +355,10 @@ class Number(AtomicExpr):
         raise TypeError(msg % type(obj).__name__)
 
     def invert(self, other, *gens, **args):
-        return mod_inverse(self, other)
+        from sympy.polys.polytools import invert
+        if getattr(other, 'is_number', True):
+            return mod_inverse(self, other)
+        return invert(self, other, *gens, **args)
 
     def __divmod__(self, other):
         from .containers import Tuple

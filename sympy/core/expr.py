@@ -3067,9 +3067,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.polys.polytools import invert
         from sympy.core.numbers import mod_inverse
-        from sympy.core.symbol import Symbol
-        if self.is_number and not \
-                getattr(g, 'has', lambda x: False)(Symbol):
+        if self.is_number and getattr(g, 'is_number', True):
             return mod_inverse(self, g)
         return invert(self, g, *gens, **args)
 

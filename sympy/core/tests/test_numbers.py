@@ -2,7 +2,7 @@ import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify)
+                   AlgebraicNumber, simplify, sin)
 from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.logic import fuzzy_not
@@ -1541,5 +1541,7 @@ def test_mod_inverse():
     assert mod_inverse(2, 5) == 3
     assert mod_inverse(-2, 5) == -3
     x = Symbol('x')
-    assert mod_inverse(2, x) == S(1)/2
+    assert S(2).invert(x) == S.Half
+    raises(TypeError, lambda: mod_inverse(2, x))
     raises(ValueError, lambda: mod_inverse(2, S.Half))
+    raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
