@@ -124,7 +124,6 @@ class Limit(Expr):
         from sympy.series.limitseq import limit_seq
 
         e, z, z0, dir = self.args
-        
         if isinstance(e,exp):
             for b in e.atoms(Symbol):
                 if b.is_zero:
