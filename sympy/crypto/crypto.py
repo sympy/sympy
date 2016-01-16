@@ -392,6 +392,18 @@ def encipher_vigenere(msg, key, symbols=None):
     >>> encipher_vigenere(msg, key)
     'QRGKKTHRZQEBPR'
 
+    Section 1 of the Kryptos sculpture at the CIA headquarters
+    uses this cipher and also changes the order of the the
+    alphabet [2]_. Here is the first line of that section of
+    the sculpture:
+
+    >>> from sympy.crypto.crypto import decipher_vigenere, padded_key
+    >>> alp = padded_key('KRYPTOS', AZ())
+    >>> key = 'PALIMPSEST'
+    >>> msg = 'EMUFPHZLRFAXYUSDJKZLDKRNSHGNFIVJ'
+    >>> decipher_vigenere(msg, key, alp)
+    'BETWEENSUBTLESHADINGANDTHEABSENC'
+
     Notes
     =====
 
@@ -426,9 +438,11 @@ def encipher_vigenere(msg, key, symbols=None):
 
         INPUT:
 
-            ``msg``: string of characters that appear in ``symbols`` (the plaintext)
+            ``msg``: string of characters that appear in ``symbols``
+            (the plaintext)
 
-            ``key``: a string of characters that appear in ``symbols`` (the secret key)
+            ``key``: a string of characters that appear in ``symbols``
+            (the secret key)
 
             ``symbols``: a string of letters defining the alphabet
 
@@ -494,7 +508,6 @@ def encipher_vigenere(msg, key, symbols=None):
     the first ``n1`` characters and then those characters become the
     key to  decipher the next ``n1`` characters, etc...:
 
-    >>> from sympy.crypto.crypto import decipher_vigenere
     >>> m = AZ('go navy, beat army! yes you can'); m
     'GONAVYBEATARMYYESYOUCAN'
     >>> key = AZ('gold bug'); n1 = len(key); n2 = len(m)
@@ -516,6 +529,8 @@ def encipher_vigenere(msg, key, symbols=None):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [2] http://web.archive.org/web/20071116100808/
+       http://filebox.vt.edu/users/batman/kryptos.html
 
     """
     msg, key, A = _prep(msg, key, symbols)
