@@ -75,7 +75,7 @@ class Product(ExprWithIntLimits):
     >>> Product(k**2,(k, 1, m))
     Product(k**2, (k, 1, m))
     >>> Product(k**2,(k, 1, m)).doit()
-    (factorial(m))**2
+    factorial(m)**2
 
     Wallis' product for pi:
 
@@ -96,7 +96,7 @@ class Product(ExprWithIntLimits):
     Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
-    2**(-2*n)*4**n*(factorial(n))**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
+    2**(-2*n)*4**n*factorial(n)**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
     >>> limit(W2e, n, oo)
     pi/2
 
@@ -109,7 +109,7 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*(factorial(n))**2)
+    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*factorial(n)**2)
     >>> Pe = Pe.rewrite(gamma)
     >>> Pe
     pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(-pi/2 + 1)*gamma(n + 1)**2)
