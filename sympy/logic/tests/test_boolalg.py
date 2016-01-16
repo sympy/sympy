@@ -86,6 +86,9 @@ def test_Or():
     ans = Or(b.canonical, a.canonical)
     assert Or(a, b) == ans
     assert Or(b, a) == ans
+    y = 1/A
+    print(Or(y < 1, y <= 1))
+    assert Or(y < 1, y <= 1) == And(-oo < y, y <= oo)
 
 
 def test_Xor():

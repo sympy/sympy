@@ -519,8 +519,6 @@ class Or(LatticeOp, BooleanFunction):
                 from sympy.core.relational import Ne
                 lhs = sift(rel, lambda x: x.lhs)
                 for l in lhs:
-                    if not l.is_Symbol:
-                        continue
                     c = sift(lhs[l], lambda x: x.rhs.is_comparable and
                         x.rhs not in (S.Infinity, S.NegativeInfinity))
                     cargs = []
