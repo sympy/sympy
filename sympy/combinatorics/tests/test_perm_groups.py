@@ -60,6 +60,7 @@ def test_order():
     b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
+    assert PermutationGroup().order() == 1
 
 
 def test_equality():
@@ -724,4 +725,4 @@ def test_is_group():
 
 
 def test_PermutationGroup():
-    raises(ValueError, lambda: PermutationGroup())
+    assert PermutationGroup() == PermutationGroup(Permutation())

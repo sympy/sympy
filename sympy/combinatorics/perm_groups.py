@@ -124,8 +124,7 @@ class PermutationGroup(Basic):
         Removes duplicates unless ``dups`` keyword is False.
         """
         if not args:
-            raise ValueError('must supply one or more permutations '
-            'to define the group')
+            args = [Permutation()]
         args = list(args[0] if is_sequence(args[0]) else args)
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
