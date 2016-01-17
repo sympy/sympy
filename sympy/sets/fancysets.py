@@ -8,7 +8,6 @@ from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
 from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import _sympify
-from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
 
 
@@ -298,12 +297,6 @@ class ImageSet(Set):
             return imageset(Lambda(n_, re),
                             self.base_set.intersect(
                                 solveset_real(im, n_)))
-
-
-@deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
-def TransformationSet(*args, **kwargs):
-    """Deprecated alias for the ImageSet constructor."""
-    return ImageSet(*args, **kwargs)
 
 
 class Range(Set):
