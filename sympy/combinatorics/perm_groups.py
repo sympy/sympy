@@ -125,7 +125,8 @@ class PermutationGroup(Basic):
         """
         if not args:
             args = [Permutation()]
-        args = list(args[0] if is_sequence(args[0]) else args)
+        else:
+            args = list(args[0] if is_sequence(args[0]) else args)
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
