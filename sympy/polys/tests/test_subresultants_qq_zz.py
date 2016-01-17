@@ -1,8 +1,8 @@
 from sympy.polys.subresultants_qq_zz import sylvester, sturm_pg, sturm_q, sturm_amv
-from sympy.polys.subresultants_qq_zz import (euclid_pg, euclid_q, 
+from sympy.polys.subresultants_qq_zz import (euclid_pg, euclid_q,
     euclid_amv, modified_subresultants_pg, subresultants_pg,
-    subresultants_amv_q, rem_z, subresultants_amv, 
-    modified_subresultants_amv, subresultants_rem, 
+    subresultants_amv_q, rem_z, subresultants_amv,
+    modified_subresultants_amv, subresultants_rem,
     subresultants_vv, subresultants_vv_2)
 from sympy import var, sturm, subresultants, prem
 from sympy.matrices import Matrix
@@ -90,7 +90,7 @@ def test_euclid_pg():
 
 def test_euclid_q():
     x = var('x')
-    
+
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
     assert euclid_q(p, q, x)[-1] == -sturm(p)[-1]
@@ -244,5 +244,3 @@ def test_subresultants_vv_2():
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
     assert subresultants_vv_2(p, q, x) == euclid_amv(p, q, x)
-
-
