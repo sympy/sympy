@@ -581,3 +581,9 @@ def test_issue_2790():
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+def test_10375():
+    import numpy as np
+    m = Min(x, y, z)
+    l = lambdify([x,y,z], m)
+    assert l(1, 2, 3) == 1
