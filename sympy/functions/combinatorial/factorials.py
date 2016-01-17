@@ -140,7 +140,7 @@ class factorial(CombinatorialFunction):
     @classmethod
     def eval(cls, n):
         n = sympify(n)
- 
+
         if n.is_Number:
             if n is S.Zero:
                 return S.One
