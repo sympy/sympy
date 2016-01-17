@@ -1,11 +1,11 @@
-from sympy.polys.subresultants_qq_zz import sylvester, sturm_pg, sturm_q, sturm_amv
-from sympy.polys.subresultants_qq_zz import (euclid_pg, euclid_q,
+from sympy import var, sturm, subresultants, prem
+from sympy.matrices import Matrix
+from sympy.polys.subresultants_qq_zz import (sylvester,
+    sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
     euclid_amv, modified_subresultants_pg, subresultants_pg,
     subresultants_amv_q, rem_z, subresultants_amv,
     modified_subresultants_amv, subresultants_rem,
     subresultants_vv, subresultants_vv_2)
-from sympy import var, sturm, subresultants, prem
-from sympy.matrices import Matrix
 
 
 def test_sylvester():
@@ -47,7 +47,7 @@ def test_sturm_pg():
     assert sturm_pg(p, q, x, 1)[-1] == sylvester(p, q, x, 1).det()
     assert sturm_pg(p, q, x)[-1] != sylvester(p, q, x, 2).det()
     assert sturm_pg(-p, q, x)[-1] == sylvester(-p, q, x, 2).det()
-
+    assert sturm_pg(-p, q, x) == modified_subresultants_pg(-p, q, x)
 
 def test_sturm_q():
     x = var('x')
@@ -72,6 +72,7 @@ def test_sturm_amv():
     assert sturm_amv(p, q, x, 1)[-1] == sylvester(p, q, x, 1).det()
     assert sturm_amv(p, q, x)[-1] != sylvester(p, q, x, 2).det()
     assert sturm_amv(-p, q, x)[-1] == sylvester(-p, q, x, 2).det()
+    assert sturm_pg(-p, q, x) == modified_subresultants_pg(-p, q, x)
 
 
 def test_euclid_pg():
@@ -80,6 +81,7 @@ def test_euclid_pg():
     p = x**6+x**5-x**4-x**3+x**2-x+1
     q = 6*x**5+5*x**4-4*x**3-3*x**2+2*x-1
     assert euclid_pg(p, q, x)[-1] == sylvester(p, q, x).det()
+    assert euclid_pg(p, q, x) == subresultants_pg(p, q, x)
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -102,6 +104,7 @@ def test_euclid_amv():
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
     assert euclid_amv(p, q, x)[-1] == sylvester(p, q, x).det()
+    assert euclid_amv(p, q, x) == subresultants_amv(p, q, x)
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21

@@ -335,7 +335,7 @@ def sturm_amv(p, q, x, method=0):
        smaller than the coefficients of the corresponding ``modified''
        subresultants by the factor Abs( LC(p)**( deg(p)- deg(q)) ).
 
-    If the Sturm sequence is complete, method=0 and LC( p ) > 0, then the 
+    If the Sturm sequence is complete, method=0 and LC( p ) > 0, then the
     coefficients of the polynomials in the sequence are ``modified'' subresultants.
     That is, they are  determinants of appropriately selected submatrices of
     sylvester2, Sylvester's matrix of 1853. In this case the Sturm sequence
@@ -662,7 +662,7 @@ def modified_subresultants_pg(p,q,x):
     the coefficients of the remainders computed this way become ``modified''
     subresultants with the help of the Pell-Gordon Theorem of 1917.
 
-    If the ``modified'' subresultant prs is complete, and LC( p ) > 0, it coincides 
+    If the ``modified'' subresultant prs is complete, and LC( p ) > 0, it coincides
     with the (generalized) Sturm sequence of the polynomials p, q.
 
     References:
@@ -866,7 +866,7 @@ def subresultants_pg(p,q,x):
     # the coefficients in lst are modified subresultants and, hence, are
     # greater than those of the corresponding subresultants by the factor
     # LC(lst[0])**( deg(lst[0]) - deg(lst[1])); see Theorem 2 in reference.
-    lcf = LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) ) 
+    lcf = LC(lst[0])**( degree(lst[0], x) - degree(lst[1], x) )
 
     # Initialize the subresultant prs list
     subr_seq = [lst[0], lst[1]]
@@ -1205,7 +1205,7 @@ def modified_subresultants_amv(p,q,x):
     modified subresultants. That is, they are  determinants of appropriately
     selected submatrices of sylvester2, Sylvester's matrix of 1853.
 
-    If the modified subresultant prs is complete, and LC( p ) > 0, it coincides 
+    If the modified subresultant prs is complete, and LC( p ) > 0, it coincides
     with the (generalized) Sturm's sequence of the polynomials p, q.
 
     References:
