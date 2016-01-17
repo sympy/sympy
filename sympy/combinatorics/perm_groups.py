@@ -123,10 +123,10 @@ class PermutationGroup(Basic):
         """The default constructor. Accepts Cycle and Permutation forms.
         Removes duplicates unless ``dups`` keyword is False.
         """
-        args = list(args[0] if is_sequence(args[0]) else args)
         if not args:
-            raise ValueError('must supply one or more permutations '
-            'to define the group')
+            args = [Permutation()]
+        else:
+            args = list(args[0] if is_sequence(args[0]) else args)
         if any(isinstance(a, Cycle) for a in args):
             args = [Permutation(a) for a in args]
         if has_variety(a.size for a in args):
@@ -1568,7 +1568,7 @@ class PermutationGroup(Basic):
         else:
             return self._is_nilpotent
 
-    def is_normal(self, gr):
+    def is_normal(self, gr, strict=True):
         """Test if G=self is a normal subgroup of gr.
 
         G is normal in gr if
@@ -1590,12 +1590,20 @@ class PermutationGroup(Basic):
         True
 
         """
-        gens2 = [p._array_form for p in self.generators]
+        d_self = self.degree
+        d_gr = gr.degree
+        new_self = self.copy()
+        if not strict and d_self != d_gr:
+            if d_self < d_gr:
+                new_self = PermGroup(new_self.generators + [Permutation(d_gr - 1)])
+            else:
+                gr = PermGroup(gr.generators + [Permutation(d_self - 1)])
+        gens2 = [p._array_form for p in new_self.generators]
         gens1 = [p._array_form for p in gr.generators]
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_rmuln(g1, g2, _af_invert(g1))
-                if not self.coset_factor(p, True):
+                if not new_self.coset_factor(p, True):
                     return False
         return True
 
