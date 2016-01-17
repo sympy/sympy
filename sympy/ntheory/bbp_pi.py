@@ -98,7 +98,7 @@ def pi_hex_digits(n):
          - a[2]*_series(j[2], n)
          - a[3]*_series(j[3], n)) & (16**(_dn(n)) - 1)
 
-    s = ("%014x" % x)
+    s = ("%016x" % x)
     #s is constrained between 0 and 14
     return s[:14]
 
