@@ -288,13 +288,6 @@ class Set(Basic):
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
-    @deprecated(useinstead="is_subset", issue=7460, deprecated_since_version="0.7.6")
-    def subset(self, other):
-        """
-        Returns True if 'other' is a subset of 'self'.
-        """
-        return other.is_subset(self)
-
     def is_subset(self, other):
         """
         Returns True if 'self' is a subset of 'other'.
