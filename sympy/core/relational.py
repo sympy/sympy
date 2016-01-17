@@ -311,6 +311,16 @@ class Equality(Relational):
                 if r is not None:
                     return _sympify(r)
 
+            from sympy.simplify import simplify
+            from sympy.simplify.simplify import fraction
+            from sympy import Tuple, Basic
+            if isinstance(lhs, Basic) and isinstance(rhs, Basic) and (not isinstance(lhs, Tuple)) and (not isinstance(rhs, Tuple)):
+                if lhs.is_Boolean is False and rhs.is_Boolean is False:
+                    r = simplify(lhs - rhs)
+                    numer, denom = fraction(r)
+                    if numer.is_zero is False and numer.is_number == True:
+                        return S.false
+
         return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod

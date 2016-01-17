@@ -661,3 +661,9 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_10401():
+    x = Symbol('x')
+    assert Eq(1/(x+1), 0) == False
+    assert Eq(x/(x + 1), 1) == False
