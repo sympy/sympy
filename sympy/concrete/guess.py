@@ -222,8 +222,8 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     Discarding a type when calling the function does not mean that the type will
     not be present in the returned dictionary; it only means that no extra
-    computation will be performed for that type but the function may still add
-    it whenever it can be easily computed from another type.
+    computation will be performed for that type, but the function may still add
+    it in the result when it can be easily converted from another type.
 
     Two generating functions (lgdogf and lgdegf) are not even computed if the
     initial term of the sequence is 0; it may be useful in that case to try
@@ -234,7 +234,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(-x + 1), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(-x + 1), 'lgf': -1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
@@ -301,7 +301,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Logarithmic Generating Function (lgf)
     if 'lgf' in types:
         # Transform sequence (multiplication by (-1)^(n+1) / n)
-        w, f = [], Integer(-1)
+        w, f = [], Integer(1)
         for i, k in enumerate(v):
             f = -f
             w.append(f*k/Integer(i+1))
