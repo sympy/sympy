@@ -4,6 +4,8 @@ Contains
 ========
 intersection
 convex_hull
+closest_points
+farthest_points
 are_coplanar
 are_similar
 
@@ -308,6 +310,175 @@ def convex_hull(*args):
     if len(convexHull) == 2:
         return Segment(convexHull[0], convexHull[1])
     return Polygon(*convexHull)
+
+
+def closest_points(*args):
+    """The closest pair of points among a given set of points in 2-d plane.
+
+    Parameters
+    ==========
+
+    args : a collection of Points on 2-d plane.
+
+    Returns
+    =======
+
+    pair : A pair of closest points
+
+    Notes
+    =====
+
+    This can only be performed on a set of non-symbolic points.
+
+    References
+    ==========
+
+    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+
+    [2] Sweep line algorithm
+    https://en.wikipedia.org/wiki/Sweep_line_algorithm
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import closest_points
+    >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
+    >>> closest_points(*points)
+    ((8, 5), (7, 6))
+
+    >>> from sympy.geometry.util import closest_points
+    >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
+    >>> closest_points(*points)
+    ((62, 73), (59, 59))
+
+    """
+    from .point import Point
+    from collections import deque
+    import numbers
+
+    points = list(args)
+    if len(points) < 2:
+        raise NotImplementedError('At-least 2 points must be inserted')
+    # make sure all our points are of the same dimension
+    for i in range(0, len(points)):
+        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+            raise NotImplementedError('The input must be a set of 2-d points')
+
+    p = points
+    p.sort()
+
+    box = deque()
+    box.append(p[0])
+
+    best_dist = (pow(p[1][1]-box[0][1], 2)+pow(p[1][0]-box[0][0], 2))
+    left = 0
+    i = 1
+    best_pair = (p[0], p[1])
+
+    while(i < len(p)):
+        j = 0
+        while left < i and p[i][0]-p[left][0] > best_dist:
+            box.remove(p[left])
+            left = left+1
+
+        for j in range(len(box)):
+            if best_dist != min(best_dist, (pow(p[i][1]-box[j][1], 2)+pow(p[i][0]-box[j][0], 2))):
+                best_pair = (p[i], box[j])
+                best_dist = min(best_dist, (pow(p[i][1]-box[j][1], 2)+pow(p[i][0]-box[j][0], 2)))
+        box.append(p[i])
+        i = i+1
+
+    return best_pair
+
+
+def farthest_points(*args):
+    """The farthest pair of points among a given set of points in 2-d plane.
+
+    Parameters
+    ==========
+
+    args : a collection of Points on 2-d plane.
+
+    Returns
+    =======
+
+    pair : A pair of farthest points
+
+    Notes
+    =====
+
+    This can only be performed on a set of non-symbolic points.
+
+    References
+    ==========
+
+    [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+
+    [2] Rotating Callipers Technique
+    https://en.wikipedia.org/wiki/Rotating_calipers
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import farthest_points
+    >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
+    >>> farthest_points(*points)
+    ((3, 9), (9, 4))
+
+    >>> from sympy.geometry.util import farthest_points
+    >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
+    >>> farthest_points(*points)
+    ((11, 85), (80, 89))
+
+    """
+    from .point import Point
+
+    def rotatingCalipers(Points):
+        def hulls(Points):
+            def orientation(p, q, r):
+                return (q[1]-p[1]) * (r[0]-p[0]) - (q[0]-p[0]) * (r[1]-p[1])
+            U = []
+            L = []
+            Points.sort()
+            for p in Points:
+                while len(U) > 1 and orientation(U[-2], U[-1], p) <= 0:
+                    U.pop()
+                while len(L) > 1 and orientation(L[-2], L[-1], p) >= 0:
+                    L.pop()
+                U.append(p)
+                L.append(p)
+            return U, L     # upper and lower
+        U, L = hulls(Points)
+        i = 0
+        j = len(L) - 1
+        while i < len(U) - 1 or j > 0:
+            yield U[i], L[j]
+            # if all the way through one side of hull, advance the other side
+            if i == len(U) - 1:
+                j -= 1
+            elif j == 0:
+                i += 1
+            # still points left on both lists, compare slopes of next hull edges
+            # being careful to avoid divide-by-zero in slope calculation
+            elif (U[i+1][1]-U[i][1]) * (L[j][0]-L[j-1][0]) > \
+                    (L[j][1]-L[j-1][1]) * (U[i+1][0]-U[i][0]):
+                i += 1
+            else:
+                j -= 1
+
+    points = list(args)
+    if len(points) < 2:
+        raise NotImplementedError('At-least 2 points must be inserted')
+
+    for i in range(0, len(points)):
+        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+            raise NotImplementedError('The input must be a set of 2-d points')
+
+    # make sure all our points are of the same dimension
+    Points = points
+    diam, pair = max([((h[0]-q[0])**2 + (h[1]-q[1])**2, (h, q))
+                     for h, q in rotatingCalipers(Points)])
+    return pair
 
 
 def are_coplanar(*e):
