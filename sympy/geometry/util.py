@@ -361,7 +361,7 @@ def closest_points(*args):
         raise NotImplementedError('At-least 2 points must be inserted')
     # make sure all our points are of the same dimension
     for i in range(0, len(points)):
-        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+        if isinstance(points[i][0], (int, float)) == False or isinstance(points[i][1], (int, float)) == False or len(points[i]) != 2:
             raise NotImplementedError('The input must be a set of 2-d points')
 
     p = points
@@ -471,7 +471,7 @@ def farthest_points(*args):
         raise NotImplementedError('At-least 2 points must be inserted')
 
     for i in range(0, len(points)):
-        if isinstance(points[i][0], (int, long, float)) == False or isinstance(points[i][1], (int, long, float)) == False or len(points[i]) != 2:
+        if isinstance(points[i][0], (int, float)) == False or isinstance(points[i][1], (int, float)) == False or len(points[i]) != 2:
             raise NotImplementedError('The input must be a set of 2-d points')
 
     # make sure all our points are of the same dimension
