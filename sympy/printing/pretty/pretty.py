@@ -1496,7 +1496,7 @@ class PrettyPrinter(Printer):
 
     def _print_Intersection(self, u):
 
-        delimiter = ' %s ' % pretty_atom('Intersection')
+        delimiter = ' %s ' % pretty_atom('Intersection', 'n')
 
         return self._print_seq(u.args, None, None, delimiter,
                                parenthesize=lambda set: set.is_ProductSet or
@@ -1504,7 +1504,7 @@ class PrettyPrinter(Printer):
 
     def _print_Union(self, u):
 
-        union_delimiter = ' %s ' % pretty_atom('Union')
+        union_delimiter = ' %s ' % pretty_atom('Union', 'U')
 
         return self._print_seq(u.args, None, None, union_delimiter,
                                parenthesize=lambda set: set.is_ProductSet or
