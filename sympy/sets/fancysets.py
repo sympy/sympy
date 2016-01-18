@@ -903,7 +903,7 @@ class ComplexRegion(Set):
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
 
-        if other.is_subset(S.Reals):
+        if self == S.Complexes:
             return self
 
         return None

@@ -379,6 +379,10 @@ def test_ComplexRegion_union():
     assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
     assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
 
+    # Issue #10419
+    c1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
+
 
 def test_ComplexRegion_measure():
     a, b = Interval(2, 5), Interval(4, 8)
