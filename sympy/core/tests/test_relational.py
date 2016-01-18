@@ -665,5 +665,5 @@ def test_issue_10304():
 
 def test_issue_10401():
     x = Symbol('x')
-    assert Eq(1/(x+1), 0) == False
-    assert Eq(x/(x + 1), 1) == False
+    assert simplify(Eq(1 / (x+1), 0)) == False
+    assert simplify(Eq(x / (x+1), 1)) == False
