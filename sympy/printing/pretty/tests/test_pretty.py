@@ -3139,6 +3139,22 @@ def test_pretty_ComplexRegion():
     ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
     assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
 
+def test_pretty_Union():
+    from sympy import Union, Interval
+    a, b = Interval(2, 3), Interval(4, 7)
+    ucode_str = u('[2, 3] ∪ [4, 7]')
+    ascii_str = '[2, 3] U [4, 7]'
+    assert upretty(Union(a, b)) == ucode_str
+    assert pretty(Union(a, b)) == ascii_str
+
+def test_pretty_Intersection():
+    from sympy import Intersection, Interval, symbols
+    x, y, z, w = symbols('x, y, z, w')
+    a, b = Interval(x, y), Interval(z, w)
+    ucode_str = u('[x, y] ∩ [z, w]')
+    ascii_str = '[x, y] n [z, w]'
+    assert upretty(Intersection(a, b)) == ucode_str
+    assert pretty(Intersection(a, b)) == ascii_str
 
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
