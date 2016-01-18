@@ -664,6 +664,13 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_Trace(self, e):
+        D = self._print(e.arg)
+        D = prettyForm(*D.parens('(',')'))
+        D.baseline = D.height()//2
+        D = prettyForm(*D.left('\n'*(D.baseline//2) + 'tr'))
+        return D
+
 
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
