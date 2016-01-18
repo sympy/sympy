@@ -15,9 +15,9 @@ class DotProduct(MatrixExpr):
             raise TypeError("Input to Dot Product, %s, not a matrix" % str(arg1))
         if not arg2.is_Matrix:
             raise TypeError("Input to Dot Product, %s, not a matrix" % str(arg2))
-        if not (1 not in arg1.shape):
+        if not (1 in arg1.shape):
             raise TypeError("Input to Dot Product, %s, not a vector" % str(arg1))
-        if not (1 not in arg2.shape):
+        if not (1 in arg2.shape):
             raise TypeError("Input to Dot Product, %s, not a vector" % str(arg1))
 
         if arg1.shape != arg2.shape:
