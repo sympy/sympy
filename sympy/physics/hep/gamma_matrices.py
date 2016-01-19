@@ -294,17 +294,17 @@ def _trace_single_line(t):
             j = ncomps
         numG = j - i
         if numG == 0:
-            spinor_free = [_[0] for _ in t.free if _[0].tensortype is DiracSpinorIndex]
+            spinor_free = [_[0] for _ in t.free if _[0].tensor_index_type is DiracSpinorIndex]
             tcoeff = t.coeff
             if len(spinor_free) == 2 and spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
                 # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
                 # TODO: add procedure to close matrix indices.
                 from sympy.tensor.tensor import tensor_indices
                 mi1, mi2 = tensor_indices('mi1:3', DiracSpinorIndex)
-                t = t.substitute_indices((spinor_free[0], mi1), (spinor_free[1], mi2))
-                t = t*DiracSpinorIndex.delta(-mi2, -mi1)
+                t = t.substitute_indices((spinor_free[0], mi1), (spinor_free[1], -mi2))
+                t = t*DiracSpinorIndex.delta(mi2, -mi1)
                 #t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
-                # t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
+                #t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
                 # TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
                 t = t.contract_metric(sg)
                 return t/tcoeff if tcoeff else t
