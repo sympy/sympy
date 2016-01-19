@@ -635,9 +635,14 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot3d.py"
             ])
         else:
+            # Use a non-windowed backend, so that the tests work on Travis
+            import matplotlib
+            matplotlib.use('Agg')
+
             # don't display matplotlib windows
             from sympy.plotting.plot import unset_show
             unset_show()
+
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
