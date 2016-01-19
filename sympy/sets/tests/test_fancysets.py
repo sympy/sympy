@@ -347,7 +347,7 @@ def test_ComplexRegion_intersect():
     # unevaluated object
     C1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
     C2 = ComplexRegion(Interval(-1, 1)*Interval(-1, 1))
-    assert C1.intersect(C2) == Intersection(C1, C2)
+    assert C1.intersect(C2) == Intersection(C1, C2, evaluate=False)
 
 
 def test_ComplexRegion_union():
@@ -376,8 +376,8 @@ def test_ComplexRegion_union():
     assert c5.union(c6) == ComplexRegion(p3)
     assert c7.union(c8) == ComplexRegion(p4)
 
-    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
-    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4), evaluate=False)
 
 
 def test_ComplexRegion_measure():
