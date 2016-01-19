@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
+    FiniteSet, Function, Ge, Gt, I, Implies, ImmutableMatrix, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
-    Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
+    Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
     Complement, FiniteSet, Interval, Intersection, Union)
@@ -2626,6 +2626,39 @@ def test_Adjoint():
         u("    †\n⎛ T⎞ \n⎝X ⎠ ")
     assert upretty(Transpose(Adjoint(X))) == \
         u("    T\n⎛ †⎞ \n⎝X ⎠ ")
+
+def test_pretty_Trace_issue_9044():
+    X = ImmutableMatrix([[1, 2], [3, 4]])
+    Y = ImmutableMatrix([[2, 4], [6, 8]])
+    ascii_str_1 = \
+"""\
+  /[1  2]\\
+tr|[    ]|
+  \[3  4]/\
+"""
+    ucode_str_1 = \
+u("""\
+  ⎛⎡1  2⎤⎞
+tr⎜⎢    ⎥⎟
+  ⎝⎣3  4⎦⎠\
+""")
+    ascii_str_2 = \
+"""\
+  /[1  2]\     /[2  4]\\
+tr|[    ]| + tr|[    ]|
+  \[3  4]/     \[6  8]/\
+"""
+    ucode_str_2 = \
+u("""\
+  ⎛⎡1  2⎤⎞     ⎛⎡2  4⎤⎞
+tr⎜⎢    ⎥⎟ + tr⎜⎢    ⎥⎟
+  ⎝⎣3  4⎦⎠     ⎝⎣6  8⎦⎠\
+""")
+    assert pretty(Trace(X)) == ascii_str_1
+    assert upretty(Trace(X)) == ucode_str_1
+
+    assert pretty(Trace(X) + Trace(Y)) == ascii_str_2
+    assert upretty(Trace(X) + Trace(Y)) == ucode_str_2
 
 
 def test_pretty_piecewise():
