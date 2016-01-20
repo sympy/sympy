@@ -385,7 +385,7 @@ class Product(ExprWithIntLimits):
         try:
             is_conv = Sum(log_sum, *lim).is_convergent()
         except NotImplementedError:
-            if Sum(sequence_term - 1, *lim).is_absolute_convergent() is S.true:
+            if Sum(sequence_term - 1, *lim).is_absolutely_convergent() is S.true:
                 return S.true
             raise NotImplementedError("The algorithm to find the product convergence of %s "
                                         "is not yet implemented" % (sequence_term))
