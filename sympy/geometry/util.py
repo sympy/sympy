@@ -352,15 +352,15 @@ def closest_points(*args):
     (Point2D(62, 73), Point2D(59, 59))
 
     """
-    from .point import Point,Point2D
+    from .point import Point, Point2D
     from collections import deque
     import numbers
-    from math import sqrt,pow
+    from math import sqrt, pow
 
     points = list(args)
     for point in points:
-     if not all([point.x.is_number, point.y.is_number]):
-         raise NotImplementedError('The input must be a set of 2D points')
+        if not all([point.x.is_number, point.y.is_number]):
+            raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     p = points
@@ -430,7 +430,7 @@ def farthest_points(*args):
     (Point2D(11, 85), Point2D(80, 89))
 
     """
-    from .point import Point,Point2D
+    from .point import Point, Point2D
 
     def rotatingCalipers(Points):
         def hulls(Points):
@@ -466,8 +466,8 @@ def farthest_points(*args):
 
     points = list(args)
     for point in points:
-     if not all([point.x.is_number, point.y.is_number]):
-         raise NotImplementedError('The input must be a set of 2D points')
+        if not all([point.x.is_number, point.y.is_number]):
+            raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     points.sort(key=lambda x: x.args)
