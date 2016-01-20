@@ -3147,6 +3147,13 @@ def test_ProductSet_paranthesis():
     a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
+def test_ProductSet_prod_char_issue_10413():
+    ascii_str = '[2, 3] x [4, 7]'
+    ucode_str = u('[2, 3] × [4, 7]')
+
+    a, b = Interval(2, 3), Interval(4, 7)
+    assert pretty(a*b) == ascii_str
+    assert upretty(a*b) == ucode_str
 
 def test_pretty_sequences():
     s1 = SeqFormula(a**2, (0, oo))

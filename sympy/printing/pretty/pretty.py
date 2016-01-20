@@ -1444,7 +1444,7 @@ class PrettyPrinter(Printer):
             from sympy import Pow
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:
-            prod_char = u('\xd7')
+            prod_char = u("\N{MULTIPLICATION SIGN}") if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
                                    parenthesize=lambda set: set.is_Union or
                                    set.is_Intersection or set.is_ProductSet)
