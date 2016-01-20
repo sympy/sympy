@@ -1205,7 +1205,7 @@ class asech(Function):
 
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def expansion_term(n, x, *previous_terms):
         if n == 0:
             return log(2 / x)
         elif n < 0 or n % 2 == 1:
