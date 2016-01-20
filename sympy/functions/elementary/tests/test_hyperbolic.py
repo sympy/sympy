@@ -564,11 +564,9 @@ def test_asech_infinities():
 
 def test_asech_series():
     x = Symbol('x')
-    assert asech(x).series(x, 0, 8) == \
-        log(2) - log(x) - x**2/4 - 3*x**4/32 - 5*x**6/96 + O(x**8)
-    t6 = asech(x).taylor_term(6, x)
+    t6 = asech(x).expansion_term(6, x)
     assert t6 == -5*x**6/96
-    assert asech(x).taylor_term(8, x, t6, 0) == -35*x**8/1024
+    assert asech(x).expansion_term(8, x, t6, 0) == -35*x**8/1024
 
 
 def test_atanh():
