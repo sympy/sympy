@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify
+from sympy import Matrix, Integer, sympify, Basic
 
 
 class NDimArray(object):
@@ -360,3 +360,7 @@ class NDimArray(object):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+
+class ImmutableNDimArray(NDimArray, Basic):
+    _op_priority = 11.0
