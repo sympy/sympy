@@ -313,7 +313,7 @@ def convex_hull(*args):
 
 
 def closest_points(*args):
-    """The closest pair of points among a given set of points in 2-d plane.
+    """The closest pair of points among a given set of points in 2D plane.
 
     Parameters
     ==========
@@ -359,8 +359,8 @@ def closest_points(*args):
 
     points = list(args)
     for point in points:
-        if not isinstance(point,Point2D):
-            raise NotImplementedError('The input must be a set of 2D points')
+     if not all([point.x.is_number, point.y.is_number]):
+         raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     p = points
@@ -391,12 +391,12 @@ def closest_points(*args):
 
 
 def farthest_points(*args):
-    """The farthest pair of points among a given set of points in 2-d plane.
+    """The farthest pair of points among a given set of points in 2D plane.
 
     Parameters
     ==========
 
-    args : a collection of Points on 2-d plane.
+    args : a collection of Points on 2D plane.
 
     Returns
     =======
@@ -466,8 +466,8 @@ def farthest_points(*args):
 
     points = list(args)
     for point in points:
-        if not isinstance(point,Point2D):
-            raise NotImplementedError('The input must be a set of 2D points')
+     if not all([point.x.is_number, point.y.is_number]):
+         raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     points.sort(key=lambda x: x.args)
