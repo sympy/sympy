@@ -323,7 +323,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        Sum.is_absolute_convergent()
+        Sum.is_absolutely_convergent()
 
         Product.is_convergent()
         """
@@ -470,9 +470,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                     "is not yet implemented" % (sequence_term))
 
-    def is_absolute_convergent(self):
+    def is_absolutely_convergent(self):
         """
         Checks for the absolute convergence of an infinite series.
+
         Same as checking convergence of absolute value of sequence_term of
         an infinite series.
 
@@ -486,9 +487,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         >>> from sympy import Sum, Symbol, sin, oo
         >>> n = Symbol('n', integer=True)
-        >>> Sum((-1)**n, (n, 1, oo)).is_absolute_convergent()
+        >>> Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent()
         False
-        >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent()
+        >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent()
         True
 
         See Also
