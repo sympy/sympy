@@ -42,18 +42,18 @@ def test_util_centroid():
 
 
 def test_closest_points():
-    points = [(1, 1), (2, 2), (11, 11)]
-    assert closest_points(*points) == ((1, 1), (2, 2))
-    points = [(38, 40), (83, 89), (74, 46), (76, 73), (75, 13), (98, 87), (5, 73), (75, 18), (30, 7)]
-    assert closest_points(*points) == ((75, 18), (75, 13))
-    points = [(34, 54), (92, 10), (99, 2), (29, 4), (4, 51), (2, 40), (18, 60), (30, 69), (10, 32)]
-    assert closest_points(*points) == ((99, 2), (92, 10))
+    points = [Point2D(1, 1), Point2D(2, 2), Point2D(11, 11)]
+    assert closest_points(*points) == (Point2D(1, 1), Point2D(2, 2))
+    points = [Point2D(38, 40), Point2D(83, 89), Point2D(74, 46), Point2D(76, 73), Point2D(75, 13), Point2D(98, 87), Point2D(5, 73), Point2D(75, 18), Point2D(30, 7)]
+    assert closest_points(*points) == (Point2D(75, 18), Point2D(75, 13))
+    points = [Point2D(34, 54), Point2D(92, 10), Point2D(99, 2), Point2D(29, 4), Point2D(4, 51), Point2D(2, 40), Point2D(18, 60), Point2D(30, 69), Point2D(10, 32)]
+    assert closest_points(*points) == (Point2D(99, 2), Point2D(92, 10))
 
 
 def test_farthest_points():
-    points = [(1, 1), (2, 2), (11, 11)]
-    assert farthest_points(*points) == ((1, 1), (11, 11))
-    points = [(38, 40), (83, 89), (74, 46), (76, 73), (75, 13), (98, 87), (5, 73), (75, 18), (30, 7)]
-    assert farthest_points(*points) == ((98, 87), (30, 7))
-    points = [(34, 54), (92, 10), (99, 2), (29, 4), (4, 51), (2, 40), (18, 60), (30, 69), (10, 32)]
-    assert farthest_points(*points) == ((4, 51), (99, 2))
+    points = [Point2D(1, 1), Point2D(2, 2), Point2D(11, 11)]
+    assert farthest_points(*points) == (Point2D(1, 1), Point2D(11, 11))
+    points = [Point2D(38, 40), Point2D(83, 89), Point2D(74, 46), Point2D(76, 73), Point2D(75, 13), Point2D(98, 87), Point2D(5, 73), Point2D(75, 18), Point2D(30, 7)]
+    assert farthest_points(*points) == (Point2D(98, 87), Point2D(30, 7))
+    points = [Point2D(34, 54), Point2D(92, 10), Point2D(99, 2), Point2D(29, 4), Point2D(4, 51), Point2D(2, 40), Point2D(18, 60), Point2D(30, 69), Point2D(10, 32)]
+    assert farthest_points(*points) == (Point2D(4, 51), Point2D(99, 2))

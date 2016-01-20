@@ -318,7 +318,7 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2-d plane.
+    args : a collection of Points on 2D plane.
 
     Returns
     =======
@@ -342,49 +342,48 @@ def closest_points(*args):
     ========
 
     >>> from sympy.geometry.util import closest_points
-    >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
+    >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
     >>> closest_points(*points)
-    ((8, 5), (7, 6))
+    (Point2D(8, 5), Point2D(7, 6))
 
     >>> from sympy.geometry.util import closest_points
-    >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
+    >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
     >>> closest_points(*points)
-    ((62, 73), (59, 59))
+    (Point2D(62, 73), Point2D(59, 59))
 
     """
-    from .point import Point
+    from .point import Point,Point2D
     from collections import deque
     import numbers
+    from math import sqrt,pow
 
     points = list(args)
+    for point in points:
+        if not isinstance(point,Point2D):
+            raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
-    # make sure all our points are of the same dimension
-    for i in range(0, len(points)):
-        if isinstance(points[i][0], (int, float)) == False or isinstance(points[i][1], (int, float)) == False or len(points[i]) != 2:
-            raise NotImplementedError('The input must be a set of 2-d points')
-
     p = points
-    p.sort()
+    p.sort(key=lambda x: x.args)
 
     box = deque()
     box.append(p[0])
 
-    best_dist = (pow(p[1][1]-box[0][1], 2)+pow(p[1][0]-box[0][0], 2))
+    best_dist = sqrt(pow(p[1].y-box[0].y, 2)+pow(p[1].x-box[0].x, 2))
     left = 0
     i = 1
     best_pair = (p[0], p[1])
 
-    while(i < len(p)):
+    while i < len(p):
         j = 0
-        while left < i and p[i][0]-p[left][0] > best_dist:
+        while left < i and p[i].x-p[left].x > best_dist:
             box.remove(p[left])
             left = left+1
 
         for j in range(len(box)):
-            if best_dist != min(best_dist, (pow(p[i][1]-box[j][1], 2)+pow(p[i][0]-box[j][0], 2))):
+            if best_dist != min(best_dist, sqrt(pow(p[i].y-box[j].y, 2)+pow(p[i].x-box[j].x, 2))):
                 best_pair = (p[i], box[j])
-                best_dist = min(best_dist, (pow(p[i][1]-box[j][1], 2)+pow(p[i][0]-box[j][0], 2)))
+                best_dist = min(best_dist, sqrt(pow(p[i].y-box[j].y, 2)+pow(p[i].x-box[j].x, 2)))
         box.append(p[i])
         i = i+1
 
@@ -421,25 +420,24 @@ def farthest_points(*args):
     ========
 
     >>> from sympy.geometry.util import farthest_points
-    >>> points = [(5, 2), (7, 6), (3, 9), (9, 4), (8, 5)]
+    >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
     >>> farthest_points(*points)
-    ((3, 9), (9, 4))
+    (Point2D(3, 9), Point2D(9, 4))
 
     >>> from sympy.geometry.util import farthest_points
-    >>> points = [(80, 89), (11, 85), (32, 51), (59, 59), (39, 80), (62, 73)]
+    >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
     >>> farthest_points(*points)
-    ((11, 85), (80, 89))
+    (Point2D(11, 85), Point2D(80, 89))
 
     """
-    from .point import Point
+    from .point import Point,Point2D
 
     def rotatingCalipers(Points):
         def hulls(Points):
             def orientation(p, q, r):
-                return (q[1]-p[1]) * (r[0]-p[0]) - (q[0]-p[0]) * (r[1]-p[1])
+                return (q.y-p.y) * (r.x-p.x) - (q.x-p.x) * (r.y-p.y)
             U = []
             L = []
-            Points.sort()
             for p in Points:
                 while len(U) > 1 and orientation(U[-2], U[-1], p) <= 0:
                     U.pop()
@@ -460,24 +458,21 @@ def farthest_points(*args):
                 i += 1
             # still points left on both lists, compare slopes of next hull edges
             # being careful to avoid divide-by-zero in slope calculation
-            elif (U[i+1][1]-U[i][1]) * (L[j][0]-L[j-1][0]) > \
-                    (L[j][1]-L[j-1][1]) * (U[i+1][0]-U[i][0]):
+            elif (U[i+1].y-U[i].y) * (L[j].x-L[j-1].x) > \
+                    (L[j].y-L[j-1].y) * (U[i+1].x-U[i].x):
                 i += 1
             else:
                 j -= 1
 
     points = list(args)
+    for point in points:
+        if not isinstance(point,Point2D):
+            raise NotImplementedError('The input must be a set of 2D points')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
-
-    for i in range(0, len(points)):
-        if isinstance(points[i][0], (int, float)) == False or isinstance(points[i][1], (int, float)) == False or len(points[i]) != 2:
-            raise NotImplementedError('The input must be a set of 2-d points')
-
-    # make sure all our points are of the same dimension
-    Points = points
-    diam, pair = max([((h[0]-q[0])**2 + (h[1]-q[1])**2, (h, q))
-                     for h, q in rotatingCalipers(Points)])
+    points.sort(key=lambda x: x.args)
+    diam, pair = max([((h.x-q.x)**2 + (h.y-q.y)**2, (h, q))
+                     for h, q in rotatingCalipers(points)])
     return pair
 
 
