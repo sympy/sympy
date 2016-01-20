@@ -21,6 +21,8 @@ class MockPrint(object):
     def flush(self):
         pass
 
+    encoding = 'utf-8'
+
 def disable_print(func, *args, **kwargs):
     @wraps(func)
     def wrapper(*args, **kwargs):
