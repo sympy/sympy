@@ -190,7 +190,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
 
-            numer, denom = fraction(simplify(dif))
+            numer, denom = dif.as_numer_denom()
             if numer.is_zero is False and numer.is_number is True:
                 return r.func(numer, S.Zero)
 
