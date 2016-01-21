@@ -1226,3 +1226,6 @@ class asech(Function):
         Returns the inverse of this function.
         """
         return sech
+
+    def _eval_rewrite_as_log(self, arg):
+        return log(1/arg + sqrt(1/arg**2 - 1))
