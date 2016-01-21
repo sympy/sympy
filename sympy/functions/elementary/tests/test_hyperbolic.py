@@ -441,7 +441,7 @@ def test_asinh():
 
 def test_asinh_rewrite():
     x = Symbol('x')
-    assert asinh(x).rewrite(log) == log(x+sqrt(x**2+1)) 
+    assert asinh(x).rewrite(log) == log(x + sqrt(x**2 + 1))
 
 
 def test_asinh_series():
