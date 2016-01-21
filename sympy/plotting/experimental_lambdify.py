@@ -210,7 +210,8 @@ class lambdify(object):
                 return None
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
-                                               in str(e)):
+                                               in str(e) or 'unorderable '
+                                               'types' in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,
                                                          use_evalf=True,
                                                          use_python_math=True)
