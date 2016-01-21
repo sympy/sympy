@@ -341,12 +341,12 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry.util import closest_points
+    >>> from sympy.geometry import closest_points, Point2D
     >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
     >>> closest_points(*points)
     (Point2D(8, 5), Point2D(7, 6))
 
-    >>> from sympy.geometry.util import closest_points
+    >>> from sympy.geometry import closest_points, Point2D
     >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
     >>> closest_points(*points)
     (Point2D(62, 73), Point2D(59, 59))
@@ -419,12 +419,12 @@ def farthest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry.util import farthest_points
+    >>> from sympy.geometry import farthest_points, Point2D
     >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
     >>> farthest_points(*points)
     (Point2D(3, 9), Point2D(9, 4))
 
-    >>> from sympy.geometry.util import farthest_points
+    >>> from sympy.geometry import farthest_points, Point2D
     >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
     >>> farthest_points(*points)
     (Point2D(11, 85), Point2D(80, 89))
