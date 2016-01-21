@@ -851,7 +851,7 @@ class asinh(Function):
         Rewrites asinh as log function.
         """
         return log(x + sqrt(x**2 + 1))
-        
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
