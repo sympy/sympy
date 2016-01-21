@@ -455,12 +455,11 @@ class Range(Set):
 
 def normalize_theta_set(theta):
     """
-    Normalize a Real Set theta in the Interval [0, 2*pi). It currently
-    supports Interval and FiniteSet. It Returns a the normalized value
-    of theta in the Set. For Interval, a maximum of one cycle [0, 2*pi],
-    is returned i.e. for theta equal to [0, 10*pi], returned normalized
-    value would be [0, 2*pi). As of now it supports theta as FiniteSet
-    and Interval.
+    Normalize a Real Set `theta` in the Interval [0, 2*pi). It returns
+    a normalized value of theta in the Set. For Interval, a maximum of
+    one cycle [0, 2*pi], is returned i.e. for theta equal to [0, 10*pi],
+    returned normalized value would be [0, 2*pi). As of now intervals
+    with end points as non-multiples of `pi` is not supported.
 
     Raises
     ======
@@ -493,52 +492,48 @@ def normalize_theta_set(theta):
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
-    from sympy.functions.elementary.complexes import Abs
 
     if theta.is_Interval:
+        interval_len = theta.measure
         # one complete circle
-        if Abs(theta.args[0] - theta.args[1]) >= 2*S.Pi:
+        if interval_len >= 2*S.Pi:
+            if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
+                k = coeff(theta.start)
+                return Union(Interval(0, k*S.Pi, False, True),
+                        Interval(k*S.Pi, 2*S.Pi, True, True))
             return Interval(0, 2*S.Pi, False, True)
 
-        new_theta = []
-        for val in [theta.args[0], theta.args[1]]:
-            k = coeff(val)
-            if (not k) and (k != S.Zero):
-                raise NotImplementedError('Normalizing theta without pi as'
-                                          'coefficient, is not Implemented.')
-            elif k == S.Zero:
-                if val == S.Zero:
-                    new_theta.append(S.Zero)
-                else:
-                    # when theta is n*pi
-                    new_theta.append(2*S.Pi)
-            else:
-                new_theta.append(k*S.Pi)
+        k_start, k_end = coeff(theta.start), coeff(theta.end)
 
-        # for negative theta
-        if new_theta[0] > new_theta[1]:
-            return Union(Interval(S(0), new_theta[1]),
-                         Interval(new_theta[0], 2*S.Pi, False, True))
+        if k_start is None or k_end is None:
+            raise NotImplementedError("Normalizing theta without pi as coefficient is "
+                                    "not yet implemented")
+        new_start = k_start*S.Pi
+        new_end = k_end*S.Pi
+
+        if new_start > new_end:
+            return Union(Interval(S(0), new_end, False, theta.right_open),
+                         Interval(new_start, 2*S.Pi, theta.left_open, True))
         else:
-            return Interval(*new_theta)
+            return Interval(new_start, new_end, theta.left_open, theta.right_open)
 
     elif theta.is_FiniteSet:
         new_theta = []
         for element in theta:
             k = coeff(element)
-            if (not k) and (k != S.Zero):
-                raise NotImplementedError('Normalizing theta without pi as'
+            if k is None:
+                raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
-            elif k == S.Zero:
-                if element == S.Zero:
-                    new_theta.append(S.Zero)
             else:
                 new_theta.append(k*S.Pi)
         return FiniteSet(*new_theta)
 
+    elif theta.is_Union:
+        return Union(*[normalize_theta_set(interval) for interval in theta.args])
+
     elif theta.is_subset(S.Reals):
-        raise NotImplementedError("Normalizing theta when, its %s is not"
-                                  "Implemented" % type(theta))
+        raise NotImplementedError("Normalizing theta when, it is of type %s is not "
+                                  "implemented" % type(theta))
     else:
         raise ValueError(" %s is not a real set" % (theta))
 
