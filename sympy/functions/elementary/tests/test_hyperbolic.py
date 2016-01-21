@@ -439,6 +439,11 @@ def test_asinh():
     assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
 
 
+def test_asinh_rewrite():
+    x = Symbol('x')
+    assert asinh(x).rewrite(log) == log(x+sqrt(x**2+1)) 
+
+
 def test_asinh_series():
     x = Symbol('x')
     assert asinh(x).series(x, 0, 8) == \
