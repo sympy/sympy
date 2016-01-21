@@ -908,9 +908,9 @@ def test_is_convergent():
     assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
 
-def test_is_absolute_convergent():
-    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() is S.false
-    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() is S.true
+def test_is_absolutely_convergent():
+    assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent() is S.true
 
 
 @XFAIL
