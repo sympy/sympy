@@ -3,7 +3,7 @@ from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
@@ -331,6 +331,14 @@ def test_upretty_modifiers():
     assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃′')
     assert upretty( Symbol('x_dot') ) == u('x_dot')
     assert upretty( Symbol('x__dot') ) == u('x__dot')
+
+
+def test_pretty_Cycle():
+    from sympy.combinatorics.permutations import Cycle
+    assert pretty(Cycle(1, 2)) == '(1 2)'
+    assert pretty(Cycle(2)) == '(2)'
+    assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
+    assert pretty(Cycle()) == '()'
 
 
 def test_pretty_basic():
@@ -3131,6 +3139,20 @@ def test_pretty_ComplexRegion():
     ucode_str = u('{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}')
     assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
 
+def test_pretty_Union_issue_10414():
+    a, b = Interval(2, 3), Interval(4, 7)
+    ucode_str = u('[2, 3] ∪ [4, 7]')
+    ascii_str = '[2, 3] U [4, 7]'
+    assert upretty(Union(a, b)) == ucode_str
+    assert pretty(Union(a, b)) == ascii_str
+
+def test_pretty_Intersection_issue_10414():
+    x, y, z, w = symbols('x, y, z, w')
+    a, b = Interval(x, y), Interval(z, w)
+    ucode_str = u('[x, y] ∩ [z, w]')
+    ascii_str = '[x, y] n [z, w]'
+    assert upretty(Intersection(a, b)) == ucode_str
+    assert pretty(Intersection(a, b)) == ascii_str
 
 def test_ProductSet_paranthesis():
     from sympy import Interval, Union, FiniteSet
@@ -3139,6 +3161,13 @@ def test_ProductSet_paranthesis():
     a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
+def test_ProductSet_prod_char_issue_10413():
+    ascii_str = '[2, 3] x [4, 7]'
+    ucode_str = u('[2, 3] × [4, 7]')
+
+    a, b = Interval(2, 3), Interval(4, 7)
+    assert pretty(a*b) == ascii_str
+    assert upretty(a*b) == ucode_str
 
 def test_pretty_sequences():
     s1 = SeqFormula(a**2, (0, oo))
@@ -3357,17 +3386,17 @@ x─→0⁺            \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-def test_pretty_RootOf():
-    expr = RootOf(x**5 + 11*x - 2, 0)
+def test_pretty_ComplexRootOf():
+    expr = rootof(x**5 + 11*x - 2, 0)
     ascii_str = \
 """\
-      / 5              \\\n\
-RootOf\\x  + 11*x - 2, 0/\
+       / 5              \\\n\
+CRootOf\\x  + 11*x - 2, 0/\
 """
     ucode_str = \
 u("""\
-      ⎛ 5              ⎞\n\
-RootOf⎝x  + 11⋅x - 2, 0⎠\
+       ⎛ 5              ⎞\n\
+CRootOf⎝x  + 11⋅x - 2, 0⎠\
 """)
 
     assert pretty(expr) == ascii_str

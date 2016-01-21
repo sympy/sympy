@@ -460,6 +460,21 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
+def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
+    from sympy.tensor import IndexedBase, Idx
+    from sympy.sandbox.indexed_integrals import IndexedIntegral
+    A = IndexedBase('A')
+    i, j = symbols('i j', integer=True)
+    a1, a2 = symbols('a1:3', cls=Idx)
+    assert _test_args(IndexedIntegral(A[a1], A[a2]))
+    assert _test_args(IndexedIntegral(A[i], A[j]))
+
+
+def test_sympy__calculus__util__AccumulationBounds():
+    from sympy.calculus.util import AccumulationBounds
+    assert _test_args(AccumulationBounds(0, 1))
+
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
@@ -929,6 +944,9 @@ def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
 
+def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
+    from sympy.stats.crv_types import ShiftedGompertzDistribution
+    assert _test_args(ShiftedGompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
@@ -3096,9 +3114,14 @@ def test_sympy__polys__polytools__PurePoly():
     assert _test_args(PurePoly(2, x, y))
 
 
+@SKIP('abstract class')
 def test_sympy__polys__rootoftools__RootOf():
-    from sympy.polys.rootoftools import RootOf
-    assert _test_args(RootOf(x**3 + x + 1, 0))
+    pass
+
+
+def test_sympy__polys__rootoftools__ComplexRootOf():
+    from sympy.polys.rootoftools import ComplexRootOf
+    assert _test_args(ComplexRootOf(x**3 + x + 1, 0))
 
 
 def test_sympy__polys__rootoftools__RootSum():
@@ -3185,6 +3208,23 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
+
+
+@SKIP("abstract class")
+def test_sympy__tensor__array__ndim_array__ImmutableNDimArray():
+    pass
+
+
+def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(densarr)
+
+
+def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
+    from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(sparr)
 
 
 def test_sympy__tensor__indexed__Idx():

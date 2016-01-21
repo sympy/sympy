@@ -2,7 +2,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise,
+    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
     Matrix)
 from mpmath import mpi
 
@@ -160,7 +160,6 @@ def test_Complement():
 
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
-
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -450,10 +449,10 @@ def test_contains():
     assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
     assert S.EmptySet.contains(1) is S.false
-    assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
+    assert FiniteSet(rootof(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
-    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
-    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+    assert rootof(x**5 + x**3 + 1, 0) in S.Reals
+    assert not rootof(x**5 + x**3 + 1, 1) in S.Reals
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
@@ -936,3 +935,25 @@ def test_issue_10113():
     assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
     assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
     assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))
+
+
+def test_issue_10248():
+    assert list(Intersection(S.Reals, FiniteSet(x))) == [
+        And(x < oo, x > -oo)]
+
+
+def test_issue_9447():
+    a = Interval(0, 1) + Interval(2, 3)
+    assert Complement(S.UniversalSet, a) == Complement(
+            S.UniversalSet, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
+    assert Complement(S.Naturals, a) == Complement(
+            S.Naturals, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
+
+
+def test_issue_10337():
+    assert (FiniteSet(2) == 3) is False
+    assert (FiniteSet(2) != 3) is True
+    raises(TypeError, lambda: FiniteSet(2) < 3)
+    raises(TypeError, lambda: FiniteSet(2) <= 3)
+    raises(TypeError, lambda: FiniteSet(2) > 3)
+    raises(TypeError, lambda: FiniteSet(2) >= 3)

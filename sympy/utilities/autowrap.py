@@ -499,12 +499,21 @@ def autowrap(
     else:
         language = _infer_language(backend)
 
-    helpers = helpers if helpers else ()
+    helpers = [helpers] if helpers else ()
     flags = flags if flags else ()
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
+
+    helps = []
+    for name_h, expr_h, args_h in helpers:
+        helps.append(make_routine(name_h, expr_h, args_h))
+
+    for name_h, expr_h, args_h in helpers:
+        if expr.has(expr_h):
+            name_h = binary_function(name_h, expr_h, backend = 'dummy')
+            expr = expr.subs(expr_h, name_h(*args_h))
     try:
         routine = make_routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
@@ -517,10 +526,6 @@ def autowrap(
                 raise
             new_args.append(missing.name)
         routine = make_routine('autofunc', expr, args + new_args)
-
-    helps = []
-    for name, expr, args in helpers:
-        helps.append(make_routine(name, expr, args))
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 

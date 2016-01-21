@@ -14,6 +14,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.sets.contains import Contains
+from sympy.utilities.misc import func_name
 
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
@@ -206,7 +207,7 @@ class Set(Basic):
             return Union(o - self for o in other.args)
 
         elif isinstance(other, Complement):
-            return Complement(other.args[0], Union(other.args[1], self))
+            return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
         elif isinstance(other, EmptySet):
             return S.EmptySet
@@ -511,8 +512,8 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        symb = self.contains(other)
-        if symb not in (True, False):
+        symb = sympify(self.contains(other))
+        if not (symb is S.true or symb is S.false):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return bool(symb)
 
@@ -949,8 +950,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) == True) or
-                (self.right_open and other.contains(self.end) == True)):
+        if ((self.left_open and sympify(other.contains(self.start)) is S.true) or
+                (self.right_open and sympify(other.contains(self.end)) is S.true)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -964,8 +965,9 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        if other.is_real is False:
+        if other.is_real is False or other is S.NegativeInfinity or other is S.Infinity:
             return false
+
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
@@ -1427,13 +1429,23 @@ class Intersection(Set):
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
+        no_iter = True
         for s in self.args:
             if s.is_iterable:
+                no_iter = False
                 other_sets = set(self.args) - set((s,))
                 other = Intersection(other_sets, evaluate=False)
-                return (x for x in s if x in other)
+                for x in s:
+                    c = sympify(other.contains(x))
+                    if c is S.true:
+                        yield x
+                    elif c is S.false:
+                        pass
+                    else:
+                        yield c
 
-        raise ValueError("None of the constituent sets are iterable")
+        if no_iter:
+            raise ValueError("None of the constituent sets are iterable")
 
     @staticmethod
     def _handle_finite_sets(args):
@@ -1485,7 +1497,7 @@ class Intersection(Set):
                     # contained in `v` then remove them from `v`
                     # and add this as a new arg
                     contained = [x for x in symbolic_s_list
-                        if v.contains(x) == True]
+                        if sympify(v.contains(x)) is S.true]
                     if contained != symbolic_s_list:
                         new_args.append(
                             v - FiniteSet(
@@ -1837,12 +1849,20 @@ class FiniteSet(Set, EvalfMixin):
                 return None
 
         elif isinstance(other, FiniteSet):
-            unk = FiniteSet(*[el for el in self if other.contains(el)
-                not in (True, False)])
+            unk = []
+            for i in self:
+                c = sympify(other.contains(i))
+                if c is not S.true and c is not S.false:
+                    unk.append(i)
+            unk = FiniteSet(*unk)
             if unk == self:
                 return
-            return Complement(FiniteSet(*[el for el in other if
-                self.contains(el) != True]), unk)
+            not_true = []
+            for i in other:
+                c = sympify(self.contains(i))
+                if c is not S.true:
+                    not_true.append(i)
+            return Complement(FiniteSet(*not_true), unk)
 
         return Set._complement(self, other)
 
@@ -1857,7 +1877,7 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) == True for x in self):
+        if any(sympify(other.contains(x)) is S.true for x in self):
             return set((
                 FiniteSet(*[x for x in self
                     if other.contains(x) != True]), other))
@@ -1944,15 +1964,23 @@ class FiniteSet(Set, EvalfMixin):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
 
     def __ge__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return other.is_subset(self)
 
     def __gt__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_superset(other)
 
     def __le__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_subset(other)
 
     def __lt__(self, other):
+        if not isinstance(other, Set):
+            raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
 
 

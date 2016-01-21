@@ -565,7 +565,7 @@ class Basic(with_metaclass(ManagedProperties)):
     @property
     def is_comparable(self):
         """Return True if self can be computed to a real number
-        with precision, else False.
+        (or already is a real number) with precision, else False.
 
         Examples
         ========
@@ -575,6 +575,19 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+
+        A False result does not mean that `self` cannot be rewritten
+        into a form that would be comparable. For example, the
+        difference computed below is zero but without simplification
+        it does not evaluate to a zero with precision:
+
+        >>> e = 2**pi*(1 + 2**pi)
+        >>> dif = e - e.expand()
+        >>> dif.is_comparable
+        False
+        >>> dif.n(2)._prec
+        1
+
         """
         is_real = self.is_real
         if is_real is False:
@@ -582,14 +595,15 @@ class Basic(with_metaclass(ManagedProperties)):
         is_number = self.is_number
         if is_number is False:
             return False
-        if is_real and is_number:
-            return True
-        n, i = [p.evalf(2) for p in self.as_real_imag()]
+        n, i = [p.evalf(2) if not p.is_Number else p
+            for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
             # if _prec = 1 we can't decide and if not,
-            # the answer is False so return False
+            # the answer is False because numbers with
+            # imaginary parts can't be compared
+            # so return False
             return False
         else:
             return n._prec != 1
