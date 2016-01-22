@@ -581,3 +581,9 @@ def test_issue_2790():
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+
+def test_issue_9474():
+    k = symbols('k', complex=True)
+    f = lambdify([k], abs(k**2))
+    assert f(10.01+0.1j) == 100.2101

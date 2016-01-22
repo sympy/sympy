@@ -12,6 +12,7 @@ from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range, builtins
 from sympy.utilities.decorator import doctest_depends_on
 
+
 # These are the namespaces the lambda functions will use.
 MATH = {}
 MPMATH = {}
@@ -31,7 +32,6 @@ NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
