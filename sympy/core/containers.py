@@ -8,6 +8,7 @@
 
 from __future__ import print_function, division
 
+from collections import defaultdict
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range
 from sympy.core.sympify import sympify, converter
@@ -194,8 +195,9 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args) == 1 and ((args[0].__class__ is dict) or
-                             (args[0].__class__ is Dict)):
+        if len(args) == 1 and (isinstance(args[0], dict) or
+            isinstance(args[0], Dict) or
+            isinstance(args[0], defaultdict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
