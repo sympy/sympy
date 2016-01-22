@@ -209,16 +209,23 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     Only a few patterns are implemented yet.
 
     The function returns a dictionary where keys are the name of a given type of
-    generating function (the most basic type being 'ogf'). Currently implemented
-    types are: 'ogf' (ordinary g.f.), 'egf' (exponential g.f.), 'lgf'
-    (logarithmic g.f.), 'hlgf' (hyperbolic logarithmic g.f.), 'lgdogf'
-    (logarithmic derivative of generating function), 'lgdegf' (logarithmic
-    derivative of exponential generating function).
+    generating function. Six types are currently implemented:
+
+         type  |  formal definition
+        -------+----------------------------------------------------------------
+        ogf    | f(x) = Sum(            a_k * x^k       ,  k: 0..infinity )
+        egf    | f(x) = Sum(            a_k * x^k / k!  ,  k: 0..infinity )
+        lgf    | f(x) = Sum( (-1)^(k+1) a_k * x^k / k   ,  k: 1..infinity )
+               |        (with initial index being hold as 1 rather than 0)
+        hlgf   | f(x) = Sum(            a_k * x^k / k   ,  k: 1..infinity )
+               |        (with initial index being hold as 1 rather than 0)
+        lgdogf | f(x) = derivate( log(Sum( a_k * x^k, k: 0..infinity )), x)
+        lgdegf | f(x) = derivate( log(Sum( a_k * x^k / k!, k: 0..infinity )), x)
 
     In order to spare time, the user can select only some types of generating
     functions (default being ['all']). While forgetting to use a list in the
     case of a single type may seem to work most of the time as in: types='ogf'
-    this (convenient) syntax may leed to unexpected extra results in some cases.
+    this (convenient) syntax may lead to unexpected extra results in some cases.
 
     Discarding a type when calling the function does not mean that the type will
     not be present in the returned dictionary; it only means that no extra
