@@ -78,8 +78,6 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Max": "amax",
-    "Min": "amin",
     "Mod": "mod",
     "oo": "inf",
     "re": "real",
