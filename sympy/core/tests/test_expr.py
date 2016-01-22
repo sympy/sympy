@@ -614,6 +614,11 @@ def test_as_independent():
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
 
+    eq = Add(x, -x, 2, -3, evaluate=False)
+    assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
+    eq = Mul(x, 1/x, 2, -3, evaluate=False)
+    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+
 
 @XFAIL
 def test_call_2():

@@ -1571,10 +1571,19 @@ class Expr(Basic, EvalfMixin):
         See also: .separatevars(), .expand(log=True),
                   .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
-        from sympy import Symbol
+        from .symbol import Symbol
+        from .add import _unevaluated_Add
+        from .mul import _unevaluated_Mul
         from sympy.utilities.iterables import sift
 
         func = self.func
+        if hint.get('as_Add', func is Add):
+            want = Add
+        else:
+            want = Mul
+        if func is not want and (func is Add or func is Mul):
+            return (want.identity, self)
+
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
         sym = set()
@@ -1593,10 +1602,6 @@ class Expr(Basic, EvalfMixin):
                 return has_other
             return has_other or e.has(*(e.free_symbols & sym))
 
-        if hint.get('as_Add', func is Add):
-            want = Add
-        else:
-            want = Mul
         if (want is not func or
                 func is not Add and func is not Mul):
             if has(self):
@@ -1613,15 +1618,16 @@ class Expr(Basic, EvalfMixin):
         depend = d[True]
         indep = d[False]
         if func is Add:  # all terms were treated as commutative
-            return (Add(*indep),
-                    Add(*depend))
+            return (Add(*indep), _unevaluated_Add(*depend))
         else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return Mul(*indep), Mul(*depend)
+            return Mul(*indep), (
+                Mul(*depend, evaluate=False) if nc else
+                _unevaluated_Mul(*depend))
 
     def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
