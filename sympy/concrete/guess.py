@@ -301,7 +301,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Logarithmic Generating Function (lgf)
     if 'lgf' in types:
         # Transform sequence (multiplication by (-1)^(n+1) / n)
-        w, f = [], Integer(1)
+        w, f = [], Integer(-1)
         for i, k in enumerate(v):
             f = -f
             w.append(f*k/Integer(i+1))
