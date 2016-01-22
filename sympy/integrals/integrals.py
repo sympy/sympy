@@ -709,6 +709,8 @@ class Integral(AddWithLimits):
         from sympy.integrals.heurisch import heurisch, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
+        from sympy import Symbol, Sum
+        from sympy.series.limits import limit
 
         if risch:
             try:
@@ -832,6 +834,24 @@ class Integral(AddWithLimits):
             if not meijerg:
                 # g(x) = Mul(trig)
                 h = trigintegrate(g, x, conds=conds)
+                if isinstance(f,Sum):
+                    f_temp =f
+                    f, limits = f.function, list(f.limits)
+                    limit = limits.pop(-1)
+                    if limits:
+                        f =f.func(f, *limits)
+                    if len(limit) == 3:
+                        _, a, b = limit
+                        if x in a.free_symbols or x in b.free_symbols:
+                            return None
+                        integrl = integrate(f, x)
+                        rv = f_temp.func(integrl, limit)
+                        if limit[0] not in integrl.free_symbols:
+                            rv = rv.doit()
+                        return rv
+                    else:
+                        return NotImplementedError('Lower and upper bound expected.')
+
                 if h is not None:
                     parts.append(coeff * h)
                     continue
