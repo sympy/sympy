@@ -4,7 +4,6 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without scipy). Here we test everything, that a user may need when
 # using SymPy with SciPy
-
 from sympy.external import import_module
 
 scipy = import_module('scipy')

@@ -84,11 +84,16 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     >>> numpy = import_module('numpy')
 
+    >>> scipy = import_module('scipy')
+
     >>> numpy = import_module('numpy', min_python_version=(2, 7),
     ... warn_old_version=False)
 
     >>> numpy = import_module('numpy', min_module_version='1.5',
     ... warn_old_version=False) # numpy.__version__ is a string
+
+    >>> scipy = import_module('scipy', min_module_version='1.5',
+    ... warn_old_version=False) # scipy.__version__ is a string
 
     >>> # gmpy does not have __version__, but it does have gmpy.version()
 
@@ -127,6 +132,9 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
     if module == 'numpy' and '__pypy__' in sys.builtin_module_names:
+        return
+
+    if module == 'scipy' and '__pypy__' in sys.builtin_module_names:
         return
 
     try:

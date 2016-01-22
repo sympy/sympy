@@ -16,6 +16,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+SCIPY = {}
 SYMPY = {}
 NUMEXPR = {}
 
@@ -26,6 +27,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+SCIPY_DEFAULT = {"I": 1j} # numpy and scipy both return 1.j for sqrt(-1).
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
 
@@ -34,7 +36,7 @@ MATH_TRANSLATIONS = {
     "Abs": "fabs",
     "ceiling": "ceil",
     "E": "e",
-    "ln": "log",
+    "ln": "log"
 }
 
 MPMATH_TRANSLATIONS = {
@@ -49,9 +51,9 @@ MPMATH_TRANSLATIONS = {
     "E": "e",
     "I": "j",
     "ln": "log",
-    #"lowergamma":"lower_gamma",
+    # "lowergamma":"lower_gamma",
     "oo": "inf",
-    #"uppergamma":"upper_gamma",
+    # "uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
     "ImmutableMatrix": "matrix",
@@ -88,7 +90,38 @@ NUMPY_TRANSLATIONS = {
     "Matrix": "array",
     "MutableDenseMatrix": "array",
     "ImmutableMatrix": "array",
-    "ImmutableDenseMatrix": "array",
+    "ImmutableDenseMatrix": "array"
+
+}
+
+# most of the functions of scipy is similar to numpy. Checked each functions.
+SCIPY_TRANSLATIONS = {
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "arg": "angle",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atan2": "arctan2",
+    "atanh": "arctanh",
+    "ceiling": "ceil",
+    "E": "e",
+    "im": "imag",
+    "ln": "log",
+    "Max": "amax",
+    "Min": "amin",
+    "Mod": "mod",
+    "oo": "inf",
+    "re": "real",
+    "elliptic_k": "ellipk",
+    "elliptic_f": "ellipeinc",
+    "besselj": "jn",
+    "bessely": "yn",
+    "besseli": "iv",
+    "besselk": "kn",
+    "loggamma": "gammaln",
+    "digamma": "psi",
+    "hyper": "hyp1f1",
 }
 
 NUMEXPR_TRANSLATIONS = {}
@@ -98,12 +131,14 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    # according to the external/importtools.py we should use import_module() for numpy,scipy
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import_module('scipy')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
-                 ("import_module('numexpr')", )),
+    "numexpr": (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS, (
+        "import_module('numexpr')", ))
 }
 
 
@@ -112,13 +147,13 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "scipy", "sympy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[
-            module]
+        namespace, namespace_default, translations,
+         import_commands = MODULES[module]
     except KeyError:
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
@@ -156,7 +191,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True):
+ dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -165,7 +200,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "scipy", "sympy" 
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -232,6 +267,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         >>> from numpy import array
         >>> f(array([1, 2, 3]), array([2, 3, 5]))
         [-2.18503986 -0.29100619 -0.8559934 ]
+
+        Use of scipy module:
+
+        >>> import scipy
+        >>> import numpy
+        >>> a = numpy.arange(10)
+        >>> a
+        [0 1 2 3 4 5 6 7 8 9]
+        >>> f = implemented_function(Function('f'), lambda x: sin(x))
+        >>> func = lambdify(x, f(x), modules='scipy')
+        >>> func(a)
+        [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
+                    -0.2794155   0.6569866   0.98935825  0.41211849]  
 
     (3) Use a dictionary defining custom functions:
 
@@ -315,6 +363,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         else:
             modules.insert(1, "numpy")
 
+        # Attempt to import scipy
+        try:
+            _import("scipy")
+        except ImportError:
+            pass
+        else:
+            modules.insert(0, "scipy")
+
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -345,8 +401,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumPyPrinter as printer
 
-    if _module_present('numexpr',namespaces) and printer is None:
-        #XXX: This has to be done here because of circular imports
+    if _module_present('scipy', namespaces) and printer is None:
+        # XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import SciPyPrinter as printer
+
+    if _module_present('numexpr', namespaces) and printer is None:
+        # XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
 
     # Get the names of the args, for creating a docstring
@@ -360,8 +420,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             names.append(var.name)
         else:
             # It's an iterable. Try to get name by inspection of calling frame.
-            name_list = [var_name for var_name, var_val in callers_local_vars
-                    if var_val is var]
+            name_list = [var_name for var_name, var_val in callers_local_vars 
+            if var_val is var]
             if len(name_list) == 1:
                 names.append(name_list[0])
             else:
@@ -388,6 +448,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
+
 
 def _module_present(modname, modlist):
     if modname in modlist:
@@ -419,6 +480,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
 
     Examples
     ========
+
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.lambdify import lambdastr
@@ -462,7 +524,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             #Sub in dummy variables for functions or symbols
             if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
             else:
                 return str(args)
@@ -491,8 +553,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
         from sympy.utilities.iterables import flatten
         import re
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
-        iter_args = ','.join([i if isiter(a) else i
-            for i, a in zip(dum_args, args)])
+        iter_args = ','.join([i if isiter(a) else i for i, a in zip(dum_args, args)])
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
         flat = '__flatten_args__'
         rv = 'lambda %s: (%s)(*list(%s([%s])))' % (
