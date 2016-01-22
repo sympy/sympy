@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
-from sympy.core.singleton import Singleton, S
+from sympy.core.singleton import Singleton, S, sympify
 from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
@@ -134,7 +134,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def __iter__(self):
         yield S.Zero
-        i = S(1)
+        i = S.One
         while True:
             yield i
             yield -i
@@ -333,7 +333,7 @@ class Range(Set):
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else S(as_int(w))
+            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
                                  for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
@@ -512,7 +512,7 @@ def normalize_theta_set(theta):
         new_end = k_end*S.Pi
 
         if new_start > new_end:
-            return Union(Interval(S(0), new_end, False, theta.right_open),
+            return Union(Interval(S.Zero, new_end, False, theta.right_open),
                          Interval(new_start, 2*S.Pi, theta.left_open, True))
         else:
             return Interval(new_start, new_end, theta.left_open, theta.right_open)
@@ -832,8 +832,8 @@ class ComplexRegion(Set):
 
         # self in polar form
         elif self.polar:
-            if S(other).is_zero:
-                r, theta = S(0), S(0)
+            if sympify(other).is_zero:
+                r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
             for element in self.psets:
@@ -857,8 +857,8 @@ class ComplexRegion(Set):
                 new_theta_interval = Intersection(theta1, theta2)
 
                 # 0 and 2*Pi means the same
-                if ((2*S.Pi in theta1 and S(0) in theta2) or
-                   (2*S.Pi in theta2 and S(0) in theta1)):
+                if ((2*S.Pi in theta1 and S.Zero in theta2) or
+                   (2*S.Pi in theta2 and S.Zero in theta1)):
                     new_theta_interval = Union(new_theta_interval,
                                                FiniteSet(0))
                 return ComplexRegion(new_r_interval*new_theta_interval,
