@@ -1203,10 +1203,29 @@ class asech(Function):
         if arg is S.ComplexInfinity:
             return S.NaN
 
-    # TODO def taylor_term(n, x, *previous_terms)
+    @staticmethod
+    @cacheit
+    def expansion_term(n, x, *previous_terms):
+        if n == 0:
+            return log(2 / x)
+        elif n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 2 and n > 2:
+                p = previous_terms[-2]
+                return p * (n - 1)**2 // (n // 2)**2 * x**2 / 4
+            else:
+                k = n // 2
+                R = RisingFactorial(S.Half , k) *  n
+                F = factorial(k) * n // 2 * n // 2
+                return -1 * R / F * x**n / 4
 
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
         """
         return sech
+
+    def _eval_rewrite_as_log(self, arg):
+        return log(1/arg + sqrt(1/arg**2 - 1))
