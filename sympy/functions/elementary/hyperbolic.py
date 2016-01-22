@@ -846,7 +846,7 @@ class asinh(Function):
         else:
             return self.func(arg)
 
-    def _eval_rewrite_as_log(self,x):
+    def _eval_rewrite_as_log(self, x):
         """
         Rewrites asinh as log function.
         """
