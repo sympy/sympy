@@ -412,6 +412,7 @@ def test_is_proper_superset():
 
     raises(ValueError, lambda: Interval(0, 1).is_proper_superset(0))
 
+
 def test_contains():
     assert Interval(0, 2).contains(1) is S.true
     assert Interval(0, 2).contains(3) is S.false
@@ -957,3 +958,20 @@ def test_issue_10337():
     raises(TypeError, lambda: FiniteSet(2) <= 3)
     raises(TypeError, lambda: FiniteSet(2) > 3)
     raises(TypeError, lambda: FiniteSet(2) >= 3)
+
+
+def test_issue_10326():
+    bad = [
+        EmptySet(),
+        FiniteSet(1),
+        Interval(1, 2),
+-       S.ComplexInfinity,
++       S.ComplexInfinity,
+        S.ImaginaryUnit,
+        S.Infinity,
+        S.NaN,
+        S.NegativeInfinity,
+        ]
+    interval = Interval(0, 5)
+    for i in bad:
+        assert i not in interval
