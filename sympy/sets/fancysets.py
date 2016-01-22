@@ -234,20 +234,30 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.utilities.iterables import iterable
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = linsolve([expr - val for val, expr in zip(other, L.expr)],
+                         L.variables).args[0]
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
+            solns = solveset(L.expr - other, L.variables[0])
 
-        for soln in solns:
-            try:
-                if soln in self.base_set:
-                    return S.true
-            except TypeError:
-                return self.base_set.contains(soln.evalf())
-        return S.false
+        if iterable(solns):
+            errs = []
+            for s in solns:
+                try:
+                    if s in self.base_set:
+                        return S.true
+                except TypeError:
+                    errs.append(s)
+            if not errs:
+                return S.false
+            solns = FiniteSet(*errs)
+            return self.base_set.contains(solns)
+        msg = filldedent('''
+            Don't know how to tell if %s contains %s''' %
+            (self, other))
+        raise NotImplementedError(msg)
 
     @property
     def is_iterable(self):
