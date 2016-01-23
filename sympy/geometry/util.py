@@ -14,7 +14,7 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import is_sequence, range, string_types
-
+from .point import Point, Point2D
 
 def idiff(eq, y, x, n=1):
     """Return ``dy/dx`` assuming that ``eq == 0``.
@@ -352,7 +352,6 @@ def closest_points(*args):
     (Point2D(62, 73), Point2D(59, 59))
 
     """
-    from .point import Point, Point2D
     from collections import deque
     from math import sqrt, pow
 
@@ -433,7 +432,6 @@ def farthest_points(*args):
     (Point2D(11, 85), Point2D(80, 89))
 
     """
-    from .point import Point, Point2D
 
     def rotatingCalipers(Points):
         def hulls(Points):
