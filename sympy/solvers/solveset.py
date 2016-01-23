@@ -12,7 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp, signsimp
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acsc, asec, arg,
@@ -401,7 +401,6 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func, domain=S.Complexes):
     """
     result = None
     if f.is_polynomial(symbol):
-
         solns = roots(f, symbol, cubics=True, quartics=True,
                       quintics=True, domain='EX')
         num_roots = sum(solns.values())
@@ -578,10 +577,20 @@ def _solveset(f, symbol, domain):
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
+            # do some very minimal simplification since
+            # repeated inversion may have left the result
+            # in a state that other solvers (e.g. poly)
+            # would have simplified; this is done here
+            # rather than in the inverter since here it
+            # is only done once whereas there it would
+            # be repeated for each step of the inversion
+            if isinstance(rhs_s, FiniteSet):
+                rhs_s = FiniteSet(*[Mul(*
+                    signsimp(i).as_content_primitive())
+                    for i in rhs_s])
             result = rhs_s
         elif isinstance(rhs_s, FiniteSet):
-            equations = [lhs - rhs for rhs in rhs_s]
-            for equation in equations:
+            for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
                     if any(_has_rational_power(g, symbol)[0]
                            for g in equation.args) or _has_rational_power(

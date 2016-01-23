@@ -1072,3 +1072,9 @@ def test_issue_9913():
 
 def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
+
+
+def test_simplification():
+    eq = x + (a - b)/(-2*a + 2*b)
+    assert solveset(eq, x) == FiniteSet(S.Half)
+    assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
