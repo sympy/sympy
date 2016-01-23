@@ -85,7 +85,7 @@ def _invert_real(f, g_ys, symbol):
     if not f.has(symbol):
         raise ValueError("Inverse of constant function doesn't exist")
 
-    if f is symbol:
+    if f == symbol:
         return (f, g_ys)
 
     n = Dummy('n', real=True)
@@ -217,7 +217,7 @@ def _invert_complex(f, g_ys, symbol):
     if not f.has(symbol):
         raise ValueError("Inverse of constant function doesn't exist")
 
-    if f is symbol:
+    if f == symbol:
         return (f, g_ys)
 
     n = Dummy('n')
@@ -434,7 +434,7 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func, domain=S.Complexes):
             if gen != symbol:
                 y = Dummy('y')
                 lhs, rhs_s = invert_func(gen, y, symbol)
-                if lhs is symbol:
+                if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
