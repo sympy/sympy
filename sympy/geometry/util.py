@@ -354,13 +354,15 @@ def closest_points(*args):
     """
     from .point import Point, Point2D
     from collections import deque
-    import numbers
     from math import sqrt, pow
 
     points = list(args)
     for point in points:
+        if not isinstance(point, Point2D):
+            raise NotImplementedError('The point must be an instance of Point2D.')
         if not all([point.x.is_number, point.y.is_number]):
-            raise NotImplementedError('The input must be a set of 2D points')
+            raise NotImplementedError('The point co-ordinates must be real numbers.')
+
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     p = points
@@ -369,23 +371,24 @@ def closest_points(*args):
     box = deque()
     box.append(p[0])
 
-    best_dist = sqrt(pow(p[1].y-box[0].y, 2)+pow(p[1].x-box[0].x, 2))
+    best_dist = sqrt(pow(p[1].y - box[0].y, 2) + pow(p[1].x - box[0].x, 2))
+
     left = 0
     i = 1
     best_pair = (p[0], p[1])
 
     while i < len(p):
         j = 0
-        while left < i and p[i].x-p[left].x > best_dist:
+        while left < i and p[i].x - p[left].x > best_dist:
             box.remove(p[left])
-            left = left+1
+            left = left + 1
 
         for j in range(len(box)):
-            if best_dist != min(best_dist, sqrt(pow(p[i].y-box[j].y, 2)+pow(p[i].x-box[j].x, 2))):
+            if best_dist != min(best_dist, sqrt(pow(p[i].y - box[j].y, 2) + pow(p[i].x - box[j].x, 2))):
                 best_pair = (p[i], box[j])
-                best_dist = min(best_dist, sqrt(pow(p[i].y-box[j].y, 2)+pow(p[i].x-box[j].x, 2)))
+                best_dist = min(best_dist, sqrt(pow(p[i].y - box[j].y, 2) + pow(p[i].x - box[j].x, 2)))
         box.append(p[i])
-        i = i+1
+        i = i + 1
 
     return best_pair
 
@@ -435,7 +438,7 @@ def farthest_points(*args):
     def rotatingCalipers(Points):
         def hulls(Points):
             def orientation(p, q, r):
-                return (q.y-p.y) * (r.x-p.x) - (q.x-p.x) * (r.y-p.y)
+                return (q.y - p.y) * (r.x - p.x) - (q.x - p.x) * (r.y - p.y)
             U = []
             L = []
             for p in Points:
@@ -458,20 +461,22 @@ def farthest_points(*args):
                 i += 1
             # still points left on both lists, compare slopes of next hull edges
             # being careful to avoid divide-by-zero in slope calculation
-            elif (U[i+1].y-U[i].y) * (L[j].x-L[j-1].x) > \
-                    (L[j].y-L[j-1].y) * (U[i+1].x-U[i].x):
+            elif (U[i+1].y - U[i].y) * (L[j].x - L[j-1].x) > \
+                    (L[j].y - L[j-1].y) * (U[i+1].x - U[i].x):
                 i += 1
             else:
                 j -= 1
 
     points = list(args)
     for point in points:
+        if not isinstance(point, Point2D):
+            raise NotImplementedError('The point must be an instance of Point2D.')
         if not all([point.x.is_number, point.y.is_number]):
-            raise NotImplementedError('The input must be a set of 2D points')
+            raise NotImplementedError('The point co-ordinates must be real numbers.')
     if len(points) < 2:
         raise NotImplementedError('At-least 2 points must be inserted')
     points.sort(key=lambda x: x.args)
-    diam, pair = max([((h.x-q.x)**2 + (h.y-q.y)**2, (h, q))
+    diam, pair = max([((h.x - q.x)**2 + (h.y - q.y)**2, (h, q))
                      for h, q in rotatingCalipers(points)])
     return pair
 
