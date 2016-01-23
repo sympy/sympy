@@ -1122,4 +1122,8 @@ def test_issue_4968():
 
 def test_issue_7827():
     N = symbols('N', integer=True)
-    assert integrate(summation(sin(n*x), (n,1,N)), x) == Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
+    assert integrate(summation(sin(n*x), (n,1,N)), x) ==\
+     Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
+    c = symbols('c', function=True)
+    assert integrate(Sum(c(n)*x**n, (n, 0, oo)), x) ==\
+     Sum(Piecewise((c(n)*log(x), Eq(n, -1)), (x**(n + 1)*c(n)/(n + 1), True)), (n, 0, oo))
