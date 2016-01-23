@@ -665,5 +665,12 @@ def test_issue_10304():
 
 def test_issue_10401():
     x = Symbol('x')
-    assert simplify(Eq(1 / (x+1), 0)) == False
-    assert simplify(Eq(x / (x+1), 1)) == False
+    y = Symbol('y', positive=True)
+    z = Symbol('z', negative=True)
+    assert simplify(Eq(1 / (x+1), 0)) is S.false
+    assert simplify(Eq(x / (x+1), 1)) is S.false
+    assert simplify(Lt(y/z ,0) ) is S.true
+    assert simplify(Lt(y/x ,0) ) == Lt(y/x ,0)
+    f = x/(x + 1)
+    g = 1/(1 + 1/x)
+    assert Eq(f, g) is not S.true

@@ -171,10 +171,8 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return l
 
     def _eval_simplify(self, ratio, measure):
-        from sympy.simplify import simplify
-        from sympy.simplify.simplify import fraction
         from sympy import Tuple, Basic
-
+        from sympy.logic.boolalg import Xor
         r = self
         r = r.func(*[i.simplify(ratio=ratio, measure=measure)
             for i in r.args])
@@ -191,8 +189,12 @@ class Relational(Boolean, Expr, EvalfMixin):
                 r = r.func._eval_relation(v, S.Zero)
 
             numer, denom = dif.as_numer_denom()
-            if numer.is_zero is False and numer.is_number is True:
-                return r.func(numer, S.Zero)
+
+            if numer.is_zero is False:
+                if r.func not in (Gt, Ge, Lt, Le):
+                    return r.func(numer, S.Zero)
+                if numer.is_positive is not None and denom.is_positive is not None:
+                    return not xor(numer.is_positive, denom.is_positive)
 
         r = r.canonical
         if measure(r) < ratio*measure(self):
