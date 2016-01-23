@@ -1123,4 +1123,3 @@ def test_issue_4968():
 def test_issue_7827():
     N = symbols('N', integer=True)
     assert integrate(summation(sin(n*x), (n,1,N)), x) == Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
-
