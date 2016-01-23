@@ -12,8 +12,8 @@ There are three types of functions implemented in SymPy:
        with dummy variables) but have no name:
            f = Lambda(x, exp(x)*x)
            f = Lambda((x, y), exp(x)*y)
-    The fourth type of functions are composites, like (sin + cos)(x); these work in
-    SymPy core, but are not yet part of SymPy.
+    The fourth type of functions are composites, like (sin + cos)(x);
+    these work in SymPy core, but are not yet part of SymPy.
 
     Examples
     ========
@@ -208,7 +208,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
             # things passing through here:
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
-            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
+            #  - AppliedUndef with given nargs like
+            #   Function('f', nargs=1)(1).nargs
             # Canonicalize nargs here; change to set in nargs.
             if is_sequence(obj.nargs):
                 obj.nargs = tuple(ordered(set(obj.nargs)))
@@ -467,6 +468,7 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+
             def bad(m):
                 from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
@@ -478,15 +480,16 @@ class Function(Application, Expr):
                 # pass
                 if isinstance(m, mpf):
                     m = m._mpf_
-                    return m[1] !=1 and m[-1] == 1
+                    return m[1] != 1 and m[-1] == 1
                 elif isinstance(m, mpc):
                     m, n = m._mpc_
-                    return m[1] !=1 and m[-1] == 1 and \
-                        n[1] !=1 and n[-1] == 1
+                    return m[1] != 1 and m[-1] == 1 and \
+                        n[1] != 1 and n[-1] == 1
                 else:
                     return False
             if any(bad(a) for a in args):
-                raise ValueError  # one or more args failed to compute with significance
+                # one or more args failed to compute with significance
+                raise ValueError
         except ValueError:
             return
 
@@ -602,8 +605,8 @@ class Function(Application, Expr):
             e = self
             e1 = e.expand()
             if e == e1:
-                #for example when e = sin(x+1) or e = sin(cos(x))
-                #let's try the general algorithm
+                # for example when e = sin(x+1) or e = sin(cos(x))
+                # let's try the general algorithm
                 term = e.subs(x, S.Zero)
                 if term.is_finite is False or term is S.NaN:
                     raise PoleError("Cannot expand %s around 0" % (self))
@@ -721,6 +724,7 @@ class AppliedUndef(Function):
         func = sage.function(fname, *args)
         return func
 
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -735,6 +739,7 @@ class UndefinedFunction(FunctionClass):
 
 UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
                                          (s.class_key() == o.class_key()))
+
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -812,7 +817,8 @@ class WildFunction(Function, AtomicExpr):
 
 class Derivative(Expr):
     """
-    Carries out differentiation of the given expression with respect to symbols.
+    Carries out differentiation of the given expression with respect to
+    symbols.
 
     expr must define ._eval_derivative(symbol) method that returns
     the differentiation result. This function only needs to consider the
@@ -908,8 +914,8 @@ class Derivative(Expr):
     f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u,
     v).diff(u) at u = f(t).
 
-    We do not allow derivatives to be taken with respect to expressions where this
-    is not so well defined.  For example, we do not allow expr.diff(x*y)
+    We do not allow derivatives to be taken with respect to expressions where
+    this is not so well defined.  For example, we do not allow expr.diff(x*y)
     because there are multiple ways of structurally defining where x*y appears
     in an expression, some of which may surprise the reader (for example, a
     very strict definition would have that (x*y*z).diff(x*y) == 0).
@@ -1099,7 +1105,7 @@ class Derivative(Expr):
             # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
             if evaluate:
-                #TODO: check if assumption of discontinuous derivatives exist
+                # TODO: check if assumption of discontinuous derivatives exist
                 variables = cls._sort_variables(variables)
             # Here we *don't* need to reinject evaluate into assumptions
             # because we are done with it and it is not an assumption that
@@ -1427,7 +1433,7 @@ class Lambda(Expr):
             # for example, https://github.com/numpy/numpy/issues/1697.
             # The ideal solution would be just to attach metadata to
             # the exception and change NumPy to take advantage of this.
-            ## XXX does this apply to Lambda? If not, remove this comment.
+            # XXX does this apply to Lambda? If not, remove this comment.
             temp = ('%(name)s takes exactly %(args)s '
                    'argument%(plural)s (%(given)s given)')
             raise TypeError(temp % {
@@ -1516,7 +1522,7 @@ class Subs(Expr):
         variables = list(sympify(variables))
 
         if list(uniq(variables)) != variables:
-            repeated = [ v for v in set(variables) if variables.count(v) > 1 ]
+            repeated = [v for v in set(variables) if variables.count(v) > 1]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
@@ -1533,9 +1539,11 @@ class Subs(Expr):
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
         from sympy.printing import StrPrinter
+
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
+
         def mystr(expr, **settings):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
@@ -1614,9 +1622,9 @@ class Subs(Expr):
         if s not in self.free_symbols:
             return S.Zero
         return self.func(self.expr.diff(s), self.variables, self.point).doit() \
-            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
+            + Add(*[Subs(point.diff(s) * self.expr.diff(arg),
                     self.variables, self.point).doit() for arg,
-                    point in zip(self.variables, self.point) ])
+                    point in zip(self.variables, self.point)])
 
 
 def diff(f, *symbols, **kwargs):
@@ -2019,6 +2027,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
 
 # This is a special application of two hints
 
+
 def _mexpand(expr, recursive=False):
     # expand multinomials and then expand products; this may not always
     # be sufficient to give a fully expanded expression (see
@@ -2237,12 +2246,12 @@ def count_ops(expr, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
 
-    If ``visual`` is ``False`` (default) then the sum of the coefficients of the
-    visual expression will be returned.
+    If ``visual`` is ``False`` (default) then the sum of the coefficients of
+    the visual expression will be returned.
 
-    If ``visual`` is ``True`` then the number of each type of operation is shown
-    with the core class types (or their virtual equivalent) multiplied by the
-    number of times they occur.
+    If ``visual`` is ``True`` then the number of each type of operation is
+    shown with the core class types (or their virtual equivalent)
+    multiplied by the number of times they occur.
 
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
@@ -2322,7 +2331,7 @@ def count_ops(expr, visual=False):
                 continue
 
             if a.is_Rational:
-                #-1/3 = NEG + DIV
+                # -1/3 = NEG + DIV
                 if a is not S.One:
                     if a.p < 0:
                         ops.append(NEG)
@@ -2364,7 +2373,8 @@ def count_ops(expr, visual=False):
                             ops.append(ADD)
                 if negs == len(aargs):  # -x - y = NEG + SUB
                     ops.append(NEG)
-                elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
+                # -x + y = SUB, but already recorded ADD
+                elif _coeff_isneg(aargs[0]):
                     ops.append(SUB - ADD)
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:
