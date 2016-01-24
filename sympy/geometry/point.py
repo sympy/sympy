@@ -266,6 +266,9 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
+        if not isinstance(p, Point):
+            p = Point(p)
+
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
 
     def taxicab_distance(self, p):
