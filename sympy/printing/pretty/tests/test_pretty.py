@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, ImmutableMatrix, Integral,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
@@ -2628,8 +2628,8 @@ def test_Adjoint():
         u("    T\n⎛ †⎞ \n⎝X ⎠ ")
 
 def test_pretty_Trace_issue_9044():
-    X = ImmutableMatrix([[1, 2], [3, 4]])
-    Y = ImmutableMatrix([[2, 4], [6, 8]])
+    X = Matrix([[1, 2], [3, 4]])
+    Y = Matrix([[2, 4], [6, 8]])
     ascii_str_1 = \
 """\
   /[1  2]\\
