@@ -536,15 +536,17 @@ def _solve_abs(f, symbol, domain=S.Complexes):
 
 def _solveset(f, symbol, domain):
     f = together(f)
-    _, f = f.as_independent(symbol, as_Add=False)
+    if f.is_Mul:
+        _, f = f.as_independent(symbol, as_Add=False)
     if f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
         f = a/m + h  # XXX condition `m != 0` should be added to soln
+    f = piecewise_fold(f)
 
-    solver = lambda f, x: _solveset(f, x, domain)
+    # assign the solvers to use
+    solver = lambda f, x, domain=domain: _solveset(f, x, domain)
     if domain.is_subset(S.Reals):
-        f = piecewise_fold(f)
         inverter_func = invert_real
     else:
         inverter_func = invert_complex
@@ -569,11 +571,16 @@ def _solveset(f, symbol, domain):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_real_trig(f, symbol)
     elif f.is_Piecewise:
+        dom = domain
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
         for (expr, in_set) in expr_set_pairs:
-            solns = solver(expr, symbol).intersect(in_set)
-            result = result + solns
+            if in_set.is_Relational:
+                in_set = in_set.as_set()
+            if in_set.is_Interval:
+                dom -= in_set
+            solns = solver(expr, symbol, in_set)
+            result += solns
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
