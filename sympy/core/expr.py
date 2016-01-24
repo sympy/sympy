@@ -1456,16 +1456,17 @@ class Expr(Basic, EvalfMixin):
         * .expand(log=True) to change log expr into an Add
 
         The only non-naive thing that is done here is to respect noncommutative
-        ordering of variables.
+        ordering of variables and to always return (0, 0) for `self` of zero
+        regardless of hints.
 
-        The returned tuple (i, d) has the following interpretation:
+        For nonzero `self`, the returned tuple (i, d) has the
+        following interpretation:
 
         * i will has no variable that appears in deps
         * d will be 1 or else have terms that contain variables that are in deps
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
-        * if self is anything else, either tuple (self, S.One) or (S.One, self)
-          is returned.
+        * otherwise (self, S.One) or (S.One, self) is returned.
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
@@ -1575,6 +1576,9 @@ class Expr(Basic, EvalfMixin):
         from .add import _unevaluated_Add
         from .mul import _unevaluated_Mul
         from sympy.utilities.iterables import sift
+
+        if self.is_zero:
+            return S.Zero, S.Zero
 
         func = self.func
         if hint.get('as_Add', func is Add):

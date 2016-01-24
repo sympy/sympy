@@ -567,6 +567,8 @@ def test_as_numer_denom():
 
 
 def test_as_independent():
+    assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
+    assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
     assert (2*x*sin(x) + y + x).as_independent(x) == (y, x + 2*x*sin(x))
     assert (2*x*sin(x) + y + x).as_independent(y) == (x + 2*x*sin(x), y)
 
