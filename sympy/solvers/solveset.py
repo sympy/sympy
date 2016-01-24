@@ -655,14 +655,13 @@ def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
         It is a bug, please report to the github issue tracker.
 
 
-    `solveset` uses two underlying functions `solveset_real` and
-    `solveset_complex` to solve equations. They are the solvers for real and
-    complex domain respectively. `solveset` ignores the assumptions on the
-    variable being solved for and instead, uses the `domain` parameter to
-    decide which solver to use.
-
     Notes
     =====
+
+    The output of `solveset` depends on the requested domain. It
+    ignores assumptions on the symbol procided by design: it will
+    always be clear what domain is being used without need to
+    reference to the assumptions used to ceate the symbol.
 
     Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
@@ -693,16 +692,17 @@ def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
       interface, then specify that the domain is real. Alternatively use
       `solveset\_real`.
 
+    >>> R = S.Reals
     >>> x = Symbol('x')
-    >>> solveset(exp(x) - 1, x, S.Reals)
+    >>> solveset(exp(x) - 1, x, R)
     {0}
-    >>> solveset(Eq(exp(x), 1), x, S.Reals)
+    >>> solveset(Eq(exp(x), 1), x, R)
     {0}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
 
-    >>> solveset(exp(x) > 1, x, S.Reals)
+    >>> solveset(exp(x) > 1, x, R)
     (0, oo)
 
     """
