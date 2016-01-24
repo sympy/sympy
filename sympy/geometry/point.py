@@ -10,7 +10,7 @@ Point3D
 
 from __future__ import division, print_function
 
-from sympy.core import S, sympify, Pow
+from sympy.core import S, sympify
 from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
