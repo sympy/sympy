@@ -10,7 +10,7 @@ Point3D
 
 from __future__ import division, print_function
 
-from sympy.core import S, sympify
+from sympy.core import S, sympify, Pow
 from sympy.core.compatibility import iterable, range
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
@@ -583,6 +583,40 @@ class Point2D(Point):
         """
 
         return (self.x, self.y, self.x, self.y)
+
+    def distance(self, p):
+        """The Euclidean distance from self to point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        distance : number or symbolic expression.
+
+        See Also
+        ========
+
+        sympy.geometry.line.Segment.length
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point2D
+        >>> p1, p2 = Point2D(1, 1), Point2D(4, 5)
+        >>> p1.distance(p2)
+        5
+
+        >>> from sympy.abc import x, y
+        >>> p3 = Point2D(x, y)
+        >>> p3.distance(Point2D(0, 0))
+        sqrt(x**2 + y**2)
+
+        """
+        return sqrt(Pow(self.x - p.x, 2) + Pow(self.y - p.y, 2))
 
     def is_concyclic(*points):
         """Is a sequence of points concyclic?
