@@ -194,7 +194,8 @@ class Relational(Boolean, Expr, EvalfMixin):
                 if r.func not in (Gt, Ge, Lt, Le):
                     return r.func(numer, S.Zero)
                 if numer.is_positive is not None and denom.is_positive is not None:
-                    return not xor(numer.is_positive, denom.is_positive)
+                    sign = -1 if denom.is_positive is True else 1
+                    return r.func(sign * numer, S.Zero)
 
         r = r.canonical
         if measure(r) < ratio*measure(self):
