@@ -635,6 +635,9 @@ def test_piecewise():
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
+    assert solveset(Piecewise((x + 1, x > 0), (I, True)) - I, x) == \
+        Interval(-oo, 0)
+
 
 def test_solveset_complex_polynomial():
     from sympy.abc import x, a, b, c
