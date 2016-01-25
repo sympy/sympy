@@ -322,7 +322,7 @@ class Lambdifier(object):
     # Strings that should be translated
     builtin_not_functions = {
         'I': '1j',
-        'oo': '1e400',
+#        'oo': '1e400',
     }
 
     ###
