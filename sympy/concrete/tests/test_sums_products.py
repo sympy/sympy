@@ -908,9 +908,9 @@ def test_is_convergent():
     assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
 
-def test_is_absolute_convergent():
-    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() is S.false
-    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() is S.true
+def test_is_absolutely_convergent():
+    assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent() is S.true
 
 
 @XFAIL
@@ -922,3 +922,10 @@ def test_convergent_failing():
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_10156():
+    cx = Sum(2*y**2*x, (x, 1,3))
+    e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
+    assert e.factor() == \
+        8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))

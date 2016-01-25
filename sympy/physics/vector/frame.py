@@ -1,5 +1,5 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, ImmutableMatrix as Matrix)
+                   eye, symbols, Dummy, ImmutableMatrix as Matrix)
 from sympy.core.compatibility import string_types, u, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -590,7 +590,7 @@ class ReferenceFrame(object):
                 from sympy.polys.polyerrors import CoercionFailed
                 from sympy.physics.vector.functions import kinematic_equations
                 q1, q2, q3 = amounts
-                u1, u2, u3 = dynamicsymbols('u1, u2, u3')
+                u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
                 templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                                rot_type, rot_order)
                 templist = [expand(i) for i in templist]

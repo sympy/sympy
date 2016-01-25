@@ -13,7 +13,7 @@ from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
 from sympy.sets import (FiniteSet, ConditionSet)
 
@@ -225,6 +225,7 @@ def test_is_function_class_equation():
 
 
 def test_garbage_input():
+    raises(ValueError, lambda: solveset_real(x, 1))
     raises(ValueError, lambda: solveset_real([x], x))
     raises(ValueError, lambda: solveset_real(x, pi))
     raises(ValueError, lambda: solveset_real(x, x**2))
@@ -289,25 +290,25 @@ def test_return_root_of():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = list(solveset_complex(f, x))
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
-    # if one uses solve to get the roots of a polynomial that has a RootOf
+    # if one uses solve to get the roots of a polynomial that has a CRootOf
     # solution, make sure that the use of nfloat during the solve process
     # doesn't fail. Note: if you want numerical solutions to a polynomial
     # it is *much* faster to use nroots to get them than to solve the
-    # equation only to get RootOf solutions which are then numerically
+    # equation only to get CRootOf solutions which are then numerically
     # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
     assert nfloat(list(solveset_complex(x**5 + 3*x**3 + 7, x))[0],
-                  exponent=False) == RootOf(x**5 + 3*x**3 + 7, 0).n()
+                  exponent=False) == CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
     sol = list(solveset_complex(x**6 - 2*x + 2, x))
-    assert all(isinstance(i, RootOf) for i in sol) and len(sol) == 6
+    assert all(isinstance(i, CRootOf) for i in sol) and len(sol) == 6
 
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = list(solveset_complex(f, x))
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert solveset_complex(s, x) == \
@@ -317,12 +318,12 @@ def test_return_root_of():
     # See #7876
     eq = x*(x - 1)**2*(x + 1)*(x**6 - x + 1)
     assert list(solveset_complex(eq, x)) == \
-        list(FiniteSet(-1, 0, 1, RootOf(x**6 - x + 1, 0),
-                       RootOf(x**6 - x + 1, 1),
-                       RootOf(x**6 - x + 1, 2),
-                       RootOf(x**6 - x + 1, 3),
-                       RootOf(x**6 - x + 1, 4),
-                       RootOf(x**6 - x + 1, 5)))
+        list(FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
+                       CRootOf(x**6 - x + 1, 1),
+                       CRootOf(x**6 - x + 1, 2),
+                       CRootOf(x**6 - x + 1, 3),
+                       CRootOf(x**6 - x + 1, 4),
+                       CRootOf(x**6 - x + 1, 5)))
 
 
 def test__has_rational_power():
@@ -559,6 +560,18 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
+    # issue 9565. Note: solveset_real does not solve this as it is
+    # solveset's job to handle Relationals
+    assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
+        ) == Interval(-1, 2)
+
+    # issue #10069
+    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == \
+        ConditionSet(x, Eq((1 - Abs(x - 1))/Abs(x - 1) > 0, 0),
+            S.Reals)
+    assert solveset(abs(1/(x - 1)) - 1 > 0, x, domain=S.Reals
+        ) == Union(Interval.open(0, 1), Interval.open(1, 2))
+
 
 @XFAIL
 def test_rewrite_trigh():
@@ -731,6 +744,7 @@ def test_solve_complex_unsolvable():
     solution = solveset_complex(cos(x) - S.Half, x)
     assert solution == unsolved_object
 
+
 @XFAIL
 def test_solve_trig_simplified():
     from sympy.abc import n
@@ -840,6 +854,12 @@ def test_solve_lambert():
 def test_solveset():
     x = Symbol('x')
     raises(ValueError, lambda: solveset(x + y))
+    raises(ValueError, lambda: solveset(x, 1))
+
+    assert solveset(0, domain=S.Reals) == S.Reals
+    assert solveset(1) == S.EmptySet
+    assert solveset(True, domain=S.Reals) == S.Reals  # issue 10197
+    assert solveset(False, domain=S.Reals) == S.EmptySet
 
     assert solveset(exp(x) - 1, domain=S.Reals) == FiniteSet(0)
     assert solveset(exp(x) - 1, x, S.Reals) == FiniteSet(0)
@@ -959,8 +979,7 @@ def test_linsolve():
     A = Matrix([[a, b], [c, d]])
     B = Matrix([[e], [f]])
     system2 = (A, B)
-    sol = FiniteSet((-b*(f - c*e/a)/(a*(d - b*c/a)) + e/a,
-                    (f - c*e/a)/(d - b*c/a)))
+    sol = FiniteSet(((-b*f + d*e)/(a*d - b*c), (a*f - c*e)/(a*d - b*c)))
     assert linsolve(system2, [x, y]) == sol
 
     # Test for Dummy Symbols issue #9667
@@ -975,6 +994,22 @@ def test_linsolve():
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
     b = Matrix([0, 0, 1])
     assert linsolve((A, b), (x, y, z)) == EmptySet()
+
+    # Issue #10056
+    A, B, J1, J2 = symbols('A B J1 J2')
+    Augmatrix = Matrix([
+        [2*I*J1, 2*I*J2, -2/J1],
+        [-2*I*J2, -2*I*J1, 2/J2],
+        [0, 2, 2*I/(J1*J2)],
+        [2, 0,  0],
+        ])
+
+    assert linsolve(Augmatrix, A, B) == FiniteSet((0, I/(J1*J2)))
+
+    # Issue #10121 - Assignment of free variables
+    a, b, c, d, e = symbols('a, b, c, d, e')
+    Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
+    assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
 
 
 def test_issue_9556():
@@ -1027,3 +1062,7 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+
+def test_issue_10397():
+    assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)

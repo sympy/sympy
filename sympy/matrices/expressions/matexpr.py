@@ -50,6 +50,11 @@ class MatrixExpr(Basic):
         Inverse
     """
 
+    # Should not be considered iterable by the
+    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # iterable (i.e., explicit matrices) should set this to True.
+    _iterable = False
+
     _op_priority = 11.0
 
     is_Matrix = True

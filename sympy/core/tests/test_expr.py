@@ -315,7 +315,7 @@ def test_atoms():
     assert Rational(1, 2).atoms() == set([S.Half])
     assert Rational(1, 2).atoms(Symbol) == set([])
 
-    assert sin(oo).atoms(oo) == set([oo])
+    assert sin(oo).atoms(oo) == set()
 
     assert Poly(0, x).atoms() == set([S.Zero])
     assert Poly(1, x).atoms() == set([S.One])
@@ -1610,6 +1610,8 @@ def test_round():
     assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
+    f = Function('f')
+    raises(TypeError, lambda: f(1).round())
 
     # exact magnitude of 10
     assert str(S(1).round()) == '1.'
@@ -1686,7 +1688,13 @@ def test_issue_6325():
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
 
+
 def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+
+def test_issue_10161():
+    x = symbols('x', real=True)
+    assert x*abs(x)*abs(x) == x**3

@@ -11,7 +11,7 @@ from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application
+from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
@@ -514,7 +514,7 @@ class Not(BooleanFunction):
         (-oo, 0]
         """
         if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement
+            return self.args[0].as_set().complement(S.Reals)
         else:
             raise NotImplementedError("Sorry, Not.as_set has not yet been"
                                       " implemented for mutivariate"
@@ -913,6 +913,16 @@ class ITE(BooleanFunction):
     def to_nnf(self, simplify=True):
         a, b, c = self.args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+
+    def _eval_derivative(self, x):
+        return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
+
+    # the diff method below is copied from Expr class
+    def diff(self, *symbols, **assumptions):
+        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *new_symbols, **assumptions)
+
 
 ### end class definitions. Some useful methods
 

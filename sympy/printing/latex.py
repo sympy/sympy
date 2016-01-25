@@ -280,6 +280,19 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Cycle(self, expr):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if str(expr) == '()':
+            return r"\left( \right)"
+        expr_perm = Permutation(expr).cyclic_form
+        term_tex = ''
+        for i in expr_perm:
+            term_tex += str(i).replace(',', r"\;")
+        term_tex = term_tex.replace('[', r"\left( ")
+        term_tex = term_tex.replace(']', r"\right)")
+        return term_tex
+
+    _print_Permutation = _print_Cycle
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
@@ -410,11 +423,9 @@ class LatexPrinter(Printer):
         elif self._settings['fold_frac_powers'] \
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
-            base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
+            base, p, q = self.parenthesize(expr.base, PRECEDENCE['Pow']), expr.exp.p, expr.exp.q
             if expr.base.is_Function:
                 return self._print(expr.base, "%s/%s" % (p, q))
-            if self._needs_brackets(expr.base):
-                return r"\left(%s\right)^{%s/%s}" % (base, p, q)
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
             # Things like 1/x
@@ -761,18 +772,12 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        if self._needs_brackets(expr.args[0]):
-            tex = r"\Re {\left (%s \right )}" % self._print(expr.args[0])
-        else:
-            tex = r"\Re{%s}" % self._print(expr.args[0])
+        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
 
         return self._do_exponent(tex, exp)
 
     def _print_im(self, expr, exp=None):
-        if self._needs_brackets(expr.args[0]):
-            tex = r"\Im {\left ( %s \right )}" % self._print(expr.args[0])
-        else:
-            tex = r"\Im{%s}" % self._print(expr.args[0])
+        tex = r"\Im{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
 
         return self._do_exponent(tex, exp)
 
@@ -935,11 +940,7 @@ class LatexPrinter(Printer):
             return r"C%s" % tex
 
     def _print_subfactorial(self, expr, exp=None):
-        x = expr.args[0]
-        if self._needs_brackets(x):
-            tex = r"!\left(%s\right)" % self._print(x)
-        else:
-            tex = "!" + self._print(x)
+        tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -947,11 +948,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_factorial(self, expr, exp=None):
-        x = expr.args[0]
-        if self._needs_brackets(x):
-            tex = r"\left(%s\right)!" % self._print(x)
-        else:
-            tex = self._print(x) + "!"
+        tex = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -959,11 +956,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_factorial2(self, expr, exp=None):
-        x = expr.args[0]
-        if self._needs_brackets(x):
-            tex = r"\left(%s\right)!!" % self._print(x)
-        else:
-            tex = self._print(x) + "!!"
+        tex = r"%s!!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -981,10 +974,7 @@ class LatexPrinter(Printer):
 
     def _print_RisingFactorial(self, expr, exp=None):
         n, k = expr.args
-        if self._needs_brackets(n):
-            base = r"\left(%s\right)" % self._print(n)
-        else:
-            base = self._print(n)
+        base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
 
         tex = r"{%s}^{\left(%s\right)}" % (base, self._print(k))
 
@@ -992,10 +982,7 @@ class LatexPrinter(Printer):
 
     def _print_FallingFactorial(self, expr, exp=None):
         n, k = expr.args
-        if self._needs_brackets(k):
-            sub = r"\left(%s\right)" % self._print(k)
-        else:
-            sub = self._print(k)
+        sub = r"%s" % self.parenthesize(k, PRECEDENCE['Func'])
 
         tex = r"{\left(%s\right)}_{%s}" % (self._print(n), sub)
 
@@ -1538,6 +1525,10 @@ class LatexPrinter(Printer):
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_AccumulationBounds(self, i):
+        return r"\langle %s, %s\rangle" % \
+                (self._print(i.min), self._print(i.max))
+
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
@@ -1648,8 +1639,10 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_RootOf(self, root):
+    def _print_ComplexRootOf(self, root):
         cls = root.__class__.__name__
+        if cls == "ComplexRootOf":
+            cls = "CRootOf"
         expr = self._print(root.expr)
         index = root.index
         if cls in accepted_latex_functions:

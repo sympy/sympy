@@ -10,7 +10,7 @@ from sympy.integrals.transforms import (mellin_transform,
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
-    EulerGamma, erf, besselj, bessely, besseli, besselk,
+    EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
     combsimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
@@ -478,7 +478,7 @@ def test_laplace_transform():
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == ((-erf(s/2) + 1)*exp(s**2/4)/s, 0, True)
+    assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
 
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)

@@ -2,7 +2,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE)
+    true, false, And, Or, Not, ITE, Min, Max)
 from sympy.printing.lambdarepr import LambdaPrinter
 import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -578,6 +578,13 @@ def test_issue_2790():
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
+
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+
+def test_Min_Max():
+    # see gh-10375
+    assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
+    assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3

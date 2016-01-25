@@ -293,8 +293,23 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Cycle(self, dc):
-        from sympy.combinatorics.permutations import Permutation
-        return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        # for Empty Cycle
+        if dc == Cycle():
+            cyc = stringPict('')
+            return prettyForm(*cyc.parens())
+
+        dc_list = Permutation(dc.list()).cyclic_form
+        # for Identity Cycle
+        if dc_list == []:
+            cyc = self._print(dc.size - 1)
+            return prettyForm(*cyc.parens())
+
+        cyc = stringPict('')
+        for i in dc_list:
+            l = self._print(str(tuple(i)).replace(',', ''))
+            cyc = prettyForm(*cyc.right(l))
+        return cyc
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
@@ -734,6 +749,13 @@ class PrettyPrinter(Printer):
             else:
                 args[i] = self._print(a)
 
+        return prettyForm.__mul__(*args)
+
+    def _print_DotProduct(self, expr):
+        args = list(expr.args)
+
+        for i, a in enumerate(args):
+            args[i] = self._print(a)
         return prettyForm.__mul__(*args)
 
     def _print_MatPow(self, expr):
@@ -1424,7 +1446,7 @@ class PrettyPrinter(Printer):
             from sympy import Pow
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:
-            prod_char = u('\xd7')
+            prod_char = u("\N{MULTIPLICATION SIGN}") if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
                                    parenthesize=lambda set: set.is_Union or
                                    set.is_Intersection or set.is_ProductSet)
@@ -1468,19 +1490,27 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_AccumuBounds(self, i):
+        left = '<'
+        right = '>'
+
+        return self._print_seq(i.args[:2], left, right)
+
     def _print_Intersection(self, u):
 
-        delimiter = ' %s ' % pretty_atom('Intersection')
+        delimiter = ' %s ' % pretty_atom('Intersection', 'n')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize=lambda set: set.is_ProductSet or set.is_Union)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Union or set.is_Complement)
 
     def _print_Union(self, u):
 
-        union_delimiter = ' %s ' % pretty_atom('Union')
+        union_delimiter = ' %s ' % pretty_atom('Union', 'U')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Intersection or set.is_Complement)
 
     def _print_SymmetricDifference(self, u):
         if not self._use_unicode:
@@ -1673,10 +1703,10 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
-    def _print_RootOf(self, expr):
+    def _print_ComplexRootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
         pform = prettyForm(*self._print_seq(args).parens())
-        pform = prettyForm(*pform.left('RootOf'))
+        pform = prettyForm(*pform.left('CRootOf'))
         return pform
 
     def _print_RootSum(self, expr):

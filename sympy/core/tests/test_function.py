@@ -290,6 +290,12 @@ def test_deriv1():
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
 
+    # See issue 8510
+    assert f(x, x + z).diff(x) == Subs(Derivative(f(y, x + z), y), Tuple(y), Tuple(x)) \
+            + Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x + z))
+    assert f(x, x**2).diff(x) == Subs(Derivative(f(y, x**2), y), Tuple(y), Tuple(x)) \
+            + 2*x*Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x**2))
+
 
 def test_deriv2():
     assert (x**3).diff(x) == 3*x**2
@@ -596,7 +602,7 @@ def test_issue_4711():
 
 def test_nfloat():
     from sympy.core.basic import _aresame
-    from sympy.polys.rootoftools import RootOf
+    from sympy.polys.rootoftools import rootof
 
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
@@ -623,7 +629,7 @@ def test_nfloat():
         9.99999999800000e-11
 
     # issue 7122
-    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
 

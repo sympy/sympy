@@ -207,23 +207,15 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*sin(oo)).n() == S.Zero
-    assert (0/sin(oo)).n() == S.Zero
     assert (0*E**(oo)).n() == S.NaN
     assert (0/E**(oo)).n() == S.Zero
 
-    assert (0+sin(oo)).n() == S.NaN
-    assert (0-sin(oo)).n() == S.NaN
     assert (0+E**(oo)).n() == S.Infinity
     assert (0-E**(oo)).n() == S.NegativeInfinity
 
-    assert (5*sin(oo)).n() == S.NaN
-    assert (5/sin(oo)).n() == S.NaN
     assert (5*E**(oo)).n() == S.Infinity
     assert (5/E**(oo)).n() == S.Zero
 
-    assert (5+sin(oo)).n() == S.NaN
-    assert (5-sin(oo)).n() == S.NaN
     assert (5+E**(oo)).n() == S.Infinity
     assert (5-E**(oo)).n() == S.NegativeInfinity
 
@@ -251,6 +243,9 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3}) == 3
     assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.}) == 3
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
 
 def test_evalf_trig_zero_detection():
@@ -481,3 +476,7 @@ def test_issue_9326():
     d2 = Dummy('d')
     e = d1 + d2
     assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+
+
+def test_issue_10323():
+    assert ceiling(sqrt(2**30 + 1)) == 2**15 + 1

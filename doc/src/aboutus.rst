@@ -429,6 +429,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinay: sympy.vector .del print changed to .delop as it is accesed
 #. Prashant Tyagi: remove wrong logic lines in sets.py
 #. Matthew Davis: Fixed documentation typos
+#. Jack Kemp: Fix incorrect assignment of free variables in linsolve
+#. Kshitij Saraogi: Parenthesized printing of Intersections
+#. Arafat Dad Khan: improve detection of polygon/ellipse intersection
+#. Sam Tygier: remove redundant simplification from Line
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

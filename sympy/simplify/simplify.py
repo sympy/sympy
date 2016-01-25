@@ -1128,7 +1128,12 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         return sympify(as_int(expr))
     except (TypeError, ValueError):
         pass
-    expr = sympify(expr)
+    expr = sympify(expr).xreplace({
+        Float('inf'): S.Infinity,
+        Float('-inf'): S.NegativeInfinity,
+        })
+    if expr is S.Infinity or expr is S.NegativeInfinity:
+        return expr
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance)
 
@@ -1166,7 +1171,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             # We'll be happy with low precision if a simple fraction
             if not (tolerance or full):
                 mpmath.mp.dps = 15
-                rat = mpmath.findpoly(xv, 1)
+                rat = mpmath.pslq([xv, 1])
                 if rat is not None:
                     return Rational(-int(rat[1]), int(rat[0]))
             mpmath.mp.dps = prec
@@ -1215,6 +1220,7 @@ def _real_to_rational(expr, tolerance=None):
     sqrt(x)/10 + 19/25
 
     """
+    inf = Float('inf')
     p = expr
     reps = {}
     reduce_num = None
@@ -1234,7 +1240,9 @@ def _real_to_rational(expr, tolerance=None):
             if float and not r:
                 r = Rational(float)
             elif not r.is_Rational:
-                if float < 0:
+                if float == inf or float == -inf:
+                    r = S.ComplexInfinity
+                elif float < 0:
                     float = -float
                     d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
                     r = -Rational(str(float/d))*d
