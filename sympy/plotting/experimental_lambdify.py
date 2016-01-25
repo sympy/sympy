@@ -587,7 +587,17 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-            return template % (func_name, self.tree2str(argtree))
+
+            # Wrapping should only happen on the outermost expression, which
+            # is the only thing we know will be a number.
+            float_wrap_evalf = self.float_wrap_evalf
+            complex_wrap_evalf = self.complex_wrap_evalf
+            self.float_wrap_evalf = False
+            self.complex_wrap_evalf = False
+            ret =  template % (func_name, self.tree2str_translate(argtree))
+            self.float_wrap_evalf = float_wrap_evalf
+            self.complex_wrap_evalf = complex_wrap_evalf
+            return ret
 
     ##############################################################################
     # The namespace constructors
