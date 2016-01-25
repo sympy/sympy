@@ -11,10 +11,11 @@ from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import string
 import re as _re
-
+import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -288,6 +289,21 @@ class Wild(Symbol):
     >>> E.match(a*b)
     {a_: 2, b_: x**3*y*z}
 
+    Make warning when user input is invalid :
+
+    >>> from sympy import Wild
+    >>> theta1, theta2, rho = var("theta1, theta2, rho")
+    >>> S1 = sin(theta1)
+    >>> C1 = cos(theta1)
+    >>> from sympy.abc import X,Y,Z
+    >>> X1 = Wild("X1", exclude=[rho, theta1, theta2])
+    >>> Y1 = Wild("Y1", exclude=[rho, theta1, theta2])
+    >>> Z1 = Wild("Z1", exclude=[rho, theta1, theta2])
+    >>> eq = -Y + (-X + Z) * cos(theta1) + (X + Y) * sin(theta1)
+    >>> eq.match(X1 + Y1 * S1 + Z1)
+    SymPyDeprecationWarning: enter valid match pattern
+    >>> eq.match(X1 * C1 + Y1 * S1)
+    SymPyDeprecationWarning: enter valid match pattern
     """
     is_Wild = True
 
@@ -319,8 +335,12 @@ class Wild(Symbol):
             return None
         if any(not f(expr) for f in self.properties):
             return None
-        repl_dict = repl_dict.copy()
         repl_dict[self] = expr
+
+        # make warning when matches not find any solution
+        if all(repl_dict[item] == 0 for item in repl_dict):
+            warnings.warn("enter valid match pattern", SymPyDeprecationWarning)
+
         return repl_dict
 
     def __call__(self, *args, **kwargs):

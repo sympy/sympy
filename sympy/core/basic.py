@@ -1492,7 +1492,6 @@ class Basic(with_metaclass(ManagedProperties)):
         {p_: 2*x - 2}
         >>> (2/x).match(p*x, old=True)
         {p_: 2/x**2}
-
         """
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
