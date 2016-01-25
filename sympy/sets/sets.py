@@ -4,6 +4,7 @@ from itertools import product
 
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
@@ -965,9 +966,12 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        if other.is_real is False or other is S.NegativeInfinity or other is S.Infinity:
+        if not isinstance(other, Expr) or (
+                other is S.Infinity or
+                other is S.NegativeInfinity or
+                other is S.NaN or
+                other is S.ComplexInfinity) or other.is_real is False:
             return false
-
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
