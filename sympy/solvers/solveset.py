@@ -1287,8 +1287,8 @@ def linsolve(system, *symbols):
 
 def check_result(f, symbol, result):
     for res in result:
-        if(f.subs(symbol,res) == 0):
-            return result
+        if(sympify(f.subs(symbol,res)) == 0):
+            continue
         else:
             return S.EmptySet
-
+    return result
