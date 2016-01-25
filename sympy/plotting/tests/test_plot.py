@@ -1,4 +1,4 @@
-from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
+from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
@@ -213,11 +213,11 @@ def plot_and_save(name):
     p = plot(i, (y, 1, 5))
     p.save(tmp_file('%s_advanced_integral' % name))
 
-    s = summation(1/x**y, (x, 1, oo))
+    s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
     p.save(tmp_file('%s_advanced_inf_sum' % name))
 
-    p = plot(summation(1/x, (x, 1, y)), (y, 2, 10), show=False)
+    p = plot(Sum(1/x, (x, 1, y)), (y, 2, 10), show=False)
     p[0].only_integers = True
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum' % name))
