@@ -964,7 +964,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if isinstance(f, (Expr, Number)):
         if domain is S.Reals:
-            return solveset_real(f, symbol)
+            return check_result(f, symbol, solveset_real(f, symbol))
         elif domain is S.Complexes:
             return solveset_complex(f, symbol)
         elif domain.is_subset(S.Reals):
@@ -1283,3 +1283,12 @@ def linsolve(system, *symbols):
     # Return solutions
     solution = FiniteSet(tuple(solution))
     return solution
+
+
+def check_result(f, symbol, result):
+    for res in result:
+        if(f.subs(symbol,res) == 0):
+            return result
+        else:
+            return S.EmptySet
+
