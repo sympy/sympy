@@ -3,39 +3,28 @@ from __future__ import print_function, division
 '''
 Use llvmlite to create executable functions from Sympy expressions
 
-  Prerequisites
-  -------------
-  LLVM - http://llvm.org/
-  llvmlite - https://github.com/numba/llvmlite
-
-Examples:
-
-Scalar expression
------------------
-  import sympy.printing.llvmlitecode as g
-
-  a = Symbol('a')
-  e = a*a + a + 1
-  e1 = g.get_jit_callable(e, args=[a])
-  print(e1(1.1), e.subs('a',1.1))
+This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
 
-import sympy
 import ctypes
 
 from sympy.external import import_module
+from sympy.printing.printer import Printer
+from sympy import S
 
-ll = import_module('llvmlite.ir').ir
-llvm = import_module('llvmlite.binding').binding
+llvmlite = import_module('llvmlite')
+if llvmlite:
+    ll = import_module('llvmlite.ir').ir
+    llvm = import_module('llvmlite.binding').binding
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_native_asmprinter()
 
-llvm.initialize()
-llvm.initialize_native_target()
-llvm.initialize_native_asmprinter()
 
-
-class LLVMJitPrinter(sympy.printing.printer.Printer):
+class LLVMJitPrinter(Printer):
+    '''Convert expressions to LLVM IR'''
     def __init__(self, *args, **kwargs):
-        kwargs.pop('args')
+        kwargs.pop('func_args')
         super(LLVMJitPrinter, self).__init__(*args, **kwargs)
         self.fp_type = ll.DoubleType()
         self.int_type = ll.IntType(64)
@@ -52,9 +41,9 @@ class LLVMJitPrinter(sympy.printing.printer.Printer):
 
     def _print_Pow(self, expr):
         base0 = self._print(expr.base)
-        if expr.exp == sympy.S.NegativeOne:
+        if expr.exp == S.NegativeOne:
             return self.builder.fdiv(ll.Constant(self.fp_type, 1.0), base0)
-        if expr.exp == sympy.S.Half:
+        if expr.exp == S.Half:
             fn_type = ll.FunctionType(self.fp_type, [self.fp_type])
             fn = ll.Function(self.module, fn_type, "sqrt")
             return self.builder.call(fn, [base0], "sqrt")
@@ -98,32 +87,29 @@ link_names = set()
 current_link_suffix = 0
 
 
-def llvm_jit_code(expr, args=None, link_name=None):
+def llvm_jit_code(expr, func_args=None):
+    """Create a native code function from a Sympy expression"""
+
     global exe_engines, current_link_suffix
     module = ll.Module('mod1')
-    lj = LLVMJitPrinter(args=args)
+    lj = LLVMJitPrinter(func_args=func_args)
 
     fp_type = ll.DoubleType()
     arg_types = []
-    for arg in args:
+    for arg in func_args:
         arg_type = fp_type
         arg_types.append(arg_type)
 
-    if not link_name:
-        default_link_name = 'jit_func'
-        current_link_suffix += 1
-        link_name = default_link_name + str(current_link_suffix)
-    if link_name in link_names:
-        print("Error, name already used: %s" % link_name)
-        return
-
+    default_link_name = 'jit_func'
+    current_link_suffix += 1
+    link_name = default_link_name + str(current_link_suffix)
     link_names.add(link_name)
 
     fn_type = ll.FunctionType(fp_type, arg_types)
     fn = ll.Function(module, fn_type, name=link_name)
     lj.module = module
     lj.param_dict = {}
-    for i, a in enumerate(args):
+    for i, a in enumerate(func_args):
         name = str(a)
         fn.args[i].name = name
         lj.param_dict[name] = fn.args[i]
@@ -163,11 +149,40 @@ def llvm_jit_code(expr, args=None, link_name=None):
     return fptr
 
 
-def get_jit_callable(expr, args=None, link_name=None):
-    '''Create an executable function from a Sympy expression'''
-    fptr = llvm_jit_code(expr, args, link_name)
+def get_jit_callable(expr, func_args=None):
+    '''Compile function from a Sympy expression
+
+    Parameters
+    ==========
+    expr : Expr
+        Expression to compile.
+    func_args : List of Symbol
+        Arguments to the generated function.  Usually the free symbols in
+        the expression.  Currently each one is assumed to convert to
+        a double precision scalar.
+
+    Returns
+    =======
+    Compiled function that can evaluate the expression.
+
+    Examples
+    ========
+    >>> import sympy.printing.llvmjitcode as jit
+    >>> from sympy.abc import a
+    >>> e = a*a + a + 1
+    >>> e1 = jit.get_jit_callable(e, func_args=[a])
+    >>> e.subs('a',1.1)   # Evaluate via substitution
+    3.31000000000000
+    >>> e1(1.1)  # Evaluate using JIT-compiled code
+    3.3100000000000005
+    '''
+
+    if not llvmlite:
+        raise ImportError("llvmlite is required for llvmjitcode")
+
+    fptr = llvm_jit_code(expr, func_args)
     arg_ctypes = []
-    for arg in args:
+    for arg in func_args:
         arg_ctype = ctypes.c_double
         arg_ctypes.append(arg_ctype)
 
