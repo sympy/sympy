@@ -2,7 +2,7 @@ from sympy.core import symbols
 from sympy.core.compatibility import range
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
-      encipher_vigenere, decipher_vigenere,
+      check_and_format, encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
       bifid5_square, bifid6_square, bifid7_square,
       encipher_bifid7, decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
@@ -46,6 +46,12 @@ def test_encipher_affine():
 def test_encipher_substitution():
     assert encipher_substitution("ABC", "BAC", symbols="ABC") == "BAC"
     assert encipher_substitution("123", "124", symbols="1234") == "124"
+
+
+def test_check_and_format():
+    assert check_and_format("abc") == "ABC"
+    assert check_and_format("aaabc", False) == "ABC"
+    assert check_and_format("abc", True, "ABC") == "ABC"
 
 
 def test_encipher_vigenere():
