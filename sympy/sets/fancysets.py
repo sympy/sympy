@@ -627,7 +627,7 @@ class ComplexRegion(Set):
         I = S.ImaginaryUnit
 
         # Rectangular Form
-        if polar is False:
+        if polar == False:
 
             if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
@@ -644,7 +644,7 @@ class ComplexRegion(Set):
                 obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
 
         # Polar Form
-        elif polar is True:
+        elif polar == True:
             new_sets = []
 
             # sets is Union of ProductSets
@@ -667,6 +667,9 @@ class ComplexRegion(Set):
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
                                    sets)
+        obj._sets = sets
+        obj._polar = polar
+        obj._args = (sets, polar)
         return obj
 
     @property
@@ -689,7 +692,11 @@ class ComplexRegion(Set):
         [2, 3] x [4, 5] U [4, 5] x [1, 7]
 
         """
-        return self.args[1]
+        return self._sets
+
+    @property
+    def args(self):
+        return self._args
 
     @property
     def psets(self):
@@ -711,11 +718,11 @@ class ComplexRegion(Set):
         ([2, 3] x [4, 5], [4, 5] x [1, 7])
 
         """
-        if self.args[1].is_ProductSet:
+        if self.sets.is_ProductSet:
             psets = ()
-            psets = psets + (self.args[1], )
+            psets = psets + (self.sets, )
         else:
-            psets = self.args[1].args
+            psets = self.sets.args
         return psets
 
     @property
@@ -795,7 +802,7 @@ class ComplexRegion(Set):
         >>> C2.polar
         True
         """
-        return self.args[0].args[1].is_Mul
+        return self._polar
 
     @property
     def _measure(self):
