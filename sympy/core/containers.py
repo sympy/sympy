@@ -196,8 +196,7 @@ class Dict(Basic):
 
     def __new__(cls, *args):
         if len(args) == 1 and (isinstance(args[0], dict) or
-            isinstance(args[0], Dict) or
-            isinstance(args[0], defaultdict)):
+            isinstance(args[0], Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
