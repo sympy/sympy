@@ -11,6 +11,7 @@ import ctypes
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 from sympy import S
+from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
 if llvmlite:
@@ -149,6 +150,7 @@ def llvm_jit_code(expr, func_args=None):
     return fptr
 
 
+@doctest_depends_on(modules=('llvmlite',))
 def get_jit_callable(expr, func_args=None):
     '''Compile function from a Sympy expression
 
