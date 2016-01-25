@@ -1045,7 +1045,7 @@ def test_issue_9778():
         FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
 
 
-@XFAIL
+
 def test_issue_failing_pow():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
 
