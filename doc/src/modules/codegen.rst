@@ -1,3 +1,5 @@
+.. _codegen_prose:
+
 ===============
 Code Generation
 ===============
@@ -330,6 +332,8 @@ We can examine the various arguments more closely::
     >>> [a.expr for a in routine.arguments if isinstance(a, InOutArgument)]
     [r + x]
 
+The full API reference can be viewed :ref:`here<codegen_API>`.
+
 Autowrap
 --------
 
@@ -339,8 +343,11 @@ imports it into the current session. Main functions of this module are
 
 It also automatically converts expressions containing ``Indexed`` objects into
 summations. The classes IndexedBase, Indexed and Idx represent a matrix element
-M[i, j]. See :ref:`tensor_module` for more on this.  ``autowrap`` creates a
-wrapper using f2py or Cython and creates a numerical function.
+M[i, j]. See :ref:`tensor_module` for more on this.  
+
+.. _autowrap:
+
+``autowrap`` creates a wrapper using f2py or Cython and creates a numerical function.
 
 .. note:: The ``autowrap`` callable is not in the sympy namespace automatically,
    to use it you must first import ``autowrap`` from ``sympy.utilities.autowrap``
@@ -422,6 +429,8 @@ expression can link to the helper routine. Items should be tuples with
 ``(<function_name>, <sympy_expression>, <arguments>)``. It is mandatory to
 supply an argument sequence to helper routines.
 
+.. _binary_function:
+
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
@@ -490,7 +499,7 @@ element-wise is in accordance to Numpy's array broadcasting rules. See `this
     >>> expr = sin(x)/x
 
     >>> from sympy.utilities.autowrap import ufuncify
-    >>> f = ufuncify([x], expr)
+    >>> f = ufuncify([x], expr) # doctest: +SKIP
 
 This function ``f`` consumes and returns a NumPy array. Generally ``ufuncify``
 performs at least as well as ``lambdify``. If the expression is complicated
