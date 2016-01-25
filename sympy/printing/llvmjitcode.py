@@ -24,11 +24,15 @@ if llvmlite:
 
 class LLVMJitPrinter(Printer):
     '''Convert expressions to LLVM IR'''
-    def __init__(self, *args, **kwargs):
-        kwargs.pop('func_args')
+    def __init__(self, module, builder, fn, *args, **kwargs):
+        self.func_arg_map = kwargs.pop("func_arg_map", {})
+        if not llvmlite:
+            raise ImportError("llvmlite is required for LLVMJITPrinter")
         super(LLVMJitPrinter, self).__init__(*args, **kwargs)
         self.fp_type = ll.DoubleType()
-        self.int_type = ll.IntType(64)
+        self.module = module
+        self.builder = builder
+        self.fn = fn
 
     def _print_Number(self, n, **kwargs):
         return ll.Constant(self.fp_type, float(n))
@@ -38,7 +42,7 @@ class LLVMJitPrinter(Printer):
 
     def _print_Symbol(self, s):
         # look up parameter with name s
-        return self.param_dict.get(str(s))
+        return self.func_arg_map.get(s)
 
     def _print_Pow(self, expr):
         base0 = self._print(expr.base)
@@ -79,6 +83,11 @@ class LLVMJitPrinter(Printer):
         fn = ll.Function(self.module, fn_type, name)
         return self.builder.call(fn, [e0], name)
 
+    def emptyPrinter(self, expr):
+        raise TypeError("Unsupported type for LLVM JIT conversion: %s"
+                        % type(expr))
+
+
 # ensure lifetime of the execution engine persists (else call to compiled
 #   function will seg fault)
 exe_engines = []
@@ -93,7 +102,6 @@ def llvm_jit_code(expr, func_args=None):
 
     global exe_engines, current_link_suffix
     module = ll.Module('mod1')
-    lj = LLVMJitPrinter(func_args=func_args)
 
     fp_type = ll.DoubleType()
     arg_types = []
@@ -108,16 +116,17 @@ def llvm_jit_code(expr, func_args=None):
 
     fn_type = ll.FunctionType(fp_type, arg_types)
     fn = ll.Function(module, fn_type, name=link_name)
-    lj.module = module
-    lj.param_dict = {}
+
+    param_dict = {}
     for i, a in enumerate(func_args):
-        name = str(a)
-        fn.args[i].name = name
-        lj.param_dict[name] = fn.args[i]
+        fn.args[i].name = str(a)
+        param_dict[a] = fn.args[i]
+
     bb_entry = fn.append_basic_block('entry')
 
-    lj.builder = ll.IRBuilder(bb_entry)
-    lj.fn = fn
+    builder = ll.IRBuilder(bb_entry)
+
+    lj = LLVMJitPrinter(module, builder, fn, func_arg_map=param_dict)
 
     ret = lj._print(expr)
     lj.builder.ret(ret)
@@ -151,8 +160,12 @@ def llvm_jit_code(expr, func_args=None):
 
 
 @doctest_depends_on(modules=('llvmlite',))
-def get_jit_callable(expr, func_args=None):
+def llvm_callable(expr, func_args=None):
     '''Compile function from a Sympy expression
+
+    Expressions are evaluated using double precision arithmetic.
+    Some single argument math functions (exp, sin, cos, etc.) are supported
+    in expressions.
 
     Parameters
     ==========
@@ -172,7 +185,7 @@ def get_jit_callable(expr, func_args=None):
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> e = a*a + a + 1
-    >>> e1 = jit.get_jit_callable(e, func_args=[a])
+    >>> e1 = jit.llvm_callable(e, func_args=[a])
     >>> e.subs('a',1.1)   # Evaluate via substitution
     3.31000000000000
     >>> e1(1.1)  # Evaluate using JIT-compiled code
