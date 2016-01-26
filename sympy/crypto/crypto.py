@@ -146,7 +146,7 @@ def _prep(msg, key, alp, default=None):
 def cycle_list(k, n):
     """
     Returns the elements of the list ``range(n)`` shifted to the
-    left by ``k`` (so the list starts with ``k``).
+    left by ``k`` (so the list starts with ``k`` (mod ``n``)).
 
     Examples
     ========
