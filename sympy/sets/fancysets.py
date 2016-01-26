@@ -568,7 +568,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion(Lambda((_x, _y), _x + _y*I), [2, 3] x [4, 6])
+    ComplexRegion([2, 3] x [4, 6], False)
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -576,8 +576,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion(Lambda((_x, _y), _x + _y*I),
-                 [2, 3] x [4, 6] U [4, 6] x [1, 8])
+    ComplexRegion([2, 3] x [4, 6] U [4, 6] x [1, 8], False)
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -593,8 +592,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))),
-                 [0, 1] x [0, 2*pi))
+    ComplexRegion([0, 1] x [0, 2*pi), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -608,7 +606,7 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))), [0, 1] x [0, pi])
+    ComplexRegion([0, 1] x [0, pi], True)
     >>> intersection == upper_half_unit_disk
     True
 
@@ -621,10 +619,11 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols, Dummy
+        from sympy import symbols, Dummy, sympify
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
+        polar = sympify(polar)
 
         # Rectangular Form
         if polar == False:
@@ -642,6 +641,8 @@ class ComplexRegion(Set):
 
             else:
                 obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
+            obj._variables = (x, y)
+            obj._expr = x + I*y
 
         # Polar Form
         elif polar == True:
@@ -667,6 +668,9 @@ class ComplexRegion(Set):
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
                                    sets)
+            obj._variables = (r, theta)
+            obj._expr = r*(cos(theta) + I*sin(theta))
+
         obj._sets = sets
         obj._polar = polar
         obj._args = (sets, polar)
@@ -697,6 +701,14 @@ class ComplexRegion(Set):
     @property
     def args(self):
         return self._args
+
+    @property
+    def variables(self):
+        return self._variables
+
+    @property
+    def expr(self):
+        return self._expr
 
     @property
     def psets(self):
