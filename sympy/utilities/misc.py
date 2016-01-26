@@ -7,14 +7,16 @@ import os
 from textwrap import fill, dedent
 from sympy.core.compatibility import get_function_name, range
 
-# if you use
-# filldedent('''
-#             the text''')
-# a space will be put before the first line because dedent will
-# put a \n as the first line and fill replaces \n with spaces
-# so we strip off any leading and trailing \n since printed wrapped
-# text should not have leading or trailing spaces.
-filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+
+def filldedent(s, w=70):
+    """
+    Strips leading and trailing empty lines from a copy of `s`, then dedents,
+    fills and returns it.
+
+    Empty line stripping serves to deal with docstrings like this one that
+    start with a newline after the initial triple quote, inserting an empty
+    line at the beginning of the string."""
+    return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
 
 
 def rawlines(s):
@@ -212,3 +214,8 @@ def find_executable(executable, path=None):
                     return f
     else:
         return None
+
+
+def func_name(x):
+    '''return function name of `x` (if defined) else the `type(x)`.'''
+    return getattr(getattr(x, 'func', x), '__name__', type(x))

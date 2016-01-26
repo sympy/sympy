@@ -2,13 +2,13 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root)
+                   Function, Poly, PurePoly, pi, root, log, exp)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality)
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
@@ -168,6 +168,10 @@ def test_reduce_rational_inequalities_real_relational():
         relational=False) == \
         Union(Interval.Lopen(-oo, -2), Interval.Lopen(0, 4))
 
+    # issue sympy/sympy#10237
+    assert reduce_rational_inequalities(
+        [[x < oo, x >= 0, -oo < x]], x, relational=False) == Interval(0, oo)
+
 
 def test_reduce_abs_inequalities():
     e = abs(x - 5) < 3
@@ -185,6 +189,7 @@ def test_reduce_abs_inequalities():
 
     nr = Symbol('nr', real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
+    assert reduce_inequalities(x < 3, symbols=[x, nr]) == And(-oo < x, x < 3)
 
 
 def test_reduce_inequalities_general():
@@ -196,6 +201,7 @@ def test_reduce_inequalities_boolean():
     assert reduce_inequalities(
         [Eq(x**2, 0), True]) == Eq(x, 0)
     assert reduce_inequalities([Eq(x**2, 0), False]) == False
+    assert reduce_inequalities(x**2 >= 0) is S.true  # issue 10196
 
 
 def test_reduce_inequalities_multivariate():
@@ -212,6 +218,8 @@ def test_reduce_inequalities_errors():
 def test_hacky_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
+    assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
+    assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
 
 
 def test_issue_6343():
@@ -230,9 +238,9 @@ def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 >= 0) == \
         Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
 
-    eq = x**8 + x - 9  # we want RootOf solns here
+    eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
-    tru = Or(And(RootOf(eq, 1) <= x, x < oo), And(-oo < x, x <= RootOf(eq, 0)))
+    tru = Or(And(rootof(eq, 1) <= x, x < oo), And(-oo < x, x <= rootof(eq, 0)))
     assert sol == tru
 
     # recast vanilla as real
@@ -242,11 +250,11 @@ def test_issue_8235():
 def test_issue_5526():
     assert reduce_inequalities(S(0) <=
         x + Integral(y**2, (y, 1, 3)) - 1, [x]) == \
-        (-Integral(y**2, (y, 1, 3)) + 1 <= x)
+        (x >= -Integral(y**2, (y, 1, 3)) + 1)
     f = Function('f')
     e = Sum(f(x), (x, 1, 3))
     assert reduce_inequalities(S(0) <= x + e + y**2, [x]) == \
-        (-y**2 - Sum(f(x), (x, 1, 3)) <= x)
+        (x >= -y**2 - Sum(f(x), (x, 1, 3)))
 
 
 def test_solve_univariate_inequality():
@@ -273,7 +281,7 @@ def test_solve_univariate_inequality():
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
-        And(RootOf(x**7 - x - 2, 0) < x, x < oo)
+        And(rootof(x**7 - x - 2, 0) < x, x < oo)
 
     # handle numerator and denominator; although these would be handled as
     # rational inequalities, these test confirm that the right thing is done
@@ -284,9 +292,15 @@ def test_solve_univariate_inequality():
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
 
-@slow
+def test_issue_9954():
+    assert isolve(x**2 >= 0, x, relational=False) == S.Reals
+    assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
+    assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
+    assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
+
+
 def test_slow_general_univariate():
-    r = RootOf(x**5 - x**2 + 1, 0)
+    r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
         Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
 
@@ -302,3 +316,11 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
+
+
+def test_issue_10047():
+    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
+
+
+def test_issue_10268():
+    assert solve(log(x) < 1000) == And(-oo < x, x < exp(1000))

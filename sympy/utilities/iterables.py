@@ -1314,7 +1314,7 @@ def partitions(n, m=None, k=None, size=False):
     ==========
 
     ``m`` : integer (default gives partitions of all sizes)
-        limits number of parts in parition (mnemonic: m, maximum parts)
+        limits number of parts in partition (mnemonic: m, maximum parts)
     ``k`` : integer (default gives partitions number from 1 through n)
         limits the numbers that are kept in the partition (mnemonic: k, keys)
     ``size`` : bool (default False, only partition is returned)
@@ -1340,7 +1340,7 @@ def partitions(n, m=None, k=None, size=False):
     {1: 4, 2: 1}
     {1: 6}
 
-    The maximum number of parts in the partion (the sum of the values in
+    The maximum number of parts in the partition (the sum of the values in
     the returned dict) are limited with m:
 
     >>> for p in partitions(6, m=2):  # doctest: +SKIP

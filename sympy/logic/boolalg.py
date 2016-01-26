@@ -11,7 +11,7 @@ from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application
+from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
@@ -56,7 +56,7 @@ class Boolean(Basic):
 
     def equals(self, other):
         """
-        Returns if the given formulas have the same truth table.
+        Returns True if the given formulas have the same truth table.
         For two formulas to be equal they must have the same literals.
 
         Examples
@@ -80,43 +80,6 @@ class Boolean(Basic):
                 not satisfiable(Not(Equivalent(self, other)))
 
 
-# Developer note: There is liable to be some confusion as to when True should
-# be used and when S.true should be used in various contexts throughout SymPy.
-# An important thing to remember is that sympify(True) returns S.true.  This
-# means that for the most part, you can just use True and it will
-# automatically be converted to S.true when necessary, similar to how you can
-# generally use 1 instead of S.One.
-
-# The rule of thumb is:
-
-#   "If the boolean in question can be replaced by an arbitrary symbolic
-#   Boolean, like Or(x, y) or x > 1, use S.true. Otherwise, use True"
-
-# In other words, use S.true only on those contexts where the boolean is being
-# used as a symbolic representation of truth.  For example, if the object ends
-# up in the .args of any expression, then it must necessarily be S.true
-# instead of True, as elements of .args must be Basic.  On the other hand, ==
-# is not a symbolic operation in SymPy, since it always returns True or False,
-# and does so in terms of structural equality rather than mathematical, so it
-# should return True. The assumptions system should use True and False. Aside
-# from not satisfying the above rule of thumb, the assumptions system uses a
-# three-valued logic (True, False, None), whereas S.true and S.false represent
-# a two-valued logic.  When it doubt, use True.
-
-# 2. "S.true == True" is True.
-
-# While "S.true is True" is False, "S.true == True" is True, so if there is
-# any doubt over whether a function or expression will return S.true or True,
-# just use "==" instead of "is" to do the comparison, and it will work in
-# either case.  Finally, for boolean flags, it's better to just use "if x"
-# instead of "if x is True". To quote PEP 8:
-
-#     Don't compare boolean values to True or False using ==.
-
-#       Yes:   if greeting:
-#       No:    if greeting == True:
-#       Worse: if greeting is True:
-
 class BooleanAtom(Boolean):
     """
     Base class of BooleanTrue and BooleanFalse.
@@ -125,6 +88,7 @@ class BooleanAtom(Boolean):
     @property
     def canonical(self):
         return self
+
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
@@ -135,6 +99,53 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     operations like ~ and >> will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
     class when they evaluate to true.
+
+    Notes
+    =====
+
+    There is liable to be some confusion as to when ``True`` should
+    be used and when ``S.true`` should be used in various contexts
+    throughout SymPy. An important thing to remember is that
+    ``sympify(True)`` returns ``S.true``. This means that for the most
+    part, you can just use ``True`` and it will automatically be converted
+    to ``S.true`` when necessary, similar to how you can generally use 1
+    instead of ``S.One``.
+
+    The rule of thumb is:
+
+    "If the boolean in question can be replaced by an arbitrary symbolic
+    ``Boolean``, like ``Or(x, y)`` or ``x > 1``, use ``S.true``.
+    Otherwise, use ``True``"
+
+    In other words, use ``S.true`` only on those contexts where the
+    boolean is being used as a symbolic representation of truth.
+    For example, if the object ends up in the ``.args`` of any expression,
+    then it must necessarily be ``S.true`` instead of ``True``, as
+    elements of ``.args`` must be ``Basic``. On the other hand,
+    ``==`` is not a symbolic operation in SymPy, since it always returns
+    ``True`` or ``False``, and does so in terms of structural equality
+    rather than mathematical, so it should return ``True``. The assumptions
+    system should use ``True`` and ``False``. Aside from not satisfying
+    the above rule of thumb, the
+    assumptions system uses a three-valued logic (``True``, ``False``, ``None``),
+    whereas ``S.true`` and ``S.false`` represent a two-valued logic. When in
+    doubt, use ``True``.
+
+    "``S.true == True is True``."
+
+    While "``S.true is True``" is ``False``, "``S.true == True``"
+    is ``True``, so if there is any doubt over whether a function or
+    expression will return ``S.true`` or ``True``, just use ``==``
+    instead of ``is`` to do the comparison, and it will work in either
+    case.  Finally, for boolean flags, it's better to just use ``if x``
+    instead of ``if x is True``. To quote PEP 8:
+
+    Don't compare boolean values to ``True`` or ``False``
+    using ``==``.
+
+    * Yes:   ``if greeting:``
+    * No:    ``if greeting == True:``
+    * Worse: ``if greeting is True:``
 
     Examples
     ========
@@ -185,6 +196,10 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     operations like ~ and >> will work as expected on this class, whereas with
     False they act bitwise on 0. Functions in the logic module will return this
     class when they evaluate to false.
+
+    Notes
+    ======
+    See note in :py:class`sympy.logic.boolalg.BooleanTrue`
 
     Examples
     ========
@@ -242,9 +257,6 @@ class BooleanFunction(Application, Boolean):
     It is used as base class for And, Or, Not, etc.
     """
     is_Boolean = True
-
-    def __call__(self, *args):
-        return self.func(*[arg(*args) for arg in self.args])
 
     def _eval_simplify(self, ratio, measure):
         return simplify_logic(self)
@@ -502,7 +514,7 @@ class Not(BooleanFunction):
         (-oo, 0]
         """
         if len(self.free_symbols) == 1:
-            return self.args[0].as_set().complement
+            return self.args[0].as_set().complement(S.Reals)
         else:
             raise NotImplementedError("Sorry, Not.as_set has not yet been"
                                       " implemented for mutivariate"
@@ -901,6 +913,16 @@ class ITE(BooleanFunction):
     def to_nnf(self, simplify=True):
         a, b, c = self.args
         return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+
+    def _eval_derivative(self, x):
+        return self.func(self.args[0], *[a.diff(x) for a in self.args[1:]])
+
+    # the diff method below is copied from Expr class
+    def diff(self, *symbols, **assumptions):
+        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
+        assumptions.setdefault("evaluate", True)
+        return Derivative(self, *new_symbols, **assumptions)
+
 
 ### end class definitions. Some useful methods
 
@@ -1383,7 +1405,7 @@ def truth_table(expr, variables, input=True):
     [1, 0] -> False
     [1, 1] -> True
 
-    >>> table = truth_table('x | y', ['x', 'y'])
+    >>> table = truth_table(x | y, [x, y])
     >>> list(table)
     [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
 
@@ -1551,10 +1573,12 @@ def SOPform(variables, minterms, dontcares=None):
     ========
 
     >>> from sympy.logic import SOPform
+    >>> from sympy import symbols
+    >>> w, x, y, z = symbols('w x y z')
     >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1],
     ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
-    >>> SOPform(['w','x','y','z'], minterms, dontcares)
+    >>> SOPform([w, x, y, z], minterms, dontcares)
     Or(And(Not(w), z), And(y, z))
 
     References
@@ -1601,10 +1625,12 @@ def POSform(variables, minterms, dontcares=None):
     ========
 
     >>> from sympy.logic import POSform
+    >>> from sympy import symbols
+    >>> w, x, y, z = symbols('w x y z')
     >>> minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1],
     ...             [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
-    >>> POSform(['w','x','y','z'], minterms, dontcares)
+    >>> POSform([w, x, y, z], minterms, dontcares)
     And(Or(Not(w), y), z)
 
     References
@@ -1672,7 +1698,7 @@ def simplify_logic(expr, form=None, deep=True):
     >>> from sympy.logic import simplify_logic
     >>> from sympy.abc import x, y, z
     >>> from sympy import S
-    >>> b = '(~x & ~y & ~z) | ( ~x & ~y & z)'
+    >>> b = (~x & ~y & ~z) | ( ~x & ~y & z)
     >>> simplify_logic(b)
     And(Not(x), Not(y))
 
@@ -1765,8 +1791,8 @@ def bool_map(bool1, bool2):
 
     >>> from sympy import SOPform, bool_map, Or, And, Not, Xor
     >>> from sympy.abc import w, x, y, z, a, b, c, d
-    >>> function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
-    >>> function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
+    >>> function1 = SOPform([x, z, y],[[1, 0, 1], [0, 0, 1]])
+    >>> function2 = SOPform([a, b, c],[[1, 0, 1], [1, 0, 0]])
     >>> bool_map(function1, function2)
     (And(Not(z), y), {y: a, z: b})
 

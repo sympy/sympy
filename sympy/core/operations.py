@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
@@ -242,7 +241,7 @@ class AssocOp(Basic):
                         continue
 
                     # try collection on non-Wild symbols
-                    from sympy.simplify.simplify import collect
+                    from sympy.simplify.radsimp import collect
                     was = expr
                     did = set()
                     for w in reversed(wild_part):

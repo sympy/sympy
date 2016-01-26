@@ -263,6 +263,13 @@ def test_Piecewise():
     expected = tt.switch(xt < 0, xt, np.nan)
     assert theq(result, expected)
 
+    expr = sy.Piecewise((0, sy.And(x>0, x<2)), \
+        (x, sy.Or(x>2, x<0)))
+    result = theano_code(expr)
+    expected = tt.switch(tt.and_(xt>0,xt<2), 0, \
+        tt.switch(tt.or_(xt>2, xt<0), xt, np.nan))
+    assert theq(result, expected)
+
 def test_Relationals():
     xt, yt = theano_code(x), theano_code(y)
     assert theq(theano_code(x > y), xt > yt)

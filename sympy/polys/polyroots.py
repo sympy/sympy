@@ -13,6 +13,7 @@ from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.exprtools import factor_terms
+from sympy.core.logic import fuzzy_not
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
@@ -355,7 +356,7 @@ def roots_quartic(f):
             r = -q/2 + root  # or -q/2 - root
             u = r**TH  # primary root of solve(x**3 - r, x)
             y2 = -5*e/6 + u - p/u/3
-            if p.is_nonzero:
+            if fuzzy_not(p.is_zero):
                 return _ans(y2)
 
             # sort it out once they know the values of the coefficients
@@ -624,9 +625,8 @@ def roots_quintic(f):
             # Again storing away the exact number and using
             # evaluated numbers in computations
             r3temp_n = Res_n[3][j]
-
-            if( comp( r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus, 0, tol) and
-                comp( r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus, 0, tol ) ):
+            if (comp((r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus).n(), 0, tol) and
+                comp((r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus).n(), 0, tol)):
                 r2 = Res[2][i]
                 r3 = Res[3][j]
                 break

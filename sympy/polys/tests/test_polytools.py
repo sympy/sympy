@@ -47,11 +47,12 @@ from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise,
-    exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
+    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
@@ -59,7 +60,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-
+from sympy import MatrixSymbol
 
 def _epsilon_eq(a, b):
     for x, y in zip(a, b):
@@ -346,7 +347,7 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
-    assert Poly(x**2 + x + 1.0).get_domain() == RR
+    assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
 
 
 def test_Poly__args():
@@ -560,7 +561,7 @@ def test_Poly_get_domain():
     raises(CoercionFailed, lambda: Poly(x/2, domain='ZZ'))
     assert Poly(x/2, domain='QQ').get_domain() == QQ
 
-    assert Poly(0.2*x).get_domain() == RR
+    assert isinstance(Poly(0.2*x).get_domain(), RealField)
 
 
 def test_Poly_set_domain():
@@ -1420,6 +1421,13 @@ def test_Poly_diff():
 
     assert Poly(x**2*y**2 + x*y).diff(x, y) == Poly(4*x*y + 1)
     assert Poly(x**2*y**2 + x*y).diff(y, x) == Poly(4*x*y + 1)
+
+
+def test_issue_9585():
+    assert diff(Poly(x**2 + x)) == Poly(2*x + 1)
+    assert diff(Poly(x**2 + x), x, evaluate=False) == \
+        Derivative(Poly(x**2 + x), x)
+    assert Derivative(Poly(x**2 + x), x).doit() == Poly(2*x + 1)
 
 
 def test_Poly_eval():
@@ -2622,7 +2630,7 @@ def test_Poly_root():
     assert f.root(2) == 2
     raises(IndexError, lambda: f.root(3))
 
-    assert Poly(x**5 + x + 1).root(0) == RootOf(x**3 - x**2 + 1, 0)
+    assert Poly(x**5 + x + 1).root(0) == rootof(x**3 - x**2 + 1, 0)
 
 
 def test_real_roots():
@@ -2632,20 +2640,20 @@ def test_real_roots():
     assert real_roots(x**3) == [0, 0, 0]
     assert real_roots(x**3, multiple=False) == [(0, 3)]
 
-    assert real_roots(x*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0]
-    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(RootOf(
+    assert real_roots(x*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0]
+    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 1)]
 
     assert real_roots(
-        x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
-    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(
+        x**3*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0, 0, 0]
+    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 3)]
 
     f = 2*x**3 - 7*x**2 + 4*x + 4
     g = x**3 + x + 1
 
     assert Poly(f).real_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).real_roots() == [RootOf(g, 0)]
+    assert Poly(g).real_roots() == [rootof(g, 0)]
 
 
 def test_all_roots():
@@ -2653,7 +2661,7 @@ def test_all_roots():
     g = x**3 + x + 1
 
     assert Poly(f).all_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).all_roots() == [RootOf(g, 0), RootOf(g, 1), RootOf(g, 2)]
+    assert Poly(g).all_roots() == [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
 
 
 def test_nroots():
@@ -2868,6 +2876,12 @@ def test_cancel():
     assert cancel(1 + p3) == 1 + p4
     assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+
+    # issue 9363
+    M = MatrixSymbol('M', 5, 5)
+    assert cancel(M[0,0] + 7) == M[0,0] + 7
+    expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
+    assert cancel(expr) == expr
 
 
 def test_reduced():

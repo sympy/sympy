@@ -72,7 +72,7 @@ def _monotonic_sign(self):
         rv = _monotonic_sign(-self)
         return rv if rv is None else -rv
 
-    if self.is_Symbol:
+    if not self.is_Add and self.as_numer_denom()[1].is_number:
         s = self
         if s.is_prime:
             if s.is_odd:
@@ -237,6 +237,30 @@ def decompose_power(expr):
 
             exp = exp.p
         else:
+            base, exp = expr, 1
+    else:
+        exp, tail = exp.as_coeff_Mul(rational=True)
+
+        if exp is S.NegativeOne:
+            base, exp = Pow(base, tail), -1
+        elif exp is not S.One:
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, exp = Pow(base, tail), exp.p
+        else:
+            base, exp = expr, 1
+
+    return base, exp
+
+
+def decompose_power_rat(expr):
+    """
+    Decompose power into symbolic base and rational exponent.
+
+    """
+    base, exp = expr.as_base_exp()
+
+    if exp.is_Number:
+        if not exp.is_Rational:
             base, exp = expr, 1
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
@@ -1242,12 +1266,15 @@ def _mask_nc(eq, name=None):
     """
     name = name or 'mask'
     # Make Dummy() append sequential numbers to the name
+
     def numbered_names():
         i = 0
         while True:
             yield name + str(i)
             i += 1
+
     names = numbered_names()
+
     def Dummy(*args, **kwargs):
         from sympy import Dummy
         return Dummy(next(names), *args, **kwargs)
@@ -1299,7 +1326,9 @@ def factor_nc(expr):
     """Return the factored form of ``expr`` while handling non-commutative
     expressions.
 
-    **examples**
+    Examples
+    ========
+
     >>> from sympy.core.exprtools import factor_nc
     >>> from sympy import Symbol
     >>> from sympy.abc import x

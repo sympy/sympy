@@ -28,7 +28,7 @@ def Maxwells_Equations_in_Geometric_Calculus():
     print('\\text{Electromagnetic Field Bi-Vector\\;\\;} F = E+IB =', F)
     print('%\\text{Four Current Density\\;\\;} J =', J)
     gradF = grad*F
-    print('#Geometric Derivative of Electomagnetic Field Bi-Vector')
+    print('#Geometric Derivative of Electromagnetic Field Bi-Vector')
     gradF.Fmt(3, 'grad*F')
 
     print('#Maxwell Equations')

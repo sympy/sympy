@@ -1,6 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O)
+                   exp_polar, polar_lift, O, stieltjes)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
 
@@ -139,7 +139,6 @@ def test_lerchphi_expansion():
     # direct summation
     assert myexpand(lerchphi(z, -1, a), a/(1 - z) + z/(1 - z)**2)
     assert myexpand(lerchphi(z, -3, a), None)
-
     # polylog reduction
     assert myexpand(lerchphi(z, s, S(1)/2),
                     2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z)
@@ -156,3 +155,26 @@ def test_lerchphi_expansion():
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
     assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)
+
+
+def test_stieltjes():
+    assert isinstance(stieltjes(x), stieltjes)
+    assert isinstance(stieltjes(x, a), stieltjes)
+
+    # Zero'th constant EulerGamma
+    assert stieltjes(0) == S.EulerGamma
+    assert stieltjes(0, 1) == S.EulerGamma
+
+    # Not defined
+    assert stieltjes(nan) == nan
+    assert stieltjes(0, nan) == nan
+    assert stieltjes(-1) == S.ComplexInfinity
+    assert stieltjes(1.5) == S.ComplexInfinity
+    assert stieltjes(z, 0) == S.ComplexInfinity
+    assert stieltjes(z, -1) == S.ComplexInfinity
+
+
+def test_stieltjes_evalf():
+    assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
+    assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
+    assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9

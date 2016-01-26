@@ -41,7 +41,7 @@ class Expr(Basic, EvalfMixin):
         the differentiation.
 
         Note, see the docstring of Derivative for how this should work
-        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        mathematically. In particular, note that expr.subs(yourclass, Symbol)
         should be well-defined on a structural level, or this will lead to
         inconsistent results.
 
@@ -475,7 +475,7 @@ class Expr(Basic, EvalfMixin):
         >>> eq = a*cos(x)**2 + a*sin(x)**2 - a
         >>> eq.is_constant()
         True
-        >>> eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+        >>> eq.subs({x: pi, a: 2}) == eq.subs({x: pi, a: 3}) == 0
         True
 
         >>> (0**x).is_constant()
@@ -569,7 +569,7 @@ class Expr(Basic, EvalfMixin):
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
-                if not (deriv.is_Number or pure_complex(deriv)):
+                if not (pure_complex(deriv, or_real=True)):
                     if flags.get('failing_number', False):
                         return failing_number
                     elif deriv.free_symbols:
@@ -595,6 +595,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.simplify.simplify import nsimplify, simplify
         from sympy.solvers.solvers import solve
+        from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -651,13 +652,17 @@ class Expr(Basic, EvalfMixin):
                         # we will handle the checking ourselves using nsimplify
                         # to see if we are in the right ballpark or not and if so
                         # *then* the simplification will be attempted.
-                        sol = solve(diff, s, check=False, simplify=False)
+                        if s.is_Symbol:
+                            sol = list(solveset(diff, s))
+                        else:
+                            sol = [s]
                         if sol:
                             if s in sol:
                                 return True
-                            if any(nsimplify(si, [s]) == s and simplify(si) == s
-                                    for si in sol):
-                                return True
+                            if s.is_real:
+                                if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                        for si in sol):
+                                    return True
                     except NotImplementedError:
                         pass
 
@@ -681,10 +686,6 @@ class Expr(Basic, EvalfMixin):
         if failing_expression:
             return diff
         return None
-
-    def _eval_is_composite(self):
-        if self.is_integer and self.is_positive and self.is_prime is False:
-            return True
 
     def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
@@ -859,7 +860,7 @@ class Expr(Basic, EvalfMixin):
             _, ((re, im), monom, ncpart) = term
 
             monom = neg(monom_key(monom))
-            ncpart = tuple([ e.sort_key(order=order) for e in ncpart ])
+            ncpart = tuple([e.sort_key(order=order) for e in ncpart])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -904,7 +905,7 @@ class Expr(Basic, EvalfMixin):
         if data:
             return ordered, gens
         else:
-            return [ term for term, _ in ordered ]
+            return [term for term, _ in ordered]
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
@@ -1410,7 +1411,7 @@ class Expr(Basic, EvalfMixin):
         Poly(x*E + 2*E, x, E, domain='ZZ')
         >>> p.coeff_monomial(E)
         2
-        >>> p.nth(0,1)
+        >>> p.nth(0, 1)
         2
 
         Since the following cannot be written as a product containing
@@ -1563,7 +1564,7 @@ class Expr(Basic, EvalfMixin):
         (x, y + 1)
         >>> (x*(1 + y)).expand(mul=True).as_independent(y)
         (x, x*y)
-        >>> a, b=symbols('a b',positive=True)
+        >>> a, b=symbols('a b', positive=True)
         >>> (log(a*b).expand(log=True)).as_independent(b)
         (log(a), log(b))
 
@@ -1876,11 +1877,13 @@ class Expr(Basic, EvalfMixin):
 
            >>> (2*x).extract_multiplicatively(3)
 
-           >>> (Rational(1,2)*x).extract_multiplicatively(3)
+           >>> (Rational(1, 2)*x).extract_multiplicatively(3)
            x/6
 
         """
         c = sympify(c)
+        if self is S.NaN:
+            return None
         if c is S.One:
             return self
         elif c == self:
@@ -1907,8 +1910,6 @@ class Expr(Basic, EvalfMixin):
             elif self is S.ComplexInfinity:
                 if not c.is_zero:
                     return S.ComplexInfinity
-            elif self is S.NaN:
-                return S.NaN
             elif self.is_Integer:
                 if not quotient.is_Integer:
                     return None
@@ -2000,6 +2001,8 @@ class Expr(Basic, EvalfMixin):
         """
 
         c = sympify(c)
+        if self is S.NaN:
+            return None
         if c is S.Zero:
             return self
         elif c == self:
@@ -2311,6 +2314,9 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
+        if self in [S.NaN, S.Infinity, -S.Infinity, S.ComplexInfinity]:
+            return False
+
         if syms:
             syms = set(map(sympify, syms))
         else:
@@ -2808,6 +2814,28 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 
+    def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,
+            full=False):
+        """
+        Compute formal power power series of self.
+
+        See the docstring of the :func:`fps` function in sympy.series.formal for
+        more information.
+        """
+        from sympy.series.formal import fps
+
+        return fps(self, x, x0, dir, hyper, order, rational, full)
+
+    def fourier_series(self, limits=None):
+        """Compute fourier sine/cosine series of self.
+
+        See the docstring of the :func:`fourier_series` in sympy.series.fourier
+        for more information.
+        """
+        from sympy.series.fourier import fourier_series
+
+        return fourier_series(self, limits)
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
@@ -2868,7 +2896,7 @@ class Expr(Basic, EvalfMixin):
         more information.
 
         """
-        from sympy.simplify.simplify import fraction
+        from sympy.simplify.radsimp import fraction
 
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
            log=log, multinomial=multinomial, basic=basic)
@@ -3029,10 +3057,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import cancel
         return cancel(self, *gens, **args)
 
-    def invert(self, g):
-        """See the invert function in sympy.polys"""
-        from sympy.polys import invert
-        return invert(self, g)
+    def invert(self, g, *gens, **args):
+        """Return the multiplicative inverse of ``self`` mod ``g``
+        where ``self`` (and ``g``) may be symbolic expressions).
+
+        See Also
+        ========
+        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        """
+        from sympy.polys.polytools import invert
+        from sympy.core.numbers import mod_inverse
+        if self.is_number and getattr(g, 'is_number', True):
+            return mod_inverse(self, g)
+        return invert(self, g, *gens, **args)
 
     def round(self, p=0):
         """Return x rounded to the given decimal place.
@@ -3082,9 +3119,12 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import Float
         x = self
-        if not x.is_number:
-            raise TypeError('%s is not a number' % type(x))
-        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+        if x.is_number and not x.is_Atom:
+            xn = x.n(2)
+            if not pure_complex(xn, or_real=True):
+                raise TypeError('Expected a number but got %s:' %
+                    getattr(getattr(x,'func', x), '__name__', type(x)))
+        elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()

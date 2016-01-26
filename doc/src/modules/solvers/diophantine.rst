@@ -92,14 +92,14 @@ write the equation in the above form, when we input the equation to any of the
 functions in Diophantine module, it needs to be in the form `eq = 0`.
 
 >>> diophantine(2*x + 3*y - 5)
-set([(3*t - 5, -2*t + 5)])
+set([(3*t_0 - 5, -2*t_0 + 5)])
 
 Note that stepping one more level below the highest API, we can solve the very
 same equation by calling :py:meth:`~sympy.solvers.diophantine.diop_solve`.
 
 >>> from sympy.solvers.diophantine import diop_solve
 >>> diop_solve(2*x + 3*y - 5)
-(3*t - 5, -2*t + 5)
+(3*t_0 - 5, -2*t_0 + 5)
 
 Note that it returns a tuple rather than a set.
 :py:meth:`~sympy.solvers.diophantine.diophantine` always return a set of tuples.
@@ -111,7 +111,7 @@ which is what :py:meth:`~sympy.solvers.diophantine.diop_solve` calls internally.
 
 >>> from sympy.solvers.diophantine import diop_linear
 >>> diop_linear(2*x + 3*y - 5)
-(3*t - 5, -2*t + 5)
+(3*t_0 - 5, -2*t_0 + 5)
 
 If the given equation has no solutions then the outputs will look like below.
 
@@ -125,13 +125,21 @@ set()
 Note that except for the highest level API, in case of no solutions, a tuple of
 `None` are returned. Size of the tuple is the same as the number of variables.
 Also, one can specifically set the parameter to be used in the solutions by
-passing a customized parameter. Consider the following example.
+passing a customized parameter. Consider the following example:
 
 >>> m = symbols("m", integer=True)
 >>> diop_solve(2*x + 3*y - 5, m)
-(3*m - 5, -2*m + 5)
+(3*m_0 - 5, -2*m_0 + 5)
 
-Please note that for the moment, user can set the parameter only for linear
+For linear Diophantine equations, the customized parameter is the prefix used
+for each free variable in the solution. Consider the following example:
+
+>>> diop_solve(2*x + 3*y - 5*z + 7, m)
+(m_0, -9*m_0 - 5*m_1 - 14, -5*m_0 - 3*m_1 - 7)
+
+In the solution above, m_0 and m_1 are independent free variables.
+
+Please note that for the moment, users can set the parameter only for linear
 Diophantine equations and binary quadratic equations.
 
 Let's try solving a binary quadratic equation which is an equation with two
@@ -156,7 +164,7 @@ set()
 >>> diophantine(x**2 - 4*x*y + 4*y**2 - 3*x + 7*y - 5)
 set([(-2*t**2 - 7*t + 10, -t**2 - 3*t + 5)])
 >>> diophantine(x**2 + 2*x*y + y**2 - 3*x - 3*y)
-set([(t, -t), (t, -t + 3)])
+set([(t_0, -t_0), (t_0, -t_0 + 3)])
 
 The most interesting case is when `\Delta > 0` and it is not a perfect square.
 In this case, the equation has either no solutions or an infinte number of
@@ -164,14 +172,17 @@ solutions. Consider the below cases where `\Delta = 8`.
 
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)
 set()
->>> from sympy import expand
+>>> from sympy import sqrt
 >>> n = symbols("n", integer=True)
 >>> s = diophantine(x**2 -  2*y**2 - 2*x - 4*y, n)
->>> x_n, y_n = s.pop()
->>> expand(x_n)
--(-2*sqrt(2) + 3)**n/2 + sqrt(2)*(-2*sqrt(2) + 3)**n/2 - sqrt(2)*(2*sqrt(2) + 3)**n/2 - (2*sqrt(2) + 3)**n/2 + 1
->>> expand(y_n)
--sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
+>>> x_1, y_1 = s.pop()
+>>> x_2, y_2 = s.pop()
+>>> x_n = -(-2*sqrt(2) + 3)**n/2 + sqrt(2)*(-2*sqrt(2) + 3)**n/2 - sqrt(2)*(2*sqrt(2) + 3)**n/2 - (2*sqrt(2) + 3)**n/2 + 1
+>>> x_1 == x_n or x_2 == x_n
+True
+>>> y_n = -sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
+>>> y_1 == y_n or y_2 == y_n
+True
 
 Here `n` is an integer. Although x_n and y_n may not look like
 integers, substituting in specific values for n (and simplifying) shows that they

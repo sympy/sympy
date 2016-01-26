@@ -528,11 +528,16 @@ def test_PolyElement___div__():
     assert (2*x**2 - 4)/2 == x**2 - 2
     assert (2*x**2 - 3)/2 == x**2
 
-    assert (x**2 - 1)/x == (x**2 - 1).quo(x) == x
-    assert (x**2 - x)/x == (x**2 - x).quo(x) == x - 1
+    assert (x**2 - 1).quo(x) == x
+    assert (x**2 - x).quo(x) == x - 1
 
-    assert (x**2 - 1)/(2*x) == (x**2 - 1).quo(2*x) == 0
+    assert (x**2 - 1)/x == x - x**(-1)
+    assert (x**2 - x)/x == x - 1
+    assert (x**2 - 1)/(2*x) == x/2 - x**(-1)/2
+
+    assert (x**2 - 1).quo(2*x) == 0
     assert (x**2 - x)/(x - 1) == (x**2 - x).quo(x - 1) == x
+
 
     R, x,y,z = ring("x,y,z", ZZ)
     assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 0
@@ -700,13 +705,14 @@ def test_PolyElement___pow__():
 
     assert f**0 == 1
     assert f**1 == f
+    raises(ValueError, lambda: f**(-1))
+
+    assert x**(-1) == x**(-1)
 
     assert f**2 == f._pow_generic(2) == f._pow_multinomial(2) == 4*x**2 + 12*x + 9
     assert f**3 == f._pow_generic(3) == f._pow_multinomial(3) == 8*x**3 + 36*x**2 + 54*x + 27
     assert f**4 == f._pow_generic(4) == f._pow_multinomial(4) == 16*x**4 + 96*x**3 + 216*x**2 + 216*x + 81
     assert f**5 == f._pow_generic(5) == f._pow_multinomial(5) == 32*x**5 + 240*x**4 + 720*x**3 + 1080*x**2 + 810*x + 243
-
-    raises(ValueError, lambda: f**-2)
 
     R, x,y,z = ring("x,y,z", ZZ, grlex)
     f = x**3*y - 2*x*y**2 - 3*z + 1

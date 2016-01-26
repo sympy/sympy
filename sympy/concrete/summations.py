@@ -5,12 +5,18 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.add import Add
+from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
+from sympy.integrals.integrals import integrate
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.compatibility import range
+from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -70,19 +76,19 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     >>> from sympy.abc import i, k, m, n, x
     >>> from sympy import Sum, factorial, oo, IndexedBase, Function
-    >>> Sum(k,(k,1,m))
+    >>> Sum(k, (k, 1, m))
     Sum(k, (k, 1, m))
-    >>> Sum(k,(k,1,m)).doit()
+    >>> Sum(k, (k, 1, m)).doit()
     m**2/2 + m/2
-    >>> Sum(k**2,(k,1,m))
+    >>> Sum(k**2, (k, 1, m))
     Sum(k**2, (k, 1, m))
-    >>> Sum(k**2,(k,1,m)).doit()
+    >>> Sum(k**2, (k, 1, m)).doit()
     m**3/3 + m**2/2 + m/6
-    >>> Sum(x**k,(k,0,oo))
+    >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
-    >>> Sum(x**k,(k,0,oo)).doit()
+    >>> Sum(x**k, (k, 0, oo)).doit()
     Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
-    >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
+    >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
 
     Here are examples to do summation with symbolic indices.  You
@@ -102,7 +108,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     convention allows us to give a perfectly valid interpretation to
     those sums by interchanging the limits according to the above rules:
 
-    >>> S = Sum(i, (i,1,n)).doit()
+    >>> S = Sum(i, (i, 1, n)).doit()
     >>> S
     n**2/2 + n/2
     >>> S.subs(n, -4)
@@ -176,6 +182,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
+            if isinstance(i, Idx):
+                i = i.label
 
             newf = eval_sum(f, (i, a, b))
             if newf is None:
@@ -231,12 +239,265 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         else:
             return NotImplementedError('Lower and upper bound expected.')
 
+    def _eval_difference_delta(self, n, step):
+        k, _, upper = self.args[-1]
+        new_upper = upper.subs(n, n + step)
+
+        if len(self.args) == 2:
+            f = self.args[0]
+        else:
+            f = self.func(*self.args[:-1])
+
+        return Sum(f, (k, upper + 1, new_upper)).doit()
+
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import sum_simplify
         return sum_simplify(self)
 
     def _eval_summation(self, f, x):
         return None
+
+    def is_convergent(self):
+        r"""Checks for the convergence of a Sum.
+
+        We divide the study of convergence of infinite sums and products in
+        two parts.
+
+        First Part:
+        One part is the question whether all the terms are well defined, i.e.,
+        they are finite in a sum and also non-zero in a product. Zero
+        is the analogy of (minus) infinity in products as :math:`e^{-\infty} = 0`.
+
+        Second Part:
+        The second part is the question of convergence after infinities,
+        and zeros in products, have been omitted assuming that their number
+        is finite. This means that we only consider the tail of the sum or
+        product, starting from some point after which all terms are well
+        defined.
+
+        For example, in a sum of the form:
+
+        .. math::
+
+            \sum_{1 \leq i < \infty} \frac{1}{n^2 + an + b}
+
+        where a and b are numbers. The routine will return true, even if there
+        are infinities in the term sequence (at most two). An analogous
+        product would be:
+
+        .. math::
+
+            \prod_{1 \leq i < \infty} e^{\frac{1}{n^2 + an + b}}
+
+        This is how convergence is interpreted. It is concerned with what
+        happens at the limit. Finding the bad terms is another independent
+        matter.
+
+        Note: It is responsibility of user to see that the sum or product
+        is well defined.
+
+        There are various tests employed to check the convergence like
+        divergence test, root test, integral test, alternating series test,
+        comparison tests, Dirichlet tests. It returns true if Sum is convergent
+        and false if divergent and NotImplementedError if it can not be checked.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Convergence_tests
+
+        Examples
+        ========
+
+        >>> from sympy import factorial, S, Sum, Symbol, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Sum(n/(n - 1), (n, 4, 7)).is_convergent()
+        True
+        >>> Sum(n/(2*n + 1), (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent()
+        False
+        >>> Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent()
+        True
+
+        See Also
+        ========
+
+        Sum.is_absolutely_convergent()
+
+        Product.is_convergent()
+        """
+        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
+        p, q = symbols('p q', cls=Wild)
+
+        sym = self.limits[0][0]
+        lower_limit = self.limits[0][1]
+        upper_limit = self.limits[0][2]
+        sequence_term = self.function
+
+        if len(sequence_term.free_symbols) > 1:
+            raise NotImplementedError("convergence checking for more that one symbol "
+                                        "containing series is not handled")
+
+        if lower_limit.is_finite and upper_limit.is_finite:
+            return S.true
+
+        # transform sym -> -sym and swap the upper_limit = S.Infinity
+        # and lower_limit = - upper_limit
+        if lower_limit is S.NegativeInfinity:
+            if upper_limit is S.Infinity:
+                return Sum(sequence_term, (sym, 0, S.Infinity)).is_convergent() and \
+                        Sum(sequence_term, (sym, S.NegativeInfinity, 0)).is_convergent()
+            sequence_term = simplify(sequence_term.xreplace({sym: -sym}))
+            lower_limit = -upper_limit
+            upper_limit = S.Infinity
+
+        interval = Interval(lower_limit, upper_limit)
+
+        # Piecewise function handle
+        if sequence_term.is_Piecewise:
+            for func_cond in sequence_term.args:
+                if func_cond[1].func is Ge or func_cond[1].func is Gt or func_cond[1] == True:
+                    return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
+            return S.true
+
+        ###  -------- Divergence test ----------- ###
+        try:
+            lim_val = limit(sequence_term, sym, upper_limit)
+            if lim_val.is_number and lim_val is not S.Zero:
+                return S.false
+        except NotImplementedError:
+            pass
+
+        try:
+            lim_val_abs = limit(abs(sequence_term), sym, upper_limit)
+            if lim_val_abs.is_number and lim_val_abs is not S.Zero:
+                return S.false
+        except NotImplementedError:
+            pass
+
+        order = O(sequence_term, (sym, S.Infinity))
+
+        ### --------- p-series test (1/n**p) ---------- ###
+        p1_series_test = order.expr.match(sym**p)
+        if p1_series_test is not None:
+            if p1_series_test[p] < -1:
+                return S.true
+            if p1_series_test[p] > -1:
+                return S.false
+
+        p2_series_test = order.expr.match((1/sym)**p)
+        if p2_series_test is not None:
+            if p2_series_test[p] > 1:
+                return S.true
+            if p2_series_test[p] < 1:
+                return S.false
+
+        ### ----------- root test ---------------- ###
+        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        lim_evaluated = lim.doit()
+        if lim_evaluated.is_number:
+            if lim_evaluated < 1:
+                return S.true
+            if lim_evaluated > 1:
+                return S.false
+
+        ### ------------- alternating series test ----------- ###
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
+            return S.true
+
+        ### ------------- comparison test ------------- ###
+        # (1/log(n)**p) comparison
+        log_test = order.expr.match(1/(log(sym)**p))
+        if log_test is not None:
+            return S.false
+
+        # (1/(n*log(n)**p)) comparison
+        log_n_test = order.expr.match(1/(sym*(log(sym))**p))
+        if log_n_test is not None:
+            if log_n_test[p] > 1:
+                return S.true
+            return S.false
+
+        # (1/(n*log(n)*log(log(n))*p)) comparison
+        log_log_n_test = order.expr.match(1/(sym*(log(sym)*log(log(sym))**p)))
+        if log_log_n_test is not None:
+            if log_log_n_test[p] > 1:
+                return S.true
+            return S.false
+
+        # (1/(n**p*log(n))) comparison
+        n_log_test = order.expr.match(1/(sym**p*log(sym)))
+        if n_log_test is not None:
+            if n_log_test[p] > 1:
+                return S.true
+            return S.false
+
+        ### ------------- integral test -------------- ###
+        if is_decreasing(sequence_term, interval):
+            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
+            try:
+                integral_val_evaluated = integral_val.doit()
+                if integral_val_evaluated.is_number:
+                    return S(integral_val_evaluated.is_finite)
+            except NotImplementedError:
+                pass
+
+        ### -------------- Dirichlet tests -------------- ###
+        if order.expr.is_Mul:
+            a_n, b_n = order.expr.args[0], order.expr.args[1]
+            m = Dummy('m', integer=True)
+
+            def _dirichlet_test(g_n):
+                try:
+                    ing_val = limit(Sum(g_n, (sym, interval.inf, m)).doit(), m, S.Infinity)
+                    if ing_val.is_finite:
+                        return S.true
+                except NotImplementedError:
+                    pass
+
+            if is_decreasing(a_n, interval):
+                dirich1 = _dirichlet_test(b_n)
+                if dirich1 is not None:
+                    return dirich1
+
+            if is_decreasing(b_n, interval):
+                dirich2 = _dirichlet_test(a_n)
+                if dirich2 is not None:
+                    return dirich2
+
+        raise NotImplementedError("The algorithm to find the Sum convergence of %s "
+                                    "is not yet implemented" % (sequence_term))
+
+    def is_absolutely_convergent(self):
+        """
+        Checks for the absolute convergence of an infinite series.
+
+        Same as checking convergence of absolute value of sequence_term of
+        an infinite series.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Absolute_convergence
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Symbol, sin, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent()
+        False
+        >>> Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent()
+        True
+
+        See Also
+        ========
+
+        Sum.is_convergent()
+        """
+        return Sum(abs(self.function), self.limits).is_convergent()
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -378,18 +639,18 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> S = Sum(x**2, (x, a, b), (x, c, d))
         >>> S
         Sum(x**2, (x, a, b), (x, c, d))
-        >>> S0 = S.reverse_order( 0)
+        >>> S0 = S.reverse_order(0)
         >>> S0
         Sum(-x**2, (x, b + 1, a - 1), (x, c, d))
-        >>> S1 = S0.reverse_order( 1)
+        >>> S1 = S0.reverse_order(1)
         >>> S1
         Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))
 
         Of course we can mix both notations:
 
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( x, 1)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
-        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( y, x)
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x)
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
         See Also
@@ -416,10 +677,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             l = limit
             if i in l_indices:
                 e = -e
-                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+                l = (limit[0], limit[2] + 1, limit[1] - 1)
             limits.append(l)
 
         return Sum(e * self.function, *limits)
+
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -509,7 +771,7 @@ def telescopic(L, R, limits):
     if sol and k in sol:
         s = sol[k]
         if not (s.is_Integer and L.subs(i, i + s) == -R):
-            #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
+            # sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
     # But there are things that match doesn't do that solve
@@ -747,7 +1009,7 @@ def eval_sum_hyper(f, i_a_b):
             cond = And(cond1, cond2)
             if cond == False:
                 return None
-        return Piecewise((res1 - res2, cond), (old_sum, True))
+            return Piecewise((res1 - res2, cond), (old_sum, True))
 
     if a == S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)

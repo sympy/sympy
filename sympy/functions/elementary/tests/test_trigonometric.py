@@ -1,8 +1,9 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
-        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
+        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos, refine,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul)
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
+        AccumBounds)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 
@@ -21,9 +22,14 @@ def test_sin():
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) == nan
 
+    assert sin(oo) == AccumBounds(-1, 1)
+    assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
-    assert sin(oo).args[0] == oo
+    assert 0*sin(oo) == S.Zero
+    assert 0/sin(oo) == S.Zero
+    assert 0 + sin(oo) == AccumBounds(-1, 1)
+    assert 5 + sin(oo) == AccumBounds(4, 6)
 
     assert sin(0) == 0
 
@@ -174,6 +180,17 @@ def test_sin_expansion():
     assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
 
 
+def test_sin_AccumBounds():
+    assert sin(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 3*S.Pi/4)) == AccumBounds(0, 1)
+    assert sin(AccumBounds(3*S.Pi/4, 7*S.Pi/4)) == AccumBounds(-1, sin(3*S.Pi/4))
+    assert sin(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(sin(S.Pi/4), sin(S.Pi/3))
+    assert sin(AccumBounds(3*S.Pi/4, 5*S.Pi/6)) == AccumBounds(sin(5*S.Pi/6), sin(3*S.Pi/4))
+
+
 def test_trig_symmetry():
     assert sin(-x) == -sin(x)
     assert cos(-x) == cos(x)
@@ -217,6 +234,8 @@ def test_cos():
     assert cos.nargs == FiniteSet(1)
     assert cos(nan) == nan
 
+    assert cos(oo) == AccumBounds(-1, 1)
+    assert cos(oo) - cos(oo) == AccumBounds(-2, 2)
     assert cos(oo*I) == oo
     assert cos(-oo*I) == oo
 
@@ -355,9 +374,22 @@ def test_cos_expansion():
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 
+def test_cos_AccumBounds():
+    assert cos(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-S.Pi/3, S.Pi/4)) == AccumBounds(cos(-S.Pi/3), 1)
+    assert cos(AccumBounds(3*S.Pi/4, 5*S.Pi/4)) == AccumBounds(-1, cos(3*S.Pi/4))
+    assert cos(AccumBounds(5*S.Pi/4, 4*S.Pi/3)) == AccumBounds(cos(5*S.Pi/4), cos(4*S.Pi/3))
+    assert cos(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(cos(S.Pi/3), cos(S.Pi/4))
+
+
 def test_tan():
     assert tan(nan) == nan
 
+    assert tan(oo) == AccumBounds(-oo, oo)
+    assert tan(oo) - tan(oo) == AccumBounds(-oo, oo)
     assert tan.nargs == FiniteSet(1)
     assert tan(oo*I) == I
     assert tan(-oo*I) == -I
@@ -488,6 +520,12 @@ def test_tan_expansion():
     assert 0 == tan(2*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 7))])*24 - 7
     assert 0 == tan(3*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*55 - 37
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
+
+
+def test_tan_AccumBounds():
+    assert tan(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/3, 2*S.Pi/3)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(tan(S.Pi/6), tan(S.Pi/3))
 
 
 def test_cot():
@@ -627,6 +665,40 @@ def test_cot_expansion():
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
 
 
+def test_cot_AccumBounds():
+    assert cot(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(-S.Pi/3, S.Pi/3)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(cot(S.Pi/3), cot(S.Pi/6))
+
+
+def test_sinc():
+    assert isinstance(sinc(x), sinc)
+
+    s = Symbol('s', zero=True)
+    assert sinc(s) == S.One
+    assert sinc(S.Infinity) == S.Zero
+    assert sinc(-S.Infinity) == S.Zero
+    assert sinc(S.NaN) == S.NaN
+    assert sinc(S.ComplexInfinity) == S.NaN
+
+    n = Symbol('n', integer=True, nonzero=True)
+    assert sinc(n*pi) == S.Zero
+    assert sinc(-n*pi) == S.Zero
+    assert sinc(pi/2) == 2 / pi
+    assert sinc(-pi/2) == 2 / pi
+    assert sinc(5*pi/2) == 2 / (5*pi)
+    assert sinc(7*pi/2) == -2 / (7*pi)
+
+    assert sinc(-x) == sinc(x)
+
+    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+
+    assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+
+    assert sinc(x).rewrite(jn) == jn(0, x)
+    assert sinc(x).rewrite(sin) == sin(x) / x
+
+
 def test_asin():
     assert asin(nan) == nan
 
@@ -685,6 +757,7 @@ def test_asin_rewrite():
 
 def test_acos():
     assert acos(nan) == nan
+    assert acos(zoo) == zoo
 
     assert acos.nargs == FiniteSet(1)
     assert acos(oo) == I*oo
@@ -817,7 +890,7 @@ def test_atan2():
     rewrite = e.rewrite(arg)
     reps = {i: I, r: -2}
     assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
-    assert (e - rewrite).subs(reps).equals(0)
+    assert refine((e - rewrite).subs(reps)).equals(0)
 
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
@@ -1338,6 +1411,8 @@ def test_csc():
 
 
 def test_asec():
+    z = Symbol('z', zero=True)
+    assert asec(z) == zoo
     assert asec(nan) == nan
     assert asec(1) == 0
     assert asec(-1) == pi
@@ -1354,6 +1429,16 @@ def test_asec():
     assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
+
+
+def test_asec_is_real():
+    assert asec(S(1)/2).is_real is False
+    n = Symbol('n', positive=True, integer=True)
+    assert asec(n).is_real is True
+    assert asec(x).is_real is None
+    assert asec(r).is_real is None
+    t = Symbol('t', real=False)
+    assert asec(t).is_real is False
 
 
 def test_acsc():
@@ -1376,7 +1461,6 @@ def test_acsc():
 
 
 @XFAIL
-@slow
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
     # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
@@ -1390,3 +1474,8 @@ def test_issue_8653():
     assert sin(n).is_irrational is None
     assert cos(n).is_irrational is None
     assert tan(n).is_irrational is None
+
+
+def test_issue_9157():
+    n = Symbol('n', integer=True, positive=True)
+    atan(n - 1).is_nonnegative is True

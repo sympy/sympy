@@ -1,8 +1,8 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
     re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, S,
-    sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
+    Symbol, I, integrate, Integral, S,
+    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
     gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
@@ -48,7 +48,7 @@ def test_erf():
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
-    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
     assert erf(z).rewrite('erfi') == -I*erfi(I*z)
     assert erf(z).rewrite('fresnels') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
@@ -125,7 +125,7 @@ def test_erfc():
         I*fresnels(z*(1 - I)/sqrt(pi)))
     assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
     assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
-    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     assert erfc(x).as_real_imag() == \
@@ -351,8 +351,7 @@ def test_expint():
     assert expint(-4, x) == exp(-x)/x + 4*exp(-x)/x**2 + 12*exp(-x)/x**3 \
         + 24*exp(-x)/x**4 + 24*exp(-x)/x**5
     assert expint(-S(3)/2, x) == \
-        exp(-x)/x + 3*exp(-x)/(2*x**2) - 3*sqrt(pi)*erf(sqrt(x))/(4*x**S('5/2')) \
-        + 3*sqrt(pi)/(4*x**S('5/2'))
+        exp(-x)/x + 3*exp(-x)/(2*x**2) + 3*sqrt(pi)*erfc(sqrt(x))/(4*x**S('5/2'))
 
     assert tn_branch(expint, 1)
     assert tn_branch(expint, 2)
@@ -515,6 +514,9 @@ def test_si():
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
+
+    t = Symbol('t', Dummy=True)
+    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
 
 def test_ci():

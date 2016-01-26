@@ -49,9 +49,10 @@ if theano:
             sympy.StrictLessThan: tt.lt,
             sympy.LessThan: tt.le,
             sympy.GreaterThan: tt.ge,
+            sympy.And: tt.and_,
+            sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -189,6 +190,8 @@ class TheanoPrinter(Printer):
 global_cache = {}
 
 def theano_code(expr, cache=global_cache, **kwargs):
+    if not theano:
+        raise ImportError("theano is required for theano_code")
     return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
@@ -211,6 +214,8 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
 
 def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     """ Create Theano function from SymPy expressions """
+    if not theano:
+        raise ImportError("theano is required for theano_function")
     cache = {} if cache == None else cache
     broadcastables = dim_handling(inputs, **kwargs)
 

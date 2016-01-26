@@ -1,15 +1,15 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
+                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
+from sympy.utilities.pytest import slow
 from sympy.utilities.randtest import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
-
 
 
 def test_rewrite_single():
@@ -99,7 +99,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols
+    from sympy import symbols, refine
     a, b, c = symbols('a b c', positive=True)
     r = exp(-(x - a)**2)*exp(-(x - b)**2)
     e = integrate(r, (x, 0, oo), meijerg=True)
@@ -112,10 +112,11 @@ def test_recursive():
         + (2*a + 2*b + c)**2/8)/4)
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
-    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
+    assert simplify(refine(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True))) == \
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
+@slow
 def test_meijerint():
     from sympy import symbols, expand, arg
     s, t, mu = symbols('s t mu', real=True)
@@ -145,7 +146,7 @@ def test_meijerint():
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
-    assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
+    assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
@@ -284,6 +285,7 @@ def test_inversion():
     assert meijerint_inversion(exp(-s**2), s, t) is None
 
 
+@slow
 def test_lookup_table():
     from random import uniform, randrange
     from sympy import Add
@@ -332,6 +334,7 @@ def test_linear_subs():
     assert integrate(besselj(1, x - 1), x, meijerg=True) == -besselj(0, 1 - x)
 
 
+@slow
 def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y

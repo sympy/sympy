@@ -10,6 +10,13 @@ See the webpage for more information and documentation:
 """
 
 from __future__ import absolute_import, print_function
+del absolute_import, print_function
+
+try:
+    import mpmath
+except ImportError:
+    raise ImportError("SymPy now depends on mpmath as an external library. "
+    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 from sympy.release import __version__
 
@@ -68,3 +75,5 @@ evalf._create_evalf_table()
 
 # This is slow to import:
 #import abc
+
+from .deprecated import *

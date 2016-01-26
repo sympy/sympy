@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S
+from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -11,6 +12,7 @@ from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import u, range
+from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -38,6 +40,7 @@ class PrettyPrinter(Printer):
         "use_unicode": None,
         "wrap_line": True,
         "num_columns": None,
+        "use_unicode_sqrt_char": True,
     }
 
     def __init__(self, settings=None):
@@ -91,8 +94,10 @@ class PrettyPrinter(Printer):
     _print_NegativeInfinity = _print_Atom
     _print_EmptySet = _print_Atom
     _print_Naturals = _print_Atom
+    _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
+    _print_Complexes = _print_Atom
 
     def _print_subfactorial(self, e):
         x = e.args[0]
@@ -288,8 +293,23 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Cycle(self, dc):
-        from sympy.combinatorics.permutations import Permutation
-        return self._print_tuple(Permutation(dc.as_list()).cyclic_form)
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        # for Empty Cycle
+        if dc == Cycle():
+            cyc = stringPict('')
+            return prettyForm(*cyc.parens())
+
+        dc_list = Permutation(dc.list()).cyclic_form
+        # for Identity Cycle
+        if dc_list == []:
+            cyc = self._print(dc.size - 1)
+            return prettyForm(*cyc.parens())
+
+        cyc = stringPict('')
+        for i in dc_list:
+            l = self._print(str(tuple(i)).replace(',', ''))
+            cyc = prettyForm(*cyc.right(l))
+        return cyc
 
     def _print_PDF(self, pdf):
         lim = self._print(pdf.pdf.args[0])
@@ -544,6 +564,8 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
+        if isinstance(e, Add):
+            E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
         LimArg = self._print(z)
@@ -727,6 +749,13 @@ class PrettyPrinter(Printer):
             else:
                 args[i] = self._print(a)
 
+        return prettyForm.__mul__(*args)
+
+    def _print_DotProduct(self, expr):
+        args = list(expr.args)
+
+        for i, a in enumerate(args):
+            args[i] = self._print(a)
         return prettyForm.__mul__(*args)
 
     def _print_MatPow(self, expr):
@@ -1060,10 +1089,6 @@ class PrettyPrinter(Printer):
 
         prettyFunc = self._print(Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
-        #postioning func_name
-        mid = prettyArgs.height()//2
-        if mid > 2:
-            prettyFunc.baseline = -mid + 1
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1328,6 +1353,13 @@ class PrettyPrinter(Printer):
     def _print_nth_root(self, base, expt):
         bpretty = self._print(base)
 
+        # In very simple cases, use a single-char root sign
+        if (self._settings['use_unicode_sqrt_char'] and self._use_unicode
+            and expt is S.Half and bpretty.height() == 1
+            and (bpretty.width() == 1
+                 or (base.is_Integer and base.is_nonnegative))):
+            return prettyForm(*bpretty.left(u('\N{SQUARE ROOT}')))
+
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
@@ -1419,9 +1451,10 @@ class PrettyPrinter(Printer):
             from sympy import Pow
             return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
         else:
-            prod_char = u('\xd7')
+            prod_char = u("\N{MULTIPLICATION SIGN}") if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
-                parenthesize=lambda set: set.is_Union or set.is_Intersection)
+                                   parenthesize=lambda set: set.is_Union or
+                                   set.is_Intersection or set.is_ProductSet)
 
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
@@ -1462,19 +1495,27 @@ class PrettyPrinter(Printer):
 
             return self._print_seq(i.args[:2], left, right)
 
+    def _print_AccumuBounds(self, i):
+        left = '<'
+        right = '>'
+
+        return self._print_seq(i.args[:2], left, right)
+
     def _print_Intersection(self, u):
 
-        delimiter = ' %s ' % pretty_atom('Intersection')
+        delimiter = ' %s ' % pretty_atom('Intersection', 'n')
 
         return self._print_seq(u.args, None, None, delimiter,
-                parenthesize=lambda set: set.is_ProductSet or set.is_Union)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Union or set.is_Complement)
 
     def _print_Union(self, u):
 
-        union_delimiter = ' %s ' % pretty_atom('Union')
+        union_delimiter = ' %s ' % pretty_atom('Union', 'U')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-             parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
+                               parenthesize=lambda set: set.is_ProductSet or
+                               set.is_Intersection or set.is_Complement)
 
     def _print_SymmetricDifference(self, u):
         if not self._use_unicode:
@@ -1492,7 +1533,6 @@ class PrettyPrinter(Printer):
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection
                                or set.is_Union)
 
-
     def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\N{SMALL ELEMENT OF}")
@@ -1505,6 +1545,35 @@ class PrettyPrinter(Printer):
 
         return self._print_seq((expr, bar, variables, inn, base), "{", "}", ' ')
 
+    def _print_ConditionSet(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+            # using _and because and is a keyword and it is bad practice to
+            # overwrite them
+            _and = u("\N{LOGICAL AND}")
+        else:
+            inn = 'in'
+            _and = 'and'
+        variables = self._print_seq(Tuple(ts.sym))
+        cond = self._print(ts.condition.as_expr())
+        bar = self._print("|")
+        base = self._print(ts.base_set)
+
+        return self._print_seq((variables, bar, variables, inn,
+                                base, _and, cond), "{", "}", ' ')
+
+    def _print_ComplexRegion(self, ts):
+        if self._use_unicode:
+            inn = u("\N{SMALL ELEMENT OF}")
+        else:
+            inn = 'in'
+        variables = self._print_seq(ts.args[0].variables)
+        expr = self._print(ts.args[0].expr)
+        bar = self._print("|")
+        prodsets = self._print(ts.sets)
+
+        return self._print_seq((expr, bar, variables, inn, prodsets), "{", "}", ' ')
+
     def _print_Contains(self, e):
         var, set = e.args
         if self._use_unicode:
@@ -1513,6 +1582,38 @@ class PrettyPrinter(Printer):
                                                el, self._print(set)), binding=8)
         else:
             return prettyForm(sstr(e))
+
+    def _print_FourierSeries(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+        return self._print_Add(s.truncate()) + self._print(dots)
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.truncate())
+
+    def _print_SeqFormula(self, s):
+        if self._use_unicode:
+            dots = u("\N{HORIZONTAL ELLIPSIS}")
+        else:
+            dots = '...'
+
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
+                s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append(dots)
+            printset = tuple(printset)
+        else:
+            printset = tuple(s)
+        return self._print_list(printset)
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize=lambda x: False):
@@ -1607,10 +1708,10 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
-    def _print_RootOf(self, expr):
+    def _print_ComplexRootOf(self, expr):
         args = [self._print_Add(expr.expr, order='lex'), expr.index]
         pform = prettyForm(*self._print_seq(args).parens())
-        pform = prettyForm(*pform.left('RootOf'))
+        pform = prettyForm(*pform.left('CRootOf'))
         return pform
 
     def _print_RootSum(self, expr):
@@ -1954,6 +2055,9 @@ def pretty_print(expr, **settings):
         use full precision. Default to "auto"
     order : bool or string, optional
         set to 'none' for long expressions if slow; default is None
+    use_unicode_sqrt_char : bool, optional
+        use compact single-character square root symbol (when unambiguous);
+        default is True.
 
     """
     print(pretty(expr, **settings))

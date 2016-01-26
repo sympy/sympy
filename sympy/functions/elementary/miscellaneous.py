@@ -14,7 +14,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, range
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And
 
@@ -93,28 +93,26 @@ def sqrt(arg):
     >>> powdenest(sqrt(x**2), force=True)
     x
 
-    To get both branches of the square root you can use the RootOf function:
+    To get both branches of the square root you can use the rootof function:
 
-    >>> from sympy import RootOf
+    >>> from sympy import rootof
 
-    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    >>> [rootof(x**2-3,i) for i in (0,1)]
     [-sqrt(3), sqrt(3)]
 
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root, real_root
+    sympy.polys.rootoftools.rootof, root, real_root
 
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Principal_value
-
+    .. [1] http://en.wikipedia.org/wiki/Square_root
+    .. [2] http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half)
-
 
 
 def cbrt(arg):
@@ -155,7 +153,7 @@ def cbrt(arg):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root, real_root
+    sympy.polys.rootoftools.rootof, root, real_root
 
     References
     ==========
@@ -195,19 +193,19 @@ def root(arg, n, k=0):
     >>> root(-2, 3, 2)
     -(-1)**(2/3)*2**(1/3)
 
-    To get all n n-th roots you can use the RootOf function.
+    To get all n n-th roots you can use the rootof function.
     The following examples show the roots of unity for n
     equal 2, 3 and 4:
 
-    >>> from sympy import RootOf, I
+    >>> from sympy import rootof, I
 
-    >>> [ RootOf(x**2 - 1, i) for i in range(2) ]
+    >>> [rootof(x**2 - 1, i) for i in range(2)]
     [-1, 1]
 
-    >>> [ RootOf(x**3 - 1,i) for i in range(3) ]
+    >>> [rootof(x**3 - 1,i) for i in range(3)]
     [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
 
-    >>> [ RootOf(x**4 - 1,i) for i in range(4) ]
+    >>> [rootof(x**4 - 1,i) for i in range(4)]
     [-1, 1, -I, I]
 
     SymPy, like other symbolic algebra systems, returns the
@@ -237,7 +235,7 @@ def root(arg, n, k=0):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf
+    sympy.polys.rootoftools.rootof
     sympy.core.power.integer_nthroot
     sqrt, real_root
 
@@ -288,7 +286,7 @@ def real_root(arg, n=None):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf
+    sympy.polys.rootoftools.rootof
     sympy.core.power.integer_nthroot
     root, sqrt
     """
@@ -413,23 +411,30 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
+        from sympy.core.exprtools import factor_terms
         def hit(v, t, f):
             if not v.is_Relational:
                 return t if v else f
-        if x == y:
-            return True
-        r = hit(x >= y, Max, Min)
-        if r is not None:
-            return r
-        r = hit(y <= x, Max, Min)
-        if r is not None:
-            return r
-        r = hit(x <= y, Min, Max)
-        if r is not None:
-            return r
-        r = hit(y >= x, Min, Max)
-        if r is not None:
-            return r
+        for i in range(2):
+            if x == y:
+                return True
+            r = hit(x >= y, Max, Min)
+            if r is not None:
+                return r
+            r = hit(y <= x, Max, Min)
+            if r is not None:
+                return r
+            r = hit(x <= y, Min, Max)
+            if r is not None:
+                return r
+            r = hit(y >= x, Min, Max)
+            if r is not None:
+                return r
+            # simplification can be expensive, so be conservative
+            # in what is attempted
+            x = factor_terms(x - y)
+            y = S.Zero
+
         return False
 
     def _eval_derivative(self, s):
@@ -452,9 +457,31 @@ class MinMaxBase(Expr, LatticeOp):
         return self.func(*[a.evalf(prec, options) for a in self.args])
     n = evalf
 
-    @property
-    def is_real(self):
-        return fuzzy_and(arg.is_real for arg in self.args)
+    _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
+    _eval_is_antihermitian = lambda s: _torf(i.is_antihermitian for i in s.args)
+    _eval_is_commutative = lambda s: _torf(i.is_commutative for i in s.args)
+    _eval_is_complex = lambda s: _torf(i.is_complex for i in s.args)
+    _eval_is_composite = lambda s: _torf(i.is_composite for i in s.args)
+    _eval_is_even = lambda s: _torf(i.is_even for i in s.args)
+    _eval_is_finite = lambda s: _torf(i.is_finite for i in s.args)
+    _eval_is_hermitian = lambda s: _torf(i.is_hermitian for i in s.args)
+    _eval_is_imaginary = lambda s: _torf(i.is_imaginary for i in s.args)
+    _eval_is_infinite = lambda s: _torf(i.is_infinite for i in s.args)
+    _eval_is_integer = lambda s: _torf(i.is_integer for i in s.args)
+    _eval_is_irrational = lambda s: _torf(i.is_irrational for i in s.args)
+    _eval_is_negative = lambda s: _torf(i.is_negative for i in s.args)
+    _eval_is_noninteger = lambda s: _torf(i.is_noninteger for i in s.args)
+    _eval_is_nonnegative = lambda s: _torf(i.is_nonnegative for i in s.args)
+    _eval_is_nonpositive = lambda s: _torf(i.is_nonpositive for i in s.args)
+    _eval_is_nonzero = lambda s: _torf(i.is_nonzero for i in s.args)
+    _eval_is_odd = lambda s: _torf(i.is_odd for i in s.args)
+    _eval_is_polar = lambda s: _torf(i.is_polar for i in s.args)
+    _eval_is_positive = lambda s: _torf(i.is_positive for i in s.args)
+    _eval_is_prime = lambda s: _torf(i.is_prime for i in s.args)
+    _eval_is_rational = lambda s: _torf(i.is_rational for i in s.args)
+    _eval_is_real = lambda s: _torf(i.is_real for i in s.args)
+    _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
+    _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
 class Max(MinMaxBase, Application):
     """
@@ -477,6 +504,10 @@ class Max(MinMaxBase, Application):
 
     Also, only comparable arguments are permitted.
 
+    It is named ``Max`` and not ``max`` to avoid conflicts
+    with the built-in function ``max``.
+
+
     Examples
     ========
 
@@ -487,29 +518,22 @@ class Max(MinMaxBase, Application):
 
     >>> Max(x, -2)                  #doctest: +SKIP
     Max(x, -2)
-
     >>> Max(x, -2).subs(x, 3)
     3
-
     >>> Max(p, -2)
     p
-
     >>> Max(x, y)                   #doctest: +SKIP
     Max(x, y)
-
     >>> Max(x, y) == Max(y, x)
     True
-
     >>> Max(x, Max(y, z))           #doctest: +SKIP
     Max(x, y, z)
-
     >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
     Max(8, p)
-
     >>> Max (1, x, oo)
     oo
 
-    Algorithm
+    * Algorithm
 
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
@@ -564,10 +588,21 @@ class Max(MinMaxBase, Application):
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
+    def _eval_is_positive(self):
+        return fuzzy_or(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_or(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_and(a.is_negative for a in self.args)
+
 
 class Min(MinMaxBase, Application):
     """
     Return, if possible, the minimum value of the list.
+    It is named ``Min`` and not ``min`` to avoid conflicts
+    with the built-in function ``min``.
 
     Examples
     ========
@@ -579,16 +614,12 @@ class Min(MinMaxBase, Application):
 
     >>> Min(x, -2)                  #doctest: +SKIP
     Min(x, -2)
-
     >>> Min(x, -2).subs(x, 3)
     -2
-
     >>> Min(p, -3)
     -3
-
     >>> Min(x, y)                   #doctest: +SKIP
     Min(x, y)
-
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)
 
@@ -616,3 +647,12 @@ class Min(MinMaxBase, Application):
         from sympy import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
+
+    def _eval_is_positive(self):
+        return fuzzy_and(a.is_positive for a in self.args)
+
+    def _eval_is_nonnegative(self):
+        return fuzzy_and(a.is_nonnegative for a in self.args)
+
+    def _eval_is_negative(self):
+        return fuzzy_or(a.is_negative for a in self.args)

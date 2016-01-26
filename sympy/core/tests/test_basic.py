@@ -107,6 +107,8 @@ def test_Singleton():
             instantiated += 1
             return Basic.__new__(cls)
 
+    assert instantiated == 0
+    MySingleton() # force instantiation
     assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
@@ -115,6 +117,8 @@ def test_Singleton():
 
     class MySingleton_sub(MySingleton):
         pass
+    assert instantiated == 1
+    MySingleton_sub()
     assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
@@ -173,6 +177,7 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
     from sympy.core.symbol import symbols
     from sympy.core.function import Function
+    from sympy.functions.elementary.trigonometric import cos, sin
     x = symbols('x')
     f = Function('f')
 
@@ -191,3 +196,9 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     assert i.is_zero
     assert i.is_number is False
     assert i.evalf(2, strict=False) == 0
+
+    # issue 10268
+    n = sin(1)**2 + cos(1)**2 - 1
+    assert n.is_comparable is False
+    assert n.n(2).is_comparable is False
+    assert n.n(2).n(2).is_comparable

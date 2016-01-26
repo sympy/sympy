@@ -503,9 +503,9 @@ class DenseMatrix(MatrixBase):
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableMatrix as cls
-        if self.rows:
+        if self.rows and self.cols:
             return cls._new(self.tolist())
-        return cls._new(0, self.cols, [])
+        return cls._new(self.rows, self.cols, [])
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -880,7 +880,12 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         row
         col_del
         """
-        self._mat = self._mat[:i*self.cols] + self._mat[(i + 1)*self.cols:]
+        if i < -self.rows or i >= self.rows:
+            raise IndexError("Index out of range: 'i = %s', valid -%s <= i"
+                             " < %s" % (i, self.rows, self.rows))
+        if i < 0:
+            i += self.rows
+        del self._mat[i*self.cols:(i+1)*self.cols]
         self.rows -= 1
 
     def col_del(self, i):
@@ -904,6 +909,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_del
         """
+        if i < -self.cols or i >= self.cols:
+            raise IndexError("Index out of range: 'i=%s', valid -%s <= i < %s"
+                             % (i, self.cols, self.cols))
         for j in range(self.rows - 1, -1, -1):
             del self._mat[i + j*self.cols]
         self.cols -= 1
@@ -973,7 +981,7 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
     return a
 
 @doctest_depends_on(modules=('numpy',))
-def symarray(prefix, shape):  # pragma: no cover
+def symarray(prefix, shape, **kwargs):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -990,8 +998,11 @@ def symarray(prefix, shape):  # pragma: no cover
       Shape of the created array.  If an int, the array is one-dimensional; for
       more than one dimension the shape must be a tuple.
 
+    \*\*kwargs : dict
+      keyword arguments passed on to Symbol
+
     Examples
-    --------
+    ========
     These doctests require numpy.
 
     >>> from sympy import symarray
@@ -1029,11 +1040,16 @@ def symarray(prefix, shape):  # pragma: no cover
       [a_1_1_0 a_1_1_1]
       [a_1_2_0 a_1_2_1]]]
 
+    For setting assumptions of the underlying Symbols:
+
+    >>> [s.is_real for s in symarray('a', 2, real=True)]
+    [True, True]
     """
     from numpy import empty, ndindex
     arr = empty(shape, dtype=object)
     for index in ndindex(shape):
-        arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
+        arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))),
+                            **kwargs)
     return arr
 
 
@@ -1471,7 +1487,7 @@ def hessian(f, varlist, constraints=[]):
     return out
 
 
-def GramSchmidt(vlist, orthog=False):
+def GramSchmidt(vlist, orthonormal=False):
     """
     Apply the Gram-Schmidt process to a set of vectors.
 
@@ -1487,7 +1503,7 @@ def GramSchmidt(vlist, orthog=False):
             raise ValueError(
                 "GramSchmidt: vector set not linearly independent")
         out.append(tmp)
-    if orthog:
+    if orthonormal:
         for i in range(len(out)):
             out[i] = out[i].normalized()
     return out
@@ -1570,11 +1586,22 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100):
+def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
+               percent=100, prng=None):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
     the matrix will be square. If ``symmetric`` is True the matrix must be
     square. If ``percent`` is less than 100 then only approximately the given
     percentage of elements will be non-zero.
+
+    The pseudo-random number generator used to generate matrix is chosen in the
+    following way.
+
+    * If ``prng`` is supplied, it will be used as random number generator.
+      It should be an instance of :class:`random.Random`, or at least have
+      ``randint`` and ``shuffle`` methods with same signatures.
+    * if ``prng`` is not supplied but ``seed`` is supplied, then new
+      :class:`random.Random` with given ``seed`` will be created;
+    * otherwise, a new :class:`random.Random` with default seed will be used.
 
     Examples
     ========
@@ -1609,10 +1636,8 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     """
     if c is None:
         c = r
-    if seed is None:
-        prng = random.Random()  # use system time
-    else:
-        prng = random.Random(seed)
+    # Note that ``Random()`` is equivalent to ``Random(None)``
+    prng = prng or random.Random(seed)
     if symmetric and r != c:
         raise ValueError(
             'For symmetric matrices, r must equal c, but %i != %i' % (r, c))

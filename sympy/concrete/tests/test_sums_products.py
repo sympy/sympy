@@ -2,8 +2,8 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le
-)
+    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
+    Indexed, Idx, IndexedBase, prod)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -251,6 +251,9 @@ def test_geometric_sums():
 
     # issue 8251:
     assert summation((1/(n + 1)**2)*n**2, (n, 0, oo)) == oo
+
+    #issue 9908:
+    assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
 
 
 def test_harmonic_sums():
@@ -831,3 +834,98 @@ def test_issue_4668():
 def test_matrix_sum():
     A = Matrix([[0,1],[n,0]])
     assert Sum(A,(n,0,3)).doit() == Matrix([[0, 4], [6, 0]])
+
+
+def test_indexed_idx_sum():
+    i = symbols('i', cls=Idx)
+    r = Indexed('r', i)
+    assert Sum(r, (i, 0, 3)).doit() == sum([r.xreplace({i: j}) for j in range(4)])
+    assert Product(r, (i, 0, 3)).doit() == prod([r.xreplace({i: j}) for j in range(4)])
+
+    j = symbols('j', integer=True)
+    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: Idx(j+k)}) for k in range(3)])
+    assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: Idx(j+k)}) for k in range(3)])
+
+    k = Idx('k', range=(1, 3))
+    A = IndexedBase('A')
+    assert Sum(A[k], k).doit() == sum([A[Idx(j, (1, 3))] for j in range(1, 4)])
+    assert Product(A[k], k).doit() == prod([A[Idx(j, (1, 3))] for j in range(1, 4)])
+
+    raises(ValueError, lambda: Sum(A[k], (k, 1, 4)))
+    raises(ValueError, lambda: Sum(A[k], (k, 0, 3)))
+    raises(ValueError, lambda: Sum(A[k], (k, 2, oo)))
+
+    raises(ValueError, lambda: Product(A[k], (k, 1, 4)))
+    raises(ValueError, lambda: Product(A[k], (k, 0, 3)))
+    raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
+
+
+def test_is_convergent():
+    # divergence tests --
+    assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() is S.false
+    assert Sum(factorial(n)/5**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
+    assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+
+    # root test --
+    assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
+
+    # integral test --
+
+    # p-series test --
+    assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(1/n**(S(6)/5), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
+
+    # comparison test --
+    assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
+    assert Sum(1/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*log(n)), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(2/(n*log(n)*log(log(n))**2), (n, 5, oo)).is_convergent() is S.true
+    assert Sum(2/(n*log(n)**2), (n, 2, oo)).is_convergent() is S.true
+    assert Sum((n - 1)/(n**2*log(n)**3), (n, 2, oo)).is_convergent() is S.true
+    assert Sum(1/(n*log(n)*log(log(n))), (n, 5, oo)).is_convergent() is S.false
+    assert Sum((n - 1)/(n*log(n)**3), (n, 3, oo)).is_convergent() is S.false
+    assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
+
+    # alternating series tests --
+    assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
+
+    # with -negativeInfinite Limits
+    assert Sum(1/(n**2 + 1), (n, -oo, 1)).is_convergent() is S.true
+    assert Sum(1/(n - 1), (n, -oo, -1)).is_convergent() is S.false
+    assert Sum(1/(n**2 - 1), (n, -oo, -5)).is_convergent() is S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, 2)).is_convergent() is S.true
+    assert Sum(1/(n**2 - 1), (n, -oo, oo)).is_convergent() is S.true
+
+    # piecewise functions
+    f = Piecewise((n**(-2), n <= 1), (n**2, n > 1))
+    assert Sum(f, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(f, (n, -oo, oo)).is_convergent() is S.false
+    assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
+
+
+def test_is_absolutely_convergent():
+    assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent() is S.true
+
+
+@XFAIL
+def test_convergent_failing():
+    assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    # is_decreasing is not handling "is_decreasing(1)", so raises error
+
+    # dirichlet tests
+    assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_10156():
+    cx = Sum(2*y**2*x, (x, 1,3))
+    e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
+    assert e.factor() == \
+        8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))

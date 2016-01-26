@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy import Number
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
@@ -35,6 +36,8 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
+        if not matrices:
+            return factor
         return obj
 
     @property
@@ -83,8 +86,8 @@ class MatMul(MatrixExpr):
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
-            from .trace import Trace
-            return factor * Trace(mmul)
+            from .trace import trace
+            return factor * trace(mmul.doit())
         else:
             raise NotImplementedError("Can't simplify any further")
 
@@ -110,6 +113,15 @@ class MatMul(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatMul(*args))
+
+    # Needed for partial compatibility with Mul
+    def args_cnc(self, **kwargs):
+        coeff, matrices = self.as_coeff_matrices()
+        # I don't know how coeff could have noncommutative factors, but this
+        # handles it.
+        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+
+        return coeff_c, coeff_nc + matrices
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -166,7 +178,7 @@ def merge_explicit(matmul):
     newargs = []
     last = matmul.args[0]
     for arg in matmul.args[1:]:
-        if isinstance(arg, MatrixBase) and isinstance(last, MatrixBase):
+        if isinstance(arg, (MatrixBase, Number)) and isinstance(last, (MatrixBase, Number)):
             last = last * arg
         else:
             newargs.append(last)

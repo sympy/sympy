@@ -185,6 +185,7 @@ speed = m/s
 acceleration = m/s**2
 density = kg/m**3
 optical_power = dioptre = D = 1/m
+illuminance = lux = lx = sr*cd/m**2
 
 # Common length units
 
@@ -225,6 +226,9 @@ sidereal_year = sidereal_years = Rational('31558149.540')*s
 tropical_year = tropical_years = Rational('365.24219')*day
 common_year = common_years = Rational('365')*day
 julian_year = julian_years = Rational('365.25')*day
+draconic_year = draconic_years = Rational('346.62')*day
+gaussian_year = gaussian_years = Rational('365.2568983')*day
+full_moon_cycle = full_moon_cycles = Rational('411.78443029')*day
 
 year = years = tropical_year
 

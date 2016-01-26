@@ -172,14 +172,14 @@ def with_metaclass(meta, *bases):
     <class 'Meta'>
 
     """
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    # Code copied from the 'six' library.
     class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
         def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
-    return metaclass("NewBase", None, {})
+    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -205,6 +205,15 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
 
     See also: is_sequence
 
@@ -233,6 +242,8 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     False
 
     """
+    if hasattr(i, '_iterable'):
+        return i._iterable
     try:
         iter(i)
     except TypeError:

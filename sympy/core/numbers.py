@@ -24,7 +24,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, filldedent
 
 rnd = mlib.round_nearest
 
@@ -243,6 +243,73 @@ def igcdex(a, b):
     return (x*x_sign, y*y_sign, a)
 
 
+def mod_inverse(a, m):
+    """
+    Return the number c such that, ( a * c ) % m == 1 where
+    c has the same sign as a. If no such value exists, a
+    ValueError is raised.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.core.numbers import mod_inverse
+
+    Suppose we wish to find multiplicative inverse x of
+    3 modulo 11. This is the same as finding x such
+    that 3 * x = 1 (mod 11). One value of x that satisfies
+    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 mod(11).
+    This is the value return by mod_inverse:
+
+    >>> mod_inverse(3, 11)
+    4
+    >>> mod_inverse(-3, 11)
+    -4
+
+    When there is a commono factor between the numerators of
+    ``a`` and ``m`` the inverse does not exist:
+
+    >>> mod_inverse(2, 4)
+    Traceback (most recent call last):
+    ...
+    ValueError: inverse of 2 mod 4 does not exist
+
+    >>> mod_inverse(S(2)/7, S(5)/2)
+    7/2
+
+    References
+    ==========
+    - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+    - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+    """
+    c = None
+    try:
+        a, m = as_int(a), as_int(m)
+        if m > 1:
+            x, y, g = igcdex(a, m)
+            if g == 1:
+                c = x % m
+            if a < 0:
+                c -= m
+    except ValueError:
+        a, m = sympify(a), sympify(m)
+        if not (a.is_number and m.is_number):
+            raise TypeError(filldedent('''
+                Expected numbers for arguments; symbolic `mod_inverse`
+                is not implemented
+                but symbolic expressions can be handled with the
+                similar function,
+                sympy.polys.polytools.invert'''))
+        big = (m > 1)
+        if not (big is S.true or big is S.false):
+            raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
+        elif big:
+            c = 1/a
+    if c is None:
+        raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
+    return c
+
+
 class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
@@ -286,6 +353,12 @@ class Number(AtomicExpr):
                 return obj
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
+
+    def invert(self, other, *gens, **args):
+        from sympy.polys.polytools import invert
+        if getattr(other, 'is_number', True):
+            return mod_inverse(self, other)
+        return invert(self, other, *gens, **args)
 
     def __divmod__(self, other):
         from .containers import Tuple
@@ -674,6 +747,10 @@ class Float(Number):
             num = '0'
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
+        elif num is S.Infinity:
+            num = '+inf'
+        elif num is S.NegativeInfinity:
+            num = '-inf'
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
@@ -719,7 +796,17 @@ class Float(Number):
         elif isinstance(num, str):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
-            _mpf_ = mlib.from_str(str(num), prec, rnd)
+            if num.is_finite():
+                _mpf_ = mlib.from_str(str(num), prec, rnd)
+            elif num.is_nan():
+                _mpf_ = _mpf_nan
+            elif num.is_infinite():
+                if num > 0:
+                    _mpf_ = _mpf_inf
+                else:
+                    _mpf_ = _mpf_ninf
+            else:
+                raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
@@ -1150,7 +1237,6 @@ class Rational(Number):
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
                     p = [1, -1][neg_pow]*int("".join(str(x) for x in digits))
                     if expt > 0:
-                        # TODO: this branch needs a test
                         return Rational(p*Pow(10, expt), 1)
                     return Rational(p, Pow(10, -expt))
                 except decimal.InvalidOperation:
@@ -1394,8 +1480,8 @@ class Rational(Number):
     def __int__(self):
         p, q = self.p, self.q
         if p < 0:
-            return -(-p//q)
-        return p//q
+            return -int(-p//q)
+        return int(p//q)
 
     __long__ = __int__
 
@@ -1857,6 +1943,9 @@ class Integer(Rational):
             # (-2)**k --> 2**k
             if self.is_negative and expt.is_even:
                 return (-self)**expt
+        if isinstance(expt, Float):
+            # Rational knows how to exponentiate by a Float
+            return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -1965,7 +2054,7 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
-    def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
+    def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
@@ -1987,7 +2076,7 @@ class AlgebraicNumber(Expr):
 
         dom = minpoly.get_domain()
 
-        if coeffs != Tuple():
+        if coeffs is not None:
             if not isinstance(coeffs, ANP):
                 rep = DMP.from_sympy_list(sympify(coeffs), 0, dom)
                 scoeffs = Tuple(*coeffs)
@@ -1998,15 +2087,15 @@ class AlgebraicNumber(Expr):
             if rep.degree() >= minpoly.degree():
                 rep = rep.rem(minpoly.rep)
 
-            sargs = (root, scoeffs)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
+            scoeffs = Tuple(1, 0)
 
             if root.is_negative:
                 rep = -rep
+                scoeffs = Tuple(-1, 0)
 
-            sargs = (root, coeffs)
+        sargs = (root, scoeffs)
 
         if alias is not None:
             if not isinstance(alias, Symbol):
@@ -2073,9 +2162,9 @@ class AlgebraicNumber(Expr):
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
     def _eval_simplify(self, ratio, measure):
-        from sympy.polys import RootOf, minpoly
+        from sympy.polys import CRootOf, minpoly
 
-        for r in [r for r in self.minpoly.all_roots() if r.func != RootOf]:
+        for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
                 # use the matching root if it's simpler
                 if measure(r) < ratio*measure(self.root):
@@ -2451,14 +2540,25 @@ class Infinity(with_metaclass(Singleton, Number)):
         NegativeInfinity
 
         """
+        from sympy.functions import re
+
         if expt.is_positive:
             return S.Infinity
         if expt.is_negative:
             return S.Zero
         if expt is S.NaN:
             return S.NaN
+        if expt is S.ComplexInfinity:
+            return S.NaN
+        if expt.is_real is False and expt.is_number:
+            expt_real = re(expt)
+            if expt_real.is_positive:
+                return S.ComplexInfinity
+            if expt_real.is_negative:
+                return S.Zero
+            if expt_real.is_zero:
+                return S.NaN
 
-        if expt.is_number:
             return self**expt.evalf()
 
     def _as_mpf_val(self, prec):
@@ -2496,7 +2596,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonpositive:
                 return S.false
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.true
         return Expr.__le__(self, other)
 
@@ -2510,7 +2610,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonpositive:
                 return S.true
-            elif other is S.Infinity:
+            elif other.is_infinite and other.is_positive:
                 return S.false
         return Expr.__gt__(self, other)
 
@@ -2658,7 +2758,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         NaN
 
         """
-        if isinstance(expt, Number):
+        if expt.is_number:
             if expt is S.NaN or \
                 expt is S.Infinity or \
                     expt is S.NegativeInfinity:
@@ -2698,7 +2798,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_nonnegative:
                 return S.true
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.false
         return Expr.__lt__(self, other)
 
@@ -2730,7 +2830,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_nonnegative:
                 return S.false
-            elif other is S.NegativeInfinity:
+            elif other.is_infinite and other.is_negative:
                 return S.true
         return Expr.__ge__(self, other)
 

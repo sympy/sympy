@@ -1,9 +1,8 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 
-from .assumptions import ManagedProperties
+from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
-from .core import BasicType
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
@@ -11,6 +10,7 @@ from .decorators import deprecated
 from .singleton import S
 
 from inspect import getmro
+
 
 class Basic(with_metaclass(ManagedProperties)):
     """
@@ -73,6 +73,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Not = False
     is_Matrix = False
     is_Vector = False
+    is_Point = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -272,7 +273,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 return arg
 
         args = self._sorted_args
-        args = len(args), tuple([ inner_key(arg) for arg in args ])
+        args = len(args), tuple([inner_key(arg) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
@@ -361,7 +362,7 @@ class Basic(with_metaclass(ManagedProperties)):
         False
 
         """
-        dummy_symbols = [ s for s in self.free_symbols if s.is_Dummy ]
+        dummy_symbols = [s for s in self.free_symbols if s.is_Dummy]
 
         if not dummy_symbols:
             return self == other
@@ -484,13 +485,13 @@ class Basic(with_metaclass(ManagedProperties)):
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
-        which are bound variables, so Integral has a method to return all symbols
-        except those. Derivative keeps track of symbols with respect to which it
-        will perform a derivative; those are bound variables, too, so it has
-        its own symbols method.
+        which are bound variables, so Integral has a method to return all
+        symbols except those. Derivative keeps track of symbols with respect
+        to which it will perform a derivative; those are
+        bound variables, too, so it has its own free_symbols method.
 
-        Any other method that uses bound variables should implement a symbols
-        method."""
+        Any other method that uses bound variables should implement a
+        free_symbols method."""
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
@@ -520,7 +521,6 @@ class Basic(with_metaclass(ManagedProperties)):
         return dict(list(zip(V, [Symbol(name % i, **v.assumptions0)
             for i, v in enumerate(V)])))
 
-
     def rcall(self, *args):
         """Apply on the argument recursively through the expression tree.
 
@@ -532,7 +532,7 @@ class Basic(with_metaclass(ManagedProperties)):
         however you can use
 
         >>> from sympy import Lambda
-        >>> from sympy.abc import x,y,z
+        >>> from sympy.abc import x, y, z
         >>> (x + Lambda(y, 2*y)).rcall(z)
         x + 2*z
         """
@@ -565,7 +565,7 @@ class Basic(with_metaclass(ManagedProperties)):
     @property
     def is_comparable(self):
         """Return True if self can be computed to a real number
-        with precision, else False.
+        (or already is a real number) with precision, else False.
 
         Examples
         ========
@@ -575,6 +575,19 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+
+        A False result does not mean that `self` cannot be rewritten
+        into a form that would be comparable. For example, the
+        difference computed below is zero but without simplification
+        it does not evaluate to a zero with precision:
+
+        >>> e = 2**pi*(1 + 2**pi)
+        >>> dif = e - e.expand()
+        >>> dif.is_comparable
+        False
+        >>> dif.n(2)._prec
+        1
+
         """
         is_real = self.is_real
         if is_real is False:
@@ -582,14 +595,15 @@ class Basic(with_metaclass(ManagedProperties)):
         is_number = self.is_number
         if is_number is False:
             return False
-        if is_real and is_number:
-            return True
-        n, i = [p.evalf(2) for p in self.as_real_imag()]
+        n, i = [p.evalf(2) if not p.is_Number else p
+            for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
             # if _prec = 1 we can't decide and if not,
-            # the answer is False so return False
+            # the answer is False because numbers with
+            # imaginary parts can't be compared
+            # so return False
             return False
         else:
             return n._prec != 1
@@ -780,7 +794,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
-        >>> expr.subs(dict([A,B,C,D,E]))
+        >>> expr.subs(dict([A, B, C, D, E]))
         a*c*sin(d*e) + b
 
         The resulting expression represents a literal replacement of the
@@ -1037,7 +1051,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
-        >>> (1 + x*y).xreplace({x:pi, y:2})
+        >>> (1 + x*y).xreplace({x: pi, y: 2})
         1 + 2*pi
 
         Replacements occur only if an entire node in the expression tree is
@@ -1066,7 +1080,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Trying to replace x with an expression raises an error:
 
-        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) #doctest: +SKIP
+        >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
         See Also
@@ -1077,19 +1091,29 @@ class Basic(with_metaclass(ManagedProperties)):
               themselves.
 
         """
+        value, _ = self._xreplace(rule)
+        return value
+
+    def _xreplace(self, rule):
+        """
+        Helper for xreplace. Tracks whether a replacement actually occurred.
+        """
         if self in rule:
-            return rule[self]
+            return rule[self], True
         elif rule:
             args = []
+            changed = False
             for a in self.args:
                 try:
-                    args.append(a.xreplace(rule))
+                    a_xr = a._xreplace(rule)
+                    args.append(a_xr[0])
+                    changed |= a_xr[1]
                 except AttributeError:
                     args.append(a)
             args = tuple(args)
-            if not _aresame(args, self.args):
-                return self.func(*args)
-        return self
+            if changed:
+                return self.func(*args), True
+        return self, False
 
     @cacheit
     def has(self, *patterns):
@@ -1126,7 +1150,7 @@ class Basic(with_metaclass(ManagedProperties)):
             for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
-        if isinstance(pattern, BasicType):
+        if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 
@@ -1307,11 +1331,11 @@ class Basic(with_metaclass(ManagedProperties)):
                 # if ``exact`` is True, only accept match if there are no null
                 # values amongst those matched.
                 if exact:
-                    _value = lambda expr, result: (value(**dict([ (
+                    _value = lambda expr, result: (value(**dict([(
                         str(key)[:-1], val) for key, val in result.items()]))
                         if all(val for val in result.values()) else expr)
                 else:
-                    _value = lambda expr, result: value(**dict([ (
+                    _value = lambda expr, result: value(**dict([(
                         str(key)[:-1], val) for key, val in result.items()]))
             else:
                 raise TypeError(
@@ -1333,6 +1357,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         mapping = {}  # changes that took place
         mask = []  # the dummies that were used as change placeholders
+
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:
@@ -1469,17 +1494,8 @@ class Basic(with_metaclass(ManagedProperties)):
         {p_: 2/x**2}
 
         """
-        from sympy import signsimp
         pattern = sympify(pattern)
-        s = signsimp(self)
-        p = signsimp(pattern)
-        # if we still have the same relationship between the types of
-        # input, then use the sign simplified forms
-        if (pattern.func == self.func) and (s.func == p.func):
-            rv = p.matches(s, old=old)
-        else:
-            rv = pattern.matches(self, old=old)
-        return rv
+        return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
@@ -1501,13 +1517,13 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> (2*Integral(x, x)).doit()
            x**2
 
-           >>> (2*Integral(x, x)).doit(deep = False)
+           >>> (2*Integral(x, x)).doit(deep=False)
            2*Integral(x, x)
 
         """
         if hints.get('deep', True):
-            terms = [ term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args ]
+            terms = [term.doit(**hints) if isinstance(term, Basic) else term
+                                         for term in self.args]
             return self.func(*terms)
         else:
             return self
@@ -1519,9 +1535,9 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
 
         if hints.get('deep', True):
-            args = [ a._eval_rewrite(pattern, rule, **hints)
+            args = [a._eval_rewrite(pattern, rule, **hints)
                         if isinstance(a, Basic) else a
-                        for a in self.args ]
+                        for a in self.args]
         else:
             args = self.args
 
@@ -1557,14 +1573,17 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x
 
         Unspecified pattern:
+
         >>> sin(x).rewrite(exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a single function:
+
         >>> sin(x).rewrite(sin, exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
         Pattern as a list of functions:
+
         >>> sin(x).rewrite([sin, ], exp)
         -I*(exp(I*x) - exp(-I*x))/2
 
@@ -1584,7 +1603,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if iterable(pattern[0]):
                     pattern = pattern[0]
 
-                pattern = [ p.__class__ for p in pattern if self.has(p) ]
+                pattern = [p.__class__ for p in pattern if self.has(p)]
 
                 if pattern:
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
@@ -1808,7 +1827,8 @@ class preorder_traversal(Iterator):
         Skip yielding current node's (last yielded node's) subtrees.
 
         Examples
-        --------
+        ========
+
         >>> from sympy.core import symbols
         >>> from sympy.core.basic import preorder_traversal
         >>> x, y, z = symbols('x y z')

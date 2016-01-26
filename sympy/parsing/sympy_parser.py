@@ -310,7 +310,8 @@ def _implicit_application(tokens, local_dict, global_dict):
 def function_exponentiation(tokens, local_dict, global_dict):
     """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, function_exponentiation)
@@ -432,7 +433,8 @@ def implicit_multiplication(result, local_dict, global_dict):
     Use this before :func:`implicit_application`, otherwise expressions like
     ``sin 2x`` will be parsed as ``x * sin(2)`` rather than ``sin(2*x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication)
@@ -457,7 +459,8 @@ def implicit_application(result, local_dict, global_dict):
     like ``sin 2x`` will be parsed as ``x * sin(2)`` rather than
     ``sin(2*x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_application)
@@ -486,7 +489,8 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
     - Functions can be exponentiated.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication_application)
@@ -698,6 +702,72 @@ def rationalize(tokens, local_dict, global_dict):
         else:
             result.append((toknum, tokval))
 
+    return result
+
+
+def _transform_equals_sign(tokens, local_dict, global_dict):
+    """Transforms the equals sign ``=`` to instances of Eq.
+
+    This is a helper function for `convert_equals_signs`.
+    Works with expressions containing one equals sign and no
+    nesting. Expressions like `(1=2)=False` won't work with this
+    and should be used with `convert_equals_signs`.
+
+    Examples: 1=2     to Eq(1,2)
+              1*2=x   to Eq(1*2, x)
+
+    This does not deal with function arguments yet.
+
+    """
+    result = []
+    if (OP, "=") in tokens:
+        result.append((NAME, "Eq"))
+        result.append((OP, "("))
+        for index, token in enumerate(tokens):
+            if token == (OP, "="):
+                result.append((OP, ","))
+                continue
+            result.append(token)
+        result.append((OP, ")"))
+    else:
+        result = tokens
+    return result
+
+
+def convert_equals_signs(result, local_dict, global_dict):
+    """ Transforms all the equals signs ``=`` to instances of Eq.
+
+    Parses the equals signs in the expression and replaces them with
+    appropriate Eq instances.Also works with nested equals signs.
+
+    Does not yet play well with function arguments.
+    For example, the expression `(x=y)` is ambiguous and can be interpreted
+    as x being an argument to a function and `convert_equals_signs` won't
+    work for this.
+
+    See also
+    ========
+    convert_equality_operators
+
+    Examples:
+    =========
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, convert_equals_signs)
+    >>> parse_expr("1*2=x", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(2, x)
+    >>> parse_expr("(1*2=x)=False", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(Eq(2, x), False)
+
+    """
+    for step in (_group_parentheses(convert_equals_signs),
+                  _apply_functions,
+                  _transform_equals_sign):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
     return result
 
 

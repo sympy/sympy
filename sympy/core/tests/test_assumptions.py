@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, sin, asin
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -327,6 +327,19 @@ def test_symbol_real():
     assert a.is_zero is False
 
 
+def test_symbol_imaginary():
+    a = Symbol('a', imaginary=True)
+
+    assert a.is_real is False
+    assert a.is_integer is False
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
+    assert a.is_zero is False
+    assert a.is_nonzero is False  # since nonzero -> real
+
+
 def test_symbol_zero():
     x = Symbol('x', zero=True)
     assert x.is_positive is False
@@ -334,6 +347,8 @@ def test_symbol_zero():
     assert x.is_negative is False
     assert x.is_nonnegative
     assert x.is_zero is True
+    # TODO Change to x.is_nonzero is None
+    # See https://github.com/sympy/sympy/pull/9583
     assert x.is_nonzero is False
     assert x.is_finite is True
 
@@ -388,11 +403,35 @@ def test_symbol_falsepositive():
     assert x.is_nonzero is None
 
 
+def test_symbol_falsepositive_mul():
+    # To test pull request 9379
+    # Explicit handling of arg.is_positive=False was added to Mul._eval_is_positive
+    x = 2*Symbol('x', positive=False)
+    assert x.is_positive is False  # This was None before
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
 def test_neg_symbol_falsepositive():
     x = -Symbol('x', positive=False)
     assert x.is_positive is None
     assert x.is_nonpositive is None
     assert x.is_negative is False
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+def test_neg_symbol_falsenegative():
+    # To test pull request 9379
+    # Explicit handling of arg.is_negative=False was added to Mul._eval_is_positive
+    x = -Symbol('x', negative=False)
+    assert x.is_positive is False  # This was None before
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
     assert x.is_nonnegative is None
     assert x.is_zero is None
     assert x.is_nonzero is None
@@ -425,7 +464,7 @@ def test_symbol_falsenonnegative():
     assert x.is_negative is None
     assert x.is_nonnegative is False
     assert x.is_zero is False
-    assert x.is_nonzero is True
+    assert x.is_nonzero is None
 
 
 @XFAIL
@@ -479,7 +518,7 @@ def test_composite():
     assert S(17).is_composite is False
     assert S(4).is_composite is True
     x = Dummy(integer=True, positive=True, prime=False)
-    assert x.is_composite
+    assert x.is_composite is None # x could be 1
     assert (x + 1).is_composite is None
 
 
@@ -714,6 +753,33 @@ def test_Pow_is_algebraic():
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
 
+def test_Mul_is_prime():
+    from sympy import Mul
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x*y).is_prime is None
+    assert ( (x+1)*(y+1) ).is_prime is False
+
+    x = Symbol('x', positive=True)
+    assert (x*y).is_prime is None
+
+    assert Mul(6, S.Half, evaluate=False).is_prime is True
+    assert Mul(sqrt(3), sqrt(3), evaluate=False).is_prime is True
+    assert Mul(5, S.Half, evaluate=False).is_prime is False
+
+def test_Pow_is_prime():
+    from sympy import Pow
+    x = Symbol('x', positive=True, integer=True)
+    y = Symbol('y', positive=True, integer=True)
+    assert (x**y).is_prime is None
+
+    x = Symbol('x', positive=True)
+    assert (x**y).is_prime is None
+
+    assert Pow(6, S.One, evaluate=False).is_prime is False
+    assert Pow(9, S.Half, evaluate=False).is_prime is True
+    assert Pow(5, S.One, evaluate=False).is_prime is True
+
 
 def test_Mul_is_infinite():
     x = Symbol('x')
@@ -900,3 +966,40 @@ def test_issues_8632_8633_8638_8675_8992():
     assert ((p + 2)**3 - S.Half).is_positive
     n = Dummy(negative=True)
     assert (n - 3).is_nonpositive
+
+
+def test_issue_9115():
+    n = Dummy('n', integer=True, nonnegative=True)
+    assert (factorial(n) >= 1) == True
+    assert (factorial(n) < 1) == False
+
+
+def test_issue_9165():
+    z = Symbol('z', zero=True)
+    f = Symbol('f', finite=False)
+    assert 0/z == S.NaN
+    assert 0*(1/z) == S.NaN
+    assert 0*f == S.NaN
+
+def test_issue_10024():
+    x = Dummy('x')
+    assert Mod(x, 2*pi).is_zero is None
+
+
+def test_issue_10302():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    i = u + u*I
+    assert i.is_real is None  # w/o simplification this should fail
+    assert (u + i).is_zero is None
+    assert (1 + i).is_zero is False
+    a = Dummy('a', zero=True)
+    assert (a + I).is_zero is False
+    assert (a + r*I).is_zero is None
+    assert (a + I).is_imaginary
+    assert (a + x + I).is_imaginary is None
+    assert (a + r*I + I).is_imaginary is None
+
+def test_complex_reciprocal_imaginary():
+    assert (1 / (4 + 3*I)).is_imaginary is False

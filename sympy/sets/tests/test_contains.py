@@ -1,4 +1,4 @@
-from sympy import Symbol, Contains, S, Interval, FiniteSet
+from sympy import Symbol, Contains, S, Interval, FiniteSet, oo
 
 
 def test_contains_basic():
@@ -15,3 +15,8 @@ def test_issue_6194():
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false
+
+
+def test_issue_10326():
+    assert Contains(oo, Interval(-oo, oo)) == False
+    assert Contains(-oo, Interval(-oo, oo)) == False
