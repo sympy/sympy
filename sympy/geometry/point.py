@@ -79,11 +79,13 @@ class Point(GeometryEntity):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         if iterable(args[0]):
-            if isinstance(args[0], Point):
+            if isinstance(args[0], Point) and not evaluate:
                 return args[0]
             args = args[0]
 
         # unpack the arguments into a friendly Tuple
+        # if we were already a Point, we're doing an excess
+        # iteration, but we'll worry about efficiency later
         coords = Tuple(*args)
         if any(a.is_number and im(a) for a in coords):
             raise ValueError('Imaginary coordinates not permitted.')
@@ -264,7 +266,14 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
-        return sqrt(sum([(a - b)**2 for a, b in zip(self.args, p.args)]))
+        try:
+            args = p.args
+        except AttributeError:
+            try:
+                args = [as_int(I) for I in p]
+            except TypeError:
+                args = Point(p).args
+        return sqrt(sum([(a - b)**2 for a, b in zip(self.args, args)]))
 
     def taxicab_distance(self, p):
         """The Taxicab Distance from self to point p.
