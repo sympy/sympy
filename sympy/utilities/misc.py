@@ -266,9 +266,9 @@ def replace(string, *reps):
     'eggsham md5'
 
     There is no guarantee that a unique answer will be
-    obtained if keys in a mapping overlap are the same
-    length and have some identical sequences at the
-    beginning/end:
+    obtained if keys in a mapping overlap (i.e. are the same
+    length and have some identical sequence at the
+    beginning/end):
 
     >>> reps = [
     ...     ('ab', 'x'),
