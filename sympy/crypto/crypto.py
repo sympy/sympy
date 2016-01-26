@@ -57,9 +57,9 @@ bifid10 = printable
 
 
 def padded_key(key, symbols, filter=True):
-    """Return a string of the characters of ``symbols`` with those of
-    ``key`` appearing first, omitting characters in ``key`` that are
-    not in ``symbols``. A ValueError is raised if a) there are
+    """Return a string of the distinct characters of ``symbols`` with
+    those of ``key`` appearing first, omitting characters in ``key``
+    that are not in ``symbols``. A ValueError is raised if a) there are
     duplicate characters in ``symbols`` or b) there are characters
     in ``key`` that are  not in ``symbols``.
 
@@ -90,15 +90,15 @@ def padded_key(key, symbols, filter=True):
 
 def check_and_join(phrase, symbols=None, filter=None):
     """
-    Joins characters of `phrase` and if symbols are provided, raises
-    an error if any character in the phrase is not in the symbols.
+    Joins characters of `phrase` and if ``symbols`` is given, raises
+    an error if any character in ``phrase`` is not in ``symbols``.
 
     Parameters
     ==========
 
     phrase:     string or list of strings to be returned as a string
-    symbols:    iterable of characters allowed in phrase; if None,
-                no checking is performed
+    symbols:    iterable of characters allowed in ``phrase``;
+                if ``symbols`` is None, no checking is performed
 
     Examples
     ========
@@ -145,7 +145,8 @@ def _prep(msg, key, alp, default=None):
 
 def cycle_list(k, n):
     """
-    Returns the cyclic shift of the list range(n) by k.
+    Returns the elements of the list ``range(n)`` shifted to the
+    left by ``k`` (so the list starts with ``k``).
 
     Examples
     ========
@@ -181,21 +182,21 @@ def encipher_shift(msg, key, symbols=None):
 
         INPUT:
 
-            ``key``: an integer from (the secret key)
+            ``key``: an integer (the secret key)
 
-            ``m``: plaintext of upper-case letters
+            ``msg``: plaintext of upper-case letters
 
         OUTPUT:
 
-            ``c``: ciphertext of upper-case letters
+            ``ct``: ciphertext of upper-case letters
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
-            1. Compute from the string ``m`` a list ``L1`` of
+            1. Compute from the string ``msg`` a list ``L1`` of
                corresponding integers.
             2. Compute from the list ``L1`` a new list ``L2``, given by
                adding ``(k mod 26)`` to each element in ``L1``.
-            3. Compute from the list ``L2`` a string ``c`` of
+            3. Compute from the list ``L2`` a string ``ct`` of
                corresponding letters.
 
     Examples
@@ -224,6 +225,28 @@ def encipher_shift(msg, key, symbols=None):
 
 
 def decipher_shift(msg, key, symbols=None):
+    """
+    Return the text by shifting the characters of ``msg`` to the
+    left by the amount given by ``key``.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_shift, decipher_shift
+    >>> msg = "GONAVYBEATARMY"
+    >>> ct = encipher_shift(msg, 1); ct
+    'HPOBWZCFBUBSNZ'
+
+    To decipher the shifted text, change the sign of the key:
+
+    >>> encipher_shift(ct, -1)
+    'GONAVYBEATARMY'
+
+    Or use this function with the original key:
+
+    >>> decipher_shift(ct, 1)
+    'GONAVYBEATARMY'
+    """
     return encipher_shift(msg, -key, symbols)
 
 
@@ -265,7 +288,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
 
         OUTPUT:
 
-            ``c``: string of characters (the ciphertext message)
+            ``ct``: string of characters (the ciphertext message)
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -274,7 +297,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
             2. Compute from the list ``L1`` a new list ``L2``, given by
                replacing ``x`` by ``a*x + b (mod N)``, for each element
                ``x`` in ``L1``.
-            3. Compute from the list ``L2`` a string ``c`` of
+            3. Compute from the list ``L2`` a string ``ct`` of
                corresponding letters.
 
     See Also
@@ -448,13 +471,13 @@ def encipher_vigenere(msg, key, symbols=None):
 
         OUTPUT:
 
-            ``c``: string of characters (the ciphertext message)
+            ``ct``: string of characters (the ciphertext message)
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
             1. Compute from the string ``key`` a list ``L1`` of
                corresponding integers. Let ``n1 = len(L1)``.
-            2. Compute from the string ``m`` a list ``L2`` of
+            2. Compute from the string ``msg`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
             3. Break ``L2`` up sequencially into sublists of size
                ``n1``; the last sublist may be smaller than ``n1``
@@ -463,7 +486,7 @@ def encipher_vigenere(msg, key, symbols=None):
                to the ``i``-th element in the sublist, for each ``i``.
             5. Assemble these lists ``C`` by concatenation into a new
                list of length ``n2``.
-            6. Compute from the new list a string ``c`` of
+            6. Compute from the new list a string ``ct`` of
                corresponding letters.
 
     Once it is known that the key is, say, `n` characters long,
@@ -483,15 +506,15 @@ def encipher_vigenere(msg, key, symbols=None):
 
           ``key``: a string of letters (the secret key)
 
-          ``m``: string of letters (the plaintext message)
+          ``msg``: string of letters (the plaintext message)
 
         OUTPUT:
 
-          ``c``: string of upper-case letters (the ciphertext message)
+          ``ct``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
-            1. Compute from the string ``m`` a list ``L2`` of
+            1. Compute from the string ``msg`` a list ``L2`` of
                corresponding integers. Let ``n2 = len(L2)``.
             2. Let ``n1`` be the length of the key. Append to the
                string ``key`` the first ``n2 - n1`` characters of
@@ -500,7 +523,7 @@ def encipher_vigenere(msg, key, symbols=None):
                to the letter numbers in the first step.
             3. Compute a new list ``C`` given by
                ``C[i] = L1[i] + L2[i] (mod N)``.
-            4. Compute from the new list a string ``c`` of letters
+            4. Compute from the new list a string ``ct`` of letters
                corresponding to the new integers.
 
     To decipher the auto-key ciphertext, the key is used to decipher
@@ -607,7 +630,7 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
 
         OUTPUT:
 
-            ``c``: ciphertext of upper-case letters
+            ``ct``: ciphertext of upper-case letters
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -621,7 +644,7 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
                ``C[i] = K*L_i`` (arithmetic is done mod N), for each
                ``i``.
             4. Concatenate these into a list ``C = C_1 + ... + C_t``.
-            5. Compute from ``C`` a string ``c`` of corresponding
+            5. Compute from ``C`` a string ``ct`` of corresponding
                letters. This has length ``k*t``.
 
     References
@@ -1272,11 +1295,11 @@ def kid_rsa_public_key(a, b, A, B):
     * The *public key* is `(n, e)`. Bob sends these to Alice.
     * The *private key* is `(n, d)`, which Bob keeps secret.
 
-    Encryption: If `m` is the plaintext message then the
-    ciphertext is `c = m e \pmod n`.
+    Encryption: If `p` is the plaintext message then the
+    ciphertext is `c = p e \pmod n`.
 
     Decryption: If `c` is the ciphertext message then the
-    plaintext is `m = c d \pmod n`.
+    plaintext is `p = c d \pmod n`.
 
     Examples
     ========
@@ -1726,9 +1749,9 @@ def elgamal_private_key(digit=10, seed=None):
 
     `a^{b} \equiv c \pmod p`
 
-    In general, if ``a`` and ``b`` are known, ``c`` is easily
+    In general, if ``a`` and ``b`` are known, ``ct`` is easily
     calculated. If ``b`` is unknown, it is hard to use
-    ``a`` and ``c`` to get ``b``.
+    ``a`` and ``ct`` to get ``b``.
 
     Parameters
     ==========
