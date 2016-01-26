@@ -298,14 +298,14 @@ def translate(s, a, b=None, c=None):
     SYNTAX
     ======
 
-    translate(None, deletechars):
+    translate(s, None, deletechars):
         all characters in ``deletechars`` are deleted
-    translate(map [,deletechars]):
+    translate(s, map [,deletechars]):
         all characters in ``deletechars`` (if provided) are deleted
         then the replacements defined by map are made; if the keys
         of map are strings then the longer ones are handled first.
         Multicharacter deletions should have a value of ''.
-    translate(oldchars, newchars, deletechars)
+    translate(s, oldchars, newchars, deletechars)
         all characters in ``deletechars`` are deleted
         then each character in ``oldchars`` is replaced with the
         corresponding character in ``newchars``
