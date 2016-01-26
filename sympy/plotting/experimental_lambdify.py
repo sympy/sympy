@@ -238,7 +238,7 @@ class lambdify(object):
 
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)
-    return l.lambda_func
+    return l
 
 
 class Lambdifier(object):
@@ -303,8 +303,13 @@ class Lambdifier(object):
         if self.print_lambda:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
+        self.eval_str = eval_str
         exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
+
+    def __call__(self, *args, **kwargs):
+        return self.lambda_func(*args, **kwargs)
+
 
     ##############################################################################
     # Dicts for translating from sympy to other modules
