@@ -332,12 +332,6 @@ def test_symbols():
     raises(ValueError, lambda: symbols('::a'))
 
 
-def test_call():
-    f = Symbol('f')
-    assert f(2)
-    raises(TypeError, lambda: Wild('x')(1))
-
-
 def test_unicode():
     xu = Symbol(u'x')
     x = Symbol('x')
