@@ -49,6 +49,7 @@ from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
+from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
@@ -123,6 +124,14 @@ class FunctionClass(ManagedProperties):
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
+            if not nargs:
+                raise ValueError(filldedent('''
+                    Incorrectly specified nargs as %s:
+                    if there are no arguments, it should be
+                    `nargs = 0`;
+                    if there are any number of arguments,
+                    it should be
+                    `nargs = None`''' % str(nargs)))
             nargs = tuple(ordered(set(nargs)))
         elif nargs is not None:
             nargs = (as_int(nargs),)
@@ -209,20 +218,20 @@ class Application(with_metaclass(FunctionClass, Basic)):
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            # Canonicalize nargs here; change to set in nargs.
+            # Canonicalize nargs here
             if is_sequence(obj.nargs):
-                obj.nargs = tuple(ordered(set(obj.nargs)))
+                nargs = tuple(ordered(set(obj.nargs)))
             elif obj.nargs is not None:
-                obj.nargs = (as_int(obj.nargs),)
-
-            obj.nargs = FiniteSet(*obj.nargs) if obj.nargs is not None \
-                else Naturals0()
+                nargs = (as_int(obj.nargs),)
+            else:
+                nargs = None
         except AttributeError:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            obj.nargs = FiniteSet(*obj._nargs) if obj._nargs is not None \
-                else Naturals0()
+            nargs = obj._nargs  # note the underscore here
+        # convert to FiniteSet
+        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
         return obj
 
     @classmethod
