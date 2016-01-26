@@ -1,7 +1,8 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.functions import express, matrix_to_vector
-from sympy import symbols, S, sin, cos, ImmutableMatrix as Matrix
+from sympy.vector.functions import express, matrix_to_vector, orthogonalize
+from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
+from sympy.utilities.pytest import raises
 
 N = CoordSysCartesian('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -157,3 +158,18 @@ def test_matrix_to_vector():
            Vector.zero
     m = Matrix([[q1], [q2], [q3]])
     assert matrix_to_vector(m, N) == q1*N.i + q2*N.j + q3*N.k
+
+
+def test_orthogonalize():
+    C = CoordSysCartesian('C')
+    i, j, k = C.base_vectors()
+    v1 = i + 2*j
+    v2 = 2*i + 3*j
+    v3 = 3*i + 5*j
+    v4 = 3*i + j
+    v5 = 2*i + 2*j
+    assert orthogonalize([v1, v2]) == [C.i + 2*C.j, 2*C.i/5 + -C.j/5]
+    # from wikipedia
+    assert orthogonalize([v4, v5], True) == \
+        [(3*sqrt(10))*C.i/10 + (sqrt(10))*C.j/10, (-sqrt(10))*C.i/10 + (3*sqrt(10))*C.j/10]
+    raises(ValueError, lambda: orthogonalize([v1, v2, v3]))

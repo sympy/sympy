@@ -186,6 +186,20 @@ def test_vector_cross():
     assert k ^ k == Vector.zero
 
 
+def test_vec_project():
+    v1 = i + j + k
+    v2 = 3*i + 4*j
+    assert v1.vec_project(v1) == i + j + k
+    assert v1.vec_project(v2) == 7/3*i + 7/3*j + 7/3*k
+
+
+def test_scalar_project():
+    v1 = i + j + k
+    v2 = 3*i + 4*j
+    assert v1.scalar_project(v1) == 1
+    assert v1.scalar_project(v2) == 7/3
+
+
 def test_vector_diff_integrate():
     f = Function('f')
     v = f(a)*C.i + a**2*C.j - C.k
