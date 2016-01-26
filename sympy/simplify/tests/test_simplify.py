@@ -32,7 +32,8 @@ def test_factorial_simplify():
 
 
 def test_simplify_expr():
-    x, y, z, k, n, m, w, f, s, A = symbols('x,y,z,k,n,m,w,f,s,A')
+    x, y, z, k, n, m, w, s, A = symbols('x,y,z,k,n,m,w,s,A')
+    f = Function('f')
 
     assert all(simplify(tmp) == tmp for tmp in [I, E, oo, x, -x, -oo, -E, -I])
 
@@ -67,6 +68,7 @@ def test_simplify_expr():
     e = integrate(x/(x**2 + 3*x + 1), x).diff(x)
     assert simplify(e) == x/(x**2 + 3*x + 1)
 
+    f = Symbol('f')
     A = Matrix([[2*k - m*w**2, -k], [-k, k - m*w**2]]).inv()
     assert simplify((A*Matrix([0, f]))[1]) == \
         -f*(2*k - m*w**2)/(k**2 - (k - m*w**2)*(2*k - m*w**2))

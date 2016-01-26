@@ -704,7 +704,8 @@ def test_nfloat():
 
 
 def test_issue_7068():
-    from sympy.abc import a, b, f
+    from sympy.abc import a, b
+    f = Function('f')
     y1 = Dummy('y')
     y2 = Dummy('y')
     func1 = f(a + y1 * b)

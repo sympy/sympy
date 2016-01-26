@@ -526,7 +526,6 @@ def test_function_subs():
     raises(ValueError, lambda: S.subs(f(y),x+y) )
     S = Sum(x*log(y),(x,0,oo),(y,0,oo))
     assert S.subs(log(y),y) == S
-    f = Symbol('f')
     S = Sum(x*f(y),(x,0,oo),(y,0,oo))
     assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
 
@@ -554,6 +553,7 @@ def test_equality():
 
 
 def test_Sum_doit():
+    f = Function('f')
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep=False) == \
         3*Integral(a**2)
@@ -875,6 +875,7 @@ def test_factor_expand_subs():
 
 
 def test_distribution_over_equality():
+    f = Function('f')
     assert Product(Eq(x*2, f(x)), (x, 1, 3)).doit() == Eq(48, f(1)*f(2)*f(3))
     assert Sum(Eq(f(x), x**2), (x, 0, y)) == \
         Eq(Sum(f(x), (x, 0, y)), Sum(x**2, (x, 0, y)))

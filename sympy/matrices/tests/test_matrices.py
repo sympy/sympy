@@ -1078,7 +1078,8 @@ def test_xreplace():
         assert Matrix([[2, 0], [0, 2]]) == cls.eye(2).xreplace({1: 2})
 
 def test_simplify():
-    f, n = symbols('f, n')
+    n = Symbol('n')
+    f = Function('f')
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])

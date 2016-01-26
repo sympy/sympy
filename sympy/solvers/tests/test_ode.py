@@ -27,7 +27,7 @@ h = Function('h')
 # dsolve() to return different results on different machines)
 
 def test_linear_2eq_order1():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     t = Symbol('t')
     x0, y0 = symbols('x0, y0')
@@ -243,7 +243,7 @@ def test_dsolve_linsystem_symbol_piecewise():
 
 
 def test_linear_2eq_order2():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     t, l = symbols('t, l')
     x0, y0 = symbols('x0, y0')
@@ -387,7 +387,7 @@ def test_linear_2eq_order2():
 
 
 def test_linear_3eq_order1():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
     eq1 = (Eq(diff(x(t),t), 21*x(t)), Eq(diff(y(t),t), 17*x(t)+3*y(t)), Eq(diff(z(t),t), 5*x(t)+7*y(t)+9*z(t)))
     sol1 = [Eq(x(t), C1*exp(21*t)), Eq(y(t), 17*C1*exp(21*t)/18 + C2*exp(3*t)), \
@@ -450,7 +450,7 @@ def test_linear_3eq_order1_diagonal():
 
 
 def test_nonlinear_2eq_order1():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
     eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
     sol1 = [
@@ -505,7 +505,7 @@ def test_nonlinear_2eq_order1():
 
 
 def test_checksysodesol():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
     eq = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
     sol = [Eq(x(t), 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t)), \
@@ -635,7 +635,7 @@ def test_checksysodesol():
 
 @slow
 def test_nonlinear_3eq_order1():
-    x, y, z = symbols('x, y, z', function=True)
+    x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
     eq1 = (4*diff(x(t),t) + 2*y(t)*z(t), 3*diff(y(t),t) - z(t)*x(t), 5*diff(z(t),t) - x(t)*y(t))
     sol1 = "[Eq(4*Integral(1/(sqrt(-4*_y**2 - 3*C1 + C2)*sqrt(-4*_y**2 + 5*C1 - C2)), (_y, x(t))), "\
@@ -942,9 +942,9 @@ def test_classify_sysode():
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     k1, k2, k3, l1, l2, l3, m1, m2, m3 = symbols('k1, k2, k3, l1, l2, l3, m1, m2, m3', Integer=True)
-    P, Q, R, p, q, r = symbols('P, Q, R, p, q, r', Function=True)
-    P1, P2, P3, Q1, Q2, R1, R2 = symbols('P1, P2, P3, Q1, Q2, R1, R2', function=True)
-    x, y, z = symbols('x, y, z', Function=True)
+    P, Q, R, p, q, r = symbols('P, Q, R, p, q, r', cls=Function)
+    P1, P2, P3, Q1, Q2, R1, R2 = symbols('P1, P2, P3, Q1, Q2, R1, R2', cls=Function)
+    x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
     x1 = diff(x(t),t) ; y1 = diff(y(t),t) ; z1 = diff(z(t),t)
     x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t) ; z2 = diff(z(t),t,t)
