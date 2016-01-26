@@ -178,3 +178,9 @@ def test_stieltjes_evalf():
     assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
     assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
     assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+
+
+def test_issue_10475():
+    assert zeta(2 + I).is_finite
+    assert zeta(1).is_finite
+    assert zeta(x).is_finite is None
