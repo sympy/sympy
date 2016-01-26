@@ -190,7 +190,7 @@ def test_vec_project():
     v1 = i + j + k
     v2 = 3*i + 4*j
     assert v1.vec_project(v1) == i + j + k
-    assert v1.vec_project(v2) == 7/3*i + 7/3*j + 7/3*k
+    assert v1.vec_project(v2) == 7/3*C.i + 7/3*C.j + 7/3*C.k
 
 
 def test_scalar_project():
