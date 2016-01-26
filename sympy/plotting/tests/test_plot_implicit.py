@@ -61,7 +61,7 @@ def plot_implicit_tests(name):
         plot_and_save(x**2 - 1, legend='An implicit plot')
         assert len(w) == 1
         assert issubclass(w[-1].category, UserWarning)
-        assert 'No labeled objects found' in str(w[0].message)
+        assert 'No labelled objects found' in str(w[0].message)
 
 def test_line_color():
     x, y = symbols('x, y')
