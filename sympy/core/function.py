@@ -1397,21 +1397,15 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         from sympy.sets.sets import FiniteSet
-        try:
-            for v in variables if iterable(variables) else [variables]:
-                if not v.is_Symbol:
-                    raise TypeError('variable is not a symbol: %s' % v)
-        except (AssertionError, AttributeError):
-            raise ValueError('variable is not a Symbol: %s' % v)
-        try:
-            variables = Tuple(*variables)
-        except TypeError:
-            variables = Tuple(variables)
-        if len(variables) == 1 and variables[0] == expr:
+        v = list(variables) if iterable(variables) else [variables]
+        for i in v:
+            if not getattr(i, 'is_Symbol', False):
+                raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
-        obj.nargs = FiniteSet(len(variables))
+        obj = Expr.__new__(cls, Tuple(*v), sympify(expr))
+        obj.nargs = FiniteSet(len(v))
         return obj
 
     @property
