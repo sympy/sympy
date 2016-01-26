@@ -15,11 +15,15 @@ from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import expr_from_dict, _dict_reorder, _parallel_dict_from_expr
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded, ExactQuotientFailed, MultivariatePolynomialError
+from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
+                                   _parallel_dict_from_expr)
+from sympy.polys.polyerrors import (
+    CoercionFailed, GeneratorsError,
+    ExactQuotientFailed, MultivariatePolynomialError)
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, build_options
+from sympy.polys.polyoptions import (Domain as DomainOpt,
+                                     Order as OrderOpt, build_options)
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.constructor import construct_domain
 from sympy.printing.defaults import DefaultPrinting
@@ -167,9 +171,6 @@ def sring(exprs, *symbols, **options):
         return (_ring, polys)
 
 def _parse_symbols(symbols):
-    if not symbols:
-        raise GeneratorsNeeded("generators weren't specified")
-
     if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr):
