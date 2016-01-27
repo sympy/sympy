@@ -6,6 +6,7 @@ set -e
 set -x
 
 if [[ "${TEST_SPHINX}" == "true" ]]; then
+    echo "Testing SPHINX"
     cd doc
     make html-errors
     make man
@@ -16,6 +17,7 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
 fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
+    echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
 fi
@@ -29,6 +31,7 @@ if [[ "${TEST_ASCII}" == "true" ]]; then
     export OLD_LANG=$LANG
     export LANG=c
     cat <<EOF | python
+print('Testing ASCII')
 import sympy
 sympy.test('print')
 EOF
@@ -39,6 +42,7 @@ fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
     cat << EOF | python
+print('Testing DOCTESTS')
 import sympy
 if not sympy.doctest():
     raise Exception('Tests failed')
@@ -49,6 +53,7 @@ fi
 
 if [[ "${TEST_SLOW}" == "true" ]]; then
     cat << EOF | python
+print('Testing SLOW')
 import sympy
 if not sympy.test(split='${SPLIT}', slow=True):
     # Travis times out if no activity is seen for 10 minutes. It also times
@@ -59,6 +64,7 @@ fi
 
 if [[ "${TEST_THEANO}" == "true" ]]; then
     cat << EOF | python
+print('Testing THEANO')
 import sympy
 if not sympy.test('*theano*'):
     raise Exception('Tests failed')
@@ -67,6 +73,7 @@ fi
 
 if [[ "${TEST_GMPY}" == "true" ]]; then
     cat << EOF | python
+print('Testing GMPY')
 import sympy
 if not sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/'):
     raise Exception('Tests failed')
@@ -75,6 +82,7 @@ fi
 
 if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
     cat << EOF | python
+print('Testing MATPLOTLIB')
 import sympy
 if not sympy.test('sympy/plotting') and sympy.doctest('sympy/plotting'):
     raise Exception('Tests failed')
@@ -83,6 +91,7 @@ fi
 
 if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
     cat << EOF | python
+print('Testing AUTOWRAP')
 import sympy
 if not sympy.test('sympy/external/tests/test_autowrap.py'):
     raise Exception('Tests failed')
@@ -91,6 +100,7 @@ fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
     cat << EOF | python
+print('Testing SYMPY, split ${SPLIT}')
 import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
