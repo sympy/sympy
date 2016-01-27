@@ -75,7 +75,7 @@ if [[ "${TEST_GMPY}" == "true" ]]; then
     cat << EOF | python
 print('Testing GMPY')
 import sympy
-if not sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/'):
+if not (sympy.test('sympy/polys/') and sympy.doctest('sympy/polys/')):
     raise Exception('Tests failed')
 EOF
 fi
@@ -84,7 +84,7 @@ if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
 import sympy
-if not sympy.test('sympy/plotting') and sympy.doctest('sympy/plotting'):
+if not (sympy.test('sympy/plotting') and sympy.doctest('sympy/plotting')):
     raise Exception('Tests failed')
 EOF
 fi
