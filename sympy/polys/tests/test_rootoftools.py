@@ -242,6 +242,10 @@ def test_CRootOf_evalf():
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
 
+    # watch out for UnboundLocalError
+    c = CRootOf(90720*x**6 - 4032*x**4 + 84*x**2 - 1, 0)
+    assert str(c._eval_evalf(2)) == '-0.e-1'
+
 
 def test_CRootOf_evalf_caching_bug():
     r = rootof(x**5 - 5*x + 12, 1)
