@@ -83,6 +83,11 @@ fi
 if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
     cat << EOF | python
 print('Testing MATPLOTLIB')
+# Set matplotlib so that it works correctly in headless Travis. We have to do
+# this here because it doesn't work after the sympy plotting module is
+# imported.
+import matplotlib
+matplotlib.use("Agg")
 import sympy
 if not (sympy.test('sympy/plotting') and sympy.doctest('sympy/plotting')):
     raise Exception('Tests failed')
