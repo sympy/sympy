@@ -619,7 +619,7 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols, Dummy, sympify
+        from sympy import symbols, Dummy, sympify, sin, cos
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
@@ -627,7 +627,6 @@ class ComplexRegion(Set):
 
         # Rectangular Form
         if polar == False:
-
             if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
                 # ** ProductSet of FiniteSets in the Complex Plane. **
@@ -638,7 +637,6 @@ class ComplexRegion(Set):
                     for y in sets.args[1]:
                         complex_num.append(x + I*y)
                 obj = FiniteSet(*complex_num)
-
             else:
                 obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
             obj._variables = (x, y)
@@ -647,33 +645,30 @@ class ComplexRegion(Set):
         # Polar Form
         elif polar == True:
             new_sets = []
-
             # sets is Union of ProductSets
             if not sets.is_ProductSet:
                 for k in sets.args:
                     new_sets.append(k)
-
             # sets is ProductSets
             else:
                 new_sets.append(sets)
-
             # Normalize input theta
             for k, v in enumerate(new_sets):
                 from sympy.sets import ProductSet
                 new_sets[k] = ProductSet(v.args[0],
                                          normalize_theta_set(v.args[1]))
             sets = Union(*new_sets)
-
-            from sympy import cos, sin
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
                                    sets)
             obj._variables = (r, theta)
             obj._expr = r*(cos(theta) + I*sin(theta))
 
+        else:
+            raise ValueError("polar should be either True or False")
+
         obj._sets = sets
         obj._polar = polar
-        obj._args = (sets, polar)
         return obj
 
     @property
@@ -700,7 +695,7 @@ class ComplexRegion(Set):
 
     @property
     def args(self):
-        return self._args
+        return (self._sets, self._polar)
 
     @property
     def variables(self):
