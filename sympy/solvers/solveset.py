@@ -1286,6 +1286,8 @@ def linsolve(system, *symbols):
 
 
 def check_result(f, symbol, result):
+    if isinstance(result,ConditionSet):
+        return result
     for res in result:
         if(sympify(f.subs(symbol,res)) == 0):
             continue
