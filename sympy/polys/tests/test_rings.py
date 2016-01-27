@@ -21,8 +21,9 @@ def test_PolyRing___init__():
     assert len(PolyRing(x, ZZ, lex).gens) == 1
     assert len(PolyRing(("x", "y", "z"), ZZ, lex).gens) == 3
     assert len(PolyRing((x, y, z), ZZ, lex).gens) == 3
+    assert len(PolyRing("", ZZ, lex).gens) == 0
+    assert len(PolyRing([], ZZ, lex).gens) == 0
 
-    raises(GeneratorsNeeded, lambda: PolyRing([], ZZ, lex))
     raises(GeneratorsError, lambda: PolyRing(0, ZZ, lex))
 
     assert PolyRing("x", ZZ[t], lex).domain == ZZ[t]
@@ -79,6 +80,9 @@ def test_PolyRing_ring_new():
     assert R.ring_new({(2, 0, 0): 1, (1, 1, 0): 2, (1, 0, 0): 3, (0, 0, 2): 4, (0, 0, 1): 5, (0, 0, 0): 6}) == f
     assert R.ring_new([((2, 0, 0), 1), ((1, 1, 0), 2), ((1, 0, 0), 3), ((0, 0, 2), 4), ((0, 0, 1), 5), ((0, 0, 0), 6)]) == f
 
+    R, = ring("", QQ)
+    assert R.ring_new([((), 7)]) == R(7)
+
 def test_PolyRing_drop():
     R, x,y,z = ring("x,y,z", ZZ)
 
@@ -118,17 +122,30 @@ def test_PolyRing_is_():
     assert R.is_univariate is False
     assert R.is_multivariate is True
 
+    R = PolyRing("", QQ, lex)
+
+    assert R.is_univariate is False
+    assert R.is_multivariate is False
+
 def test_PolyRing_add():
     R, x = ring("x", ZZ)
     F = [ x**2 + 2*i + 3 for i in range(4) ]
 
     assert R.add(F) == reduce(add, F) == 4*x**2 + 24
 
+    R, = ring("", ZZ)
+
+    assert R.add([2, 5, 7]) == 14
+
 def test_PolyRing_mul():
     R, x = ring("x", ZZ)
     F = [ x**2 + 2*i + 3 for i in range(4) ]
 
     assert R.mul(F) == reduce(mul, F) == x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
+
+    R, = ring("", ZZ)
+
+    assert R.mul([2, 3, 5]) == 30
 
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")
@@ -151,6 +168,12 @@ def test_sring():
     Rt = FracField("t", ZZ, lex)
     R = PolyRing("x,y,z", Rt, lex)
     assert sring(x + 2*y/t + t**2*z/3, x, y, z) == (R, R.x + 2*R.y/Rt.t + Rt.t**2*R.z/3)
+
+    r = sqrt(2) - sqrt(3)
+    R, a = sring(r, extension=True)
+    assert R.domain == QQ.algebraic_field(r)
+    assert R.gens == ()
+    assert a == R.domain.from_sympy(r)
 
 def test_PolyElement___hash__():
     R, x, y, z = ring("x,y,z", QQ)
@@ -226,6 +249,9 @@ def test_PolyElement_as_expr():
     assert f.as_expr(X, Y, Z) == g
 
     raises(ValueError, lambda: f.as_expr(X))
+
+    R, = ring("", ZZ)
+    R(3).as_expr() == 3
 
 def test_PolyElement_from_expr():
     x, y, z = symbols("x,y,z")
@@ -391,6 +417,9 @@ def test_PolyElement_terms():
 
     assert f.terms() == f.terms(grlex) == f.terms('grlex') == [((1, 7), 1), ((2, 3), 2)]
     assert f.terms(lex) == f.terms('lex') == [((2, 3), 2), ((1, 7), 1)]
+
+    R, = ring("", ZZ)
+    assert R(3).terms() == [((), 3)]
 
 def test_PolyElement_monoms():
     R, x,y,z = ring("x,y,z", QQ)
