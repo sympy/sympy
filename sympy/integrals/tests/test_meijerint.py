@@ -168,6 +168,7 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x - 3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x - mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+    assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
