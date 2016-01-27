@@ -215,14 +215,26 @@ class PolyRing(DefaultPrinting, IPolys):
 
             obj._one = [(obj.zero_monom, domain.one)]
 
-            codegen = MonomialOps(ngens)
-            obj.monomial_mul = codegen.mul()
-            obj.monomial_pow = codegen.pow()
-            obj.monomial_mulpow = codegen.mulpow()
-            obj.monomial_ldiv = codegen.ldiv()
-            obj.monomial_div = codegen.div()
-            obj.monomial_lcm = codegen.lcm()
-            obj.monomial_gcd = codegen.gcd()
+            if ngens:
+                # These expect monomials in at least one variable
+                codegen = MonomialOps(ngens)
+                obj.monomial_mul = codegen.mul()
+                obj.monomial_pow = codegen.pow()
+                obj.monomial_mulpow = codegen.mulpow()
+                obj.monomial_ldiv = codegen.ldiv()
+                obj.monomial_div = codegen.div()
+                obj.monomial_lcm = codegen.lcm()
+                obj.monomial_gcd = codegen.gcd()
+            else:
+                monunit = lambda a, b: ()
+                obj.monomial_mul = monunit
+                obj.monomial_pow = monunit
+                obj.monomial_mulpow = lambda a, b, c: ()
+                obj.monomial_ldiv = monunit
+                obj.monomial_div = monunit
+                obj.monomial_lcm = monunit
+                obj.monomial_gcd = monunit
+
 
             if order is lex:
                 obj.leading_expv = lambda f: max(f)
