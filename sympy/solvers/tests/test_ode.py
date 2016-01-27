@@ -30,7 +30,7 @@ def test_linear_2eq_order1():
     x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     t = Symbol('t')
-    x0, y0 = symbols('x0, y0')
+    x0, y0 = symbols('x0, y0', cls=Function)
     eq1 = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
     sol1 = [Eq(x(t), 9*C1*exp(6*sqrt(3)*t) + 9*C2*exp(-6*sqrt(3)*t)), \
     Eq(y(t), 6*sqrt(3)*C1*exp(6*sqrt(3)*t) - 6*sqrt(3)*C2*exp(-6*sqrt(3)*t))]
@@ -108,9 +108,9 @@ def test_linear_2eq_order1():
     assert eq8[1].subs(s).doit().simplify()
 
     eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
-    sol10 = [Eq(x(t), C1*x0 + C2*x0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t)), \
-    Eq(y(t), C1*y0 + C2(y0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t) + \
-    exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0))]
+    sol10 = [Eq(x(t), C1*x0(t) + C2*x0(t)*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)**2, t)), \
+    Eq(y(t), C1*y0(t) + C2*(y0(t)*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)**2, t) + \
+    exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)))]
     s = dsolve(eq10)
     assert s == sol10   # too complicated to test with subs and simplify
 
@@ -246,7 +246,7 @@ def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     t, l = symbols('t, l')
-    x0, y0 = symbols('x0, y0')
+    x0, y0 = symbols('x0, y0', cls=Function)
 
     eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
     sol1 = [Eq(x(t), 43*C1*exp(t*rootof(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*rootof(l**4 - 14*l**2 + 2, 1)) + \
@@ -295,10 +295,10 @@ def test_linear_2eq_order2():
 
     eq7 = (Eq(diff(x(t),t,t), log(t)*(t*diff(x(t),t) - x(t)) + exp(t)*(t*diff(y(t),t) - y(t))), \
     Eq(diff(y(t),t,t), (t**2)*(t*diff(x(t),t) - x(t)) + (t)*(t*diff(y(t),t) - y(t))))
-    sol7 = [Eq(x(t), C3*t + t*Integral((C1*x0 + C2*x0*Integral(t*exp(t)*exp(Integral(t**2, t))*\
-    exp(Integral(t*log(t), t))/x0**2, t))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*y0 + \
-    C2(y0*Integral(t*exp(t)*exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0**2, t) + \
-    exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0))/t**2, t))]
+    sol7 = [Eq(x(t), C3*t + t*Integral((C1*x0(t) + C2*x0(t)*Integral(t*exp(t)*exp(Integral(t**2, t))*\
+    exp(Integral(t*log(t), t))/x0(t)**2, t))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*y0(t) + \
+    C2*(y0(t)*Integral(t*exp(t)*exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0(t)**2, t) + \
+    exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0(t)))/t**2, t))]
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
