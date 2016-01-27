@@ -264,7 +264,7 @@ class Vector(BasisDependent):
         >>> v1 = i + j + k
         >>> v2 = 3*i + 4*j
         >>> v1.vec_project(v2)
-        7/3*i + 7/3*j + 7/3*k
+        7/3*C.i + 7/3*C.j + 7/3*C.k
 
         """
         return self.dot(other) / self.dot(self) * self
