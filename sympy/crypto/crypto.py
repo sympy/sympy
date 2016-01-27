@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-This file contains some classical ciphers and rotines
+This file contains some classical ciphers and routines
 implementing a linear-feedback shift register (LFSR)
-and the Diffie-Hellman key exchange are also provided.
+and the Diffie-Hellman key exchange.
 """
 
 from __future__ import print_function
@@ -24,7 +24,7 @@ from sympy.utilities.randtest import _randrange
 
 def AZ(s=None):
     """Return the letters of ``s`` in uppercase. In case more than
-    one string is passed, each of them will be processed an a list
+    one string is passed, each of them will be processed and a list
     of upper case strings will be returned.
 
     Examples
