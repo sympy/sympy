@@ -172,7 +172,7 @@ def sring(exprs, *symbols, **options):
 
 def _parse_symbols(symbols):
     if isinstance(symbols, string_types):
-        return _symbols(symbols, seq=True)
+        return _symbols(symbols, seq=True) if symbols else ()
     elif isinstance(symbols, Expr):
         return (symbols,)
     elif is_sequence(symbols):
