@@ -140,7 +140,23 @@ matrix:
       sudo: true
     - python: "pypy"
       env:
-        - SPLIT="4/4"
+        - TEST_DOCTESTS="true"
+        - FASTCACHE="false"
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="1/4"
+        - FASTCACHE="false"
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="2/4"
+        - FASTCACHE="false"
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="3/4"
+        - FASTCACHE="false"
 
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
