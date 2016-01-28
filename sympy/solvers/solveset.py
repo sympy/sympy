@@ -21,7 +21,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, Complement)
+                        Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -536,7 +536,6 @@ def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
 
 
 def _solve_real_trig(f, symbol):
-    from sympy.simplify.fu import TR9
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
     f = f.rewrite(exp)
