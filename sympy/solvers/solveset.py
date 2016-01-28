@@ -539,27 +539,8 @@ def _solve_real_trig(f, symbol):
     from sympy.simplify.fu import TR9
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
-    if f.is_Add:
-        f=TR9(f)
-
     f = f.rewrite(exp)
-    f = together(f)
-    g, h = fraction(f)
-    y = Dummy('y')
-    g, h = g.expand(), h.expand()
-    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
-
-    solns = solveset_complex(g, y) - solveset_complex(h, y)
-
-    if isinstance(solns, FiniteSet):
-        return Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                       for s in solns])
-    elif solns is S.EmptySet:
-        return S.EmptySet
-    else:
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+    return solveset(f,symbol)
 
 
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):

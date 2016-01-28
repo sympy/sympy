@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import (FiniteSet, ConditionSet)
+from sympy.sets import (FiniteSet, ConditionSet ,ImageSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
@@ -709,22 +709,21 @@ def test_solveset_complex_tan():
 
 def test_solve_trig():
     from sympy.abc import n
+    _n = Dummy('_n')
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
+    ImageSet(Lambda(_n, _n*pi), S.Integers)
     assert solveset_real(sin(x) - 1, x) == \
-        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
+        ImageSet(Lambda(_n, 2*_n*pi + pi/2), S.Integers)
 
     assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
+    ImageSet(Lambda(_n, _n*pi + pi/2), S.Integers)
 
     assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
+        ImageSet(Lambda(_n, _n*pi - pi/4),S.Integers)
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
+    # assert solveset_real(tan(x),x) ==\
+    #  ImageSet(Lambda(_n, _n*pi), Integers()) \ ImageSet(Lambda(_n, _n*pi + pi/2), Integers())
 
 
 @XFAIL
@@ -1062,3 +1061,11 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+def test_issue_10426():
+    a =symbols('a')
+    
+    #assert solveset(sin(x + a) - sin(x), a) == \
+    #ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), S.Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    assert solveset(sin(x),x,S.Reals) == ImageSet(Lambda(_n, _n*pi), S.Integers)
