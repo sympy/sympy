@@ -709,20 +709,8 @@ def test_solveset_complex_tan():
 
 def test_solve_trig():
     from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
-
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptyS
 
@@ -745,7 +733,7 @@ def test_solve_complex_unsolvable():
     assert solution == unsolved_object
 
 
-@XFAIL
+
 def test_solve_trig_simplified():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
