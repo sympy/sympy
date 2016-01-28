@@ -195,6 +195,7 @@ def test_factorial2():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
 
+    raises(ValueError, lambda: factorial2(S(5)/2))
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
