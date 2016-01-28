@@ -89,7 +89,10 @@ print('Testing MATPLOTLIB')
 import matplotlib
 matplotlib.use("Agg")
 import sympy
-if not (sympy.test('sympy/plotting') and sympy.doctest('sympy/plotting')):
+# Unfortunately, we have to use subprocess=False so that the above will be
+# applied, so no hash randomization here.
+if not (sympy.test('sympy/plotting', subprocess=False) and
+    sympy.doctest('sympy/plotting', subprocess=False)):
     raise Exception('Tests failed')
 EOF
 fi
