@@ -270,7 +270,7 @@ class Point(GeometryEntity):
             args = p.args
         except AttributeError:
             try:
-                args = [as_int(I) for I in p]
+                args = [as_int(i) for i in p]
             except TypeError:
                 args = Point(p).args
         return sqrt(sum([(a - b)**2 for a, b in zip(self.args, args)]))
