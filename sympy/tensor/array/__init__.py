@@ -73,8 +73,8 @@ N-dim arrays can be converted to nested lists by the ``tolist()`` method:
 
 >>> m2.tolist()
 [[[0, 1], [2, 3]], [[4, 5], [6, 7]], [[8, 9], [10, 11]]]
->>> type(m2.tolist())
-<type 'list'>
+>>> isinstance(m2.tolist(), list)
+True
 
 If the rank is 2, it is possible to convert them to matrices with ``tomatrix()``:
 
