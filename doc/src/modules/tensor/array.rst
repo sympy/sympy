@@ -6,9 +6,6 @@ N-dim array
 .. automodule:: sympy.tensor.array
 
 
-Classes
-=======
-
 .. autoclass:: ImmutableDenseNDimArray
    :members:
 
