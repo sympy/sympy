@@ -712,7 +712,7 @@ def test_solve_trig():
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
-    assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptyS
+    assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
 
 @XFAIL
