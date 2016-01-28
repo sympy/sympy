@@ -331,7 +331,7 @@ class factorial2(CombinatorialFunction):
 
         if arg.is_Number:
             if arg.is_infinite:
-                return
+                raise ValueError("argument must be nonnegative integer or odd integer")
 
             # This implementation is faster than the recursive one
             # It also avoids "maximum recursion depth exceeded" runtime error
