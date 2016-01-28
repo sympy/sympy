@@ -94,7 +94,7 @@ def _create_lookup_table(table):
                 return arg <= 0
 
     # Section 8.4.2
-    from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
+    from sympy import (gamma, pi, cos, exp, re, sin, sinc, sqrt, sinh, cosh,
                        factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
@@ -150,6 +150,9 @@ def _create_lookup_table(table):
     # TODO can do t + a. but can also do by expansion... (XXX not really)
     add(sin(t), [], [], [S(1)/2], [0], t**2/4, sqrt(pi))
     add(cos(t), [], [], [0], [S(1)/2], t**2/4, sqrt(pi))
+
+    # Section 8.4.6 (sinc function)
+    add(sinc(t), [], [], [0], [S(-1)/2], t**2/4, sqrt(pi)/2)
 
     # Section 8.5.5
     def make_log1(subs):
