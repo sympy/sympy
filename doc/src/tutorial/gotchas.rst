@@ -239,6 +239,11 @@ object and a Python object, you get a SymPy object, but whenever you combine
 two Python objects, SymPy never comes into play, and so you get a Python
 object.
 
+.. warning:: SymPy Live wraps both 1s in the expression ``1 + 1`` by Integer,
+so the example doesn't show what it is supposed to show. Similar issue occurs
+in few following examples as well. This occurs doesn't occur in actual desktop
+environment.
+
     >>> type(Integer(1) + 1)
     <class 'sympy.core.numbers.Integer'>
     >>> type(1 + 1)
