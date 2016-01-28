@@ -350,7 +350,7 @@ class factorial2(CombinatorialFunction):
                 return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
             raise ValueError("argument must be nonnegative integer or odd integer")
         else:
-            raise ValueError("argument must be nonnegative integer or odd integer")
+            return None
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
