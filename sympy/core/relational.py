@@ -170,6 +170,41 @@ class Relational(Boolean, Expr, EvalfMixin):
                     return r
                 return l
 
+    def _simplify_relational(self):
+        from sympy.utilities.iterables import sift
+        from sympy import Add, Mul
+        from sympy.core.exprtools import factor_terms
+        f = self.func
+        dif = Add(self.lhs, -self.rhs, evaluate=False)
+        numer, denom = dif.as_numer_denom()
+        sifted = sift(Mul.make_args(numer) + Mul.make_args(denom), lambda x: x.is_zero)
+        zero = sifted[True]
+        expr = numer/denom
+        if zero:
+            expr = expr.xreplace(dict(zip(zero, [S.Zero]*len(zero))))
+            if expr.has(S.ComplexInfinity):
+                expr = S.NaN
+        expr = factor_terms(expr)  # or should the full simplify be used?
+        if expr.is_Mul:
+            sifted = sift(expr.args, lambda x: x.is_positive)
+            unk = sifted[None]
+            neg = len(sifted[False])
+            sign = -1 if (neg % 2) else 1
+            expr = Mul(*unk)
+        else:
+            sign = 1
+        c, expr = expr.as_coeff_Add()
+        if self.func in (Eq, Ne):
+            if c is S.Zero:
+                expr = expr.as_numer_denom()[0]
+        else:
+            if expr.as_numer_denom()[0].is_number:
+                expr = expr.as_numer_denom()[1]
+            if sign == -1:
+                f = self.reversed.func
+
+        return self.reversed.func(-expr, c) if expr._args.count(-1)%2 else f(expr, -c)
+
     def _eval_simplify(self, ratio, measure):
         from sympy import Tuple, Basic
         from sympy.logic.boolalg import Xor
@@ -188,14 +223,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
 
-            numer, denom = dif.as_numer_denom()
-
-            if numer.is_zero is False:
-                if r.func not in (Gt, Ge, Lt, Le):
-                    return r.func(numer, S.Zero)
-                if numer.is_positive is not None and denom.is_positive is not None:
-                    sign = -1 if denom.is_positive is True else 1
-                    return r.func(sign * numer, S.Zero)
+            return r._simplify_relational()
 
         r = r.canonical
         if measure(r) < ratio*measure(self):

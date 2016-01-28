@@ -665,12 +665,14 @@ def test_issue_10304():
 
 def test_issue_10401():
     x = Symbol('x')
-    y = Symbol('y', positive=True)
-    z = Symbol('z', negative=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
     assert simplify(Eq(1 / (x+1), 0)) is S.false
     assert simplify(Eq(x / (x+1), 1)) is S.false
-    assert simplify(Lt(y/z ,0) ) is S.true
-    assert simplify(Lt(y/x ,0) ) == Lt(y/x ,0)
+    assert simplify(Lt(p/n ,0) ) is S.true
+    assert simplify(Lt(p/x ,0) ) == (x < 0)
+    assert simplify(Lt(p*x, 0) ) == (x < 0)
+    assert simplify(Lt(-p*x, p) ) == (x > -1)
     f = x/(x + 1)
     g = 1/(1 + 1/x)
     assert Eq(f, g) is not S.true
