@@ -136,6 +136,11 @@ matrix:
         - TEST_SYMPY="true"
         - SPLIT="3/4"
         - FASTCACHE="false"
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
+        - FASTCACHE="false"
 
   allow_failures:
     - python: 3.5 # Dummy value
@@ -161,6 +166,11 @@ matrix:
       env:
         - TEST_SYMPY="true"
         - SPLIT="3/4"
+        - FASTCACHE="false"
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
         - FASTCACHE="false"
 
 before_install:
