@@ -388,7 +388,10 @@ class PolyRing(DefaultPrinting, IPolys):
     def index(self, gen):
         """Compute index of ``gen`` in ``self.gens``. """
         if gen is None:
-            i = 0
+            if self.ngens:
+                i = 0
+            else:
+                i = -1  # indicate impossible choice
         elif isinstance(gen, int):
             i = gen
 
@@ -874,10 +877,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_squarefree(f):
+        if not f.ring.ngens:
+            return True
         return f.ring.dmp_sqf_p(f)
 
     @property
     def is_irreducible(f):
+        if not f.ring.ngens:
+            return True
         return f.ring.dmp_irreducible_p(f)
 
     @property
@@ -1601,6 +1608,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not f:
             return -oo
+        elif i < 0:
+            return 0
         else:
             return max([ monom[i] for monom in f.itermonoms() ])
 
@@ -1627,6 +1636,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not f:
             return -oo
+        elif i < 0:
+            return 0
         else:
             return min([ monom[i] for monom in f.itermonoms() ])
 
@@ -1762,7 +1773,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         p = self.ring.zero
         expv = self.leading_expv()
-        if expv:
+        if expv is not None:
             p[expv] = self[expv]
         return p
 

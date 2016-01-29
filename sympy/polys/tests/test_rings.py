@@ -276,6 +276,10 @@ def test_PolyElement_from_expr():
     raises(ValueError, lambda: R.from_expr(2**x))
     raises(ValueError, lambda: R.from_expr(7*x + sqrt(2)))
 
+    R, = ring("", ZZ)
+    f = R.from_expr(1)
+    assert f == 1 and isinstance(f, R.dtype)
+
 def test_PolyElement_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
@@ -307,6 +311,10 @@ def test_PolyElement_degree():
     assert (x*y**3 + z).degree(z) == 1
     assert (7*x**5*y**3 + z).degree(z) == 1
 
+    R, = ring("", ZZ)
+    assert R(0).degree() == -oo
+    assert R(1).degree() == 0
+
 def test_PolyElement_tail_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
@@ -337,6 +345,10 @@ def test_PolyElement_tail_degree():
     assert (2*y**3 + x**3*z).tail_degree(z) == 0
     assert (x*y**3 + x**3*z).tail_degree(z) == 0
     assert (7*x**5*y**3 + x**3*z).tail_degree(z) == 0
+
+    R, = ring("", ZZ)
+    assert R(0).tail_degree() == -oo
+    assert R(1).tail_degree() == 0
 
 def test_PolyElement_degrees():
     R, x,y,z = ring("x,y,z", ZZ)
@@ -371,6 +383,9 @@ def test_PolyElement_coeff():
     raises(ValueError, lambda: f.coeff(-x*y*z))
     raises(ValueError, lambda: f.coeff(7*z**3))
 
+    R, = ring("", ZZ)
+    R(3).coeff(1) == 3
+
 def test_PolyElement_LC():
     R, x, y = ring("x,y", QQ, lex)
     assert R(0).LC == QQ(0)
@@ -388,6 +403,10 @@ def test_PolyElement_LT():
     assert R(0).LT == ((0, 0), QQ(0))
     assert (QQ(1,2)*x).LT == ((1, 0), QQ(1, 2))
     assert (QQ(1,4)*x*y + QQ(1,2)*x).LT == ((1, 1), QQ(1, 4))
+
+    R, = ring("", ZZ)
+    assert R(0).LT == ((), 0)
+    assert R(1).LT == ((), 1)
 
 def test_PolyElement_leading_monom():
     R, x, y = ring("x,y", QQ, lex)
@@ -809,6 +828,12 @@ def test_PolyElement_div():
     r = 2*x + 1
 
     assert f.div(G) == (Q, r)
+
+    R, = ring("", ZZ)
+    assert R(3).div(R(2)) == (0, 3)
+
+    R, = ring("", QQ)
+    assert R(3).div(R(2)) == (QQ(3, 2), 0)
 
 def test_PolyElement_rem():
     R, x = ring("x", ZZ, grlex)
@@ -1240,6 +1265,10 @@ def test_PolyElement_is_():
     assert (f + 1).is_cyclotomic is True
 
     raises(MultivariatePolynomialError, lambda: x.is_cyclotomic)
+
+    R, = ring("", ZZ)
+    assert R(4).is_squarefree is True
+    assert R(6).is_irreducible is True
 
 def test_PolyElement_drop():
     R, x,y,z = ring("x,y,z", ZZ)
