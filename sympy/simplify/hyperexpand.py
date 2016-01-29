@@ -1688,7 +1688,7 @@ def try_polynomial(func, z):
     al0 = [x for x in a0 if x <= 0]
     bl0 = [x for x in b0 if x <= 0]
 
-    if bl0:
+    if bl0 and len(al0) <= 1:
         return oo
     if not al0:
         return None
