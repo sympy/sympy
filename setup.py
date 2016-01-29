@@ -67,6 +67,7 @@ modules = [
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
+    'sympy.codegen',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
@@ -252,11 +253,11 @@ class run_benchmarks(Command):
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
-
 tests = [
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
+    'sympy.codegen.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
