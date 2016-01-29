@@ -1048,10 +1048,9 @@ def test_issue_9953():
 
 def test_issue_10426():
     a =symbols('a')
-    
+    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
     #assert solveset(sin(x + a) - sin(x), a) == \
     #ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
-    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
 
 
 def test_issue_9913():
