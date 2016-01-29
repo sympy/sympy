@@ -2609,10 +2609,10 @@ class TensorHead(Basic):
             for el in mat_ind:
                 eltyp = self.index_types[el]
                 if eltyp in matrix_behavior_kinds:
-                    elind = -self.index_types[el].auto_right
+                    elind = TensorIndex('aMl', self.index_types[el], False, is_matrix_index=True)
                     matrix_behavior_kinds[eltyp].append(elind)
                 else:
-                    elind = self.index_types[el].auto_left
+                    elind = TensorIndex('aMl', self.index_types[el], True, is_matrix_index=True)
                     matrix_behavior_kinds[eltyp] = [elind]
                 indices = indices[:el] + (elind,) + indices[el:]
 
