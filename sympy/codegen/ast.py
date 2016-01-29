@@ -49,7 +49,7 @@ from sympy.core import Symbol, Tuple
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
-from sympy.core.compatibility import with_metaclass
+from sympy.core.compatibility import with_metaclass, string_types
 from sympy.tensor import Indexed
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
@@ -223,7 +223,7 @@ class AugAssign(Basic):
                 raise ValueError("Dimensions of lhs and rhs don't align.")
         elif rhs_is_mat and not lhs_is_mat:
             raise ValueError("Cannot assign a matrix to a scalar.")
-        if isinstance(op, str):
+        if isinstance(op, string_types):
             op = operator(op)
         elif op not in op_registry.values():
             raise TypeError("Unrecognized Operator")
@@ -356,7 +356,7 @@ def datatype(arg):
         else:
             return Double
 
-    if isinstance(arg, str):
+    if isinstance(arg, string_types):
         if arg.lower() not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
@@ -388,11 +388,11 @@ class Variable(Basic):
     """
 
     def __new__(cls, dtype, name):
-        if isinstance(dtype, str):
+        if isinstance(dtype, string_types):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-        if isinstance(name, str):
+        if isinstance(name, string_types):
             name = Symbol(name)
         elif not isinstance(name, (Symbol, MatrixSymbol)):
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
@@ -426,7 +426,7 @@ class Result(Variable):
     """
 
     def __new__(cls, dtype, name=None):
-        if isinstance(dtype, str):
+        if isinstance(dtype, string_types):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
@@ -498,7 +498,7 @@ class FunctionDef(Basic):
 
     def __new__(cls, name, args, body, results):
         # name
-        if isinstance(name, str):
+        if isinstance(name, string_types):
             name = Symbol(name)
         elif not isinstance(name, Symbol):
             raise TypeError("Function name must be Symbol or string")
@@ -555,7 +555,7 @@ class Import(Basic):
             funcs = Tuple()
         elif iterable(funcs):
             funcs = Tuple(*[Symbol(f) for f in funcs])
-        elif isinstance(funcs, str):
+        elif isinstance(funcs, string_types):
             funcs = Tuple(Symbol(funcs))
         else:
             raise TypeError("Unrecognized funcs type: ", funcs)
@@ -585,7 +585,7 @@ class Declare(Basic):
     """
 
     def __new__(cls, dtype, variables):
-        if isinstance(dtype, str):
+        if isinstance(dtype, string_types):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
