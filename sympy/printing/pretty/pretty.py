@@ -1567,8 +1567,8 @@ class PrettyPrinter(Printer):
             inn = u("\N{SMALL ELEMENT OF}")
         else:
             inn = 'in'
-        variables = self._print_seq(ts.args[0].variables)
-        expr = self._print(ts.args[0].expr)
+        variables = self._print_seq(ts.variables)
+        expr = self._print(ts.expr)
         bar = self._print("|")
         prodsets = self._print(ts.sets)
 
