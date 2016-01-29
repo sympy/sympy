@@ -212,7 +212,7 @@ before_install:
   - if [[ "${TEST_SAGE}" == "true" ]]; then
       sudo apt-add-repository -y ppa:aims/sagemath;
       sudo apt-get update;
-      sudo apt-get install sagemath-upstream-binary;
+      sudo apt-get install -y sagemath-upstream-binary;
     fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
