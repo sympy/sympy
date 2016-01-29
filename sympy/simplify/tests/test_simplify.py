@@ -609,3 +609,16 @@ def test_issue_9324_simplify():
     M = MatrixSymbol('M', 10, 10)
     e = M[0, 0] + M[5, 4] + 1304
     assert simplify(e) == e
+
+
+def test_simplify_function_inverse():
+    x, y = symbols('x, y')
+    g = Function('g')
+
+    class f(Function):
+        def inverse(self, argindex=1):
+            return g
+
+    assert simplify(f(g(x))) == x
+    assert simplify(f(g(sin(x)**2 + cos(x)**2))) == 1
+    assert simplify(f(g(x, y))) == f(g(x, y))
