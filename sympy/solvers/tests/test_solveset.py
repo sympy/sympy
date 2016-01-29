@@ -1046,6 +1046,14 @@ def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
 
 
+def test_issue_10426():
+    a =symbols('a')
+    
+    #assert solveset(sin(x + a) - sin(x), a) == \
+    #ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
+
+
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
