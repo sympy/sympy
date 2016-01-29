@@ -198,7 +198,7 @@ class AugAssign(Basic):
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import AugAssign, AddOp
     >>> x, y = symbols('x, y')
-    >>> AugAssign(x, AddOp(), y)
+    >>> AugAssign(x, '+', y)
     x += y
 
     """
