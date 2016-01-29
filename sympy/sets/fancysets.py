@@ -917,8 +917,13 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return ComplexRegion.__new__(cls, S.Reals*S.Reals)
 
     def __eq__(self, other):
-        if other == ComplexRegion(S.Reals*S.Reals):
-            return True
+        return other == ComplexRegion(S.Reals*S.Reals)
 
     def __hash__(self):
         return hash(ComplexRegion(S.Reals*S.Reals))
+
+    def __str__(self):
+        return "S.Complexes"
+
+    def __repr__(self):
+        return "S.Complexes"

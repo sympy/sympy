@@ -198,8 +198,10 @@ def test_Complex():
     assert -I in S.Complexes
     assert sqrt(-1) in S.Complexes
     assert S.Complexes.intersect(S.Reals) == S.Reals
-    # assert S.Complexes.union(S.Reals) == S.Complexes
+    assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
+    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
+    assert str(S.Complexes) == "S.Complexes"
 
 
 def take(n, iterable):
@@ -395,45 +397,36 @@ def test_normalize_theta_set():
 
     # Interval
     assert normalize_theta_set(Interval(pi, 2*pi)) == \
-        Union(FiniteSet(0), Interval(pi, 2*pi, False, True))
+        Union(FiniteSet(0), Interval.Ropen(pi, 2*pi))
     assert normalize_theta_set(Interval(9*pi/2, 5*pi)) == Interval(pi/2, pi)
-    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == \
-        Interval(0, 2*pi, False, True)
-    assert normalize_theta_set(Interval(-3*pi/2, pi/2, True, True)) == \
-        Union(Interval(0, pi/2, False, True), Interval(pi/2, 2*pi, True, True))
-    assert normalize_theta_set(Interval(-7*pi/2, -3*pi/2, True, True)) == \
-        Union(Interval(0, pi/2, False, True), Interval(pi/2, 2*pi, True, True))
+    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == Interval.Ropen(0, 2*pi)
+    assert normalize_theta_set(Interval.open(-3*pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(-7*pi/2, -3*pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
     assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
-    assert normalize_theta_set(Interval(-pi/2, pi/2, True, True)) == \
-        Union(Interval(0, pi/2, False, True), Interval(3*pi/2, 2*pi, True, True))
-    assert normalize_theta_set(Interval(-4*pi, 3*pi)) == \
-        Interval(0, 2*pi, False, True)
-    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == \
-        Interval(pi/2, 3*pi/2)
-    assert normalize_theta_set(Interval(0, 2*pi, True, True)) == \
-        Interval(0, 2*pi, True, True)
-    assert normalize_theta_set(Interval(-pi/2, pi/2, False, True)) == \
-        Union(Interval(0, pi/2, False, True), Interval(3*pi/2, 2*pi, False, True))
-    assert normalize_theta_set(Interval(-pi/2, pi/2, True, False)) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, True, True))
-    assert normalize_theta_set(Interval(-pi/2, pi/2, False, False)) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
-    assert normalize_theta_set(Interval(4*pi, 9*pi/2, True, True)) == \
-        Interval(0, pi/2, True, True)
-    assert normalize_theta_set(Interval(4*pi, 9*pi/2, True, False)) == \
-        Interval(0, pi/2, True, False)
-    assert normalize_theta_set(Interval(4*pi, 9*pi/2,False, True)) == \
-        Interval(0, pi/2, False, True)
-    assert normalize_theta_set(Interval(3*pi, 5*pi, True, True)) == \
-        Union(Interval(0, pi, False, True), Interval(pi, 2*pi, True, True))
+        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(-pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval(-4*pi, 3*pi)) == Interval.Ropen(0, 2*pi)
+    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == Interval(pi/2, 3*pi/2)
+    assert normalize_theta_set(Interval.open(0, 2*pi)) == Interval.open(0, 2*pi)
+    assert normalize_theta_set(Interval.Ropen(-pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.Lopen(-pi/2, pi/2)) == \
+        Union(Interval(0, pi/2), Interval.open(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
+        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(4*pi, 9*pi/2)) == Interval.open(0, pi/2)
+    assert normalize_theta_set(Interval.Lopen(4*pi, 9*pi/2)) == Interval.Lopen(0, pi/2)
+    assert normalize_theta_set(Interval.Ropen(4*pi, 9*pi/2)) == Interval.Ropen(0, pi/2)
+    assert normalize_theta_set(Interval.open(3*pi, 5*pi)) == \
+        Union(Interval.Ropen(0, pi), Interval.open(pi, 2*pi))
 
     # FiniteSet
     assert normalize_theta_set(FiniteSet(0, pi, 3*pi)) == FiniteSet(0, pi)
-    assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == \
-        FiniteSet(0, pi/2, pi)
-    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == \
-        FiniteSet(0, pi, 3*pi/2)
+    assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == FiniteSet(0, pi/2, pi)
+    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == FiniteSet(0, pi, 3*pi/2)
     assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
         FiniteSet(pi/2)
     assert normalize_theta_set(FiniteSet(2*pi)) == FiniteSet(0)
