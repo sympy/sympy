@@ -448,6 +448,7 @@ def solveset_real(f, symbol):
     (-oo, oo)
 
     """
+    from sympy import erf, erfinv, erfc, erfcinv
     if not getattr(symbol, 'is_Symbol', False):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
@@ -518,7 +519,21 @@ def solveset_real(f, symbol):
         result = [s for s in result
                   if isinstance(s, RootOf)
                   or domain_check(original_eq, symbol, s)]
-        return FiniteSet(*result).intersect(S.Reals)
+        res =FiniteSet(*result).intersect(S.Reals)
+
+        if isinstance(res, FiniteSet) and \
+        not all(isinstance(x, (erf, erfinv, erfc, erfcinv)) for x in res.args):
+            for r in res:
+                if not checksol(f, symbol, r):
+                    res = FiniteSet(*[x for x in res if x != r])
+            if res is EmptySet():
+                return S.EmptySet
+            else:
+                return res
+        if res is EmptySet():
+            return S.EmptySet
+        else:
+            return res
     else:
         return result.intersect(S.Reals)
 
@@ -964,7 +979,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if isinstance(f, (Expr, Number)):
         if domain is S.Reals:
-            return check_result(f, symbol, solveset_real(f, symbol))
+            return solveset_real(f, symbol)
         elif domain is S.Complexes:
             return solveset_complex(f, symbol)
         elif domain.is_subset(S.Reals):
@@ -1283,14 +1298,3 @@ def linsolve(system, *symbols):
     # Return solutions
     solution = FiniteSet(tuple(solution))
     return solution
-
-
-def check_result(f, symbol, result):
-    if isinstance(result,ConditionSet):
-        return result
-    for res in result:
-        if(sympify(f.subs(symbol,res)) == 0):
-            continue
-        else:
-            return S.EmptySet
-    return result
