@@ -10,7 +10,6 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass, ordered, range
 from sympy.core.evaluate import global_evaluate
-from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
@@ -289,13 +288,6 @@ class Set(Basic):
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
-    @deprecated(useinstead="is_subset", issue=7460, deprecated_since_version="0.7.6")
-    def subset(self, other):
-        """
-        Returns True if 'other' is a subset of 'self'.
-        """
-        return other.is_subset(self)
-
     def is_subset(self, other):
         """
         Returns True if 'self' is a subset of 'other'.
@@ -518,11 +510,6 @@ class Set(Basic):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
         return bool(symb)
 
-    @property
-    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
-    def is_real(self):
-        return None
-
 
 class ProductSet(Set):
     """
@@ -656,11 +643,6 @@ class ProductSet(Set):
 
 
     @property
-    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
-    def is_real(self):
-        return all(set.is_real for set in self.sets)
-
-    @property
     def is_iterable(self):
         return all(set.is_iterable for set in self.sets)
 
@@ -724,11 +706,6 @@ class Interval(Set, EvalfMixin):
     .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
-
-    @property
-    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
-    def is_real(self):
-        return True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
 
@@ -1350,12 +1327,6 @@ class Union(Set, EvalfMixin):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
-    @property
-    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
-    def is_real(self):
-        return all(set.is_real for set in self.args)
-
-
 class Intersection(Set):
     """
     Represents an intersection of sets as a :class:`Set`.
@@ -1945,11 +1916,6 @@ class FiniteSet(Set, EvalfMixin):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    @property
-    @deprecated(useinstead="is_subset(S.Reals)", issue=6212, deprecated_since_version="0.7.6")
-    def is_real(self):
-        return all(el.is_real for el in self)
 
     def compare(self, other):
         return (hash(self) - hash(other))
