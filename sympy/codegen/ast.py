@@ -77,7 +77,7 @@ class Assign(Basic):
     --------
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
+    >>> from sympy.codegen.ast import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
@@ -196,9 +196,9 @@ class AugAssign(Basic):
     --------
 
     >>> from sympy import symbols
-    >>> from symcc.types.ast import AugAssign
+    >>> from sympy.codegen.ast import AugAssign, AddOp
     >>> x, y = symbols('x, y')
-    >>> AugAssign(x, AddOp, y)
+    >>> AugAssign(x, AddOp(), y)
     x += y
 
     """
