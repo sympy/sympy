@@ -1,7 +1,7 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, Dict
+from sympy import Symbol, Rational, SparseMatrix, Dict, diff
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
 from sympy.utilities.pytest import raises
@@ -273,10 +273,12 @@ def test_diff_and_applyfunc():
     from sympy.abc import x, y, z
     md = ImmutableDenseNDimArray([[x, y], [x*z, x*y*z]])
     assert md.diff(x) == ImmutableDenseNDimArray([[1, 0], [z, y*z]])
+    assert diff(md, x) == ImmutableDenseNDimArray([[1, 0], [z, y*z]])
 
     sd = ImmutableSparseNDimArray(md)
     assert sd == ImmutableSparseNDimArray([x, y, x*z, x*y*z], (2, 2))
     assert sd.diff(x) == ImmutableSparseNDimArray([[1, 0], [z, y*z]])
+    assert diff(sd, x) == ImmutableSparseNDimArray([[1, 0], [z, y*z]])
 
     mdn = md.applyfunc(lambda x: x*3)
     assert mdn == ImmutableDenseNDimArray([[3*x, 3*y], [3*x*z, 3*x*y*z]])

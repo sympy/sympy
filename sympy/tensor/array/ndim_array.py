@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify, Basic
+from sympy import Matrix, Integer, sympify, Basic, Derivative
 
 
 class NDimArray(object):
@@ -360,6 +360,12 @@ class NDimArray(object):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+    def _eval_diff(self, *args, **kwargs):
+        if kwargs.pop("evaluate", True):
+            return self.diff(*args)
+        else:
+            return Derivative(self, *args, **kwargs)
 
 
 class ImmutableNDimArray(NDimArray, Basic):

@@ -1,7 +1,7 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix
+from sympy import Symbol, Rational, SparseMatrix, diff
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
 
@@ -264,7 +264,9 @@ def test_diff():
     from sympy.abc import x, y, z
     md = MutableDenseNDimArray([[x, y], [x*z, x*y*z]])
     assert md.diff(x) == MutableDenseNDimArray([[1, 0], [z, y*z]])
+    assert diff(md, x) == MutableDenseNDimArray([[1, 0], [z, y*z]])
 
     sd = MutableSparseNDimArray(md)
     assert sd == MutableSparseNDimArray([x, y, x*z, x*y*z], (2, 2))
     assert sd.diff(x) == MutableSparseNDimArray([[1, 0], [z, y*z]])
+    assert diff(sd, x) == MutableSparseNDimArray([[1, 0], [z, y*z]])
