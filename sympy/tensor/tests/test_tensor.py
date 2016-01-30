@@ -10,7 +10,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
-from sympy.utilities.pytest import raises, skip, XFAIL
+from sympy.utilities.pytest import raises, skip
 from sympy.core.compatibility import range
 
 def _is_equal(arg1, arg2):
@@ -468,7 +468,7 @@ def test_TensorIndexType():
 def test_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-    assert a.tensortype == Lorentz
+    assert a.tensor_index_type == Lorentz
     assert a != -a
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     t = A(a,b)*B(-b,c)
@@ -1209,8 +1209,8 @@ def test_hidden_indices_for_matrix_multiplication():
     B0 = B(-m0)
     B1 = B(m1)
 
-    assert str(B1*A0*B0) == 'B(m1, Matind_0)*A(Lorentz_0, -Matind_0, Matind_1)*B(-Lorentz_0, -Matind_1)'
-    assert str(B0*A0) == 'B(-Lorentz_0, Matind_0)*A(Lorentz_0, -Matind_0, mMatind_1)'
+    assert str(B1*A0*B0) == 'B(m1, -Matind_0)*A(Lorentz_0, Matind_0, -Matind_1)*B(-Lorentz_0, Matind_1)'
+    assert str(B0*A0) == 'B(-Lorentz_0, -Matind_0)*A(Lorentz_0, Matind_0, mMatind_0)'
     assert str(A0*B0) == 'A(Lorentz_0, mMatind_0, -Matind_0)*B(-Lorentz_0, Matind_0)'
 
     C = tensorhead('C', [L, L], [[1]*2])
@@ -1219,7 +1219,7 @@ def test_hidden_indices_for_matrix_multiplication():
 
     assert str(A(m0)*C(m1, -m0)) == 'A(Lorentz_0, mMatind_0, -mMatind_1)*C(m1, -Lorentz_0)'
 
-    assert str(C(True, True)*C(True, True)) == 'C(mLorentz_0, -Lorentz_0)*C(Lorentz_0, -mLorentz_2)'
+    assert str(C(True, True)*C(True, True)) == 'C(mLorentz_0, -Lorentz_0)*C(Lorentz_0, -mLorentz_1)'
 
     assert _is_equal(A(m0), A(m0))
     assert _is_equal(B(-m1), B(-m1))
@@ -1238,7 +1238,7 @@ def test_hidden_indices_for_matrix_multiplication():
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert str(D0 * Aa) == 'D(mLorentz_0, -Lorentz_0, mMatind_0, -Matind_0)*A(Lorentz_0, Matind_0, -mMatind_2)'
+    assert str(D0 * Aa) == 'D(mLorentz_0, -Lorentz_0, mMatind_0, -Matind_0)*A(Lorentz_0, Matind_0, -mMatind_1)'
     assert D(m0, m1) == D(m0, m1, matl2, -matl1)
 
     raises(ValueError, lambda: C(True))

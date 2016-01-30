@@ -2609,16 +2609,19 @@ class TensorHead(Basic):
             for el in mat_ind:
                 eltyp = self.index_types[el]
                 if eltyp in matrix_behavior_kinds:
-                    elind = TensorIndex('aMl', self.index_types[el], False, is_matrix_index=True)
+                    fmt0 = self.index_types[el]._get_matrix_fmt(0)
+                    elind = TensorIndex(fmt0, self.index_types[el], False, is_matrix_index=True)
                     matrix_behavior_kinds[eltyp].append(elind)
                 else:
-                    elind = TensorIndex('aMl', self.index_types[el], True, is_matrix_index=True)
+                    fmt1 = self.index_types[el]._get_matrix_fmt(1)
+                    elind = TensorIndex(fmt1, self.index_types[el], True, is_matrix_index=True)
                     matrix_behavior_kinds[eltyp] = [elind]
                 indices = indices[:el] + (elind,) + indices[el:]
 
         return indices, matrix_behavior_kinds
 
-    def _rename_matrix_indices(self, indices):
+    @staticmethod
+    def _rename_matrix_indices(indices):
         type_counter = defaultdict(int)
         for i, idx in enumerate(indices):
             if not idx.is_matrix_index:
@@ -3819,8 +3822,6 @@ class TensMul(TensExpr):
 
         # flatten:
         args = TensMul._flatten(args)
-        # substitute matrix indices:
-        args = TensMul._tensMul_check_matrix_indices(args)
 
         is_canon_bp = kw_args.get('is_canon_bp', False)
         # targs = [arg for arg in args if isinstance(arg, TensExpr)]
@@ -3866,14 +3867,36 @@ class TensMul(TensExpr):
         dum = []
 
         index_up = lambda u: u if u.is_up else -u
-        # cdt = defaultdict(int)
-        # indices_by_arg = [get_indices(arg) for arg in args]
+
+        indices = list(itertools.chain(*[get_indices(arg) for arg in args]))
+
+        def standardize_matrix_free_indices(arg):
+            type_counter = defaultdict(int)
+            indices = arg.get_indices()
+            for indx, i in sorted(arg.free, key=lambda x: x[1]):
+                if indx.is_matrix_index:
+                    tit = indx.tensor_index_type
+                    type_counter[tit] += 1
+                    if type_counter[tit] == 1: # and not indx.is_up:
+                        indices[i] = TensorIndex(tit._get_matrix_fmt(0), tit, True, True)
+                    elif type_counter[tit] == 2: # and indx.is_up:
+                        indices[i] = TensorIndex(tit._get_matrix_fmt(1), tit, False, True)
+            arg = arg._set_indices(*indices)
+            return arg
 
         for arg in args:
             if not isinstance(arg, TensExpr):
                 continue
-            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free])
-            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free])
+
+            arg = standardize_matrix_free_indices(arg)
+
+            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free if not i.is_matrix_index]) # TODO: if needed?
+            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free if not i.is_matrix_index])
+
+            mat_dict1 = dict([(i, pos) for i, pos in free if i.is_matrix_index]) # TODO: if needed?
+            mat_dict2 = dict([(i, pos) for i, pos in arg.free if i.is_matrix_index])
+
+            # Get a set containing all indices to contract in upper form:
             indices_to_contract = set(free_dict1.keys()) & set(free_dict2.keys())
 
             for name in indices_to_contract:
@@ -3882,19 +3905,79 @@ class TensMul(TensExpr):
                 ipos2pf = ipos2 + f_ext_rank
                 if ind1.is_up == ind2.is_up:
                     raise ValueError('wrong index construction {0}'.format(ind1))
+                # Create a new dummy indices pair:
                 if ind1.is_up:
                     new_dummy = (ipos1, ipos2pf)
                 else:
                     new_dummy = (ipos2pf, ipos1)
                 dum.append(new_dummy)
 
+            # Matrix indices check:
+            mat_keys1 = set(mat_dict1.keys())
+            mat_keys2 = set(mat_dict2.keys())
+
+            mat_types_map1 = defaultdict(set)
+            mat_types_map2 = defaultdict(set)
+
+            for (i, pos) in mat_dict1.items():
+                mat_types_map1[i.tensor_index_type].add(i)
+            for (i, pos) in mat_dict2.items():
+                mat_types_map2[i.tensor_index_type].add(i)
+
+            mat_contraction = mat_keys1 & mat_keys2
+            mat_skip = set([])
+            mat_free = []
+
+            # Contraction of matrix indices is a bit more complicated,
+            # because it is governed by more complicated rules:
+            for mi in mat_contraction:
+                if not mi.is_up:
+                    continue
+
+                mat_types_map1[mi.tensor_index_type].discard(mi)
+                mat_types_map2[mi.tensor_index_type].discard(mi)
+
+                negmi1 = mat_types_map1[mi.tensor_index_type].pop() if mat_types_map1[mi.tensor_index_type] else None
+                negmi2 = mat_types_map2[mi.tensor_index_type].pop() if mat_types_map2[mi.tensor_index_type] else None
+
+                mat_skip.update([mi, negmi1, negmi2])
+
+                ipos1 = mat_dict1[mi]
+                ipos2 = mat_dict2[mi]
+                ipos2pf = ipos2 + f_ext_rank
+
+                # Case A(m0)*B(m0) ==> A(-D)*B(D):
+                if (negmi1 not in mat_keys1) and (negmi2 not in mat_keys2):
+                    dum.append((ipos2pf, ipos1))
+                # Case A(m0, -m1)*B(m0) ==> A(m0, -D)*B(D):
+                elif (negmi1 in mat_keys1) and (negmi2 not in mat_keys2):
+                    mpos1 = mat_dict1[negmi1]
+                    dum.append((ipos2pf, mpos1))
+                    mat_free.append((mi, ipos1))
+                    indices[ipos1] = mi
+                # Case A(m0)*B(m0, -m1) ==> A(-D)*B(D, m0):
+                elif (negmi1 not in mat_keys1) and (negmi2 in mat_keys2):
+                    mpos2 = mat_dict2[negmi2]
+                    dum.append((ipos2pf, ipos1))
+                    mat_free.append((mi, f_ext_rank + mpos2))
+                    indices[f_ext_rank + mpos2] = mi
+                # Case A(m0, -m1)*B(m0, -m1) ==> A(m0, -D)*B(D, -m1):
+                elif (negmi1 in mat_keys1) and (negmi2 in mat_keys2):
+                    mpos1 = mat_dict1[negmi1]
+                    mpos2 = mat_dict2[negmi2]
+                    dum.append((ipos2pf, mpos1))
+                    mat_free.append((mi, ipos1))
+                    mat_free.append((negmi2, f_ext_rank + mpos2))
+
             # Update values to the cumulative data structures:
-            free = [(ind, i) for ind, i in free if index_up(ind) not in indices_to_contract]
-            free.extend([(ind, i + f_ext_rank) for ind, i in arg.free if index_up(ind) not in indices_to_contract])
+            free = [(ind, i) for ind, i in free if index_up(ind) not in indices_to_contract
+                        and ind not in mat_skip]
+            free.extend([(ind, i + f_ext_rank) for ind, i in arg.free if index_up(ind) not in indices_to_contract
+                        and ind not in mat_skip])
+            free.extend(mat_free)
             dum.extend([(i1 + f_ext_rank, i2 + f_ext_rank) for i1, i2 in arg.dum])
             f_ext_rank += arg.ext_rank
 
-        indices = list(itertools.chain(*[get_indices(arg) for arg in args]))
         # rename contracted indices:
         indices = _IndexStructure._replace_dummy_names(indices, free, dum)
 
@@ -3909,62 +3992,6 @@ class TensMul(TensExpr):
                 newargs.append(arg)
 
         return newargs, indices, free, dum
-
-    @staticmethod
-    def _tensMul_check_matrix_indices(args):
-        # This "private" method checks matrix indices.
-        # Matrix indices are special, and observe
-        # anomalous substitution rules to determine contractions.
-
-        # count
-        type_count = defaultdict(lambda: 0)
-        type_valence = defaultdict(lambda: True)
-        type_contraction = defaultdict(lambda: False)
-
-        def generate_for_type(index_type):
-            number = type_count[index_type]
-            type_count[index_type] += 1
-            matrix_fmt = index_type._get_matrix_fmt(number)
-            valence = type_valence[index_type]
-            type_valence[index_type] = not valence
-            return TensorIndex(matrix_fmt, index_type, valence, is_matrix_index=True)
-
-        newargs = []
-        for arg in args:
-            if not isinstance(arg, TensExpr):
-                newargs.append(arg)
-                continue
-            old_indices = arg.get_indices()
-
-            new_indices = [None]*arg.ext_rank
-            for posi, ind in enumerate(old_indices):
-                if ind.is_matrix_index and ind in arg._get_free_indices_set():
-                    new_indices[posi] = generate_for_type(ind.tensor_index_type)
-                else:
-                    new_indices[posi] = ind
-
-            newargs.append(arg._set_indices(*new_indices))
-            old_index_types = [i.tensor_index_type for i in old_indices]
-            for key in type_count.keys():
-                if type_contraction[key]:
-                    if old_index_types.count(key) > 1:
-                        # decrease by one all values of `type_count`,
-                        # this way contracted indices will have the same label:
-                        type_count[key] -= 1
-                        # `type_contraction[key]` remains true.
-                    else:
-                        # there is only one matrix index in this `arg`,
-                        # and it has not been contracted,
-                        # mark this type for contraction on the next step:
-                        type_contraction[key] = False
-                elif old_index_types.count(key) > 0:
-                    # if this type has appeared, but there was no trailing
-                    # contraction waiting, mark it as "contraction", to contract
-                    # it with the next `arg`:
-                    type_contraction[key] = True
-                    type_count[key] -= 1
-
-        return newargs
 
     @staticmethod
     def _get_components_from_args(args):
