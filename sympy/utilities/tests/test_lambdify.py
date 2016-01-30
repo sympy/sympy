@@ -1,15 +1,18 @@
+from itertools import product
+import math
+
+import mpmath
+
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff)
 from sympy.printing.lambdarepr import LambdaPrinter
-import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-import math
 import sympy
 
 
@@ -327,6 +330,25 @@ def test_numpy_old_matrix():
     f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
+
+
+def test_issue9474():
+    mods = [None, 'math']
+    if numpy:
+        mods.append('numpy')
+
+    for mod in mods:
+        f = lambdify(x, sympy.S(1)/x, modules=mod)
+        assert f(2) == 0.5
+        f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
+        assert f(2) == 0
+
+    for absfunc, modules in product([Abs, abs], mods):
+        f = lambdify(x, absfunc(x), modules=modules)
+        assert f(-1) == 1
+        assert f(1) == 1
+        assert f(3+4j) == 5
+
 
 def test_numpy_piecewise():
     if not numpy:

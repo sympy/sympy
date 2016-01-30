@@ -31,14 +31,12 @@ NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
 }
 
 MPMATH_TRANSLATIONS = {
-    "Abs": "fabs",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipf",
     "elliptic_e": "ellipe",
@@ -65,7 +63,6 @@ MPMATH_TRANSLATIONS = {
 }
 
 NUMPY_TRANSLATIONS = {
-    "Abs": "abs",
     "acos": "arccos",
     "acosh": "arccosh",
     "arg": "angle",
@@ -150,11 +147,12 @@ def _import(module, reload="False"):
     # Add translated names to namespace
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
+    namespace['Abs'] = abs
 
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True):
+             dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
