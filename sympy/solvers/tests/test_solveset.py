@@ -1056,9 +1056,10 @@ def test_issue_10426():
     _y =Dummy('_y')
     assert solveset(sin(x + a) - sin(x), a) == \
     ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), S.Complexes)
-    #assert solveset(sin(x + a1) - sin(x), a1, domain=S.Reals) == imageset(Lambda(_n, 2*_n*pi), S.Integers)
+    # Assertion error for below test but works fine.
+    # assert solveset(sin(x + a1) - sin(x), a1, domain=S.Reals) == imageset(Lambda(_n, 2*_n*pi), S.Integers)
     # assert solveset(sin(x + a) - sin(x), a) == \
-    # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), ComplexRegion(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+    # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
 
 
 def test_issue_9913():
