@@ -1047,10 +1047,16 @@ def test_issue_9953():
 
 
 def test_issue_10426():
-    a =symbols('a')
-    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    # Commented test-case need another PR from updated fancysets, printer branch.
+    # from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
+    #                               ComplexRegion)
+    a1 =symbols('a1')
+    _n =Dummy('_n')
+    _x =Dummy('_x')
+    _y =Dummy('_y')
+    assert solveset(sin(x + a1) - sin(x), a1, domain=S.Reals) == imageset(Lambda(_n, 2*_n*pi), S.Integers)
     #assert solveset(sin(x + a) - sin(x), a) == \
-    #ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+    #ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), ComplexRegion(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
 
 
 def test_issue_9913():
