@@ -23,12 +23,16 @@ def test_singularities():
                                                        (1 + sqrt(3)*I)/2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
 
-@XFAIL
-def test_singularities_non_rational():
-    x = Symbol('x', real=True)
 
-    assert singularities(exp(1/x), x) == (0)
-    assert singularities(log((x - 2)**2), x) == (2)
+def test_singularities_non_rational():
+    x = Symbol('x')
+
+    assert singularities(exp(1/x), x) == FiniteSet(0)
+    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
+    assert singularities(exp(1/log(x + 1)), x) == FiniteSet(0)
+    # assert singularities(a*sin(1/x).rewrite(exp), x) == FiniteSet(0)
+    assert singularities(exp(1/x)*x/(x**4 - 4), x) == \
+        FiniteSet(0, -sqrt(2), sqrt(2), -I*sqrt(2), I*sqrt(2))
 
 
 def test_is_increasing():

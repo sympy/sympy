@@ -1,30 +1,30 @@
 from sympy.core.sympify import sympify
+from sympy.sets.sets import Union
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
-from sympy import S
+from sympy import S, Symbol, exp, log
 
 
-def singularities(expr, sym):
+def singularities(f, sym):
     """
-    Finds singularities for a function.
+    Finds singularities for a complex valued function with symbol `sym`
     Currently supported functions are:
-    - univariate rational(real or complex) functions
+    - univariate functions
 
     Examples
     ========
 
     >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, I, sqrt
-    >>> x = Symbol('x', real=True)
-    >>> y = Symbol('y', real=False)
-    >>> singularities(x**2 + x + 1, x)
+    >>> from sympy import Symbol, I, sqrt, log
+    >>> from sympy.abc import z
+    >>> singularities(z**2 + z + 1, z)
     EmptySet()
-    >>> singularities(1/(x + 1), x)
+    >>> singularities(1/(z + 1), z)
     {-1}
-    >>> singularities(1/(y**2 + 1), y)
+    >>> singularities(1/(z**2 + 1), z)
     {-I, I}
-    >>> singularities(1/(y**3 + 1), y)
-    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    >>> singularities(log(log(log(z) - 2)), z)
+    {exp(3)}
 
     References
     ==========
@@ -32,12 +32,19 @@ def singularities(expr, sym):
     .. [1] http://en.wikipedia.org/wiki/Mathematical_singularity
 
     """
-    if not expr.is_rational_function(sym):
-        raise NotImplementedError("Algorithms finding singularities for"
-                                  " non rational functions are not yet"
-                                  " implemented")
-    else:
-        return solveset(simplify(1/expr), sym)
+    f, sym = map(sympify, [f, sym])
+
+    if not isinstance(sym, Symbol):
+        raise ValueError("")
+    if f.is_number or f.is_polynomial(sym):
+        return S.EmptySet
+    elif f.is_Mul or f.is_Add:
+        return Union(*[singularities(funct, sym) for funct in f.args])
+    elif f.func is exp:
+        return singularities(f.exp, sym)
+    elif f.func is log:
+        return solveset(simplify(f.args[0]), sym)
+    return solveset(simplify(1/f), sym)
 
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################
