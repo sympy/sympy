@@ -266,14 +266,8 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
-        try:
-            args = p.args
-        except AttributeError:
-            try:
-                args = [as_int(i) for i in p]
-            except TypeError:
-                args = Point(p).args
-        return sqrt(sum([(a - b)**2 for a, b in zip(self.args, args)]))
+        return sqrt(sum([(a - b)**2 for a, b in zip(
+            self.args, p.args if isinstance(p, Point) else p)]))
 
     def taxicab_distance(self, p):
         """The Taxicab Distance from self to point p.
