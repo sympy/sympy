@@ -350,6 +350,21 @@ def test_issue9474():
         assert f(3+4j) == 5
 
 
+def test_issue_9871():
+    if not numexpr:
+        skip("numexpr not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    r = sqrt(x**2 + y**2)
+    expr = diff(1/r, x)
+
+    xn = yn = numpy.arange(1, 10)
+    fv_numpy = lambdify((x, y), expr, modules='numpy')(xn, yn)
+    fv_numexpr = lambdify((x, y), expr, modules='numexpr')(xn, yn)
+    numpy.testing.assert_allclose(fv_numexpr, fv_numpy, rtol=1e-10)
+
+
 def test_numpy_piecewise():
     if not numpy:
         skip("numpy not installed.")
