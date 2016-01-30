@@ -46,8 +46,24 @@ singleton
 
 S
 ^
-.. autoclass:: S
+.. autoclass:: Singleton
    :members:
+
+.. note:: Some important points.
+
+   1.Normally the first invocation of this class creates the unique instance of the class and
+   subsequent invocations would simply return a reference to the instance created earlier.
+   ``S.One`` denotes a singleton object in SymPy having value ``Integer(1)``.The ``S`` object makes it so
+   that only one instance of ``Integer(1)`` is ever created. The reason that these are stored in this way
+   is because of their frequent use throughout the codebase, which makes it more efficient.
+
+   2. Most Integers -- even identical ones like ``Integer(1)`` and ``Integer(1)`` -- get stored
+   at arbitrary memory locations and tests for equality between them and a value must be
+   done with the ``==`` operator: ``x == 1``. By having a single instance, SymPy enables two optimizations.
+   First, it saves memory. Second, you can compare against these objects using is comparison, like ``x is S.One``. Because only one instance can ever exist ``Integer(1)`` is always the same as ``S.One``.
+
+   * There are several objects in SymPy which are implemented as singletons. Some of them are ``S.NegativeOne``, ``S.Zero``, ``S.NegativeInfinity``, ``S.EmptySet``, ``S.Infinity`` and others can be seen by running ``dir(S)``. Ignore the ones that start with ``__``  those are Python internal methods.
+
 
 expr
 ----
