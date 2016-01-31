@@ -40,11 +40,14 @@ def singularities(f, sym):
         return S.EmptySet
     elif f.is_Mul or f.is_Add:
         return Union(*[singularities(funct, sym) for funct in f.args])
+    elif f.is_Pow:
+        return singularities(log(f.base)*f.exp, sym)
     elif f.func is exp:
         return singularities(f.exp, sym)
     elif f.func is log:
         return solveset(simplify(f.args[0]), sym)
-    return solveset(simplify(1/f), sym)
+    else:
+        raise NotImplementedError("")
 
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################

@@ -22,6 +22,7 @@ def test_singularities():
     assert singularities(x/(x**3 + 1), x) == FiniteSet(-1, (1 - sqrt(3)*I)/2,
                                                        (1 + sqrt(3)*I)/2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
+    assert singularities(x**2/(x**2 - 4), x) == FiniteSet(-2, 2)
 
 
 def test_singularities_non_rational():
