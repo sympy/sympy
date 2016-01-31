@@ -37,6 +37,7 @@ MATH_TRANSLATIONS = {
 }
 
 MPMATH_TRANSLATIONS = {
+    "Abs": "fabs",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipf",
     "elliptic_e": "ellipe",
@@ -151,8 +152,12 @@ def _import(module, reload="False"):
     # For computing the modulus of a sympy expression we use the builtin abs
     # function, instead of the previously used fabs function for all
     # translation modules. This is because the fabs function in the math
-    # module does not accept complex valued arguments. (see issue 9474)
-    namespace['Abs'] = abs
+    # module does not accept complex valued arguments. (see issue 9474). The
+    # only exception, where we don't use the builtin abs function is the
+    # mpmath translation module, because mpmath.fabs returns mpf objects in
+    # contrast to abs().
+    if 'Abs' not in namespace:
+        namespace['Abs'] = abs
 
 
 @doctest_depends_on(modules=('numpy'))

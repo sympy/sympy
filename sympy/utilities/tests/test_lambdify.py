@@ -344,6 +344,10 @@ def test_issue9474():
         f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
         assert f(2) == 0
 
+    if mpmath:
+        f = lambdify(x, sympy.S(1)/sympy.Abs(x), modules=['mpmath'])
+        assert isinstance(f(2), mpmath.mpf)
+
     for absfunc, modules in product([Abs, abs], mods):
         f = lambdify(x, absfunc(x), modules=modules)
         assert f(-1) == 1
