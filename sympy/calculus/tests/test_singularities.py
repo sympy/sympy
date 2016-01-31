@@ -1,7 +1,7 @@
 from sympy import Symbol, exp, log
 from sympy.calculus.singularities import (singularities, is_increasing,
         is_strictly_increasing, is_decreasing, is_strictly_decreasing, is_monotonic,
-        order_of_zero)
+        order)
 from sympy.sets import Interval, FiniteSet, EmptySet
 from sympy import oo, S, I, sqrt, sin, cos, pi
 
@@ -36,12 +36,12 @@ def test_singularities_non_rational():
     assert singularities(cos(1/z) + sin(z**2), z) == FiniteSet(0)
 
 
-def test_order_of_zero():
-    assert order_of_zero(log(z - 1)/(z - 2)**5, z, 2) == -4
-    assert order_of_zero(z - 1, z, 1) == 1
-    assert order_of_zero(exp(z - 1), z, 1) == S.Infinity
-    assert order_of_zero(sin(z)/z, z, 0) == 0
-    assert order_of_zero(cos(z)/(z - pi/2), z, pi/2) == 0
+def test_order():
+    assert order(log(z - 1)/(z - 2)**5, z, 2) == -4
+    assert order(z - 1, z, 1) == 1
+    assert order(exp(z - 1), z, 1) == S.Infinity
+    assert order(sin(z)/z, z, 0) == 0
+    assert order(cos(z)/(z - pi/2), z, pi/2) == 0
 
 
 def test_is_increasing():

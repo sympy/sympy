@@ -52,28 +52,25 @@ def singularities(f, sym):
         raise NotImplementedError("")
 
 
-def order_of_zero(f, x, a):
+def order(f, x, a):
     """
-    Finds the order of zero of a meromorphic function at
-    a point `a` with `x` as symbol
-
     Examples
     ========
 
-    >>> from sympy import order_of_zero, exp
+    >>> from sympy import order, exp
     >>> from sympy.abc import z
-    >>> order_of_zero(exp(z)/(z - 2)**3, z, 2)
+    >>> order(exp(z)/(z - 2)**3, z, 2)
     -3
-    >>> order_of_zero(2*z, z, 0)
+    >>> order(2*z, z, 0)
     1
-    >>> order_of_zero((z - 1)*exp(1/(z - 1)), z, 1)
+    >>> order((z - 1)*exp(1/(z - 1)), z, 1)
 
     """
     f = sympify(f)
     if f.is_zero:
         return S.Infinity
-    order = O(f, (x, a))
-    e = order.expr
+    big_oh = O(f, (x, a))
+    e = big_oh.expr
     if e is S.One:
         if f.subs({x: a}) is S.NaN:
             return S.Zero
