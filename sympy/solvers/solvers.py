@@ -1383,12 +1383,14 @@ def _solve(f, *symbols, **flags):
         # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
         if f_num is S.Zero:
-            return []
+            return [S.Zero]
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
             if flags.get('simplify', True):
                 sol = simplify(sol)
             return [sol]
+        elif f_num is None:
+            return []
 
         result = False  # no solution was obtained
         msg = ''  # there is no failure message
