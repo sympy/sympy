@@ -116,7 +116,7 @@ look at the issues tagged `Easy to Fix
 
 Please note that all participants of this project are expected to follow our
 Code of Conduct. By participating in this project you agree to abide by its
-terms. See `CODE_OF_CONDUCT.MD <CODE_OF_CONDUCT.MD>`_.
+terms. See `CODE_OF_CONDUCT.md <CODE_OF_CONDUCT.md>`_.
 
 Tests
 -----
