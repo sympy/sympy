@@ -147,6 +147,11 @@ def _import(module, reload="False"):
     # Add translated names to namespace
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
+
+    # For computing the modulus of a sympy expression we use the builtin abs
+    # function, instead of the previously used fabs function for all
+    # translation modules. This is because the fabs function in the math
+    # module does not accept complex valued arguments. (see issue 9474)
     namespace['Abs'] = abs
 
 
