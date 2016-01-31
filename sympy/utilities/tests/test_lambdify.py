@@ -336,7 +336,8 @@ def test_issue9474():
     mods = [None, 'math']
     if numpy:
         mods.append('numpy')
-
+    if mpmath:
+        mods.append('mpmath')
     for mod in mods:
         f = lambdify(x, sympy.S(1)/x, modules=mod)
         assert f(2) == 0.5
