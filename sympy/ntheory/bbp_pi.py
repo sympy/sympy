@@ -23,32 +23,58 @@ at: http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Modifications:
-1.Once the nth digit is selected the number of digits of working
-precision is calculated to ensure that the 14 Hexadecimal representation
-of that region is accurate. This was found empirically to be
-int((math.log10(n//1000))+18). This was found by searching for a value
-of working precision for the n = 0 and n = 1 then n was increased until
-the result was less precise, therefore increased again this was repeated
-for increasing n and an effective fit was found between n and the
-working precision value.
 
-2. The while loop to evaluate whether the series has converged has be
-replaced with a fixed for-loop, that option was selected because in a
-very large number of cases the loop converged to a point where no
-difference can be detected in less than 15 iterations. (done for more
-accurate memory and time banking).
+1.Once the nth digit and desired number of digits is selected, the
+number of digits of working precision is calculated to ensure that
+the hexadecimal digits returned are accurate. This is calculated as
 
-3. output hex string constrained to 14 characters (accuracy assured to be
-n = 10**7)
+    int(math.log(start + prec)/math.log(16) + prec + 3)
+    ---------------------------------------   --------
+                      /                          /
+    number of hex digits           additional digits
+
+This was checked by the following code which completed without
+errors (and dig are the digits included in the test_bbp.py file):
+
+    for i in range(0,1000):
+     for j in range(1,1000):
+      a, b = pi_hex_digits(i, j), dig[i:i+j]
+      if a != b:
+        print('%s\n%s'%(a,b))
+
+Deceasing the additional digits by 1 generated errors, so '3' is
+the smallest additional precision needed to calculate the above
+loop without errors. The following trailing 10 digits were also
+checked to be accurate (and the times were slightly faster with
+some of the constant modifications that were made):
+
+    >> from time import time
+    >> t=time();pi_hex_digits(10**2-10 + 1, 10), time()-t
+    ('e90c6cc0ac', 0.0)
+    >> t=time();pi_hex_digits(10**4-10 + 1, 10), time()-t
+    ('26aab49ec6', 0.17100000381469727)
+    >> t=time();pi_hex_digits(10**5-10 + 1, 10), time()-t
+    ('a22673c1a5', 4.7109999656677246)
+    >> t=time();pi_hex_digits(10**6-10 + 1, 10), time()-t
+    ('9ffd342362', 59.985999822616577)
+    >> t=time();pi_hex_digits(10**7-10 + 1, 10), time()-t
+    ('c1a42e06a1', 689.51800012588501)
+
+2. The while loop to evaluate whether the series has converged quits
+when the addition amount `dt` has dropped to zero.
+
+3. the formatting string to convert the decimal to hexidecimal is
+calculated for the given precision.
 
 4. pi_hex_digits(n) changed to have coefficient to the formula in an
 array (perhaps just a matter of preference).
 
 '''
+
 from __future__ import print_function, division
 
 import math
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
 
 
 def _series(j, n, prec=14):
@@ -97,14 +123,19 @@ def pi_hex_digits(n, prec=14):
     >>> from sympy.ntheory.bbp_pi import pi_hex_digits
     >>> pi_hex_digits(0)
     '3243f6a8885a30'
-    >>> pi_hex_digits(13)
-    '08d313198a2e03'
+    >>> pi_hex_digits(0, 3)
+    '324'
 
     References
     ==========
 
     .. [1] http://www.numberworld.org/digits/Pi/
     """
+    n, prec = as_int(n), as_int(prec)
+    if n < 0:
+        raise ValueError('n cannot be negative')
+    if prec == 0:
+        return ''
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
@@ -124,4 +155,7 @@ def pi_hex_digits(n, prec=14):
 
 def _dn(n, prec):
     # controller for n dependence on precision
-    return int(math.log(n + prec)/math.log(16) + prec + 2)
+    # n = starting digit index
+    # prec = the number of total digits to compute
+    n += 1  # because we subtract 1 for _series
+    return int(math.log(n + prec)/math.log(16) + prec + 3)
