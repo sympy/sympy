@@ -1,5 +1,8 @@
 language: python
 sudo: false
+cache:
+  directories:
+    - $HOME/virtualenv
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false"
@@ -96,16 +99,16 @@ matrix:
           - gfortran
     - python: 2.7
       env:
-        - TEST_AUTOWRAP="true"
-      sudo: true
-      virtualenv:
-        system_site_packages: true
-    - python: 2.7
-      env:
         - TEST_ASCII="true"
     - python: 3.4
       env:
         - TEST_ASCII="true"
+    - python: 2.7
+      env:
+        - TEST_AUTOWRAP="true"
+      sudo: true
+      virtualenv:
+        system_site_packages: true
   allow_failures:
     - python: 3.3 # Dummy value
       env:
