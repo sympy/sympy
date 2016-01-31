@@ -1,13 +1,13 @@
 from sympy import Symbol, exp, log
 from sympy.calculus.singularities import (singularities, is_increasing,
-                                          is_strictly_increasing, is_decreasing,
-                                          is_strictly_decreasing, is_monotonic)
+        is_strictly_increasing, is_decreasing, is_strictly_decreasing, is_monotonic,
+        order_of_zero)
 from sympy.sets import Interval, FiniteSet, EmptySet
-from sympy import oo, S, I, sqrt, sin, cos
+from sympy import oo, S, I, sqrt, sin, cos, pi
 
 from sympy.utilities.pytest import XFAIL
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 a = Symbol('a', negative=True)
 b = Symbol('b', positive=True)
 
@@ -26,8 +26,6 @@ def test_singularities():
 
 
 def test_singularities_non_rational():
-    z = Symbol('z')
-
     assert singularities(exp(1/z), z) == FiniteSet(0)
     assert singularities(log((z - 2)**2), z) == FiniteSet(2)
     assert singularities(exp(1/log(z + 1)), z) == FiniteSet(0)
@@ -36,6 +34,14 @@ def test_singularities_non_rational():
         FiniteSet(0, -sqrt(2), sqrt(2), -I*sqrt(2), I*sqrt(2))
     assert singularities(sin(1/(z - 1)), z) == FiniteSet(1)
     assert singularities(cos(1/z) + sin(z**2), z) == FiniteSet(0)
+
+
+def test_order_of_zero():
+    assert order_of_zero(log(z - 1)/(z - 2)**5, z, 2) == -4
+    assert order_of_zero(z - 1, z, 1) == 1
+    assert order_of_zero(exp(z - 1), z, 1) == S.Infinity
+    assert order_of_zero(sin(z)/z, z, 0) == 0
+    assert order_of_zero(cos(z)/(z - pi/2), z, pi/2) == 0
 
 
 def test_is_increasing():

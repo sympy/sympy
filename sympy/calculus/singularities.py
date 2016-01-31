@@ -1,4 +1,5 @@
 from sympy.core.sympify import sympify
+from sympy.series.order import O
 from sympy.sets.sets import Union
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
@@ -49,6 +50,39 @@ def singularities(f, sym):
         return solveset(simplify(f.args[0]), sym)
     else:
         raise NotImplementedError("")
+
+
+def order_of_zero(f, x, a):
+    """
+    Finds the order of zero of a meromorphic function at
+    a point `a` with `x` as symbol
+
+    Examples
+    ========
+
+    >>> from sympy import order_of_zero, exp
+    >>> from sympy.abc import z
+    >>> order_of_zero(exp(z)/(z - 2)**3, z, 2)
+    -3
+    >>> order_of_zero(2*z, z, 0)
+    1
+    >>> order_of_zero((z - 1)*exp(1/(z - 1)), z, 1)
+
+    """
+    f = sympify(f)
+    if f.is_zero:
+        return S.Infinity
+    order = O(f, (x, a))
+    e = order.expr
+    if e is S.One:
+        if f.subs({x: a}) is S.NaN:
+            return S.Zero
+        else:
+            return S.Infinity
+    if e == x - a:
+        return S.One
+    if e.is_rational_function(x) and e.is_Pow:
+        return e.exp
 
 ###########################################################################
 ###################### DIFFERENTIAL CALCULUS METHODS ######################
