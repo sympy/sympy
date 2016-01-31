@@ -12,7 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, u, range
+from sympy.core.compatibility import long, iterable, u, range, PY3
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
@@ -128,6 +128,15 @@ def test_multiplication():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
+    if PY3:
+        c = a @ b
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
     h = matrix_multiply_elementwise(a, c)
     assert h == a.multiply_elementwise(c)
     assert h[0, 0] == 7
@@ -154,6 +163,14 @@ def test_multiplication():
     assert c[0, 1] == 2*5
     assert c[1, 0] == 3*5
     assert c[1, 1] == 0
+
+    if PY3:
+        c = 5 @ b
+        assert isinstance(c, Matrix)
+        assert c[0, 0] == 5
+        assert c[0, 1] == 2*5
+        assert c[1, 0] == 3*5
+        assert c[1, 1] == 0
 
 
 def test_power():
