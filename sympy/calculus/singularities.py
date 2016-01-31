@@ -3,7 +3,7 @@ from sympy.series.order import O
 from sympy.sets.sets import Union
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
-from sympy import S, Symbol, exp, log, sin, cos
+from sympy import S, Symbol, exp, log, sin, cos, sinh, cosh
 
 
 def singularities(f, sym):
@@ -44,7 +44,7 @@ def singularities(f, sym):
     elif f.is_Pow:
         return singularities(log(f.base)*f.exp, sym)
     # Entire functions
-    elif f.func in (exp, sin, cos):
+    elif f.func in (exp, sin, cos, sinh, cosh):
         return singularities(f.args[0], sym)
     elif f.func is log:
         return solveset(simplify(f.args[0]), sym)
