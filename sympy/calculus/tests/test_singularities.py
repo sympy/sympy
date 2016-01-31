@@ -3,7 +3,7 @@ from sympy.calculus.singularities import (singularities, is_increasing,
                                           is_strictly_increasing, is_decreasing,
                                           is_strictly_decreasing, is_monotonic)
 from sympy.sets import Interval, FiniteSet, EmptySet
-from sympy import oo, S, I, sqrt
+from sympy import oo, S, I, sqrt, sin, cos
 
 from sympy.utilities.pytest import XFAIL
 
@@ -26,14 +26,16 @@ def test_singularities():
 
 
 def test_singularities_non_rational():
-    x = Symbol('x')
+    z = Symbol('z')
 
-    assert singularities(exp(1/x), x) == FiniteSet(0)
-    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
-    assert singularities(exp(1/log(x + 1)), x) == FiniteSet(0)
-    # assert singularities(a*sin(1/x).rewrite(exp), x) == FiniteSet(0)
-    assert singularities(exp(1/x)*x/(x**4 - 4), x) == \
+    assert singularities(exp(1/z), z) == FiniteSet(0)
+    assert singularities(log((z - 2)**2), z) == FiniteSet(2)
+    assert singularities(exp(1/log(z + 1)), z) == FiniteSet(0)
+    assert singularities(z*sin(1/z).rewrite(exp), z) == FiniteSet(0)
+    assert singularities(exp(1/z)*z/(z**4 - 4), z) == \
         FiniteSet(0, -sqrt(2), sqrt(2), -I*sqrt(2), I*sqrt(2))
+    assert singularities(sin(1/(z - 1)), z) == FiniteSet(1)
+    assert singularities(cos(1/z) + sin(z**2), z) == FiniteSet(0)
 
 
 def test_is_increasing():
