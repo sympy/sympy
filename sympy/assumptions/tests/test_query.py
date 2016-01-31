@@ -2186,6 +2186,14 @@ def test_issue_9636():
     assert ask(Q.odd(3.0)) is False
 
 
+def test_issue_10458():
+    x = symbols('x', integer=True, positive=True)
+    assert ask(Q.nonpositive(1/x-1)) is True
+    assert ask(Q.nonpositive(1-1/x)) is None
+    assert ask(Q.nonnegative(1/x-1)) is None
+    assert ask(Q.nonnegative(1-1/x)) is True
+
+
 @XFAIL
 def test_autosimp_fails():
     # Unxfail after fixing issue #9807
