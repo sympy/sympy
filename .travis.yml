@@ -111,6 +111,19 @@ matrix:
             - cython
       virtualenv:
         system_site_packages: true
+    - python: 3.5
+      env:
+        - TEST_AUTOWRAP="true"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
+      virtualenv:
+        system_site_packages: true
+
     - python: 3.5 # Dummy value
       env:
         - TEST_SAGE="true"
