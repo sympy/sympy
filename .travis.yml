@@ -210,7 +210,8 @@ before_install:
         source activate test-environment;
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      pip install "theano";
+      # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
+      conda install theano;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
       sudo apt-add-repository -y ppa:aims/sagemath;
