@@ -2188,10 +2188,28 @@ def test_issue_9636():
 
 def test_issue_10458():
     x = symbols('x', integer=True, positive=True)
-    assert ask(Q.nonpositive(1/x-1)) is True
-    assert ask(Q.nonpositive(1-1/x)) is None
-    assert ask(Q.nonnegative(1/x-1)) is None
-    assert ask(Q.nonnegative(1-1/x)) is True
+    assert ask(Q.nonpositive(1/x - 1)) is True
+    assert ask(Q.nonpositive(1 - 1/x)) is None
+    assert ask(Q.nonnegative(1/x - 1)) is None
+    assert ask(Q.nonnegative(1 - 1/x)) is True
+    assert ask(Q.nonnegative(x - 1/x + 1)) is True
+    assert ask(Q.nonnegative(1 - 1/x - x)) is False
+    assert ask(Q.nonpositive(1 - 1/x - x)) is True
+    assert ask(Q.nonpositive(x - 1/x + 1)) is False
+    assert ask(Q.nonpositive(x + x**2 - 1)) is False
+    assert ask(Q.nonnegative(x + x**2 - 1)) is True
+    assert ask(Q.nonpositive(1 - (1/x**2) + x**2 + 3*x)) is False
+    assert ask(Q.nonnegative(1 - (1/x**2) + x**2 + 3*x)) is True
+
+    x = symbols('x', integer=True, negative=True)
+    assert ask(Q.nonpositive(1/x - 1)) is True
+    assert ask(Q.nonpositive(1 - 1/x)) is False
+    assert ask(Q.nonnegative(1/x - 1)) is False
+    assert ask(Q.nonnegative(1 - 1/x)) is True
+    assert ask(Q.nonpositive(- x + x**2 + 1)) is False
+    assert ask(Q.nonnegative(- x + x**2 + 1)) is True
+    assert ask(Q.nonpositive(3*x - (1/x**2) - x**2 + 1)) is True
+    assert ask(Q.nonnegative(3*x - (1/x**2) - x**2 + 1)) is False
 
 
 @XFAIL

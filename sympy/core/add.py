@@ -599,6 +599,7 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
+                    # make difference between integer and rational number
                     if a.is_nonpositive and v.is_integer == True:
                         return
                     if s.is_nonnegative:
@@ -616,6 +617,7 @@ class Add(Expr, AssocOp):
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
+                    # make difference between integer and rational number
                     if a.is_nonnegative and v.is_integer == True:
                         return
                     if s.is_nonpositive:
