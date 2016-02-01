@@ -111,13 +111,14 @@ matrix:
             - cython
       virtualenv:
         system_site_packages: true
-    # These builds are allowed failures. They need to be duplicated here and below.
     - python: 3.5 # Dummy value
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
       sudo: true
       dist: trusty
+
+    # These builds are allowed failures. They need to be duplicated here and below.
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
@@ -144,12 +145,6 @@ matrix:
         - FASTCACHE="false"
 
   allow_failures:
-    - python: 3.5 # Dummy value
-      env:
-        - TEST_SAGE="true"
-        - FASTCACHE="false"
-      sudo: true
-      dist: trusty
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
