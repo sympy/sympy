@@ -1,7 +1,6 @@
 from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import PY3
 
 def test_sparse_matrix():
     def sparse_eye(n):
@@ -66,8 +65,11 @@ def test_sparse_matrix():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
-    if PY3:
-        c = a @ b
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
         assert c[0, 0] == 7
         assert c[0, 1] == 2
         assert c[1, 0] == 6

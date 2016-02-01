@@ -12,7 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, u, range, PY3
+from sympy.core.compatibility import long, iterable, u, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
@@ -128,8 +128,11 @@ def test_multiplication():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
-    if PY3:
-        c = a @ b
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
         assert c[0, 0] == 7
         assert c[0, 1] == 2
         assert c[1, 0] == 6
@@ -164,8 +167,11 @@ def test_multiplication():
     assert c[1, 0] == 3*5
     assert c[1, 1] == 0
 
-    if PY3:
-        c = 5 @ b
+    try:
+        eval('c = 5 @ b')
+    except SyntaxError:
+        pass
+    else:
         assert isinstance(c, Matrix)
         assert c[0, 0] == 5
         assert c[0, 1] == 2*5
