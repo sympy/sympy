@@ -718,7 +718,7 @@ class AppliedUndef(Function):
         import sage.all as sage
         fname = str(self.func)
         args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname, *args)
+        func = sage.function(fname)(*args)
         return func
 
 class UndefinedFunction(FunctionClass):
