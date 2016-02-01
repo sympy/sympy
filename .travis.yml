@@ -141,7 +141,6 @@ matrix:
             - pypy
           packages:
             - pypy
-            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -153,7 +152,6 @@ matrix:
             - pypy
           packages:
             - pypy
-            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -165,7 +163,6 @@ matrix:
             - pypy
           packages:
             - pypy
-            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -177,7 +174,6 @@ matrix:
             - pypy
           packages:
             - pypy
-            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
@@ -189,7 +185,6 @@ matrix:
             - pypy
           packages:
             - pypy
-            - pypy-dev
 
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
