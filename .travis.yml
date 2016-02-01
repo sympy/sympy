@@ -118,57 +118,65 @@ matrix:
       sudo: true
       dist: trusty
 
-    # These builds are allowed failures. They need to be duplicated here and below.
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
         - SPLIT="1/4"
         - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
         - SPLIT="2/4"
         - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
         - SPLIT="3/4"
         - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+            - pypy-dev
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
         - SPLIT="4/4"
         - FASTCACHE="false"
-
-  allow_failures:
-    - python: "pypy"
-      env:
-        - TEST_DOCTESTS="true"
-        - FASTCACHE="false"
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/4"
-        - FASTCACHE="false"
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/4"
-        - FASTCACHE="false"
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - FASTCACHE="false"
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
-        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+            - pypy-dev
 
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
