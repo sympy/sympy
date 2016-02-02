@@ -117,54 +117,56 @@ class Assignment(Relational):
 # XXX: This should be handled better
 Relational.ValidRelationOperator[':='] = Assignment
 
-# The following are defined to be sympy approved nodes. If there is something
-# smaller that could be used, that would be preferable. We only use them as
-# tokens.
+
+class AugmentedAssignment(Assignment):
+    """
+    Base class for augmented assignments
+    """
+
+    @property
+    def rel_op(self):
+        return self._symbol + '='
 
 
-class NativeOp(Basic):
-    """Base type for native operands."""
-    pass
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} {1}= {2}'.format(sstr(self.lhs), self._symbol,
+                sstr(self.rhs))
 
 
-class AddOp(NativeOp):
+class AddAugmentedAssignment(AugmentedAssignment):
     _symbol = '+'
 
 
-class SubOp(NativeOp):
+class SubAugmentedAssignment(AugmentedAssignment):
     _symbol = '-'
 
 
-class MulOp(NativeOp):
+class MulAugmentedAssignment(AugmentedAssignment):
     _symbol = '*'
 
 
-class DivOp(NativeOp):
+class DivAugmentedAssignment(AugmentedAssignment):
     _symbol = '/'
 
 
-class ModOp(NativeOp):
+class ModAugmentedAssignment(AugmentedAssignment):
     _symbol = '%'
 
 
-# Note: even though there is a "registry" here, these are not
-# singeltonized. Don't use "is" comparison on them.
-op_registry = {'+': AddOp(),
-               '-': SubOp(),
-               '*': MulOp(),
-               '/': DivOp(),
-               '%': ModOp()}
+Relational.ValidRelationOperator['+='] = AddAugmentedAssignment
+Relational.ValidRelationOperator['-='] = SubAugmentedAssignment
+Relational.ValidRelationOperator['*='] = MulAugmentedAssignment
+Relational.ValidRelationOperator['/='] = DivAugmentedAssignment
+Relational.ValidRelationOperator['%='] = ModAugmentedAssignment
 
-def operator(op):
-    """Returns an operator instance for the given operator"""
+def aug_assign(lhs, op, rhs):
+    """
+    Create 'lhs op= rhs'.
 
-    if op.lower() not in op_registry:
-        raise ValueError("Unrecognized operator " + op)
-    return op_registry[op]
-
-
-class AugAssign(Basic):
-    """Represents augmented variable assignment for code generation.
+    Represents augmented variable assignment for code generation. This is a
+    convenience function. You can also use the AugmentedAssignment classes
+    directly, like AddAugmentedAssignment(x, y).
 
     Parameters
     ----------
@@ -174,7 +176,7 @@ class AugAssign(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    op : NativeOp
+    op : str
         Operator (+, -, /, *, %).
 
     rhs : Expr
@@ -187,59 +189,16 @@ class AugAssign(Basic):
     --------
 
     >>> from sympy import symbols
-    >>> from sympy.codegen.ast import AugAssign, AddOp
+    >>> from sympy.codegen.ast import aug_assign, AddAugmentedAssignment
     >>> x, y = symbols('x, y')
-    >>> AugAssign(x, '+', y)
+    >>> aug_assign(x, '+', y)
     x += y
-
+    >>> AddAugmentedAssignment(x, y)
+    x += y
     """
-
-    def __new__(cls, lhs, op, rhs):
-        from sympy.tensor import Indexed
-        from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        if isinstance(op, string_types):
-            op = operator(op)
-        elif op not in op_registry.values():
-            raise TypeError("Unrecognized Operator")
-        return Basic.__new__(cls, lhs, op, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} {1}= {2}'.format(sstr(self.lhs), self.op._symbol,
-                sstr(self.rhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def op(self):
-        return self._args[1]
-
-    @property
-    def rhs(self):
-        return self._args[2]
-
+    if op + '=' not in Relational.ValidRelationOperator:
+        raise ValueError("Unrecognized operator %s" % op)
+    return Relational.ValidRelationOperator[op + '='](lhs, rhs)
 
 class For(Basic):
     """Represents a 'for-loop' in the code.
@@ -319,6 +278,8 @@ Double = NativeDouble()
 Void = NativeVoid()
 
 
+# Note: even though there is a "registry" here, these are not
+# singeltonized. Don't use "is" comparison on them.
 dtype_registry = {'bool': Bool,
                   'int': Int,
                   'float': Float,

@@ -3,9 +3,11 @@ from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
-from sympy.codegen.ast import (Assignment, AugAssign, datatype, Bool, Int, Float,
+from sympy.codegen.ast import (Assignment, aug_assign, datatype, Bool, Int, Float,
         Double, Void, For, InArgument, OutArgument, InOutArgument, Variable,
-        Result, Return, FunctionDef)
+        Result, Return, FunctionDef, AddAugmentedAssignment,
+        SubAugmentedAssignment, MulAugmentedAssignment,
+        DivAugmentedAssignment, ModAugmentedAssignment)
 
 x, y = symbols("x, y")
 n = symbols("n", integer=True)
@@ -53,31 +55,50 @@ def test_Assignment():
 
 def test_AugAssign():
     # Here we just do things to show they don't error
-    AugAssign(x, '+', y)
-    AugAssign(x, '+', 0)
-    AugAssign(A, '+', mat)
-    AugAssign(A[1, 0], '+', 0)
-    AugAssign(A[1, 0], '+', x)
-    AugAssign(B[i], '+', x)
-    AugAssign(B[i], '+', 0)
-    a = AugAssign(x, '+', y)
-    assert a.func(*a.args) == a
+    aug_assign(x, '+', y)
+    aug_assign(x, '+', 0)
+    aug_assign(A, '+', mat)
+    aug_assign(A[1, 0], '+', 0)
+    aug_assign(A[1, 0], '+', x)
+    aug_assign(B[i], '+', x)
+    aug_assign(B[i], '+', 0)
+
+    a = aug_assign(x, '+', y)
+    b = AddAugmentedAssignment(x, y)
+    assert a.func(*a.args) == a == b
+
+    a = aug_assign(x, '-', y)
+    b = SubAugmentedAssignment(x, y)
+    assert a.func(*a.args) == a == b
+
+    a = aug_assign(x, '*', y)
+    b = MulAugmentedAssignment(x, y)
+    assert a.func(*a.args) == a == b
+
+    a = aug_assign(x, '/', y)
+    b = DivAugmentedAssignment(x, y)
+    assert a.func(*a.args) == a == b
+
+    a = aug_assign(x, '%', y)
+    b = ModAugmentedAssignment(x, y)
+    assert a.func(*a.args) == a == b
+
     # Here we test things to show that they error
     # Matrix to scalar
-    raises(ValueError, lambda: AugAssign(B[i], '+', A))
-    raises(ValueError, lambda: AugAssign(B[i], '+', mat))
-    raises(ValueError, lambda: AugAssign(x, '+', mat))
-    raises(ValueError, lambda: AugAssign(x, '+', A))
-    raises(ValueError, lambda: AugAssign(A[1, 0], '+', mat))
+    raises(ValueError, lambda: aug_assign(B[i], '+', A))
+    raises(ValueError, lambda: aug_assign(B[i], '+', mat))
+    raises(ValueError, lambda: aug_assign(x, '+', mat))
+    raises(ValueError, lambda: aug_assign(x, '+', A))
+    raises(ValueError, lambda: aug_assign(A[1, 0], '+', mat))
     # Scalar to matrix
-    raises(ValueError, lambda: AugAssign(A, '+', x))
-    raises(ValueError, lambda: AugAssign(A, '+', 0))
+    raises(ValueError, lambda: aug_assign(A, '+', x))
+    raises(ValueError, lambda: aug_assign(A, '+', 0))
     # Non-atomic lhs
-    raises(TypeError, lambda: AugAssign(mat, '+', A))
-    raises(TypeError, lambda: AugAssign(0, '+', x))
-    raises(TypeError, lambda: AugAssign(x * x, '+', 1))
-    raises(TypeError, lambda: AugAssign(A + A, '+', mat))
-    raises(TypeError, lambda: AugAssign(B, '+', 0))
+    raises(TypeError, lambda: aug_assign(mat, '+', A))
+    raises(TypeError, lambda: aug_assign(0, '+', x))
+    raises(TypeError, lambda: aug_assign(x * x, '+', 1))
+    raises(TypeError, lambda: aug_assign(A + A, '+', mat))
+    raises(TypeError, lambda: aug_assign(B, '+', 0))
 
 
 def test_datatype():
@@ -98,7 +119,7 @@ def test_datatype():
 
 
 def test_For():
-    f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), AugAssign(x, '+', y)))
+    f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))
     f = For(n, (1, 2, 3, 4, 5), (Assignment(A[n, 0], x + n),))
     assert f.func(*f.args) == f
     raises(TypeError, lambda: For(n, x, (x + y,)))
