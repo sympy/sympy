@@ -239,10 +239,10 @@ install:
     elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
-    - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-        then virtualenv -p /usr/bin/pypy ~/.venv;
-             . ~/.venv/bin/activate;
-      fi
+  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
+      then virtualenv -p /usr/bin/pypy ~/.venv;
+           . ~/.venv/bin/activate;
+    fi
 script:
   - bin/test_travis.sh
 #  - if [[ "${TEST_SPHINX}" == "true" ]]; then
