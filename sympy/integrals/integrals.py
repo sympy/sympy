@@ -22,6 +22,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
+from sympy import symbols
 
 
 class Integral(AddWithLimits):
@@ -520,8 +521,14 @@ class Integral(AddWithLimits):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     elif isinstance(antideriv, Add):
-                        function = Add(*[i._eval_interval(x,a,b) for i in
-                            Add.make_args(antideriv)])
+                        if b is S.Infinity:
+                            c = symbols('c')
+                            function = Add(*[i._eval_interval(x,a,c) for i in
+                                Add.make_args(antideriv)])
+                            function = limit(function, c, b)
+                        else:
+                             function = Add(*[i._eval_interval(x,a,b) for i in
+                                Add.make_args(antideriv)])
                     else:
                         try:
                             function = antideriv._eval_interval(x, a, b)
