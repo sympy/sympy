@@ -563,6 +563,11 @@ class StrPrinter(Printer):
             "==": "Eq",
             "!=": "Ne",
             ":=": "Assignment",
+            '+=': "AddAugmentedAssignment",
+            "-=": "SubAugmentedAssignment",
+            "*=": "MulAugmentedAssignment",
+            "/=": "DivAugmentedAssignment",
+            "%=": "ModAugmentedAssignment",
         }
 
         if expr.rel_op in charmap:

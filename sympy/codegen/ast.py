@@ -182,12 +182,10 @@ def aug_assign(lhs, op, rhs):
     --------
 
     >>> from sympy import symbols
-    >>> from sympy.codegen.ast import aug_assign, AddAugmentedAssignment
+    >>> from sympy.codegen.ast import aug_assign
     >>> x, y = symbols('x, y')
     >>> aug_assign(x, '+', y)
-    x += y
-    >>> AddAugmentedAssignment(x, y)
-    x += y
+    AddAugmentedAssignment(x, y)
     """
     if op + '=' not in Relational.ValidRelationOperator:
         raise ValueError("Unrecognized operator %s" % op)
