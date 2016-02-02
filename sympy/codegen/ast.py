@@ -127,13 +127,6 @@ class AugmentedAssignment(Assignment):
     def rel_op(self):
         return self._symbol + '='
 
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} {1}= {2}'.format(sstr(self.lhs), self._symbol,
-                sstr(self.rhs))
-
-
 class AddAugmentedAssignment(AugmentedAssignment):
     _symbol = '+'
 
