@@ -310,7 +310,8 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, argv=[]):
+        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
+        latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -352,6 +353,14 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if False, printing will initialize for a normal console;
         The default is None, which automatically determines whether we are in
         an ipython instance or not.
+    str_printer: function, optional, default=None
+        A custom string printer function. This should mimic
+        sympy.printing.sstrrepr().
+    pretty_printer: function, optional, default=None
+        A custom pretty printer. This should mimic sympy.printing.pretty().
+    latex_printer: function, optional, default=None
+        A custom LaTeX printer. This should mimic sympy.printing.latex()
+        This should mimic sympy.printing.latex().
     argv: list of arguments for IPython
         See sympy.bin.isympy for options that can be used to initialize IPython.
 
@@ -455,7 +464,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     ip.runsource(_preexec_source, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order,
-        use_unicode=use_unicode, use_latex=use_latex, ip=ip)
+                  use_unicode=use_unicode, use_latex=use_latex, ip=ip,
+                  str_printer=str_printer, pretty_printer=pretty_printer,
+                  latex_printer=latex_printer)
 
     message = _make_message(ipython, quiet, _preexec_source)
 
