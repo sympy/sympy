@@ -39,6 +39,18 @@ import mpmath
 
 
 
+# a transform to remove hollow 2-arg
+# mul factoring: 2*(1 + x) -> 2 + 2*x
+hollow_mul = Transform(
+    lambda x: Mul(*x.args),
+    lambda x:
+    x.is_Mul and
+    len(x.args) == 2 and
+    x.args[0].is_Number and
+    x.args[1].is_Add and
+    x.is_commutative)
+
+
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
     Separates variables in an expression, if possible.  By
@@ -586,14 +598,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         short = exptrigsimp(short, simplify=False)
 
     # get rid of hollow 2-arg Mul factorization
-    hollow_mul = Transform(
-        lambda x: Mul(*x.args),
-        lambda x:
-        x.is_Mul and
-        len(x.args) == 2 and
-        x.args[0].is_Number and
-        x.args[1].is_Add and
-        x.is_commutative)
     expr = short.xreplace(hollow_mul)
 
     numer, denom = expr.as_numer_denom()

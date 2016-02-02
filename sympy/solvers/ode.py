@@ -4138,8 +4138,8 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     >>> f = Function('f')
     >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
     >>> dsolve(eq, f(x),
-    ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
-    Eq(f(x), C1*x + C2*x**2 + x**4/6)
+    ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters')
+    Eq(f(x), x*(C1 + C2*x + x**3/6))
 
     """
     x = func.args[0]

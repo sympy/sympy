@@ -726,6 +726,10 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    y, a = symbols('y,a')
+    assert solveset_real(sin(y + a) - sin(y), a) == \
+        imageset(Lambda(n, 2*n*pi), S.Integers)
+
 
 @XFAIL
 def test_solve_trig_abs():
@@ -873,7 +877,7 @@ def test_solveset():
                                                   S.Integers)
 
 
-def test_conditonset():
+def test_conditionset():
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
         ConditionSet(x, True, S.Reals)
 
@@ -888,10 +892,6 @@ def test_conditonset():
 
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
-
-    y,a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        ConditionSet(a, Eq(-sin(y) + sin(y + a), 0), S.Reals)
 
 
 @XFAIL

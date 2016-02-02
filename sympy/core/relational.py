@@ -171,24 +171,172 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return l
 
     def _eval_simplify(self, ratio, measure):
-        r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
-            for i in r.args])
-        if r.is_Relational:
-            dif = r.lhs - r.rhs
-            # replace dif with a valid Number that will
+        '''
+        This routine should not return an expression that would
+        (after replacing symbols with values) return a different
+        value than what the original expression would have returned.
+        To this end, evaluation and simplification are done
+        cautiously.
+        '''
+        from sympy.utilities.iterables import sift
+        from sympy.simplify.radsimp import fraction
+        from sympy.simplify.simplify import hollow_mul
+        from sympy.solvers.solvers import denoms
+        from sympy.core.exprtools import factor_terms
+        from sympy.core.add import Add, _unevaluated_Add
+        from sympy.core.mul import Mul
+        from sympy.core.function import expand_mul
+
+        func = {True: self.func, False: self.reversed.func}
+        isEqNe = self.func in (Eq, Ne)
+        forward = True
+        L, R = self.args
+        if not L:
+            L, R = R, L
+            forward = not forward
+
+        # simplify as long as it does not remmove any denominators
+        denL = [d for d in denoms(L) if not d.is_number]
+        _L = L.simplify(ratio=ratio, measure=measure)
+        _denL = [d for d in denoms(_L) if not d.is_number]
+        if denL == _denL:
+            L = _L
+
+        denR = [d for d in denoms(R) if not d.is_number]
+        _R = R.simplify(ratio=ratio, measure=measure)
+        _denR = [d for d in denoms(_R) if not d.is_number]
+        if denR == _denR:
+            R = _R
+
+        # special simplifications possible for Eq and Ne
+        if isEqNe:
+            if L == R:
+                return _sympify(denL == denR)
+            if denR and not denL and L.is_number:
+                R, d = R.as_numer_denom()
+                L *= d
+                denL = [i for i in denoms(d) if not i.is_number]
+            elif denL and not denR and R.is_number:
+                L, d = L.as_numer_denom()
+                R *= d
+                denR = [i for i in denoms(d) if not i.is_number]
+
+        # the value of op(L, R) might be invalid (e.g.
+        # Lt(I, 1 + I) while Lt(I - (1 + I), 0) -> Lt(-1, 0) -> True
+        # so we must be careful to not allow such simplification
+        # to take place.
+        safe = False
+        if not (denL and denR):
+            # if there are denominators in both sides they
+            # might cancel upon simplification so we proceed
+            # only if one or both sides are free of fractions
+            if isEqNe:
+                # Eq and Ne can take imaginary args;
+                # if both sides don't have denominators then we won't
+                # have spurious cancellation of singularities
+                safe = True
+            elif L.is_real or R.is_real:
+                # if the sides are known to be real then there are
+                # no problems with imaginary parts
+                safe = True
+
+        # term by term simplification
+        rv = None
+        oldLR = L, R
+        L = expand_mul(L)
+        R = expand_mul(R)
+        exLR = L, R
+        nargs = len(Add.make_args(L))
+        for a in Add.make_args(R):
+            ndif = L - a
+            new = len(Add.make_args(ndif))
+            if safe and new <= nargs or new == nargs and ndif:
+                L = ndif
+                R -= a
+        if R and L.is_number:
+            L, R = R, L
+            forward = not forward
+
+        if not R:
+            # replace L with a valid Number that will
             # allow a definitive comparison with 0
             v = None
-            if dif.is_comparable:
-                v = dif.n(2)
-            elif dif.equals(0):  # XXX this is expensive
-                v = S.Zero
+            if L.is_comparable:
+                v = L.n(2)
+            else:
+                L = L.simplify(ratio=ratio, measure=measure)
+                if L.equals(0):  # XXX this is expensive
+                    v = S.Zero
             if v is not None:
-                r = r.func._eval_relation(v, S.Zero)
+                r = func[forward]._eval_relation(v, S.Zero)
+                if not r.is_Relational:
+                    rv = r
+            del v
 
-        r = r.canonical
-        if measure(r) < ratio*measure(self):
-            return r
+        if rv is None:
+            if L.as_coeff_Add()[0] is S.Zero:
+                L = expand_mul(L)
+            was = None
+            while was != L:
+                was = L
+                L = factor_terms(L)
+                R = factor_terms(R)
+                if not L.is_Add:
+                    # move factors with known sign to R
+                    nargs = len(Mul.make_args(R))
+                    sifted = sift(Mul.make_args(L),
+                        lambda x: x.is_positive and (
+                        x.is_number or len(Mul.make_args(R/x)) <= nargs))
+                    p = Mul(*sifted[True])
+                    if p is not S.One:
+                        L /= p
+                        R /= p
+                    sifted = sift(sifted[False],
+                        lambda x: x.is_negative and (
+                        x.is_number or len(Mul.make_args(R/x)) <= nargs))
+                    neg = sifted[True]
+                    n = Mul(*neg)
+                    if neg:
+                        L /= n
+                        R /= n
+                        if len(neg) % 2:
+                            forward = not forward
+                    if p == n == 1 and L.is_Mul:
+                        L = was
+                # move numeric terms to R
+                c, L = L.as_coeff_Add()
+                R -= c
+                m, L = L.as_coeff_Mul()
+                R /= m
+                if m < 0:
+                    forward = not forward
+
+            if not L:
+                L, R = R, L
+                forward = not forward
+                # move constants back to R
+                c, L = L.as_coeff_Add()
+                R -= c
+                # XXX can this move ever be necessary?
+                m, L = L.as_coeff_Mul()
+                R /= m
+                if m < 0:
+                    forward = not forward
+
+            # touch-up final simplification
+            if exLR != (L, R):
+                L = factor_terms(L).xreplace(hollow_mul)
+                R = factor_terms(R).xreplace(hollow_mul)
+            else:
+                # keep the previously simplified values
+                L, R = oldLR
+
+        if rv is None:
+            changed = (L, R) != self.args
+            rv = func[forward](L, R, evaluate=changed).canonical
+
+        if measure(rv) < ratio*measure(self):
+            return rv
         else:
             return self
 
