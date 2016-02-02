@@ -15,7 +15,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
-from sympy.printing.codeprinter import Assignment
+from sympy.codegen.ast import Assignment
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint

@@ -1,8 +1,9 @@
 from sympy import symbols, MatrixSymbol, Matrix, IndexedBase, Idx, Range
+from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
-from sympy.codegen.ast import (Assign, AugAssign, datatype, Bool, Int, Float,
+from sympy.codegen.ast import (Assignment, AugAssign, datatype, Bool, Int, Float,
         Double, Void, For, InArgument, OutArgument, InOutArgument, Variable,
         Result, Return, FunctionDef)
 
@@ -14,34 +15,41 @@ B = IndexedBase('B')
 i = Idx("i", n)
 
 
-def test_Assign():
+def test_Assignment():
+    x, y = symbols("x, y")
+    A = MatrixSymbol('A', 3, 1)
+    mat = Matrix([1, 2, 3])
+    B = IndexedBase('B')
+    n = symbols("n", integer=True)
+    i = Idx("i", n)
     # Here we just do things to show they don't error
-    Assign(x, y)
-    Assign(x, 0)
-    Assign(A, mat)
-    Assign(A[1, 0], 0)
-    Assign(A[1, 0], x)
-    Assign(B[i], x)
-    Assign(B[i], 0)
-    a = Assign(x, y)
+    Assignment(x, y)
+    Assignment(x, 0)
+    Assignment(A, mat)
+    Assignment(A[1,0], 0)
+    Assignment(A[1,0], x)
+    Assignment(B[i], x)
+    Assignment(B[i], 0)
+    a = Assignment(x, y)
     assert a.func(*a.args) == a
     # Here we test things to show that they error
     # Matrix to scalar
-    raises(ValueError, lambda: Assign(B[i], A))
-    raises(ValueError, lambda: Assign(B[i], mat))
-    raises(ValueError, lambda: Assign(x, mat))
-    raises(ValueError, lambda: Assign(x, A))
-    raises(ValueError, lambda: Assign(A[1, 0], mat))
+    raises(ValueError, lambda: Assignment(B[i], A))
+    raises(ValueError, lambda: Assignment(B[i], mat))
+    raises(ValueError, lambda: Assignment(x, mat))
+    raises(ValueError, lambda: Assignment(x, A))
+    raises(ValueError, lambda: Assignment(A[1,0], mat))
     # Scalar to matrix
-    raises(ValueError, lambda: Assign(A, x))
-    raises(ValueError, lambda: Assign(A, 0))
+    raises(ValueError, lambda: Assignment(A, x))
+    raises(ValueError, lambda: Assignment(A, 0))
     # Non-atomic lhs
-    raises(TypeError, lambda: Assign(mat, A))
-    raises(TypeError, lambda: Assign(0, x))
-    raises(TypeError, lambda: Assign(x * x, 1))
-    raises(TypeError, lambda: Assign(A + A, mat))
-    raises(TypeError, lambda: Assign(B, 0))
+    raises(TypeError, lambda: Assignment(mat, A))
+    raises(TypeError, lambda: Assignment(0, x))
+    raises(TypeError, lambda: Assignment(x*x, 1))
+    raises(TypeError, lambda: Assignment(A + A, mat))
+    raises(TypeError, lambda: Assignment(B, 0))
 
+    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_AugAssign():
     # Here we just do things to show they don't error
@@ -90,8 +98,8 @@ def test_datatype():
 
 
 def test_For():
-    f = For(n, Range(0, 3), (Assign(A[n, 0], x + n), AugAssign(x, '+', y)))
-    f = For(n, (1, 2, 3, 4, 5), (Assign(A[n, 0], x + n),))
+    f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), AugAssign(x, '+', y)))
+    f = For(n, (1, 2, 3, 4, 5), (Assignment(A[n, 0], x + n),))
     assert f.func(*f.args) == f
     raises(TypeError, lambda: For(n, x, (x + y,)))
 

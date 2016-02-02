@@ -15,7 +15,8 @@ from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
 # dictionary mapping sympy function to (argument_conditions, C_function).

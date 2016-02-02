@@ -49,15 +49,13 @@ from sympy.core import Symbol, Tuple
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
+from sympy.core.relational import Relational
 from sympy.core.compatibility import with_metaclass, string_types
-from sympy.tensor import Indexed
-from sympy.matrices import ImmutableDenseMatrix
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
-
-class Assign(Basic):
-    """Represents variable assignment for code generation.
+class Assignment(Relational):
+    """
+    Represents variable assignment for code generation.
 
     Parameters
     ----------
@@ -74,25 +72,30 @@ class Assign(Basic):
         the dimensions will not align.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.codegen.ast import Assign
+    >>> from sympy.codegen.ast import Assignment
     >>> x, y, z = symbols('x, y, z')
-    >>> Assign(x, y)
-    x := y
-    >>> Assign(x, 0)
-    x := 0
+    >>> Assignment(x, y)
+    Assignment(x, y)
+    >>> Assignment(x, 0)
+    Assignment(x, 0)
     >>> A = MatrixSymbol('A', 1, 3)
     >>> mat = Matrix([x, y, z]).T
-    >>> Assign(A, mat)
-    A := Matrix([[x, y, z]])
-    >>> Assign(A[0, 1], x)
-    A[0, 1] := x
-
+    >>> Assignment(A, mat)
+    Assignment(A, Matrix([[x, y, z]]))
+    >>> Assignment(A[0, 1], x)
+    Assignment(A[0, 1], x)
     """
 
-    def __new__(cls, lhs, rhs):
+    rel_op = ':='
+    __slots__ = []
+
+    def __new__(cls, lhs, rhs=0, **assumptions):
+        from sympy.matrices.expressions.matexpr import (
+            MatrixElement, MatrixSymbol)
+        from sympy.tensor.indexed import Indexed
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
@@ -112,20 +115,10 @@ class Assign(Basic):
                 raise ValueError("Dimensions of lhs and rhs don't align.")
         elif rhs_is_mat and not lhs_is_mat:
             raise ValueError("Cannot assign a matrix to a scalar.")
-        return Basic.__new__(cls, lhs, rhs)
+        return Relational.__new__(cls, lhs, rhs, **assumptions)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
+# XXX: This should be handled better
+Relational.ValidRelationOperator[':='] = Assignment
 
 # The following are defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
@@ -204,6 +197,9 @@ class AugAssign(Basic):
     """
 
     def __new__(cls, lhs, op, rhs):
+        from sympy.tensor import Indexed
+        from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
@@ -348,6 +344,8 @@ def datatype(arg):
     DataType
 
     """
+    from sympy.matrices import ImmutableDenseMatrix
+
     def infer_dtype(arg):
         if arg.is_integer:
             return Int
@@ -388,6 +386,8 @@ class Variable(Basic):
     """
 
     def __new__(cls, dtype, name):
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+
         if isinstance(dtype, string_types):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):

@@ -24,7 +24,8 @@ import string
 from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
 known_functions = {

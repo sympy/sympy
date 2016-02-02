@@ -73,7 +73,7 @@ An important distinction is that the code printer has to deal with assignments
 building blocks for the code printers and hence the ``codegen`` module.  An
 example that shows the use of ``Assignment``::
 
-    >>> from sympy.printing.codeprinter import Assignment
+    >>> from sympy.codegen.ast import Assignment
     >>> mat = Matrix([x, y, z]).T
     >>> known_mat = MatrixSymbol('K', 1, 3)
     >>> Assignment(known_mat, mat)

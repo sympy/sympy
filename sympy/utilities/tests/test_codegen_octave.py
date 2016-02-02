@@ -4,7 +4,6 @@ from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.codeprinter import Assignment
 from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
