@@ -664,6 +664,13 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_Trace(self, e):
+        D = self._print(e.arg)
+        D = prettyForm(*D.parens('(',')'))
+        D.baseline = D.height()//2
+        D = prettyForm(*D.left('\n'*(0) + 'tr'))
+        return D
+
 
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
@@ -749,6 +756,13 @@ class PrettyPrinter(Printer):
             else:
                 args[i] = self._print(a)
 
+        return prettyForm.__mul__(*args)
+
+    def _print_DotProduct(self, expr):
+        args = list(expr.args)
+
+        for i, a in enumerate(args):
+            args[i] = self._print(a)
         return prettyForm.__mul__(*args)
 
     def _print_MatPow(self, expr):
@@ -1560,8 +1574,8 @@ class PrettyPrinter(Printer):
             inn = u("\N{SMALL ELEMENT OF}")
         else:
             inn = 'in'
-        variables = self._print_seq(ts.args[0].variables)
-        expr = self._print(ts.args[0].expr)
+        variables = self._print_seq(ts.variables)
+        expr = self._print(ts.expr)
         bar = self._print("|")
         prodsets = self._print(ts.sets)
 

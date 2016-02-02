@@ -98,7 +98,7 @@ def test_diff_symbols():
 def test_Function():
     class myfunc(Function):
         @classmethod
-        def eval(cls, x):
+        def eval(cls, x):  # one arg
             return
 
     assert myfunc.nargs == FiniteSet(1)
@@ -107,11 +107,12 @@ def test_Function():
 
     class myfunc(Function):
         @classmethod
-        def eval(cls, *x):
+        def eval(cls, *x):  # star args
             return
 
     assert myfunc.nargs == S.Naturals0
     assert myfunc(x).nargs == S.Naturals0
+
 
 def test_nargs():
     f = Function('f')
@@ -124,6 +125,9 @@ def test_nargs():
     assert log(2).nargs == FiniteSet(1, 2)
     assert Function('f', nargs=2).nargs == FiniteSet(2)
     assert Function('f', nargs=0).nargs == FiniteSet(0)
+    assert Function('f', nargs=(0, 1)).nargs == FiniteSet(0, 1)
+    assert Function('f', nargs=None).nargs == S.Naturals0
+    raises(ValueError, lambda: Function('f', nargs=()))
 
 
 def test_Lambda():
@@ -153,7 +157,7 @@ def test_Lambda():
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
-    raises(ValueError, lambda: Lambda(1, x))
+    raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
 

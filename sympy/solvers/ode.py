@@ -2233,30 +2233,26 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
-    x = func.args[0]
-    s = True
-    testnum = 0
+    elif sol.rhs == func:
+        sol = sol.reversed
+
     if order == 'auto':
         order = ode_order(ode, func)
-    if solve_for_func and not (
-            sol.lhs == func and not sol.rhs.has(func)) and not (
-            sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
                 result = checkodesol(ode, Eq(func, solved[0]),
                     order=order, solve_for_func=False)
             else:
                 result = checkodesol(ode, [Eq(func, t) for t in solved],
                 order=order, solve_for_func=False)
-
             return result
 
+    s = True
+    testnum = 0
+    x = func.args[0]
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
@@ -2265,8 +2261,6 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
-            elif sol.rhs == func:
-                s = sub_func_doit(ode_diff, func, sol.lhs)
             else:
                 testnum += 1
                 continue
@@ -2292,7 +2286,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         elif testnum == 2:
             # Third pass. Try solving for df/dx and substituting that into the
             # ODE. Thanks to Chris Smith for suggesting this method.  Many of
-            # the comments below are his too.
+            # the comments below are his, too.
             # The method:
             # - Take each of 1..n derivatives of the solution.
             # - Solve each nth derivative for d^(n)f/dx^(n)

@@ -1574,9 +1574,9 @@ class LatexPrinter(Printer):
             self._print(s.condition.as_expr()))
 
     def _print_ComplexRegion(self, s):
-        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (
-            self._print(s.args[0].expr),
+            self._print(s.expr),
             vars_print,
             self._print(s.sets))
 

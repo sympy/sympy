@@ -3,6 +3,7 @@ from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
+from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, Abs, I)
 from sympy.utilities.pytest import XFAIL, raises
@@ -460,3 +461,13 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_issue_9980():
+    c1 = ComplexRegion(Interval(1, 2)*Interval(2, 3))
+    c2 = ComplexRegion(Interval(1, 5)*Interval(1, 3))
+    R = Union(c1, c2)
+    assert simplify(R) == ComplexRegion(Union(Interval(1, 2)*Interval(2, 3), \
+                                    Interval(1, 5)*Interval(1, 3)), False)
+    assert c1.func(*c1.args) == c1
+    assert R.func(*R.args) == R

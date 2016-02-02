@@ -22,6 +22,7 @@ access any SymPy module, or use this contens:
    crypto.rst
    concrete.rst
    evalf.rst
+   codegen.rst
    numeric-computation.rst
    functions/index.rst
    galgebra/index.rst

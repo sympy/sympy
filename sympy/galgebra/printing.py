@@ -32,7 +32,6 @@ import os
 import sys
 
 from sympy.core.compatibility import StringIO, range
-from sympy.core.decorators import deprecated
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 
@@ -231,16 +230,6 @@ class GA_Printer(StrPrinter):
         return self
 
     def __exit__(self, type, value, traceback):
-        GA_Printer._off()
-
-    @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=7141, deprecated_since_version="0.7.4")
-    def on():
-        GA_Printer._on()
-
-    @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=7141, deprecated_since_version="0.7.4")
-    def off():
         GA_Printer._off()
 
 

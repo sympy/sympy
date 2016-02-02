@@ -330,8 +330,8 @@ class factorial2(CombinatorialFunction):
         # TODO: extend this to complex numbers?
 
         if arg.is_Number:
-            if arg.is_infinite:
-                return
+            if not arg.is_Integer:
+                raise ValueError("argument must be nonnegative integer or negative odd integer")
 
             # This implementation is faster than the recursive one
             # It also avoids "maximum recursion depth exceeded" runtime error
@@ -339,13 +339,13 @@ class factorial2(CombinatorialFunction):
                 if arg.is_even:
                     k = arg / 2
                     return 2 ** k * factorial(k)
-
                 return factorial(arg) / factorial2(arg - 1)
 
-            if arg.is_even:
-                raise ValueError("argument must be nonnegative or odd")
 
-            return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+            if arg.is_odd:
+                return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+            raise ValueError("argument must be nonnegative integer or negative odd integer")
+
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input

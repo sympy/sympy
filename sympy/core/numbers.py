@@ -547,7 +547,7 @@ class Number(AtomicExpr):
         """Efficiently extract the coefficient of a product. """
         if rational and not self.is_Rational:
             return S.One, self
-        return self, S.One
+        return (self, S.One) if self else (S.One, self)
 
     def as_coeff_Add(self):
         """Efficiently extract the coefficient of a summation. """
@@ -747,6 +747,10 @@ class Float(Number):
             num = '0'
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
+        elif num is S.Infinity:
+            num = '+inf'
+        elif num is S.NegativeInfinity:
+            num = '-inf'
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
