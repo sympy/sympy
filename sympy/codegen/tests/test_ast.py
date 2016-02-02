@@ -81,18 +81,18 @@ def test_AugAssign():
 
 
 def test_datatype():
-    assert Bool is datatype('bool')
-    assert Int is datatype('int')
-    assert Float is datatype('float')
-    assert Double is datatype('double')
-    assert Void is datatype('void')
+    assert Bool == datatype('bool')
+    assert Int == datatype('int')
+    assert Float == datatype('float')
+    assert Double == datatype('double')
+    assert Void == datatype('void')
     # Check inferred types
-    assert datatype(x) is Double
-    assert datatype(n) is Int
+    assert datatype(x) == Double
+    assert datatype(n) == Int
     # This should work (I think), but doesn't due to how SymPy handles bools.
-    # assert datatype(b) is Bool
-    assert datatype(A) is Double
-    assert datatype(mat) is Int
+    # assert datatype(b) == Bool
+    assert datatype(A) == Double
+    assert datatype(mat) == Int
     d = datatype('int')
     assert d.func(*d.args) == d
 

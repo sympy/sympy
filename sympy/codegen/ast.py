@@ -18,9 +18,7 @@ AST Type Tree
      |                          |--->MulOp
      |                          |--->DivOp
      |                          |--->ModOp
-     |           *Singleton*----|
-     |                    |
-     |--->DataType        |
+     |--->DataType
      |           |--------|--->NativeBool
      |                    |--->NativeInteger
      |                    |--->NativeFloat
@@ -46,11 +44,10 @@ from __future__ import print_function, division
 
 
 from sympy.core import Symbol, Tuple
-from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
-from sympy.core.compatibility import with_metaclass, string_types
+from sympy.core.compatibility import string_types
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
@@ -125,7 +122,7 @@ Relational.ValidRelationOperator[':='] = Assignment
 # tokens.
 
 
-class NativeOp(with_metaclass(Singleton, Basic)):
+class NativeOp(Basic):
     """Base type for native operands."""
     pass
 
@@ -150,15 +147,16 @@ class ModOp(NativeOp):
     _symbol = '%'
 
 
+# Note: even though there is a "registry" here, these are not
+# singeltonized. Don't use "is" comparison on them.
 op_registry = {'+': AddOp(),
                '-': SubOp(),
                '*': MulOp(),
                '/': DivOp(),
                '%': ModOp()}
 
-
 def operator(op):
-    """Returns the operator singleton for the given operator"""
+    """Returns an operator instance for the given operator"""
 
     if op.lower() not in op_registry:
         raise ValueError("Unrecognized operator " + op)
@@ -284,7 +282,7 @@ class For(Basic):
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
-class DataType(with_metaclass(Singleton, Basic)):
+class DataType(Basic):
     """Base class representing native datatypes"""
     pass
 
@@ -329,15 +327,16 @@ dtype_registry = {'bool': Bool,
 
 
 def datatype(arg):
-    """Returns the datatype singleton for the given dtype.
+    """Returns a datatype instance for the given dtype.
 
     Parameters
     ----------
     arg : str or sympy expression
-        If a str ('bool', 'int', 'float', 'double', or 'void'), return the
-        singleton for the corresponding dtype. If a sympy expression, return
-        the datatype that best fits the expression. This is determined from the
-        assumption system. For more control, use the `DataType` class directly.
+        If a str ('bool', 'int', 'float', 'double', or 'void'), return an
+        instance of the corresponding dtype. If a sympy expression, return the
+        datatype that best fits the expression. This is determined from the
+        assumption system. For more control, use the `DataType` class
+        directly.
 
     Returns
     -------
@@ -362,9 +361,9 @@ def datatype(arg):
         arg = _sympify(arg)
         if isinstance(arg, ImmutableDenseMatrix):
             dts = [infer_dtype(i) for i in arg]
-            if all([i is Bool for i in dts]):
+            if all([i == Bool for i in dts]):
                 return Bool
-            elif all([i is Int for i in dts]):
+            elif all([i == Int for i in dts]):
                 return Int
             else:
                 return Double
