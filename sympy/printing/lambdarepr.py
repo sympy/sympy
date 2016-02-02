@@ -244,7 +244,7 @@ class NumExprPrinter(LambdaPrinter):
 
     def doprint(self, expr):
         lstr = super(NumExprPrinter, self).doprint(expr)
-        return "evaluate('%s')" % lstr
+        return "evaluate('%s', truediv=True)" % lstr
 
 def lambdarepr(expr, **settings):
     """
