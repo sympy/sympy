@@ -9,15 +9,14 @@ AST Type Tree
 -------------
 
 *Basic*
-     |--->Assign
-     |--->AugAssign
-     |--->NativeOp
-     |           |--------------|
-     |                          |--->AddOp
-     |                          |--->SubOp
-     |                          |--->MulOp
-     |                          |--->DivOp
-     |                          |--->ModOp
+     |--->Assignment
+     |             |--->AugmentedAssignment
+     |                                    |--->AddAugmentedAssignment
+     |                                    |--->SubAugmentedAssignment
+     |                                    |--->MulAugmentedAssignment
+     |                                    |--->DivAugmentedAssignment
+     |                                    |--->ModAugmentedAssignment
+     |
      |--->DataType
      |           |--------|--->NativeBool
      |                    |--->NativeInteger
