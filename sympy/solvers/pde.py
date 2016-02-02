@@ -470,17 +470,14 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
                 return checkpdesol(pde, [Eq(func, t) for t in solved],
                     func=func, solve_for_func=False)
 
-    # The first method includes direct substitution of the solution in
-    # the PDE and simplifying.
+    # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
         pde = pde.lhs - pde.rhs
         s = simplify(pde.subs(func, sol.rhs).doit())
         return s is S.Zero, s
-    else:
-        raise NotImplementedError(filldedent('''
-    There is no method implemented for checking the equation
-    when solve_for_func is False and the sol does not have
-    the function on the left or right hand side.'''))
+
+    raise NotImplementedError(filldedent('''
+        Unable to test if %s is a solution to %s.''' % (sol, pde)))
 
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
