@@ -72,7 +72,7 @@ class NDimArray(object):
         real_index = 0
         # check if input index can exist in current indexing
         for i in range(self._rank):
-            if index[i] > self.shape[i]:
+            if index[i] >= self.shape[i]:
                 raise ValueError('Index ' + str(index) + ' out of border')
             real_index = real_index*self.shape[i] + index[i]
 
@@ -308,14 +308,14 @@ class NDimArray(object):
 
     def __mul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
-            raise ValueError("scalar expected")
+            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
-            raise ValueError("scalar expected")
+            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
@@ -328,7 +328,7 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __rdiv__(self, other):
-        raise TypeError('unsupported operation on NDimArray')
+        raise NotImplementedError('unsupported operation on NDimArray')
 
     def __eq__(self, other):
         """
