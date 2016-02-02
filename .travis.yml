@@ -230,6 +230,10 @@ before_install:
     fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
+  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
+      then virtualenv -p /usr/bin/pypy ~/.venv;
+           . ~/.venv/bin/activate;
+    fi
   - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
       pip uninstall -y setuptools;
       python setup.py install;
@@ -238,10 +242,6 @@ install:
       python setup.py install;
     elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
-    fi
-  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-      then virtualenv -p /usr/bin/pypy ~/.venv;
-           . ~/.venv/bin/activate;
     fi
 script:
   - bin/test_travis.sh
