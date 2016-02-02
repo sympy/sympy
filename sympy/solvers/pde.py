@@ -387,7 +387,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     else:
         return tuple(retlist)
 
-def checkpdesol(pde, sol, func=None, order=None, solve_for_func=True):
+def checkpdesol(pde, sol, func=None, solve_for_func=True):
     """
     Checks if the given solution satisfies the partial differential
     equation.
@@ -449,7 +449,7 @@ def checkpdesol(pde, sol, func=None, order=None, solve_for_func=True):
     # then return a list or set of tuples.
     if is_sequence(sol, set):
         return type(sol)([checkpdesol(
-            pde, i, func=func, order=order,
+            pde, i, func=func,
             solve_for_func=solve_for_func) for i in sol])
 
     # Convert solution into an equation
@@ -465,10 +465,10 @@ def checkpdesol(pde, sol, func=None, order=None, solve_for_func=True):
         if solved:
             if len(solved) == 1:
                 return checkpdesol(pde, Eq(func, solved[0]),
-                    func=func, order=order, solve_for_func=False)
+                    func=func, solve_for_func=False)
             else:
                 return checkpdesol(pde, [Eq(func, t) for t in solved],
-                    func=func, order=order, solve_for_func=False)
+                    func=func, solve_for_func=False)
 
     # The first method includes direct substitution of the solution in
     # the PDE and simplifying.
