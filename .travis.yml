@@ -186,7 +186,7 @@ matrix:
           packages:
             - pypy
 
-  allowed_failures:
+  allow_failures:
     # Fails because of some issues with Travis
     - python: 3.5
       env:
