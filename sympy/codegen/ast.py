@@ -239,18 +239,18 @@ class CodeBlock(Basic):
         # y := x + 1
         # z := y + z
 
-        # The nodes
+        # A = The nodes
         #
         # enumerate keeps nodes in the same order they are already in if
         # possible. It will also allow us to handle duplicate assignments to
         # the same variable when those are implemented.
         A = list(enumerate(assignments))
 
-        # {variable: [assignments using variable]}
+        # var_map = {variable: [assignments using variable]}
         # like {x: [y := x + 1, z := y + x], ...}
         var_map = {}
 
-        # Edges in the graph
+        # E = Edges in the graph
         E = []
         for i in A:
             if i[1].lhs in var_map:
@@ -259,6 +259,7 @@ class CodeBlock(Basic):
         for i in A:
             for x in i[1].rhs.free_symbols:
                 if x not in var_map:
+                    # XXX: Allow this case?
                     raise ValueError("Undefined variable %s" % x)
                 E.append((var_map[x], i))
 

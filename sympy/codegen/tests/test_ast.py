@@ -1,15 +1,17 @@
-from sympy import symbols, MatrixSymbol, Matrix, IndexedBase, Idx, Range
+from sympy import (symbols, MatrixSymbol, Matrix, IndexedBase, Idx, Range,
+    Tuple, sin)
 from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
-from sympy.codegen.ast import (Assignment, aug_assign, datatype, Bool, Int, Float,
-        Double, Void, For, InArgument, OutArgument, InOutArgument, Variable,
-        Result, Return, FunctionDef, AddAugmentedAssignment,
-        SubAugmentedAssignment, MulAugmentedAssignment,
-        DivAugmentedAssignment, ModAugmentedAssignment)
+from sympy.codegen.ast import (Assignment, aug_assign, datatype, Bool, Int,
+    Float, Double, Void, CodeBlock, For, InArgument, OutArgument,
+    InOutArgument, Variable, Result, Return, FunctionDef,
+    AddAugmentedAssignment, SubAugmentedAssignment,
+    MulAugmentedAssignment, DivAugmentedAssignment,
+    ModAugmentedAssignment)
 
-x, y = symbols("x, y")
+x, y, z, t, x0 = symbols("x, y, z, t, x0")
 n = symbols("n", integer=True)
 A = MatrixSymbol('A', 3, 1)
 mat = Matrix([1, 2, 3])
@@ -117,6 +119,67 @@ def test_datatype():
     d = datatype('int')
     assert d.func(*d.args) == d
 
+
+def test_CodeBlock():
+    c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
+    assert c.func(*c.args) == c
+
+    assert c.left_hand_sides == Tuple(x, y)
+    assert c.right_hand_sides == Tuple(1, x + 1)
+
+    raises(TypeError, lambda: CodeBlock(x))
+
+    # TODO: test that variables are used before they are assigned
+
+def test_CodeBlock_topological_sort():
+    assignments = [
+        Assignment(x, y + z),
+        Assignment(z, 1),
+        Assignment(t, x),
+        Assignment(y, 2),
+        ]
+
+    ordered_assignments = [
+        # Note that the unrelated z=1 and y=2 are kept in that order
+        Assignment(z, 1),
+        Assignment(y, 2),
+        Assignment(x, y + z),
+        Assignment(t, x),
+        ]
+    c = CodeBlock.topological_sort(assignments)
+    assert c == CodeBlock(*ordered_assignments)
+
+    # Cycle
+    invalid_assignments = [
+        Assignment(x, y + z),
+        Assignment(z, 1),
+        Assignment(y, x),
+        Assignment(y, 2),
+        ]
+
+    raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
+
+    # Undefined variable
+    invalid_assignments = [
+        Assignment(x, y)
+        ]
+
+    raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
+
+def test_CodeBlock_cse():
+    c = CodeBlock(
+        Assignment(y, 1),
+        Assignment(x, sin(y)),
+        Assignment(z, sin(y)),
+        Assignment(t, x*z),
+        )
+    assert c.cse() == CodeBlock(
+        Assignment(y, 1),
+        Assignment(x0, sin(y)),
+        Assignment(x, x0),
+        Assignment(z, x0),
+        Assignment(t, x*z),
+        )
 
 def test_For():
     f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))
