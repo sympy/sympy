@@ -246,7 +246,7 @@ object.
 
 .. note::
 
-   On running the example above in sympy live,(1+1) is wrapped
+   On running the example above in sympy live, (1+1) is wrapped
    by Integer, so it does not show the correct output.
 
 This is usually not a big deal. Python ints work much the same as SymPy
@@ -268,7 +268,7 @@ on whether or not you have run ``from __future__ import division``:
 
 .. note::
 
-   On running the example above in sympy live,(1/2) is wrapped
+   On running the example above in sympy live, (1/2) is wrapped
    by Integer, so it does not show the correct output.
 
 To avoid this, we can construct the rational object explicitly
@@ -284,7 +284,7 @@ This problem also comes up whenever we have a larger symbolic expression with
 
 .. note::
 
-   On running the example above in sympy live,(1/2) is wrapped
+   On running the example above in sympy live, (1/2) is wrapped
    by Integer, so it does not show the correct output.
 
 This happens because Python first evaluates ``1/2`` into ``0.5``, and then
