@@ -374,8 +374,11 @@ class Order(Expr):
                     return not (self.expr.exp-expr.expr.exp).is_positive
                 if expr.expr.is_Mul:
                     for arg in expr.expr.args:
-                        if arg.is_Pow and self.expr.base == arg.base:
-                            return not (self.expr.exp-arg.exp).is_positive
+                        if (arg.is_Pow and self.expr.base == arg.base
+                            and (expr.expr/arg).is_number):
+                            r = (self.expr.exp-arg.exp).is_positive
+                            if not r is None:
+                                return r
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
