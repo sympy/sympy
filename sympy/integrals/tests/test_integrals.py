@@ -1056,7 +1056,7 @@ def test_issue_4492():
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
 
-
+@XFAIL
 def test_issue_2708():
     # This test needs to use an integration function that can
     # not be evaluated in closed form.  Update as needed.
