@@ -22,7 +22,6 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
-from sympy import symbols
 
 
 class Integral(AddWithLimits):
@@ -522,12 +521,7 @@ class Integral(AddWithLimits):
                         function = Poly(function, *gens)
                     else:
                         try:
-                            if b is S.Infinity:
-                                c = symbols('c')
-                                function = antideriv._eval_interval(x, a, c)
-                                function = limit(function, c, b)
-                            else:
-                              function = antideriv._eval_interval(x, a, b)
+                            function = antideriv._eval_interval(x, a, b)
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
