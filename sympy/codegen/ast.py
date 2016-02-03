@@ -192,6 +192,34 @@ def aug_assign(lhs, op, rhs):
 
 
 class CodeBlock(Basic):
+    """
+    Represents a block of code
+
+    For now only assignments are supported. This restriction will be lifted in
+    the future.
+
+    Useful methods on this object are
+
+    ``left_hand_sides``: Tuple of left-hand sides, in order.
+    ``left_hand_sides``: Tuple of right-hand sides, in order.
+    ``topological_sort``: Class method. Return a CodeBlock with assignments
+                          sorted so that variables are assigned before they
+                          are used.
+    ``cse``: Return a new CodeBlock with common subexpressions eliminated and
+             pulled out as assignments.
+
+    Example
+    =======
+
+    >>> from sympy import symbols, ccode
+    >>> from sympy.codegen.ast import CodeBlock, Assignment
+    >>> x, y = symbols('x y')
+
+    >>> c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
+    >>> print(ccode(c))
+    x = 1;
+    y = x + 1;
+    """
     def __new__(cls, *assignments):
         if not all(isinstance(i, Assignment) for i in assignments):
             # Will support more things later
@@ -224,6 +252,21 @@ class CodeBlock(Basic):
 
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
+
+        Example
+        =======
+
+        >>> from sympy import symbols
+        >>> from sympy.codegen.ast import CodeBlock, Assignment
+        >>> x, y, z = symbols('x y z')
+
+        >>> assignments = [
+        ...     Assignment(x, y + z),
+        ...     Assignment(y, z + 1),
+        ...     Assignment(z, 2),
+        ... ]
+        >>> CodeBlock.topological_sort(assignments)
+        CodeBlock(Assignment(z, 2), Assignment(y, z + 1), Assignment(x, y + z))
         """
         from sympy.utilities.iterables import topological_sort
         # Create a graph where the nodes are assignments and there is a directed edge
@@ -272,7 +315,25 @@ class CodeBlock(Basic):
         """
         Return a new code block with common subexpressions eliminated
 
-        See the docstring of :func:`sympy.simplify.cse_main.cse` for more information.
+        See the docstring of :func:`sympy.simplify.cse_main.cse` for more
+        information.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, sin
+        >>> from sympy.codegen.ast import CodeBlock, Assignment
+        >>> x, y, z = symbols('x y z')
+
+        >>> c = CodeBlock(
+        ...     Assignment(x, 1),
+        ...     Assignment(y, sin(x) + 1),
+        ...     Assignment(z, sin(x) - 1),
+        ... )
+        ...
+        >>> c.cse()
+        CodeBlock(Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 +
+        1), Assignment(z, x0 - 1))
         """
         # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
