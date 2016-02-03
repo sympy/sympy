@@ -163,8 +163,9 @@ def test_invert_complex():
 
     assert invert_complex(log(x), y, x) == (x, FiniteSet(exp(y)))
 
-    raises(ValueError, lambda: invert_real(S.One, y, x))
+    raises(ValueError, lambda: invert_real(1, y, x))
     raises(ValueError, lambda: invert_complex(x, x, x))
+    raises(ValueError, lambda: invert_complex(x, x, 1))
 
 
 def test_domain_check():

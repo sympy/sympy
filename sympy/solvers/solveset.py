@@ -32,63 +32,90 @@ from sympy.utilities import filldedent
 import warnings
 
 
-def invert_real(f_x, y, x, domain=S.Reals):
-    """ Inverts a real valued function
-
-    Reduces the real valued equation ``f(x) = y`` to a set of equations ``{g(x)
-    = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is a simpler
-    function than ``f(x)``.  The return value is a tuple ``(g(x), set_h)``,
-    where ``g(x)`` is a function of ``x`` and ``set_h`` is the set of
-    functions ``{h_1(y), h_2(y), ..., h_n(y)}``.
+def _invert(f_x, y, x, domain=S.Complexes):
+    """
+    Reduce the complex valued equation ``f(x) = y`` to a set of equations
+    ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
+    a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
+    set_h)``, where ``g(x)`` is a function of ``x`` and ``set_h`` is
+    the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
-    The ``set_h`` contains the functions along with the information about their
-    domain in which they are valid, through set operations. For instance, if
-    ``y = Abs(x) - n``, is inverted, then, the ``set_h`` doesn't simply
-    return `{-n, n}`, as the nature of `n` is unknown; rather it will return:
-    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`.
+    The ``set_h`` contains the functions along with the information
+    about their domain in which they are valid, through set
+    operations. For instance, if ``y = Abs(x) - n``, is inverted
+    in the real domain, then, the ``set_h`` doesn't simply return
+    `{-n, n}`, as the nature of `n` is unknown; rather it will return:
+    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
+
+    By default, the complex domain is used but note that inverting even
+    seemingly simple functions like ``exp(x)`` can give very different
+    result in the complex domain than are obtained in the real domain.
+    (In the case of ``exp(x)``, the inversion via ``log`` is multi-valued
+    in the complex domain, having infinitely many branches.)
+
+    If you are working with real values only (or you are not sure which
+    function to use) you should probably use set the domain to
+    ``S.Reals`` (or use `invert\_real` which does that automatically).
+
 
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import invert_real
-    >>> from sympy import tan, Abs, exp
-    >>> from sympy.abc import x, y, n
+    >>> from sympy.solvers.solveset import invert_complex, invert_real
+    >>> from sympy.abc import x, y
+    >>> from sympy import exp, log
+
+    When does exp(x) == y?
+
+    >>> invert_complex(exp(x), y, x)
+    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
+    >>> invert_real(exp(x), y, x)
+    (x, Intersection((-oo, oo), {log(y)}))
+
+    When does exp(x) == 1?
+
+    >>> invert_complex(exp(x), 1, x)
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers()))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
-    >>> invert_real(tan(x), y, x)
-    (x, ImageSet(Lambda(_n, _n*pi + atan(y)), Integers()))
-
-
-    * ``set_h`` containing information about the domain
-
-    >>> invert_real(Abs(x**31 + x), y, x)
-    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
-    >>> invert_real(exp(Abs(x)), y, x)
-    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
 
     See Also
     ========
-    invert_complex
+    invert_real, invert_complex
     """
+    x = sympify(x)
+    if not x.is_Symbol:
+        raise ValueError("x must be a symbol")
+    f_x = sympify(f_x)
+    if not f_x.has(x):
+        raise ValueError("Inverse of constant function doesn't exist")
     y = sympify(y)
-    if not y.has(x):
+    if y.has(x):
+        raise ValueError("y should be independent of x ")
+
+    if domain.is_subset(S.Reals):
         x, s = _invert_real(f_x, FiniteSet(y), x)
-        if isinstance(s, FiniteSet):
-            s = s.intersection(domain)
-        return x, s
     else:
-        raise ValueError(" y should be independent of x ")
+        x, s = _invert_complex(f_x, FiniteSet(y), x)
+    return x, s.intersection(domain) if isinstance(s, FiniteSet) else s
+
+
+invert_complex = _invert
+
+
+def invert_real(f_x, y, x, domain=S.Reals):
+    return _invert(f_x, y, x, domain)
 
 
 def _invert_real(f, g_ys, symbol):
-    if not f.has(symbol):
-        raise ValueError("Inverse of constant function doesn't exist")
+    """Helper function for _invert."""
 
     if f == symbol:
         return (f, g_ys)
 
     n = Dummy('n', real=True)
+
     if hasattr(f, 'inverse') and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
@@ -100,22 +127,23 @@ def _invert_real(f, g_ys, symbol):
                             symbol)
 
     if isinstance(f, Abs):
+        pos = Interval(0, S.Infinity)
+        neg = Interval(S.NegativeInfinity, 0)
         return _invert_real(f.args[0],
-                            Union(imageset(Lambda(n, n), g_ys).intersect(Interval(0, oo)),
-                                  imageset(Lambda(n, -n), g_ys).intersect(Interval(-oo, 0))),
-                            symbol)
+                    Union(imageset(Lambda(n, n), g_ys).intersect(pos),
+                          imageset(Lambda(n, -n), g_ys).intersect(neg)), symbol)
 
     if f.is_Add:
         # f = g + h
         g, h = f.as_independent(symbol)
-        if g != S.Zero:
+        if g is not S.Zero:
             return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
     if f.is_Mul:
         # f = g*h
         g, h = f.as_independent(symbol)
 
-        if g != S.One:
+        if g is not S.One:
             return _invert_real(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
     if f.is_Pow:
@@ -169,69 +197,25 @@ def _invert_real(f, g_ys, symbol):
     return (f, g_ys)
 
 
-def invert_complex(f_x, y, x, domain=S.Complexes):
-    """ Inverts a complex valued function.
-
-    Reduces the complex valued equation ``f(x) = y`` to a set of equations
-    ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
-    a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
-    set_h)``, where ``g(x)`` is a function of ``x`` and ``set_h`` is
-    the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
-    Here, ``y`` is not necessarily a symbol.
-
-    Note that `invert\_complex` and `invert\_real` don't always produce the
-    same result even for a seemingly simple function like ``exp(x)`` because
-    the complex extension of real valued ``log`` is multivariate in the complex
-    system and has infinitely many branches. If you are working with real
-    values only or you are not sure with function to use you should use
-    `invert\_real`.
-
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.solveset import invert_complex
-    >>> from sympy.abc import x, y
-    >>> from sympy import exp, log
-    >>> invert_complex(log(x), y, x)
-    (x, {exp(y)})
-    >>> invert_complex(log(x), 0, x)  # Second parameter is not a symbol
-    (x, {1})
-    >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
-
-    See Also
-    ========
-    invert_real
-    """
-    y = sympify(y)
-    if not y.has(x):
-        return _invert_complex(f_x, FiniteSet(y), x)
-    else:
-        raise ValueError(" y should be independent of x ")
-
-
 def _invert_complex(f, g_ys, symbol):
-    """ Helper function for invert_complex """
-
-    if not f.has(symbol):
-        raise ValueError("Inverse of constant function doesn't exist")
+    """Helper function for _invert."""
 
     if f == symbol:
         return (f, g_ys)
 
     n = Dummy('n')
+
     if f.is_Add:
         # f = g + h
         g, h = f.as_independent(symbol)
-        if g != S.Zero:
+        if g is not S.Zero:
             return _invert_complex(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
     if f.is_Mul:
         # f = g*h
         g, h = f.as_independent(symbol)
 
-        if g != S.One:
+        if g is not S.One:
             return _invert_complex(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
     if hasattr(f, 'inverse') and \
@@ -248,6 +232,7 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
+
     return (f, g_ys)
 
 
