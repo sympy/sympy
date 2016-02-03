@@ -111,7 +111,7 @@ matrix:
             - cython
       virtualenv:
         system_site_packages: true
-    - python: 3.5
+    - python: 3.4
       env:
         - TEST_AUTOWRAP="true"
       addons:
