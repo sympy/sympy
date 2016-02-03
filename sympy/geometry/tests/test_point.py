@@ -231,9 +231,9 @@ def test_Point2D():
     # Test Distance
     p1 = Point2D(1, 5)
     p2 = Point2D(4, 2.5)
-    p3 = Point2D(6.1, 3.5)
+    p3 = (6, 3)
     assert p1.distance(p2) == sqrt(61)/2
-    assert p2.distance(p3) == sqrt(541)/10
+    assert p2.distance(p3) == sqrt(17)/2
 
 
 def test_issue_9214():
