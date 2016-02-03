@@ -111,7 +111,7 @@ matrix:
             - cython
       virtualenv:
         system_site_packages: true
-    - python: 3.4
+    - python: 3.5
       env:
         - TEST_AUTOWRAP="true"
       addons:
@@ -185,6 +185,21 @@ matrix:
             - pypy
           packages:
             - pypy
+
+  allowed_failures:
+    # Fails because of some issues with Travis
+    - python: 3.5
+      env:
+        - TEST_AUTOWRAP="true"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
+      virtualenv:
+        system_site_packages: true
 
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
