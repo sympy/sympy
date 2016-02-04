@@ -38,11 +38,25 @@ class stringPict(object):
     @staticmethod
     def equalLengths(lines):
         # empty lines
+        _max_dot = 0
         if not lines:
             return ['']
 
         width = max(len(line) for line in lines)
-        return [line.center(width) for line in lines]
+
+        if any('v̇' in s for s in lines):
+            _dot_arr = [ ]
+            for index, line in enumerate(lines):
+                _no_dot = []
+                if 'v̇' in line:
+                    import re
+                    _no_dot = [m.start() for m in re.finditer('v̇', line)]
+                _dot_arr.append(len(_no_dot))
+            _max_dot = max(element for element in _dot_arr)
+            ss = [ line.center(width - _max_dot + _dot_arr[index]) for index, line in enumerate(lines)]
+            return ss
+
+        return [ line.center(width) for line in lines]
 
     def height(self):
         """The height of the picture in characters."""
