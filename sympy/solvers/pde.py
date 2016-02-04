@@ -44,11 +44,14 @@ from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
+from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
 from sympy.simplify.radsimp import collect
+
 import operator
+
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
@@ -445,44 +448,37 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If the given solution is in the form of a list or a set
     # then return a list or set of tuples.
     if is_sequence(sol, set):
-        return type(sol)([checkpdesol(pde, i, solve_for_func=solve_for_func) for i in sol])
+        return type(sol)([checkpdesol(
+            pde, i, func=func,
+            solve_for_func=solve_for_func) for i in sol])
 
     # Convert solution into an equation
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
+    elif sol.rhs == func:
+        sol = sol.reversed
 
     # Try solving for the function
-    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
-            (sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
-                result = checkpdesol(pde, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
+                return checkpdesol(pde, Eq(func, solved[0]),
+                    func=func, solve_for_func=False)
             else:
-                result = checkpdesol(pde, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
+                return checkpdesol(pde, [Eq(func, t) for t in solved],
+                    func=func, solve_for_func=False)
 
-    # The first method includes direct substitution of the solution in
-    # the PDE and simplifying.
-    pde = pde.lhs - pde.rhs
+    # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
-        s = pde.subs(func, sol.rhs).doit()
-    elif sol.rhs == func:
-        s = pde.subs(func, sol.lhs).doit()
-    if s:
-        ss = simplify(s)
-        if ss:
-            return False, ss
-        else:
-            return True, 0
-    else:
-        return True, 0
+        pde = pde.lhs - pde.rhs
+        s = simplify(pde.subs(func, sol.rhs).doit())
+        return s is S.Zero, s
+
+    raise NotImplementedError(filldedent('''
+        Unable to test if %s is a solution to %s.''' % (sol, pde)))
+
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     r"""

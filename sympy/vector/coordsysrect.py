@@ -313,7 +313,7 @@ class CoordSysCartesian(Basic):
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
-        {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
+        {A.x: -sin(q)*B.y + cos(q)*B.x, A.y: sin(q)*B.x + cos(q)*B.y, A.z: B.z}
 
         """
 
@@ -438,6 +438,12 @@ class CoordSysCartesian(Basic):
                 final_matrix = orienters.rotation_matrix(self)
             else:
                 final_matrix = orienters.rotation_matrix()
+            # TODO: trigsimp is needed here so that the matrix becomes
+            # canonical (scalar_map also calls trigsimp; without this, you can
+            # end up with the same CoordinateSystem that compares differently
+            # due to a differently formatted matrix). However, this is
+            # probably not so good for performance.
+            final_matrix = trigsimp(final_matrix)
         else:
             final_matrix = Matrix(eye(3))
             for orienter in orienters:
