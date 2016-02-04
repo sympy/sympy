@@ -111,6 +111,9 @@ matrix:
             - cython
       virtualenv:
         system_site_packages: true
+
+    # Everything here and below is in the allow_failures. The need to be
+    # duplicated here and in that section below.
     - python: 3.5
       env:
         - TEST_AUTOWRAP="true"
@@ -208,6 +211,63 @@ matrix:
         - FASTCACHE="false"
       sudo: true
       dist: trusty
+
+
+    # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
+    - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="1/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="2/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="3/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
 
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
