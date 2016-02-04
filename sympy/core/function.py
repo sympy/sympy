@@ -727,7 +727,7 @@ class AppliedUndef(Function):
         import sage.all as sage
         fname = str(self.func)
         args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname, *args)
+        func = sage.function(fname)(*args)
         return func
 
 class UndefinedFunction(FunctionClass):
@@ -1307,7 +1307,7 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if old in self.variables and not new.is_Symbol:
+        if old in self.variables and not new._diff_wrt:
             # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is

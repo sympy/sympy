@@ -46,7 +46,7 @@ def express(expr, system, system2=None, variables=False):
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
     >>> express(N.x, B, variables=True)
-    B.x*cos(q) - B.y*sin(q)
+    -sin(q)*B.y + cos(q)*B.x
     >>> d = N.i.outer(N.i)
     >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
     True
@@ -69,9 +69,8 @@ def express(expr, system, system2=None, variables=False):
             #If variables attribute is True, substitute
             #the coordinate variables in the Vector
             system_list = []
-            for x in expr.atoms():
-                if (isinstance(x, (BaseScalar, BaseVector))
-                        and x.system != system):
+            for x in expr.atoms(BaseScalar, BaseVector):
+                if x.system != system:
                     system_list.append(x.system)
             system_list = set(system_list)
             subs_dict = {}
@@ -113,8 +112,8 @@ def express(expr, system, system2=None, variables=False):
             system_set = set([])
             expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in expr.atoms():
-                if isinstance(x, BaseScalar)and x.system != system:
+            for x in expr.atoms(BaseScalar):
+                if x.system != system:
                     system_set.add(x.system)
             subs_dict = {}
             for f in system_set:

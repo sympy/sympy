@@ -574,6 +574,8 @@ def lambda_notation(tokens, local_dict, global_dict):
                 if tokNum == OP and tokVal == ':':
                     tokVal = ','
                     flag = True
+                if not flag and tokNum == OP and tokVal in ['*', '**']:
+                    raise TokenError("Starred arguments in lambda not supported")
                 if flag:
                     result.insert(-1, (tokNum, tokVal))
                 else:
