@@ -201,6 +201,14 @@ matrix:
       virtualenv:
         system_site_packages: true
 
+    # The apt installation of sage fails sometimes
+    - python: 3.5 # Dummy value
+      env:
+        - TEST_SAGE="true"
+        - FASTCACHE="false"
+      sudo: true
+      dist: trusty
+
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
