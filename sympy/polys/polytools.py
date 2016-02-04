@@ -1474,7 +1474,7 @@ class Poly(Expr):
         """
         Polynomial pseudo-quotient of ``f`` by ``g``.
 
-        See the Caveat note in the function prem(f, g). 
+        See the Caveat note in the function prem(f, g).
 
         Examples
         ========
