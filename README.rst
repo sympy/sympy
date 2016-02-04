@@ -104,6 +104,20 @@ If you install it system-wide, you may need to prefix the previous command with 
 
 See http://docs.sympy.org/dev/install.html for more information.
 
+Contributing
+------------
+
+We welcome contributions from anyone, even if you are new to open
+source. Please read our `introduction to contributing
+<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_. If you
+are new and looking for some way to contribute a good place to start is to
+look at the issues tagged `Easy to Fix
+<https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22>`_.
+
+Please note that all participants of this project are expected to follow our
+Code of Conduct. By participating in this project you agree to abide by its
+terms. See `CODE_OF_CONDUCT.md <CODE_OF_CONDUCT.md>`_.
+
 Tests
 -----
 
@@ -184,7 +198,7 @@ from Google Summer of Code students.
 In 2011, Ondřej Čertík stepped down as lead developer, with Aaron Meurer, who
 also started as a Google Summer of Code student, taking his place. Ondřej
 Čertík is still active in the community, but is too busy with work and family
-to play a lead development role
+to play a lead development role.
 
 Since then, a lot more people have joined the development and some people have
 also left. You can see the full list in doc/src/aboutus.rst, or online at:

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import random
+from sympy import Derivative
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, as_int, range
@@ -314,6 +315,12 @@ class DenseMatrix(MatrixBase):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
+
+    def _eval_diff(self, *args, **kwargs):
+        if kwargs.pop("evaluate", True):
+            return self.diff(*args)
+        else:
+            return Derivative(self, *args, **kwargs)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -1586,11 +1593,22 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100):
+def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
+               percent=100, prng=None):
     """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
     the matrix will be square. If ``symmetric`` is True the matrix must be
     square. If ``percent`` is less than 100 then only approximately the given
     percentage of elements will be non-zero.
+
+    The pseudo-random number generator used to generate matrix is chosen in the
+    following way.
+
+    * If ``prng`` is supplied, it will be used as random number generator.
+      It should be an instance of :class:`random.Random`, or at least have
+      ``randint`` and ``shuffle`` methods with same signatures.
+    * if ``prng`` is not supplied but ``seed`` is supplied, then new
+      :class:`random.Random` with given ``seed`` will be created;
+    * otherwise, a new :class:`random.Random` with default seed will be used.
 
     Examples
     ========
@@ -1625,10 +1643,8 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     """
     if c is None:
         c = r
-    if seed is None:
-        prng = random.Random()  # use system time
-    else:
-        prng = random.Random(seed)
+    # Note that ``Random()`` is equivalent to ``Random(None)``
+    prng = prng or random.Random(seed)
     if symmetric and r != c:
         raise ValueError(
             'For symmetric matrices, r must equal c, but %i != %i' % (r, c))

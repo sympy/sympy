@@ -186,6 +186,11 @@ class Routine(object):
         self.local_vars = local_vars
         self.global_vars = global_vars
 
+    def __str__(self):
+        return self.__class__.__name__ + "({name!r}, {arguments}, {results}, {local_vars}, {global_vars})".format(**self.__dict__)
+
+    __repr__ = __str__
+
     @property
     def variables(self):
         """Returns a set of all variables possibly used in the routine.
@@ -286,12 +291,17 @@ class Variable(object):
         self.dimensions = dimensions
         self.precision = precision
 
+    def __str__(self):
+        return "%s(%r)" % (self.__class__.__name__, self.name)
+
+    __repr__ = __str__
+
     @property
     def name(self):
         return self._name
 
     def get_datatype(self, language):
-        """Returns the datatype string for the requested langage.
+        """Returns the datatype string for the requested language.
 
         Examples
         ========
@@ -337,6 +347,11 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
+    def __str__(self):
+        return "%s(%r, %r)" % (self.__class__.__name__, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
@@ -378,6 +393,11 @@ class OutputArgument(Argument, ResultBase):
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
 
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
@@ -389,6 +409,12 @@ class InOutArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
     __init__.__doc__ = OutputArgument.__init__.__doc__
 
+
+    def __str__(self):
+        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+            self.result_var)
+
+    __repr__ = __str__
 
 class Result(Variable, ResultBase):
     """An expression for a return value.

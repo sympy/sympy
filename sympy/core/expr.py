@@ -41,7 +41,7 @@ class Expr(Basic, EvalfMixin):
         the differentiation.
 
         Note, see the docstring of Derivative for how this should work
-        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        mathematically. In particular, note that expr.subs(yourclass, Symbol)
         should be well-defined on a structural level, or this will lead to
         inconsistent results.
 
@@ -569,7 +569,7 @@ class Expr(Basic, EvalfMixin):
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
-                if not (deriv.is_Number or pure_complex(deriv)):
+                if not (pure_complex(deriv, or_real=True)):
                     if flags.get('failing_number', False):
                         return failing_number
                     elif deriv.free_symbols:
@@ -1456,16 +1456,17 @@ class Expr(Basic, EvalfMixin):
         * .expand(log=True) to change log expr into an Add
 
         The only non-naive thing that is done here is to respect noncommutative
-        ordering of variables.
+        ordering of variables and to always return (0, 0) for `self` of zero
+        regardless of hints.
 
-        The returned tuple (i, d) has the following interpretation:
+        For nonzero `self`, the returned tuple (i, d) has the
+        following interpretation:
 
         * i will has no variable that appears in deps
         * d will be 1 or else have terms that contain variables that are in deps
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
-        * if self is anything else, either tuple (self, S.One) or (S.One, self)
-          is returned.
+        * otherwise (self, S.One) or (S.One, self) is returned.
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
@@ -1571,10 +1572,22 @@ class Expr(Basic, EvalfMixin):
         See also: .separatevars(), .expand(log=True),
                   .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
-        from sympy import Symbol
+        from .symbol import Symbol
+        from .add import _unevaluated_Add
+        from .mul import _unevaluated_Mul
         from sympy.utilities.iterables import sift
 
+        if self.is_zero:
+            return S.Zero, S.Zero
+
         func = self.func
+        if hint.get('as_Add', func is Add):
+            want = Add
+        else:
+            want = Mul
+        if func is not want and (func is Add or func is Mul):
+            return (want.identity, self)
+
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
         sym = set()
@@ -1593,10 +1606,6 @@ class Expr(Basic, EvalfMixin):
                 return has_other
             return has_other or e.has(*(e.free_symbols & sym))
 
-        if hint.get('as_Add', func is Add):
-            want = Add
-        else:
-            want = Mul
         if (want is not func or
                 func is not Add and func is not Mul):
             if has(self):
@@ -1613,15 +1622,16 @@ class Expr(Basic, EvalfMixin):
         depend = d[True]
         indep = d[False]
         if func is Add:  # all terms were treated as commutative
-            return (Add(*indep),
-                    Add(*depend))
+            return (Add(*indep), _unevaluated_Add(*depend))
         else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return Mul(*indep), Mul(*depend)
+            return Mul(*indep), (
+                Mul(*depend, evaluate=False) if nc else
+                _unevaluated_Mul(*depend))
 
     def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
@@ -3057,10 +3067,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import cancel
         return cancel(self, *gens, **args)
 
-    def invert(self, g):
-        """See the invert function in sympy.polys"""
-        from sympy.polys import invert
-        return invert(self, g)
+    def invert(self, g, *gens, **args):
+        """Return the multiplicative inverse of ``self`` mod ``g``
+        where ``self`` (and ``g``) may be symbolic expressions).
+
+        See Also
+        ========
+        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        """
+        from sympy.polys.polytools import invert
+        from sympy.core.numbers import mod_inverse
+        if self.is_number and getattr(g, 'is_number', True):
+            return mod_inverse(self, g)
+        return invert(self, g, *gens, **args)
 
     def round(self, p=0):
         """Return x rounded to the given decimal place.
@@ -3110,9 +3129,12 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import Float
         x = self
-        if not x.is_number:
-            raise TypeError('%s is not a number' % type(x))
-        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+        if x.is_number and not x.is_Atom:
+            xn = x.n(2)
+            if not pure_complex(xn, or_real=True):
+                raise TypeError('Expected a number but got %s:' %
+                    getattr(getattr(x,'func', x), '__name__', type(x)))
+        elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()

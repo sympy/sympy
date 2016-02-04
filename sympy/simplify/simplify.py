@@ -204,8 +204,9 @@ def _is_sum_surds(p):
 
 
 def posify(eq):
-    """Return eq (with generic symbols made positive) and a restore
-    dictionary.
+    """Return eq (with generic symbols made positive) and a
+    dictionary containing the mapping between the old and new
+    symbols.
 
     Any symbol that has positive=None will be replaced with a positive dummy
     symbol having the same name. This replacement will allow more symbolic
@@ -215,21 +216,30 @@ def posify(eq):
     A dictionary that can be sent to subs to restore eq to its original
     symbols is also returned.
 
-    >>> from sympy import posify, Symbol, log
+    >>> from sympy import posify, Symbol, log, solve
     >>> from sympy.abc import x
     >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
     (_x + n + p, {_x: x})
 
-    >> log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
+    >>> eq = 1/x
+    >>> log(eq).expand()
     log(1/x)
-
-    >>> log(posify(1/x)[0]).expand() # take [0] and ignore replacements
+    >>> log(posify(eq)[0]).expand()
     -log(_x)
-    >>> eq, rep = posify(1/x)
-    >>> log(eq).expand().subs(rep)
+    >>> p, rep = posify(eq)
+    >>> log(p).expand().subs(rep)
     -log(x)
-    >>> posify([x, 1 + x])
-    ([_x, _x + 1], {_x: x})
+
+    It is possible to apply the same transformations to an iterable
+    of expressions:
+
+    >>> eq = x**2 - 4
+    >>> solve(eq, x)
+    [-2, 2]
+    >>> eq_x, reps = posify([eq, x]); eq_x
+    [_x**2 - 4, _x]
+    >>> solve(*eq_x)
+    [2]
     """
     eq = sympify(eq)
     if iterable(eq):
@@ -512,6 +522,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        if isinstance(expr, Function) and hasattr(expr, "inverse"):
+            if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
+               isinstance(expr.args[0], expr.inverse(argindex=1)):
+                return simplify(expr.args[0].args[0], ratio=ratio,
+                                measure=measure, fu=fu)
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
                          for x in expr.args])
 
@@ -1118,7 +1133,12 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         return sympify(as_int(expr))
     except (TypeError, ValueError):
         pass
-    expr = sympify(expr)
+    expr = sympify(expr).xreplace({
+        Float('inf'): S.Infinity,
+        Float('-inf'): S.NegativeInfinity,
+        })
+    if expr is S.Infinity or expr is S.NegativeInfinity:
+        return expr
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance)
 
@@ -1156,7 +1176,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             # We'll be happy with low precision if a simple fraction
             if not (tolerance or full):
                 mpmath.mp.dps = 15
-                rat = mpmath.findpoly(xv, 1)
+                rat = mpmath.pslq([xv, 1])
                 if rat is not None:
                     return Rational(-int(rat[1]), int(rat[0]))
             mpmath.mp.dps = prec
@@ -1205,6 +1225,7 @@ def _real_to_rational(expr, tolerance=None):
     sqrt(x)/10 + 19/25
 
     """
+    inf = Float('inf')
     p = expr
     reps = {}
     reduce_num = None
@@ -1224,7 +1245,9 @@ def _real_to_rational(expr, tolerance=None):
             if float and not r:
                 r = Rational(float)
             elif not r.is_Rational:
-                if float < 0:
+                if float == inf or float == -inf:
+                    r = S.ComplexInfinity
+                elif float < 0:
                     float = -float
                     d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
                     r = -Rational(str(float/d))*d

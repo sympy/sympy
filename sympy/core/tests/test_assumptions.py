@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -325,6 +325,19 @@ def test_symbol_real():
     assert a.is_nonnegative is False
     assert a.is_nonpositive is False
     assert a.is_zero is False
+
+
+def test_symbol_imaginary():
+    a = Symbol('a', imaginary=True)
+
+    assert a.is_real is False
+    assert a.is_integer is False
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
+    assert a.is_zero is False
+    assert a.is_nonzero is False  # since nonzero -> real
 
 
 def test_symbol_zero():
@@ -967,3 +980,26 @@ def test_issue_9165():
     assert 0/z == S.NaN
     assert 0*(1/z) == S.NaN
     assert 0*f == S.NaN
+
+def test_issue_10024():
+    x = Dummy('x')
+    assert Mod(x, 2*pi).is_zero is None
+
+
+def test_issue_10302():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    i = u + u*I
+    assert i.is_real is None  # w/o simplification this should fail
+    assert (u + i).is_zero is None
+    assert (1 + i).is_zero is False
+    a = Dummy('a', zero=True)
+    assert (a + I).is_zero is False
+    assert (a + r*I).is_zero is None
+    assert (a + I).is_imaginary
+    assert (a + x + I).is_imaginary is None
+    assert (a + r*I + I).is_imaginary is None
+
+def test_complex_reciprocal_imaginary():
+    assert (1 / (4 + 3*I)).is_imaginary is False

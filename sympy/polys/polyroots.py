@@ -625,9 +625,8 @@ def roots_quintic(f):
             # Again storing away the exact number and using
             # evaluated numbers in computations
             r3temp_n = Res_n[3][j]
-
-            if( comp( r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus, 0, tol) and
-                comp( r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus, 0, tol ) ):
+            if (comp((r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus).n(), 0, tol) and
+                comp((r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus).n(), 0, tol)):
                 r2 = Res[2][i]
                 r3 = Res[3][j]
                 break

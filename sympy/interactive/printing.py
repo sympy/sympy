@@ -9,7 +9,7 @@ from io import BytesIO
 from sympy import latex as default_latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
-from sympy.utilities.misc import debug, find_executable
+from sympy.utilities.misc import debug
 
 
 def _init_python_printing(stringify_func):
@@ -394,18 +394,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                     debug("init_printing: Setting use_unicode to True")
                     use_unicode = True
                 if use_latex is None:
-                    if find_executable('latex') and find_executable('dvipng'):
-                        debug("init_printing: Setting use_latex to True")
-                        use_latex = True
-                    else:
-                        try:
-                            import matplotlib
-                        except ImportError:
-                            debug("init_printing: Setting use_latex to False")
-                            use_latex = False
-                        else:
-                            debug("init_printing: Setting use_latex to 'matplotlib'")
-                            use_latex = 'matplotlib'
+                    debug("init_printing: Setting use_latex to True")
+                    use_latex = True
 
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,

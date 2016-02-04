@@ -32,6 +32,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     TypeError: Cannot set values of ImmutableDenseMatrix
     """
 
+    # MatrixExpr is set as NotIterable, but we want explicit matrices to be
+    # iterable
+    _iterable = True
+
     _class_priority = 8
 
     @classmethod
@@ -94,6 +98,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _eval_adjoint = DenseMatrix._eval_adjoint
     _eval_inverse = DenseMatrix._eval_inverse
     _eval_simplify = DenseMatrix._eval_simplify
+    _eval_diff = DenseMatrix._eval_diff
 
     equals = DenseMatrix.equals
     is_Identity = DenseMatrix.is_Identity
@@ -157,6 +162,8 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
     subs = MatrixBase.subs
+
+    xreplace = MatrixBase.xreplace
 
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))

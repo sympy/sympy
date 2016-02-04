@@ -236,7 +236,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Marek Šuppa: Improvements to symbols, tests
 #. Prasoon Shukla: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
-#. Thomas Hisch: Improvements to the printing module
+#. Thomas Hisch: Spherical Hankel functions, Improvements to the printing module, Improvements to the doctesting system
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Case Van Horsen: Fixes to gmpy support
@@ -424,6 +424,15 @@ want to be mentioned here, so see our repository history for a full list).
 #. Shashank Kumar: Fixed indenation error in summations.py and added test for issue #9908
 #. Devyani Kota: Fixed issue 9953: linsolve([ ], ...) now returns S.EmptySet
 #. Keval Shah: Union with subset of S.Complexes now evaluated
+#. Dzhelil Rufat: Make it possible to lambdify expressions that contain sums
+#. Jacob Garber: Correct Polygon.encloses_point in geometry and update references
+#. Vinay: sympy.vector .del print changed to .delop as it is accesed
+#. Prashant Tyagi: remove wrong logic lines in sets.py
+#. Matthew Davis: Fixed documentation typos
+#. Jack Kemp: Fix incorrect assignment of free variables in linsolve
+#. Kshitij Saraogi: Parenthesized printing of Intersections
+#. Arafat Dad Khan: improve detection of polygon/ellipse intersection
+#. Sam Tygier: remove redundant simplification from Line
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

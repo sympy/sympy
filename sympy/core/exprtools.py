@@ -252,6 +252,30 @@ def decompose_power(expr):
     return base, exp
 
 
+def decompose_power_rat(expr):
+    """
+    Decompose power into symbolic base and rational exponent.
+
+    """
+    base, exp = expr.as_base_exp()
+
+    if exp.is_Number:
+        if not exp.is_Rational:
+            base, exp = expr, 1
+    else:
+        exp, tail = exp.as_coeff_Mul(rational=True)
+
+        if exp is S.NegativeOne:
+            base, exp = Pow(base, tail), -1
+        elif exp is not S.One:
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, exp = Pow(base, tail), exp.p
+        else:
+            base, exp = expr, 1
+
+    return base, exp
+
+
 class Factors(object):
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 

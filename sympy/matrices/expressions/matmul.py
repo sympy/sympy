@@ -36,6 +36,8 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
+        if not matrices:
+            return factor
         return obj
 
     @property
@@ -111,6 +113,15 @@ class MatMul(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatMul(*args))
+
+    # Needed for partial compatibility with Mul
+    def args_cnc(self, **kwargs):
+        coeff, matrices = self.as_coeff_matrices()
+        # I don't know how coeff could have noncommutative factors, but this
+        # handles it.
+        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+
+        return coeff_c, coeff_nc + matrices
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

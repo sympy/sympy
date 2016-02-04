@@ -111,6 +111,7 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.sandbox',
     'sympy.series',
     'sympy.series.benchmarks',
     'sympy.sets',
@@ -121,6 +122,7 @@ modules = [
     'sympy.strategies',
     'sympy.strategies.branch',
     'sympy.tensor',
+    'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
@@ -288,6 +290,7 @@ tests = [
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
+    'sympy.sandbox.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
@@ -295,11 +298,12 @@ tests = [
     'sympy.stats.tests',
     'sympy.strategies.branch.tests',
     'sympy.strategies.tests',
+    'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
-    ]
+]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code

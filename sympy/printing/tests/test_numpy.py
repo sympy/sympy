@@ -1,8 +1,11 @@
-from sympy import Piecewise, lambdify, Equality, Unequality, Sum
+from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.printing.lambdarepr import NumPyPrinter
-import numpy as np
 
+from sympy.utilities.pytest import skip
+from sympy.external import import_module
+
+np = import_module('numpy')
 
 def test_numpy_piecewise_regression():
     """
@@ -15,6 +18,9 @@ def test_numpy_piecewise_regression():
 
 
 def test_sum():
+    if not np:
+        skip("NumPy not installed")
+
     s = Sum(x ** i, (i, a, b))
     f = lambdify((a, b, x), s, 'numpy')
 
@@ -31,6 +37,9 @@ def test_sum():
 
 
 def test_multiple_sums():
+    if not np:
+        skip("NumPy not installed")
+
     s = Sum((x + j) * i, (i, a, b), (j, c, d))
     f = lambdify((a, b, c, d, x), s, 'numpy')
 
@@ -42,6 +51,9 @@ def test_multiple_sums():
 
 
 def test_relational():
+    if not np:
+        skip("NumPy not installed")
+
     e = Equality(x, 1)
 
     f = lambdify((x,), e)
@@ -77,3 +89,23 @@ def test_relational():
     f = lambdify((x,), e)
     x_ = np.array([0, 1, 2])
     assert np.array_equal(f(x_), [False, True, True])
+
+
+def test_mod():
+    if not np:
+        skip("NumPy not installed")
+
+    e = Mod(a, b)
+    f = lambdify((a, b), e)
+
+    a_ = np.array([0, 1, 2, 3])
+    b_ = 2
+    assert np.array_equal(f(a_, b_), [0, 1, 0, 1])
+
+    a_ = np.array([0, 1, 2, 3])
+    b_ = np.array([2, 2, 2, 2])
+    assert np.array_equal(f(a_, b_), [0, 1, 0, 1])
+
+    a_ = np.array([2, 3, 4, 5])
+    b_ = np.array([2, 3, 4, 5])
+    assert np.array_equal(f(a_, b_), [0, 0, 0, 0])

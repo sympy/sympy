@@ -3,6 +3,7 @@ from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.scalar import BaseScalar
 from sympy.core import S
 
 
@@ -19,7 +20,7 @@ class Del(Basic):
         obj._x, obj._y, obj._z = system.x, system.y, system.z
         obj._i, obj._j, obj._k = system.i, system.j, system.k
         obj._system = system
-        obj._name = system.__str__() + ".del"
+        obj._name = system.__str__() + ".delop"
         return obj
 
     @property
@@ -171,6 +172,6 @@ def _diff_conditional(expr, base_scalar):
     """
 
     new_expr = express(expr, base_scalar.system, variables = True)
-    if base_scalar in new_expr.atoms():
+    if base_scalar in new_expr.atoms(BaseScalar):
         return Derivative(new_expr, base_scalar)
     return S(0)

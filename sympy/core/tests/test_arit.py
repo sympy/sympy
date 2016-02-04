@@ -1502,6 +1502,9 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+    assert Mod(nan, 1) == nan
+    assert Mod(1, nan) == nan
+    assert Mod(nan, nan) == nan
 
     # Float handling
     point3 = Float(3.3) % 1
@@ -1884,3 +1887,8 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+
+def test_Add_is_zero():
+    x, y = symbols('x y', zero=True)
+    assert (x + y).is_zero

@@ -1,13 +1,16 @@
 from sympy.core.compatibility import range
 from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel)
+        cancel, KroneckerDelta)
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment)
+from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
-from sympy.abc import p
+from sympy.abc import p, x, i
 
 oo = S.Infinity
 
@@ -259,3 +262,14 @@ def test_density_call():
     assert 0 in d
     assert 5 not in d
     assert d(S(0)) == d[S(0)]
+
+
+def test_DieDistribution():
+    X = DieDistribution(6)
+    assert X.pdf(S(1)/2) == S.Zero
+    assert X.pdf(x).subs({x: 1}).doit() == S(1)/6
+    assert X.pdf(x).subs({x: 7}).doit() == 0
+    assert X.pdf(x).subs({x: -1}).doit() == 0
+    assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
+    raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
+    raises(ValueError, lambda: X.pdf(x**2 - 1))

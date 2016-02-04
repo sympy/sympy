@@ -273,15 +273,17 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy import im
+        from sympy import AccumBounds, im
 
         def _eval(arg):
+            if arg is S.Infinity or arg is S.NegativeInfinity:
+                return AccumBounds(0, 1)
             if arg.is_integer:
                 return S.Zero
             if arg.is_number:
                 if arg is S.NaN:
                     return S.NaN
-                elif arg in [S.Infinity, -S.Infinity, S.ComplexInfinity]:
+                elif arg is S.ComplexInfinity:
                     return None
                 else:
                     return arg - floor(arg)

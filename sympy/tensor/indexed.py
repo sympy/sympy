@@ -333,33 +333,16 @@ class IndexedBase(Expr, NotIterable):
         else:
             raise TypeError("Base label should be a string or Symbol.")
 
-        obj = Expr.__new__(cls, label, **kw_args)
         if is_sequence(shape):
-            obj._shape = Tuple(*shape)
+            shape = Tuple(*shape)
         else:
-            obj._shape = sympify(shape)
+            shape = sympify(shape)
+        if shape is not None:
+            obj = Expr.__new__(cls, label, shape, **kw_args)
+        else:
+            obj = Expr.__new__(cls, label, **kw_args)
+        obj._shape = shape
         return obj
-
-    @property
-    def args(self):
-        """Returns the arguments used to create this IndexedBase object.
-
-        Examples
-        ========
-
-        >>> from sympy import IndexedBase
-        >>> from sympy.abc import x, y
-        >>> IndexedBase('A', shape=(x, y)).args
-        (A, (x, y))
-
-        """
-        if self._shape:
-            return self._args + (self._shape,)
-        else:
-            return self._args
-
-    def _hashable_content(self):
-        return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):

@@ -1,6 +1,7 @@
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
+from sympy.core.relational import Relational
 from sympy.matrices import MatrixSymbol, Matrix
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.pytest import raises
@@ -51,6 +52,7 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
+    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_print_Symbol():
 
