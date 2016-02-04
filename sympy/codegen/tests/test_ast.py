@@ -127,10 +127,6 @@ def test_CodeBlock():
     assert c.left_hand_sides == Tuple(x, y)
     assert c.right_hand_sides == Tuple(1, x + 1)
 
-    raises(TypeError, lambda: CodeBlock(x))
-
-    # TODO: test that variables are used before they are assigned
-
 def test_CodeBlock_topological_sort():
     assignments = [
         Assignment(x, y + z),
@@ -180,6 +176,9 @@ def test_CodeBlock_cse():
         Assignment(z, x0),
         Assignment(t, x*z),
         )
+
+    raises(NotImplementedError, lambda: CodeBlock(Assignment(x, 1),
+        Assignment(y, 1), Assignment(y, 2)).cse())
 
 def test_For():
     f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))

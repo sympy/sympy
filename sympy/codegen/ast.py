@@ -200,8 +200,8 @@ class CodeBlock(Basic):
 
     Useful methods on this object are
 
-    ``left_hand_sides``: Tuple of left-hand sides, in order.
-    ``left_hand_sides``: Tuple of right-hand sides, in order.
+    ``left_hand_sides``: Tuple of left-hand sides of assignments, in order.
+    ``left_hand_sides``: Tuple of right-hand sides of assignments, in order.
     ``topological_sort``: Class method. Return a CodeBlock with assignments
                           sorted so that variables are assigned before they
                           are used.
@@ -220,22 +220,16 @@ class CodeBlock(Basic):
     x = 1;
     y = x + 1;
     """
-    def __new__(cls, *assignments):
-        if not all(isinstance(i, Assignment) for i in assignments):
-            # Will support more things later
-            raise TypeError("CodeBlock inputs must be Assignments")
-
+    def __new__(cls, *args):
         left_hand_sides = []
         right_hand_sides = []
-        for i in assignments:
-            lhs, rhs = i.args
-            if lhs in left_hand_sides:
-                raise NotImplementedError("Duplicate assignments to the same "
-                "variable are not yet supported (%s)" % lhs)
-            left_hand_sides.append(lhs)
-            right_hand_sides.append(rhs)
+        for i in args:
+            if isinstance(i, Assignment):
+                lhs, rhs = i.args
+                left_hand_sides.append(lhs)
+                right_hand_sides.append(rhs)
 
-        obj = Basic.__new__(cls, *assignments)
+        obj = Basic.__new__(cls, *args)
 
         obj.left_hand_sides = Tuple(*left_hand_sides)
         obj.right_hand_sides = Tuple(*right_hand_sides)
@@ -249,6 +243,8 @@ class CodeBlock(Basic):
         variables are assigned before they are used.
 
         The existing order of assignments is preserved as much as possible.
+
+        This function assumes that variables are assigned to only once.
 
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
@@ -337,6 +333,19 @@ class CodeBlock(Basic):
         """
         # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
+
+        if not all(isinstance(i, Assignment) for i in self.args):
+            # Will support more things later
+            raise NotImplementedError("CodeBlock.cse only supports Assignments")
+
+        if any(isinstance(i, AugmentedAssignment) for i in self.args):
+            raise NotImplementedError("CodeBlock.cse doesn't yet work with AugmentedAssignments")
+
+        for i, lhs in enumerate(self.left_hand_sides):
+            if lhs in self.left_hand_sides[:i]:
+                raise NotImplementedError("Duplicate assignments to the same "
+                    "variable are not yet supported (%s)" % lhs)
+
         replacements, reduced_exprs = cse(self.right_hand_sides, symbols=symbols,
             optimizations=optimizations, postprocess=postprocess, order=order)
         assert len(reduced_exprs) == 1
