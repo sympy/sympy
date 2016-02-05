@@ -168,8 +168,8 @@ def test_orthogonalize():
     v3 = 3*i + 5*j
     v4 = 3*i + j
     v5 = 2*i + 2*j
-    assert orthogonalize([v1, v2]) == [C.i + 2*C.j, 2*C.i/5 + -C.j/5]
+    assert orthogonalize(v1, v2) == [C.i + 2*C.j, 2*C.i/5 + -C.j/5]
     # from wikipedia
-    assert orthogonalize([v4, v5], True) == \
+    assert orthogonalize(v4, v5, orthonormal=True) == \
         [(3*sqrt(10))*C.i/10 + (sqrt(10))*C.j/10, (-sqrt(10))*C.i/10 + (3*sqrt(10))*C.j/10]
-    raises(ValueError, lambda: orthogonalize([v1, v2, v3]))
+    raises(ValueError, lambda: orthogonalize(v1, v2, v3))
