@@ -274,25 +274,6 @@ class Vector(BasisDependent):
         else:
             return self.dot(other) / self.dot(self) * self
 
-    def scalar_project(self, other):
-        """
-        Returns the scalar projection of the 'other' on 'self'.
-
-        Examples
-        ========
-
-        >>> from sympy.vector.coordsysrect import CoordSysCartesian
-        >>> from sympy.vector.vector import Vector, BaseVector
-        >>> C = CoordSysCartesian('C')
-        >>> i, j, k = C.base_vectors()
-        >>> v1 = i + j + k
-        >>> v2 = 3*i + 4*j
-        >>> v1.scalar_project(v2)
-        7/3
-
-        """
-        return self.dot(other) / self.dot(self)
-
     def __or__(self, other):
         return self.outer(other)
     __or__.__doc__ = outer.__doc__

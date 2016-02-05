@@ -195,13 +195,6 @@ def test_vec_project():
     assert v1.vec_project(v2, scalar=True) == 7/3
 
 
-def test_scalar_project():
-    v1 = i + j + k
-    v2 = 3*i + 4*j
-    assert v1.scalar_project(v1) == 1
-    assert v1.scalar_project(v2) == 7/3
-
-
 def test_vector_diff_integrate():
     f = Function('f')
     v = f(a)*C.i + a**2*C.j - C.k
