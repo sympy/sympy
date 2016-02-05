@@ -221,7 +221,7 @@ def intersection(*entities):
     return res
 
 
-def convex_hull(*args):
+def convex_hull(*args, **kwargs):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -232,12 +232,13 @@ def convex_hull(*args):
     Returns
     =======
 
-    convex_hull : Polygon
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
 
-    This can only be performed on a set of non-symbolic points.
+    This can only be performed on a set of points whose coordinates can
+    be ordered on the number line.
 
     References
     ==========
@@ -258,9 +259,12 @@ def convex_hull(*args):
     ========
 
     >>> from sympy.geometry import Point, convex_hull
-    >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
+    >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
+    >>> convex_hull(*points, **dict(polygon=False))
+    ([Point2D(-5, 2), Point2D(15, 4)],
+     [Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4)])
 
     """
     from .entity import GeometryEntity
@@ -268,6 +272,7 @@ def convex_hull(*args):
     from .line import Segment
     from .polygon import Polygon
 
+    polygon = kwargs.get('polygon', True)
     p = set()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -291,9 +296,10 @@ def convex_hull(*args):
 
     p = list(p)
     if len(p) == 1:
-        return p[0]
+        return p[0] if polygon else (p[0], None)
     elif len(p) == 2:
-        return Segment(p[0], p[1])
+        s = Segment(p[0], p[1])
+        return s if polygon else (s, None)
 
     def _orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if
@@ -303,7 +309,10 @@ def convex_hull(*args):
     # scan to find upper and lower convex hulls of a set of 2d points.
     U = []
     L = []
-    p.sort(key=lambda x: x.args)
+    try:
+        p.sort(key=lambda x: x.args)
+    except TypeError:
+        raise ValueError("The points could not be sorted.")
     for p_i in p:
         while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
@@ -315,8 +324,13 @@ def convex_hull(*args):
     convexHull = tuple(L + U[1:-1])
 
     if len(convexHull) == 2:
-        return Segment(convexHull[0], convexHull[1])
-    return Polygon(*convexHull)
+        s = Segment(convexHull[0], convexHull[1])
+        return s if polygon else (s, None)
+    if polygon:
+        return Polygon(*convexHull)
+    else:
+        U.reverse()
+        return (U, L)
 
 
 def closest_points(*args):
@@ -356,10 +370,7 @@ def closest_points(*args):
     from collections import deque
     from math import hypot
 
-    if not all(isinstance(i, Point2D) for i in args):
-        raise NotImplementedError('Only 2-dimensional points are supported.')
-
-    p = list(set(args))
+    p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
         raise ValueError('At least 2 distinct points must be given.')
 
@@ -430,52 +441,33 @@ def farthest_points(*args):
     from math import hypot
 
     def rotatingCalipers(Points):
-        def hulls(Points):
-            def orientation(p, q, r):
-                return (q.y - p.y) * (r.x - p.x) - (q.x - p.x) * (r.y - p.y)
-            U = []
-            L = []
-            for p in Points:
-                while len(U) > 1 and orientation(U[-2], U[-1], p) <= 0:
-                    U.pop()
-                while len(L) > 1 and orientation(L[-2], L[-1], p) >= 0:
-                    L.pop()
-                U.append(p)
-                L.append(p)
-            return U, L     # upper and lower
-        U, L = hulls(Points)
-        i = 0
-        j = len(L) - 1
-        while i < len(U) - 1 or j > 0:
-            yield U[i], L[j]
-            # if all the way through one side of hull, advance the other side
-            if i == len(U) - 1:
-                j -= 1
-            elif j == 0:
-                i += 1
-            # still points left on both lists, compare slopes of next hull edges
-            # being careful to avoid divide-by-zero in slope calculation
-            elif (U[i+1].y - U[i].y) * (L[j].x - L[j-1].x) > \
-                    (L[j].y - L[j-1].y) * (U[i+1].x - U[i].x):
-                i += 1
-            else:
-                j -= 1
+        U, L = convex_hull(*Points, **dict(polygon=False))
 
-    if not all(isinstance(i, Point2D) for i in args):
-        raise NotImplementedError('Only 2-dimensional points are supported.')
-
-    p = list(set(args))
-    if len(p) < 2:
-        raise ValueError('At least 2 distinct points must be given.')
-
-    try:
-        p.sort(key=lambda x: x.args)
-    except TypeError:
-        raise ValueError("The points could not be sorted.")
+        if L is None:
+            if isinstance(U, Point):
+                raise ValueError('At least two distinct points must be given.')
+            yield U.args
+        else:
+            i = 0
+            j = len(L) - 1
+            while i < len(U) - 1 or j > 0:
+                yield U[i], L[j]
+                # if all the way through one side of hull, advance the other side
+                if i == len(U) - 1:
+                    j -= 1
+                elif j == 0:
+                    i += 1
+                # still points left on both lists, compare slopes of next hull edges
+                # being careful to avoid divide-by-zero in slope calculation
+                elif (U[i+1].y - U[i].y) * (L[j].x - L[j-1].x) > \
+                        (L[j].y - L[j-1].y) * (U[i+1].x - U[i].x):
+                    i += 1
+                else:
+                    j -= 1
 
     rv = []
     diam = 0
-    for pair in rotatingCalipers(p):
+    for pair in rotatingCalipers(args):
         h, q = _ordered_points(pair)
         d = hypot(h.x - q.x, h.y - q.y)
         if d > diam:

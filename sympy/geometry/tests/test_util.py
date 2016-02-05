@@ -27,7 +27,14 @@ def test_util():
     # coverage for some leftover functions in sympy.geometry.util
     assert intersection(Point(0, 0)) == []
     raises(ValueError, lambda: intersection(Point(0, 0), 3))
+
+
+def test_convex_hull():
     raises(ValueError, lambda: convex_hull(Point(0, 0), 3))
+    points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
+    assert convex_hull(*points, **dict(polygon=False)) == (
+        [Point2D(-5, -2), Point2D(1, -1), Point2D(3, -1), Point2D(15, -4)],
+        [Point2D(-5, -2), Point2D(15, -4)])
 
 
 def test_util_centroid():
@@ -93,3 +100,14 @@ def test_farthest_points_closest_points():
         for i, j in subsets((a, b, c), 2)])
     assert closest_points(b, c, a) == ans
     assert farthest_points(b, c, a) == ans
+
+    # unique to farthest
+    points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
+    assert farthest_points(*points) == set(
+        [(Point2D(-5, 2), Point2D(15, 4))])
+    points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
+    assert farthest_points(*points) == set(
+        [(Point2D(-5, -2), Point2D(15, -4))])
+    assert farthest_points((1, 1), (0, 0)) == set(
+        [(Point2D(0, 0), Point2D(1, 1))])
+    raises(ValueError, lambda: farthest_points((1, 1)))
