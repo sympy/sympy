@@ -50,6 +50,9 @@ def test_farthest_points_closest_points():
             func = closest_points
         else:
             func = farthest_points
+
+        raises(ValueError, lambda: func(Point2D(0, 0), Point2D(0, 0)))
+
         # 3rd pt dx is close and pt is closer to 1st pt
         p1 = [Point2D(0, 0), Point2D(3, 0), Point2D(1, 1)]
         # 3rd pt dx is close and pt is closer to 2nd pt
@@ -60,11 +63,13 @@ def test_farthest_points_closest_points():
         p4 = [Point2D(0, 0), Point2D(3, 0), Point2D(4, 0)]
         # 3rd pt dx is not closer and it's closer to 1st pt
         p5 = [Point2D(0, 0), Point2D(3, 0), Point2D(-1, 0)]
+        # duplicate point doesn't affect outcome
+        dup = [Point2D(0, 0), Point2D(3, 0), Point2D(3, 0), Point2D(-1, 0)]
         # symbolic
         x = Symbol('x', positive=True)
         s = [Point2D(a) for a in ((x, 1), (x + 3, 2), (x + 2, 2))]
 
-        for points in (p1, p2, p3, p4, p5, s):
+        for points in (p1, p2, p3, p4, p5, s, dup):
             d = how(i.distance(j) for i, j in subsets(points, 2))
             ans = a, b = list(func(*points))[0]
             a.distance(b) == d
