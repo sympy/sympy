@@ -35,7 +35,6 @@ def tensorproduct(*args):
     [[[[x**2, x*y], [x*y, y**2]], [[2*x**2, 2*x*y], [2*x*y, 2*y**2]]], [[[3*x**2, 3*x*y], [3*x*y, 3*y**2]], [[4*x**2, 4*x*y], [4*x*y, 4*y**2]]]]
 
     Applying this function on two matrices will result in a rank 4 array.
-    This is not the expected result of the tensor product of matrices.
 
     >>> from sympy import Matrix, eye
     >>> m = Matrix([[x, y], [z, t]])
@@ -103,7 +102,7 @@ def tensorcontraction(array, *contraction_axes):
     taken_dims = set([])
     for axes_group in contraction_axes:
         if not isinstance(axes_group, collections.Iterable):
-            raise ValueError("collections of contraction pairs expected")
+            raise ValueError("collections of contraction axes expected")
 
         dim = array.shape[axes_group[0]]
 
