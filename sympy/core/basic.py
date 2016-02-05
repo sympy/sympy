@@ -843,7 +843,9 @@ class Basic(with_metaclass(ManagedProperties)):
                    it should be a dictionary of old: new pairs or an iterable
                    of (old, new) tuples."""))
         elif len(args) == 2:
-            sequence = [args]
+            _args_valid = Basic._eval_subs(self, args[0], args[1])
+            if _args_valid is None:
+                sequence = [args]
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
 
@@ -1022,6 +1024,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See also: _subs
         """
+        from sympy.physics.vector.vector import Vector
+
+        if isinstance(new, Vector) and self.find(old):
+            raise AttributeError("substitute a vector in for a scalar is not allowed")
+
         return None
 
     def xreplace(self, rule):

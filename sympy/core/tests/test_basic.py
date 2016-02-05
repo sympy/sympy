@@ -202,3 +202,13 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     assert n.is_comparable is False
     assert n.n(2).is_comparable is False
     assert n.n(2).n(2).is_comparable
+
+
+def test_sub_vector():
+    from sympy.physics.mechanics import ReferenceFrame
+    A = ReferenceFrame('A')
+    v = A.x
+    s, t, u = symbols('s t u')
+    raises(AttributeError, lambda:(s*t).subs(s, v))
+    raises(AttributeError, lambda:(s/t).subs(s, v))
+    raises(AttributeError, lambda:(s*t/u).subs(u, v))
