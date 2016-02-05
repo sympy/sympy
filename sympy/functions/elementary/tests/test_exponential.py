@@ -1,7 +1,8 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
+    AccumBounds)
 
 
 def test_exp_values():
@@ -259,6 +260,10 @@ def test_exp_assumptions():
     assert exp(pi*rn).is_algebraic is False
 
 
+def test_exp_AccumBounds():
+    assert exp(AccumBounds(1, 2)) == AccumBounds(E, E**2)
+
+
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
@@ -342,6 +347,10 @@ def test_log_simplify():
     x = Symbol("x", positive=True)
     assert log(x**2).expand() == 2*log(x)
     assert expand_log(log(x**(2 + log(2)))) == (2 + log(2))*log(x)
+
+
+def test_log_AccumBounds():
+    assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
 def test_lambertw():

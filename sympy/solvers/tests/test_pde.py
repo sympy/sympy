@@ -94,6 +94,11 @@ def test_checkpdesol():
          (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
     for eq in [eq4, eq5, eq6]:
         assert checkpdesol(eq, pdsolve(eq))[0]
+    sol = pdsolve(eq4)
+    sol4 = Eq(sol.lhs - sol.rhs, 0)
+    raises(NotImplementedError, lambda:
+        checkpdesol(eq4, sol4, solve_for_func=False))
+
 
 def test_solvefun():
     f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])

@@ -5,7 +5,8 @@ from sympy import (
     gamma, GoldenRatio, hyper, hypersimp, I, Integral, integrate, log,
     logcombine, Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise,
     posify, rad, Rational, root, S, separatevars, signsimp, simplify,
-    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo, Sum, Lt)
+    sin, sinh, solve, sqrt, Symbol, symbols, sympify, tan, tanh, zoo,
+    Sum, Lt, sign)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot
 from sympy.utilities.pytest import XFAIL, slow
@@ -337,6 +338,13 @@ def test_nsimplify():
     assert nsimplify(S(2e-8)) == S(1)/50000000
     # issue 7322 direct test
     assert nsimplify(1e-42, rational=True) != 0
+    # issue 10336
+    inf = Float('inf')
+    infs = (-oo, oo, inf, -inf)
+    for i in infs:
+        ans = sign(i)*oo
+        assert nsimplify(i) == ans
+        assert nsimplify(i + x) == x + ans
 
 
 def test_issue_9448():
@@ -609,3 +617,16 @@ def test_issue_9324_simplify():
     M = MatrixSymbol('M', 10, 10)
     e = M[0, 0] + M[5, 4] + 1304
     assert simplify(e) == e
+
+
+def test_simplify_function_inverse():
+    x, y = symbols('x, y')
+    g = Function('g')
+
+    class f(Function):
+        def inverse(self, argindex=1):
+            return g
+
+    assert simplify(f(g(x))) == x
+    assert simplify(f(g(sin(x)**2 + cos(x)**2))) == 1
+    assert simplify(f(g(x, y))) == f(g(x, y))

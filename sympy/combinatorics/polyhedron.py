@@ -637,9 +637,9 @@ def _pgroup_calcs():
     ... tetrahedron, cube, octahedron, dodecahedron, icosahedron)
     ...
     >>> polyhedra = (tetrahedron, cube, octahedron, dodecahedron, icosahedron)
-    >>> [h.pgroup.is_group() for h in polyhedra]
+    >>> [h.pgroup.is_group for h in polyhedra]
     ...
-    [False, False, False, False, False]
+    [True, True, True, True, True]
 
     Although tests in polyhedron's test suite check that powers of the
     permutations in the groups generate all permutations of the vertices
@@ -656,7 +656,7 @@ def _pgroup_calcs():
     ...             perms.add(p)
     ...
     ...     perms = [Permutation(p) for p in perms]
-    ...     assert PermutationGroup(perms).is_group()
+    ...     assert PermutationGroup(perms).is_group
 
     In addition to doing the above, the tests in the suite confirm that the
     faces are all present after the application of each permutation.

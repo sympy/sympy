@@ -615,3 +615,6 @@ def test_rs_series():
     r = rs_series(cos(p), a, 2)
     assert r.as_expr() == a**QQ(28,15)/6 - a**QQ(5,3) + a**QQ(8,5)/24 - a**QQ(7,5) - \
         a**QQ(4,3)/2 - a**QQ(16,15) - a**QQ(4,5)/2 + 1
+
+    assert rs_series(sin(a)/7, a, 5).as_expr() == (sin(a)/7).series(a, 0,
+            5).removeO()

@@ -223,6 +223,48 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Javascript Code printing
+------------------------
+
+.. module:: sympy.printing.jscode
+
+.. autodata:: sympy.printing.jscode.known_functions
+
+.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+   :members:
+
+   .. autoattribute:: JavascriptCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.jscode.jscode
+
+Octave (and Matlab) Code printing
+---------------------------------
+
+.. module:: sympy.printing.octave
+
+.. autodata:: sympy.printing.octave.known_fcns_src1
+
+.. autodata:: sympy.printing.octave.known_fcns_src2
+
+.. autoclass:: sympy.printing.octave.OctaveCodePrinter
+   :members:
+
+   .. autoattribute:: OctaveCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.octave.octave_code
+
+Theano Code printing
+--------------------
+
+.. module:: sympy.printing.theanocode
+
+.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+   :members:
+
+   .. autoattribute:: TheanoPrinter.printmethod
+
+.. autofunction:: sympy.printing.theanocode.theano_function
+
 Gtk
 ---
 
@@ -307,13 +349,31 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 
-ReprPrinter
------------
+srepr
+-----
 
 .. module:: sympy.printing.repr
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
+
+``srepr()`` gives more low level textual output than ``repr()``
+
+Example::
+
+  >>> repr(5*x**3 + sin(x))
+  '5*x**3 + sin(x)'
+
+  >>> srepr(5*x**3 + sin(x))
+  "Add(Mul(Integer(5), Pow(Symbol('x'), Integer(3))), sin(Symbol('x')))"
+
+``srepr()`` gives the ``repr`` form, which is what ``repr()`` would normally give
+but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s 
+is so verbose, it is unlikely that anyone would want it called by default.
+Another reason is that lists call repr on their elements, like ``print([a, b, c])``
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with 
+SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
+
 
 .. autoclass:: ReprPrinter
    :members:
@@ -376,6 +436,8 @@ CodePrinter
 This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.Assignment
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
 

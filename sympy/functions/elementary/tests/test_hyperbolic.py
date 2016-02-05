@@ -439,6 +439,11 @@ def test_asinh():
     assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
 
 
+def test_asinh_rewrite():
+    x = Symbol('x')
+    assert asinh(x).rewrite(log) == log(x + sqrt(x**2 + 1))
+
+
 def test_asinh_series():
     x = Symbol('x')
     assert asinh(x).series(x, 0, 8) == \
@@ -560,6 +565,18 @@ def test_asech_infinities():
     assert asech(oo) == I*pi/2
     assert asech(-oo) == I*pi/2
     assert asech(zoo) == nan
+
+
+def test_asech_series():
+    x = Symbol('x')
+    t6 = asech(x).expansion_term(6, x)
+    assert t6 == -5*x**6/96
+    assert asech(x).expansion_term(8, x, t6, 0) == -35*x**8/1024
+
+
+def test_asech_rewrite():
+    x = Symbol('x')
+    assert asech(x).rewrite(log) == log(1/x + sqrt(1/x**2 - 1))
 
 
 def test_atanh():

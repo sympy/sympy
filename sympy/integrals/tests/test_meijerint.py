@@ -1,5 +1,5 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
+                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
@@ -146,7 +146,7 @@ def test_meijerint():
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
-    assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
+    assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
@@ -168,6 +168,7 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x - 3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x - mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+    assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)

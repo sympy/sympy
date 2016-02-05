@@ -1,5 +1,5 @@
-from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-    Float, I, sin, exp, log, factorial, frac
+from sympy import AccumBounds, Symbol, floor, nan, oo, E, symbols, ceiling, pi, \
+        Rational, Float, I, sin, exp, log, factorial, frac
 
 from sympy.utilities.pytest import XFAIL
 
@@ -216,6 +216,8 @@ def test_ceiling():
 
 def test_frac():
     assert isinstance(frac(x), frac)
+    assert frac(oo) == AccumBounds(0, 1)
+    assert frac(-oo) == AccumBounds(0, 1)
 
     assert frac(n) == 0
     assert frac(nan) == nan
