@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import I, Rational, Symbol, pi, sqrt
-from sympy.geometry import Line, Point, Point3D, Line3D
+from sympy.geometry import Line, Point, Point2D, Point3D, Line3D
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.pytest import raises
@@ -224,6 +224,16 @@ def test_point3D():
     # Test __sub__
     p_2d = Point(0, 0)
     raises(ValueError, lambda: (p - p_2d))
+
+
+def test_Point2D():
+
+    # Test Distance
+    p1 = Point2D(1, 5)
+    p2 = Point2D(4, 2.5)
+    p3 = (6, 3)
+    assert p1.distance(p2) == sqrt(61)/2
+    assert p2.distance(p3) == sqrt(17)/2
 
 
 def test_issue_9214():
