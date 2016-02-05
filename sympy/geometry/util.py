@@ -13,8 +13,15 @@ are_similar
 from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
-from sympy.core.compatibility import is_sequence, range, string_types
+from sympy.core.compatibility import (
+    is_sequence, range, string_types, ordered)
 from .point import Point, Point2D
+
+
+def _ordered_points(p):
+    """Return the tuple of points sorted numerically according to args"""
+    return tuple(sorted(p, key=lambda x: x.args))
+
 
 def idiff(eq, y, x, n=1):
     """Return ``dy/dx`` assuming that ``eq == 0``.
@@ -214,7 +221,7 @@ def intersection(*entities):
     return res
 
 
-def convex_hull(*args):
+def convex_hull(*args, **kwargs):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -225,12 +232,13 @@ def convex_hull(*args):
     Returns
     =======
 
-    convex_hull : Polygon
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
 
-    This can only be performed on a set of non-symbolic points.
+    This can only be performed on a set of points whose coordinates can
+    be ordered on the number line.
 
     References
     ==========
@@ -251,9 +259,12 @@ def convex_hull(*args):
     ========
 
     >>> from sympy.geometry import Point, convex_hull
-    >>> points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]
+    >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
+    >>> convex_hull(*points, **dict(polygon=False))
+    ([Point2D(-5, 2), Point2D(15, 4)],
+     [Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4)])
 
     """
     from .entity import GeometryEntity
@@ -261,6 +272,7 @@ def convex_hull(*args):
     from .line import Segment
     from .polygon import Polygon
 
+    polygon = kwargs.get('polygon', True)
     p = set()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -284,9 +296,10 @@ def convex_hull(*args):
 
     p = list(p)
     if len(p) == 1:
-        return p[0]
+        return p[0] if polygon else (p[0], None)
     elif len(p) == 2:
-        return Segment(p[0], p[1])
+        s = Segment(p[0], p[1])
+        return s if polygon else (s, None)
 
     def _orientation(p, q, r):
         '''Return positive if p-q-r are clockwise, neg if ccw, zero if
@@ -296,7 +309,10 @@ def convex_hull(*args):
     # scan to find upper and lower convex hulls of a set of 2d points.
     U = []
     L = []
-    p.sort(key=lambda x: x.args)
+    try:
+        p.sort(key=lambda x: x.args)
+    except TypeError:
+        raise ValueError("The points could not be sorted.")
     for p_i in p:
         while len(U) > 1 and _orientation(U[-2], U[-1], p_i) <= 0:
             U.pop()
@@ -308,27 +324,30 @@ def convex_hull(*args):
     convexHull = tuple(L + U[1:-1])
 
     if len(convexHull) == 2:
-        return Segment(convexHull[0], convexHull[1])
-    return Polygon(*convexHull)
+        s = Segment(convexHull[0], convexHull[1])
+        return s if polygon else (s, None)
+    if polygon:
+        return Polygon(*convexHull)
+    else:
+        U.reverse()
+        return (U, L)
 
 
 def closest_points(*args):
-    """The closest pair of points among a given set of points in 2D plane.
+    """Return the subset of points from a set of points that were
+    the closest to each other in the 2D plane.
 
     Parameters
     ==========
 
     args : a collection of Points on 2D plane.
 
-    Returns
-    =======
-
-    pair : A pair of closest points
-
     Notes
     =====
 
-    This can only be performed on a set of non-symbolic points.
+    This can only be performed on a set of points whose coordinates can
+    be ordered on the number line. If there are no ties then a single
+    pair of Points will be in the set.
 
     References
     ==========
@@ -341,74 +360,65 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Point2D
-    >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
-    >>> closest_points(*points)
-    (Point2D(8, 5), Point2D(7, 6))
-
-    >>> from sympy.geometry import closest_points, Point2D
-    >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
-    >>> closest_points(*points)
-    (Point2D(62, 73), Point2D(59, 59))
+    >>> from sympy.geometry import closest_points, Point2D, Triangle
+    >>> Triangle(sss=(3, 4, 5)).args
+    (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
+    >>> closest_points(*_)
+    set([(Point2D(0, 0), Point2D(3, 0))])
 
     """
     from collections import deque
-    from math import sqrt, pow
+    from math import hypot
 
-    points = list(args)
-    for point in points:
-        if not isinstance(point, Point2D):
-            raise NotImplementedError('The point must be an instance of Point2D.')
-        if not all([point.x.is_number, point.y.is_number]):
-            raise NotImplementedError('The point co-ordinates must be real numbers.')
+    p = [Point2D(i) for i in set(args)]
+    if len(p) < 2:
+        raise ValueError('At least 2 distinct points must be given.')
 
-    if len(points) < 2:
-        raise NotImplementedError('At-least 2 points must be inserted')
-    p = points
-    p.sort(key=lambda x: x.args)
+    try:
+        p.sort(key=lambda x: x.args)
+    except TypeError:
+        raise ValueError("The points could not be sorted.")
 
-    box = deque()
-    box.append(p[0])
-
-    best_dist = sqrt(pow(p[1].y - box[0].y, 2) + pow(p[1].x - box[0].x, 2))
-
+    rv = [(0, 1)]
+    best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
+    i = 2
     left = 0
-    i = 1
-    best_pair = (p[0], p[1])
-
+    box = deque([0, 1])
     while i < len(p):
-        j = 0
-        while left < i and p[i].x - p[left].x > best_dist:
-            box.remove(p[left])
-            left = left + 1
+        while left < i and p[i][0] - p[left][0] > best_dist:
+            box.popleft()
+            left += 1
 
-        for j in range(len(box)):
-            if best_dist != min(best_dist, sqrt(pow(p[i].y - box[j].y, 2) + pow(p[i].x - box[j].x, 2))):
-                best_pair = (p[i], box[j])
-                best_dist = min(best_dist, sqrt(pow(p[i].y - box[j].y, 2) + pow(p[i].x - box[j].x, 2)))
-        box.append(p[i])
-        i = i + 1
+        for j in box:
+            d = hypot(p[i].x - p[j].x, p[i].y - p[j].y)
+            if d < best_dist:
+                rv = [(j, i)]
+            elif d == best_dist:
+                rv.append((j, i))
+            else:
+                continue
+            best_dist = d
+        box.append(i)
+        i += 1
 
-    return best_pair
+    return set([tuple([p[i] for i in pair]) for pair in rv])
 
 
 def farthest_points(*args):
-    """The farthest pair of points among a given set of points in 2D plane.
+    """Return the subset of points from a set of points that were
+    the furthest apart from each other in the 2D plane.
 
     Parameters
     ==========
 
     args : a collection of Points on 2D plane.
 
-    Returns
-    =======
-
-    pair : A pair of farthest points
-
     Notes
     =====
 
-    This can only be performed on a set of non-symbolic points.
+    This can only be performed on a set of points whose coordinates can
+    be ordered on the number line. If there are no ties then a single
+    pair of Points will be in the set.
 
     References
     ==========
@@ -421,62 +431,54 @@ def farthest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import farthest_points, Point2D
-    >>> points = [Point2D(5, 2), Point2D(7, 6), Point2D(3, 9), Point2D(9, 4), Point2D(8, 5)]
-    >>> farthest_points(*points)
-    (Point2D(3, 9), Point2D(9, 4))
-
-    >>> from sympy.geometry import farthest_points, Point2D
-    >>> points = [Point2D(80, 89), Point2D(11, 85), Point2D(32, 51), Point2D(59, 59), Point2D(39, 80), Point2D(62, 73)]
-    >>> farthest_points(*points)
-    (Point2D(11, 85), Point2D(80, 89))
+    >>> from sympy.geometry import farthest_points, Point2D, Triangle
+    >>> Triangle(sss=(3, 4, 5)).args
+    (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
+    >>> farthest_points(*_)
+    set([(Point2D(0, 0), Point2D(3, 4))])
 
     """
+    from math import hypot
 
     def rotatingCalipers(Points):
-        def hulls(Points):
-            def orientation(p, q, r):
-                return (q.y - p.y) * (r.x - p.x) - (q.x - p.x) * (r.y - p.y)
-            U = []
-            L = []
-            for p in Points:
-                while len(U) > 1 and orientation(U[-2], U[-1], p) <= 0:
-                    U.pop()
-                while len(L) > 1 and orientation(L[-2], L[-1], p) >= 0:
-                    L.pop()
-                U.append(p)
-                L.append(p)
-            return U, L     # upper and lower
-        U, L = hulls(Points)
-        i = 0
-        j = len(L) - 1
-        while i < len(U) - 1 or j > 0:
-            yield U[i], L[j]
-            # if all the way through one side of hull, advance the other side
-            if i == len(U) - 1:
-                j -= 1
-            elif j == 0:
-                i += 1
-            # still points left on both lists, compare slopes of next hull edges
-            # being careful to avoid divide-by-zero in slope calculation
-            elif (U[i+1].y - U[i].y) * (L[j].x - L[j-1].x) > \
-                    (L[j].y - L[j-1].y) * (U[i+1].x - U[i].x):
-                i += 1
-            else:
-                j -= 1
+        U, L = convex_hull(*Points, **dict(polygon=False))
 
-    points = list(args)
-    for point in points:
-        if not isinstance(point, Point2D):
-            raise NotImplementedError('The point must be an instance of Point2D.')
-        if not all([point.x.is_number, point.y.is_number]):
-            raise NotImplementedError('The point co-ordinates must be real numbers.')
-    if len(points) < 2:
-        raise NotImplementedError('At-least 2 points must be inserted')
-    points.sort(key=lambda x: x.args)
-    diam, pair = max([((h.x - q.x)**2 + (h.y - q.y)**2, (h, q))
-                     for h, q in rotatingCalipers(points)])
-    return pair
+        if L is None:
+            if isinstance(U, Point):
+                raise ValueError('At least two distinct points must be given.')
+            yield U.args
+        else:
+            i = 0
+            j = len(L) - 1
+            while i < len(U) - 1 or j > 0:
+                yield U[i], L[j]
+                # if all the way through one side of hull, advance the other side
+                if i == len(U) - 1:
+                    j -= 1
+                elif j == 0:
+                    i += 1
+                # still points left on both lists, compare slopes of next hull edges
+                # being careful to avoid divide-by-zero in slope calculation
+                elif (U[i+1].y - U[i].y) * (L[j].x - L[j-1].x) > \
+                        (L[j].y - L[j-1].y) * (U[i+1].x - U[i].x):
+                    i += 1
+                else:
+                    j -= 1
+
+    rv = []
+    diam = 0
+    for pair in rotatingCalipers(args):
+        h, q = _ordered_points(pair)
+        d = hypot(h.x - q.x, h.y - q.y)
+        if d > diam:
+            rv = [(h, q)]
+        elif d == diam:
+            rv.append((h, q))
+        else:
+            continue
+        diam = d
+
+    return set(rv)
 
 
 def are_coplanar(*e):

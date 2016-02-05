@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import Symbol, sqrt, Derivative
 from sympy.geometry import Point, Point2D, Polygon, Segment, convex_hull, intersection, centroid
-from sympy.geometry.util import idiff, closest_points, farthest_points
+from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 
@@ -27,7 +27,14 @@ def test_util():
     # coverage for some leftover functions in sympy.geometry.util
     assert intersection(Point(0, 0)) == []
     raises(ValueError, lambda: intersection(Point(0, 0), 3))
+
+
+def test_convex_hull():
     raises(ValueError, lambda: convex_hull(Point(0, 0), 3))
+    points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
+    assert convex_hull(*points, **dict(polygon=False)) == (
+        [Point2D(-5, -2), Point2D(1, -1), Point2D(3, -1), Point2D(15, -4)],
+        [Point2D(-5, -2), Point2D(15, -4)])
 
 
 def test_util_centroid():
@@ -41,19 +48,66 @@ def test_util_centroid():
     assert centroid(Point(0, 0), Point(0, 0), Point(2, 0)) == Point(2, 0)/3
 
 
-def test_closest_points():
-    points = [Point2D(1, 1), Point2D(2, 2), Point2D(11, 11)]
-    assert closest_points(*points) == (Point2D(1, 1), Point2D(2, 2))
-    points = [Point2D(38, 40), Point2D(83, 89), Point2D(74, 46), Point2D(76, 73), Point2D(75, 13), Point2D(98, 87), Point2D(5, 73), Point2D(75, 18), Point2D(30, 7)]
-    assert closest_points(*points) == (Point2D(75, 18), Point2D(75, 13))
-    points = [Point2D(34, 54), Point2D(92, 10), Point2D(99, 2), Point2D(29, 4), Point2D(4, 51), Point2D(2, 40), Point2D(18, 60), Point2D(30, 69), Point2D(10, 32)]
-    assert closest_points(*points) == (Point2D(99, 2), Point2D(92, 10))
+def test_farthest_points_closest_points():
+    from random import randint
+    from sympy.utilities.iterables import subsets
 
+    for how in (min, max):
+        if how is min:
+            func = closest_points
+        else:
+            func = farthest_points
 
-def test_farthest_points():
-    points = [Point2D(1, 1), Point2D(2, 2), Point2D(11, 11)]
-    assert farthest_points(*points) == (Point2D(1, 1), Point2D(11, 11))
-    points = [Point2D(38, 40), Point2D(83, 89), Point2D(74, 46), Point2D(76, 73), Point2D(75, 13), Point2D(98, 87), Point2D(5, 73), Point2D(75, 18), Point2D(30, 7)]
-    assert farthest_points(*points) == (Point2D(98, 87), Point2D(30, 7))
-    points = [Point2D(34, 54), Point2D(92, 10), Point2D(99, 2), Point2D(29, 4), Point2D(4, 51), Point2D(2, 40), Point2D(18, 60), Point2D(30, 69), Point2D(10, 32)]
-    assert farthest_points(*points) == (Point2D(4, 51), Point2D(99, 2))
+        raises(ValueError, lambda: func(Point2D(0, 0), Point2D(0, 0)))
+
+        # 3rd pt dx is close and pt is closer to 1st pt
+        p1 = [Point2D(0, 0), Point2D(3, 0), Point2D(1, 1)]
+        # 3rd pt dx is close and pt is closer to 2nd pt
+        p2 = [Point2D(0, 0), Point2D(3, 0), Point2D(2, 1)]
+        # 3rd pt dx is close and but pt is not closer
+        p3 = [Point2D(0, 0), Point2D(3, 0), Point2D(1, 10)]
+        # 3rd pt dx is not closer and it's closer to 2nd pt
+        p4 = [Point2D(0, 0), Point2D(3, 0), Point2D(4, 0)]
+        # 3rd pt dx is not closer and it's closer to 1st pt
+        p5 = [Point2D(0, 0), Point2D(3, 0), Point2D(-1, 0)]
+        # duplicate point doesn't affect outcome
+        dup = [Point2D(0, 0), Point2D(3, 0), Point2D(3, 0), Point2D(-1, 0)]
+        # symbolic
+        x = Symbol('x', positive=True)
+        s = [Point2D(a) for a in ((x, 1), (x + 3, 2), (x + 2, 2))]
+
+        for points in (p1, p2, p3, p4, p5, s, dup):
+            d = how(i.distance(j) for i, j in subsets(points, 2))
+            ans = a, b = list(func(*points))[0]
+            a.distance(b) == d
+            assert ans == _ordered_points(ans)
+
+        # if the following ever fails, the above tests were not sufficient
+        # and the logical error in the routine should be fixed
+        points = set()
+        while len(points) != 7:
+            points.add(Point2D(randint(1, 100), randint(1, 100)))
+        points = list(points)
+        d = how(i.distance(j) for i, j in subsets(points, 2))
+        ans = a, b = list(func(*points))[0]
+        a.distance(b) == d
+        assert ans == _ordered_points(ans)
+
+    a, b, c = list(
+        _ordered_points((
+        Point2D(0, 0), Point2D(1, 0), Point2D(1/2, sqrt(3)/2))))
+    ans = set([_ordered_points((i, j))
+        for i, j in subsets((a, b, c), 2)])
+    assert closest_points(b, c, a) == ans
+    assert farthest_points(b, c, a) == ans
+
+    # unique to farthest
+    points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
+    assert farthest_points(*points) == set(
+        [(Point2D(-5, 2), Point2D(15, 4))])
+    points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
+    assert farthest_points(*points) == set(
+        [(Point2D(-5, -2), Point2D(15, -4))])
+    assert farthest_points((1, 1), (0, 0)) == set(
+        [(Point2D(0, 0), Point2D(1, 1))])
+    raises(ValueError, lambda: farthest_points((1, 1)))
