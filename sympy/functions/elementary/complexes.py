@@ -257,7 +257,7 @@ class sign(Function):
     is_finite = True
     is_complex = True
 
-    def doit(self):
+    def doit(self, **hints):
         if self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
         return self
