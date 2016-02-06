@@ -238,7 +238,11 @@ class ImageSet(Set):
             solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
                          L.variables).args[0])
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
+            solnsSet = solveset(L.expr-other, L.variables[0])
+            if solnsSet.is_FiniteSet:
+                solns = list(solveset(L.expr - other, L.variables[0]))
+            else:
+                raise TypeError("Set obtained is not Finite Set")
 
         for soln in solns:
             try:
