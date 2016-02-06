@@ -88,6 +88,7 @@ Matrix([
 
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray
+from .arrayop import tensorproduct, tensorcontraction
 
 Array = ImmutableDenseNDimArray
 NDimArray = ImmutableDenseNDimArray
