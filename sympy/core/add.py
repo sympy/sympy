@@ -422,8 +422,6 @@ class Add(Expr, AssocOp):
         >>> (3*x*y).as_two_terms()
         (3, x*y)
         """
-        if len(self.args) == 1:
-            return S.Zero, self
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
@@ -437,12 +435,6 @@ class Add(Expr, AssocOp):
         for f in expr.args:
             ni, di = f.as_numer_denom()
             nd[di].append(ni)
-        # put infinity in the numerator
-        if S.Zero in nd:
-            n = nd.pop(S.Zero)
-            assert len(n) == 1
-            n = n[0]
-            nd[S.One].append(n/S.Zero)
 
         # check for quick exit
         if len(nd) == 1:
