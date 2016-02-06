@@ -500,7 +500,7 @@ def orthogonalize(*vlist, **kwargs):
     >>> i, j, k = C.base_vectors()
     >>> v1 = i + 2*j
     >>> v2 = 2*i + 3*j
-    >>> orthogonalize([v1, v2])
+    >>> orthogonalize(v1, v2)
     [C.i + 2*C.j, 2/5*C.i + (-1/5)*C.j]
 
     References
