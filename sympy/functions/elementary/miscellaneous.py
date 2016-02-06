@@ -455,7 +455,7 @@ class MinMaxBase(Expr, LatticeOp):
         return fuzzy_and(arg.is_real for arg in self.args)
 
 
-class Max(MinMaxBase, Application):
+class Max(MinMaxBase, Application) :
     """
     Return, if possible, the maximum value of the list.
 

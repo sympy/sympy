@@ -206,7 +206,7 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-
+        from sympy import Symbol, symbols, Min
         if a is None or b is None:
             # In this case, it is just simple substitution
             return piecewise_fold(
@@ -215,6 +215,8 @@ class Piecewise(Function):
         mul = 1
         if (a == b) == True:
             return S.Zero
+        elif a.atoms(Symbol) or b.atoms(Symbol):
+            pass
         elif (a > b) == True:
             a, b, mul = b, a, -1
         elif (a <= b) != True:
