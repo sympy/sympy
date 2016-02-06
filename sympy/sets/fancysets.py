@@ -9,6 +9,8 @@ from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
 from sympy.core.singleton import Singleton, S, sympify
 from sympy.core.sympify import _sympify
 from sympy.core.function import Lambda
+from textwrap import fill, dedent
+
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -242,7 +244,10 @@ class ImageSet(Set):
             if solnsSet.is_FiniteSet:
                 solns = list(solveset(L.expr - other, L.variables[0]))
             else:
-                raise TypeError("Set obtained is not Finite Set")
+                filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+                raise NotImplementedError(filldedent('''
+                Determining that whether an ImageSet contains %s has not been implemented.'''
+                                                     % solveset(L.expr-other, L.variables[0])))
 
         for soln in solns:
             try:
