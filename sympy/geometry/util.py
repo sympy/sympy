@@ -368,7 +368,8 @@ def closest_points(*args):
 
     """
     from collections import deque
-    from math import hypot
+    from math import hypot, sqrt as _sqrt
+    from sympy.functions.elementary.miscellaneous import sqrt
 
     p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
@@ -378,6 +379,13 @@ def closest_points(*args):
         p.sort(key=lambda x: x.args)
     except TypeError:
         raise ValueError("The points could not be sorted.")
+
+    if any(not i.is_Rational for j in p for i in j.args):
+        def hypot(x, y):
+            arg = x*x + y*y
+            if arg.is_Rational:
+                return _sqrt(arg)
+            return sqrt(arg)
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
@@ -438,7 +446,7 @@ def farthest_points(*args):
     set([(Point2D(0, 0), Point2D(3, 4))])
 
     """
-    from math import hypot
+    from math import hypot, sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -464,6 +472,15 @@ def farthest_points(*args):
                     i += 1
                 else:
                     j -= 1
+
+    p = [Point2D(i) for i in set(args)]
+
+    if any(not i.is_Rational for j in p for i in j.args):
+        def hypot(x, y):
+            arg = x*x + y*y
+            if arg.is_Rational:
+                return _sqrt(arg)
+            return sqrt(arg)
 
     rv = []
     diam = 0
