@@ -1117,5 +1117,15 @@ def test_issue_4950():
         -2.4*exp(8*x) - 12.0*exp(5*x)
 
 
+def test_issue_10434():
+    w = symbols('w' , positive = True)
+    res = (1/(2 * pi) * integrate(exp(1j * x * n), (x, -w, w)))
+    assert res ==\
+     Piecewise((2*w, Eq(n, 0)), (-1.0*I*exp(1.0*I*n*w)/n + 1.0*I*exp(-1.0*I*n*w)/n, True))/(2*pi)
+    res_sin = res.rewrite(sin)
+    final = simplify(res_sin)
+    assert final == Piecewise((w/pi, Eq(n, 0)), (1.0*sin(1.0*n*w)/(pi*n), True))
+
+
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5

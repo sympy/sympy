@@ -215,7 +215,7 @@ class Piecewise(Function):
         mul = 1
         if (a == b) == True:
             return S.Zero
-        elif a.atoms(Symbol) or b.atoms(Symbol):
+        elif isinstance((a,b) , Symbol) and (a.atoms(Symbol) or b.atoms(Symbol)):
             pass
         elif (a > b) == True:
             a, b, mul = b, a, -1
