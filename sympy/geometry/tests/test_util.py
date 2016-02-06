@@ -93,9 +93,9 @@ def test_farthest_points_closest_points():
         a.distance(b) == d
         assert ans == _ordered_points(ans)
 
-    a, b, c = list(
-        _ordered_points((
-        Point2D(0, 0), Point2D(1, 0), Point2D(1/2, sqrt(3)/2))))
+    # equidistant points
+    a, b, c = (
+        Point2D(0, 0), Point2D(1, 0), Point2D(1/2, sqrt(3)/2))
     ans = set([_ordered_points((i, j))
         for i, j in subsets((a, b, c), 2)])
     assert closest_points(b, c, a) == ans
