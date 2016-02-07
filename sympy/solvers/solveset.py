@@ -487,8 +487,19 @@ def solveset_real(f, symbol):
     elif f.is_Piecewise:
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
-        for (expr, in_set) in expr_set_pairs:
-            solns = solveset_real(expr, symbol).intersect(in_set)
+        expr_cond = {}
+        sym_interval ={}
+        for other_n, (expr_tmp, cond) in enumerate(f.args):
+            expr_cond[expr_tmp] = cond
+        for (expr, in_set_symbol) in expr_set_pairs:
+            solns_tmp = solveset_real(expr, symbol)
+            # by default symbol interval. many times cond symbols are expr symbols
+            for sym in expr.atoms(Symbol):
+                if sym == expr_cond[expr].atoms(Symbol):
+                    sym_interval[sym] = in_set_symbol
+                else:
+                    sym_interval[sym] = (S.Reals)
+            solns = solns_tmp.intersect(sym_interval[symbol])
             result = result + solns
     else:
         lhs, rhs_s = invert_real(f, 0, symbol)
