@@ -45,7 +45,8 @@ def _unevaluated_Add(*args):
     >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
-
+    >>> uAdd(x + 1, x + 2)
+    x + x + 3
     """
     args = list(args)
     newargs = []
