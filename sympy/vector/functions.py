@@ -2,7 +2,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
-from sympy import sympify, diff, integrate, S
+from sympy import sympify, diff, integrate, S, simplify
 
 
 def express(expr, system, system2=None, variables=False):
@@ -477,7 +477,7 @@ def _path(from_object, to_object):
 
 def orthogonalize(*vlist, **kwargs):
     """
-    Takes a list of independent vectors and orthogonalizes them
+    Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
     orthogonal or orthonormal vectors.
 
@@ -515,11 +515,11 @@ def orthogonalize(*vlist, **kwargs):
         raise TypeError('Each element must be of Type Vector')
 
     ortho_vlist = []
-    for i in range(len(vlist)):
+    for i, term in enumerate(vlist):
         term = vlist[i]
         for j in range(i):
             term -= ortho_vlist[j].vec_project(vlist[i])
-        if term == Vector.zero:
+        if simplify(term).equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)
 
