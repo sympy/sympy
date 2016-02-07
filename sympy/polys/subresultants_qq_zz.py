@@ -7,8 +7,8 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
-from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly)
-from sympy import (pprint, QQ, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly, pprint)
+from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
     '''
@@ -113,6 +113,15 @@ def sylvester(f, g, x, method = 1):
                 j = j + 1
             k = k + 1
         return M
+
+def sign_seq(poly_seq, x):
+    """
+    Given a sequence of polynomials poly_seq, it returns
+    the sequence of signs of the leading coefficients of
+    the polynomials in poly_seq.
+
+    """
+    return [sign(LC(poly_seq[i], x)) for i in range(len(poly_seq))]
 
 def sturm_pg(p, q, x, method=0):
     """
@@ -1049,6 +1058,25 @@ def rem_z(p, q, x):
     '''
     delta = (degree(p, x) - degree(q, x) + 1)
     return rem(Abs(LC(q, x))**delta  *  p, q, x)
+
+def quo_z(p, q, x):
+    """
+    Intended mainly for p, q polynomials in Z[x] so that,
+    on dividing p by q, the quotient will also be in Z[x]. (However,
+    it also works fine for polynomials in Q[x].)
+
+    It premultiplies p by the _absolute_ value of the leading coefficient
+    of q, raised to the power deg(p) - deg(q) + 1 and then performs
+    polynomial division in Q[x], using the function quo(p, q, x).
+
+    By contrast the function pquo(p, q, x) does _not_ use the absolute
+    value of the leading coefficient of q.
+
+    See also function rem_z(p, q, x) for additional comments and references.
+
+    """
+    delta = (degree(p, x) - degree(q, x) + 1)
+    return quo(Abs(LC(q, x))**delta  *  p, q, x)
 
 def subresultants_amv(f, g, x):
     """
