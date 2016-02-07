@@ -507,3 +507,16 @@ def test_issue_10295():
     assert sA.shape == (2, 3)
     for (ri, ci), val in numpy.ndenumerate(A):
         assert sA[ri, ci] == val
+
+    B = numpy.array([-7, x, 3*y**2])
+    sB = S(B)
+    assert B[0] == -7
+    assert B[1] == x
+    assert B[2] == 3*y**2
+
+    C = numpy.arange(0, 24)
+    C.resize(2,3,4)
+    sC = S(C)
+    assert sC.dtype == object
+    assert sC[0, 0, 0].is_integer
+    assert sC[0, 0, 0] == 0
