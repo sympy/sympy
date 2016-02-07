@@ -517,6 +517,8 @@ def orthogonalize(vlist, orthonormal=False):
     for i, term in enumerate(vlist):
         for j in range(i):
             term -= ortho_vlist[j].projection(vlist[i])
+        # TODO : The following line introduces a performance issue
+        # and needs to be changed once a good solution for issue #10279 is found.
         if simplify(term).equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)
