@@ -517,6 +517,5 @@ def test_issue_10295():
     C = numpy.arange(0, 24)
     C.resize(2,3,4)
     sC = S(C)
-    assert sC.dtype == object
     assert sC[0, 0, 0].is_integer
     assert sC[0, 0, 0] == 0

@@ -7,9 +7,7 @@ from inspect import getmro
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
-from ..external import import_module
 
-numpy = import_module('numpy')
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -278,11 +276,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
-    if numpy:
-        if isinstance(a, numpy.ndarray):
-            func = numpy.vectorize(lambda elem: sympify(
-                elem, locals, convert_xor, strict, rational, evaluate))
-            return func(a)
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
 
     if iterable(a):
         try:
