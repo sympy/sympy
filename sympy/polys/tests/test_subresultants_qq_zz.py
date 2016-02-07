@@ -1,8 +1,8 @@
 from sympy import var, sturm, subresultants, prem, pquo
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, eye
 from sympy.polys.subresultants_qq_zz import (sylvester, bezout,
     subresultants_bezout, modified_subresultants_bezout,
-    process_bezout_output,
+    process_bezout_output, backward_eye,
     sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
     euclid_amv, modified_subresultants_pg, subresultants_pg,
     subresultants_amv_q, quo_z, rem_z, subresultants_amv,
@@ -39,8 +39,9 @@ def test_bezout():
 
     p = -2*x**5+7*x**3+9*x**2-3*x+1
     q = -10*x**4+21*x**2+18*x-3
-    assert bezout(p, q, x).det() == sylvester(p, q, x, 2).det()
-    assert bezout(p, q, x).det() != sylvester(p, q, x, 1).det()
+    assert bezout(p, q, x, 'bz').det() == sylvester(p, q, x, 2).det()
+    assert bezout(p, q, x, 'bz').det() != sylvester(p, q, x, 1).det()
+    assert bezout(p, q, x, 'prs') == backward_eye(5) * bezout(p, q, x, 'bz') * backward_eye(5)
 
 def test_subresultants_bezout():
     x = var('x')

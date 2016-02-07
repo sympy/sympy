@@ -7,7 +7,7 @@ Created on Mon Dec 28 13:25:02 2015
 
 from __future__ import print_function, division
 
-from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly, pprint)
+from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
 from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
@@ -123,27 +123,34 @@ def sign_seq(poly_seq, x):
     """
     return [sign(LC(poly_seq[i], x)) for i in range(len(poly_seq))]
 
-def bezout(p, q, x):
+def bezout(p, q, x, method='bz'):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
     that degree(p, x) >= degree(q, x).
 
-    Returns Bezout's matrix of p and q of dimensions deg(p) x deg(p).
-    This symmetric matrix is equivalent to sylvester2, Sylvester's
-    matrix of 1853, whose dimensions are 2*deg(p) x 2*deg(p).
+    The default option bezout(p, q, x, method='bz') returns Bezout's
+    symmetric matrix of p and q, of dimensions deg(p) x deg(p). The
+    determinant of this matrix is equal to the determinant of sylvester2,
+    Sylvester's matrix of 1853, whose dimensions are 2*deg(p) x 2*deg(p);
+    however, the subresultants of these two matrices may vary in sign.
+
+    The other option, bezout(p, q, x, 'prs'), is of interest to us
+    in this module because it returns a matrix equivalent to sylvester2.
+    In this case all subresultants of the two matrices are identical.
 
     Both the subresultant polynomial remainder sequence (prs) and
     the modified subresultant prs of p and q can be computed by
     evaluating determinants of appropriately selected submatrices of
-    bezout(p, q, x) --- one determinant per coefficient of the
+    bezout(p, q, x, 'prs') --- one determinant per coefficient of the
     remainder polynomials.
 
-    Caveat: The matrix returned by bezout(p, q, x) differs from the ones
-    encountered in the literature, in that --- in each row --- the leading
-    coefficient (LC) of the corresponding polynomial is the first element.
-    In the literature, by contrast, the Bezout matrix is first defined as
-    having the LC's in the last row positions and then it is transformed into
-    ours.
+    The matrices bezout(p, q, x, 'bz') and bezout(p, q, x, 'prs')
+    are related by the formula
+
+    bezout(p, q, x, 'prs') =
+    backward_eye(deg(p)) * bezout(p, q, x, 'bz') * backward_eye(deg(p)),
+
+    where backward_eye() is the backward identity function.
 
     References:
     ===========
@@ -159,16 +166,33 @@ def bezout(p, q, x):
     expr = p * q.subs(x,y) - p.subs(x,y) * q
 
     # hence expr is exactly divisible by x - y
-    poly = Poly( quo(expr, x-y) )
+    poly = Poly( quo(expr, x-y), x, y)
 
     # form Bezout matrix and store them in B as indicated to get
     # the LC coefficient of each poly in the first position of each row
     B = zeros(degP)
     for i in range(degP):
         for j in range(degP):
-            B[degP - 1 - i, degP - 1 - j] = poly.nth(i, j)
-
+            if method == 'prs':
+                B[degP - 1 - i, degP - 1 - j] = poly.nth(i, j)
+            else:
+                B[i, j] = poly.nth(i, j)
     return B
+
+def backward_eye(n):
+    '''
+    Returns the backward identity matrix of dimensions n x n.
+
+    Needed to "turn" the Bezout matrices
+    so that the leading coefficients are first.
+    See docstring of the function bezout(p, q, x, method='bz').
+    '''
+    M = eye(n)  # identity matrix of order n
+
+    for i in range(int(M.rows / 2)):
+        M.row_swap(0 + i, M.rows - 1 - i)
+
+    return M
 
 def process_bezout_output(poly_seq, x):
     """
@@ -204,13 +228,13 @@ def subresultants_bezout(p, q, x):
 
     Computes the subresultant polynomial remainder sequence
     of p, q by evaluating determinants of appropriately selected
-    submatrices of bezout(p, q, x). The dimensions of the latter
-    are deg(p) x deg(p).
+    submatrices of bezout(p, q, x, 'prs'). The dimensions of the
+    latter are deg(p) x deg(p).
 
     Each coefficient is computed by evaluating the determinant of the
-    corresponding submatrix of bezout(p, q, x).
+    corresponding submatrix of bezout(p, q, x, 'prs').
 
-    bezout(p, q, x) is used instead of sylvester1(p, q, x),
+    bezout(p, q, x, 'prs) is used instead of sylvester(p, q, x, 1),
     Sylvester's matrix of 1840, because the dimensions of the latter
     are (deg(p) + deg(q)) x (deg(p) + deg(q)).
 
@@ -244,7 +268,7 @@ def subresultants_bezout(p, q, x):
     F = LC(f, x)**(degF - degG)
 
     # form the bezout matrix
-    B = bezout(f, g, x)
+    B = bezout(f, g, x, 'prs')
 
     # pick appropriate submatrices of B
     # and form subresultant polys
@@ -275,13 +299,13 @@ def modified_subresultants_bezout(p, q, x):
 
     Computes the modified subresultant polynomial remainder sequence
     of p, q by evaluating determinants of appropriately selected
-    submatrices of bezout(p, q, x). The dimensions of the latter
-    are deg(p) x deg(p).
+    submatrices of bezout(p, q, x, 'prs'). The dimensions of the
+    latter are deg(p) x deg(p).
 
     Each coefficient is computed by evaluating the determinant of the
-    corresponding submatrix of bezout(p, q, x).
+    corresponding submatrix of bezout(p, q, x, 'prs').
 
-    bezout(p, q, x) is used instead of sylvester2(p, q, x),
+    bezout(p, q, x, 'prs') is used instead of sylvester(p, q, x, 2),
     Sylvester's matrix of 1853, because the dimensions of the latter
     are 2*deg(p) x 2*deg(p).
 
@@ -319,7 +343,7 @@ def modified_subresultants_bezout(p, q, x):
     SR_L = [f, g]      # subresultant list
 
     # form the bezout matrix
-    B = bezout(f, g, x)
+    B = bezout(f, g, x, 'prs')
 
     # pick appropriate submatrices of B
     # and form subresultant polys
