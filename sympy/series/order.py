@@ -303,8 +303,8 @@ class Order(Expr):
         if order_symbols is None:
             order_symbols = self.args[1:]
         else:
-            if not all(o[1] == order_symbols[0][1] for o in order_symbols) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
+                    not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
@@ -337,8 +337,8 @@ class Order(Expr):
         if expr is S.NaN:
             return False
         if expr.is_Order:
-            if not all(p == expr.point[0] for p in expr.point) and \
-               not all(p == self.point[0] for p in self.point):
+            if (not all(p == expr.point[0] for p in expr.point) and
+                   not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
             else:
@@ -385,6 +385,8 @@ class Order(Expr):
             for s in common_symbols:
                 l = ratio.limit(s, point)
                 from sympy.series.limits import Limit
+
+		l = Limit(ratio, s, point).doit(heuristics=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:
