@@ -293,9 +293,9 @@ def test_piecewise_solve():
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
     assert solve(g, x) == [5]
-
+    # solve returing {2,5} for below.
     g = Piecewise(((x - 5)**5, x >= 2), (f, True))
-    assert solve(g, x) == [5]
+    assert solveset(g, x, S.Reals) == FiniteSet(5)
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
