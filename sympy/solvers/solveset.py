@@ -469,10 +469,10 @@ def solveset_real(f, symbol):
 
     result = EmptySet()
 
-    if f.expand().is_zero:
-        return S.Reals
-    elif not f.has(symbol):
+    if not f.has(symbol):
         return EmptySet()
+    elif f.expand().is_zero:
+        return S.Reals
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
