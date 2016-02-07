@@ -469,10 +469,10 @@ def solveset_real(f, symbol):
 
     result = EmptySet()
 
-    if not f.has(symbol):
-        return EmptySet()
-    elif f.expand().is_zero:
+    if f.expand().is_zero:
         return S.Reals
+    elif not f.has(symbol):
+        return EmptySet()
     elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
@@ -495,12 +495,18 @@ def solveset_real(f, symbol):
             solns_tmp = solveset_real(expr, symbol)
             # by default symbol interval. many times cond symbols are expr symbols
             for sym in expr.atoms(Symbol):
-                if sym == expr_cond[expr].atoms(Symbol):
+                if expr_cond[expr] != True:
+                    cond_symbol = expr_cond[expr].atoms(Symbol)
+                if sym == cond_symbol:
                     sym_interval[sym] = in_set_symbol
-                else:
+                elif sym != cond_symbol:
                     sym_interval[sym] = (S.Reals)
-            solns = solns_tmp.intersect(sym_interval[symbol])
-            result = result + solns
+            if not expr.has(Symbol):
+                solns = solns_tmp.intersect(in_set_symbol)
+                result = result + solns
+            else:
+                solns = solns_tmp.intersect(sym_interval[symbol])
+                result = result + solns
     else:
         lhs, rhs_s = invert_real(f, 0, symbol)
         if lhs == symbol:

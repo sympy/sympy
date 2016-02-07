@@ -628,7 +628,7 @@ def test_piecewise():
     )
     y = Symbol('y', positive=True)
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
-    assert solveset(f, x, domain=S.Reals) == FiniteSet(2)
+    assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
 
 def test_solveset_complex_polynomial():
@@ -1058,6 +1058,8 @@ def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
 
 
+def test_issue_10534():
+    assert solveset_real(Piecewise((x, y<0), (x + 1, True)), x) == FiniteSet(-1,0)
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
