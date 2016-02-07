@@ -475,7 +475,7 @@ def _path(from_object, to_object):
         i -= 1
     return index, from_path
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -509,7 +509,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')
