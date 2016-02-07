@@ -186,13 +186,15 @@ def test_vector_cross():
     assert k ^ k == Vector.zero
 
 
-def test_vec_project():
+def test_projection():
     v1 = i + j + k
     v2 = 3*i + 4*j
-    assert v1.vec_project(v1) == i + j + k
-    assert v1.vec_project(v2) == 7/3*C.i + 7/3*C.j + 7/3*C.k
-    assert v1.vec_project(v1, scalar=True) == 1
-    assert v1.vec_project(v2, scalar=True) == 7/3
+    v3 = 0*i + 0*j
+    assert v1.projection(v1) == i + j + k
+    assert v1.projection(v2) == 7/3*C.i + 7/3*C.j + 7/3*C.k
+    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v2, scalar=True) == 7/3
+    assert v3.projection(v1) == Vector.zero
 
 
 def test_vector_diff_integrate():

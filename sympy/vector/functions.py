@@ -516,9 +516,8 @@ def orthogonalize(*vlist, **kwargs):
 
     ortho_vlist = []
     for i, term in enumerate(vlist):
-        term = vlist[i]
         for j in range(i):
-            term -= ortho_vlist[j].vec_project(vlist[i])
+            term -= ortho_vlist[j].projection(vlist[i])
         if simplify(term).equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)

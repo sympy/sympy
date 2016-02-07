@@ -250,7 +250,7 @@ class Vector(BasisDependent):
 
         return DyadicAdd(*args)
 
-    def vec_project(self, other, scalar=False):
+    def projection(self, other, scalar=False):
         """
         Returns the vector or scalar projection of the 'other' on 'self'.
 
@@ -263,12 +263,15 @@ class Vector(BasisDependent):
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
         >>> v2 = 3*i + 4*j
-        >>> v1.vec_project(v2)
+        >>> v1.projection(v2)
         7/3*C.i + 7/3*C.j + 7/3*C.k
-        >>> v1.vec_project(v2, scalar=True)
+        >>> v1.projection(v2, scalar=True)
         7/3
 
         """
+        if self.equals(Vector.zero):
+            return S.zero if scalar else Vector.zero
+
         if scalar:
             return self.dot(other) / self.dot(self)
         else:
