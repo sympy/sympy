@@ -1243,6 +1243,8 @@ class LatexPrinter(Printer):
     _print_MatrixSymbol = _print_Symbol
 
     def _deal_with_super_sub(self, string):
+        if '{' in string:
+            return string
 
         name, supers, subs = split_super_sub(string)
 
