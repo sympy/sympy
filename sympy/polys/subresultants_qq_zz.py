@@ -163,7 +163,7 @@ def bezout(p, q, x, method='bz'):
     degP = degree(p, x)
 
     # expr is 0 when x = y
-    expr = p * q.subs(x,y) - p.subs(x,y) * q
+    expr = p * q.subs({x:y}) - p.subs({x:y}) * q
 
     # hence expr is exactly divisible by x - y
     poly = Poly( quo(expr, x-y), x, y)
