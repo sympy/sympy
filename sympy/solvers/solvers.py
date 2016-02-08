@@ -1346,6 +1346,8 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for n, (expr, cond) in enumerate(f.args):
+            # for 'cond' result is added : 1 ,not added :0
+            result_added = {cond: 0}
             candidates = _solve(piecewise_fold(expr), symbol, **flags)
             for candidate in candidates:
                 if candidate in result:
@@ -1364,7 +1366,7 @@ def _solve(f, *symbols, **flags):
                         if other_cond == False:
                             continue
                         try:
-                            if other_cond.subs(symbol, candidate) == True:
+                            if (other_cond.subs(symbol, candidate) == True) and (result_added[other_cond] != 0):
                                 matches_other_piece = True
                                 break
                         except:
@@ -1377,6 +1379,7 @@ def _solve(f, *symbols, **flags):
                             (candidate, v),
                             (S.NaN, True)
                         ))
+                        result_added = {cond: 1}
         check = False
     else:
         # first see if it really depends on symbol and whether there
@@ -1389,6 +1392,8 @@ def _solve(f, *symbols, **flags):
             if flags.get('simplify', True):
                 sol = simplify(sol)
             return [sol]
+        elif f_num is None:
+            return []
 
         result = False  # no solution was obtained
         msg = ''  # there is no failure message

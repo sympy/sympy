@@ -1058,8 +1058,22 @@ def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
 
 
-def test_issue_10534():
-    assert solveset_real(Piecewise((x, y<0), (x + 1, True)), x) == FiniteSet(-1,0)
+# <<<<<<< HEAD
+# def test_issue_10534():
+#     assert solveset_real(Piecewise((x, y<0), (x + 1, True)), x) == FiniteSet(-1,0)
+# =======
+# def test_issue_10122():
+#     from sympy.logic.boolalg import (And, Or)
+#     from sympy.solvers.solvers import solve
+#     assert solveset(abs(x)+abs(1-x)-1>0,x,domain=S.Reals) == Union(Interval.open(-oo, 0), Interval.open(1, oo))
+#     assert solveset(Piecewise((x,x>=0),(-x,True))+Piecewise((x-1,x>=1),(1-x,True))-1>0, x, \
+#         domain=S.Reals) == Union(Interval.open(-oo, 0), Interval.open(1, oo))
+#     # syntax error in below test case
+#     # assert solve(Piecewise((x,x>=0),(-x,True))+Piecewise((x-1,x>=1),(1-x,True))-1>0,x) \
+#     # == Or(And(-oo < x, x < 0), And(1 < x, x < oo))
+
+
+# >>>>>>> 10122_solveset_multiple_abs
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
