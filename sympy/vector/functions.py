@@ -484,11 +484,11 @@ def orthogonalize(*vlist, **kwargs):
     Parameters
     ==========
 
-    vlist : list of independent vectors to be made orthogonal.
+    vlist : sequence of independent vectors to be made orthogonal.
 
     orthonormal : Optional parameter
-    Set to True if the the vectors returned should be orthonormal.
-    Default: False
+                  Set to True if the the vectors returned should be orthonormal.
+                  Default: False
 
     Examples
     ========
