@@ -497,7 +497,7 @@ def solveset_real(f, symbol):
             for sym in expr.atoms(Symbol):
                 if expr_cond[expr] != True:
                     cond_symbol_set = expr_cond[expr].atoms(Symbol)
-                for cond_symbol in cond_symbol_set:   
+                for cond_symbol in cond_symbol_set:
                     if sym == cond_symbol:
                         sym_interval[sym] = in_set_symbol
                     elif sym != cond_symbol:

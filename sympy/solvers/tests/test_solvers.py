@@ -1428,11 +1428,8 @@ def test_issues_6819_6820_6821_6248_8692():
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
 
     # issue 8692
-    # solve giving NotImplementedError line 896, in solve 'is not real or imaginary.' % a)
-    # solving Abs(x**2 - 7) when the argument is not real or imaginary.
-
-    # assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
-    #     -S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2]
+    assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
+        -S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2]
     assert solveset(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x, S.Reals) == \
     FiniteSet(-S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2)
 
