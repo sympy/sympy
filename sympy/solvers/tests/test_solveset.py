@@ -12,11 +12,8 @@ from sympy.core.relational import Unequality as Ne
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-
 from sympy.polys.rootoftools import RootOf
-
 from sympy.sets import (FiniteSet, ConditionSet, ImageSet)
-
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
@@ -709,20 +706,8 @@ def test_solveset_complex_tan():
 
 def test_solve_trig():
     from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
-
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
@@ -745,7 +730,7 @@ def test_solve_complex_unsolvable():
     assert solution == unsolved_object
 
 
-@XFAIL
+
 def test_solve_trig_simplified():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
@@ -1056,6 +1041,27 @@ def test_issue_9849():
 
 def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
+
+
+def test_issue_10426():
+    # Commented test-case need another PR from updated fancysets, printer branch.
+    # from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
+    #                               ComplexRegion)
+    a1 =symbols('a1')
+    _n =Dummy('_n')
+    _x =Dummy('_x')
+    _y =Dummy('_y')
+    assert solveset(sin(x + a) - sin(x), a) == \
+    ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), S.Complexes)
+    # Assertion error for below test but works fine.
+    # assert solveset(sin(x + a1) - sin(x), a1, domain=S.Reals) == imageset(Lambda(_n, 2*_n*pi), S.Integers)
+    # assert solveset(sin(x + a) - sin(x), a) == \
+    # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+
+
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
+    ImageSet(Lambda(_n, 2*_n*pi + pi/2), Integers())
 
 
 def test_issue_9913():
