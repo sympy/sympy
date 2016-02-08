@@ -538,6 +538,7 @@ def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
 def _solve_real_trig(f, symbol):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
+    f_original = f
     f = f.rewrite(exp)
     f = together(f)
     g, h = fraction(f)
@@ -555,13 +556,7 @@ def _solve_real_trig(f, symbol):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        if f.rewrite(sin).has(sin):
-            f = f.rewrite(sin)
-        elif f.rewrite(cos).has(cos):
-            f = f.rewrite(cos)
-        f = simplify(f)
-        f = trigsimp(f)
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):
