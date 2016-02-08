@@ -1345,9 +1345,10 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
+        result_added = {}
         for n, (expr, cond) in enumerate(f.args):
             # for 'cond' result is added : 1 ,not added :0
-            result_added = {cond: 0}
+            result_added[cond] = 0
             candidates = _solve(piecewise_fold(expr), symbol, **flags)
             for candidate in candidates:
                 if candidate in result:
@@ -1379,7 +1380,7 @@ def _solve(f, *symbols, **flags):
                             (candidate, v),
                             (S.NaN, True)
                         ))
-                        result_added = {cond: 1}
+                        result_added[cond] = 1
         check = False
     else:
         # first see if it really depends on symbol and whether there

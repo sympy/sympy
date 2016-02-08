@@ -496,11 +496,12 @@ def solveset_real(f, symbol):
             # by default symbol interval. many times cond symbols are expr symbols
             for sym in expr.atoms(Symbol):
                 if expr_cond[expr] != True:
-                    cond_symbol = expr_cond[expr].atoms(Symbol)
-                if sym == cond_symbol:
-                    sym_interval[sym] = in_set_symbol
-                elif sym != cond_symbol:
-                    sym_interval[sym] = (S.Reals)
+                    cond_symbol_set = expr_cond[expr].atoms(Symbol)
+                for cond_symbol in cond_symbol_set:   
+                    if sym == cond_symbol:
+                        sym_interval[sym] = in_set_symbol
+                    elif sym != cond_symbol:
+                        sym_interval[sym] = (S.Reals)
             if not expr.has(Symbol):
                 solns = solns_tmp.intersect(in_set_symbol)
                 result = result + solns
