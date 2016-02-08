@@ -33,6 +33,7 @@ class LLVMJitPrinter(Printer):
         self.module = module
         self.builder = builder
         self.fn = fn
+        self.ext_fn = {}  # keep track of wrappers to external functions
 
     def _print_Number(self, n, **kwargs):
         return ll.Constant(self.fp_type, float(n))
@@ -79,8 +80,11 @@ class LLVMJitPrinter(Printer):
     def _print_Function(self, expr):
         name = expr.func.__name__
         e0 = self._print(expr.args[0])
-        fn_type = ll.FunctionType(self.fp_type, [self.fp_type])
-        fn = ll.Function(self.module, fn_type, name)
+        fn = self.ext_fn.get(name)
+        if not fn:
+            fn_type = ll.FunctionType(self.fp_type, [self.fp_type])
+            fn = ll.Function(self.module, fn_type, name)
+            self.ext_fn[name] = fn
         return self.builder.call(fn, [e0], name)
 
     def emptyPrinter(self, expr):

@@ -43,3 +43,11 @@ def test_func():
     jit_res = f(1.5)
 
     assert isclose(jit_res, res)
+
+def test_two_func():
+    e = 4.0*sympy.exp(-a) + sympy.exp(b)
+    f = g.llvm_callable(e, [a,b])
+    res = float(e.subs({a: 1.5, b:2.0}).evalf())
+    jit_res = f(1.5, 2.0)
+
+    assert isclose(jit_res, res)
