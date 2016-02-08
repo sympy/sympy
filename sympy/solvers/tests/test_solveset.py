@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.sets import (FiniteSet, ConditionSet)
+from sympy.sets import (FiniteSet, ConditionSet, ImageSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
@@ -1062,3 +1062,10 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+def test_issue_9531_and_9606():
+    _n =Dummy('_n')
+    # complex solution
+    assert solveset(sinh(x)) == ImageSet(Lambda(_n, _n*I*pi), S.Integers)
+    # real solution is only one : 0
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
