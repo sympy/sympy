@@ -9,6 +9,7 @@ from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy import Dummy
 
 
 def _sympifyit(arg, retval=None):
@@ -336,6 +337,56 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    def _eval_derivative_wrt(self, expr, new_name):
+        """Transform derivatives wrt a MatrixElement to derivatives wrt a symbol.
+        See Expr._eval_derivative_wrt for more information.
+        """
+        new_self = Dummy(new_name)
+
+        class FoundAmbigousExpression(Exception):
+            """Signal that we have found an Expression that may or may not be equal to self"""
+
+        def check_equal_index(a, b):
+            """Check if two MatrixElement indices are equal. Return None if result is ambigous."""
+            if a.equals(b):
+                return True
+            if (a-b).is_constant():
+                return False
+            return None
+
+        def replace_and_check(subexpr):
+            """Recursively search for self in subexpr and replace all instances of self with new_self.
+            When a subexpression is found that may or may not be equal to self (for example a
+            MatrixElement with a free variable in its index), or the self.parent is found outside
+            of a MatrixElement, raise FoundAmbigousExpression to signal that we can not evaluate
+            the Derivative.
+            """
+            if isinstance(subexpr, MatrixElement):
+                found_ambiguous_arg = False
+                for is_equal in [subexpr.parent == self.parent, check_equal_index(subexpr.i, self.i), check_equal_index(subexpr.j, self.j)]:
+                    if is_equal is None:
+                        found_ambiguous_arg = True
+                    elif not is_equal:
+                        return subexpr.func(subexpr.parent, replace_and_check(subexpr.i), replace_and_check(subexpr.j))
+                if found_ambiguous_arg:
+                    raise FoundAmbigousExpression()
+                return new_self
+            if isinstance(subexpr, MatrixSymbol):
+                if subexpr == self.parent:
+                    raise FoundAmbigousExpression()
+                return subexpr
+            if len(subexpr.args) == 0:
+                return subexpr
+            return subexpr.func(*[replace_and_check(e) for e in subexpr.args])
+
+        # Return new expression and new symbol, or return None if we don't know how to create
+        # a new expression and new symbol for this Derivative.
+        try:
+            return (replace_and_check(expr), new_self)
+        except FoundAmbigousExpression:
+            return None
+
 
 
 class MatrixSymbol(MatrixExpr):
