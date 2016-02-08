@@ -1068,7 +1068,6 @@ def test_issue_4492():
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
 
-@XFAIL
 def test_issue_2708():
     # This test needs to use an integration function that can
     # not be evaluated in closed form.  Update as needed.
@@ -1076,7 +1075,11 @@ def test_issue_2708():
     integral_f = NonElementaryIntegral(f, (z, 2, 3))
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
-
+    assert integrate(2*f + exp(z), (z, 2, 3)) == \
+        2*integral_f - exp(2) + exp(3)
+    assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
+        1.0*NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+                                  (z, 0, x))
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
