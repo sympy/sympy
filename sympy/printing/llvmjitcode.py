@@ -97,65 +97,91 @@ link_names = set()
 current_link_suffix = 0
 
 
+class LLVMJitCode(object):
+    def __init__(self):
+        self.fp_type = ll.DoubleType()
+        self.module = ll.Module('mod1')
+        self.fn = None
+        self.arg_types = []
+        self.param_dict = {}  # map symbol name to LLVM function argument
+        self.link_name = ''
+
+    def create_args(self, func_args):
+        """Create types for function arguments"""
+        for arg in func_args:
+            arg_type = self.fp_type
+            self.arg_types.append(arg_type)
+
+    def create_function_base(self):
+        """Create function with name and type signature"""
+        global link_names, current_link_suffix
+        default_link_name = 'jit_func'
+        current_link_suffix += 1
+        self.link_name = default_link_name + str(current_link_suffix)
+        link_names.add(self.link_name)
+
+        fn_type = ll.FunctionType(self.fp_type, self.arg_types)
+        self.fn = ll.Function(self.module, fn_type, name=self.link_name)
+
+    def create_param_dict(self, func_args):
+        """Mapping of symbolic values to function arguments"""
+        for i, a in enumerate(func_args):
+            self.fn.args[i].name = str(a)
+            self.param_dict[a] = self.fn.args[i]
+
+    def create_function(self, expr):
+        """Create function body and return LLVM IR"""
+        bb_entry = self.fn.append_basic_block('entry')
+        builder = ll.IRBuilder(bb_entry)
+
+        lj = LLVMJitPrinter(self.module, builder, self.fn,
+                            func_arg_map=self.param_dict)
+
+        ret = lj._print(expr)
+        lj.builder.ret(ret)
+
+        strmod = str(self.module)
+        return strmod
+
+    def compile_function(self, strmod):
+        global exe_engines
+        llmod = llvm.parse_assembly(strmod)
+
+        pmb = llvm.create_pass_manager_builder()
+        pmb.opt_level = 2
+        pass_manager = llvm.create_module_pass_manager()
+        pmb.populate(pass_manager)
+
+        pass_manager.run(llmod)
+
+        target_machine = \
+            llvm.Target.from_default_triple().create_target_machine()
+        exe_eng = llvm.create_mcjit_compiler(llmod, target_machine)
+        exe_eng.finalize_object()
+        exe_engines.append(exe_eng)
+
+        if False:
+            print("Assembly")
+            print(target_machine.emit_assembly(llmod))
+
+        fptr = exe_eng.get_pointer_to_function(
+            llmod.get_function(self.link_name))
+
+        return fptr
+
+
 def llvm_jit_code(expr, func_args=None):
     """Create a native code function from a Sympy expression"""
+    jit = LLVMJitCode()
 
-    global exe_engines, current_link_suffix
-    module = ll.Module('mod1')
-
-    fp_type = ll.DoubleType()
-    arg_types = []
-    for arg in func_args:
-        arg_type = fp_type
-        arg_types.append(arg_type)
-
-    default_link_name = 'jit_func'
-    current_link_suffix += 1
-    link_name = default_link_name + str(current_link_suffix)
-    link_names.add(link_name)
-
-    fn_type = ll.FunctionType(fp_type, arg_types)
-    fn = ll.Function(module, fn_type, name=link_name)
-
-    param_dict = {}
-    for i, a in enumerate(func_args):
-        fn.args[i].name = str(a)
-        param_dict[a] = fn.args[i]
-
-    bb_entry = fn.append_basic_block('entry')
-
-    builder = ll.IRBuilder(bb_entry)
-
-    lj = LLVMJitPrinter(module, builder, fn, func_arg_map=param_dict)
-
-    ret = lj._print(expr)
-    lj.builder.ret(ret)
-
-    strmod = str(module)
+    jit.create_args(func_args)
+    jit.create_function_base()
+    jit.create_param_dict(func_args)
+    strmod = jit.create_function(expr)
     if False:
         print("LLVM IR")
         print(strmod)
-
-    llmod = llvm.parse_assembly(strmod)
-
-    pmb = llvm.create_pass_manager_builder()
-    pmb.opt_level = 2
-    pass_manager = llvm.create_module_pass_manager()
-    pmb.populate(pass_manager)
-
-    pass_manager.run(llmod)
-
-    target_machine = llvm.Target.from_default_triple().create_target_machine()
-    exe_eng = llvm.create_mcjit_compiler(llmod, target_machine)
-    exe_eng.finalize_object()
-    exe_engines.append(exe_eng)
-
-    if False:
-        print("Assembly")
-        print(target_machine.emit_assembly(llmod))
-
-    fptr = exe_eng.get_pointer_to_function(llmod.get_function(link_name))
-
+    fptr = jit.compile_function(strmod)
     return fptr
 
 
