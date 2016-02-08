@@ -1066,14 +1066,14 @@ def test_issue_9824():
     assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers
 
-
-def test_issue_9913():
-    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
-        FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
-                (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
-
 def test_issue_9531_and_9606():
     # complex solution
     assert solveset(sinh(x)) == ImageSet(Lambda(n, n*I*pi), S.Integers)
     # real solution is only one : 0
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+
+
+def test_issue_9913():
+    assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
+        FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
+                (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
