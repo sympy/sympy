@@ -555,6 +555,12 @@ def _solve_real_trig(f, symbol):
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
+    	if f.rewrite(sin).has(sin):
+    		f = f.rewrite(sin)
+    	elif f.rewrite(cos).has(cos):
+    		f = f.rewrite(cos)
+        f = simplify(f)
+        f = trigsimp(f)
         return ConditionSet(symbol, Eq(f, 0), S.Reals)
 
 
