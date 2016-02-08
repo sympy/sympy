@@ -1062,6 +1062,11 @@ def test_issue_10426():
     # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
 
 
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
+    ImageSet(Lambda(_n, 2*_n*pi + pi/2), Integers())
+
+
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
