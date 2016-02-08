@@ -37,7 +37,9 @@ known_fcns_src2 = {
     "ceiling": "ceil",
     "conjugate": "conj",
     "hankel1": "hankelh1",
-    "hankel2": "hankelh2"
+    "hankel2": "hankelh2",
+    "im": "imag",
+    "re": "real"
 }
 
 
