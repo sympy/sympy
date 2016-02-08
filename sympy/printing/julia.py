@@ -23,21 +23,21 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
                    "asinh", "acosh", "atanh", "acoth", "asech",
-                   "sinc", "atan2", "log", "exp",
+                   "sinc", "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",
-                   "polygamma", "beta", "sign", "floor",
+                   "polygamma", "beta",
                    "airyai", "airyaiprime", "airybi", "airybiprime",
                    "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv"]
 # These functions have different names ("Sympy": "Julia"), more
-# generally a mapping to (argument_conditions, octave_function).
+# generally a mapping to (argument_conditions, julia_function).
 known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
-    "DiracDelta": "dirac",
-    "Heaviside": "heaviside",
+    "hankel1": "hankelh1",
+    "hankel2": "hankelh2"
 }
 
 
@@ -45,13 +45,13 @@ class JuliaCodePrinter(CodePrinter):
     """
     A printer to convert expressions to strings of Julia code.
     """
-    printmethod = "_octave"
+    printmethod = "_julia"
     language = "Julia"
 
     _operators = {
-        'and': '&',
-        'or': '|',
-        'not': '~',
+        'and': '&&',
+        'or': '||',
+        'not': '!',
     }
 
     _default_settings = {
@@ -117,7 +117,7 @@ class JuliaCodePrinter(CodePrinter):
         # print complex numbers nicely in Julia
         if (expr.is_number and expr.is_imaginary and
                 expr.as_coeff_Mul()[0].is_integer):
-            return "%si" % self._print(-S.ImaginaryUnit*expr)
+            return "%sim" % self._print(-S.ImaginaryUnit*expr)
 
         # cribbed from str.py
         prec = precedence(expr)
@@ -210,17 +210,15 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_ImaginaryUnit(self, expr):
-        return "1i"
+        return "im"
 
 
     def _print_Exp1(self, expr):
-        return "exp(1)"
+        return "eu"
 
 
     def _print_GoldenRatio(self, expr):
-        # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
-        #return self._print((1+sqrt(S(5)))/2)
-        return "(1+sqrt(5))/2"
+        return 'golden'
 
 
     def _print_NumberSymbol(self, expr):
@@ -260,11 +258,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Infinity(self, expr):
-        return 'inf'
+        return 'Inf'
 
 
     def _print_NegativeInfinity(self, expr):
-        return '-inf'
+        return '-Inf'
 
 
     def _print_NaN(self, expr):
@@ -363,7 +361,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
 
 
     def _print_Idx(self, expr):
@@ -372,16 +370,6 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
-
-
-    def _print_hankel1(self, expr):
-        return "besselh(%s, 1, %s)" % (self._print(expr.order),
-                                       self._print(expr.argument))
-
-
-    def _print_hankel2(self, expr):
-        return "besselh(%s, 2, %s)" % (self._print(expr.order),
-                                       self._print(expr.argument))
 
 
     # Note: as of 2015, Julia doesn't have spherical Bessel functions
@@ -399,22 +387,6 @@ class JuliaCodePrinter(CodePrinter):
         return self._print(expr2)
 
 
-    def _print_airyai(self, expr):
-        return "airy(0, %s)" % self._print(expr.args[0])
-
-
-    def _print_airyaiprime(self, expr):
-        return "airy(1, %s)" % self._print(expr.args[0])
-
-
-    def _print_airybi(self, expr):
-        return "airy(2, %s)" % self._print(expr.args[0])
-
-
-    def _print_airybiprime(self, expr):
-        return "airy(3, %s)" % self._print(expr.args[0])
-
-
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
@@ -429,7 +401,7 @@ class JuliaCodePrinter(CodePrinter):
             # Express each (cond, expr) pair in a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
             # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}).*({1}) + (~({0})).*(".format
+            ecpairs = ["({0}) ? ({1}) : (".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = "%s" % self._print(expr.args[-1].expr)
@@ -484,7 +456,7 @@ class JuliaCodePrinter(CodePrinter):
         return pretty
 
 
-def octave_code(expr, assign_to=None, **settings):
+def julia_code(expr, assign_to=None, **settings):
     r"""Converts `expr` to a string of Julia code.
 
     Parameters
@@ -522,21 +494,21 @@ def octave_code(expr, assign_to=None, **settings):
     Examples
     ========
 
-    >>> from sympy import octave_code, symbols, sin, pi
+    >>> from sympy import julia_code, symbols, sin, pi
     >>> x = symbols('x')
-    >>> octave_code(sin(x).series(x).removeO())
+    >>> julia_code(sin(x).series(x).removeO())
     'x.^5/120 - x.^3/6 + x'
 
     >>> from sympy import Rational, ceiling, Abs
     >>> x, y, tau = symbols("x, y, tau")
-    >>> octave_code((2*tau)**Rational(7, 2))
+    >>> julia_code((2*tau)**Rational(7, 2))
     '8*sqrt(2)*tau.^(7/2)'
 
     Note that element-wise (Hadamard) operations are used by default between
-    symbols.  This is because its very common in Julia to write "vectorized"
+    symbols.  This is because its possible in Julia to write "vectorized"
     code.  It is harmless if the values are scalars.
 
-    >>> octave_code(sin(pi*x*y), assign_to="s")
+    >>> julia_code(sin(pi*x*y), assign_to="s")
     's = sin(pi*x.*y);'
 
     If you need a matrix product "*" or matrix power "^", you can specify the
@@ -545,7 +517,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> from sympy import Symbol, MatrixSymbol
     >>> n = Symbol('n', integer=True, positive=True)
     >>> A = MatrixSymbol('A', n, n)
-    >>> octave_code(3*pi*A**3)
+    >>> julia_code(3*pi*A**3)
     '(3*pi)*A^3'
 
     This class uses several rules to decide which symbol to use a product.
@@ -556,7 +528,7 @@ def octave_code(expr, assign_to=None, **settings):
     issues.  For example, suppose x and y are scalars and A is a Matrix, then
     while a human programmer might write "(x^2*y)*A^3", we generate:
 
-    >>> octave_code(x**2*y*A**3)
+    >>> julia_code(x**2*y*A**3)
     '(x.^2.*y)*A^3'
 
     Matrices are supported using Julia inline notation.  When using
@@ -565,7 +537,7 @@ def octave_code(expr, assign_to=None, **settings):
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
-    >>> octave_code(mat, assign_to='A')
+    >>> julia_code(mat, assign_to='A')
     'A = [x.^2 sin(x) ceil(x)];'
 
     ``Piecewise`` expressions are implemented with logical masking by default.
@@ -576,15 +548,15 @@ def octave_code(expr, assign_to=None, **settings):
 
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
-    >>> octave_code(pw, assign_to=tau)
-    'tau = ((x > 0).*(x + 1) + (~(x > 0)).*(x));'
+    >>> julia_code(pw, assign_to=tau)
+    'tau = ((x > 0) ? (x + 1) : (x));'
 
     Note that any expression that can be generated normally can also exist
     inside a Matrix:
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
-    >>> octave_code(mat, assign_to='A')
-    'A = [x.^2 ((x > 0).*(x + 1) + (~(x > 0)).*(x)) sin(x)];'
+    >>> julia_code(mat, assign_to='A')
+    'A = [x.^2 ((x > 0) ? (x + 1) : (x)) sin(x)];'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
@@ -595,13 +567,13 @@ def octave_code(expr, assign_to=None, **settings):
     >>> f = Function('f')
     >>> g = Function('g')
     >>> custom_functions = {
-    ...   "f": "existing_octave_fcn",
+    ...   "f": "existing_julia_fcn",
     ...   "g": [(lambda x: x.is_Matrix, "my_mat_fcn"),
     ...         (lambda x: not x.is_Matrix, "my_fcn")]
     ... }
     >>> mat = Matrix([[1, x]])
-    >>> octave_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
-    'existing_octave_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
+    >>> julia_code(f(x) + g(x) + g(mat), user_functions=custom_functions)
+    'existing_julia_fcn(x) + my_fcn(x) + my_mat_fcn([1 x])'
 
     Support for loops is provided through ``Indexed`` types. With
     ``contract=True`` these expressions will be turned into loops, whereas
@@ -615,15 +587,15 @@ def octave_code(expr, assign_to=None, **settings):
     >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-    >>> octave_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy(i) = (y(i + 1) - y(i))./(t(i + 1) - t(i));'
+    >>> julia_code(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i]) ./ (t[i + 1] - t[i]);'
     """
     return JuliaCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_octave_code(expr, **settings):
+def print_julia_code(expr, **settings):
     """Prints the Julia representation of the given expression.
 
-    See `octave_code` for the meaning of the optional arguments.
+    See `julia_code` for the meaning of the optional arguments.
     """
-    print(octave_code(expr, **settings))
+    print(julia_code(expr, **settings))
