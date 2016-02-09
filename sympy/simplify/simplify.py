@@ -1293,7 +1293,7 @@ def clear_coefficients(expr):
         c, expr = expr.as_coeff_Add()
         rhs -= c
     tmp = [(i, 1) for i in expr.free_symbols]
-    if expr.subs(tmp) < 0:
+    if expr.subs(tmp).is_real and expr.subs(tmp) < 0:
         expr *= -1
         rhs *= -1
     return expr, (R, rhs)
