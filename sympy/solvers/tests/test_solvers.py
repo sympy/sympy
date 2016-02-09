@@ -1420,8 +1420,6 @@ def test_issue_6792():
 
 def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
-    from sympy.solvers.solveset import solveset
-    from sympy.sets import FiniteSet
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
     assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
@@ -1430,9 +1428,6 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 8692
     assert solve(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x) == [
         -S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2]
-    assert solveset(Eq(Abs(x + 1) + Abs(x**2 - 7), 9), x, S.Reals) == \
-    FiniteSet(-S(1)/2 + sqrt(61)/2, -sqrt(69)/2 + S(1)/2)
-
 
     # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
