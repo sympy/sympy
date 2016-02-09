@@ -1388,13 +1388,12 @@ class Rational(Number):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        if self is S.One:
+            other, self = self, other
+        if other is S.One:
+            return self or S.Zero
         if isinstance(other, Rational):
-            if self is S.One:
-                return other
-            elif other is S.One:
-                return self
-            else:
-                return Rational(self.p*other.p, self.q*other.q)
+            return Rational(self.p*other.p, self.q*other.q)
         elif isinstance(other, Float):
             return other*self
         else:
