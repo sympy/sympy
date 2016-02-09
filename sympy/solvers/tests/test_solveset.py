@@ -736,13 +736,13 @@ def test_solve_complex_unsolvable():
 
 def test_solve_trig_simplified():
     from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
+    assert solveset(sin(x), x, S.Reals) == \
         imageset(Lambda(n, n*pi), S.Integers)
 
-    assert solveset_real(cos(x), x) == \
+    assert solveset(cos(x), x, S.Reals) == \
         imageset(Lambda(n, n*pi + pi/2), S.Integers)
 
-    assert solveset_real(cos(x) + sin(x), x) == \
+    assert solveset(cos(x) + sin(x), x, S.Reals) == \
         imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
 
