@@ -1561,8 +1561,9 @@ class PrettyPrinter(Printer):
         try:
             cond = self._print(ts.condition.as_expr())
         except AttributeError:
-            condition = self._print(ts.condition)
-            cond = self._print_seq(condition, "(", ")")
+            cond = self._print(ts.condition)
+            if self._use_unicode:
+                cond = self._print_seq(cond, "(", ")")
 
         bar = self._print("|")
         base = self._print(ts.base_set)

@@ -3200,15 +3200,15 @@ def test_pretty_ConditionSet():
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
     assert pretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == \
-        '{x | x in {1} and (Contains(x, (-oo, oo)))}'
+        '{x | x in {1} and Contains(x, (-oo, oo))}'
     assert upretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == u('{x | x ∊ {1} ∧ (x ∈ ℝ)}')
 
     assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) ==\
-        '{x | x in {1, 2, 3} and (And(x > 1, x < -1))}'
+        '{x | x in {1, 2, 3} and And(x > 1, x < -1)}'
     assert upretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == \
         u('{x | x ∊ {1, 2, 3} ∧ (x > 1 ∧ x < -1)}')
 
-    assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{x | x in {1, 2} and (Or(x > 1, x < -1))}'
+    assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{x | x in {1, 2} and Or(x > 1, x < -1)}'
     assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == u('{x | x ∊ {1, 2} ∧ (x > 1 ∨ x < -1)}')
 
 
