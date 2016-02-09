@@ -3025,7 +3025,7 @@ def unrad(eq, *syms, **flags):
 
         # remove constants and powers of factors since these don't change
         # the location of the root; XXX should factor or factor_terms be used?
-        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True))
+        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True), clear=True)
         if eq.is_Mul:
             args = []
             for f in eq.args:
@@ -3075,7 +3075,7 @@ def unrad(eq, *syms, **flags):
         sorted(dict(cov=[], n=None, rpt=0).items())]
 
     # preconditioning
-    eq = powdenest(factor_terms(eq, radical=True))
+    eq = powdenest(factor_terms(eq, radical=True, clear=True))
     eq, d = eq.as_numer_denom()
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
