@@ -1064,7 +1064,7 @@ def test_issue_10426():
 
 def test_issue_9824():
     assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
-    ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers
+    ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
 
 
 def test_issue_9913():
