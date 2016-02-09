@@ -19,7 +19,8 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
+from sympy import solve
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
@@ -744,7 +745,7 @@ class Ellipse(GeometrySet):
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
 
-            # TODO: Replace solve with solveset, when this line is tested
+            # TODO: Replace solve with solveset, when this line is tested (non linear equation system)
             tangent_points = solve([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines
@@ -877,7 +878,7 @@ class Ellipse(GeometrySet):
         seq = slope - norm
 
         # TODO: Replace solve with solveset, when this line is tested
-        yis = solve(seq, y)[0]
+        yis = list(solveset(seq, y))[0]
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
             try:
@@ -885,8 +886,8 @@ class Ellipse(GeometrySet):
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
                 # TODO: Replace solve with solveset, when these lines are tested
-                xsol = _nsort(solve(xeq, x), separated=True)[0]
-            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+                xsol = _nsort(list(solveset(xeq, x)), separated=True)[0]
+            points = [Point(i, list(solveset(eq.subs(x, i), y))[0]) for i in xsol]
         else:
             raise NotImplementedError(
                 'intersections for the general ellipse are not supported')
@@ -1130,7 +1131,7 @@ class Ellipse(GeometrySet):
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
 
-        # TODO: Replace solve with solveset, when this line is tested
+        # TODO: Replace solve with solveset, when this line is tested (binary_quadratic equation system)
         result = solve([seq, oeq], [x, y])
         return [Point(*r) for r in list(uniq(result))]
 

@@ -12,13 +12,14 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
 from .line3d import Line3D, LinearEntity3D, Ray3D, Segment3D
 from .line import Line, Ray, Segment
+
+from sympy.solvers.solveset import linsolve, solveset
 
 
 class Plane(GeometryEntity):
@@ -628,8 +629,7 @@ class Plane(GeometryEntity):
         m = Dummy()
         p = self.projection(Point3D(self.p1.x + cos(t), self.p1.y + sin(t), 0)*m)
 
-        # TODO: Replace solve with solveset, when this line is tested
-        return p.xreplace({m: solve(p.distance(self.p1) - 1, m)[0]})
+        return p.xreplace({m: list(solveset(p.distance(self.p1) - 1, m))})
 
     def intersection(self, o):
         """ The intersection with other geometrical entity.
@@ -686,12 +686,11 @@ class Plane(GeometryEntity):
                 a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
 
-                # TODO: Replace solve with solveset, when this line is tested
-                c = solve(b.subs(list(zip((x, y, z), a.args))), t)
+                c = solveset(b.subs(list(zip((x, y, z), a.args))), t)
                 if not c:
                     return []
                 else:
-                    p = a.subs(t, c[0])
+                    p = a.subs(t, list(c)[0])
                     if p not in self:
                         return []  # e.g. a segment might not intersect a plane
                     return [p]
@@ -707,18 +706,14 @@ class Plane(GeometryEntity):
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
 
-                # TODO: Replace solve with solveset, when this line is tested
-                f = solve((d.subs(z, 0), e.subs(z, 0)), [x, y])
+                f = linsolve((d.subs(z, 0), e.subs(z, 0)), [x, y])
                 if len(f) == 2:
                     return [Line3D(Point3D(f[x], f[y], 0), direction_ratio=c)]
-
-                # TODO: Replace solve with solveset, when this line is tested
-                g = solve((d.subs(y, 0), e.subs(y, 0)),[x, z])
+                g = list(linsolve((d.subs(y, 0), e.subs(y, 0)),[x, z]).args[0])
                 if len(g) == 2:
                     return [Line3D(Point3D(g[x], 0, g[z]), direction_ratio=c)]
 
-                # TODO: Replace solve with solveset, when this line is tested
-                h = solve((d.subs(x, 0), e.subs(x, 0)),[y, z])
+                h = list(linsolve((d.subs(x, 0), e.subs(x, 0)),[y, z]).args[0])
                 if len(h) == 2:
                     return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
 
