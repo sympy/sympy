@@ -219,6 +219,14 @@ class JuliaCodePrinter(CodePrinter):
         return "eu"
 
 
+    def _print_EulerGamma(self, expr):
+        return "eulergamma"
+
+
+    def _print_Catalan(self, expr):
+        return "catalan"
+
+
     def _print_GoldenRatio(self, expr):
         return 'golden'
 
