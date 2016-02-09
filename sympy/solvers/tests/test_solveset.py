@@ -724,9 +724,8 @@ def test_solve_invalid_sol():
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
 
 
-def test_solve_complex_unsolvable():
+def test_solve_complex_unsolvable_previously():
     _n =Dummy('_n')
-    unsolved_object = ConditionSet(x, Eq(2*cos(x) - 1, 0), S.Complexes)
     solution = solveset_complex(cos(x) - S.Half, x)
     assert solution == Union(ImageSet(Lambda(_n, 2*_n*pi - pi/3), S.Integers),\
      ImageSet(Lambda(_n, 2*_n*pi + pi/3), S.Integers))
