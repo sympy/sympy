@@ -1426,6 +1426,7 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
+        from sympy.simplify.simplify import clear_coefficients
         from sympy import oo
 
         new_args = []
@@ -1442,39 +1443,21 @@ class Intersection(Set):
         if len(args) == 2 and len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
             iterable = iter(s)
             ineq = next(iterable)
-            q = ineq.primitive()[0]
-            ineq = ineq / q
-            st = new_args[0].start / q
-            en = new_args[0].end / q
-            q = ineq.as_coeff_Add()[0]
-            ineq -= q
-            st -= q
-            en -= q
-            q = ineq.primitive()[0]
-            ineq /= q
-            st /= q
-            en /= q
-            tmp = [(i, 1) for i in ineq.free_symbols]
-            tmp1 = []
-            try:
-                for i in ineq.args:
-                    if i.subs(tmp) < 0:
-                        tmp1.append(i * -1)
-                    else:
-                        tmp1.append(i)
-                tmp2 = [i for i in (-1 * ineq).args]
-                if (set(tmp1) == set(tmp2)) or (len(tmp2) == 0 and ineq.subs(tmp) < 0):
-                    st *= -1
-                    en *= -1
-                    ineq *= -1
-                if st > en:
-                    st, en = en, st
-                if st != -oo and en != oo and len(tmp) > 0:
-                    other_sets = Intersection(Interval(st, en))
-                    s = FiniteSet(ineq)
-                    new_args = [other_sets]
-            except (ValueError, TypeError):
-                pass
+            if ineq.free_symbols != set():
+                p, (R, fR) = clear_coefficients(ineq - new_args[0].start)
+                st = fR.subs(R, 0)
+                q, (R, fR) = clear_coefficients(ineq - new_args[0].end)
+                en = fR.subs(R, 0)
+                try:
+                    assert p == q
+                    if st > en:
+                        st, en = en, st
+                    if st != -oo and en != oo :
+                        other_sets = Intersection(Interval(st, en))
+                        s = FiniteSet(p)
+                        new_args = [other_sets]
+                except (AssertionError, ValueError, TypeError):
+                    pass
         res = []
         unk = []
         for x in s:

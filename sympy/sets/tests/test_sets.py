@@ -985,8 +985,7 @@ def test_issue_10326():
 
 def test_issue_10285():
     from sympy import Mul
-    x = Symbol('x')
-    y = Symbol('y')
+    from sympy.abc import x,y,z
     assert FiniteSet(2*x + 1).intersect(Interval(3, 5)) == FiniteSet(x).intersect(Interval(1, 2))
     assert FiniteSet(x*y + 1).intersect(Interval(3, 5)) == FiniteSet(x*y).intersect(Interval(2, 4))
     assert FiniteSet(2*x + 2*y).intersect(Interval(2, 4)) == FiniteSet(x + y).intersect(Interval(1, 2))
@@ -999,3 +998,6 @@ def test_issue_10285():
     assert FiniteSet(-2*x - 2*y + 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-2, -1))
     assert FiniteSet(-2*x - 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-3, -2))
     assert FiniteSet(-2*x + 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(-x + y).intersect(Interval(2, 3))
+    assert FiniteSet(2 + x*(2 + 2*y)).intersect(Interval(3, 5)) == FiniteSet(x*(y + 1)).intersect(Interval(Mul(1) / 2, Mul(3) / 2))
+    assert FiniteSet(2 + x*(2 + 2*y)).intersect(Interval(2, 6)) == FiniteSet(x*(y + 1)).intersect(Interval(0, 2))
+    assert FiniteSet(1 + 4*x*y).intersect(Interval(5, 9)) == FiniteSet(x*y).intersect(Interval(1, 2))
