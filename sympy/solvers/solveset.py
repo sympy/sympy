@@ -804,7 +804,8 @@ def solveset_complex(f, symbol):
             for equation in equations:
                 if equation == f:
                     if any(_has_rational_power(g, symbol)[0]
-                           for g in equation.args):
+                           for g in equation.args) or _has_rational_power(
+                           equation, symbol)[0]:
                         result += _solve_radical(equation,
                                                  symbol,
                                                  solveset_complex)

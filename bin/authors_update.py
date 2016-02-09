@@ -70,13 +70,11 @@ git_people.pop(226) # Sergey B Kirpichev
 
 
 header = """\
-All people who contributed to SymPy by sending at least a patch or more (in
-the order of the date of their first contribution), except those who
-explicitly didn't want to be mentioned.  You can find missing people from this
-file by using git log --reverse --format="%aN <%aE>" | awk ' !x[$0]++' (the
-order from that command will be a little different, but close to the order
-here).  People with a * next to their names are not found in the metadata of
-the git history.
+All people who contributed to SymPy by sending at least a patch or more (in the
+order of the date of their first contribution), except those who explicitly
+didn't want to be mentioned. People with a * next to their names are not found
+in the metadata of the git history. This file is generated automatically by
+running `./bin/authors_update.py`.
 """
 
 fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
