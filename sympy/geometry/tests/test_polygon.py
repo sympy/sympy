@@ -3,7 +3,7 @@ import warnings
 
 from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, GeometryError, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import verify_numerically
@@ -78,6 +78,8 @@ def test_polygon():
     assert p5.encloses_point(Point(1, 3))
     assert p5.encloses_point(Point(0, 0)) is False
     assert p5.encloses_point(Point(4, 0)) is False
+    assert p1.encloses(Circle(Point(2.5,2.5),5)) is False
+    assert p1.encloses(Ellipse(Point(2.5,2),5,6)) is False
     p5.plot_interval('x') == [x, 0, 1]
     assert p5.distance(
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)

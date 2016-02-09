@@ -5,7 +5,7 @@ from sympy import (
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
+    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
@@ -949,9 +949,9 @@ def test_latex_Poly():
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 
-def test_latex_RootOf():
-    assert latex(RootOf(x**5 + x + 3, 0)) == \
-        r"\operatorname{RootOf} {\left(x^{5} + x + 3, 0\right)}"
+def test_latex_ComplexRootOf():
+    assert latex(rootof(x**5 + x + 3, 0)) == \
+        r"\operatorname{CRootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 
 def test_latex_RootSum():

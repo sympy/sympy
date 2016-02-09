@@ -30,7 +30,7 @@ class ClassRegistry(Registry):
         feature='C, including its class ClassRegistry,',
         last_supported_version='0.7.7',
         useinstead='direct imports from the defining module',
-        issue=7124,
+        issue=9371,
         deprecated_since_version='0.7.7')
     def __getattr__(self, name):
         return any(cls.__name__ == name for cls in all_classes)

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import random
+from sympy import Derivative
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, as_int, range
@@ -314,6 +315,12 @@ class DenseMatrix(MatrixBase):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
+
+    def _eval_diff(self, *args, **kwargs):
+        if kwargs.pop("evaluate", True):
+            return self.diff(*args)
+        else:
+            return Derivative(self, *args, **kwargs)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,

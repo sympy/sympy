@@ -252,7 +252,8 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, lcm
+from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+                         PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -2060,7 +2061,7 @@ def odesimp(eq, func, order, constants, hint):
     eq = constantsimp(eq, constants)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
-    # When RootOf is implemented in solve(), we will want to return a RootOf
+    # When CRootOf is implemented in solve(), we will want to return a CRootOf
     # everytime instead of an Equality.
 
     # Get the f(x) on the left if possible.
@@ -2232,30 +2233,26 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
-    x = func.args[0]
-    s = True
-    testnum = 0
+    elif sol.rhs == func:
+        sol = sol.reversed
+
     if order == 'auto':
         order = ode_order(ode, func)
-    if solve_for_func and not (
-            sol.lhs == func and not sol.rhs.has(func)) and not (
-            sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
                 result = checkodesol(ode, Eq(func, solved[0]),
                     order=order, solve_for_func=False)
             else:
                 result = checkodesol(ode, [Eq(func, t) for t in solved],
                 order=order, solve_for_func=False)
-
             return result
 
+    s = True
+    testnum = 0
+    x = func.args[0]
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
@@ -2264,8 +2261,6 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
-            elif sol.rhs == func:
-                s = sub_func_doit(ode_diff, func, sol.lhs)
             else:
                 testnum += 1
                 continue
@@ -2291,7 +2286,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         elif testnum == 2:
             # Third pass. Try solving for df/dx and substituting that into the
             # ODE. Thanks to Chris Smith for suggesting this method.  Many of
-            # the comments below are his too.
+            # the comments below are his, too.
             # The method:
             # - Take each of 1..n derivatives of the solution.
             # - Solve each nth derivative for d^(n)f/dx^(n)
@@ -2464,8 +2459,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     if sol.has(Integral):
         return oo
 
-    # Next, try to solve for func.  This code will change slightly when RootOf
-    # is implemented in solve().  Probably a RootOf solution should fall
+    # Next, try to solve for func.  This code will change slightly when CRootOf
+    # is implemented in solve().  Probably a CRootOf solution should fall
     # somewhere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
@@ -3901,7 +3896,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     are returned, based on expansions with Eulers formula.  The general
     solution is the sum of the terms found.  If SymPy cannot find exact roots
     to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be returned
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be returned
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -3965,7 +3960,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
 
     # A generator of constants
     constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
@@ -4537,7 +4532,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be return
+    :py:class:`~sympy.polys.rootoftools.CRootOf` instance will be return
     instead.
 
     >>> from sympy import Function, dsolve, Eq
@@ -4546,11 +4541,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
-    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
-    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
-    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
-    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4)))
+    Eq(f(x), C1*exp(x*CRootOf(_x**5 + 10*_x - 2, 0)) +
+    C2*exp(x*CRootOf(_x**5 + 10*_x - 2, 1)) +
+    C3*exp(x*CRootOf(_x**5 + 10*_x - 2, 2)) +
+    C4*exp(x*CRootOf(_x**5 + 10*_x - 2, 3)) +
+    C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 4)))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -4605,7 +4600,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
             chareq += r[i]*symbol**i
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
     chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
 
     # A generator of constants
@@ -6502,8 +6497,8 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     l = Dummy('l')
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    l1 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
-    l2 = RootOf(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
+    l1 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 0)
+    l2 = rootof(l**2 - (r['a']+r['d'])*l + r['a']*r['d'] - r['b']*r['c'], l, 1)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D > 0:
@@ -6919,10 +6914,10 @@ def _linear_2eq_order2_type1(x, y, t, r, eq):
     l = Symbol('l')
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
-    l1 = RootOf(chara_eq, 0)
-    l2 = RootOf(chara_eq, 1)
-    l3 = RootOf(chara_eq, 2)
-    l4 = RootOf(chara_eq, 3)
+    l1 = rootof(chara_eq, 0)
+    l2 = rootof(chara_eq, 1)
+    l3 = rootof(chara_eq, 2)
+    l4 = rootof(chara_eq, 3)
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D != 0:
@@ -7196,7 +7191,7 @@ def _linear_2eq_order2_type6(x, y, t, r, eq):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
+    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
@@ -7241,7 +7236,7 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
     a2 = denum.coeff(x(t))
     b2 = denum.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [RootOf(chareq, k) for k in range(Poly(chareq).degree())]
+    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     F = Integral(f, t)
     z1 = C1*Integral(exp(k1*F), t) + C2
     z2 = C3*Integral(exp(k2*F), t) + C4

@@ -243,6 +243,9 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3}) == 3
     assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.}) == 3
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
 
 def test_evalf_trig_zero_detection():
@@ -473,3 +476,22 @@ def test_issue_9326():
     d2 = Dummy('d')
     e = d1 + d2
     assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+
+
+def test_issue_10323():
+    assert ceiling(sqrt(2**30 + 1)) == 2**15 + 1
+
+
+def test_AssocOp_Function():
+    e = S('''
+    Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
+    sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
+    I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
+    # the following should not raise a recursion error; it
+    # should raise a value error because the first arg computes
+    # a non-comparable (prec=1) imaginary part
+    raises(ValueError, lambda: e._eval_evalf(2))

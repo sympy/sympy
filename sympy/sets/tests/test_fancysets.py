@@ -3,6 +3,7 @@ from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
+from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, Abs, I)
 from sympy.utilities.pytest import XFAIL, raises
@@ -347,7 +348,7 @@ def test_ComplexRegion_intersect():
     # unevaluated object
     C1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
     C2 = ComplexRegion(Interval(-1, 1)*Interval(-1, 1))
-    assert C1.intersect(C2) == Intersection(C1, C2)
+    assert C1.intersect(C2) == Intersection(C1, C2, evaluate=False)
 
 
 def test_ComplexRegion_union():
@@ -376,8 +377,8 @@ def test_ComplexRegion_union():
     assert c5.union(c6) == ComplexRegion(p3)
     assert c7.union(c8) == ComplexRegion(p4)
 
-    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
-    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4), evaluate=False)
 
 
 def test_ComplexRegion_measure():
@@ -393,15 +394,39 @@ def test_ComplexRegion_measure():
 def test_normalize_theta_set():
 
     # Interval
+    assert normalize_theta_set(Interval(pi, 2*pi)) == \
+        Union(FiniteSet(0), Interval(pi, 2*pi, False, True))
     assert normalize_theta_set(Interval(9*pi/2, 5*pi)) == Interval(pi/2, pi)
     assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == \
         Interval(0, 2*pi, False, True)
+    assert normalize_theta_set(Interval(-3*pi/2, pi/2, True, True)) == \
+        Union(Interval(0, pi/2, False, True), Interval(pi/2, 2*pi, True, True))
+    assert normalize_theta_set(Interval(-7*pi/2, -3*pi/2, True, True)) == \
+        Union(Interval(0, pi/2, False, True), Interval(pi/2, 2*pi, True, True))
     assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
         Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+    assert normalize_theta_set(Interval(-pi/2, pi/2, True, True)) == \
+        Union(Interval(0, pi/2, False, True), Interval(3*pi/2, 2*pi, True, True))
     assert normalize_theta_set(Interval(-4*pi, 3*pi)) == \
         Interval(0, 2*pi, False, True)
     assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == \
         Interval(pi/2, 3*pi/2)
+    assert normalize_theta_set(Interval(0, 2*pi, True, True)) == \
+        Interval(0, 2*pi, True, True)
+    assert normalize_theta_set(Interval(-pi/2, pi/2, False, True)) == \
+        Union(Interval(0, pi/2, False, True), Interval(3*pi/2, 2*pi, False, True))
+    assert normalize_theta_set(Interval(-pi/2, pi/2, True, False)) == \
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, True, True))
+    assert normalize_theta_set(Interval(-pi/2, pi/2, False, False)) == \
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+    assert normalize_theta_set(Interval(4*pi, 9*pi/2, True, True)) == \
+        Interval(0, pi/2, True, True)
+    assert normalize_theta_set(Interval(4*pi, 9*pi/2, True, False)) == \
+        Interval(0, pi/2, True, False)
+    assert normalize_theta_set(Interval(4*pi, 9*pi/2,False, True)) == \
+        Interval(0, pi/2, False, True)
+    assert normalize_theta_set(Interval(3*pi, 5*pi, True, True)) == \
+        Union(Interval(0, pi, False, True), Interval(pi, 2*pi, True, True))
 
     # FiniteSet
     assert normalize_theta_set(FiniteSet(0, pi, 3*pi)) == FiniteSet(0, pi)
@@ -411,6 +436,13 @@ def test_normalize_theta_set():
         FiniteSet(0, pi, 3*pi/2)
     assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
         FiniteSet(pi/2)
+    assert normalize_theta_set(FiniteSet(2*pi)) == FiniteSet(0)
+
+    # Unions
+    assert normalize_theta_set(Union(Interval(0, pi/3), Interval(pi/2, pi))) == \
+        Union(Interval(0, pi/3), Interval(pi/2, pi))
+    assert normalize_theta_set(Union(Interval(0, pi), Interval(2*pi, 7*pi/3))) == \
+        Interval(0, pi)
 
     # ValueError for non-real sets
     raises(ValueError, lambda: normalize_theta_set(S.Complexes))
@@ -429,3 +461,13 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_issue_9980():
+    c1 = ComplexRegion(Interval(1, 2)*Interval(2, 3))
+    c2 = ComplexRegion(Interval(1, 5)*Interval(1, 3))
+    R = Union(c1, c2)
+    assert simplify(R) == ComplexRegion(Union(Interval(1, 2)*Interval(2, 3), \
+                                    Interval(1, 5)*Interval(1, 3)), False)
+    assert c1.func(*c1.args) == c1
+    assert R.func(*R.args) == R

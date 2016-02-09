@@ -64,7 +64,8 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
-    # Note : In Python 3 the text is unicode, but in 2 it is a string.
+    # Note : Unicode of Python2 is equivalent to str in Python3. In Python 3 we have one
+    # text type: str which holds Unicode data and two byte types bytes and bytearray.
     # XXX: How can we make this ignore the terminal width? This test fails if
     # the terminal is too narrow.
     assert text in ("{pi: 3.14, n_i: 3}",
@@ -100,7 +101,8 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
-    # Note : In Python 3 the text is unicode, but in 2 it is a string.
+    # Note : Unicode of Python2 is equivalent to str in Python3. In Python 3 we have one
+    # text type: str which holds Unicode data and two byte types bytes and bytearray.
     # Python 3.3.3 + IPython 0.13.2 gives: '{n_i: 3, pi: 3.14}'
     # Python 3.3.3 + IPython 1.1.0 gives: '{n_i: 3, pi: 3.14}'
     # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'

@@ -327,6 +327,13 @@ try:
 except ImportError: # <= Python 2.7
     from itertools import izip_longest as zip_longest
 
+
+try:
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
+
+
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6

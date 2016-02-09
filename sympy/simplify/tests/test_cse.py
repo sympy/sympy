@@ -1,7 +1,7 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
+                   Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
                    IndexedBase, Idx, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -274,7 +274,7 @@ def test_issue_4499():
 
 
 def test_issue_6169():
-    r = RootOf(x**6 - 4*x**5 - 2, 1)
+    r = CRootOf(x**6 - 4*x**5 - 2, 1)
     assert cse(r) == ([], [r])
     # and a check that the right thing is done with the new
     # mechanism

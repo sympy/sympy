@@ -13,6 +13,7 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
+from sympy.core.compatibility import as_int, SYMPY_INTS
 
 from sympy.logic.boolalg import BooleanAtom
 
@@ -1434,6 +1435,22 @@ class Poly(Expr):
         """
         Polynomial pseudo-remainder of ``f`` by ``g``.
 
+        Caveat: The function prem(f, g, x) can be safely used to compute
+          in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
+
+          To safely compute Euclidean and Sturmian prs's in Z[x]
+          employ anyone of the corresponding functions found in
+          the module sympy.polys.subresultants_qq_zz. The functions
+          in the module with suffix _pg compute prs's in Z[x] employing
+          rem(f, g, x), whereas the functions with suffix _amv
+          compute prs's in Z[x] employing rem_z(f, g, x).
+
+          The function rem_z(f, g, x) differs from prem(f, g, x) in that
+          to compute the remainder polynomials in Z[x] it premultiplies
+          the divident times the absolute value of the leading coefficient
+          of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
+
+
         Examples
         ========
 
@@ -1456,6 +1473,8 @@ class Poly(Expr):
     def pquo(f, g):
         """
         Polynomial pseudo-quotient of ``f`` by ``g``.
+
+        See the Caveat note in the function prem(f, g).
 
         Examples
         ========
@@ -3313,10 +3332,10 @@ class Poly(Expr):
         IndexError: root index out of [-3, 2] range, got 3
 
         >>> Poly(x**5 + x + 1).root(0)
-        RootOf(x**3 - x**2 + 1, 0)
+        CRootOf(x**3 - x**2 + 1, 0)
 
         """
-        return sympy.polys.rootoftools.RootOf(f, index, radicals=radicals)
+        return sympy.polys.rootoftools.rootof(f, index, radicals=radicals)
 
     def real_roots(f, multiple=True, radicals=True):
         """
@@ -3331,10 +3350,10 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).real_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).real_roots()
-        [RootOf(x**3 + x + 1, 0)]
+        [CRootOf(x**3 + x + 1, 0)]
 
         """
-        reals = sympy.polys.rootoftools.RootOf.real_roots(f, radicals=radicals)
+        reals = sympy.polys.rootoftools.CRootOf.real_roots(f, radicals=radicals)
 
         if multiple:
             return reals
@@ -3354,12 +3373,12 @@ class Poly(Expr):
         >>> Poly(2*x**3 - 7*x**2 + 4*x + 4).all_roots()
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).all_roots()
-        [RootOf(x**3 + x + 1, 0),
-         RootOf(x**3 + x + 1, 1),
-         RootOf(x**3 + x + 1, 2)]
+        [CRootOf(x**3 + x + 1, 0),
+         CRootOf(x**3 + x + 1, 1),
+         CRootOf(x**3 + x + 1, 2)]
 
         """
-        roots = sympy.polys.rootoftools.RootOf.all_roots(f, radicals=radicals)
+        roots = sympy.polys.rootoftools.CRootOf.all_roots(f, radicals=radicals)
 
         if multiple:
             return roots
@@ -4738,7 +4757,8 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert
+    >>> from sympy import invert, S
+    >>> from sympy.core.numbers import mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)
@@ -4749,6 +4769,17 @@ def invert(f, g, *gens, **args):
     ...
     NotInvertible: zero divisor
 
+    For more efficient inversion of Rationals,
+    use the ``mod_inverse`` function:
+
+    >>> mod_inverse(3, 5)
+    2
+    >>> (S(2)/5).invert(S(7)/3)
+    5/2
+
+    See Also
+    ========
+    sympy.core.numbers.mod_inverse
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5611,7 +5642,8 @@ def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
-    args = [i._eval_factor() if hasattr(i, '_eval_factor') else i for i in Mul.make_args(expr)]
+    args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
+        for i in Mul.make_args(expr)]
     for arg in args:
         if arg.is_Number:
             coeff *= arg
