@@ -12,16 +12,8 @@ from sympy.core.relational import Unequality as Ne
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-<<<<<<< HEAD
-from sympy.polys.rootoftools import RootOf
 from sympy.sets import (FiniteSet, ConditionSet, ImageSet)
-=======
-
 from sympy.polys.rootoftools import CRootOf
-
-from sympy.sets import (FiniteSet, ConditionSet)
-
->>>>>>> master
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
@@ -1067,12 +1059,13 @@ def test_issue_10426():
     # assert solveset(sin(x + a) - sin(x), a) == \
     # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
     assert solveset(sin(x + a) - sin(x), a) == Union(ImageSet(Lambda(_n, 2*_n*pi), S.Integers),\
-     ImageSet(Lambda(_n, -I*(I*(2*_n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers)
+     ImageSet(Lambda(_n, -I*(I*(2*_n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
 
 
 def test_issue_9824():
-    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) == \
-    ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) ==\
+     ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
 
 def test_issue_9531_and_9606():
     # complex solution
