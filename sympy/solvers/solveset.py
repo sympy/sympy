@@ -604,7 +604,7 @@ def _solveset(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
+def solveset(f, symbol=None, domain=S.Complexes, _check=True, _first=True, ):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -643,10 +643,9 @@ def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
     Notes
     =====
 
-    The output of `solveset` depends on the requested domain. It
-    ignores assumptions on the symbol procided by design: it will
-    always be clear what domain is being used without need to
-    reference to the assumptions used to ceate the symbol.
+    The output of `solveset` depends on the requested domain rather
+    than on the assumptions a symbol may have. Assumptions on symbols
+    are ignored.
 
     Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
@@ -700,7 +699,7 @@ def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
             # -- leave it alone
             return result
 
-        if check:
+        if _check:
             # whittle away all but the symbol-containing core
             # to use this for testing
             fx = f.as_independent(symbol, as_Add=True)[1]
@@ -770,7 +769,7 @@ def solveset(f, symbol=None, domain=S.Complexes, check=True, _first=True, ):
 def _invalid_solutions(f, symbol, domain):
     bad = S.EmptySet
     for d in denoms(f):
-        bad += solveset(d, symbol, domain, _first=False, check=False)
+        bad += solveset(d, symbol, domain, _first=False, _check=False)
     return result
 
 
