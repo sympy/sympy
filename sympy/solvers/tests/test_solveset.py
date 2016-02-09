@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, Dummy, Eq, Gt,
+    Abs, Dummy, Eq, Gt, Function,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
@@ -1083,3 +1083,9 @@ def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
     assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
+
+
+def test_issue_10555():
+    f = Function('f')
+    assert solveset(f(x) - pi/2, x, S.Reals) == \
+        ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
