@@ -284,7 +284,11 @@ class LatexPrinter(Printer):
         from sympy.combinatorics.permutations import Permutation, Cycle
         if str(expr) == '()':
             return r"\left( \right)"
-        expr_perm = Permutation(expr).cyclic_form
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
         term_tex = ''
         for i in expr_perm:
             term_tex += str(i).replace(',', r"\;")
