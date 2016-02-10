@@ -445,7 +445,7 @@ class JuliaCodePrinter(CodePrinter):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
-        tab = "  "
+        tab = "    "
         inc_regex = ('^function ', '^if ', '^elseif ', '^else$', '^for ')
         dec_regex = ('^end$', '^elseif ', '^else$')
 

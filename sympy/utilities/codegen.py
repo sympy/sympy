@@ -1142,9 +1142,6 @@ class JuliaCodeGen(CodeGen):
     def routine(self, name, expr, argument_sequence, global_vars):
         """Specialized Routine creation for Julia."""
 
-        # FIXME: this is probably general enough for other high-level
-        # languages, perhaps its the C/Fortran one that is specialized!
-
         if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
             if not expr:
                 raise ValueError("No expression given")
@@ -1163,18 +1160,21 @@ class JuliaCodeGen(CodeGen):
 
         # Julia supports multiple return values
         return_vals = []
+        output_args = []
         for (i, expr) in enumerate(expressions):
             if isinstance(expr, Equality):
                 out_arg = expr.lhs
                 expr = expr.rhs
                 symbol = out_arg
                 if isinstance(out_arg, Indexed):
+                    dims = tuple([ (S.One, dim) for dim in out_arg.shape])
                     symbol = out_arg.base.label
                 if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
                     raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
                                        "can define output arguments.")
 
                 return_vals.append(Result(expr, name=symbol, result_var=out_arg))
+                output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 if not expr.has(symbol):
                     # this is a pure output: remove from the symbols list, so
                     # it doesn't become an input.
@@ -1185,7 +1185,8 @@ class JuliaCodeGen(CodeGen):
                 return_vals.append(Result(expr, name='out%d' % (i+1)))
 
         # setup input argument list
-        arg_list = []
+        output_args.sort(key=lambda x: str(x.name))
+        arg_list = list(output_args) 
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
@@ -1234,9 +1235,9 @@ class JuliaCodeGen(CodeGen):
             "project": self.project}
         for line in tmp.splitlines():
             if line == '':
-                code_lines.append("%\n")
+                code_lines.append("#\n")
             else:
-                code_lines.append("%%   %s\n" % line)
+                code_lines.append("#   %s\n" % line)
         return code_lines
 
     def _preprocessor_statements(self, prefix):
@@ -1247,28 +1248,13 @@ class JuliaCodeGen(CodeGen):
         code_list = []
         code_list.append("function ")
 
-        # Outputs
-        outs = []
-        for i, result in enumerate(routine.results):
-            if isinstance(result, Result):
-                # Note: name not result_var; want `y` not `y[i]` for Indexed
-                s = self._get_symbol(result.name)
-            else:
-                raise CodeGenError("unexpected object in Routine results")
-            outs.append(s)
-        if len(outs) > 1:
-            code_list.append("[" + (", ".join(outs)) + "]")
-        else:
-            code_list.append("".join(outs))
-        code_list.append(" = ")
-
         # Inputs
         args = []
         for i, arg in enumerate(routine.arguments):
-            if isinstance(arg, (OutputArgument, InOutArgument)):
+            if isinstance(arg, OutputArgument):
                 raise CodeGenError("Julia: invalid argument of type %s" %
                                    str(type(arg)))
-            if isinstance(arg, InputArgument):
+            if isinstance(arg, (InputArgument, InOutArgument)):
                 args.append("%s" % self._get_symbol(arg.name))
         args = ", ".join(args)
         code_list.append("%s(%s)\n" % (routine.name, args))
@@ -1280,16 +1266,24 @@ class JuliaCodeGen(CodeGen):
         return []
 
     def _declare_globals(self, routine):
-        if not routine.global_vars:
-            return []
-        s = " ".join(sorted([self._get_symbol(g) for g in routine.global_vars]))
-        return ["global " + s + "\n"]
-
-    def _declare_locals(self, routine):
         return []
 
+    def _declare_locals(self, routine):
+        if not routine.local_vars:
+            return []
+        s = ", ".join(sorted([self._get_symbol(g) for g in routine.local_vars]))
+        return ["local " + s + "\n"]
+
     def _get_routine_ending(self, routine):
-        return ["end\n"]
+        outs = []
+        for result in routine.results:
+            if isinstance(result, Result):
+                # Note: name not result_var; want `y` not `y[i]` for Indexed
+                s = self._get_symbol(result.name)
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+            outs.append(s)
+        return ["return " + ", ".join(outs) + "\nend\n"]
 
     def _call_printer(self, routine):
         declarations = []
@@ -1305,14 +1299,14 @@ class JuliaCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
-                    "  %s = %s;  %% constant\n" % (obj, v))
+                    "  %s = %s;  # constant\n" % (obj, v))
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
                 declarations.append(
-                    "  %% unsupported: %s\n" % (name))
+                    "  # unsupported: %s\n" % (name))
             code_lines.append("%s\n" % (oct_expr))
         return declarations + code_lines
 
@@ -1577,7 +1571,7 @@ class OctaveCodeGen(CodeGen):
 
 
 def get_code_generator(language, project):
-    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen,
+    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen, "JULIA": JuliaCodeGen,
                     "OCTAVE": OctaveCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
