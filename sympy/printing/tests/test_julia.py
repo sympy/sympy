@@ -195,17 +195,17 @@ def test_special_matrices():
 
 def test_containers():
     assert mcode([1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]) == \
-        "Any[1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]"
+        "Any[1, 2, 3, Any[4, 5, Any[6, 7]], 8, Any[9, 10], 11]"
     assert mcode((1, 2, (3, 4))) == "(1, 2, (3, 4))"
-    assert mcode([1]) == "[1]"
+    assert mcode([1]) == "Any[1]"
     assert mcode((1,)) == "(1,)"
     assert mcode(Tuple(*[1, 2, 3])) == "(1, 2, 3)"
     assert mcode((1, x*y, (3, x**2))) == "(1, x.*y, (3, x.^2))"
     # scalar, matrix, empty matrix and empty list
-    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0,0), zeros(0,0))"
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0,0), Any[])"
 
 
-def test_octave_noninline():
+def test_julia_noninline():
     source = mcode((x+y)/Catalan, assign_to='me', inline=False)
     expected = (
         "Catalan = 0.915965594177219;\n"
@@ -214,7 +214,7 @@ def test_octave_noninline():
     assert source == expected
 
 
-def test_octave_piecewise():
+def test_julia_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
     assert mcode(expr) == "((x < 1) ? (x) : (x.^2))"
     assert mcode(expr, assign_to="r") == (
@@ -246,7 +246,7 @@ def test_octave_piecewise():
     raises(ValueError, lambda: mcode(expr))
 
 
-def test_octave_piecewise_times_const():
+def test_julia_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x**2, True))
     assert mcode(2*pw) == "2*((x < 1) ? (x) : (x.^2))"
     assert mcode(pw/x) == "((x < 1) ? (x) : (x.^2))./x"
@@ -254,59 +254,59 @@ def test_octave_piecewise_times_const():
     assert mcode(pw/3) == "((x < 1) ? (x) : (x.^2))/3"
 
 
-def test_octave_matrix_assign_to():
+def test_julia_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
-    assert mcode(A, assign_to='a') == "a = [1 2 3];"
+    assert mcode(A, assign_to='a') == "a = [1 2 3]"
     A = Matrix([[1, 2], [3, 4]])
-    assert mcode(A, assign_to='A') == "A = [1 2;\n3 4];"
+    assert mcode(A, assign_to='A') == "A = [1 2;\n3 4]"
 
 
-def test_octave_matrix_assign_to_more():
+def test_julia_matrix_assign_to_more():
     # assigning to Symbol or MatrixSymbol requires lhs/rhs match
     A = Matrix([[1, 2, 3]])
     B = MatrixSymbol('B', 1, 3)
     C = MatrixSymbol('C', 2, 3)
-    assert mcode(A, assign_to=B) == "B = [1 2 3];"
+    assert mcode(A, assign_to=B) == "B = [1 2 3]"
     raises(ValueError, lambda: mcode(A, assign_to=x))
     raises(ValueError, lambda: mcode(A, assign_to=C))
 
 
-def test_octave_matrix_1x1():
+def test_julia_matrix_1x1():
     A = Matrix([[3]])
     B = MatrixSymbol('B', 1, 1)
     C = MatrixSymbol('C', 1, 2)
-    assert mcode(A, assign_to=B) == "B = 3;"
+    assert mcode(A, assign_to=B) == "B = 3"
     # FIXME?
     #assert mcode(A, assign_to=x) == "x = 3;"
     raises(ValueError, lambda: mcode(A, assign_to=C))
 
 
-def test_octave_matrix_elements():
+def test_julia_matrix_elements():
     A = Matrix([[x, 2, x*y]])
     assert mcode(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
     assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
-           "sin(AA(1, 2)) + AA(1, 1).^2 + AA(1, 3)"
-    assert mcode(sum(A)) == "AA(1, 1) + AA(1, 2) + AA(1, 3)"
+           "sin(AA[1, 2]) + AA[1, 1].^2 + AA[1, 3]"
+    assert mcode(sum(A)) == "AA[1, 1] + AA[1, 2] + AA[1, 3]"
 
 
-def test_octave_boolean():
+def test_julia_boolean():
     assert mcode(True) == "true"
     assert mcode(S.true) == "true"
     assert mcode(False) == "false"
     assert mcode(S.false) == "false"
 
 
-def test_octave_not_supported():
+def test_julia_not_supported():
     assert mcode(S.ComplexInfinity) == (
-        "% Not supported in Octave:\n"
+        "% Not supported in Julia:\n"
         "% ComplexInfinity\n"
         "zoo"
     )
     f = Function('f')
     assert mcode(f(x).diff(x)) == (
-        "% Not supported in Octave:\n"
+        "% Not supported in Julia:\n"
         "% Derivative\n"
         "Derivative(f(x), x)"
     )
@@ -359,7 +359,7 @@ def test_specfun():
         assert julia_code(f(n, x)) == f.__name__ + '(n, x)'
     for f in [airyai, airyaiprime, airybi, airybiprime]:
         assert julia_code(f(x)) == f.__name__ + '(x)'
-    assert octave_code(hankel1(n, x)) == 'hankelh1(n, x)'
-    assert octave_code(hankel2(n, x)) == 'hankelh2(n, x)'
-    assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
-    assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+    assert julia_code(hankel1(n, x)) == 'hankelh1(n, x)'
+    assert julia_code(hankel2(n, x)) == 'hankelh2(n, x)'
+    assert julia_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
+    assert julia_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'

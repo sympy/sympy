@@ -75,7 +75,6 @@ class JuliaCodePrinter(CodePrinter):
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self.outter_list = True
 
 
     def _rate_index_position(self, p):
