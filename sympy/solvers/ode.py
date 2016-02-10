@@ -656,7 +656,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify)
+            return _helper_simplify(eq, hint, hints, simplify, **kwargs)
 
 def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
@@ -682,7 +682,7 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         free = eq.free_symbols
         cons = lambda s: s.free_symbols.difference(free)
         if isinstance(sols, Expr):
-            return odesimp(sols, func, order, cons(sols), hint)
+            return odesimp(sols, func, order, cons(sols), hint, **kwargs)
         return [odesimp(s, func, order, cons(s), hint) for s in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
@@ -1985,7 +1985,7 @@ def checksysodesol(eqs, sols, func=None):
 
 
 @vectorize(0)
-def odesimp(eq, func, order, constants, hint):
+def odesimp(eq, func, order, constants, hint, **kwargs):
     r"""
     Simplifies ODEs, including trying to solve for ``func`` and running
     :py:meth:`~sympy.solvers.ode.constantsimp`.
@@ -2112,8 +2112,9 @@ def odesimp(eq, func, order, constants, hint):
 
     else:
         # The solution is not solved, so try to solve it
+        rational_flag = kwargs.get('rational', True)
         try:
-            eqsol = solve(eq, func, force=True)
+            eqsol = solve(eq, func, force=True, rational=rational_flag)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
