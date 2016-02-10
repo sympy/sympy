@@ -703,7 +703,7 @@ class Basic(with_metaclass(ManagedProperties)):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 

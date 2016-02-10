@@ -5,7 +5,9 @@ from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
+
 a, b, c, x, y = symbols('a b c x y')
+
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
     F, T, X, Y, Z, u = map(Function, 'FTXYZu')
