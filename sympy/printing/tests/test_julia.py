@@ -106,9 +106,9 @@ def test_mix_number_pow_symbols():
 
 def test_imag():
     I = S('I')
-    assert mcode(I) == "1im"
+    assert mcode(I) == "im"
     assert mcode(5*I) == "5im"
-    assert mcode((S(3)/2)*I) == "3*1im/2"
+    assert mcode((S(3)/2)*I) == "3*im/2"
     assert mcode(3+4*I) == "3 + 4im"
 
 
@@ -139,13 +139,13 @@ def test_boolean():
 
 
 def test_Matrices():
-    assert mcode(Matrix(1, 1, [10])) == "10"
+    assert mcode(Matrix(1, 1, [10])) == "[10]"
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]]);
     expected = ("[1 sin(x/2)  abs(x);\n"
                 "0        1      pi;\n"
-                "0   exp(1) ceil(x)]")
+                "0        e ceil(x)]")
     assert mcode(A) == expected
     # row and columns
     assert mcode(A[:,0]) == "[1, 0, 0]"
@@ -226,9 +226,9 @@ def test_julia_piecewise():
         "  r = x.^2;\n"
         "end")
     expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
-    expected = ("((x < 1) ? (x.^2) : (\n"
-                "(x < 2) ? (x.^3) : (\n"
-                "(x < 3) ? (x.^4) : (x.^5))))")
+    expected = ("((x < 1) ? (x.^2) :\n"
+                "(x < 2) ? (x.^3) :\n"
+                "(x < 3) ? (x.^4) : (x.^5))")
     assert mcode(expr) == expected
     assert mcode(expr, assign_to="r") == "r = " + expected + ";"
     assert mcode(expr, assign_to="r", inline=False) == (
@@ -349,7 +349,7 @@ def test_sparse():
     M[0, 3] = 30;
     M[3, 0] = x*y;
     assert mcode(M) == (
-        "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x.*y 20 10 30 22], 5, 6)"
+        "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x.*y, 20, 10, 30, 22], 5, 6)"
     )
 
 

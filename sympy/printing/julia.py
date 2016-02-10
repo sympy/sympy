@@ -284,8 +284,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_tuple(self, expr):
-        return '(' + ', '.join(self._print(a) for a in expr) + ')'
-    _print_Tuple = _print_list
+        if len(expr) == 1:
+            return "(%s,)" % self._print(expr[0])
+        else:
+            return "(%s)" % self.stringify(expr, ", ")
+    _print_Tuple = _print_tuple
 
 
     def _print_BooleanTrue(self, expr):
@@ -345,7 +348,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self._print(expr.parent) + '[%s, %s]'%(expr.i+1, expr.j+1)
 
 
     def _print_MatrixSlice(self, expr):
@@ -411,11 +414,11 @@ class JuliaCodePrinter(CodePrinter):
             # Express each (cond, expr) pair in a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
             # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}) ? ({1}) : (".format
+            ecpairs = ["({0}) ? ({1}) :".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
-            elast = "%s" % self._print(expr.args[-1].expr)
-            pw = "\n".join(ecpairs) + elast + ")"*len(ecpairs)
+            elast = " (%s)" % self._print(expr.args[-1].expr)
+            pw = "\n".join(ecpairs) + elast
             # Note: current need these outer brackets for 2*pw.  Would be
             # nicer to teach parenthesize() to do this for us when needed!
             return "(" + pw + ")"
