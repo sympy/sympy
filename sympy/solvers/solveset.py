@@ -538,9 +538,11 @@ def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
 def _solve_real_trig(f, symbol):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
+    f_original = f
     f = f.rewrite(exp)
     f = together(f)
     return solveset(f,symbol)
+
 
 
 def _solve_as_poly(f, symbol, solveset_solver, invert_func):
