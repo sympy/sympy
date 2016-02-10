@@ -519,7 +519,15 @@ def _solve_abs(f, symbol, domain=S.Complexes):
 
 
 
-def _solveset(f, symbol, domain):
+def _solveset(f, symbol, domain, _final=False, _check=False):
+    """Helper for solveset to return a result from an expression
+    that has already been sympify'ed and is known to contain the
+    given symbol."""
+    # _final controls whether the final result is being returned
+    # or not; if so, _check controls whether the answer is
+    # checked or not.
+
+    orig_f = f
     f = together(f)
     if f.is_Mul:
         _, f = f.as_independent(symbol, as_Add=False)
@@ -601,10 +609,28 @@ def _solveset(f, symbol, domain):
         else:
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
+    if _final:
+        if isinstance(result, ConditionSet):
+            # it wasn't solved or has enumerated all conditions
+            # -- leave it alone
+            return result
+
+        if _check:
+            # whittle away all but the symbol-containing core
+            # to use this for testing
+            fx = orig_f.as_independent(symbol, as_Add=True)[1]
+            fx = fx.as_independent(symbol, as_Add=False)[1]
+
+            if isinstance(result, FiniteSet):
+                # check the result for invalid solutions
+                result = FiniteSet(*[s for s in result
+                          if isinstance(s, RootOf)
+                          or domain_check(fx, symbol, s)])
+
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes, _check=True, _first=True, ):
+def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
     Parameters
@@ -690,29 +716,6 @@ def solveset(f, symbol=None, domain=S.Complexes, _check=True, _first=True, ):
     (0, oo)
 
     """
-
-    if not _first:
-        result = _solveset(f, symbol, domain)
-
-        if isinstance(result, ConditionSet):
-            # it wasn't solved or has enumerated all conditions
-            # -- leave it alone
-            return result
-
-        if _check:
-            # whittle away all but the symbol-containing core
-            # to use this for testing
-            fx = f.as_independent(symbol, as_Add=True)[1]
-            fx = fx.as_independent(symbol, as_Add=False)[1]
-
-            if isinstance(result, FiniteSet):
-                # check the result for invalid solutions
-                result = FiniteSet(*[s for s in result
-                          if isinstance(s, RootOf)
-                          or domain_check(fx, symbol, s)])
-
-        return result
-
     f = sympify(f)
 
     if f is S.true:
@@ -763,7 +766,7 @@ def solveset(f, symbol=None, domain=S.Complexes, _check=True, _first=True, ):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return solveset(f, symbol, domain, _first=False)
+    return _solveset(f, symbol, domain, _final=True, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):
