@@ -7,6 +7,7 @@ from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
+from sympy.core.mul import Mul
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -520,8 +521,34 @@ class Integral(AddWithLimits):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     else:
+                        def is_indef_int(g, x):
+                            return (isinstance(g, Integral) and
+                                    any(i == (x,) for i in g.limits))
+
+                        def eval_factored(f, x, a, b):
+                            # _eval_interval for integrals with
+                            # (constant) factors
+                            # a single indefinite integral is assumed
+                            args = []
+                            for g in Mul.make_args(f):
+                                if is_indef_int(g, x):
+                                    args.append(g._eval_interval(x, a, b))
+                                else:
+                                    args.append(g)
+                            return Mul(*args)
+
+                        integrals, others = [], []
+                        for f in Add.make_args(antideriv):
+                            if any(is_indef_int(g, x)
+                                   for g in Mul.make_args(f)):
+                                integrals.append(f)
+                            else:
+                                others.append(f)
+                        uneval = Add(*[eval_factored(f, x, a, b)
+                                       for f in integrals])
                         try:
-                            function = antideriv._eval_interval(x, a, b)
+                            evalued = Add(*others)._eval_interval(x, a, b)
+                            function = uneval + evalued
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
