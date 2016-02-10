@@ -2,6 +2,10 @@
 
 from __future__ import print_function, division
 
+from sympy.external import import_module
+
+np = import_module('numpy')
+
 from inspect import getmro
 
 from .core import all_classes as sympy_classes
@@ -265,6 +269,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         return a._sympy_()
     except AttributeError:
         pass
+
+    if np is not None:
+        if isinstance(a, np.ndarray):
+            #Delayed import to avoid circular imports
+            from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+            from sympy.utilities.iterables import flatten
+            try:
+                shape = a.shape
+                a = flatten(a)
+                return ImmutableDenseNDimArray(a, shape)
+            except TypeError:
+                pass
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
