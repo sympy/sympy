@@ -75,6 +75,7 @@ class JuliaCodePrinter(CodePrinter):
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+        self.outter_list = True
 
 
     def _rate_index_position(self, p):
@@ -82,7 +83,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _get_statement(self, codestring):
-        return "%s;" % codestring
+        return "%s" % codestring
 
 
     def _get_comment(self, text):
@@ -90,7 +91,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "const {0} = {1}".format(name, value)
 
 
     def _format_code(self, lines):
@@ -216,7 +217,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Exp1(self, expr):
-        return "eu"
+        return "e"
 
 
     def _print_EulerGamma(self, expr):
@@ -280,8 +281,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_list(self, expr):
-        return '{' + ', '.join(self._print(a) for a in expr) + '}'
-    _print_tuple = _print_list
+        return 'Any[' + ', '.join(self._print(a) for a in expr) + ']'
+
+
+    def _print_tuple(self, expr):
+        return '(' + ', '.join(self._print(a) for a in expr) + ')'
     _print_Tuple = _print_list
 
 
@@ -303,18 +307,15 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
-        if (A.rows, A.cols) == (0, 0):
-            return '[]'
-        elif A.rows == 0 or A.cols == 0:
+        if A.rows == 0 or A.cols == 0:
             return 'zeros(%s, %s)' % (A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
-            # Julia does not distinguish between scalars and 1x1 matrices
-            return self._print(A[0, 0])
+            return "[%s]" % A[0, 0]
         elif A.rows == 1:
             return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
         elif A.cols == 1:
             # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
+            return "[%s]" % ", ".join([self._print(a) for a in A])
         return "[%s]" % A.table(self, rowstart='', rowend='',
                                 rowsep=';\n', colsep=' ')
 
@@ -323,9 +324,9 @@ class JuliaCodePrinter(CodePrinter):
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
-        I = Matrix([[k[0] + 1 for k in L]])
-        J = Matrix([[k[1] + 1 for k in L]])
-        AIJ = Matrix([[k[2] for k in L]])
+        I = Matrix([k[0] + 1 for k in L])
+        J = Matrix([k[1] + 1 for k in L])
+        AIJ = Matrix([k[2] for k in L])
         return "sparse(%s, %s, %s, %s, %s)" % (self._print(I), self._print(J),
                                             self._print(AIJ), A.rows, A.cols)
 
@@ -415,7 +416,7 @@ class JuliaCodePrinter(CodePrinter):
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = "%s" % self._print(expr.args[-1].expr)
-            pw = " ...\n".join(ecpairs) + elast + ")"*len(ecpairs)
+            pw = "\n".join(ecpairs) + elast + ")"*len(ecpairs)
             # Note: current need these outer brackets for 2*pw.  Would be
             # nicer to teach parenthesize() to do this for us when needed!
             return "(" + pw + ")"
@@ -519,7 +520,7 @@ def julia_code(expr, assign_to=None, **settings):
     code.  It is harmless if the values are scalars.
 
     >>> julia_code(sin(pi*x*y), assign_to="s")
-    's = sin(pi*x.*y);'
+    's = sin(pi*x.*y)'
 
     If you need a matrix product "*" or matrix power "^", you can specify the
     symbol as a ``MatrixSymbol``.
@@ -548,7 +549,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 sin(x) ceil(x)];'
+    'A = [x.^2 sin(x) ceil(x)]'
 
     ``Piecewise`` expressions are implemented with logical masking by default.
     Alternatively, you can pass "inline=False" to use if-else conditionals.
@@ -559,14 +560,14 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
     >>> julia_code(pw, assign_to=tau)
-    'tau = ((x > 0) ? (x + 1) : (x));'
+    'tau = ((x > 0) ? (x + 1) : (x))'
 
     Note that any expression that can be generated normally can also exist
     inside a Matrix:
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 ((x > 0) ? (x + 1) : (x)) sin(x)];'
+    'A = [x.^2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
@@ -598,7 +599,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
     >>> julia_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i]) ./ (t[i + 1] - t[i]);'
+    'Dy[i] = (y[i + 1] - y[i])./(t[i + 1] - t[i])'
     """
     return JuliaCodePrinter(settings).doprint(expr, assign_to)
 
