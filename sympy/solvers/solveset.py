@@ -283,13 +283,23 @@ def _domain_check(f, symbol, p):
                     for g in f.args])
 
 
-def _is_finite_with_finite_vars(f):
+def _is_finite_with_finite_vars(f, domain=S.Complexes):
     """
-    Return True if the given expression is finite when all free symbols
-    (that are not already specified as finite) are made finite.
+    Return True if the given expression is finite. For symbols that
+    don't assign a value for `complex` and/or `real`, the domain will
+    be used to assign a value; symbols that don't assign a value
+    for `finite` will be made finite. All other assumptions are
+    left unmodified.
     """
-    reps = dict([(s, Dummy(s.name, finite=True, **s.assumptions0))
-                for s in f.free_symbols if s.is_finite is None])
+    def assumptions(s):
+        A = s.assumptions0
+        if A.get('finite', None) is None:
+            A['finite'] = True
+        A.setdefault('complex', True)
+        A.setdefault('real', domain.is_subset(S.Reals))
+        return A
+
+    reps = dict([(s, Dummy(**assumptions(s))) for s in f.free_symbols])
     return f.xreplace(reps).is_finite
 
 
@@ -552,7 +562,8 @@ def _solveset(f, symbol, domain, _final=False, _check=False):
         return domain
     elif not f.has(symbol):
         return EmptySet()
-    elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
+    elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
+            for m in f.args):
         # if f(x) and g(x) are both finite we can say that the solution of
         # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
         # general. g(x) can grow to infinitely large for the values where
@@ -669,10 +680,6 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Notes
     =====
 
-    The output of `solveset` depends on the requested domain rather
-    than on the assumptions a symbol may have. Assumptions on symbols
-    are ignored.
-
     Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
     return the Domain and EmptySet, respectively, while True and False
@@ -689,25 +696,41 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, Symbol, Eq, pprint, S, solveset
-    >>> from sympy.abc import x
+    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy.solvers.solveset import solveset, solveset_real
 
-    * The default domain is complex. Not specifying a domain will lead to the
-      solving of the equation in the complex domain.
+    * The default domain is complex. Not specifying a domain will lead
+      to the solving of the equation in the complex domain (and this
+      is not affected by the assumptions on the symbol):
 
+    >>> x = Symbol('x')
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
-    * If you want to solve equation in real domain by the `solveset`
-      interface, then specify that the domain is real. Alternatively use
-      `solveset\_real`.
+    >>> x = Symbol('x', real=True)
+    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    {2*n*I*pi | n in Integers()}
+
+    * If you want to use `solveset` to solve the equation in the
+      real domain, provide a real domain. (Using `solveset\_real`
+      does this automatically.)
 
     >>> R = S.Reals
     >>> x = Symbol('x')
     >>> solveset(exp(x) - 1, x, R)
     {0}
-    >>> solveset(Eq(exp(x), 1), x, R)
+    >>> solveset_real(exp(x) - 1, x)
     {0}
+
+    The solution is mostly unaffected by assumptions on the symbol,
+    but there may be some slight difference:
+
+    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
+    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
+
+    >>> p = Symbol('p', positive=True)
+    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
+    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
