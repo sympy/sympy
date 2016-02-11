@@ -86,7 +86,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "% {0}".format(text)
+        return "# {0}".format(text)
 
 
     def _declare_number_const(self, name, value):
@@ -363,7 +363,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i+1, expr.j+1)
+        return self._print(expr.parent) + '[%s,%s]'%(expr.i+1, expr.j+1)
 
 
     def _print_MatrixSlice(self, expr):

@@ -427,8 +427,9 @@ def test_jl_matrixsymbol_slice2():
     source = result[1]
     expected = (
         "function test(A)\n"
-        "    B = A[1:2, 1:2]\n"
-        "    C = A[1:2, 2:3]\n"
+        "    B = A[1:2,1:2]\n"
+        "    C = A[1:2,2:3]\n"
+        "    return B, C\n"
         "end\n"
     )
     assert source == expected

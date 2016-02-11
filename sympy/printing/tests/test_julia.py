@@ -208,8 +208,8 @@ def test_containers():
 def test_julia_noninline():
     source = mcode((x+y)/Catalan, assign_to='me', inline=False)
     expected = (
-        "Catalan = 0.915965594177219;\n"
-        "me = (x + y)/Catalan;"
+        "Catalan = 0.915965594177219\n"
+        "me = (x + y)/Catalan"
     )
     assert source == expected
 
@@ -221,9 +221,9 @@ def test_julia_piecewise():
         "r = ((x < 1) ? (x) : (x.^2))")
     assert mcode(expr, assign_to="r", inline=False) == (
         "if (x < 1)\n"
-        "  r = x;\n"
+        "    r = x\n"
         "else\n"
-        "  r = x.^2;\n"
+        "    r = x.^2\n"
         "end")
     expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
     expected = ("((x < 1) ? (x.^2) :\n"
@@ -233,13 +233,13 @@ def test_julia_piecewise():
     assert mcode(expr, assign_to="r") == "r = " + expected + ";"
     assert mcode(expr, assign_to="r", inline=False) == (
         "if (x < 1)\n"
-        "  r = x.^2\n"
+        "    r = x.^2\n"
         "elseif (x < 2)\n"
-        "  r = x.^3\n"
+        "    r = x.^3\n"
         "elseif (x < 3)\n"
-        "  r = x.^4\n"
+        "    r = x.^4\n"
         "else\n"
-        "  r = x.^5\n"
+        "    r = x.^5\n"
         "end")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
@@ -287,8 +287,8 @@ def test_julia_matrix_elements():
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
     assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
-           "sin(AA[1, 2]) + AA[1, 1].^2 + AA[1, 3]"
-    assert mcode(sum(A)) == "AA[1, 1] + AA[1, 2] + AA[1, 3]"
+           "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
+    assert mcode(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
 
 def test_julia_boolean():
@@ -319,11 +319,11 @@ def test_trick_indent_with_end_else_words():
     pw = Piecewise((t1, x < 0), (t2, x <= 1), (1, True))
     assert mcode(pw, inline=False) == (
         "if (x < 0)\n"
-        "  endless\n"
+        "    endless\n"
         "elseif (x <= 1)\n"
-        "  elsewhere\n"
+        "    elsewhere\n"
         "else\n"
-        "  1\n"
+        "    1\n"
         "end")
 
 
