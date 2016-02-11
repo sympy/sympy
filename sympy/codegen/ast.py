@@ -373,7 +373,7 @@ class For(Basic):
     >>> from sympy import symbols, Range
     >>> from sympy.codegen.ast import aug_assign, For
     >>> x, n = symbols('x n')
-    >>> For(n, Range(10), aug_assign(x, '+', n))
+    >>> For(n, Range(10), [aug_assign(x, '+', n)])
     For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
     """
 
