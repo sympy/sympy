@@ -366,16 +366,29 @@ class For(Basic):
     target : symbol
     iter : iterable
     body : sympy expr
+
+    Examples
+    --------
+
+    >>> from sympy import symbols, Range
+    >>> from sympy.codegen.ast import aug_assign, For
+    >>> x, n = symbols('x n')
+    >>> For(n, Range(10), aug_assign(x, '+', n))
+    For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
     """
 
     def __new__(cls, target, iter, body):
         target = _sympify(target)
         if not iterable(iter):
             raise TypeError("iter must be an iterable")
+        if isinstance(iter, list):
+            # _sympify errors on lists because they are mutable
+            iter = tuple(iter)
         iter = _sympify(iter)
-        if not iterable(body):
-            raise TypeError("body must be an iterable")
-        body = Tuple(*(_sympify(i) for i in body))
+        if not isinstance(body, CodeBlock):
+            if not iterable(body):
+                raise TypeError("body must be an iterable or CodeBlock")
+            body = CodeBlock(*(_sympify(i) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
     @property
