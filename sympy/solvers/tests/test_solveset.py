@@ -889,6 +889,10 @@ def test_conditonset():
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
 
+    y,a = symbols('y,a')
+    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
+        ConditionSet(a, Eq(-sin(y) + sin(y + a), 0), S.Reals)
+
 
 @XFAIL
 def test_conditionset_equality():

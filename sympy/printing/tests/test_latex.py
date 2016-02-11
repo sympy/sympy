@@ -140,6 +140,8 @@ def test_latex_permutation():
     assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
     assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
     assert latex(Permutation()) == r"\left( \right)"
+    assert latex(Permutation(2, 4)*Permutation(5)) == r"\left( 2\; 4\right)\left( 5\right)"
+    assert latex(Permutation(5)) == r"\left( 5\right)"
 
 
 def test_latex_Float():

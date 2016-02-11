@@ -98,6 +98,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _eval_adjoint = DenseMatrix._eval_adjoint
     _eval_inverse = DenseMatrix._eval_inverse
     _eval_simplify = DenseMatrix._eval_simplify
+    _eval_diff = DenseMatrix._eval_diff
 
     equals = DenseMatrix.equals
     is_Identity = DenseMatrix.is_Identity

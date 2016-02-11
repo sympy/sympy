@@ -284,7 +284,11 @@ class LatexPrinter(Printer):
         from sympy.combinatorics.permutations import Permutation, Cycle
         if str(expr) == '()':
             return r"\left( \right)"
-        expr_perm = Permutation(expr).cyclic_form
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
         term_tex = ''
         for i in expr_perm:
             term_tex += str(i).replace(',', r"\;")
@@ -1574,9 +1578,9 @@ class LatexPrinter(Printer):
             self._print(s.condition.as_expr()))
 
     def _print_ComplexRegion(self, s):
-        vars_print = ', '.join([self._print(var) for var in s.args[0].variables])
+        vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; |\; %s \in %s \right\}" % (
-            self._print(s.args[0].expr),
+            self._print(s.expr),
             vars_print,
             self._print(s.sets))
 

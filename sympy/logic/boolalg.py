@@ -9,7 +9,6 @@ from itertools import combinations, product
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
-from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
@@ -1288,20 +1287,6 @@ def is_literal(expr):
         return not isinstance(expr, BooleanFunction)
 
 
-@deprecated(
-    useinstead="sympify", issue=6550, deprecated_since_version="0.7.3")
-def compile_rule(s):
-    """
-    Transforms a rule into a SymPy expression
-    A rule is a string of the form "symbol1 & symbol2 | ..."
-
-    Note: This function is deprecated.  Use sympify() instead.
-
-    """
-    import re
-    return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))
-
-
 def to_int_repr(clauses, symbols):
     """
     Takes clauses in CNF format and puts them into an integer representation.
@@ -1856,22 +1841,3 @@ def bool_map(bool1, bool2):
     if m:
         return a, m
     return m is not None
-
-
-@deprecated(
-    useinstead="bool_map", issue=7197, deprecated_since_version="0.7.4")
-def bool_equal(bool1, bool2, info=False):
-    """Return True if the two expressions represent the same logical
-    behaviour for some correspondence between the variables of each
-    (which may be different). For example, And(x, y) is logically
-    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
-    mapping is desired, then set ``info`` to True and the simplified
-    form of the functions and mapping of variables will be returned.
-    """
-
-    mapping = bool_map(bool1, bool2)
-    if not mapping:
-        return False
-    if info:
-        return mapping
-    return True
