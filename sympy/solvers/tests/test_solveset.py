@@ -876,10 +876,6 @@ def test_conditonset():
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
 
-    y,a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        ConditionSet(a, Eq(-sin(y) + sin(y + a), 0), S.Reals)
-
 
 @XFAIL
 def test_conditionset_equality():
@@ -1055,7 +1051,7 @@ def test_issue_10426():
     #                               ComplexRegion)
     a =symbols('a')
     # Assertion error for below test but works fine locally.
-    # assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == imageset(Lambda(_n, 2*_n*pi), S.Integers)
+    # assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == imageset(Lambda(n, 2*n*pi), S.Integers)
     # assert solveset(sin(x + a) - sin(x), a) == \
     # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
     assert solveset(sin(x + a) - sin(x), a) == (ImageSet(Lambda(n, 2*n*pi), S.Integers) +\
