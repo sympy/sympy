@@ -241,6 +241,41 @@ def test_solve_mul():
     assert solveset_real(x/log(x), x) == EmptySet()
 
 
+def test_piecewise_solveset():
+    from sympy.sets import FiniteSet
+    from sympy.solvers.solveset import (
+    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
+    linsolve, _is_function_class_equation, invert_real, invert_complex,
+    solveset)
+
+    abs2 = Piecewise((-x, x <= 0), (x, x > 0))
+    f = abs2.subs(x, x - 2)
+    assert solveset(f, x, S.Reals) == FiniteSet(2)
+    assert solveset(f - 1, x, S.Reals) == FiniteSet(1, 3)
+
+    f = Piecewise(((x - 2)**2, x >= 0), (1, True))
+    assert solveset(f, x, S.Reals) == FiniteSet(2)
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, True))
+    assert solveset(g, x, S.Reals) == FiniteSet(2, 5)
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
+    assert solveset(g, x, S.Reals) == FiniteSet(2, 5)
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
+    assert solveset(g, x, S.Reals) == FiniteSet(5)
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True))
+    assert solveset(g, x, S.Reals) == FiniteSet(5)
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    assert solveset(g, x, S.Reals) == FiniteSet(5)
+
+    g = Piecewise(((x - 5)**5, x >= 2),
+                  (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
+    assert solveset(g, x, S.Reals) == FiniteSet(5)
+
+
 def test_solve_invert():
     assert solveset_real(exp(x) - 3, x) == FiniteSet(log(3))
     assert solveset_real(log(x) - 3, x) == FiniteSet(exp(3))
