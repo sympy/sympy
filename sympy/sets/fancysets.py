@@ -9,7 +9,7 @@ from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
 from sympy.core.singleton import Singleton, S, sympify
 from sympy.core.sympify import _sympify
 from sympy.core.function import Lambda
-from textwrap import fill, dedent
+from sympy.utilities.misc import filldedent, func_name
 
 
 
@@ -237,18 +237,16 @@ class ImageSet(Set):
         from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = list(linsolve([expr - val for val, expr in
+            zip(other, L.expr)], L.variables).args[0])
         else:
             solnsSet = solveset(L.expr-other, L.variables[0])
             if solnsSet.is_FiniteSet:
                 solns = list(solveset(L.expr - other, L.variables[0]))
             else:
-                filldedent = lambda s, w=70: '\n' + fill(dedent(str(s)).strip('\n'), width=w)
                 raise NotImplementedError(filldedent('''
-                Determining that whether an ImageSet contains %s has not been implemented.'''
-                                                     % solveset(L.expr-other, L.variables[0])))
-
+                Determining whether an ImageSet contains %s has not
+                been implemented.''' % func_name(other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
