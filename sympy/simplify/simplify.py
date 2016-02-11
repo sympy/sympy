@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -1292,8 +1292,8 @@ def clear_coefficients(expr):
         rhs /= m
         c, expr = expr.as_coeff_Add()
         rhs -= c
-    tmp = [(i, 1) for i in expr.free_symbols]
-    if expr.subs(tmp).is_real and expr.subs(tmp) < 0:
-        expr *= -1
-        rhs *= -1
+    e = signsimp(expr, evaluate = False)
+    if _coeff_isneg(e):
+        expr = -expr
+        rhs = -rhs
     return expr, (R, rhs)
