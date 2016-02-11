@@ -2112,9 +2112,9 @@ def odesimp(eq, func, order, constants, hint, **kwargs):
 
     else:
         # The solution is not solved, so try to solve it
-        rational_flag = kwargs.get('rational', True)
+        solve_flags = kwargs
         try:
-            eqsol = solve(eq, func, force=True, rational=rational_flag)
+            eqsol = solve(eq, func, force=True, **solve_flags)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
