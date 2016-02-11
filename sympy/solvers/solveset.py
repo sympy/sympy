@@ -487,10 +487,8 @@ def solveset_real(f, symbol):
     elif f.is_Piecewise:
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
-        expr_cond = {}
+        expr_cond = dict(f.args)
         sym_interval ={}
-        for other_n, (expr_tmp, cond) in enumerate(f.args):
-            expr_cond[expr_tmp] = cond
         for (expr, in_set_symbol) in expr_set_pairs:
             solns_tmp = solveset_real(expr, symbol)
             # by default symbol interval. many times cond symbols are expr symbols
