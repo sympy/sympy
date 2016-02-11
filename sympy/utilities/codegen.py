@@ -1169,12 +1169,12 @@ class JuliaCodeGen(CodeGen):
                 if isinstance(out_arg, Indexed):
                     dims = tuple([ (S.One, dim) for dim in out_arg.shape])
                     symbol = out_arg.base.label
+                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
                     raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
                                        "can define output arguments.")
 
                 return_vals.append(Result(expr, name=symbol, result_var=out_arg))
-                output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 if not expr.has(symbol):
                     # this is a pure output: remove from the symbols list, so
                     # it doesn't become an input.
@@ -1186,7 +1186,7 @@ class JuliaCodeGen(CodeGen):
 
         # setup input argument list
         output_args.sort(key=lambda x: str(x.name))
-        arg_list = list(output_args) 
+        arg_list = list(output_args)
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
@@ -1269,10 +1269,7 @@ class JuliaCodeGen(CodeGen):
         return []
 
     def _declare_locals(self, routine):
-        if not routine.local_vars:
-            return []
-        s = ", ".join(sorted([self._get_symbol(g) for g in routine.local_vars]))
-        return ["local " + s + "\n"]
+        return []
 
     def _get_routine_ending(self, routine):
         outs = []
@@ -1294,20 +1291,20 @@ class JuliaCodeGen(CodeGen):
             else:
                 raise CodeGenError("unexpected object in Routine results")
 
-            constants, not_supported, oct_expr = julia_code(result.expr,
+            constants, not_supported, jl_expr = julia_code(result.expr,
                 assign_to=assign_to, human=False)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
-                    "  %s = %s;  # constant\n" % (obj, v))
+                    "%s = %s\n" % (obj, v))
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
                 declarations.append(
-                    "  # unsupported: %s\n" % (name))
-            code_lines.append("%s\n" % (oct_expr))
+                    "# unsupported: %s\n" % (name))
+            code_lines.append("%s\n" % (jl_expr))
         return declarations + code_lines
 
     def _indent_code(self, codelines):
@@ -1317,7 +1314,7 @@ class JuliaCodeGen(CodeGen):
         return p.indent_code(codelines)
         return codelines
 
-    def dump_jl(self, routines, f, prefix, header=True, empty=True, inline=True):
+    def dump_jl(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
 
     dump_jl.extension = code_extension

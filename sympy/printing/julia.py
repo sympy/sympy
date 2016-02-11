@@ -208,7 +208,10 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Pi(self, expr):
-        return 'pi'
+        if self._settings["inline"]:
+            return "pi"
+        else:
+            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_ImaginaryUnit(self, expr):
@@ -216,19 +219,31 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Exp1(self, expr):
-        return "e"
+        if self._settings["inline"]:
+            return "e"
+        else:
+            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_EulerGamma(self, expr):
-        return "eulergamma"
+        if self._settings["inline"]:
+            return "eulergamma"
+        else:
+            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_Catalan(self, expr):
-        return "catalan"
+        if self._settings["inline"]:
+            return "catalan"
+        else:
+            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_GoldenRatio(self, expr):
-        return 'golden'
+        if self._settings["inline"]:
+            return "golden"
+        else:
+            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_NumberSymbol(self, expr):
@@ -367,14 +382,14 @@ class JuliaCodePrinter(CodePrinter):
                     return lstr + ':' + hstr
             else:
                 return ':'.join((lstr, self._print(step), hstr))
-        return (self._print(expr.parent) + '(' +
-                strslice(expr.rowslice, expr.parent.shape[0]) + ', ' +
-                strslice(expr.colslice, expr.parent.shape[1]) + ')')
+        return (self._print(expr.parent) + '[' +
+                strslice(expr.rowslice, expr.parent.shape[0]) + ',' +
+                strslice(expr.colslice, expr.parent.shape[1]) + ']')
 
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
+        return "%s[%s]" % (self._print(expr.base.label), ",".join(inds))
 
 
     def _print_Idx(self, expr):
