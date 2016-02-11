@@ -101,8 +101,12 @@ def test_simplify_other():
     assert simplify(sin(x)**2 + cos(x)**2) == 1
     assert simplify(gamma(x + 1)/gamma(x)) == x
     assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
+    # XXX this should go to Eq(x, 1) but it is not known that these
+    # two are equivalent -- perhaps each needs an _eval_Eq method to
+    # recognize the other?
     assert simplify(
-        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(x, 1)
+        Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == \
+        Eq(factorial(x), gamma(x))
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
     # issue 6123

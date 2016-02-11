@@ -608,7 +608,6 @@ def test_simplify_relational():
             try:
                 assert str(val_ans) == str(val_eq)
             except:
-                print(val_ans, val_eq)
                 rv = False
         return rv
 
@@ -660,7 +659,7 @@ def test_simplify_relational():
     eq = Lt(1/p + 1/p/x, 1)
     assert check(eq, 1/x < p - 1)
     eq = Lt((1 + 1/x)/r, 1)
-    assert check(eq, eq)
+    assert check(eq, (x  + 1)/(r*x) < 1)
     eq = Lt(1/p + 1/p/x, 0)
     assert check(eq, 1/x < -1)
     assert check(Ne(p/(p - 1), 1), S.true)

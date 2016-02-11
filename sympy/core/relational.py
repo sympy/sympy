@@ -195,18 +195,24 @@ class Relational(Boolean, Expr, EvalfMixin):
             L, R = R, L
             forward = not forward
 
-        # simplify as long as it does not remmove any denominators
-        denL = [d for d in denoms(L) if not d.is_number]
-        _L = L.simplify(ratio=ratio, measure=measure)
-        _denL = [d for d in denoms(_L) if not d.is_number]
-        if denL == _denL:
-            L = _L
-
-        denR = [d for d in denoms(R) if not d.is_number]
-        _R = R.simplify(ratio=ratio, measure=measure)
-        _denR = [d for d in denoms(_R) if not d.is_number]
-        if denR == _denR:
-            R = _R
+        # simplify as long as it does not remove any denominators;
+        # in some cases a new denominator mak be introduced, however,
+        # as in simplify(sqrt(tan(x)**2 + 1)) -> 1/Abs(cos(x)) where
+        # (although superficially different) are both the same in
+        # terms of having a discontinuity at odd multiples of pi/2.
+        def _doside(L):
+            denL = set([d for d in denoms(L) if not d.is_number])
+            _L = L.simplify(ratio=ratio, measure=measure)
+            if denL:
+                _denL = set([d for d in denoms(_L) if not d.is_number])
+                ok = not denL - _denL
+            else:
+                ok = True
+            if ok:
+                L = _L
+            return L, denL
+        L, denL = _doside(L)
+        R, denR = _doside(R)
 
         # special simplifications possible for Eq and Ne
         if isEqNe:
