@@ -784,7 +784,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
-            f, symbol, relational=False).intersection(domain)
+            f, symbol, relational=False)
+            for d in denoms(f, [symbol]):
+                result -= solveset(d, symbol, domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result

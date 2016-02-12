@@ -1089,3 +1089,11 @@ def test_issue_10555():
     f = Function('f')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
         ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+
+
+def test_issue_8715():
+    eq = x + 1/x > -2 + 1/x
+    assert solveset(eq, x, S.Reals) == \
+        (Interval.open(-2, oo) - FiniteSet(0))
+    assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
+        Interval.open(exp(-2), oo) - FiniteSet(1)
