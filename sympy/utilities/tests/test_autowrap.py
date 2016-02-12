@@ -117,6 +117,16 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
+    f = autowrap(Eq(z, x + y + z), backend='dummy', args=(y, x, z))
+    assert f() == str(x + y + z)
+    assert f.args == "y, x, z"
+    assert f.returns == "z"
+
+    f = autowrap(Eq(z, x + y + z), backend='dummy', args={y, x, z})
+    assert f() == str(x + y + z)
+    assert f.args == "y, x, z"
+    assert f.returns == "z"
+
 
 def test_autowrap_store_files():
     x, y = symbols('x y')

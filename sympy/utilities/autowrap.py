@@ -77,7 +77,7 @@ from subprocess import STDOUT, CalledProcessError
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output, range
+from sympy.core.compatibility import check_output, range, iterable
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
@@ -501,6 +501,7 @@ def autowrap(
 
     helpers = [helpers] if helpers else ()
     flags = flags if flags else ()
+    args = list(args) if iterable(args) else args
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
