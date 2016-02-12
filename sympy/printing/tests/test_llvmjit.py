@@ -20,7 +20,7 @@ def isclose(a, b):
 
 def test_simple_expr():
     e = a + 1.0
-    f = g.llvm_callable(e, [a])
+    f = g.llvm_callable([a], e)
     res = float(e.subs({a: 4.0}).evalf())
     jit_res = f(4.0)
 
@@ -29,7 +29,7 @@ def test_simple_expr():
 
 def test_two_arg():
     e = 4.0*a + b + 3.0
-    f = g.llvm_callable(e, [a, b])
+    f = g.llvm_callable([a, b], e)
     res = float(e.subs({a: 4.0, b: 3.0}).evalf())
     jit_res = f(4.0, 3.0)
 
@@ -38,7 +38,7 @@ def test_two_arg():
 
 def test_func():
     e = 4.0*sympy.exp(-a)
-    f = g.llvm_callable(e, [a])
+    f = g.llvm_callable([a], e)
     res = float(e.subs({a: 1.5}).evalf())
     jit_res = f(1.5)
 
@@ -46,7 +46,7 @@ def test_func():
 
 def test_two_func():
     e = 4.0*sympy.exp(-a) + sympy.exp(b)
-    f = g.llvm_callable(e, [a,b])
+    f = g.llvm_callable([a,b], e)
     res = float(e.subs({a: 1.5, b:2.0}).evalf())
     jit_res = f(1.5, 2.0)
 

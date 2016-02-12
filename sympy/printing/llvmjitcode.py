@@ -110,13 +110,13 @@ class LLVMJitCode(object):
         self.param_dict = {}  # map symbol name to LLVM function argument
         self.link_name = ''
 
-    def create_args(self, func_args):
+    def _create_args(self, func_args):
         """Create types for function arguments"""
         for arg in func_args:
             arg_type = self.fp_type
             self.arg_types.append(arg_type)
 
-    def create_function_base(self):
+    def _create_function_base(self):
         """Create function with name and type signature"""
         global link_names, current_link_suffix
         default_link_name = 'jit_func'
@@ -127,13 +127,13 @@ class LLVMJitCode(object):
         fn_type = ll.FunctionType(self.fp_type, self.arg_types)
         self.fn = ll.Function(self.module, fn_type, name=self.link_name)
 
-    def create_param_dict(self, func_args):
+    def _create_param_dict(self, func_args):
         """Mapping of symbolic values to function arguments"""
         for i, a in enumerate(func_args):
             self.fn.args[i].name = str(a)
             self.param_dict[a] = self.fn.args[i]
 
-    def create_function(self, expr):
+    def _create_function(self, expr):
         """Create function body and return LLVM IR"""
         bb_entry = self.fn.append_basic_block('entry')
         builder = ll.IRBuilder(bb_entry)
@@ -147,7 +147,7 @@ class LLVMJitCode(object):
         strmod = str(self.module)
         return strmod
 
-    def compile_function(self, strmod):
+    def _compile_function(self, strmod):
         global exe_engines
         llmod = llvm.parse_assembly(strmod)
 
@@ -174,23 +174,23 @@ class LLVMJitCode(object):
         return fptr
 
 
-def llvm_jit_code(expr, func_args=None):
+def _llvm_jit_code(args, expr):
     """Create a native code function from a Sympy expression"""
     jit = LLVMJitCode()
 
-    jit.create_args(func_args)
-    jit.create_function_base()
-    jit.create_param_dict(func_args)
-    strmod = jit.create_function(expr)
+    jit._create_args(args)
+    jit._create_function_base()
+    jit._create_param_dict(args)
+    strmod = jit._create_function(expr)
     if False:
         print("LLVM IR")
         print(strmod)
-    fptr = jit.compile_function(strmod)
+    fptr = jit._compile_function(strmod)
     return fptr
 
 
 @doctest_depends_on(modules=('llvmlite',))
-def llvm_callable(expr, func_args=None):
+def llvm_callable(args, expr):
     '''Compile function from a Sympy expression
 
     Expressions are evaluated using double precision arithmetic.
@@ -199,12 +199,12 @@ def llvm_callable(expr, func_args=None):
 
     Parameters
     ==========
-    expr : Expr
-        Expression to compile.
-    func_args : List of Symbol
+    args : List of Symbol
         Arguments to the generated function.  Usually the free symbols in
         the expression.  Currently each one is assumed to convert to
         a double precision scalar.
+    expr : Expr
+        Expression to compile.
 
     Returns
     =======
@@ -215,8 +215,8 @@ def llvm_callable(expr, func_args=None):
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> e = a*a + a + 1
-    >>> e1 = jit.llvm_callable(e, func_args=[a])
-    >>> e.subs('a',1.1)   # Evaluate via substitution
+    >>> e1 = jit.llvm_callable([a], e)
+    >>> e.subs(a, 1.1)   # Evaluate via substitution
     3.31000000000000
     >>> e1(1.1)  # Evaluate using JIT-compiled code
     3.3100000000000005
@@ -225,9 +225,9 @@ def llvm_callable(expr, func_args=None):
     if not llvmlite:
         raise ImportError("llvmlite is required for llvmjitcode")
 
-    fptr = llvm_jit_code(expr, func_args)
+    fptr = _llvm_jit_code(args, expr)
     arg_ctypes = []
-    for arg in func_args:
+    for arg in args:
         arg_ctype = ctypes.c_double
         arg_ctypes.append(arg_ctype)
 
