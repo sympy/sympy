@@ -4,12 +4,9 @@ from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
-from sympy.codegen.ast import (Assignment, aug_assign, datatype, Bool, Int,
-    Float, Double, Void, CodeBlock, For, InArgument, OutArgument,
-    InOutArgument, Variable, Result, Return, FunctionDef,
-    AddAugmentedAssignment, SubAugmentedAssignment,
-    MulAugmentedAssignment, DivAugmentedAssignment,
-    ModAugmentedAssignment)
+from sympy.codegen.ast import (Assignment, aug_assign, CodeBlock, For,
+    AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
+    DivAugmentedAssignment, ModAugmentedAssignment)
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
 n = symbols("n", integer=True)
@@ -102,24 +99,6 @@ def test_AugAssign():
     raises(TypeError, lambda: aug_assign(A + A, '+', mat))
     raises(TypeError, lambda: aug_assign(B, '+', 0))
 
-
-def test_datatype():
-    assert Bool == datatype('bool')
-    assert Int == datatype('int')
-    assert Float == datatype('float')
-    assert Double == datatype('double')
-    assert Void == datatype('void')
-    # Check inferred types
-    assert datatype(x) == Double
-    assert datatype(n) == Int
-    # This should work (I think), but doesn't due to how SymPy handles bools.
-    # assert datatype(b) == Bool
-    assert datatype(A) == Double
-    assert datatype(mat) == Int
-    d = datatype('int')
-    assert d.func(*d.args) == d
-
-
 def test_CodeBlock():
     c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
     assert c.func(*c.args) == c
@@ -185,41 +164,3 @@ def test_For():
     f = For(n, (1, 2, 3, 4, 5), (Assignment(A[n, 0], x + n),))
     assert f.func(*f.args) == f
     raises(TypeError, lambda: For(n, x, (x + y,)))
-
-
-def test_Variable():
-    v = Variable('int', x)
-    assert v.func(*v.args) == v
-    Variable('double', A)
-    raises(TypeError, lambda: Variable('int', x + y))
-
-
-def test_Result():
-    r = Result('double')
-    assert r.func(*r.args) == r
-    r = Result('double', 'var_name')
-    assert r.func(*r.args) == r
-    raises(TypeError, lambda: Result('int', x + y))
-
-
-def test_Arguments():
-    a = InArgument('int', x)
-    b = OutArgument('double', x)
-    c = InOutArgument('float', A)
-    assert a.func(*a.args) == a
-    assert b.func(*b.args) == b
-    assert c.func(*c.args) == c
-
-
-def test_FunctionDef():
-    ax = InArgument('double', x)
-    ay = InArgument('double', y)
-    f = FunctionDef('test', (ax, ay), (Return(x + y),), (Result('double'),))
-    assert f.func(*f.args) == f
-    raises(TypeError, lambda: FunctionDef('test', (x, y), (Return(x + y),), (Result('double'),)))
-    raises(TypeError, lambda: FunctionDef('test', (ax, ay), (Return(x + y),), (x + y,)))
-
-
-def test_Return():
-    r = Return(x + y)
-    assert r.func(*r.args) == r
