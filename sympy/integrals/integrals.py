@@ -15,7 +15,7 @@ from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.matrices import Matrix, ImmutableMatrix
+from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.functions import Piecewise, sqrt, sign
@@ -397,7 +397,7 @@ class Integral(AddWithLimits):
         if function.is_zero:
             return S.Zero
 
-        if isinstance(function, (Matrix, ImmutableMatrix)):
+        if isinstance(function, MatrixBase):
             return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
 
         # There is no trivial answer, so continue
