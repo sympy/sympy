@@ -1461,3 +1461,10 @@ def test_issue_7117():
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
+
+
+def test_issue_10489():
+    latexSymbolWithBrace = 'C_{x_{0}}'
+    s = Symbol(latexSymbolWithBrace)
+    assert latex(s) == latexSymbolWithBrace
+    assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
