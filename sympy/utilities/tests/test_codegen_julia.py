@@ -107,7 +107,7 @@ def test_jl_code_argument_order():
     routine = make_routine("test", expr, argument_sequence=[z, x, y], language="julia")
     code_gen = JuliaCodeGen()
     output = StringIO()
-    code_gen.dump_m([routine], output, "test", header=False, empty=False)
+    code_gen.dump_jl([routine], output, "test", header=False, empty=False)
     source = output.getvalue()
     expected = (
         "function test(z, x, y)\n"

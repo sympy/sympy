@@ -202,13 +202,13 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "(1, 2, 3)"
     assert mcode((1, x*y, (3, x**2))) == "(1, x.*y, (3, x.^2))"
     # scalar, matrix, empty matrix and empty list
-    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0,0), Any[])"
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
 
 
 def test_julia_noninline():
     source = mcode((x+y)/Catalan, assign_to='me', inline=False)
     expected = (
-        "Catalan = 0.915965594177219\n"
+        "const Catalan = 0.915965594177219\n"
         "me = (x + y)/Catalan"
     )
     assert source == expected
@@ -230,7 +230,7 @@ def test_julia_piecewise():
                 "(x < 2) ? (x.^3) :\n"
                 "(x < 3) ? (x.^4) : (x.^5))")
     assert mcode(expr) == expected
-    assert mcode(expr, assign_to="r") == "r = " + expected + ";"
+    assert mcode(expr, assign_to="r") == "r = " + expected
     assert mcode(expr, assign_to="r", inline=False) == (
         "if (x < 1)\n"
         "    r = x.^2\n"
@@ -277,7 +277,7 @@ def test_julia_matrix_1x1():
     C = MatrixSymbol('C', 1, 2)
     assert mcode(A, assign_to=B) == "B = [3]"
     # FIXME?
-    #assert mcode(A, assign_to=x) == "x = 3;"
+    #assert mcode(A, assign_to=x) == "x = [3]"
     raises(ValueError, lambda: mcode(A, assign_to=C))
 
 
@@ -300,14 +300,14 @@ def test_julia_boolean():
 
 def test_julia_not_supported():
     assert mcode(S.ComplexInfinity) == (
-        "% Not supported in Julia:\n"
-        "% ComplexInfinity\n"
+        "# Not supported in Julia:\n"
+        "# ComplexInfinity\n"
         "zoo"
     )
     f = Function('f')
     assert mcode(f(x).diff(x)) == (
-        "% Not supported in Julia:\n"
-        "% Derivative\n"
+        "# Not supported in Julia:\n"
+        "# Derivative\n"
         "Derivative(f(x), x)"
     )
 
