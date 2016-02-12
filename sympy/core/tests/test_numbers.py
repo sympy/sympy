@@ -470,6 +470,9 @@ def test_Float():
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
 
+    assert Float(oo) == Float('+inf')
+    assert Float(-oo) == Float('-inf')
+
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))

@@ -250,6 +250,33 @@ class Vector(BasisDependent):
 
         return DyadicAdd(*args)
 
+    def projection(self, other, scalar=False):
+        """
+        Returns the vector or scalar projection of the 'other' on 'self'.
+
+        Examples
+        ========
+
+        >>> from sympy.vector.coordsysrect import CoordSysCartesian
+        >>> from sympy.vector.vector import Vector, BaseVector
+        >>> C = CoordSysCartesian('C')
+        >>> i, j, k = C.base_vectors()
+        >>> v1 = i + j + k
+        >>> v2 = 3*i + 4*j
+        >>> v1.projection(v2)
+        7/3*C.i + 7/3*C.j + 7/3*C.k
+        >>> v1.projection(v2, scalar=True)
+        7/3
+
+        """
+        if self.equals(Vector.zero):
+            return S.zero if scalar else Vector.zero
+
+        if scalar:
+            return self.dot(other) / self.dot(self)
+        else:
+            return self.dot(other) / self.dot(self) * self
+
     def __or__(self, other):
         return self.outer(other)
     __or__.__doc__ = outer.__doc__

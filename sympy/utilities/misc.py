@@ -4,8 +4,10 @@ from __future__ import print_function, division
 
 import sys
 import os
+import re as _re
 from textwrap import fill, dedent
 from sympy.core.compatibility import get_function_name, range
+
 
 
 def filldedent(s, w=70):
@@ -217,5 +219,183 @@ def find_executable(executable, path=None):
 
 
 def func_name(x):
-    '''return function name of `x` (if defined) else the `type(x)`.'''
+    '''Return function name of `x` (if defined) else the `type(x)`.
+    See Also
+    ========
+    sympy.core.compatibility get_function_name
+    '''
     return getattr(getattr(x, 'func', x), '__name__', type(x))
+
+
+def _replace(reps):
+    """Return a function that can make the replacements, given in
+    ``reps``, on a string. The replacements should be given as mapping.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import _replace
+    >>> f = _replace(dict(foo='bar', d='t'))
+    >>> f('food')
+    'bart'
+    >>> f = _replace({})
+    >>> f('food')
+    'food'
+    """
+    if not reps:
+        return lambda x: x
+    D = lambda match: reps[match.group(0)]
+    pattern = _re.compile("|".join(
+        [_re.escape(k) for k, v in reps.items()]), _re.M)
+    return lambda string: pattern.sub(D, string)
+
+
+def replace(string, *reps):
+    """Return ``string`` with all keys in ``reps`` replaced with
+    their corresponding values, longer strings first, irrespective
+    of the order they are given.  ``reps`` may be passed as tuples
+    or a single mapping.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import replace
+    >>> replace('foo', {'oo': 'ar', 'f': 'b'})
+    'bar'
+    >>> replace("spamham sha", ("spam", "eggs"), ("sha","md5"))
+    'eggsham md5'
+
+    There is no guarantee that a unique answer will be
+    obtained if keys in a mapping overlap (i.e. are the same
+    length and have some identical sequence at the
+    beginning/end):
+
+    >>> reps = [
+    ...     ('ab', 'x'),
+    ...     ('bc', 'y')]
+    >>> replace('abc', *reps) in ('xc', 'ay')
+    True
+
+    References
+    ==========
+
+    .. [1] http://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    """
+    if len(reps) == 1:
+        kv = reps[0]
+        if type(kv) is dict:
+            reps = kv
+        else:
+            return string.replace(*kv)
+    else:
+        reps = dict(reps)
+    return _replace(reps)(string)
+
+
+def translate(s, a, b=None, c=None):
+    """Return ``s`` where characters have been replaced or deleted.
+
+    SYNTAX
+    ======
+
+    translate(s, None, deletechars):
+        all characters in ``deletechars`` are deleted
+    translate(s, map [,deletechars]):
+        all characters in ``deletechars`` (if provided) are deleted
+        then the replacements defined by map are made; if the keys
+        of map are strings then the longer ones are handled first.
+        Multicharacter deletions should have a value of ''.
+    translate(s, oldchars, newchars, deletechars)
+        all characters in ``deletechars`` are deleted
+        then each character in ``oldchars`` is replaced with the
+        corresponding character in ``newchars``
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import translate
+    >>> from sympy.core.compatibility import unichr
+    >>> abc = 'abc'
+    >>> translate(abc, None, 'a')
+    'bc'
+    >>> translate(abc, {'a': 'x'}, 'c')
+    'xb'
+    >>> translate(abc, {'abc': 'x', 'a': 'y'})
+    'x'
+
+    >>> translate('abcd', 'ac', 'AC', 'd')
+    'AbC'
+
+    There is no guarantee that a unique answer will be
+    obtained if keys in a mapping overlap are the same
+    length and have some identical sequences at the
+    beginning/end:
+
+    >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
+    True
+    """
+    from sympy.core.compatibility import maketrans
+
+    # when support for Python 2 is dropped, this try/except can be
+    #removed
+    try:
+        ''.translate(None, '')
+        py3 = False
+    except TypeError:
+        py3 = True
+
+    mr = {}
+    if a is None:
+        assert c is None
+        if not b:
+            return s
+        c = b
+        a = b = ''
+    else:
+        if type(a) is dict:
+            short = {}
+            for k in list(a.keys()):
+                if (len(k) == 1 and len(a[k]) == 1):
+                    short[k] = a.pop(k)
+            mr = a
+            c = b
+            if short:
+                a, b = [''.join(i) for i in list(zip(*short.items()))]
+            else:
+                a = b = ''
+        else:
+            assert len(a) == len(b)
+    if py3:
+        if c:
+            s = s.translate(maketrans('', '', c))
+        s = replace(s, mr)
+        return s.translate(maketrans(a, b))
+    else:
+        # when support for Python 2 is dropped, this if-else-block
+        # can be replaced with the if-clause
+        if c:
+            c = list(c)
+            rem = {}
+            for i in range(-1, -1 - len(c), -1):
+                if ord(c[i]) > 255:
+                    rem[c[i]] = ''
+                    c.pop(i)
+            s = s.translate(None, ''.join(c))
+            s = replace(s, rem)
+            if a:
+                a = list(a)
+                b = list(b)
+                for i in range(-1, -1 - len(a), -1):
+                    if ord(a[i]) > 255 or ord(b[i]) > 255:
+                        mr[a.pop(i)] = b.pop(i)
+                a = ''.join(a)
+                b = ''.join(b)
+        s = replace(s, mr)
+        table = maketrans(a, b)
+        # s may have become unicode which uses the py3 syntax for translate
+        if type(table) is str and type(s) is str:
+            s = s.translate(table)
+        else:
+            s = s.translate(dict(
+                [(i, ord(c)) for i, c in enumerate(table)]))
+        return s
