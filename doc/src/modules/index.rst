@@ -25,7 +25,6 @@ access any SymPy module, or use this contens:
    codegen.rst
    numeric-computation.rst
    functions/index.rst
-   galgebra/index.rst
    geometry/index.rst
    integrals/integrals.rst
    liealgebras/index.rst
