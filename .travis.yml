@@ -323,6 +323,8 @@ install:
       pip uninstall -y sympy;
       pip install setuptools;
       python setup.py install;
+      # this assumes TEST_MATPLOTLIB is also true (for the conda installation)
+      conda install llvmlite;
     elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
