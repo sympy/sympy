@@ -1070,6 +1070,12 @@ def test_issue_9531_and_9606():
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
 
 
+def test_issue_7914():
+    assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1 ,x) ==\
+     ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers) +\
+      ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
+
+
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
