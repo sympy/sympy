@@ -128,7 +128,10 @@ class Vector(object):
 
         if other == 0:
             other = Vector(0)
-        other = _check_vector(other)
+        try:
+            other = _check_vector(other)
+        except TypeError:
+            return False
         if (self.args == []) and (other.args == []):
             return True
         elif (self.args == []) or (other.args == []):
