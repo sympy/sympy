@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 28 13:25:02 2015
-
-@author: alkis
-"""
-"""
 This module contains functions for the computation
 of Euclidean, generalized Sturmian and (modified) subresultant
 polynomial remainder sequences (prs's).
@@ -133,7 +128,7 @@ bezout(f, g, x, method='prs')
 The following identity holds:
 
 bezout(f, g, x, method='prs') =
-   backward_eye(deg(f)) * bezout(f, g, x, 'bz') * backward_eye(deg(f))
+backward_eye(deg(f))*bezout(f, g, x, method='bz')*backward_eye(deg(f))
 
 2B. Subresultant and modified subresultant prs's by
 ===================================================
