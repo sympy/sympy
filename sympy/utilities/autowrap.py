@@ -472,7 +472,8 @@ def autowrap(
         the generated code and the wrapper input files are left intact in the
         specified path.
     args : iterable, optional
-        An iterable of symbols. Specifies the argument sequence for the function.
+        An ordered iterable of symbols. Specifies the argument sequence for the
+        function.
     flags : iterable, optional
         Additional option flags that will be passed to the backend.
     verbose : bool, optional
@@ -493,7 +494,6 @@ def autowrap(
     >>> binary_func(1, 4, 2)
     -1.0
     """
-
     if language:
         _validate_backend_language(backend, language)
     else:
@@ -501,7 +501,7 @@ def autowrap(
 
     helpers = [helpers] if helpers else ()
     flags = flags if flags else ()
-    args = list(args) if iterable(args) else args
+    args = list(args) if iterable(args, exclude=set) else args
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
