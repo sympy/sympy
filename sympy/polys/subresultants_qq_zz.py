@@ -9,6 +9,15 @@ This module contains functions for the computation
 of Euclidean, generalized Sturmian and (modified) subresultant
 polynomial remainder sequences (prs's).
 
+The pseudo-remainder function prem() of sympy is _not_ used
+by any of the functions in the module.
+
+Instead of prem() we use the function
+
+rem_z().
+
+Included is also the function quo_z().
+
 1. Theoretical background:
 ==========================
 Consider the polynomials f, g ∈ Z[x] of degrees deg(f) = n and
@@ -103,6 +112,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
+No function utilizes sympy's function prem().
 
 2A. Matrices:
 =============
@@ -119,6 +129,8 @@ determinant evaluation.
 sylvester(f, g, x, method=1)
 sylvester(f, g, x, method=2)
 bezout(f, g, x, method='prs')
+
+The following identity holds:
 
 bezout(f, g, x, method='prs') =
    backward_eye(deg(f)) * bezout(f, g, x, 'bz') * backward_eye(deg(f))
@@ -141,7 +153,7 @@ appropriately selected sub-matrix of sylvester1(f, g, x),
 Sylvester’s matrix of 1840.
 
 To compute the remainder polynomials the function
-subresultants rem(f, g, x) employs rem(f, g, x).
+subresultants_rem(f, g, x) employs rem(f, g, x).
 By contrast, the other two functions implement Van Vleck’s ideas
 of 1900 and compute the remainder polynomials by trinagularizing
 sylvester2(f, g, x), Sylvester’s matrix of 1853.
@@ -188,8 +200,8 @@ This function employs rem(f, g, x) for the computation of
 the remainder polynomials, despite the fact that it implements
 the A-M-V Theorem.
 
-It is included in our module in order to show that both theorems
-mentioned above can be implemented utilizing either the function
+It is included in our module in order to show that theorems P-G
+and A-M-V can be implemented utilizing either the function
 rem(f, g, x) or the function rem_z(f, g, x).
 
 For clearly historical reasons --- since the Collins-Brown-Traub
