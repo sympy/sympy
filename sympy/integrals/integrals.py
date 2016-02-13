@@ -15,6 +15,10 @@ from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.simplify.simplify import simplify
+from sympy import expand_log
+#from sympy.utilities import xthreaded
+#from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
@@ -734,6 +738,7 @@ class Integral(AddWithLimits):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
+
         if isinstance(f, Poly) and not meijerg:
             return f.integrate(x)
 
@@ -758,9 +763,19 @@ class Integral(AddWithLimits):
             else:
                 if i:
                     # There was a nonelementary integral. Try integrating it.
-                    return result + i.doit(risch=False)
+                    a="ans"
+                    a=str(result + i.doit(risch=False))
+                    if "log" in a:
+                        return expand_log(simplify(result + i.doit(risch=False)))
+                    else:
+                        return simplify(result + i.doit(risch=False))
                 else:
-                    return result
+                    a="ans"
+                    a=str(result)
+                    if "log" in a:
+                        return expand_log(simplify(result))
+                    else:
+                        return simplify(result)
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
@@ -1096,6 +1111,7 @@ class Integral(AddWithLimits):
         return f
 
 
+#@xthreaded
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
@@ -1258,6 +1274,7 @@ def integrate(*args, **kwargs):
         return integral
 
 
+#@xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
 
