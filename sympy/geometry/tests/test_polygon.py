@@ -228,6 +228,12 @@ def test_polygon():
     assert intersection(m[p1], m[p2], m[p3]) == [t1.centroid]
     assert t1.medial == Triangle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
 
+    # Nine-point circle
+    vo_middles = [Segment(v, t1.orthocenter).midpoint for v in t1.vertices]
+    assert t1.nine_point_circle == Circle(*vo_middles)
+    assert t1.nine_point_circle == Circle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
+
+
     # Perpendicular
     altitudes = t1.altitudes
     assert altitudes[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
