@@ -1050,12 +1050,15 @@ def test_issue_10426():
     # from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
     #                               ComplexRegion)
     a =symbols('a')
+    assert solveset(sin(x + a) - sin(x), a) ==\
+    Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
     # Assertion error for below test but works fine locally.
     # assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == imageset(Lambda(n, 2*n*pi), S.Integers)
     # assert solveset(sin(x + a) - sin(x), a) == \
     # ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
-    assert solveset(sin(x + a) - sin(x), a) == (ImageSet(Lambda(n, 2*n*pi), S.Integers) +\
-        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
+    # assert solveset(sin(x + a) - sin(x), a) == (ImageSet(Lambda(n, 2*n*pi), S.Integers) +\
+    #     ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
 
 
 def test_issue_9824():
