@@ -3,11 +3,11 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import And
 from sympy.core import oo
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
 from sympy.core.singleton import Singleton, S, sympify
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, converter
 from sympy.core.function import Lambda
 from sympy.utilities.misc import filldedent, func_name
 
@@ -329,6 +329,15 @@ class Range(Set):
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
+        if len(args) == 1:
+            if PY3 and isinstance(args[0], range):
+                # Python 3 range object.
+                args = args[0].start, args[0].stop, args[0].step
+            elif not PY3 and isinstance(args[0], xrange):
+                # Seems the only way to access the args is through the pickle
+                # methods
+                args = args[0].__reduce__()[1]
+
         # expand range
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
@@ -452,6 +461,11 @@ class Range(Set):
     def _boundary(self):
         return self
 
+
+if PY3:
+    converter[range] = Range
+else:
+    converter[xrange] = Range
 
 def normalize_theta_set(theta):
     """
