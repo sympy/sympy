@@ -233,7 +233,6 @@ def test_polygon():
     assert t1.nine_point_circle == Circle(*vo_middles)
     assert t1.nine_point_circle == Circle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
 
-
     # Perpendicular
     altitudes = t1.altitudes
     assert altitudes[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
