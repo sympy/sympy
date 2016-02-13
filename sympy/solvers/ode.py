@@ -529,6 +529,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         - Do ``help(ode.ode_<hintname>)`` to get help more information on a
           specific hint, where ``<hintname>`` is the name of a hint without
           ``_Integral``.
+        - By default floats are converted into rationals. You can use
+          dsolve(eq, f, rational=False) when solving ODEs with floats to force
+          dsolve not to convert floats to rationals.
 
     For system of ordinary differential equations
     =============================================
@@ -2112,6 +2115,7 @@ def odesimp(eq, func, order, constants, hint, **kwargs):
 
     else:
         # The solution is not solved, so try to solve it
+        # Pass the kwargs to solve
         solve_flags = kwargs
         try:
             eqsol = solve(eq, func, force=True, **solve_flags)
