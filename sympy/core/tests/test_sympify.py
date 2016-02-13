@@ -1,6 +1,6 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi)
+    Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
@@ -9,7 +9,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY
+from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 
 import mpmath
 
@@ -492,3 +492,13 @@ def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
+
+def test_Range():
+    # Only works in Python 3 where range returns a range type
+    if PY3:
+        builtin_range = range
+    else:
+        builtin_range = xrange
+
+    assert sympify(builtin_range(10)) == Range(10)
+    assert _sympify(builtin_range(10)) == Range(10)
