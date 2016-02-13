@@ -276,6 +276,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
+    try:
+        from ..tensor.array import Array
+        return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
+    except AttributeError:
+        pass
+
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
