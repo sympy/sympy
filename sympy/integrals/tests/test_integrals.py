@@ -1127,6 +1127,11 @@ def test_issue_7130():
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
 
+def test_issue_10567():
+    a, b, c, t = symbols('a b c t')
+    vt = Matrix([a*t, b, c])
+    assert integrate(vt, t) == Integral(vt, t).doit()
+    assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
 
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
