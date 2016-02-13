@@ -9,6 +9,8 @@ from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
 from sympy.core.singleton import Singleton, S, sympify
 from sympy.core.sympify import _sympify
 from sympy.core.function import Lambda
+from sympy.utilities.misc import filldedent, func_name
+
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -235,11 +237,16 @@ class ImageSet(Set):
         from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = list(linsolve([expr - val for val, expr in
+            zip(other, L.expr)], L.variables).args[0])
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
-
+            solnsSet = solveset(L.expr-other, L.variables[0])
+            if solnsSet.is_FiniteSet:
+                solns = list(solveset(L.expr - other, L.variables[0]))
+            else:
+                raise NotImplementedError(filldedent('''
+                Determining whether an ImageSet contains %s has not
+                been implemented.''' % func_name(other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
@@ -917,8 +924,13 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return ComplexRegion.__new__(cls, S.Reals*S.Reals)
 
     def __eq__(self, other):
-        if other == ComplexRegion(S.Reals*S.Reals):
-            return True
+        return other == ComplexRegion(S.Reals*S.Reals)
 
     def __hash__(self):
         return hash(ComplexRegion(S.Reals*S.Reals))
+
+    def __str__(self):
+        return "S.Complexes"
+
+    def __repr__(self):
+        return "S.Complexes"

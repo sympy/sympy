@@ -15,6 +15,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+
 from sympy.printing.codeprinter import Assignment
 
 from sympy.printing.pretty import pretty as xpretty
@@ -2595,7 +2597,6 @@ u("""\
 
 
 def test_Adjoint():
-    from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert pretty(Adjoint(X)) == " +\nX "
@@ -2660,6 +2661,26 @@ tr⎜⎢    ⎥⎟ + tr⎜⎢    ⎥⎟
     assert pretty(Trace(X) + Trace(Y)) == ascii_str_2
     assert upretty(Trace(X) + Trace(Y)) == ucode_str_2
 
+
+def test_MatrixExpressions():
+    n = Symbol('n', integer=True)
+    X = MatrixSymbol('X', n, n)
+
+    assert pretty(X) == upretty(X) == "X"
+
+    Y = X[1:2:3, 4:5:6]
+
+    ascii_str = ucode_str = "X[1:3, 4:6]"
+
+    assert pretty(Y) == ascii_str
+    assert upretty(Y) == ucode_str
+
+    Z = X[1:10:2]
+
+    ascii_str = ucode_str = "X[1:10:2, :n]"
+
+    assert pretty(Z) == ascii_str
+    assert upretty(Z) == ucode_str
 
 def test_pretty_dotproduct():
     from sympy.matrices import Matrix, MatrixSymbol
@@ -3178,6 +3199,18 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
+    assert pretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == \
+        '{x | x in {1} and Contains(x, (-oo, oo))}'
+    assert upretty(ConditionSet(x, Contains(x, S.Reals, evaluate=False), FiniteSet(1))) == u('{x | x ∊ {1} ∧ (x ∈ ℝ)}')
+
+    assert pretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) ==\
+        '{x | x in {1, 2, 3} and And(x > 1, x < -1)}'
+    assert upretty(ConditionSet(x, And(x > 1, x < -1), FiniteSet(1, 2, 3))) == \
+        u('{x | x ∊ {1, 2, 3} ∧ (x > 1 ∧ x < -1)}')
+
+    assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{x | x in {1, 2} and Or(x > 1, x < -1)}'
+    assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == u('{x | x ∊ {1, 2} ∧ (x > 1 ∨ x < -1)}')
+
 
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
@@ -3203,7 +3236,6 @@ def test_pretty_Intersection_issue_10414():
     assert pretty(Intersection(a, b)) == ascii_str
 
 def test_ProductSet_paranthesis():
-    from sympy import Interval, Union, FiniteSet
     ucode_str = u('([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])')
 
     a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
