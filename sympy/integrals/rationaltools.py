@@ -8,7 +8,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
 from sympy.polys import Poly, resultant, ZZ
 from sympy.polys.polytools import count_roots
 from sympy.core.compatibility import range
-
+from sympy import primitive
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
@@ -92,17 +92,19 @@ def ratint(f, x, **flags):
 
         if not real:
             for h, q in L:
+                h=h.primitive()
                 eps += RootSum(
-                    q, Lambda(t, t*log(h.as_expr())), quadratic=True)
+                    q, Lambda(t, t*log(h[1].as_expr())), quadratic=True)
         else:
             for h, q in L:
-                R = log_to_real(h, q, x, t)
+                h=h.primitive()
+                R = log_to_real(h[1], q, x, t)
 
                 if R is not None:
                     eps += R
                 else:
                     eps += RootSum(
-                        q, Lambda(t, t*log(h.as_expr())), quadratic=True)
+                        q, Lambda(t, t*log(h[1].as_expr())), quadratic=True)
 
         result += eps
 
