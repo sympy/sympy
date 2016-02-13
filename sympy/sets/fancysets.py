@@ -323,13 +323,8 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if PY3 and isinstance(args[0], range):
-                # Python 3 range object.
-                args = args[0].start, args[0].stop, args[0].step
-            elif not PY3 and isinstance(args[0], xrange):
-                # Seems the only way to access the args is through the pickle
-                # methods
-                args = args[0].__reduce__()[1]
+            if isinstance(args[0], range if PY3 else xrange):
+                args = args[0].__reduce__()[1]  # use pickle method
 
         # expand range
         slc = slice(*args)
