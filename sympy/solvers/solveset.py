@@ -962,7 +962,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
                     n, d = ratsimp(e).as_numer_denom()
                     if sympify(d) == symbol:
                         domain = domain - (FiniteSet(0))
-                
+
             result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
         except NotImplementedError:
