@@ -1294,6 +1294,11 @@ def clear_coefficients(expr):
         rhs -= c
     e = signsimp(expr, evaluate = False)
     if _coeff_isneg(e):
+<<<<<<< HEAD
         expr = -expr
         rhs = -rhs
+=======
+        expr *= -1
+        rhs *= -1
+>>>>>>> 331b2cf5e40085919202d942ccc0c6f9018ca6a6
     return expr, (R, rhs)
