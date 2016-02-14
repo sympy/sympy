@@ -4,8 +4,7 @@ from sympy import S
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.logic.boolalg import And
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+from sympy.sets.sets import (Set, Intersection, FiniteSet)
 
 
 class ConditionSet(Set):

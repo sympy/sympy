@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from .basic import Basic
 from .compatibility import cmp_to_key, reduce, is_sequence, range
-from .logic import _fuzzy_group, fuzzy_or, fuzzy_not, fuzzy_and
+from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit

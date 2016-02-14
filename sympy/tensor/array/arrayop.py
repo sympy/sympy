@@ -2,7 +2,7 @@ import itertools
 
 import collections
 
-from sympy import S, Tuple, Matrix, prod
+from sympy import S, Tuple, Matrix
 
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray

@@ -453,7 +453,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.basic import Atom
         from sympy.core.function import expand_mul
 
         if hasattr(arg, '_eval_Abs'):

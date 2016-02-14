@@ -13,10 +13,9 @@ from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, atan, acsc, asec, arg,
-                             Piecewise, piecewise_fold)
+                             acos, asin, acsc, asec, arg,
+                             piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -28,8 +27,6 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-
-import warnings
 
 
 def invert_real(f_x, y, x):

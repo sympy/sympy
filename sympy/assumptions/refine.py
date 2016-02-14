@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
-from sympy.core.logic import fuzzy_not
 
 
 def refine(expr, assumptions=True):
