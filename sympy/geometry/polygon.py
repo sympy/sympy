@@ -2277,7 +2277,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.nine_point_circle
-        Circle(Point(1/4, 1/4), sqrt(2)/4)
+        Circle(Point2D(1/4, 1/4), sqrt(2)/4)
 
         """
         return Circle(*self.medial.vertices)

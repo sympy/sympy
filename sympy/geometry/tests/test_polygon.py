@@ -229,9 +229,8 @@ def test_polygon():
     assert t1.medial == Triangle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
 
     # Nine-point circle
-    vo_middles = [Segment(v, t1.orthocenter).midpoint for v in t1.vertices]
-    assert t1.nine_point_circle == Circle(*vo_middles)
     assert t1.nine_point_circle == Circle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
+    assert t1.nine_point_circle == Circle(Point(0, 0), Point(0, 2.5), Point(2.5, 2.5))
 
     # Perpendicular
     altitudes = t1.altitudes
