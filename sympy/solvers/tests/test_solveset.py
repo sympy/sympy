@@ -577,6 +577,8 @@ def test_solve_abs():
     assert solveset_real(eq, x) == u
     assert solveset(eq, x, domain=S.Reals) == u
 
+    raises(ValueError, lambda: solveset(abs(x) - 1, x))
+
 
 @XFAIL
 def test_rewrite_trigh():

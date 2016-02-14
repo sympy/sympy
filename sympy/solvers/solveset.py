@@ -353,15 +353,15 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
-def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
+def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
-        return as_poly_solver(g, symbol)
+        return _solve_as_poly(g, symbol, domain)
     else:
-        valid_solns = solveset_solver(g, symbol)
-        invalid_solns = solveset_solver(h, symbol)
+        valid_solns = _solveset(g, symbol, domain)
+        invalid_solns = _solveset(h, symbol, domain)
         return valid_solns - invalid_solns
 
 
@@ -389,7 +389,7 @@ def _solve_real_trig(f, symbol):
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
-def _solve_as_poly(f, symbol, solveset_solver, invert_func, domain=S.Complexes):
+def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
     Solve the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
@@ -427,7 +427,8 @@ def _solve_as_poly(f, symbol, solveset_solver, invert_func, domain=S.Complexes):
 
             if gen != symbol:
                 y = Dummy('y')
-                lhs, rhs_s = invert_func(gen, y, symbol)
+                inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+                lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                 else:
@@ -508,8 +509,12 @@ def _solve_radical(f, symbol, solveset_solver):
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 
-def _solve_abs(f, symbol, domain=S.Complexes):
+def _solve_abs(f, symbol, domain):
     """ Helper function to solve equation involving absolute value function """
+    if not domain.is_subset(S.Reals):
+        raise ValueError(filldedent('''
+            Absolute values cannot be inverted in the
+            complex domain.'''))
     p, q, r = Wild('p'), Wild('q'), Wild('r')
     pattern_match = f.match(p*Abs(q) + r) or {}
     if not pattern_match.get(p, S.Zero).is_zero:
@@ -529,13 +534,11 @@ def _solve_abs(f, symbol, domain=S.Complexes):
 
 
 
-def _solveset(f, symbol, domain, _final=False, _check=False):
+def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
-    # _final controls whether the final result is being returned
-    # or not; if so, _check controls whether the answer is
-    # checked or not.
+    # _check controls whether the answer is checked or not
 
     orig_f = f
     f = together(f)
@@ -554,7 +557,6 @@ def _solveset(f, symbol, domain, _final=False, _check=False):
     else:
         inverter_func = invert_complex
     inverter = lambda f, rhs, symbol: inverter_func(f, rhs, symbol, domain)
-    poly_solver = lambda f, symbol: _solve_as_poly(f, symbol, solver, inverter, domain)
 
     result = EmptySet()
 
@@ -612,31 +614,28 @@ def _solveset(f, symbol, domain, _final=False, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        result += _solve_as_rational(equation, symbol,
-                                                     solveset_solver=solver,
-                                                     as_poly_solver=poly_solver)
+                        result += _solve_as_rational(equation, symbol, domain)
                 else:
                     result += solver(equation, symbol)
         else:
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
-    if _final:
+    if _check:
         if isinstance(result, ConditionSet):
             # it wasn't solved or has enumerated all conditions
             # -- leave it alone
             return result
 
-        if _check:
-            # whittle away all but the symbol-containing core
-            # to use this for testing
-            fx = orig_f.as_independent(symbol, as_Add=True)[1]
-            fx = fx.as_independent(symbol, as_Add=False)[1]
+        # whittle away all but the symbol-containing core
+        # to use this for testing
+        fx = orig_f.as_independent(symbol, as_Add=True)[1]
+        fx = fx.as_independent(symbol, as_Add=False)[1]
 
-            if isinstance(result, FiniteSet):
-                # check the result for invalid solutions
-                result = FiniteSet(*[s for s in result
-                          if isinstance(s, RootOf)
-                          or domain_check(fx, symbol, s)])
+        if isinstance(result, FiniteSet):
+            # check the result for invalid solutions
+            result = FiniteSet(*[s for s in result
+                      if isinstance(s, RootOf)
+                      or domain_check(fx, symbol, s)])
 
     return result
 
@@ -784,21 +783,20 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
-            f, symbol, relational=False)
-            for d in denoms(f, [symbol]):
-                result -= solveset(d, symbol, domain)
+            f, symbol, relational=False) - _invalid_solutions(
+            f, symbol, domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _final=True, _check=True)
+    return _solveset(f, symbol, domain, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):
     bad = S.EmptySet
     for d in denoms(f):
-        bad += solveset(d, symbol, domain, _first=False, _check=False)
-    return result
+        bad += _solveset(d, symbol, domain, _check=False)
+    return bad
 
 
 def solveset_real(f, symbol):
