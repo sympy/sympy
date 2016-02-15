@@ -111,6 +111,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    from sympy.external import import_module
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
