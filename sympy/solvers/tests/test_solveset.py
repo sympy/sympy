@@ -1045,7 +1045,7 @@ def test_issue_9953():
     assert linsolve([ ], x) == S.EmptySet
 
 
-def test_issue_10426():
+#def test_issue_10426():
     # Commented test-case need another PR from updated fancysets, printer branch.
     # from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
     #                               ComplexRegion)
