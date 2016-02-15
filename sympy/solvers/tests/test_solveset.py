@@ -1070,3 +1070,7 @@ def test_issue_9913():
 
 def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
+
+
+def test_issue_8715():
+    assert solveset(x + 1/x > -2 + 1/x ,x ,S.Reals) == Union(Interval.open(-2,0),Interval.open(0,oo))

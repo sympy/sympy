@@ -915,7 +915,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     (0, oo)
 
     """
-
+    from sympy.simplify import ratsimp
     f = sympify(f)
 
     if f is S.true:
@@ -958,6 +958,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
         try:
+            for e in f.args:
+                    n, d = ratsimp(e).as_numer_denom()
+                    if sympify(d) == symbol:
+                        domain = domain - (FiniteSet(0))
+
             result = solve_univariate_inequality(
             f, symbol, relational=False).intersection(domain)
         except NotImplementedError:
