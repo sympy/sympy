@@ -741,6 +741,12 @@ def test_solve_trig():
         Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
               imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
 
+    y, a = symbols('y,a')
+    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
+        Union(imageset(Lambda(n, 2*n*pi), S.Integers),
+        imageset(Lambda(n,
+        -I*(I*(2*n*pi +arg(-exp(-2*I*y))) + 2*im(y))), S.Integers))
+
 
 @XFAIL
 def test_solve_trig_abs():
@@ -897,10 +903,6 @@ def test_conditionset():
 
     assert solveset(x + sin(x) > 1, x, domain=S.Reals) == \
         ConditionSet(x, x + sin(x) > 1, S.Reals)
-
-    y,a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        ConditionSet(a, Eq(-sin(y) + sin(y + a), 0), S.Reals)
 
 
 @XFAIL
