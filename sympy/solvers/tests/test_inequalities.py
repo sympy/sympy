@@ -312,12 +312,15 @@ def test_issue_8545():
 def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
-
+    
 
 def test_issue_10198():
-    assert reduce_inequalities(-1 + 1/abs( 1/x - 1 ) < 0) == And( -oo < x, x < 0 ) or And( 0 < x, x < 1/2 )
+    assert reduce_inequalities(-1 + 1/abs( 1/x - 1 ) < 0) == Or(And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2))
     assert reduce_inequalities( abs( 1/sqrt( x ) ) - 1,x) == Eq(x, -1)
-
-
+    assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
+        Or(And(-oo < x, x < 0), And(S(0) < x, x < S(3)/4),And(S(3)/2 < x, x < oo))
+    raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(1 - 1/sqrt(x)), '<', x))
+    
+    
 def test_issue_10047():
     assert solve(sin(x) < 2) == And(-oo < x, x < oo)
