@@ -95,7 +95,6 @@ class BooleanAtom(Boolean):
 
     __add__ = _noop
     __radd__ = _noop
-    __neg__ = _noop
     __sub__ = _noop
     __rsub__ = _noop
     __mul__ = _noop
@@ -107,6 +106,7 @@ class BooleanAtom(Boolean):
     __div__ = _noop
     __rtruediv__ = _noop
     __mod__ = _noop
+    __rmod__ = _noop
     _eval_power = _noop
 
 
