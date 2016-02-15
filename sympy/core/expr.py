@@ -909,8 +909,9 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from sympy.core import Add, Mul, S
-        from sympy.core.exprtools import decompose_power
+        from .add import Add
+        from .mul import Mul
+        from .exprtools import decompose_power
 
         gens, terms = set([]), []
 
