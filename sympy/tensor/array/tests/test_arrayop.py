@@ -1,7 +1,7 @@
-from sympy import symbols
+from sympy import symbols, sin, exp, log, cos
 from sympy.tensor.array import Array
 
-from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction
+from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array
 
 
 def test_tensorproduct():
@@ -35,6 +35,7 @@ def test_tensorproduct():
     assert tensorproduct(A, B, a) == Array([[a*x, 2*a*x, 3*a*x], [a*y, 2*a*y, 3*a*y]])
     assert tensorproduct(B, a, A) == Array([[a*x, a*y], [2*a*x, 2*a*y], [3*a*x, 3*a*y]])
 
+
 def test_tensorcontraction():
     from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x
     B = Array(range(18), (2, 3, 3))
@@ -44,3 +45,23 @@ def test_tensorcontraction():
     assert tensorcontraction(C1, (0, 2)) == Array([[a + o, b + p], [e + s, f + t], [i + w, j + x]])
     assert tensorcontraction(C1, (0, 2, 3)) == Array([a + p, e + t, i + x])
     assert tensorcontraction(C1, (2, 3)) == Array([[a + d, e + h, i + l], [m + p, q + t, u + x]])
+
+
+def test_derivative_by_array():
+    from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+
+    bexpr = x*y**2*exp(z)*log(t)
+    sexpr = sin(bexpr)
+    cexpr = cos(bexpr)
+
+    a = Array([sexpr])
+
+    assert derive_by_array(sexpr, t) == x*y**2*exp(z)*cos(x*y**2*exp(z)*log(t))/t
+    assert derive_by_array(sexpr, [x, y, z]) == Array([bexpr/x*cexpr, 2*y*bexpr/y**2*cexpr, bexpr*cexpr])
+    assert derive_by_array(a, [x, y, z]) == Array([[bexpr/x*cexpr], [2*y*bexpr/y**2*cexpr], [bexpr*cexpr]])
+
+    assert derive_by_array(sexpr, [[x, y], [z, t]]) == Array([[bexpr/x*cexpr, 2*y*bexpr/y**2*cexpr], [bexpr*cexpr, bexpr/log(t)/t*cexpr]])
+    assert derive_by_array(a, [[x, y], [z, t]]) == Array([[[bexpr/x*cexpr], [2*y*bexpr/y**2*cexpr]], [[bexpr*cexpr], [bexpr/log(t)/t*cexpr]]])
+    assert derive_by_array([[x, y], [z, t]], [x, y]) == Array([[[1, 0], [0, 0]], [[0, 1], [0, 0]]])
+    assert derive_by_array([[x, y], [z, t]], [[x, y], [z, t]]) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]],
+                                                                         [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
