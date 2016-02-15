@@ -2113,7 +2113,7 @@ def odesimp(eq, func, order, constants, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solveset(eq, func, S.Reals)
+            eqsol = solve(eq, func, force=True)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
