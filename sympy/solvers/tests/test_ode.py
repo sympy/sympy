@@ -576,18 +576,18 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
-        (False, 60*x**4*((log(x) + 1)**2 + log(x))*(
-        log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
+        (False,
+        x**4*(60*log(x)**3 + 235*log(x)**2 + 240*log(x) + 60)*log(x)**2 - 9)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == \
         (True, 0)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x),
         solve_for_func=False) == (True, 0)
     assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
-        [(True, 0), (True, 0), (False, 2*C2)]
+        [(True, 0), (True, 0), (False, C2)]
     assert checkodesol(f(x).diff(x, 2), set([Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
-        set([(True, 0), (True, 0), (False, 2*C2)])
+        set([(True, 0), (True, 0), (False, C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -1061,7 +1061,8 @@ def test_separable1():
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
     assert dsolve(eq4, hint='separable', simplify=False) == sol4
-    assert dsolve(eq5, hint='separable') == simplify(sol5).expand()
+    assert dsolve(eq5, hint='separable').simplify() == \
+        sol5.simplify()
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
@@ -1104,7 +1105,8 @@ def test_separable3():
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
     sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
-    assert dsolve(eq11, hint='separable') == simplify(sol11)
+    assert dsolve(eq11, hint='separable').simplify() == \
+        sol11.simplify()
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
@@ -2119,14 +2121,14 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3)
-    sol = x*(C1 + C2*x + Rational(1, 2)*x**2)
+    sol = x*(C1 + C2*x + x**2/2)
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x)
-    sol =  C1/x + C2*x**3 - Rational(1, 16)*log(x)/x - Rational(1, 8)*log(x)**2/x
+    sol =  C1/x + C2*x**3 - log(x)**2/(8*x) - log(x)/(16*x)
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
@@ -2159,10 +2161,10 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert our_hint in classify_ode(eq, f(x))
 
     eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4)
-    sol = C1*x + C2*x**2 + x**4/6
+    sol = Eq(f(x), x*(C1 + C2*x + x**3/6))
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert dsolve(eq, f(x), hint=our_hint) in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x))

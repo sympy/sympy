@@ -1,12 +1,15 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
+    cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
                                    Gt, Ge, Ne)
 from sympy.sets.sets import Interval, FiniteSet
+from sympy.utilities.misc import filldedent
+
 
 x, y, z, t = symbols('x,y,z,t')
 
@@ -573,9 +576,102 @@ def test_issue_8449():
     assert Le(oo, -p) is S.false
 
 
-def test_simplify():
-    assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    assert simplify(S(1) < -x) == (x < -1)
+def test_simplify_relational():
+    def check(eq, ans):
+        from random import randint as rnd
+        if not eq.is_Relational:
+            raise ValueError(filldedent('''
+    The `check` function expects to see if a Relational
+    simplifies correctly; the expression that was passed
+    (if it was a Relational) simplified at instantiation
+    and was no longer a Relational so it is not something
+    that should be tested in this `test_` function.'''))
+
+        rv = simplify(eq) == ans
+        if eq != ans:
+            free = eq.free_symbols
+            v = [rnd(1, 100) + S.ImaginaryUnit*rnd(1, 100) for i in free]
+            reps = dict(zip(free, v))
+            try:
+                val_eq = eq.xreplace(reps)
+                if val_eq.is_Relational:
+                    val_eq = val_eq.func(*[S(str(i.n(2))) for i in val_eq.args])
+            except TypeError:
+                val_eq = None
+            try:
+                val_ans = ans if not ans.is_Relational else \
+                    ans.xreplace(reps)
+                if val_ans.is_Relational:
+                    val_ans = val_ans.func(*[S(str(i.n(2))) for i in val_ans.args])
+            except TypeError:
+                val_ans = None
+            try:
+                assert str(val_ans) == str(val_eq)
+            except:
+                rv = False
+        return rv
+
+    x = Symbol('x')
+    assert check(x*(y + 1) - x*y - x + 1 < x, x > 1)
+    assert check(S(1) < -x, x < -1)
+
+    # issue 10401
+    r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    assert check(Eq(1/(x + 1), 0), S.false)
+    assert check(Eq(x/(x + 1), 1), S.false)
+    assert check(Lt(p/x, 0), Lt(1/x ,0))
+
+    f = x/(x + 1)
+    g = 1/(1 + 1/x)
+    assert simplify(Eq(f, g)) is not S.true
+    f = f.subs(x, r)
+    g = g.subs(x, r)
+    assert simplify(Eq(f, g)) is not S.true
+
+    assert check(Eq(x*(x - 1), x**2 - x), S.true)
+    eq = Lt(x, x - 1)
+    assert check(eq, eq)
+    eq = Eq(x, x - 1)
+    assert check(eq, S.false)
+    eq = Lt(x, x)
+    assert check(eq, eq)
+    assert check(Lt(p, p*x), Gt(x, 1))
+    assert check(Lt(2*x/n, 0), Gt(x, 0))
+    assert check(Lt(-2*x/n, 0), Lt(x, 0))
+    eq = Lt(cos(x)**2, -sin(x)**2)
+    assert check(eq, eq)
+    eq = Lt(cos(r)**2, -sin(r)**2)
+    assert simplify(eq) is S.false
+    eq = Lt(x, x + x**2)
+    assert check(eq, Lt(x, x*(x + 1)))
+    eq = Lt(r, r + r**2)
+    assert check(eq, Gt(r**2, 0))
+    eq = Lt(x + I, y + I)
+    assert check(eq, eq)
+    eq = Lt(1 + p*(1 + x), y)
+    assert check(eq, p*(x + 1) < y - 1)
+    eq = Lt(1 + p + p*x, y)
+    assert check(eq, p*(x + 1) < y - 1)
+    eq = Lt((cos(x)**2 + sin(x)**2)/p, 1)
+    assert check(eq, p > 1)
+    eq = Lt(1/p + 1/p/x, 1)
+    assert check(eq, 1/x < p - 1)
+    eq = Lt((1 + 1/x)/r, 1)
+    assert check(eq, (x  + 1)/(r*x) < 1)
+    eq = Lt(1/p + 1/p/x, 0)
+    assert check(eq, 1/x < -1)
+    assert check(Ne(p/(p - 1), 1), S.true)
+    assert check(Lt(x, 2*x - 2), x > 2)
+    assert check(Lt(x, 2*x - sqrt(2)), x > sqrt(2))
+    eq = Eq(I/(1 + I), 1)
+    assert check(eq, S.false)
+
+
+@XFAIL
+def test_fail_instantiation():
+    raises(TypeError, lambda: Lt(1 + (1 - 3*I)**2, 1 + (1 - 3*I)**2))
 
 
 def test_equals():
