@@ -368,6 +368,17 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
+            if (self.expr.is_Pow and self.expr.base.is_Symbol
+                and self.expr.exp.is_positive):
+                if expr.expr.is_Pow and self.expr.base == expr.expr.base:
+                    return not (self.expr.exp-expr.expr.exp).is_positive
+                if expr.expr.is_Mul:
+                    for arg in expr.expr.args:
+                        if (arg.is_Pow and self.expr.base == arg.base
+                            and (expr.expr/arg).is_number):
+                            r = (self.expr.exp-arg.exp).is_positive
+                            if not (r is None):
+                                return not r
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
@@ -384,6 +395,17 @@ class Order(Expr):
                     if r != l:
                         return
             return r
+        if (self.expr.is_Pow and self.expr.base.is_Symbol
+            and self.expr.exp.is_positive):
+            if expr.is_Pow and self.expr.base == expr.base:
+                return not (self.expr.exp-expr.exp).is_positive
+            if expr.is_Mul:
+                for arg in expr.args:
+                    if (arg.is_Pow and self.expr.base == arg.base
+                        and (expr/arg).is_number):
+                        r = (self.expr.exp-arg.exp).is_positive
+                        if not (r is None):
+                            return not r
         obj = self.func(expr, *self.args[1:])
         return self.contains(obj)
 
