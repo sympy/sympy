@@ -661,3 +661,13 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_8571():
+    raises(TypeError, lambda: x*S.true)
+    raises(TypeError, lambda: x + S.true)
+    raises(TypeError, lambda: S.true + x)
+    raises(TypeError, lambda: S(2)*S.false)
+    raises(TypeError, lambda: S(3)*S.true)
+    raises(TypeError, lambda: S.true*S(3.0))
+    assert S(1)*S.false == False

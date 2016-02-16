@@ -90,9 +90,14 @@ class Add(Expr, AssocOp):
 
         """
         from sympy.calculus.util import AccumBounds
+        from sympy import Poly
         rv = None
         if len(seq) == 2:
             a, b = seq
+            if (not isinstance(a, Poly) and a in [S.true, S.false]) or (not isinstance(b, Poly)
+            and b in [S.true, S.false]):
+                raise TypeError("unsupported operand type(s) for +: '{}' and '{}'"
+                .format(type(a).__name__, type(b).__name__))
             if b.is_Rational:
                 a, b = b, a
             if a.is_Rational:
