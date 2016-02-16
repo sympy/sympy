@@ -34,7 +34,6 @@ from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
-from sympy.core.compatibility import string_types
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
