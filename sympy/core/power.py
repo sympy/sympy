@@ -1027,6 +1027,8 @@ class Pow(Expr):
         if self.base.is_zero or (self.base - 1).is_zero:
             return True
         elif self.exp.is_rational:
+            if self.base.is_algebraic is False:
+                return self.exp.is_nonzero
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
