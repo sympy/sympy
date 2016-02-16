@@ -1,13 +1,214 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 28 13:25:02 2015
+This module contains functions for the computation
+of Euclidean, generalized Sturmian and (modified) subresultant
+polynomial remainder sequences (prs's).
 
-@author: alkis
+The pseudo-remainder function prem() of sympy is _not_ used
+by any of the functions in the module.
+
+Instead of prem() we use the function
+
+rem_z().
+
+Included is also the function quo_z().
+
+1. Theoretical background:
+==========================
+Consider the polynomials f, g ∈ Z[x] of degrees deg(f) = n and
+deg(g) = m with n ≥ m.
+
+Definition 1:
+=============
+The sign sequence of a polynomial remainder sequence (prs) is the
+sequence of signs of the leading coefficients of its polynomials.
+
+Sign sequences can be computed with the function:
+
+sign_seq(poly_seq, x)
+
+Definition 2:
+=============
+A polynomial remainder sequence (prs) is called complete if the
+degree difference between any two consecutive polynomials is 1;
+otherwise, it called incomplete.
+
+It is understood that f, g belong to the sequences mentioned in
+the two definitions.
+
+1A. Euclidean and subresultant prs's:
+=====================================
+The subresultant prs of f, g is a sequence of polynomials in Z[x]
+analogous to the Euclidean prs, the sequence obtained by applying
+on f, g Euclid’s algorithm for polynomial greatest common divisors
+(gcd) in Q[x].
+
+The subresultant prs differs from the Euclidean prs in that the
+coefficients of each polynomial in the former sequence are determinants
+--- also referred to as subresultants --- of appropriately selected
+sub-matrices of sylvester1(f, g, x), Sylvester’s matrix of 1840 of
+dimensions (n + m) × (n + m).
+
+Recall that the determinant of sylvester1(f, g, x) itself is
+called the resultant of f, g and serves as a criterion of whether
+the two polynomials have common roots or not.
+
+For complete prs’s the sign sequence of the Euclidean prs of f, g
+is identical to the sign sequence of the subresultant prs of f, g
+and the coefficients of one sequence  are easily computed from the
+coefficients of the  other.
+
+For incomplete prs’s the polynomials in the subresultant prs, generally
+differ in sign from those of the Euclidean prs, and --- unlike the
+case of complete prs’s --- it is not at all obvious how to compute
+the coefficients of one sequence from the coefficients of the  other.
+
+1B. Sturmian and modified subresultant prs's:
+=============================================
+For the same polynomials f, g ∈ Z[x] mentioned above, their ``modified''
+subresultant prs is a sequence of polynomials similar to the Sturmian
+prs, the sequence obtained by applying in Q[x] Sturm’s algorithm on f, g.
+
+The two sequences differ in that the coefficients of each polynomial
+in the modified subresultant prs are the determinants --- also referred
+to as modified subresultants --- of appropriately selected  sub-matrices
+of sylvester2(f, g, x), Sylvester’s matrix of 1853 of dimensions 2n × 2n.
+
+The determinant of sylvester2 itself is called the modified resultant
+of f, g and it also can serve as a criterion of whether the two
+polynomials have common roots or not.
+
+For complete prs’s the  sign sequence of the Sturmian prs of f, g is
+identical to the sign sequence of the modified subresultant prs of
+f, g and the coefficients of one sequence  are easily computed from
+the coefficients of the other.
+
+For incomplete prs’s the polynomials in the modified subresultant prs,
+generally differ in sign from those of the Sturmian prs, and --- unlike
+the case of complete prs’s --- it is not at all obvious how to compute
+the coefficients of one sequence from the coefficients of the  other.
+
+As Sylvester pointed out, the coefficients of the polynomial remainders
+obtained as (modified) subresultants are the smallest possible without
+introducing rationals and without computing (integer) greatest common
+divisors.
+
+1C. On terminology:
+===================
+Whence the terminology? Well generalized Sturmian prs's are
+``modifications'' of Euclidean prs's; the hint came from the title
+of the Pell-Gordon paper of 1917.
+
+In the literature one also encounters the name ``non signed'' and
+``signed'' prs for Euclidean and Sturmian prs respectively.
+
+Likewise ``non signed'' and ``signed'' subresultant prs for
+subresultant and modified subresultant prs respectively.
+
+2. Functions in the module:
+===========================
+No function utilizes sympy's function prem().
+
+2A. Matrices:
+=============
+The functions sylvester(f, g, x, method=1) and
+sylvester(f, g, x, method=2) compute either Sylvester matrix.
+They can be used to compute (modified) subresultant prs's by
+direct determinant evaluation.
+
+The function bezout(f, g, x, method='prs') provides a matrix of
+smaller dimensions than either Sylvester matrix. It is the function
+of choice for computing (modified) subresultant prs's by direct
+determinant evaluation.
+
+sylvester(f, g, x, method=1)
+sylvester(f, g, x, method=2)
+bezout(f, g, x, method='prs')
+
+The following identity holds:
+
+bezout(f, g, x, method='prs') =
+backward_eye(deg(f))*bezout(f, g, x, method='bz')*backward_eye(deg(f))
+
+2B. Subresultant and modified subresultant prs's by
+===================================================
+determinant evaluation:
+=======================
+Instead of utilizing the Sylvester matrices, we employ
+the Bezout matrix of smaller dimensions.
+
+subresultants_bezout(f, g, x)
+modified_subresultants_bezout(f, g, x)
+
+2C. Subresultant prs's by ONE determinant evaluation:
+=====================================================
+All three functions in this section evaluate one determinant
+per remainder polynomial; this is the determinant of an
+appropriately selected sub-matrix of sylvester1(f, g, x),
+Sylvester’s matrix of 1840.
+
+To compute the remainder polynomials the function
+subresultants_rem(f, g, x) employs rem(f, g, x).
+By contrast, the other two functions implement Van Vleck’s ideas
+of 1900 and compute the remainder polynomials by trinagularizing
+sylvester2(f, g, x), Sylvester’s matrix of 1853.
+
+
+subresultants_rem(f, g, x)
+subresultants_vv(f, g, x)
+subresultants_vv_2(f, g, x).
+
+2E. Euclidean, Sturmian prs's in Q[x]:
+======================================
+euclid_q(f, g, x)
+sturm_q(f, g, x)
+
+2F. Euclidean, Sturmian and (modified) subresultant prs's P-G:
+==============================================================
+All functions in this section are based on the Pell-Gordon (P-G)
+theorem of 1917.
+Computations are done in Q[x], employing the function rem(f, g, x)
+for the computation of the remainder polynomials.
+
+euclid_pg(f, g, x)
+sturm pg(f, g, x)
+subresultants_pg(f, g, x)
+modified_subresultants_pg(f, g, x)
+
+2G. Euclidean, Sturmian and (modified) subresultant prs's A-M-V:
+================================================================
+All functions in this section are based on the Akritas-Malaschonok-
+Vigklas (A-M-V) theorem of 2015.
+Computations are done in Z[x], employing the function rem_z(f, g, x)
+for the computation of the remainder polynomials.
+
+euclid_amv(f, g, x)
+sturm_amv(f, g, x)
+subresultants_amv(f, g, x)
+modified_subresultants_amv(f, g, x)
+
+2Ga. Exception:
+===============
+subresultants_amv_q(f, g, x)
+
+This function employs rem(f, g, x) for the computation of
+the remainder polynomials, despite the fact that it implements
+the A-M-V Theorem.
+
+It is included in our module in order to show that theorems P-G
+and A-M-V can be implemented utilizing either the function
+rem(f, g, x) or the function rem_z(f, g, x).
+
+For clearly historical reasons --- since the Collins-Brown-Traub
+coefficients-reduction factor β_i was not available in 1917 ---
+we have implemented the Pell-Gordon theorem with the function
+rem(f, g, x) and the A-M-V Theorem  with the function rem_z(f, g, x).
 """
+
 
 from __future__ import print_function, division
 
-from sympy import (Abs, degree, expand, floor, LC, Matrix, nan, Poly, pprint)
+from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
 from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
@@ -122,6 +323,251 @@ def sign_seq(poly_seq, x):
 
     """
     return [sign(LC(poly_seq[i], x)) for i in range(len(poly_seq))]
+
+def bezout(p, q, x, method='bz'):
+    """
+    The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
+
+    The default option bezout(p, q, x, method='bz') returns Bezout's
+    symmetric matrix of p and q, of dimensions deg(p) x deg(p). The
+    determinant of this matrix is equal to the determinant of sylvester2,
+    Sylvester's matrix of 1853, whose dimensions are 2*deg(p) x 2*deg(p);
+    however, the subresultants of these two matrices may vary in sign.
+
+    The other option, bezout(p, q, x, 'prs'), is of interest to us
+    in this module because it returns a matrix equivalent to sylvester2.
+    In this case all subresultants of the two matrices are identical.
+
+    Both the subresultant polynomial remainder sequence (prs) and
+    the modified subresultant prs of p and q can be computed by
+    evaluating determinants of appropriately selected submatrices of
+    bezout(p, q, x, 'prs') --- one determinant per coefficient of the
+    remainder polynomials.
+
+    The matrices bezout(p, q, x, 'bz') and bezout(p, q, x, 'prs')
+    are related by the formula
+
+    bezout(p, q, x, 'prs') =
+    backward_eye(deg(p)) * bezout(p, q, x, 'bz') * backward_eye(deg(p)),
+
+    where backward_eye() is the backward identity function.
+
+    References:
+    ===========
+    1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
+    and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
+    Vol. 15, 233–266, 2004.
+
+    """
+    y = var('y')
+    degP = degree(p, x)
+
+    # expr is 0 when x = y
+    expr = p * q.subs({x:y}) - p.subs({x:y}) * q
+
+    # hence expr is exactly divisible by x - y
+    poly = Poly( quo(expr, x-y), x, y)
+
+    # form Bezout matrix and store them in B as indicated to get
+    # the LC coefficient of each poly in the first position of each row
+    B = zeros(degP)
+    for i in range(degP):
+        for j in range(degP):
+            if method == 'prs':
+                B[degP - 1 - i, degP - 1 - j] = poly.nth(i, j)
+            else:
+                B[i, j] = poly.nth(i, j)
+    return B
+
+def backward_eye(n):
+    '''
+    Returns the backward identity matrix of dimensions n x n.
+
+    Needed to "turn" the Bezout matrices
+    so that the leading coefficients are first.
+    See docstring of the function bezout(p, q, x, method='bz').
+    '''
+    M = eye(n)  # identity matrix of order n
+
+    for i in range(int(M.rows / 2)):
+        M.row_swap(0 + i, M.rows - 1 - i)
+
+    return M
+
+def process_bezout_output(poly_seq, x):
+    """
+    poly_seq is a polynomial remainder sequence computed either by
+    subresultants_bezout or by modified_subresultants_bezout.
+
+    This function removes from poly_seq all zero polynomials as well
+    as all those whose degree is equal to the degree of a previous
+    polynomial in poly_seq, as we scan it from left to right.
+
+    """
+    L = poly_seq[:]  # get a copy of the input sequence
+    d = degree(L[1], x)
+    i = 2
+    while i < len(L):
+        d_i = degree(L[i], x)
+        if d_i < 0:          # zero poly
+            L.remove(L[i])
+            i = i - 1
+        if d == d_i:         # poly degree equals degree of previous poly
+            L.remove(L[i])
+            i = i - 1
+        if d_i >= 0:
+            d = d_i
+        i = i + 1
+
+    return L
+
+def subresultants_bezout(p, q, x):
+    """
+    The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
+
+    Computes the subresultant polynomial remainder sequence
+    of p, q by evaluating determinants of appropriately selected
+    submatrices of bezout(p, q, x, 'prs'). The dimensions of the
+    latter are deg(p) x deg(p).
+
+    Each coefficient is computed by evaluating the determinant of the
+    corresponding submatrix of bezout(p, q, x, 'prs').
+
+    bezout(p, q, x, 'prs) is used instead of sylvester(p, q, x, 1),
+    Sylvester's matrix of 1840, because the dimensions of the latter
+    are (deg(p) + deg(q)) x (deg(p) + deg(q)).
+
+    If the subresultant prs is complete, then the output coincides
+    with the Euclidean sequence of the polynomials p, q.
+
+    References:
+    ===========
+    1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
+    and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
+    Vol. 15, 233–266, 2004.
+
+    """
+    # make sure neither p nor q is 0
+    if p == 0 or q == 0:
+        return [p, q]
+
+    f, g = p, q
+    n = degF = degree(f, x)
+    m = degG = degree(g, x)
+
+    # make sure proper degrees
+    if n == 0 and m == 0:
+        return [f, g]
+    if n < m:
+        n, m, degF, degG, f, g = m, n, degG, degF, g, f
+    if n > 0 and m == 0:
+        return [f, g]
+
+    SR_L = [f, g]      # subresultant list
+    F = LC(f, x)**(degF - degG)
+
+    # form the bezout matrix
+    B = bezout(f, g, x, 'prs')
+
+    # pick appropriate submatrices of B
+    # and form subresultant polys
+    if degF > degG:
+        j = 2
+    if degF == degG:
+        j = 1
+    while j <= degF:
+        M = B[0:j, :]
+        k, coeff_L = j - 1, []
+        while k <= degF - 1:
+            coeff_L.append(M[: ,0 : j].det())
+            if k < degF - 1:
+                M.col_swap(j - 1, k + 1)
+            k = k + 1
+
+        # apply Theorem 2.1 in the paper by Toca & Vega 2004
+        # to get correct signs
+        SR_L.append((int((-1)**(j*(j-1)/2)) * Poly(coeff_L, x) / F).as_expr())
+        j = j + 1
+
+    return process_bezout_output(SR_L, x)
+
+def modified_subresultants_bezout(p, q, x):
+    """
+    The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
+
+    Computes the modified subresultant polynomial remainder sequence
+    of p, q by evaluating determinants of appropriately selected
+    submatrices of bezout(p, q, x, 'prs'). The dimensions of the
+    latter are deg(p) x deg(p).
+
+    Each coefficient is computed by evaluating the determinant of the
+    corresponding submatrix of bezout(p, q, x, 'prs').
+
+    bezout(p, q, x, 'prs') is used instead of sylvester(p, q, x, 2),
+    Sylvester's matrix of 1853, because the dimensions of the latter
+    are 2*deg(p) x 2*deg(p).
+
+    If the modified subresultant prs is complete, and LC( p ) > 0, the output
+    coincides with the (generalized) Sturm's sequence of the polynomials p, q.
+
+    References:
+    ===========
+    1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Sturm Sequences
+    and Modified Subresultant Polynomial Remainder Sequences.''
+    Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
+
+    2. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
+    and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
+    Vol. 15, 233–266, 2004.
+
+
+    """
+    # make sure neither p nor q is 0
+    if p == 0 or q == 0:
+        return [p, q]
+
+    f, g = p, q
+    n = degF = degree(f, x)
+    m = degG = degree(g, x)
+
+    # make sure proper degrees
+    if n == 0 and m == 0:
+        return [f, g]
+    if n < m:
+        n, m, degF, degG, f, g = m, n, degG, degF, g, f
+    if n > 0 and m == 0:
+        return [f, g]
+
+    SR_L = [f, g]      # subresultant list
+
+    # form the bezout matrix
+    B = bezout(f, g, x, 'prs')
+
+    # pick appropriate submatrices of B
+    # and form subresultant polys
+    if degF > degG:
+        j = 2
+    if degF == degG:
+        j = 1
+    while j <= degF:
+        M = B[0:j, :]
+        k, coeff_L = j - 1, []
+        while k <= degF - 1:
+            coeff_L.append(M[: ,0 : j].det())
+            if k < degF - 1:
+                M.col_swap(j - 1, k + 1)
+            k = k + 1
+
+        ## Theorem 2.1 in the paper by Toca & Vega 2004 is _not needed_
+        ## in this case since
+        ## the bezout matrix is equivalent to sylvester2
+        SR_L.append(( Poly(coeff_L, x)).as_expr())
+        j = j + 1
+
+    return process_bezout_output(SR_L, x)
 
 def sturm_pg(p, q, x, method=0):
     """

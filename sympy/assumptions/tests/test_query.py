@@ -543,7 +543,7 @@ def test_I():
 
 
 @slow
-def test_bounded():
+def test_bounded1():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
@@ -628,6 +628,11 @@ def test_bounded():
     assert ask(Q.finite(a), Q.positive(x) & ~Q.positive(y)) is None
     assert ask(Q.finite(a), ~Q.positive(x) & Q.positive(y)) is None
     assert ask(Q.finite(a), ~Q.positive(x) & ~Q.positive(y)) is None
+
+
+@slow
+def test_bounded2a():
+    x, y, z = symbols('x,y,z')
     a = x + y + z
     x, y, z = a.args
     assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
@@ -771,6 +776,13 @@ def test_bounded():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
+
+
+@slow
+def test_bounded2b():
+    x, y, z = symbols('x,y,z')
+    a = x + y + z
+    x, y, z = a.args
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(
@@ -942,9 +954,13 @@ def test_bounded():
     assert ask(
         Q.finite(a), Q.positive(x) & Q.positive(y) & Q.positive(z)) is None
 
-    x, y, z = symbols('x,y,z')
     assert ask(Q.finite(2*x)) is None
     assert ask(Q.finite(2*x), Q.finite(x)) is True
+
+
+@slow
+def test_bounded3():
+    x, y, z = symbols('x,y,z')
     a = x*y
     x, y = a.args
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is True
@@ -1005,7 +1021,7 @@ def test_bounded():
     assert ask(Q.finite(Rational(1, 2) ** x)) is None
     assert ask(Q.finite(Rational(1, 2) ** x), Q.positive(x)) is True
     assert ask(Q.finite(Rational(1, 2) ** x), Q.negative(x)) is None
-    assert ask(Q.finite(S(2) ** x), Q.negative(x)) is True
+    assert ask(Q.finite(2**x), Q.negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
     assert ask(Q.finite(x**2), ~Q.finite(x)) is False

@@ -160,7 +160,7 @@ Matrix([
 
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray
-from .arrayop import tensorproduct, tensorcontraction
+from .arrayop import tensorproduct, tensorcontraction, derive_by_array
 
 Array = ImmutableDenseNDimArray
 NDimArray = ImmutableDenseNDimArray

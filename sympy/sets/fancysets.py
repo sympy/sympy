@@ -3,12 +3,14 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import And
 from sympy.core import oo
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
 from sympy.core.singleton import Singleton, S, sympify
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, converter
 from sympy.core.function import Lambda
+from sympy.utilities.misc import filldedent, func_name
+
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -235,11 +237,16 @@ class ImageSet(Set):
         from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = list(linsolve([expr - val for val, expr in
+            zip(other, L.expr)], L.variables).args[0])
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
-
+            solnsSet = solveset(L.expr-other, L.variables[0])
+            if solnsSet.is_FiniteSet:
+                solns = list(solveset(L.expr - other, L.variables[0]))
+            else:
+                raise NotImplementedError(filldedent('''
+                Determining whether an ImageSet contains %s has not
+                been implemented.''' % func_name(other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
@@ -322,6 +329,10 @@ class Range(Set):
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
+        if len(args) == 1:
+            if isinstance(args[0], range if PY3 else xrange):
+                args = args[0].__reduce__()[1]  # use pickle method
+
         # expand range
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
@@ -445,6 +456,11 @@ class Range(Set):
     def _boundary(self):
         return self
 
+
+if PY3:
+    converter[range] = Range
+else:
+    converter[xrange] = Range
 
 def normalize_theta_set(theta):
     """
@@ -917,8 +933,13 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return ComplexRegion.__new__(cls, S.Reals*S.Reals)
 
     def __eq__(self, other):
-        if other == ComplexRegion(S.Reals*S.Reals):
-            return True
+        return other == ComplexRegion(S.Reals*S.Reals)
 
     def __hash__(self):
         return hash(ComplexRegion(S.Reals*S.Reals))
+
+    def __str__(self):
+        return "S.Complexes"
+
+    def __repr__(self):
+        return "S.Complexes"

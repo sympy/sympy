@@ -16,7 +16,7 @@ from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.utilities import xthreaded
+from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
 from sympy.functions import Piecewise, sqrt, sign
@@ -398,6 +398,9 @@ class Integral(AddWithLimits):
         if function.is_zero:
             return S.Zero
 
+        if isinstance(function, MatrixBase):
+            return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
+
         # There is no trivial answer, so continue
 
         undone_limits = []
@@ -768,7 +771,6 @@ class Integral(AddWithLimits):
 
         # try to convert to poly(x) and then integrate if successful (fast)
         poly = f.as_poly(x)
-
         if poly is not None and not meijerg:
             return poly.integrate().as_expr()
 
@@ -1118,7 +1120,6 @@ class Integral(AddWithLimits):
         return f
 
 
-@xthreaded
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
@@ -1281,7 +1282,6 @@ def integrate(*args, **kwargs):
         return integral
 
 
-@xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
 
