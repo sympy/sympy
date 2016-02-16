@@ -335,6 +335,8 @@ class Range(Set):
 
         # expand range
         slc = slice(*args)
+        if slc.step == 0:
+            raise ValueError("step cannot be 0")
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
             start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))

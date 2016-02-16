@@ -132,6 +132,7 @@ def test_Range():
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(-oo, oo, 2))
     raises(ValueError, lambda: Range(0, pi, 1))
+    raises(ValueError, lambda: Range(1, 10, 0))
 
     assert 5 in Range(0, oo, 5)
     assert -5 in Range(-oo, 0, 5)
