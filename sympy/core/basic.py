@@ -6,7 +6,6 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
-from .decorators import deprecated
 from .singleton import S
 
 from inspect import getmro
@@ -565,7 +564,7 @@ class Basic(with_metaclass(ManagedProperties)):
     @property
     def is_comparable(self):
         """Return True if self can be computed to a real number
-        with precision, else False.
+        (or already is a real number) with precision, else False.
 
         Examples
         ========
@@ -575,6 +574,19 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+
+        A False result does not mean that `self` cannot be rewritten
+        into a form that would be comparable. For example, the
+        difference computed below is zero but without simplification
+        it does not evaluate to a zero with precision:
+
+        >>> e = 2**pi*(1 + 2**pi)
+        >>> dif = e - e.expand()
+        >>> dif.is_comparable
+        False
+        >>> dif.n(2)._prec
+        1
+
         """
         is_real = self.is_real
         if is_real is False:
@@ -582,14 +594,15 @@ class Basic(with_metaclass(ManagedProperties)):
         is_number = self.is_number
         if is_number is False:
             return False
-        if is_real and is_number:
-            return True
-        n, i = [p.evalf(2) for p in self.as_real_imag()]
+        n, i = [p.evalf(2) if not p.is_Number else p
+            for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
             # if _prec = 1 we can't decide and if not,
-            # the answer is False so return False
+            # the answer is False because numbers with
+            # imaginary parts can't be compared
+            # so return False
             return False
         else:
             return n._prec != 1
@@ -661,12 +674,6 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
-    @deprecated(useinstead="iter(self.args)", issue=7717, deprecated_since_version="0.7.6")
-    def iter_basic_args(self):
-        """
-        Iterates arguments of ``self``.
-        """
-        return iter(self.args)
 
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
@@ -696,7 +703,7 @@ class Basic(with_metaclass(ManagedProperties)):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -1595,20 +1602,6 @@ class Basic(with_metaclass(ManagedProperties)):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
-
-    @property
-    @deprecated(useinstead="is_finite", issue=8071, deprecated_since_version="0.7.6")
-    def is_bounded(self):
-        return super(Basic, self).__getattribute__('is_finite')
-
-    @property
-    @deprecated(useinstead="is_infinite", issue=8071, deprecated_since_version="0.7.6")
-    def is_unbounded(self):
-        return super(Basic, self).__getattribute__('is_infinite')
-
-    @deprecated(useinstead="is_zero", issue=8071, deprecated_since_version="0.7.6")
-    def is_infinitesimal(self):
-        return super(Basic, self).__getattribute__('is_zero')
 
 
 class Atom(Basic):

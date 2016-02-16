@@ -7,12 +7,12 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
-                         Triangular, Uniform, UniformSum, VonMises, Weibull,
-                         WignerSemicircle, correlation, moment, cmoment,
-                         smoment)
+                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
+                         StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle, correlation,
+                         moment, cmoment, smoment)
 
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf,
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor, expand_func)
@@ -41,7 +41,7 @@ def test_single_normal():
     pdf = density(Y)
     x = Symbol('x')
     assert (pdf(x) ==
-            2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
+            2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
@@ -437,6 +437,11 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+def test_shiftedgompertz():
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=True)
+    X = ShiftedGompertz("x", b, eta)
+    assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
 def test_studentt():
     nu = Symbol("nu", positive=True)
@@ -607,7 +612,7 @@ def test_density_unevaluated():
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
-    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
+    assert nd.cdf(x) == (1 - erfc(sqrt(2)*x/2))/2 + S.One/2
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0

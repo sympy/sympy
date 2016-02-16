@@ -49,6 +49,7 @@ from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
+from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
@@ -123,6 +124,14 @@ class FunctionClass(ManagedProperties):
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
+            if not nargs:
+                raise ValueError(filldedent('''
+                    Incorrectly specified nargs as %s:
+                    if there are no arguments, it should be
+                    `nargs = 0`;
+                    if there are any number of arguments,
+                    it should be
+                    `nargs = None`''' % str(nargs)))
             nargs = tuple(ordered(set(nargs)))
         elif nargs is not None:
             nargs = (as_int(nargs),)
@@ -209,20 +218,20 @@ class Application(with_metaclass(FunctionClass, Basic)):
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            # Canonicalize nargs here; change to set in nargs.
+            # Canonicalize nargs here
             if is_sequence(obj.nargs):
-                obj.nargs = tuple(ordered(set(obj.nargs)))
+                nargs = tuple(ordered(set(obj.nargs)))
             elif obj.nargs is not None:
-                obj.nargs = (as_int(obj.nargs),)
-
-            obj.nargs = FiniteSet(*obj.nargs) if obj.nargs is not None \
-                else Naturals0()
+                nargs = (as_int(obj.nargs),)
+            else:
+                nargs = None
         except AttributeError:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            obj.nargs = FiniteSet(*obj._nargs) if obj._nargs is not None \
-                else Naturals0()
+            nargs = obj._nargs  # note the underscore here
+        # convert to FiniteSet
+        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
         return obj
 
     @classmethod
@@ -646,14 +655,23 @@ class Function(Application, Expr):
         """
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex - 1].is_Symbol:
-            # See issue 4624 and issue 4719 and issue 5600
-            arg_dummy = Dummy('xi_%i' % argindex)
-            arg_dummy.dummy_index = hash(self.args[argindex - 1])
-            return Subs(Derivative(
-                self.subs(self.args[argindex - 1], arg_dummy),
-                arg_dummy), arg_dummy, self.args[argindex - 1])
-        return Derivative(self, self.args[argindex - 1], evaluate=False)
+
+        if self.args[argindex - 1].is_Symbol:
+            for i in range(len(self.args)):
+                if i == argindex - 1:
+                    continue
+                # See issue 8510
+                if self.args[argindex - 1] in self.args[i].free_symbols:
+                    break
+            else:
+                return Derivative(self, self.args[argindex - 1], evaluate=False)
+        # See issue 4624 and issue 4719 and issue 5600
+        arg_dummy = Dummy('xi_%i' % argindex)
+        arg_dummy.dummy_index = hash(self.args[argindex - 1])
+        new_args = [arg for arg in self.args]
+        new_args[argindex-1] = arg_dummy
+        return Subs(Derivative(self.func(*new_args), arg_dummy),
+            arg_dummy, self.args[argindex - 1])
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -709,7 +727,7 @@ class AppliedUndef(Function):
         import sage.all as sage
         fname = str(self.func)
         args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname, *args)
+        func = sage.function(fname)(*args)
         return func
 
 class UndefinedFunction(FunctionClass):
@@ -1004,11 +1022,19 @@ class Derivative(Expr):
         if not variables:
             variables = expr.free_symbols
             if len(variables) != 1:
+                if expr.is_number:
+                    return S.Zero
                 from sympy.utilities.misc import filldedent
-                raise ValueError(filldedent('''
-                    Since there is more than one variable in the
-                    expression, the variable(s) of differentiation
-                    must be supplied to differentiate %s''' % expr))
+                if len(variables) == 0:
+                    raise ValueError(filldedent('''
+                        Since there are no variables in the expression,
+                        the variable(s) of differentiation must be supplied
+                        to differentiate %s''' % expr))
+                else:
+                    raise ValueError(filldedent('''
+                        Since there is more than one variable in the
+                        expression, the variable(s) of differentiation
+                        must be supplied to differentiate %s''' % expr))
 
         # Standardize the variables by sympifying them and making appending a
         # count of 1 if there is only one variable: diff(e,x)->diff(e,x,1).
@@ -1281,7 +1307,7 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if old in self.variables and not new.is_Symbol:
+        if old in self.variables and not new._diff_wrt:
             # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
@@ -1371,21 +1397,15 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         from sympy.sets.sets import FiniteSet
-        try:
-            for v in variables if iterable(variables) else [variables]:
-                if not v.is_Symbol:
-                    raise TypeError('variable is not a symbol: %s' % v)
-        except (AssertionError, AttributeError):
-            raise ValueError('variable is not a Symbol: %s' % v)
-        try:
-            variables = Tuple(*variables)
-        except TypeError:
-            variables = Tuple(variables)
-        if len(variables) == 1 and variables[0] == expr:
+        v = list(variables) if iterable(variables) else [variables]
+        for i in v:
+            if not getattr(i, 'is_Symbol', False):
+                raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
-        obj.nargs = FiniteSet(len(variables))
+        obj = Expr.__new__(cls, Tuple(*v), sympify(expr))
+        obj.nargs = FiniteSet(len(v))
         return obj
 
     @property
@@ -2300,7 +2320,8 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            if isinstance(a, str):
+            # XXX: This is a hack to support non-Basic args
+            if isinstance(a, string_types):
                 continue
 
             if a.is_Rational:
@@ -2389,6 +2410,11 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
+
+                # XXX: This is a hack to support non-Basic args
+                if isinstance(a, string_types):
+                    continue
+
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
                     if a.is_Boolean:

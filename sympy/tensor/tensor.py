@@ -739,40 +739,6 @@ class TIDS(CantSympify):
         return tids, sign
 
 
-class VTIDS(TIDS):
-    """
-    DEPRECATED: DO NOT USE.
-    """
-
-    @deprecated(useinstead="TIDS")
-    def __init__(self, components, free, dum, data):
-        super(VTIDS, self).__init__(components, free, dum)
-        self.data = data
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def parse_data(data):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator.parse_data(data)
-
-    @deprecated(useinstead="TIDS")
-    def correct_signature_from_indices(self, data, indices, free, dum):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def flip_index_by_metric(data, metric, pos):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._flip_index_by_metric(data, metric, pos)
-
-
 class _TensorDataLazyEvaluator(CantSympify):
     """
     EXPERIMENTAL: do not rely on this class, it may change without deprecation

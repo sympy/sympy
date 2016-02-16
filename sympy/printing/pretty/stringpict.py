@@ -29,6 +29,7 @@ class stringPict(object):
         """Initialize from string.
         Multiline strings are centered.
         """
+        self.s = s
         #picture is a string that just can be printed
         self.picture = stringPict.equalLengths(s.splitlines())
         #baseline is the line number of the "base line"
