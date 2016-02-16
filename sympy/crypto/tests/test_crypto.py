@@ -1,26 +1,25 @@
 from sympy.core import symbols
 from sympy.core.compatibility import range
-from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
+from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
-      encipher_vigenere, decipher_vigenere,
+      check_and_join, encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
-      bifid5_square, bifid6_square, bifid7_square,
-      encipher_bifid7, decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
+      bifid5_square, bifid6_square, bifid5, bifid6, bifid10,
+      decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
-      dh_shared_key)
+      dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
+      decipher_bifid, bifid_square, padded_key, uniq)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
-from sympy.utilities.pytest import raises
-from random import randrange
 
-def test_alphabet_of_cipher():
-    assert alphabet_of_cipher()[0] == "A"
-    assert alphabet_of_cipher(symbols="1z") == ["1", "z"]
+from sympy.utilities.pytest import raises, slow
+
+from random import randrange
 
 
 def test_cycle_list():
@@ -33,6 +32,7 @@ def test_encipher_shift():
     assert encipher_shift("ABC", 0) == "ABC"
     assert encipher_shift("ABC", 1) == "BCD"
     assert encipher_shift("ABC", -1) == "ZAB"
+    assert decipher_shift("ZAB", -1) == "ABC"
 
 
 def test_encipher_affine():
@@ -41,11 +41,21 @@ def test_encipher_affine():
     assert encipher_affine("ABC", (-1, 0)) == "AZY"
     assert encipher_affine("ABC", (-1, 1), symbols="ABCD") == "BAD"
     assert encipher_affine("123", (-1, 1), symbols="1234") == "214"
+    assert encipher_affine("ABC", (3, 16)) == "QTW"
+    assert decipher_affine("QTW", (3, 16)) == "ABC"
 
 
 def test_encipher_substitution():
-    assert encipher_substitution("ABC", "BAC", symbols="ABC") == "BAC"
-    assert encipher_substitution("123", "124", symbols="1234") == "124"
+    assert encipher_substitution("ABC", "BAC", "ABC") == "BAC"
+    assert encipher_substitution("123", "1243", "1234") == "124"
+
+
+def test_check_and_join():
+    assert check_and_join("abc") == "abc"
+    assert check_and_join(uniq("aaabc")) == "abc"
+    assert check_and_join("ab c".split()) == "abc"
+    assert check_and_join("abc", "a", filter=True) == "a"
+    raises(ValueError, lambda: check_and_join('ab', 'a'))
 
 
 def test_encipher_vigenere():
@@ -73,8 +83,10 @@ def test_encipher_hill():
     A = Matrix(2, 2, [1, 2, 3, 5])
     assert encipher_hill("ABCD", A, symbols="ABCD") == "CBAB"
     assert encipher_hill("AB", A, symbols="ABCD") == "CB"
-    # n does not need to be a multiple of k
-    assert encipher_hill("ABA", A) == "CFAA"
+    # message length, n, does not need to be a multiple of k;
+    # it is padded
+    assert encipher_hill("ABA", A) == "CFGC"
+    assert encipher_hill("ABA", A, pad="Z") == "CFYV"
 
 
 def test_decipher_hill():
@@ -98,8 +110,7 @@ def test_encipher_bifid5():
 
 
 def test_bifid5_square():
-    A = alphabet_of_cipher()
-    A.remove("J")
+    A = bifid5
     f = lambda i, j: symbols(A[5*i + j])
     M = Matrix(5, 5, f)
     assert bifid5_square("") == M
@@ -110,20 +121,6 @@ def test_decipher_bifid5():
     assert decipher_bifid5("CO", "CD") == "AB"
     assert decipher_bifid5("ch", "c") == "AB"
     assert decipher_bifid5("b ac", "b") == "ABC"
-
-
-def test_bifid7_square():
-    A = alphabet_of_cipher() + [str(a) for a in range(23)]
-    f = lambda i, j: symbols(A[7*i + j])
-    M = Matrix(7, 7, f)
-    assert bifid7_square("") == M
-
-
-def test_encipher_bifid7():
-    assert encipher_bifid7("AB", "AB") == "AB"
-    assert encipher_bifid7("AB", "CD") == "CR"
-    assert encipher_bifid7("ab", "c") == "CJ"
-    assert encipher_bifid7("a bc", "b") == "BAC"
 
 
 def test_encipher_bifid6():
@@ -141,7 +138,7 @@ def test_decipher_bifid6():
 
 
 def test_bifid6_square():
-    A = alphabet_of_cipher() + [str(a) for a in range(10)]
+    A = bifid6
     f = lambda i, j: symbols(A[6*i + j])
     M = Matrix(6, 6, f)
     assert bifid6_square("") == M
@@ -207,13 +204,18 @@ def test_decipher_kid_rsa():
 def test_encode_morse():
     assert encode_morse('ABC') == '.-|-...|-.-.'
     assert encode_morse('SMS ') == '...|--|...||'
+    assert encode_morse('SMS\n') == '...|--|...||'
+    assert encode_morse('') == ''
+    assert encode_morse(' ') == '||'
+    assert encode_morse(' ', sep='`') == '``'
+    assert encode_morse(' ', sep='``') == '````'
     assert encode_morse('!@#$%^&*()_+') == '-.-.--|.--.-.|...-..-|-.--.|-.--.-|..--.-|.-.-.'
 
 
 def test_decode_morse():
     assert decode_morse('-.-|.|-.--') == 'KEY'
     assert decode_morse('.-.|..-|-.||') == 'RUN'
-    assert decode_morse('.....----') == 'Invalid Morse Code'
+    raises(KeyError, lambda: decode_morse('.....----'))
 
 
 def test_lfsr_sequence():
@@ -244,23 +246,29 @@ def test_lfsr_connection_polynomial():
     s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
     assert lfsr_connection_polynomial(s) == x**2 + x + 1
 
+
 def test_elgamal_private_key():
     a, b, _ = elgamal_private_key(digit=100)
     assert isprime(a)
     assert is_primitive_root(b, a)
     assert len(bin(a)) >= 102
 
+
 def test_elgamal():
-    dk = elgamal_private_key(20)
+    dk = elgamal_private_key(5)
     ek = elgamal_public_key(dk)
-    m = 12345
-    assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)
+    P = ek[0]
+    assert P - 1 == decipher_elgamal(encipher_elgamal(P - 1, ek), dk)
+    raises(ValueError, lambda: encipher_elgamal(P, dk))
+    raises(ValueError, lambda: encipher_elgamal(-1, dk))
+
 
 def test_dh_private_key():
     p, g, _ = dh_private_key(digit = 100)
     assert isprime(p)
     assert is_primitive_root(g, p)
     assert len(bin(p)) >= 102
+
 
 def test_dh_public_key():
     p1, g1, a = dh_private_key(digit = 100)
@@ -269,9 +277,29 @@ def test_dh_public_key():
     assert g1 == g2
     assert ga == pow(g1, a, p1)
 
+
 def test_dh_shared_key():
     prk = dh_private_key(digit = 100)
     p, _, ga = dh_public_key(prk)
     b = randrange(2, p)
     sk = dh_shared_key((p, _, ga), b)
     assert sk == pow(ga, b, p)
+    raises(ValueError, lambda: dh_shared_key((1031, 14, 565), 2000))
+
+
+def test_padded_key():
+    assert padded_key('b', 'ab') == 'ba'
+    raises(ValueError, lambda: padded_key('ab', 'ace'))
+    raises(ValueError, lambda: padded_key('ab', 'abba'))
+
+
+def test_bifid():
+    raises(ValueError, lambda: encipher_bifid('abc', 'b', 'abcde'))
+    assert encipher_bifid('abc', 'b', 'abcd') == 'bdb'
+    raises(ValueError, lambda: decipher_bifid('bdb', 'b', 'abcde'))
+    assert encipher_bifid('bdb', 'b', 'abcd') == 'abc'
+    raises(ValueError, lambda: bifid_square('abcde'))
+    assert bifid5_square("B") == \
+        bifid5_square('BACDEFGHIKLMNOPQRSTUVWXYZ')
+    assert bifid6_square('B0') == \
+        bifid6_square('B0ACDEFGHIJKLMNOPQRSTUVWXYZ123456789')

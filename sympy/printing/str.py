@@ -499,6 +499,12 @@ class StrPrinter(Printer):
         return '%s**%s' % (self.parenthesize(expr.base, PREC),
                          self.parenthesize(expr.exp, PREC))
 
+    def _print_ImmutableDenseNDimArray(self, expr):
+        return str(expr)
+
+    def _print_ImmutableSparseNDimArray(self, expr):
+        return str(expr)
+
     def _print_Integer(self, expr):
         return str(expr.p)
 
@@ -566,8 +572,9 @@ class StrPrinter(Printer):
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
-    def _print_RootOf(self, expr):
-        return "RootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'), expr.index)
+    def _print_ComplexRootOf(self, expr):
+        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr, order='lex'),
+                                    expr.index)
 
     def _print_RootSum(self, expr):
         args = [self._print_Add(expr.expr, order='lex')]

@@ -327,6 +327,13 @@ try:
 except ImportError: # <= Python 2.7
     from itertools import izip_longest as zip_longest
 
+
+try:
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
+
+
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6
@@ -515,9 +522,10 @@ def default_sort_key(item, order=None):
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)

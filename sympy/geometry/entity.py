@@ -258,7 +258,7 @@ class GeometryEntity(Basic):
         elif isinstance(o, Ray) or isinstance(o, Line):
             return False
         elif isinstance(o, Ellipse):
-            return self.encloses_point(o.center) and not self.intersection(o)
+            return self.encloses_point(o.center) and not self.intersection(o) and self.encloses_point(Point(o.center.x+o.hradius,o.center.y))
         elif isinstance(o, Polygon):
             if isinstance(o, RegularPolygon):
                 if not self.encloses_point(o.center):

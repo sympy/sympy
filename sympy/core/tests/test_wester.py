@@ -31,7 +31,6 @@ from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
-from sympy.galgebra.ga import MV
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
 from sympy.polys.rings import vring
@@ -1264,27 +1263,24 @@ def test_O2():
                                                                   [-5],
                                                                   [4]])
 
-
-@slow
+# The vector module has no way of representing vectors symbolically (without
+# respect to a basis)
+@XFAIL
 def test_O3():
-    (va, vb, vc, vd) = MV.setup('va vb vc vd')
     assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
 
-
 def test_O4():
-    (ex, ey, ez, grad) = MV.setup('e*x|y|z', metric='[1,1,1]',
-                                  coords=(x, y, z))
-    F = ex*(x*y*z) + ey*((x*y*z)**2) + ez*((y**2)*(z**3))
-    assert (grad^F -(x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez +
-            (2*y*z*(-x**2*y + z**2))*ey^ez) == 0
+    from sympy.vector import CoordSysCartesian
+    N = CoordSysCartesian("N")
+    i, j, k = N.base_vectors()
+    x, y, z = N.base_scalars()
+    F = i*(x*y*z) + j*((x*y*z)**2) + k*((y**2)*(z**3))
+    assert N.delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
 
-
+# The vector module has no way of representing vectors symbolically (without
+# respect to a basis)
 @XFAIL
-@slow
 def test_O5():
-    (_, _, _, grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x, y, z))
-    f = MV('f','vector',fct=True)
-    g = MV('g','vector',fct=True)
     assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
 
 #testO8-O9 MISSING!!
@@ -2254,11 +2250,8 @@ def test_U10():
     # see issue 2519:
     assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
 
-
+@XFAIL
 def test_U11():
-    (dx, dy, dz) = MV.setup('dx dy dz')
-    # answer is correct, but SymPy doc does not indicate how/if differential
-    # forms are supported
     assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx ^ dy ^dz
 
 

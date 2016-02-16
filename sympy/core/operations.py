@@ -305,10 +305,13 @@ class AssocOp(Basic):
         thing).
         """
         from sympy import Symbol
-        from sympy.core.function import AppliedUndef
+        from sympy.core.function import AppliedUndef, Function
         x, tail = self.as_independent(Symbol, AppliedUndef)
 
-        if tail is not self.identity:
+        # if x is an AssocOp Function then the _evalf below will
+        # call _eval_evalf (here) so we must break the recursion
+        if not (tail is self.identity or
+                isinstance(x, AssocOp) and x.is_Function):
             # here, we have a number so we just call to _evalf with prec;
             # prec is not the same as n, it is the binary precision so
             # that's why we don't call to evalf.
