@@ -18,6 +18,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
@@ -229,6 +230,23 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(name)
         else:
             return name
+
+    def _print_AugmentedAssignment(self, expr):
+        lhs_code = self._print(expr.lhs)
+        op = expr.rel_op
+        rhs_code = self._print(expr.rhs)
+        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+
+    def _print_For(self, expr):
+        target = self._print(expr.target)
+        if isinstance(expr.iterable, Range):
+            start, stop, step = expr.iterable.args
+        else:
+            raise NotImplementedError("Only iterable currently supported is Range")
+        body = self._print(expr.body)
+        return ('for ({target} = {start}; {target} < {stop}; {target} += '
+                '{step}) {{\n{body}\n}}').format(target=target, start=start,
+                stop=stop, step=step, body=body)
 
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
