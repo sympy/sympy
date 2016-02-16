@@ -395,6 +395,8 @@ class SparseMatrix(MatrixBase):
             return other._new(self*self._new(other))
         return self.scalar_multiply(other)
 
+    __matmul__ = __mul__
+
     def __rmul__(self, other):
         """Return product the same type as other (if a Matrix).
 
@@ -416,6 +418,8 @@ class SparseMatrix(MatrixBase):
         if isinstance(other, MatrixBase):
             return other*other._new(self)
         return self.scalar_multiply(other)
+
+    __rmatmul__ = __rmul__
 
     def __add__(self, other):
         """Add other to self, efficiently if possible.
