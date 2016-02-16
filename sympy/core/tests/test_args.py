@@ -133,6 +133,41 @@ def test_sympy__assumptions__sathandlers__CheckIsPrime():
     assert _test_args(CheckIsPrime(Q.positive))
     assert _test_args(CheckIsPrime(Q.positive(5)))
 
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__AugmentedAssignment():
+    from sympy.codegen.ast import AugmentedAssignment
+    assert _test_args(AugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__AddAugmentedAssignment():
+    from sympy.codegen.ast import AddAugmentedAssignment
+    assert _test_args(AddAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__SubAugmentedAssignment():
+    from sympy.codegen.ast import SubAugmentedAssignment
+    assert _test_args(SubAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__MulAugmentedAssignment():
+    from sympy.codegen.ast import MulAugmentedAssignment
+    assert _test_args(MulAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__DivAugmentedAssignment():
+    from sympy.codegen.ast import DivAugmentedAssignment
+    assert _test_args(DivAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__ModAugmentedAssignment():
+    from sympy.codegen.ast import ModAugmentedAssignment
+    assert _test_args(ModAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__CodeBlock():
+    from sympy.codegen.ast import CodeBlock, Assignment
+    assert _test_args(CodeBlock(Assignment(x, 1), Assignment(y, 2)))
+
+def test_sympy__codegen__ast__For():
+    from sympy.codegen.ast import For, CodeBlock, AddAugmentedAssignment
+    from sympy import Range
+    assert _test_args(For(x, Range(10), CodeBlock(AddAugmentedAssignment(y, 1))))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
