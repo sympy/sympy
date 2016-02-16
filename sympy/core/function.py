@@ -345,7 +345,7 @@ class Function(Application, Expr):
 
     @property
     def _diff_wrt(self):
-        """Don't Allow derivatives wrt defined functions.
+        """Don't allow derivatives wrt defined functions.
 
         Examples
         ========
