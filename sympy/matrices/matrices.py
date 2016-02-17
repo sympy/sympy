@@ -513,10 +513,14 @@ class MatrixBase(object):
             return self._new(self.rows, self.cols,
                 [i*other for i in self._mat])
 
+    __matmul__ = __mul__
+
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
             return self._new(a)*self
         return self._new(self.rows, self.cols, [a*i for i in self._mat])
+
+    __rmatmul__ = __rmul__
 
     def __pow__(self, num):
         from sympy.matrices import eye, diag, MutableMatrix

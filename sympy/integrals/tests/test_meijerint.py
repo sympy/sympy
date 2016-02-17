@@ -99,7 +99,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols, refine
+    from sympy import symbols
     a, b, c = symbols('a b c', positive=True)
     r = exp(-(x - a)**2)*exp(-(x - b)**2)
     e = integrate(r, (x, 0, oo), meijerg=True)
@@ -112,7 +112,7 @@ def test_recursive():
         + (2*a + 2*b + c)**2/8)/4)
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
-    assert simplify(refine(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True))) == \
+    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
