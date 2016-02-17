@@ -529,6 +529,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         - Do ``help(ode.ode_<hintname>)`` to get help more information on a
           specific hint, where ``<hintname>`` is the name of a hint without
           ``_Integral``.
+        - By default floats are converted into rationals. You can use
+          dsolve(eq, f, rational=False) when solving ODEs with floats to force
+          dsolve not to convert floats to rationals.
 
     For system of ordinary differential equations
     =============================================
@@ -656,7 +659,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify)
+            return _helper_simplify(eq, hint, hints, simplify, **kwargs)
 
 def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
@@ -682,7 +685,7 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         free = eq.free_symbols
         cons = lambda s: s.free_symbols.difference(free)
         if isinstance(sols, Expr):
-            return odesimp(sols, func, order, cons(sols), hint)
+            return odesimp(sols, func, order, cons(sols), hint, **kwargs)
         return [odesimp(s, func, order, cons(s), hint) for s in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
@@ -1987,7 +1990,7 @@ def checksysodesol(eqs, sols, func=None):
 
 
 @vectorize(0)
-def odesimp(eq, func, order, constants, hint):
+def odesimp(eq, func, order, constants, hint, **kwargs):
     r"""
     Simplifies ODEs, including trying to solve for ``func`` and running
     :py:meth:`~sympy.solvers.ode.constantsimp`.
@@ -2114,8 +2117,10 @@ def odesimp(eq, func, order, constants, hint):
 
     else:
         # The solution is not solved, so try to solve it
+        # Pass the kwargs to solve
+        solve_flags = kwargs
         try:
-            eqsol = solve(eq, func, force=True)
+            eqsol = solve(eq, func, force=True, **solve_flags)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
