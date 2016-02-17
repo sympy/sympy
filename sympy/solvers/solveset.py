@@ -12,11 +12,11 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp, signsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, atan, acsc, asec, arg,
-                             Piecewise, piecewise_fold)
+                             acos, asin, acsc, asec, arg,
+                             piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -28,8 +28,6 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-
-import warnings
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -540,6 +538,7 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
 
+    from sympy.simplify.simplify import signsimp
     orig_f = f
     f = together(f)
     if f.is_Mul:

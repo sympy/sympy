@@ -14,7 +14,7 @@ from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
-    is_sequence, range, string_types, ordered)
+    is_sequence, range, string_types)
 from .point import Point, Point2D
 
 

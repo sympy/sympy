@@ -13,7 +13,6 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
-from sympy.core.compatibility import as_int, SYMPY_INTS
 
 from sympy.logic.boolalg import BooleanAtom
 

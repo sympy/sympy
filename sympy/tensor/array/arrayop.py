@@ -2,6 +2,7 @@ import itertools
 
 import collections
 
+from sympy import S, Tuple, MatrixBase
 from sympy import S, Tuple, diff, MatrixBase
 
 from sympy.tensor.array import ImmutableDenseNDimArray
