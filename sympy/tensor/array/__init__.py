@@ -170,7 +170,7 @@ the derivative of arrays will return a new array `B` defined by
 
 `B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \\frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}}`
 
-The function ``derive_by_array`` performs such derivative:
+The function ``derive_by_array`` performs such an operation:
 
 >>> from sympy.tensor.array import Array, tensorcontraction, derive_by_array
 >>> from sympy.abc import x, y, z, t
