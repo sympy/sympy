@@ -1182,7 +1182,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     >>> from sympy.core.symbol import S
     >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
     {2: 3, 3: -2}
-    >>> factorrat(S(-1)/789)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
+    >>> factorrat(S(-1)/987)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
     {-1: 1, 3: -1, 7: -1, 47: -1}
 
     Please see the docstring for ``factorint`` for detailed explanations
