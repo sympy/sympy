@@ -148,7 +148,7 @@ def derive_by_array(expr, dx):
     Given the array `A_{i_1, \ldots, i_N}` and the array `X_{j_1, \ldots, j_M}`
     this function will return a new array `B` defined by
 
-    `B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}`
+    `B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \\frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}}`
 
     Examples
     ========
