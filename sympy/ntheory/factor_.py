@@ -1179,6 +1179,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     as values. For example:
 
     >>> from sympy.ntheory import factorrat
+    >>> from sympy.core.symbol import S
     >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
     {2: 3, 3: -2}
     >>> factorrat(S(-1)/789)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
