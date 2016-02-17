@@ -317,7 +317,6 @@ def reduce_abs_inequality(expr, rel, gen):
                     exprs = args
         elif expr.is_Pow:
             n = expr.exp
-            
             if not n.is_Integer:
                 raise ValueError("Only Integer Powers are allowed on Abs.")
 
