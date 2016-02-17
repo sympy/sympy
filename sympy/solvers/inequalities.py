@@ -288,7 +288,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     See Also
     ========
-    
+
     reduce_abs_inequalities
     """
     if gen.is_real is False:
