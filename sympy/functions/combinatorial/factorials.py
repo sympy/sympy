@@ -10,11 +10,16 @@ from sympy.ntheory import sieve
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce, range, HAS_GMPY
 from sympy.core.cache import cacheit
 
 from sympy.polys.polytools import poly_from_expr
 from sympy.polys.polyerrors import PolificationFailed
+
+if HAS_GMPY == 1:
+    from gmpy import fac as gmpy_factorial
+elif HAS_GMPY == 2:
+    from gmpy2 import fac as gmpy2_factorial
 
 
 class CombinatorialFunction(Function):
@@ -161,6 +166,13 @@ class factorial(CombinatorialFunction):
                                 result *= i
                                 cls._small_factorials.append(result)
                         result = cls._small_factorials[n-1]
+
+                    # GMPY factorial is faster, use it when available
+                    elif HAS_GMPY == 1:
+                        result = gmpy_factorial(n)
+
+                    elif HAS_GMPY == 2:
+                        result = gmpy2_factorial(n)
 
                     else:
                         bits = bin(n).count('1')
