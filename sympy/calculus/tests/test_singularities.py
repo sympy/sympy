@@ -2,8 +2,8 @@ from sympy import Symbol, exp, log
 from sympy.calculus.singularities import (singularities, is_increasing,
                                           is_strictly_increasing, is_decreasing,
                                           is_strictly_decreasing, is_monotonic)
-from sympy.sets import Interval
-from sympy import oo, S
+from sympy.sets import Interval, FiniteSet, EmptySet
+from sympy import oo, S, I, sqrt
 
 from sympy.utilities.pytest import XFAIL
 
@@ -11,12 +11,17 @@ from sympy.abc import x, y
 a = Symbol('a', negative=True)
 b = Symbol('b', positive=True)
 
+
 def test_singularities():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
+    y = Symbol('y')
 
-    assert singularities(x**2, x) == ()
-    assert singularities(x/(x**2 + 3*x + 2), x) == (-2, -1)
-
+    assert singularities(x**2, x) == S.EmptySet
+    assert singularities(x/(x**2 + 3*x + 2), x) == FiniteSet(-2, -1)
+    assert singularities(1/(x**2 + 1), x) == FiniteSet(I, -I)
+    assert singularities(x/(x**3 + 1), x) == FiniteSet(-1, (1 - sqrt(3)*I)/2,
+                                                       (1 + sqrt(3)*I)/2)
+    assert singularities(1/(y**2 + 2*I*y + 1), y) == FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
 
 @XFAIL
 def test_singularities_non_rational():

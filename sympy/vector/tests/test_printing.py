@@ -83,8 +83,8 @@ pretty_s = u(
 #This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
 upretty_d_7 = u(
 """\
-⎛ 2    ⎞ (N_i|N_k) + (3⋅C_y - 3⋅c) (N_k|N_k)\n\
-⎝a  + b⎠                                    \
+⎛ 2    ⎞ (N_i|N_k) + (-3⋅c + 3⋅C_y) (N_k|N_k)\n\
+⎝a  + b⎠                                     \
 """)
 pretty_d_7 = u(
 """\
@@ -126,6 +126,8 @@ def test_pretty_print_unicode():
     assert upretty(v[0]) == u('0')
     assert upretty(v[1]) == u('N_i')
     assert upretty(v[5]) == u('(a) N_i + (-b) N_j')
+    # Make sure the printing works in other objects
+    assert upretty(v[5].args) == u('((a) N_i, (-b) N_j)')
     assert upretty(v[8]) == upretty_v_8
     assert upretty(v[2]) == u('(-1) N_i')
     assert upretty(v[11]) == upretty_v_11
@@ -142,7 +144,7 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
                            '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\' +
+    assert latex(v[6]) == ('(a^{2} + \\mathbf{{x}_{N}})\\mathbf{\\' +
                            'hat{i}_{N}} + \\mathbf{\\hat{k}_{N}}')
     assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
                            '{C}}^{2} - \\int f{\\left (b \\right )}\\,' +

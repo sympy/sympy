@@ -14,7 +14,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
     det_quick, det_perm, det_minor, _simple_dens
 
 from sympy.physics.units import cm
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
 from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically as tn
@@ -236,9 +236,9 @@ def test_quintics_1():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
-    # if one uses solve to get the roots of a polynomial that has a RootOf
+    # if one uses solve to get the roots of a polynomial that has a CRootOf
     # solution, make sure that the use of nfloat during the solve process
     # doesn't fail. Note: if you want numerical solutions to a polynomial
     # it is *much* faster to use nroots to get them than to solve the
@@ -246,14 +246,14 @@ def test_quintics_1():
     # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
     assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
-        RootOf(x**5 + 3*x**3 + 7, 0).n()
+        CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
 
 
 def test_highorder_poly():
     # just testing that the uniq generator is unpacked
     sol = solve(x**6 - 2*x + 2)
-    assert all(isinstance(i, RootOf) for i in sol) and len(sol) == 6
+    assert all(isinstance(i, CRootOf) for i in sol) and len(sol) == 6
 
 
 @slow
@@ -267,7 +267,7 @@ def test_quintics_2():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
 
 def test_solve_rational():
@@ -1075,10 +1075,12 @@ def test_unrad1():
         sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
         - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
     assert check(unrad(eq),
-        (s**7 - sqrt(3)*s**7*I + 102*12**(S(1)/3)*s**5 +
-        102*2**(S(2)/3)*3**(S(5)/6)*s**5*I + 1620*s**4 - 1620*sqrt(3)*s**4*I -
-        13872*18**(S(1)/3)*s**3 + 471648*s - 471648*sqrt(3)*s*I, [s, s**3 - 306*x
-        - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) + 810]))
+        (-s*(-s**6 + sqrt(3)*s**6*I - 153*2**(S(2)/3)*3**(S(1)/3)*s**4 +
+        51*12**(S(1)/3)*s**4 - 102*2**(S(2)/3)*3**(S(5)/6)*s**4*I - 1620*s**3 +
+        1620*sqrt(3)*s**3*I + 13872*18**(S(1)/3)*s**2 - 471648 +
+        471648*sqrt(3)*I), [s, s**3 - 306*x - sqrt(3)*sqrt(31212*x**2 -
+        165240*x + 61484) + 810]))
+
     assert solve(eq) == [] # not other code errors
 
 
@@ -1096,7 +1098,7 @@ def test_unrad_fail():
     # but checksol doesn't work like that
     assert solve(root(x**3 - 3*x**2, 3) + 1 - x) == [S(1)/3]
     assert solve(root(x + 1, 3) + root(x**2 - 2, 5) + 1) == [
-        -1, -1 + RootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
+        -1, -1 + CRootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
 
 
 def test__invert():
@@ -1442,9 +1444,9 @@ def test_issue_6752():
 
 def test_issue_6792():
     assert solve(x*(x - 1)**2*(x + 1)*(x**6 - x + 1)) == [
-    -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
-    RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
-    RootOf(x**6 - x + 1, 5)]
+        -1, 0, 1, CRootOf(x**6 - x + 1, 0), CRootOf(x**6 - x + 1, 1),
+         CRootOf(x**6 - x + 1, 2), CRootOf(x**6 - x + 1, 3),
+         CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
 def test_issues_6819_6820_6821_6248_8692():
@@ -1732,10 +1734,10 @@ def test_high_order_multivariate():
     raises(NotImplementedError, lambda:
         solve(a*x**5 - x + 1, x, incomplete=False))
 
-    # result checking must always consider the denominator and RootOf
+    # result checking must always consider the denominator and CRootOf
     # must be checked, too
     d = x**5 - x + 1
-    assert solve(d*(1 + 1/d)) == [RootOf(d + 1, i) for i in range(5)]
+    assert solve(d*(1 + 1/d)) == [CRootOf(d + 1, i) for i in range(5)]
     d = x - 1
     assert solve(d*(2 + 1/d)) == [S.Half]
 

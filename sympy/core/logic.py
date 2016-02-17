@@ -11,6 +11,32 @@ from __future__ import print_function, division
 from sympy.core.compatibility import range
 
 
+def _torf(args):
+    """Return True if all args are True, False if they
+    are all False, else None.
+
+    >>> from sympy.core.logic import _torf
+    >>> _torf((True, True))
+    True
+    >>> _torf((False, False))
+    False
+    >>> _torf((True, False))
+    """
+    sawT = sawF = False
+    for a in args:
+        if a is True:
+            if sawF:
+                return
+            sawT = True
+        elif a is False:
+            if sawT:
+                return
+            sawF = True
+        else:
+            return
+    return sawT
+
+
 def _fuzzy_group(args, quick_exit=False):
     """Return True if all args are True, None if there is any None else False
     unless ``quick_exit`` is True (then return None as soon as a second False

@@ -3,13 +3,14 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import And
 from sympy.core import oo
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
-from sympy.core.singleton import Singleton, S
-from sympy.core.sympify import _sympify
-from sympy.core.decorators import deprecated
+from sympy.core.singleton import Singleton, S, sympify
+from sympy.core.sympify import _sympify, converter
 from sympy.core.function import Lambda
+from sympy.utilities.misc import filldedent, func_name
+
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -134,7 +135,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def __iter__(self):
         yield S.Zero
-        i = S(1)
+        i = S.One
         while True:
             yield i
             yield -i
@@ -236,11 +237,16 @@ class ImageSet(Set):
         from sympy.solvers.solveset import solveset, linsolve
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in zip(other, L.expr)],
-                         L.variables).args[0])
+            solns = list(linsolve([expr - val for val, expr in
+            zip(other, L.expr)], L.variables).args[0])
         else:
-            solns = list(solveset(L.expr - other, L.variables[0]))
-
+            solnsSet = solveset(L.expr-other, L.variables[0])
+            if solnsSet.is_FiniteSet:
+                solns = list(solveset(L.expr - other, L.variables[0]))
+            else:
+                raise NotImplementedError(filldedent('''
+                Determining whether an ImageSet contains %s has not
+                been implemented.''' % func_name(other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
@@ -300,12 +306,6 @@ class ImageSet(Set):
                                 solveset_real(im, n_)))
 
 
-@deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
-def TransformationSet(*args, **kwargs):
-    """Deprecated alias for the ImageSet constructor."""
-    return ImageSet(*args, **kwargs)
-
-
 class Range(Set):
     """
     Represents a range of integers.
@@ -329,11 +329,15 @@ class Range(Set):
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
+        if len(args) == 1:
+            if isinstance(args[0], range if PY3 else xrange):
+                args = args[0].__reduce__()[1]  # use pickle method
+
         # expand range
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else S(as_int(w))
+            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
                                  for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
@@ -453,14 +457,18 @@ class Range(Set):
         return self
 
 
+if PY3:
+    converter[range] = Range
+else:
+    converter[xrange] = Range
+
 def normalize_theta_set(theta):
     """
-    Normalize a Real Set theta in the Interval [0, 2*pi). It currently
-    supports Interval and FiniteSet. It Returns a the normalized value
-    of theta in the Set. For Interval, a maximum of one cycle [0, 2*pi],
-    is returned i.e. for theta equal to [0, 10*pi], returned normalized
-    value would be [0, 2*pi). As of now it supports theta as FiniteSet
-    and Interval.
+    Normalize a Real Set `theta` in the Interval [0, 2*pi). It returns
+    a normalized value of theta in the Set. For Interval, a maximum of
+    one cycle [0, 2*pi], is returned i.e. for theta equal to [0, 10*pi],
+    returned normalized value would be [0, 2*pi). As of now intervals
+    with end points as non-multiples of `pi` is not supported.
 
     Raises
     ======
@@ -493,52 +501,48 @@ def normalize_theta_set(theta):
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
-    from sympy.functions.elementary.complexes import Abs
 
     if theta.is_Interval:
+        interval_len = theta.measure
         # one complete circle
-        if Abs(theta.args[0] - theta.args[1]) >= 2*S.Pi:
+        if interval_len >= 2*S.Pi:
+            if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
+                k = coeff(theta.start)
+                return Union(Interval(0, k*S.Pi, False, True),
+                        Interval(k*S.Pi, 2*S.Pi, True, True))
             return Interval(0, 2*S.Pi, False, True)
 
-        new_theta = []
-        for val in [theta.args[0], theta.args[1]]:
-            k = coeff(val)
-            if (not k) and (k != S.Zero):
-                raise NotImplementedError('Normalizing theta without pi as'
-                                          'coefficient, is not Implemented.')
-            elif k == S.Zero:
-                if val == S.Zero:
-                    new_theta.append(S.Zero)
-                else:
-                    # when theta is n*pi
-                    new_theta.append(2*S.Pi)
-            else:
-                new_theta.append(k*S.Pi)
+        k_start, k_end = coeff(theta.start), coeff(theta.end)
 
-        # for negative theta
-        if new_theta[0] > new_theta[1]:
-            return Union(Interval(S(0), new_theta[1]),
-                         Interval(new_theta[0], 2*S.Pi, False, True))
+        if k_start is None or k_end is None:
+            raise NotImplementedError("Normalizing theta without pi as coefficient is "
+                                    "not yet implemented")
+        new_start = k_start*S.Pi
+        new_end = k_end*S.Pi
+
+        if new_start > new_end:
+            return Union(Interval(S.Zero, new_end, False, theta.right_open),
+                         Interval(new_start, 2*S.Pi, theta.left_open, True))
         else:
-            return Interval(*new_theta)
+            return Interval(new_start, new_end, theta.left_open, theta.right_open)
 
     elif theta.is_FiniteSet:
         new_theta = []
         for element in theta:
             k = coeff(element)
-            if (not k) and (k != S.Zero):
-                raise NotImplementedError('Normalizing theta without pi as'
+            if k is None:
+                raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
-            elif k == S.Zero:
-                if element == S.Zero:
-                    new_theta.append(S.Zero)
             else:
                 new_theta.append(k*S.Pi)
         return FiniteSet(*new_theta)
 
+    elif theta.is_Union:
+        return Union(*[normalize_theta_set(interval) for interval in theta.args])
+
     elif theta.is_subset(S.Reals):
-        raise NotImplementedError("Normalizing theta when, its %s is not"
-                                  "Implemented" % type(theta))
+        raise NotImplementedError("Normalizing theta when, it is of type %s is not "
+                                  "implemented" % type(theta))
     else:
         raise ValueError(" %s is not a real set" % (theta))
 
@@ -573,7 +577,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion(Lambda((_x, _y), _x + _y*I), [2, 3] x [4, 6])
+    ComplexRegion([2, 3] x [4, 6], False)
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -581,8 +585,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion(Lambda((_x, _y), _x + _y*I),
-                 [2, 3] x [4, 6] U [4, 6] x [1, 8])
+    ComplexRegion([2, 3] x [4, 6] U [4, 6] x [1, 8], False)
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -598,8 +601,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))),
-                 [0, 1] x [0, 2*pi))
+    ComplexRegion([0, 1] x [0, 2*pi), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -613,7 +615,7 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion(Lambda((_r, _theta), _r*(I*sin(_theta) + cos(_theta))), [0, 1] x [0, pi])
+    ComplexRegion([0, 1] x [0, pi], True)
     >>> intersection == upper_half_unit_disk
     True
 
@@ -626,14 +628,14 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols, Dummy
+        from sympy import symbols, Dummy, sympify, sin, cos
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
+        polar = sympify(polar)
 
         # Rectangular Form
-        if polar is False:
-
+        if polar == False:
             if all(_a.is_FiniteSet for _a in sets.args) and (len(sets.args) == 2):
 
                 # ** ProductSet of FiniteSets in the Complex Plane. **
@@ -644,34 +646,38 @@ class ComplexRegion(Set):
                     for y in sets.args[1]:
                         complex_num.append(x + I*y)
                 obj = FiniteSet(*complex_num)
-
             else:
                 obj = ImageSet.__new__(cls, Lambda((x, y), x + I*y), sets)
+            obj._variables = (x, y)
+            obj._expr = x + I*y
 
         # Polar Form
-        elif polar is True:
+        elif polar == True:
             new_sets = []
-
             # sets is Union of ProductSets
             if not sets.is_ProductSet:
                 for k in sets.args:
                     new_sets.append(k)
-
             # sets is ProductSets
             else:
                 new_sets.append(sets)
-
             # Normalize input theta
             for k, v in enumerate(new_sets):
                 from sympy.sets import ProductSet
                 new_sets[k] = ProductSet(v.args[0],
                                          normalize_theta_set(v.args[1]))
             sets = Union(*new_sets)
-
-            from sympy import cos, sin
             obj = ImageSet.__new__(cls, Lambda((r, theta),
                                    r*(cos(theta) + I*sin(theta))),
                                    sets)
+            obj._variables = (r, theta)
+            obj._expr = r*(cos(theta) + I*sin(theta))
+
+        else:
+            raise ValueError("polar should be either True or False")
+
+        obj._sets = sets
+        obj._polar = polar
         return obj
 
     @property
@@ -694,7 +700,19 @@ class ComplexRegion(Set):
         [2, 3] x [4, 5] U [4, 5] x [1, 7]
 
         """
-        return self.args[1]
+        return self._sets
+
+    @property
+    def args(self):
+        return (self._sets, self._polar)
+
+    @property
+    def variables(self):
+        return self._variables
+
+    @property
+    def expr(self):
+        return self._expr
 
     @property
     def psets(self):
@@ -716,11 +734,11 @@ class ComplexRegion(Set):
         ([2, 3] x [4, 5], [4, 5] x [1, 7])
 
         """
-        if self.args[1].is_ProductSet:
+        if self.sets.is_ProductSet:
             psets = ()
-            psets = psets + (self.args[1], )
+            psets = psets + (self.sets, )
         else:
-            psets = self.args[1].args
+            psets = self.sets.args
         return psets
 
     @property
@@ -800,7 +818,7 @@ class ComplexRegion(Set):
         >>> C2.polar
         True
         """
-        return self.args[0].args[1].is_Mul
+        return self._polar
 
     @property
     def _measure(self):
@@ -837,8 +855,8 @@ class ComplexRegion(Set):
 
         # self in polar form
         elif self.polar:
-            if S(other).is_zero:
-                r, theta = S(0), S(0)
+            if sympify(other).is_zero:
+                r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
             for element in self.psets:
@@ -862,8 +880,8 @@ class ComplexRegion(Set):
                 new_theta_interval = Intersection(theta1, theta2)
 
                 # 0 and 2*Pi means the same
-                if ((2*S.Pi in theta1 and S(0) in theta2) or
-                   (2*S.Pi in theta2 and S(0) in theta1)):
+                if ((2*S.Pi in theta1 and S.Zero in theta2) or
+                   (2*S.Pi in theta2 and S.Zero in theta1)):
                     new_theta_interval = Union(new_theta_interval,
                                                FiniteSet(0))
                 return ComplexRegion(new_r_interval*new_theta_interval,
@@ -903,7 +921,7 @@ class ComplexRegion(Set):
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
 
-        if other.is_subset(S.Reals):
+        if self == S.Complexes:
             return self
 
         return None
@@ -915,8 +933,13 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return ComplexRegion.__new__(cls, S.Reals*S.Reals)
 
     def __eq__(self, other):
-        if other == ComplexRegion(S.Reals*S.Reals):
-            return True
+        return other == ComplexRegion(S.Reals*S.Reals)
 
     def __hash__(self):
         return hash(ComplexRegion(S.Reals*S.Reals))
+
+    def __str__(self):
+        return "S.Complexes"
+
+    def __repr__(self):
+        return "S.Complexes"

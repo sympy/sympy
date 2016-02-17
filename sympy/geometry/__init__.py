@@ -23,6 +23,6 @@ from sympy.geometry.plane import Plane
 from sympy.geometry.ellipse import Ellipse, Circle
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle, rad, deg
 from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
-    intersection
+    intersection, closest_points, farthest_points
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.curve import Curve

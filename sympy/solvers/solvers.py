@@ -694,7 +694,7 @@ def solve(f, *symbols, **flags):
     ----------------------------------------
 
     When solving polynomial expressions, one might not want explicit solutions
-    (which can be quite long). If the expression is univariate, RootOf
+    (which can be quite long). If the expression is univariate, CRootOf
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
@@ -704,7 +704,9 @@ def solve(f, *symbols, **flags):
         sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)), -(3*sqrt(69)/2 +
         27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
-        [RootOf(x**3 - x + 1, 0), RootOf(x**3 - x + 1, 1), RootOf(x**3 - x + 1, 2)]
+        [CRootOf(x**3 - x + 1, 0),
+         CRootOf(x**3 - x + 1, 1),
+         CRootOf(x**3 - x + 1, 2)]
 
         If the expression is multivariate, no solution might be returned:
 
@@ -741,8 +743,8 @@ def solve(f, *symbols, **flags):
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
         >>> solve(eq)  # this gives 2 solutions but misses a 3rd
-        [RootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
-        RootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
+        [CRootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
+        CRootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
         >>> sol = solve(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
@@ -3029,7 +3031,7 @@ def unrad(eq, *syms, **flags):
 
         # remove constants and powers of factors since these don't change
         # the location of the root; XXX should factor or factor_terms be used?
-        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True))
+        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True), clear=True)
         if eq.is_Mul:
             args = []
             for f in eq.args:
@@ -3079,7 +3081,7 @@ def unrad(eq, *syms, **flags):
         sorted(dict(cov=[], n=None, rpt=0).items())]
 
     # preconditioning
-    eq = powdenest(factor_terms(eq, radical=True))
+    eq = powdenest(factor_terms(eq, radical=True, clear=True))
     eq, d = eq.as_numer_denom()
     eq = _mexpand(eq, recursive=True)
     if eq.is_number:
