@@ -1,4 +1,4 @@
-"""
+r"""
 N-dim array module for SymPy.
 
 Four classes are provided to handle N-dim arrays, given by the combinations
@@ -168,7 +168,7 @@ The definition of a derivative by an array is as follows: given the array
 `A_{i_1, \ldots, i_N}` and the array `X_{j_1, \ldots, j_M}`
 the derivative of arrays will return a new array `B` defined by
 
-`B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \\frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}}`
+`B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}}`
 
 The function ``derive_by_array`` performs such an operation:
 
@@ -186,14 +186,14 @@ Scalar derived by an array basis:
 >>> derive_by_array(sin(x*y), [x, y, z])
 [y*cos(x*y), x*cos(x*y), 0]
 
-Deriving array by an array basis: `B^{nm} := \\frac{\partial A^m}{\partial x^n}`
+Deriving array by an array basis: `B^{nm} := \frac{\partial A^m}{\partial x^n}`
 
 >>> basis = [x, y, z]
 >>> ax = derive_by_array([exp(x), sin(y*z), t], basis)
 >>> ax
 [[exp(x), 0, 0], [0, z*cos(y*z), 0], [0, y*cos(y*z), 0]]
 
-Contraction of the resulting array: `\sum_m \\frac{\partial A^m}{\partial x^m}`
+Contraction of the resulting array: `\sum_m \frac{\partial A^m}{\partial x^m}`
 
 >>> tensorcontraction(ax, (0, 1))
 z*cos(y*z) + exp(x)
