@@ -538,6 +538,7 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
 
+    from sympy.simplify.simplify import signsimp
     orig_f = f
     f = together(f)
     if f.is_Mul:
