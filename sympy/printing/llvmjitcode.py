@@ -50,15 +50,21 @@ class LLVMJitPrinter(Printer):
         if expr.exp == S.NegativeOne:
             return self.builder.fdiv(ll.Constant(self.fp_type, 1.0), base0)
         if expr.exp == S.Half:
-            fn_type = ll.FunctionType(self.fp_type, [self.fp_type])
-            fn = ll.Function(self.module, fn_type, "sqrt")
+            fn = self.ext_fn.get("sqrt")
+            if not fn:
+                fn_type = ll.FunctionType(self.fp_type, [self.fp_type])
+                fn = ll.Function(self.module, fn_type, "sqrt")
+                self.ext_fn["sqrt"] = fn
             return self.builder.call(fn, [base0], "sqrt")
         if expr.exp == 2:
             return self.builder.fmul(base0, base0)
 
         exp0 = self._print(expr.exp)
-        fn_type = ll.FunctionType(self.fp_type, [self.fp_type, self.fp_type])
-        fn = ll.Function(self.module, fn_type, "pow")
+        fn = self.ext_fn.get("pow")
+        if not fn:
+            fn_type = ll.FunctionType(self.fp_type, [self.fp_type, self.fp_type])
+            fn = ll.Function(self.module, fn_type, "pow")
+            self.ext_fn["pow"] = fn
         return self.builder.call(fn, [base0, exp0], "pow")
 
     def _print_Mul(self, expr):
