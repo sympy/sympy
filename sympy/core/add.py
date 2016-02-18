@@ -446,15 +446,23 @@ class Add(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
+    def _eval_is_real(self):
+        for a in self.args:
+            if a.is_infinite:
+                return None
+        return _fuzzy_group((a.is_real for a in self.args), quick_exit=True)
+
+    def _eval_is_complex(self):
+        for a in self.args:
+            if a.is_infinite:
+                return None
+        return  _fuzzy_group((a.is_complex for a in self.args), quick_exit=True)
+
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
         (a.is_antihermitian for a in self.args), quick_exit=True)
     _eval_is_finite = lambda self: _fuzzy_group(
-        (a.is_finite for a in self.args), quick_exit=True)
+        (a.is_finite for a in self.args), quick_exit=False)
     _eval_is_hermitian = lambda self: _fuzzy_group(
         (a.is_hermitian for a in self.args), quick_exit=True)
     _eval_is_integer = lambda self: _fuzzy_group(
