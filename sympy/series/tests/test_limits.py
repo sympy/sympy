@@ -463,6 +463,8 @@ def test_issue_9205():
     assert Limit(x + y, x + y, a).free_symbols == set([a])
     assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])
 
+def test_issue_10610():
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
 
 def test_limit_seq():
     assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
