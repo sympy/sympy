@@ -277,15 +277,21 @@ def test_euler():
     assert euler(20, evaluate=False) != 370371188237525
 
     n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True, positive=True, odd=True)
+    p = Symbol('p', integer=True, positive=True, even=True)
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
+    assert euler(k) == 0
+    raises(ValueError, lambda: euler(-1))
+    raises(ValueError, lambda: euler(-k))
+    raises(ValueError, lambda: euler(-p))
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
-    assert euler(2*n + 1).rewrite(Sum) == 0
+    assert euler(2*p + 1).rewrite(Sum) == 0
 
 
 @XFAIL

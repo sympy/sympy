@@ -14,6 +14,7 @@ from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, expand_mul
 from sympy.core.numbers import E, pi
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
@@ -733,13 +734,18 @@ class euler(Function):
 
     @classmethod
     def eval(cls, m):
-        if m.is_odd:
+        if fuzzy_or([m.is_positive, m.is_negative]) is None:
+            return
+        elif m.is_negative:
+            raise ValueError('Euler numbers are not defined on negative numbers')
+        elif m.is_odd and m >= 1:
             return S.Zero
-        if m.is_Integer and m.is_nonnegative:
+        elif m.is_Integer and m.is_nonnegative:
             from mpmath import mp
             m = m._to_mpmath(mp.prec)
             res = mp.eulernum(m, exact=True)
             return Integer(res)
+
 
     def _eval_rewrite_as_Sum(self, arg):
         from sympy import Sum
@@ -754,7 +760,6 @@ class euler(Function):
 
     def _eval_evalf(self, prec):
         m = self.args[0]
-
         if m.is_Integer and m.is_nonnegative:
             from mpmath import mp
             from sympy import Expr
