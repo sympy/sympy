@@ -1260,40 +1260,46 @@ def _real_to_rational(expr, tolerance=None):
     return p.subs(reps, simultaneous=True)
 
 
-def clear_coefficients(expr):
-    """Return `p, (R, f(R))` where `p` is the expression obtained
-    when Rational additive and multiplicative coefficients of `expr`
-    have been stripped away in a naive fashion (i.e. without
-    simplification). If `expr = v` then f(R).subs(R, v) is the
-    value that `v` would have after undergoing the same operations
-    as were used to remove the coefficients from `expr`. (`f(R)`
-    will necessarily always be in a simplified `mx + b` form with
-    `b, mx = f(R).as_coeff_Add()` and `m = mx.as_coeff_Mul()[0]`.)
+def clear_coefficients(expr, rhs=S.Zero):
+    """Return `p, r` where `p` is the expression obtained when Rational
+    additive and multiplicative coefficients of `expr` have been stripped
+    away in a naive fashion (i.e. without simplification). The operations
+    needed to remove the coefficients will be applied to `rhs` and returned
+    as `r`.
 
     Examples
     ========
 
     >>> from sympy.simplify.simplify import clear_coefficients
     >>> from sympy.abc import x, y
-    >>> clear_coefficients(2 + 4*y*(6*x + 3))
-    (y*(2*x + 1), (_rhs, _rhs/12 - 1/6))
-    >>> p, (R, fR) = _
-    >>> fR.subs(R, 0)
-    -1/6
+    >>> from sympy import Dummy
+    >>> expr = 4*y*(6*x + 3)
+    >>> clear_coefficients(expr - 2)
+    (y*(2*x + 1), 1/6)
+
+    When solving 2 or more expressions like `expr = a`,
+    `expr = b`, etc..., it is advantageous to provide a Dummy symbol
+    for `rhs` and  simply replace it with `a`, `b`, etc... in `r`.
+
+    >>> rhs = Dummy('rhs')
+    >>> clear_coefficients(expr, rhs)
+    (y*(2*x + 1), _rhs/12)
+    >>> _[1].subs(rhs, 2)
+    1/6
     """
     was = None
-    R = Dummy('rhs')
-    rhs = R
-    if expr.free_symbols == set():
-        return expr, (R, rhs)
+    free = expr.free_symbols
     while was != expr:
         was = expr
-        m, expr = expr.as_content_primitive()
+        m, expr = (
+            expr.as_content_primitive()
+            if free else
+            factor_terms(expr).as_coeff_Mul())
         rhs /= m
         c, expr = expr.as_coeff_Add()
         rhs -= c
-    e = signsimp(expr, evaluate = False)
-    if _coeff_isneg(e):
+    expr = signsimp(expr, evaluate = False)
+    if _coeff_isneg(expr):
         expr = -expr
         rhs = -rhs
-    return expr, (R, rhs)
+    return expr, rhs

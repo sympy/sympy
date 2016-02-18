@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix)
+    Matrix, signsimp)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -983,21 +983,17 @@ def test_issue_10326():
     assert Interval(-oo, oo).contains(oo) is S.false
     assert Interval(-oo, oo).contains(-oo) is S.false
 
+
 def test_issue_10285():
-    from sympy import Mul
-    from sympy.abc import x,y,z
-    assert FiniteSet(2*x + 1).intersect(Interval(3, 5)) == FiniteSet(x).intersect(Interval(1, 2))
-    assert FiniteSet(x*y + 1).intersect(Interval(3, 5)) == FiniteSet(x*y).intersect(Interval(2, 4))
-    assert FiniteSet(2*x + 2*y).intersect(Interval(2, 4)) == FiniteSet(x + y).intersect(Interval(1, 2))
-    assert FiniteSet(2*x + 1).intersect(Interval(2, 4)) == FiniteSet(x).intersect(Interval(Mul(1) / 2, Mul(3) / 2))
-    assert FiniteSet((2*x + 1) / 3).intersect(Interval(2, 4)) == FiniteSet(x).intersect(Interval(Mul(5) /2, Mul(11) /2))
-    assert FiniteSet(x).intersect(Interval(2, 3)) == FiniteSet(x).intersect(Interval(2, 3))
-    assert FiniteSet(2*x/3 + 3*y/2).intersect(Interval(2, 4)) == FiniteSet(4*x + 9*y).intersect(Interval(12, 24))
-    assert FiniteSet(-2*x - 1).intersect(Interval(3, 5)) == FiniteSet(x).intersect(Interval(-3, -2))
-    assert FiniteSet(-2*x/3 - 3*y/2).intersect(Interval(2, 4)) == FiniteSet(4*x + 9*y).intersect(Interval(-24, -12))
-    assert FiniteSet(-2*x - 2*y + 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-2, -1))
-    assert FiniteSet(-2*x - 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(x + y).intersect(Interval(-3, -2))
-    assert FiniteSet(-2*x + 2*y - 1).intersect(Interval(3, 5)) == FiniteSet(-x + y).intersect(Interval(2, 3))
-    assert FiniteSet(2 + x*(2 + 2*y)).intersect(Interval(3, 5)) == FiniteSet(x*(y + 1)).intersect(Interval(Mul(1) / 2, Mul(3) / 2))
-    assert FiniteSet(2 + x*(2 + 2*y)).intersect(Interval(2, 6)) == FiniteSet(x*(y + 1)).intersect(Interval(0, 2))
-    assert FiniteSet(1 + 4*x*y).intersect(Interval(5, 9)) == FiniteSet(x*y).intersect(Interval(1, 2))
+    assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
+        FiniteSet(x).intersect(Interval.Lopen(-3, -2))
+    eq = -x - 2*(-x - y)
+    s = signsimp(eq)
+    ivl = Interval.open(0, 1)
+    assert FiniteSet(eq).intersect(ivl) == FiniteSet(s).intersect(ivl)
+    assert FiniteSet(-eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.open(-1, 0))
+    eq -= 1
+    ivl = Interval.Lopen(1, oo)
+    assert FiniteSet(eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.Lopen(2, oo))

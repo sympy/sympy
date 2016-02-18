@@ -65,9 +65,9 @@ def invert_real(f_x, y, x):
     * ``set_h`` containing information about the domain
 
     >>> invert_real(Abs(x**31 + x), y, x)
-    (x**31 + x, Intersection([0, oo), {y}) U Intersection((-oo, 0], {-y}))
+    (x**31 + x, Intersection([0, oo), {y}))
     >>> invert_real(exp(Abs(x)), y, x)
-    (x, Intersection([0, oo), {log(y)}) U Intersection((-oo, 0], {-log(y)}))
+    (x, Intersection([0, oo), {log(y)}))
 
     See Also
     ========
