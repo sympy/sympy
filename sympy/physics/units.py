@@ -222,6 +222,7 @@ minute = minutes = 60*s
 h = hour = hours = 60*minute
 day = days = 24*hour
 
+anomalistic_year = anomalistic_years = Rational('365.259636')*day
 sidereal_year = sidereal_years = Rational('31558149.540')*s
 tropical_year = tropical_years = Rational('365.24219')*day
 common_year = common_years = Rational('365')*day

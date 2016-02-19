@@ -305,7 +305,7 @@ class AssocOp(Basic):
         thing).
         """
         from sympy import Symbol
-        from sympy.core.function import AppliedUndef, Function
+        from sympy.core.function import AppliedUndef
         x, tail = self.as_independent(Symbol, AppliedUndef)
 
         # if x is an AssocOp Function then the _evalf below will

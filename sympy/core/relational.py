@@ -5,7 +5,6 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
-from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
 

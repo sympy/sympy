@@ -462,6 +462,11 @@ def test_simplify_float_vs_integer():
 
 
 def test_as_content_primitive():
+    assert (x/2 + y).as_content_primitive() == (S.Half, x + 2*y)
+    assert (x/2 + y).as_content_primitive(clear=False) == (S.One, x/2 + y)
+    assert (y*(x/2 + y)).as_content_primitive() == (S.Half, y*(x + 2*y))
+    assert (y*(x/2 + y)).as_content_primitive(clear=False) == (S.One, y*(x/2 + y))
+
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.

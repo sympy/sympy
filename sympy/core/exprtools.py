@@ -16,7 +16,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered, cartes)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -1012,8 +1012,10 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     >>> gcd_terms(x/2/y + 1/x/y)
     (x**2 + 2)/(2*x*y)
-    >>> gcd_terms(x/2/y + 1/x/y, fraction=False, clear=False)
-    (x + 2/x)/(2*y)
+    >>> gcd_terms(x/2/y + 1/x/y, clear=False)
+    (x**2/2 + 1)/(x*y)
+    >>> gcd_terms(x/2/y + 1/x/y, clear=False, fraction=False)
+    (x/2 + 1/x)/y
 
     The ``clear`` flag was ignored in this case because the returned
     expression was a rational expression, not a simple sum.
@@ -1053,6 +1055,15 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         cont, numer, denom = _gcd_terms(terms, isprimitive, fraction)
         numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
+        if not clear:
+            c, _coeff = coeff.as_coeff_Mul()
+            if not c.is_Integer and not clear and numer.is_Add:
+                n, d = c.as_numer_denom()
+                _numer = numer/d
+                if any(a.as_coeff_Mul()[0].is_Integer
+                        for a in _numer.args):
+                    numer = _numer
+                    coeff = n*_coeff
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
     if not isinstance(terms, Basic):
@@ -1117,14 +1128,6 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> factor_terms(x/2 + 1, clear=True)
     (x + 2)/2
 
-    This only applies when there is a single Add that the coefficient
-    multiplies:
-
-    >>> factor_terms(x*y/2 + y, clear=True)
-    y*(x + 2)/2
-    >>> factor_terms(x*y/2 + y, clear=False) == _
-    True
-
     If a -1 is all that can be factored out, to *not* factor it out, the
     flag ``sign`` must be False:
 
@@ -1156,7 +1159,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 return expr
             return expr.func(*newargs)
 
-        cont, p = expr.as_content_primitive(radical=radical)
+        cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove

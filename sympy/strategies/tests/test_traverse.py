@@ -1,5 +1,6 @@
 from sympy.strategies.traverse import (top_down, bottom_up, sall, top_down_once,
-        bottom_up_once, expr_fns, basic_fns)
+        bottom_up_once, basic_fns)
+from sympy.strategies.util import expr_fns
 from sympy import Basic, symbols, Symbol, S
 
 zero_symbols = lambda x: S.Zero if isinstance(x, Symbol) else x

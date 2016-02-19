@@ -1306,14 +1306,14 @@ class PermutationGroup(Basic):
                     yield x._array_form
                 else:
                     yield x
-            raise StopIteration
+            return
         if len(u) == 1:
             for i in basic_orbits[0]:
                 if af:
                     yield u[0][i]._array_form
                 else:
                     yield u[0][i]
-            raise StopIteration
+            return
 
         u = list(reversed(u))
         basic_orbits = basic_orbits[::-1]
@@ -1327,7 +1327,7 @@ class PermutationGroup(Basic):
             # backtrack when finished iterating over coset
             if pos[h] >= posmax[h]:
                 if h == 0:
-                    raise StopIteration
+                    return
                 pos[h] = 0
                 h -= 1
                 stg.pop()

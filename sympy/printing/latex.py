@@ -281,10 +281,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Cycle(self, expr):
-        from sympy.combinatorics.permutations import Permutation, Cycle
+        from sympy.combinatorics.permutations import Permutation
         if str(expr) == '()':
             return r"\left( \right)"
-        expr_perm = Permutation(expr).cyclic_form
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
         term_tex = ''
         for i in expr_perm:
             term_tex += str(i).replace(',', r"\;")
@@ -1239,6 +1243,8 @@ class LatexPrinter(Printer):
     _print_MatrixSymbol = _print_Symbol
 
     def _deal_with_super_sub(self, string):
+        if '{' in string:
+            return string
 
         name, supers, subs = split_super_sub(string)
 

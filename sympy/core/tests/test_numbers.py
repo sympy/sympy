@@ -1097,7 +1097,7 @@ def test_Integer_factors():
     def F(i):
         return Integer(i).factors()
 
-    assert F(1) == {1: 1}
+    assert F(1) == {}
     assert F(2) == {2: 1}
     assert F(3) == {3: 1}
     assert F(4) == {2: 2}
@@ -1158,10 +1158,6 @@ def test_Rational_factors():
     assert F(2, 9) == {2: 1, 3: -2}
     assert F(2, 15) == {2: 1, 3: -1, 5: -1}
     assert F(6, 10) == {3: 1, 5: -1}
-    assert str(F(12, 1, visual=True)) == '2**2*3**1'
-    assert str(F(1, 1, visual=True)) == '1'
-    assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
-    assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
 def test_issue_4107():

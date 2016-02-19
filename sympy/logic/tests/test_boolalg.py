@@ -1,3 +1,5 @@
+from __future__ import division
+
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality
@@ -725,3 +727,23 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_issue_8571():
+    x = symbols('x')
+    for t in (S.true, S.false):
+        raises(TypeError, lambda: +t)
+        raises(TypeError, lambda: -t)
+        raises(TypeError, lambda: abs(t))
+        # use int(bool(t)) to get 0 or 1
+        raises(TypeError, lambda: int(t))
+
+        for o in [S.Zero, S.One, x]:
+            for _ in range(2):
+                raises(TypeError, lambda: o + t)
+                raises(TypeError, lambda: o - t)
+                raises(TypeError, lambda: o % t)
+                raises(TypeError, lambda: o*t)
+                raises(TypeError, lambda: o/t)
+                raises(TypeError, lambda: o**t)
+                o, t = t, o  # do again in reversed order
