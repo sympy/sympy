@@ -157,11 +157,11 @@ represent many types of solutions. For the single variable case it can represent
  * There can also be bizarre solutions to equations like the set of rational
    numbers.
 
-No other Python object (list, dictionary, generator, Python sets)
-provides the flexibility of mathematical sets which our sets module tries to
-emulate. The second reason to use sets is that they are close to the entities
-which mathematicians deals with and it makes it easier to reason about them.
-Set objects conform to Pythonic conventions when possible, i.e., ``x in A`` and
+No other Python object (list, dictionary, generator, Python sets) provides the
+flexibility of mathematical sets which our sets module tries to emulate. The
+second reason to use sets is that they are close to the entities which
+mathematicians deal with and it makes it easier to reason about them.  Set
+objects conform to Pythonic conventions when possible, i.e., ``x in A`` and
 ``for i in A`` both work when they can be computed. Another advantage of using
 objects closer to mathematical entities is that the user won't have to "learn"
 our representation and she can have her expectations transferred from her
@@ -287,9 +287,9 @@ What are the general methods employed by solveset to solve an equation?
    recursively.
 
 
- * The function class is now checked if it's trigonometric or hyperbolic, in
-   which case the function ``_solve_real_trig`` is called, which solves it by
-   converting it to complex exponential form.
+ * If the function is trigonometric or hyperbolic, the function
+   ``_solve_real_trig`` is called, which solves it by converting it to complex
+   exponential form.
 
 
  * The function is now checked if there is any instance of a ``Piecewise``
@@ -317,19 +317,17 @@ What are the general methods employed by solveset to solve an equation?
    used as follows:
 
    - The method to solve the rational function is called:
-     ``_solve_as_rational(f, symbol, solveset_solver, as_poly_solver)`` its
-     third argument is the ``solveset_solver`` which can either be
-     ``solveset_real`` or ``solveset_complex`` based on these, the respective
-     poly solver ``_solve_as_poly_real`` or ``_solve_as_poly_complex`` is
-     called to solve as polynomial.
+     ``_solve_as_rational``.  Based on the domain, the
+     respective poly solver ``_solve_as_poly_real`` or
+     ``_solve_as_poly_complex`` is called to solve ``f`` as a polynomial.
 
    - The underlying method ``_solve_as_poly`` solves the equation using
      polynomial techniques if it's already a polynomial equation or, with
      a change of variables, can be made so.
 
 
- * The final solution set is intersected with the input domain, and the
-   resulting solution is returned.
+ * The final solution set returned by ``solveset`` is the intersection of the
+   set of solutions found above and the input domain.
 
 .. Remember to change the above part when the new solver is implemented.
 
@@ -457,13 +455,11 @@ Search based solver and step-by-step solution
 How do we deal with cases where only some of the solutions are known?
 ---------------------------------------------------------------------
 
- Creating a universal equation solver, which can solve each and every
- equation we encounter in mathematics is an ideal case for solvers in
- a Computer Algebra System. We always have some cases, which are not
- solved, or solved with incomplete solutions, so it's very important
- to represent that situation. For this type of situation we use the
- ``ConditionSet`` class in the sets module, which acts as an unevaluated
- solveset object.
+ Creating a universal equation solver, which can solve each and every equation
+ we encounter in mathematics is an ideal case for solvers in a Computer
+ Algebra System. When cases which are not solved or can only be solved
+ incompletely, a ``ConditionSet`` is used and acts as an unevaluated solveset
+ object.
 
  Note that, mathematically, finding a complete set of solutions for an
  equation is undecidable. See `Richardson's theorem
@@ -488,7 +484,7 @@ What will you do with the old solve?
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 
- * Replace ``solve`` with ``solveset`` once solveset is at least powerful as
+ * Replace ``solve`` with ``solveset`` once solveset is at least as powerful as
    ``solve``, i.e., ``solveset`` does everything that ``solve`` can do
    currently, and
 
@@ -498,12 +494,12 @@ What will you do with the old solve?
 How are symbolic parameters handled in solveset?
 ------------------------------------------------
 
- Solveset is in its initial phase of development as of now, so the symbolic
- parameters aren't handled well for all the cases, but some work has been done
- in this regard to depict our ideology towards symbolic parameters. As an
- example, consider the solving of `|x| = n` for real `x`, where `n` is a
- symbolic parameter. Solveset returns the value of `x` considering the domain
- of the symbolic parameter `n` as well:
+ Solveset is in its initial phase of development, so the symbolic parameters
+ aren't handled well for all the cases, but some work has been done in this
+ regard to depict our ideology towards symbolic parameters. As an example,
+ consider the solving of `|x| = n` for real `x`, where `n` is a symbolic
+ parameter. Solveset returns the value of `x` considering the domain of the
+ symbolic parameter `n` as well:
 
  .. math:: ([0, \infty) \cap \{n\}) \cup ((-\infty, 0] \cap \{-n\}).
 
@@ -511,10 +507,10 @@ How are symbolic parameters handled in solveset?
  ``Interval`` `[0, \infty)` and `-n` is the solution only when `-n` belongs to
  the ``Interval`` `(- \infty, 0]`.
 
- There are various other cases as well which needs to be addressed, like
- say, solving of `2^x + (a - 2)` for `x` where `a` is a symbolic parameter.
- As of now, It returns the solution as an intersection with `\mathbb{R}`, which
- is trivial, as it doesn't reveal the domain of `a` in the solution.
+ There are other cases to address too, like solving `2^x + (a - 2)` for `x`
+ where `a` is a symbolic parameter.  As of now, It returns the solution as an
+ intersection with `\mathbb{R}`, which is trivial, as it doesn't reveal the
+ domain of `a` in the solution.
 
  Recently, we have also implemented a function to find the domain of the
  expression in a FiniteSet (Intersection with the interval) in which it is
