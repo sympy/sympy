@@ -252,7 +252,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
@@ -1784,9 +1784,11 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
         return 'type3'
     r1 = eq[0].match(diff(x(t),t) - f)
     r2 = eq[1].match(diff(y(t),t) - g)
-    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    num, den = (
+        (r1[f].subs(x(t),u).subs(y(t),v))/
+        (r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
     R1 = num.match(f1*g1)
-    R2 = denum.match(f2*g2)
+    R2 = den.match(f2*g2)
     phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
     if R1 and R2:
         return 'type4'
@@ -2113,7 +2115,8 @@ def odesimp(eq, func, order, constants, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solve(eq, func, force=True)
+            floats = any(i.is_Float for i in eq.atoms(Number))
+            eqsol = solve(eq, func, force=True, rational=False if floats else None)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
@@ -2233,30 +2236,26 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
-    x = func.args[0]
-    s = True
-    testnum = 0
+    elif sol.rhs == func:
+        sol = sol.reversed
+
     if order == 'auto':
         order = ode_order(ode, func)
-    if solve_for_func and not (
-            sol.lhs == func and not sol.rhs.has(func)) and not (
-            sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
                 result = checkodesol(ode, Eq(func, solved[0]),
                     order=order, solve_for_func=False)
             else:
                 result = checkodesol(ode, [Eq(func, t) for t in solved],
                 order=order, solve_for_func=False)
-
             return result
 
+    s = True
+    testnum = 0
+    x = func.args[0]
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
@@ -2265,8 +2264,6 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
-            elif sol.rhs == func:
-                s = sub_func_doit(ode_diff, func, sol.lhs)
             else:
                 testnum += 1
                 continue
@@ -2292,7 +2289,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         elif testnum == 2:
             # Third pass. Try solving for df/dx and substituting that into the
             # ODE. Thanks to Chris Smith for suggesting this method.  Many of
-            # the comments below are his too.
+            # the comments below are his, too.
             # The method:
             # - Take each of 1..n derivatives of the solution.
             # - Solve each nth derivative for d^(n)f/dx^(n)
@@ -3564,8 +3561,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     seriesdict = {}
     recurr = Function("r")
 
-    # Generating the recurrence relation which works this way
-    # a] For the second order term the summation begins at n = 2. The coefficients
+    # Generating the recurrence relation which works this way:
+    # for the second order term the summation begins at n = 2. The coefficients
     # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
     # the exponent of x becomes n.
     # For example, if p is x, then the second degree recurrence term is
@@ -3641,8 +3638,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     # Checking how many values are already present
     tcounter = len([t for t in finaldict.values() if t])
 
-    for count in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
-    #while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
+    for _ in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
         check = rhs.subs(n, startiter)
         nlhs = lhs.subs(n, startiter)
         nrhs = check.subs(finaldict)
@@ -4271,7 +4267,7 @@ def _linear_coeff_match(expr, func):
         if eq is a*x + b*f(x) + c, else None.
         '''
         eq = _mexpand(eq)
-        c = eq.as_independent(x, f(x), as_Add = True)[0]
+        c = eq.as_independent(x, f(x), as_Add=True)[0]
         if not c.is_Rational:
             return
         a = eq.coeff(x)
@@ -6806,10 +6802,10 @@ def sysode_linear_2eq_order2(match_):
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
-        eqs = 0
+        eqs = []
         for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],2]
-        eq[i] = eqs
+            eqs.append(terms/fc[i,func[i],2])
+        eq[i] = Add(*eqs)
     # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
     # and Eq(a2*diff(y(t),t,t), a2*diff(x(t),t)+b2*diff(y(t),t)+c2*x(t)+d2*y(t)+e2)
     r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
@@ -7190,14 +7186,16 @@ def _linear_2eq_order2_type6(x, y, t, r, eq):
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     z = Function('z')
-    num, denum = cancel((r['c1']*x(t) + r['d1']*y(t))/(r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
+    num, den = cancel(
+        (r['c1']*x(t) + r['d1']*y(t))/
+        (r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
     f = r['c1']/num.coeff(x(t))
     a1 = num.coeff(x(t))
     b1 = num.coeff(y(t))
-    a2 = denum.coeff(x(t))
-    b2 = denum.coeff(y(t))
+    a2 = den.coeff(x(t))
+    b2 = den.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
+    k1, k2 = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
@@ -7235,12 +7233,14 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
-    num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
+    num, den = cancel(
+        (r['a1']*x(t) + r['b1']*y(t))/
+        (r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
     f = r['a1']/num.coeff(x(t))
     a1 = num.coeff(x(t))
     b1 = num.coeff(y(t))
-    a2 = denum.coeff(x(t))
-    b2 = denum.coeff(y(t))
+    a2 = den.coeff(x(t))
+    b2 = den.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
     [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     F = Integral(f, t)
@@ -7289,10 +7289,10 @@ def _linear_2eq_order2_type8(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
+    num, den = cancel(r['d1']/r['c2']).as_numer_denom()
     f = -r['d1']/num
     a = num
-    b = denum
+    b = den
     mul = sqrt(abs(a*b))
     Igral = Integral(t*f, t)
     if a*b > 0:
@@ -7392,8 +7392,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
     q = Wild('q', exclude=[t, t**2])
     s = Wild('s', exclude=[t, t**2])
     n = Wild('n', exclude=[t, t**2])
-    num, denum = r['c1'].as_numer_denom()
-    dic = denum.match((n*(p*t**2+q*t+s)**2).expand())
+    num, den = r['c1'].as_numer_denom()
+    dic = den.match((n*(p*t**2+q*t+s)**2).expand())
     eqz = dic[p]*t**2 + dic[q]*t + dic[s]
     a = num/dic[n]
     b = cancel(r['d1']*eqz**2)
@@ -7944,9 +7944,11 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     g2 = Wild('g2', exclude=[u,t])
     r1 = eq[0].match(diff(x(t),t) - f)
     r2 = eq[1].match(diff(y(t),t) - g)
-    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    num, den = (
+        (r1[f].subs(x(t),u).subs(y(t),v))/
+        (r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
     R1 = num.match(f1*g1)
-    R2 = denum.match(f2*g2)
+    R2 = den.match(f2*g2)
     phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
     F1 = R1[f1]; F2 = R2[f2]
     G1 = R1[g1]; G2 = R2[g2]

@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
-        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos, refine,
+        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
@@ -890,7 +890,7 @@ def test_atan2():
     rewrite = e.rewrite(arg)
     reps = {i: I, r: -2}
     assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
-    assert refine((e - rewrite).subs(reps)).equals(0)
+    assert (e - rewrite).subs(reps).equals(0)
 
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 

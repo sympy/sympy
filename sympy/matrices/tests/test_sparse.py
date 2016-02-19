@@ -65,6 +65,18 @@ def test_sparse_matrix():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
     x = Symbol("x")
 
     c = b * Symbol("x")

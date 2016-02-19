@@ -128,6 +128,18 @@ def test_multiplication():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
     h = matrix_multiply_elementwise(a, c)
     assert h == a.multiply_elementwise(c)
     assert h[0, 0] == 7
@@ -154,6 +166,17 @@ def test_multiplication():
     assert c[0, 1] == 2*5
     assert c[1, 0] == 3*5
     assert c[1, 1] == 0
+
+    try:
+        eval('c = 5 @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert isinstance(c, Matrix)
+        assert c[0, 0] == 5
+        assert c[0, 1] == 2*5
+        assert c[1, 0] == 3*5
+        assert c[1, 1] == 0
 
 
 def test_power():

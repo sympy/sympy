@@ -12,7 +12,6 @@ from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.matrixutils import matrix_zeros
-from sympy.physics.quantum.represent import represent
 
 #------------------------------------------------------------------------------
 

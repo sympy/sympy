@@ -703,7 +703,7 @@ class Basic(with_metaclass(ManagedProperties)):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -1635,7 +1635,6 @@ class Atom(Basic):
 
     @cacheit
     def sort_key(self, order=None):
-        from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def _eval_simplify(self, ratio, measure):

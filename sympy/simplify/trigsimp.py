@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
-from sympy.core.compatibility import ordered, reduce, iterable
+from sympy.core.compatibility import reduce, iterable
 from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction

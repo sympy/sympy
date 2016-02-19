@@ -3,9 +3,9 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core import (Basic, S, Add, Mul, Pow,
-    Symbol, sympify, expand, expand_mul, expand_func,
+    Symbol, sympify, expand_mul, expand_func,
     Function, Dummy, Expr, factor_terms,
-    FunctionClass, symbols, expand_power_exp)
+    symbols, expand_power_exp)
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
@@ -13,8 +13,7 @@ from sympy.core.function import expand_log, count_ops, _mexpand
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
-    gamma, exp, sqrt, log, root, exp_polar,
-    sin, piecewise_fold)
+    gamma, exp, sqrt, log, exp_polar, piecewise_fold)
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -25,7 +24,7 @@ from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessel
 
 from sympy.utilities.iterables import has_variety
 
-from sympy.simplify.radsimp import radsimp, collect_sqrt, fraction
+from sympy.simplify.radsimp import radsimp, fraction
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -522,6 +521,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        if isinstance(expr, Function) and hasattr(expr, "inverse"):
+            if len(expr.args) == 1 and len(expr.args[0].args) == 1 and \
+               isinstance(expr.args[0], expr.inverse(argindex=1)):
+                return simplify(expr.args[0].args[0], ratio=ratio,
+                                measure=measure, fu=fu)
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
                          for x in expr.args])
 

@@ -594,7 +594,6 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvers.solvers import solve
         from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -909,8 +908,9 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from sympy.core import Add, Mul, S
-        from sympy.core.exprtools import decompose_power
+        from .add import Add
+        from .mul import Mul
+        from .exprtools import decompose_power
 
         gens, terms = set([]), []
 
@@ -1569,8 +1569,10 @@ class Expr(Basic, EvalfMixin):
         >>> (log(a*b).expand(log=True)).as_independent(b)
         (log(a), log(b))
 
-        See also: .separatevars(), .expand(log=True),
-                  .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+        See Also
+        ========
+        .separatevars(), .expand(log=True), Add.as_two_terms(),
+        Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
         from .symbol import Symbol
         from .add import _unevaluated_Add
@@ -1800,7 +1802,7 @@ class Expr(Basic, EvalfMixin):
             c, r = -c, -r
         return c, r
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
@@ -1846,6 +1848,14 @@ class Expr(Basic, EvalfMixin):
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
 
+        If clear=False (default is True) then content will not be removed
+        from an Add if it can be distributed to leave one or more
+        terms with integer coefficients.
+
+        >>> (x/2 + y).as_content_primitive()
+        (1/2, x + 2*y)
+        >>> (x/2 + y).as_content_primitive(clear=False)
+        (1, x/2 + y)
         """
         return S.One, self
 
@@ -2612,7 +2622,7 @@ class Expr(Basic, EvalfMixin):
                 yield series.removeO()
             else:
                 yield series
-            raise StopIteration
+            return
 
         while series.is_Order:
             n += 1
