@@ -29,21 +29,23 @@ def _isnumber(i):
 
 
 def _monotonic_sign(self):
-    """Return the value closest to 0 that ``self`` may have if all symbols
-    are signed and the result is uniformly the same sign for all values of symbols.
-    If a symbol is only signed but not known to be an
-    integer or the result is 0 then a symbol representative of the sign of self
-    will be returned. Otherwise, None is returned if a) the sign could be positive
-    or negative or b) self is not in one of the following forms:
+    """Return the value closest to 0 that ``self`` may have if all
+    symbols are signed and the result is uniformly the same sign for
+    all values of symbols. If a symbol is only signed (but not known
+    to be an integer) or the result is 0 then a symbol representative
+    of the sign of self will be returned. Otherwise, None is returned
+    if a) the sign could be positive or negative or b) self is not in
+    one of the following forms:
 
-    - L(x, y, ...) + A: a function linear in all symbols x, y, ... with an
-      additive constant; if A is zero then the function can be a monomial whose
-      sign is monotonic over the range of the variables, e.g. (x + 1)**3 if x is
-      nonnegative.
-    - A/L(x, y, ...) + B: the inverse of a function linear in all symbols x, y, ...
-      that does not have a sign change from positive to negative for any set
-      of values for the variables.
-    - M(x, y, ...) + A: a monomial M whose factors are all signed and a constant, A.
+    - L(x, y, ...) + A: a function linear in all symbols x, y, ...
+      with an additive constant; if A is zero then the function can be
+      a monomial whose sign is monotonic over the range of the
+      variables, e.g. (x + 1)**3 if x is nonnegative.
+    - A/L(x, y, ...) + B: the inverse of a function linear in all
+      symbols x, y, ... that does not have a sign change from positive
+      to negative for any set of values for the variables.
+    - M(x, y, ...) + A: a monomial M whose factors are all signed and
+      a constant, A.
     - A/M(x, y, ...) + B: the inverse of a monomial and constants A and B.
     - P(x): a univariate polynomial
 
@@ -121,12 +123,14 @@ def _monotonic_sign(self):
                 if x.is_nonnegative and all(r <= x0 for r in roots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
-                            return y if y.is_positive else Dummy('pos', positive=True)
+                            return y if y.is_positive else Dummy(
+                                'pos', positive=True)
                         else:
                             return Dummy('nneg', nonnegative=True)
                     if y.is_nonpositive and d.is_negative:
                         if y:
-                            return y if y.is_negative else Dummy('neg', negative=True)
+                            return y if y.is_negative else Dummy(
+                                'neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
                 elif x.is_nonpositive and all(r >= x0 for r in roots):
@@ -164,15 +168,15 @@ def _monotonic_sign(self):
     c, a = self.as_coeff_Add()
     v = None
     if not a.is_polynomial():
-        # F/A or A/F where A is a number and F is a signed, rational monomial
+        # F/A or A/F: A is a number; F is a signed, rational monomial
         n, d = a.as_numer_denom()
         if not (n.is_number or d.is_number):
             return
         if (
                 a.is_Mul or a.is_Pow) and \
                 a.is_rational and \
-                all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow) and \
-                (a.is_positive or a.is_negative):
+                all(p.exp.is_Integer for p in a.atoms(Pow) if p.is_Pow
+                    ) and (a.is_positive or a.is_negative):
             v = S(1)
             for ai in Mul.make_args(a):
                 if ai.is_number:
@@ -186,7 +190,8 @@ def _monotonic_sign(self):
                 v *= ai.subs(reps)
     elif c:
         # signed linear expression
-        if not any(p for p in a.atoms(Pow) if not p.is_number) and (a.is_nonpositive or a.is_nonnegative):
+        if not any(p for p in a.atoms(Pow) if not p.is_number) and \
+                (a.is_nonpositive or a.is_nonnegative):
             free = list(a.free_symbols)
             p = {}
             for i in free:

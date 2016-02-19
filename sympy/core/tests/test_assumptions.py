@@ -1004,11 +1004,9 @@ def test_issue_10302():
 
 def test_issue_10458():
     x = Symbol('x', integer=True, positive=True)
-    assert (1/x-1).is_nonpositive is True
-    assert (1-1/x).is_nonpositive is None
-    assert (1-1/x).is_nonnegative is True
-    assert (1/x-1).is_nonnegative is None
+    assert (1/x - 1).is_nonpositive
+    assert (1/x - 1).is_nonnegative is None
 
 
 def test_complex_reciprocal_imaginary():
-    assert (1 / (4 + 3*I)).is_imaginary is False
+    assert (1/(4 + 3*I)).is_imaginary is False

@@ -595,12 +595,12 @@ class Add(Expr, AssocOp):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
-            if not c.is_zero:
+            if a.is_integer and a.is_nonpositive:
+                return
+            if c:
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if a.is_nonpositive and v.is_integer == True:
-                        return
                     if s.is_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
@@ -612,12 +612,12 @@ class Add(Expr, AssocOp):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
-            if not c.is_zero:
+            if a.is_integer and a.is_nonnegative:
+                return
+            if c:
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if a.is_nonnegative and v.is_integer == True:
-                        return
                     if s.is_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
