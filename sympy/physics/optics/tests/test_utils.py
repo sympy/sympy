@@ -114,4 +114,4 @@ def test_hyperfocal_distance():
 def test_transverse_magnification():
     si, so = symbols('si, so')
     assert transverse_magnification(si, so) == -si/so
-    assert test_transverse_magnification(30, 15) == -2
+    assert transverse_magnification(30, 15) == -2
