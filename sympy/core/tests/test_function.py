@@ -610,19 +610,19 @@ def test_nfloat():
 
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
-    assert _aresame(nfloat(eq, exponent=True), x**(4.0/3) + (4.0/3)*x**(1.0/3))
+    assert nfloat(eq) == (x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
+    assert nfloat(eq, exponent=True) == (x**(4.0/3) + (4.0/3)*x**(1.0/3))
     eq = x**(S(4)/3) + 4*x**(x/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
+    assert nfloat(eq) == (x**(S(4)/3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
     # specify precision to match value used in nfloat
     Float_big = Float(big, 15)
-    assert _aresame(nfloat(big), Float_big)
-    assert _aresame(nfloat(big*x), Float_big*x)
-    assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
+    assert nfloat(big) == Float_big
+    assert nfloat(big*x) == Float_big*x
+    assert nfloat(x**big, exponent=True) == (x**Float_big)
     assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
-    assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
+    assert not nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
@@ -634,7 +634,11 @@ def test_nfloat():
 
     # issue 7122
     eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
-    assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+    assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3*x**4 + y)'
+	
+    # issue 10395
+    eq = x * Max(y, -1.1)
+    assert nfloat(eq) == x*Max(-1.1, y)
 
 
 def test_issue_7068():
