@@ -1,7 +1,7 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factorial,
-                   fibonacci, floor, Function, GoldenRatio, I, Integral,
-                   integrate, log, Mul, N, oo, pi, Pow, product, Product,
-                   Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol)
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath)
 from mpmath import inf, ninf
@@ -495,3 +495,11 @@ def test_AssocOp_Function():
     # should raise a value error because the first arg computes
     # a non-comparable (prec=1) imaginary part
     raises(ValueError, lambda: e._eval_evalf(2))
+
+
+def test_issue_10395():
+    eq = x*Max(0, y)
+    assert nfloat(eq) == eq
+    eq = x*Max(y, -1.1)
+    assert nfloat(eq) == eq
+    assert Max(y, 4).n() == Max(4.0, y)
