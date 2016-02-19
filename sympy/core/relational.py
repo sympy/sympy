@@ -8,7 +8,7 @@ from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -284,6 +284,7 @@ class Equality(Relational):
     is_Equality = True
 
     def __new__(cls, lhs, rhs=0, **options):
+        from sympy.functions.elementary.piecewise import Piecewise
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
@@ -302,6 +303,35 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
+
+            # check for incompatibility in terms of Booleans: you can't
+            # have a Boolean equal to a non-Boolean (though in the case
+            # of Piecewise you have to see if it is possible to get
+            # a Boolean result from it).
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
+            def _bool(b):
+                # return True if b is S.true, S.false, a Boolean
+                # with args or a Piecewise whose expressions are
+                # all one of the above, otherwise False or None (if
+                # b contains a Piecewise with only some Boolean
+                # expressions
+                if isinstance(b, BooleanAtom):
+                    return True
+                if isinstance(b, Boolean) and b.args:
+                    # checking that it has args guards
+                    # against Symbol which is a Boolean
+                    return True
+                elif isinstance(b, Piecewise):
+                    if not any(_bool(e) for e, c in b.args):
+                        return False
+                    if all(_bool(e) for e, c in b.args):
+                        return True
+                else:
+                    return False
+            b1, b2 = _bool(lhs), _bool(rhs)
+            if (b1 or b2) and False in (b1, b2):
+                return S.false
 
             # If appropriate, check if the difference evaluates.  Detect
             # incompatibility such as lhs real and rhs not real.
