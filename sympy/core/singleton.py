@@ -82,7 +82,7 @@ class Singleton(ManagedProperties):
     =====
 
     Instance creation is delayed until the first time the value is accessed.
-    (SymPy versions before 0.7.7 would create the instance during class
+    (SymPy versions before 1.0 would create the instance during class
     creation time, which would be prone to import cycles.)
 
     This metaclass is a subclass of ManagedProperties because that is the
