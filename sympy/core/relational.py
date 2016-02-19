@@ -8,7 +8,7 @@ from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -309,6 +309,10 @@ class Equality(Relational):
                 r = (lhs - rhs).is_zero
                 if r is not None:
                     return _sympify(r)
+
+            # If expression have both Boolean terms
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
