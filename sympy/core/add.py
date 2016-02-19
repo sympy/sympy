@@ -596,10 +596,10 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             c, a = self.as_coeff_Add()
             if c:
-                if a.is_integer and a.is_nonpositive:
-                    return
                 v = _monotonic_sign(a)
                 if v is not None:
+                    if not v.is_zero and v.is_integer and a.is_nonpositive:
+                        return
                     s = v + c
                     if s.is_nonnegative:
                         return True
@@ -613,10 +613,10 @@ class Add(Expr, AssocOp):
         if not self.is_number:
             c, a = self.as_coeff_Add()
             if c:
-                if a.is_integer and a.is_nonnegative:
-                    return
                 v = _monotonic_sign(a)
                 if v is not None:
+                    if not v.is_zero and v.is_integer and a.is_nonnegative:
+                        return
                     s = v + c
                     if s.is_nonpositive:
                         return True
