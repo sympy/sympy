@@ -43,7 +43,7 @@ Why Solveset?
   a set object and a set object takes care of all types of output. For
   cases where it doesn't "know" all the solutions a ``ConditionSet`` with a partial
   solution is returned. For input it only takes the equation, the variables
-  to solve for and the optional argument ``domain`` over which the equations is to
+  to solve for and the optional argument ``domain`` over which the equation is to
   be solved.
 
 * ``solveset`` can return infinitely many solutions. For example solving for
@@ -428,7 +428,7 @@ Search based solver and step-by-step solution
 
  * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
 
- * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} ∩ S`,
+ * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} \cap S`,
                       where `x_i` are roots of `P(x)`.
 
  * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
@@ -505,7 +505,7 @@ How are symbolic parameters handled in solveset?
  symbolic parameter. Solveset returns the value of `x` considering the domain
  of the symbolic parameter `n` as well:
 
- .. math:: ([0, \infty) ∩ \{n\}) ∪ ((-\infty, 0] ∩ \{-n\}).
+ .. math:: ([0, \infty) \cap \{n\}) \cup ((-\infty, 0] \cap \{-n\}).
 
  This simply means `n` is the solution only when it belongs to the
  ``Interval`` `[0, \infty)` and `-n` is the solution only when `-n` belongs to
