@@ -156,7 +156,7 @@ def test_func_args():
 def test_eval_refine():
     from sympy.core.expr import Expr
     class MockExpr(Expr):
-        def _eval_refine(self):
+        def _eval_refine(self, assumptions):
             return True
 
     mock_obj = MockExpr()

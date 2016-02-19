@@ -205,7 +205,7 @@ class exp(ExpBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_refine(self):
+    def _eval_refine(self, assumptions):
         from sympy.assumptions import ask, Q
         arg = self.args[0]
         if arg.is_Mul:
