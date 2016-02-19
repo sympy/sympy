@@ -508,7 +508,7 @@ How are symbolic parameters handled in solveset?
  .. math:: ([0, \infty) ∩ \{n\}) ∪ ((-\infty, 0] ∩ \{-n\}).
 
  This simply means `n` is the solution only when it belongs to the
- ``Interval`` `[0, \infty)` and `-n` is the solution only when `n` belongs to
+ ``Interval`` `[0, \infty)` and `-n` is the solution only when `-n` belongs to
  the ``Interval`` `(- \infty, 0]`.
 
  There are various other cases as well which needs to be addressed, like
