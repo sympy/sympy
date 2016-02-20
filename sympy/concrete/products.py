@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.tensor.indexed import Idx
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols, Wild
+from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots

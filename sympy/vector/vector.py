@@ -1,5 +1,5 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol, Basic
+from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix

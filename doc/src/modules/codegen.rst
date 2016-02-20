@@ -59,7 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 expressions to specific languages. Supported languages are C
 (:py:func:`sympy.printing.ccode.ccode`), Fortran 95
 (:py:func:`sympy.printing.fcode.fcode`), Javascript
-(:py:func:`sympy.printing.jscode.jscode`) , Mathematica
+(:py:func:`sympy.printing.jscode.jscode`), Julia
+(:py:func:`sympy.printing.julia.julia_code`), Mathematica
 (:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
 (:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
@@ -188,6 +189,8 @@ how it works::
     H_is = I*S*gamma_1*gamma_2*k*(3*pow(cos(beta), 2) - 1)/pow(r, 3);
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
+    >>> print(julia_code(expr, assign_to="H_is"))
+    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(mathematica_code(expr))

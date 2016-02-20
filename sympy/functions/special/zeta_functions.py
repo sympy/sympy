@@ -463,6 +463,11 @@ class zeta(Function):
     def _eval_rewrite_as_lerchphi(self, s, a=1):
         return lerchphi(1, s, a)
 
+    def _eval_is_finite(self):
+        arg_is_one = (self.args[0] - 1).is_zero
+        if arg_is_one is not None:
+            return not arg_is_one
+
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
             s, a = self.args
