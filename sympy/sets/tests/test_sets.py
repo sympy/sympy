@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix)
+    Matrix, signsimp)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -993,3 +993,19 @@ def test_issue_2799():
     assert (U + inf_interval == inf_interval + U == R) is True
     assert (U + R == R + U == R) is True
     assert (R + inf_interval == inf_interval + R == R) is True
+
+
+def test_issue_10285():
+    assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
+        FiniteSet(x).intersect(Interval.Lopen(-3, -2))
+    eq = -x - 2*(-x - y)
+    s = signsimp(eq)
+    ivl = Interval.open(0, 1)
+    assert FiniteSet(eq).intersect(ivl) == FiniteSet(s).intersect(ivl)
+    assert FiniteSet(-eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.open(-1, 0))
+    eq -= 1
+    ivl = Interval.Lopen(1, oo)
+    assert FiniteSet(eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.Lopen(2, oo))
+
