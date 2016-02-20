@@ -113,7 +113,7 @@ def test_Range():
     assert 30 not in r
 
     assert list(Range(0, 5)) == list(range(5))
-    assert list(Range(5, 0, -1)) == list(range(1, 6))
+    assert list(Range(5, 0, -1)) == list(range(5, 0, -1))
 
     assert Range(0, 10, -1) == S.EmptySet
 
@@ -142,9 +142,9 @@ def test_Range():
 
     assert Range(0, oo, 2)._last_element is oo
     assert Range(-oo, 1, 1)._last_element is S.Zero
+    assert Range(oo, -1, -1)._last_element is S.Zero
 
-    it = iter(Range(-oo, 0, 2))
-    assert (next(it), next(it)) == (-2, -4)
+    raises(ValueError, lambda: next(iter(Range(-oo, 0, 2))))
 
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
@@ -169,7 +169,7 @@ def test_Range():
             Range(1000000000000)
 
 
-def test_range_interval_intersection():
+def test_Range_Interval_intersection():
     # Intersection with intervals
     assert FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6))) == \
         FiniteSet(2, 3, 4, 5, 6)

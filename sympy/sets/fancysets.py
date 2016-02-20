@@ -307,20 +307,34 @@ class ImageSet(Set):
 
 class Range(Set):
     """
-    Represents a range of integers.
+    Represents an ordered range of integers.
 
     Examples
     ========
 
-    >>> from sympy import Range
-    >>> list(Range(5)) # 0 to 5
+    >>> from sympy import Range, oo
+
+    >>> list(Range(5))
     [0, 1, 2, 3, 4]
-    >>> list(Range(10, 15)) # 10 to 15
+    >>> list(Range(10, 15))
     [10, 11, 12, 13, 14]
-    >>> list(Range(10, 20, 2)) # 10 to 20 in steps of 2
+    >>> list(Range(10, 20, 2))
     [10, 12, 14, 16, 18]
-    >>> list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2
-    [12, 14, 16, 18, 20]
+    >>> list(Range(20, 10, -2))
+    [20, 18, 16, 14, 12]
+
+    For convenience, a Range starting at +/-oo is
+    assumed to end one step from the ending point:
+
+    >>> 2 in Range(-oo, 3, 1)
+    True
+    >>> 3 in Range(-oo, 3, 1)
+    False
+
+    >>> 3 in Range(oo, 2, -1)
+    True
+    >>> 2 in Range(oo, 2, -1)
+    False
 
     """
 
@@ -340,30 +354,23 @@ class Range(Set):
                                  for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use ImageSets of Ranges for other cases")
+                    "Use ImageSets of Ranges for other cases.")
 
-        if not step.is_finite:
-            raise ValueError("Infinite step is not allowed")
         if start == stop:
             return S.EmptySet
+
+        if start.is_infinite and stop.is_infinite:
+            raise ValueError("Both the start and end value of "
+                             "Range cannot be unbounded")
+
+        if step.is_infinite:
+            raise ValueError("Infinite step is not allowed")
 
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
 
-        # normalize args: regardless of how they are entered they will show
-        # canonically as Range(inf, sup, step) with step > 0
-        if n.is_finite:
-            start, stop = sorted((start, start + (n - 1)*step))
-        else:
-            start, stop = sorted((start, stop - step))
-
-        step = abs(step)
-        if (start, stop) == (S.NegativeInfinity, S.Infinity):
-            raise ValueError("Both the start and end value of "
-                             "Range cannot be unbounded")
-        else:
-            return Basic.__new__(cls, start, stop + step, step)
+        return Basic.__new__(cls, start, start + n*step if n.is_finite else stop, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -385,15 +392,16 @@ class Range(Set):
             # round inwards
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
+            step  = abs(self.step)
             # if we are off the sequence, get back on
             if inf.is_finite and self.inf.is_finite:
-                off = (inf - self.inf) % self.step
+                off = (inf - self.inf) % step
             else:
                 off = S.Zero
             if off:
-                inf += self.step - off
+                inf += step - off
 
-            return Range(inf, sup + 1, self.step)
+            return Range(inf, sup + 1, step)
 
         if other == S.Naturals:
             return self._intersect(Interval(1, S.Infinity))
@@ -404,6 +412,10 @@ class Range(Set):
         return None
 
     def _contains(self, other):
+        if self.start is S.NegativeInfinity:
+            return other <= self.stop - self.step
+        if self.start is S.Infinity:
+            return other >= self.stop - self.step
         if (((self.start - other)/self.step).is_integer or
             ((self.stop - other)/self.step).is_integer):
             return _sympify(other >= self.inf and other <= self.sup)
@@ -412,14 +424,11 @@ class Range(Set):
             return S.false
 
     def __iter__(self):
-        if self.start is S.NegativeInfinity:
-            i = self.stop - self.step
-            step = -self.step
-        else:
-            i = self.start
-            step = self.step
-
-        while(i < self.stop and i >= self.start):
+        if self.start.is_infinite:
+            raise ValueError('cannot start iteration from infinite value')
+        i = self.start
+        step = self.step
+        while(i != self.stop):
             yield i
             i += step
 
@@ -438,18 +447,24 @@ class Range(Set):
     def _last_element(self):
         if self.stop is S.Infinity:
             return S.Infinity
-        elif self.start is S.NegativeInfinity:
+        elif self.start.is_infinite:
             return self.stop - self.step
         else:
             return self._ith_element(len(self) - 1)
 
     @property
     def _inf(self):
-        return self.start
+        if self.step > 0:
+            return self.start
+        else:
+            return self.stop - self.step
 
     @property
     def _sup(self):
-        return self.stop - self.step
+        if self.step > 0:
+            return self.stop - self.step
+        else:
+            return self.start
 
     @property
     def _boundary(self):
