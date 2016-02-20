@@ -1522,8 +1522,8 @@ class Intersection(Set):
 
         for s in args:
             if s.is_Complement:
+                args.remove(s)
                 other_sets = args + [s.args[0]]
-                other_sets.remove(s)
                 return Complement(Intersection(*other_sets), s.args[1])
 
         # At this stage we are guaranteed not to have any
@@ -1653,7 +1653,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return false
 
     def as_relational(self, symbol):
-        return False
+        return false
 
     def __len__(self):
         return 0
@@ -1726,7 +1726,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
         return true
 
     def as_relational(self, symbol):
-        return True
+        return true
 
     def _union(self, other):
         return self
