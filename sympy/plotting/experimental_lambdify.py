@@ -592,7 +592,6 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-            
             # Wrapping should only happen on the outermost expression, which
             # is the only thing we know will be a number.
             float_wrap_evalf = self.float_wrap_evalf
