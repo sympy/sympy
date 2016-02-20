@@ -5,6 +5,7 @@ from sympy.core.numbers import oo
 from sympy.core.relational import Equality
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
@@ -747,3 +748,9 @@ def test_issue_8571():
                 raises(TypeError, lambda: o/t)
                 raises(TypeError, lambda: o**t)
                 o, t = t, o  # do again in reversed order
+
+
+def test_issue_10641():
+    x = symbols('x')
+    assert str(Or(x < sqrt(3), x).n(2)) == 'Or(x, x < 1.7)'
+    assert str(And(x < sqrt(3), x).n(2)) == 'And(x, x < 1.7)'

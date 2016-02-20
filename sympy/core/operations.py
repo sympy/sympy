@@ -292,6 +292,10 @@ class AssocOp(Basic):
             return False
         return is_in
 
+    def evalf(self, prec=None, **options):
+        return self.func(*[a.evalf(prec, options) for a in self.args])
+    n = evalf
+
     def _eval_evalf(self, prec):
         """
         Evaluate the parts of self that are numbers; if the whole thing
