@@ -631,7 +631,6 @@ def test_product_basic():
     assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
     assert (d4*d4).is_subset(d6*d6)
-
     assert square.complement(Interval(-oo, oo)*Interval(-oo, oo)) == Union(
         (Interval(-oo, 0, True, True) +
          Interval(1, oo, True, True))*Interval(-oo, oo),
@@ -990,9 +989,9 @@ def test_issue_2799():
     inf_interval = Interval(a, oo)
     R = S.Reals
 
-    assert (U + inf_interval == inf_interval + U == R) is True
-    assert (U + R == R + U == R) is True
-    assert (R + inf_interval == inf_interval + R == R) is True
+    assert (U + inf_interval == inf_interval + U) is True
+    assert (U + R == R + U) is True
+    assert (R + inf_interval == inf_interval + R) is True
 
 
 def test_issue_10285():
