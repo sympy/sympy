@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -1257,3 +1257,42 @@ def _real_to_rational(expr, tolerance=None):
                     r = Integer(0)
         reps[key] = r
     return p.subs(reps, simultaneous=True)
+
+
+def clear_coefficients(expr):
+    """Return `p, (R, f(R))` where `p` is the expression obtained
+    when Rational additive and multiplicative coefficients of `expr`
+    have been stripped away in a naive fashion (i.e. without
+    simplification). If `expr = v` then f(R).subs(R, v) is the
+    value that `v` would have after undergoing the same operations
+    as were used to remove the coefficients from `expr`. (`f(R)`
+    will necessarily always be in a simplified `mx + b` form with
+    `b, mx = f(R).as_coeff_Add()` and `m = mx.as_coeff_Mul()[0]`.)
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import clear_coefficients
+    >>> from sympy.abc import x, y
+    >>> clear_coefficients(2 + 4*y*(6*x + 3))
+    (y*(2*x + 1), (_rhs, _rhs/12 - 1/6))
+    >>> p, (R, fR) = _
+    >>> fR.subs(R, 0)
+    -1/6
+    """
+    was = None
+    R = Dummy('rhs')
+    rhs = R
+    if expr.free_symbols == set():
+        return expr, (R, rhs)
+    while was != expr:
+        was = expr
+        m, expr = expr.as_content_primitive()
+        rhs /= m
+        c, expr = expr.as_coeff_Add()
+        rhs -= c
+    e = signsimp(expr, evaluate = False)
+    if _coeff_isneg(e):
+        expr = -expr
+        rhs = -rhs
+    return expr, (R, rhs)

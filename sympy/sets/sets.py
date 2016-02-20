@@ -1426,6 +1426,8 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
+        from sympy.simplify.simplify import clear_coefficients
+        from sympy import oo
 
         new_args = []
         fs_args = []
@@ -1438,6 +1440,24 @@ class Intersection(Set):
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
+        if len(args) == 2 and len(s) == 1 and len(new_args) == 1 and isinstance(new_args[0], Interval):
+            iterable = iter(s)
+            ineq = next(iterable)
+            if ineq.free_symbols != set():
+                p, (R, fR) = clear_coefficients(ineq - new_args[0].start)
+                st = fR.subs(R, 0)
+                q, (R, fR) = clear_coefficients(ineq - new_args[0].end)
+                en = fR.subs(R, 0)
+                try:
+                    assert p == q
+                    if st > en:
+                        st, en = en, st
+                    if st != -oo and en != oo :
+                        other_sets = Intersection(Interval(st, en))
+                        s = FiniteSet(p)
+                        new_args = [other_sets]
+                except (AssertionError, ValueError, TypeError):
+                    pass
         res = []
         unk = []
         for x in s:
