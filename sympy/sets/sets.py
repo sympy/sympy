@@ -908,6 +908,9 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        # For unions of intervals UniversalSet is S.Reals
+        if other.is_UniversalSet or other == S.Reals:
+            return S.Reals
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -1185,6 +1188,10 @@ class Union(Set, EvalfMixin):
             a = (x for set in finite_sets for x in set)
             finite_set = FiniteSet(*a)
             args = [finite_set] + [x for x in args if not x.is_FiniteSet]
+        # For unions of intervals UniversalSet is S.Reals
+
+        universalset_to_interval = lambda x: S.Reals if x.is_UniversalSet else x
+        args = [universalset_to_interval(arg_sets) for arg_sets in args]
 
         # ===== Pair-wise Rules =====
         # Here we depend on rules built into the constituent sets

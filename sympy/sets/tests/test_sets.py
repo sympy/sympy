@@ -982,3 +982,14 @@ def test_issue_10326():
     assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))
     assert Interval(-oo, oo).contains(oo) is S.false
     assert Interval(-oo, oo).contains(-oo) is S.false
+
+
+def test_issue_2799():
+    U = S.UniversalSet
+    a = Symbol('a', real=True)
+    inf_interval = Interval(a, oo)
+    R = S.Reals
+
+    assert (U + inf_interval == inf_interval + U == R) is True
+    assert (U + R == R + U == R) is True
+    assert (R + inf_interval == inf_interval + R == R) is True
