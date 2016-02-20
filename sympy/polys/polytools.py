@@ -1434,6 +1434,22 @@ class Poly(Expr):
         """
         Polynomial pseudo-remainder of ``f`` by ``g``.
 
+        Caveat: The function prem(f, g, x) can be safely used to compute
+          in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
+
+          To safely compute Euclidean and Sturmian prs's in Z[x]
+          employ anyone of the corresponding functions found in
+          the module sympy.polys.subresultants_qq_zz. The functions
+          in the module with suffix _pg compute prs's in Z[x] employing
+          rem(f, g, x), whereas the functions with suffix _amv
+          compute prs's in Z[x] employing rem_z(f, g, x).
+
+          The function rem_z(f, g, x) differs from prem(f, g, x) in that
+          to compute the remainder polynomials in Z[x] it premultiplies
+          the divident times the absolute value of the leading coefficient
+          of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
+
+
         Examples
         ========
 
@@ -1456,6 +1472,8 @@ class Poly(Expr):
     def pquo(f, g):
         """
         Polynomial pseudo-quotient of ``f`` by ``g``.
+
+        See the Caveat note in the function prem(f, g).
 
         Examples
         ========
@@ -4738,7 +4756,8 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert
+    >>> from sympy import invert, S
+    >>> from sympy.core.numbers import mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)
@@ -4749,6 +4768,17 @@ def invert(f, g, *gens, **args):
     ...
     NotInvertible: zero divisor
 
+    For more efficient inversion of Rationals,
+    use the ``mod_inverse`` function:
+
+    >>> mod_inverse(3, 5)
+    2
+    >>> (S(2)/5).invert(S(7)/3)
+    5/2
+
+    See Also
+    ========
+    sympy.core.numbers.mod_inverse
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5611,7 +5641,8 @@ def _symbolic_factor_list(expr, opt, method):
     """Helper function for :func:`_symbolic_factor`. """
     coeff, factors = S.One, []
 
-    args = [i._eval_factor() if hasattr(i, '_eval_factor') else i for i in Mul.make_args(expr)]
+    args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
+        for i in Mul.make_args(expr)]
     for arg in args:
         if arg.is_Number:
             coeff *= arg

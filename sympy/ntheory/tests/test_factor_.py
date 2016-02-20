@@ -3,7 +3,7 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
 from sympy.ntheory import totient, factorint, primefactors, divisors, nextprime, pollard_rho, \
-    perfect_power, multiplicity, trailing, divisor_count, primorial, pollard_pm1, divisor_sigma
+    perfect_power, multiplicity, trailing, divisor_count, primorial, pollard_pm1, divisor_sigma, factorrat
 
 from sympy.ntheory.factor_ import smoothness, smoothness_p, \
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma, \
@@ -388,6 +388,13 @@ def test_visual_factorint():
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
     assert -1 in factorint(-42, visual=True).args
+
+
+def test_factorrat():
+    assert str(factorrat(S(12)/1, visual=True)) == '2**2*3**1'
+    assert str(factorrat(S(1)/1, visual=True)) == '1'
+    assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
+    assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
 def test_visual_io():

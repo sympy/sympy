@@ -5,11 +5,10 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
-from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -308,6 +307,10 @@ class Equality(Relational):
             r = (lhs - rhs).as_numer_denom()[0].is_zero
             if r is not None:
                 return _sympify(r)
+
+            # If expression have both Boolean terms
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 

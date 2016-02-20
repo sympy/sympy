@@ -34,7 +34,6 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import range
-from sympy.core.decorators import deprecated
 
 from math import log as mathlog
 
@@ -655,12 +654,17 @@ class ComplexRootOf(RootOf):
                     # verification by findroot will raise a ValueError in this
                     # case and the interval will then be tightened -- and
                     # eventually the root will be found.
+                    #
+                    # It is also possible that findroot will not have any
+                    # successful iterations to process (in which case it
+                    # will fail to initialize a variable that is tested
+                    # after the iterations and raise an UnboundLocalError).
                     if self.is_real:
                         if (a <= root <= b):
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
-                except ValueError:
+                except (UnboundLocalError, ValueError):
                     pass
                 interval = interval.refine()
 

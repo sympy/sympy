@@ -666,3 +666,10 @@ def test_issue_10304():
 def test_issue_10401():
     assert Ne(x/(x + 1), 1) is S.true
     assert Ne(x/(x - 1), 1) is S.true
+
+
+def test_issue_10633():
+    assert Eq(True, False) == False
+    assert Eq(False, True) == False
+    assert Eq(True, True) == True
+    assert Eq(False, False) == True

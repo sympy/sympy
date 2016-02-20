@@ -1,3 +1,5 @@
+from __future__ import division
+
 from sympy.assumptions.ask import Q
 from sympy.core.compatibility import ordered
 from sympy.core.numbers import oo
@@ -815,3 +817,23 @@ def test_mv_issue_5473():
     p = symbols('p', positive=True)
     assert And(x > -p, x > 2) == (x > 2)
     assert Or(x > -p, x < 2) is S.true
+
+
+def test_issue_8571():
+    x = symbols('x')
+    for t in (S.true, S.false):
+        raises(TypeError, lambda: +t)
+        raises(TypeError, lambda: -t)
+        raises(TypeError, lambda: abs(t))
+        # use int(bool(t)) to get 0 or 1
+        raises(TypeError, lambda: int(t))
+
+        for o in [S.Zero, S.One, x]:
+            for _ in range(2):
+                raises(TypeError, lambda: o + t)
+                raises(TypeError, lambda: o - t)
+                raises(TypeError, lambda: o % t)
+                raises(TypeError, lambda: o*t)
+                raises(TypeError, lambda: o/t)
+                raises(TypeError, lambda: o**t)
+                o, t = t, o  # do again in reversed order

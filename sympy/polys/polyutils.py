@@ -376,7 +376,10 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        expr = expr.expand()
+        try:
+            expr = expr.expand()
+        except AttributeError:
+            raise PolynomialError('expression must support expand method')
         # TODO: Integrate this into expand() itself
         while any(_is_expandable_pow(i) or i.is_Mul and
             any(_is_expandable_pow(j) for j in i.args) for i in

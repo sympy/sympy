@@ -140,6 +140,8 @@ def test_latex_permutation():
     assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
     assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
     assert latex(Permutation()) == r"\left( \right)"
+    assert latex(Permutation(2, 4)*Permutation(5)) == r"\left( 2\; 4\right)\left( 5\right)"
+    assert latex(Permutation(5)) == r"\left( 5\right)"
 
 
 def test_latex_Float():
@@ -1459,3 +1461,10 @@ def test_issue_7117():
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
+
+
+def test_issue_10489():
+    latexSymbolWithBrace = 'C_{x_{0}}'
+    s = Symbol(latexSymbolWithBrace)
+    assert latex(s) == latexSymbolWithBrace
+    assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'

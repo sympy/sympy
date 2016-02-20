@@ -4,14 +4,14 @@ import random
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, sstr)
+    sympify, trigsimp, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
 from sympy.core.compatibility import long, iterable, u, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -128,6 +128,18 @@ def test_multiplication():
     assert c[2, 0] == 18
     assert c[2, 1] == 0
 
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
     h = matrix_multiply_elementwise(a, c)
     assert h == a.multiply_elementwise(c)
     assert h[0, 0] == 7
@@ -154,6 +166,17 @@ def test_multiplication():
     assert c[0, 1] == 2*5
     assert c[1, 0] == 3*5
     assert c[1, 1] == 0
+
+    try:
+        eval('c = 5 @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert isinstance(c, Matrix)
+        assert c[0, 0] == 5
+        assert c[0, 1] == 2*5
+        assert c[1, 0] == 3*5
+        assert c[1, 1] == 0
 
 
 def test_power():
@@ -1769,9 +1792,19 @@ def test_limit():
 
 
 def test_diff():
-    A = Matrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
-    assert A.diff(x) == Matrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
-    assert A.diff(y) == Matrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+    A = MutableDenseMatrix(((1, 4, x), (y, 2, 4), (10, 5, x**2 + 1)))
+    assert A.diff(x) == MutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
+    assert A.diff(y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    assert diff(A, x) == MutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
+    assert diff(A, y) == MutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    A_imm = A.as_immutable()
+    assert A_imm.diff(x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
+    assert A_imm.diff(y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
+    assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
 
 
 def test_getattr():

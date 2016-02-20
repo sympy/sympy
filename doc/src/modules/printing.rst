@@ -223,6 +223,64 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Javascript Code printing
+------------------------
+
+.. module:: sympy.printing.jscode
+
+.. autodata:: sympy.printing.jscode.known_functions
+
+.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+   :members:
+
+   .. autoattribute:: JavascriptCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.jscode.jscode
+
+Julia code printing
+---------------------------------
+
+.. module:: sympy.printing.julia
+
+.. autodata:: sympy.printing.julia.known_fcns_src1
+
+.. autodata:: sympy.printing.julia.known_fcns_src2
+
+.. autoclass:: sympy.printing.julia.JuliaCodePrinter
+   :members:
+
+   .. autoattribute:: JuliaCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.julia.julia_code
+
+Octave (and Matlab) Code printing
+---------------------------------
+
+.. module:: sympy.printing.octave
+
+.. autodata:: sympy.printing.octave.known_fcns_src1
+
+.. autodata:: sympy.printing.octave.known_fcns_src2
+
+.. autoclass:: sympy.printing.octave.OctaveCodePrinter
+   :members:
+
+   .. autoattribute:: OctaveCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.octave.octave_code
+
+Theano Code printing
+--------------------
+
+.. module:: sympy.printing.theanocode
+
+.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+   :members:
+
+   .. autoattribute:: TheanoPrinter.printmethod
+
+.. autofunction:: sympy.printing.theanocode.theano_function
+
 Gtk
 ---
 
@@ -394,6 +452,8 @@ CodePrinter
 This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.Assignment
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
 

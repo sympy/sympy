@@ -567,6 +567,8 @@ def test_as_numer_denom():
 
 
 def test_as_independent():
+    assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
+    assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
     assert (2*x*sin(x) + y + x).as_independent(x) == (y, x + 2*x*sin(x))
     assert (2*x*sin(x) + y + x).as_independent(y) == (x + 2*x*sin(x), y)
 
@@ -613,6 +615,11 @@ def test_as_independent():
     # issue 5784
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
+
+    eq = Add(x, -x, 2, -3, evaluate=False)
+    assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
+    eq = Mul(x, 1/x, 2, -3, evaluate=False)
+    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
 
 @XFAIL
@@ -1271,6 +1278,7 @@ def test_issue_5300():
 
 
 def test_as_coeff_Mul():
+    assert S(0).as_coeff_Mul() == (S.One, S.Zero)
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
     assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))

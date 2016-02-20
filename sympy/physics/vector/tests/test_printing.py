@@ -129,7 +129,7 @@ def test_vector_latex_with_functions():
 
     v = omega.diff() ** alpha * N.x
 
-    assert v._latex() == (r'\left(\dot{\omega}\right)^{\alpha}'
+    assert v._latex() == (r'\dot{\omega}^{\alpha}'
                           r'\mathbf{\hat{n}_x}')
 
 
