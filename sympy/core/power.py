@@ -1454,10 +1454,22 @@ class Pow(Expr):
         return expand_mul(r*b0**e) + order
 
     def _eval_as_leading_term(self, x):
-        from sympy import exp, log
+        from sympy import exp, log, Order
         if not self.exp.has(x):
             return self.func(self.base.as_leading_term(x), self.exp)
-        return exp(self.exp * log(self.base)).as_leading_term(x)
+        elif self.base is S.Exp1:
+            if self.exp.is_Mul:
+                k, arg = self.exp.as_independent(x)
+            else:
+                k, arg = S.One, self.exp
+            if arg.is_Add:
+                return Mul(*[exp(k*f).as_leading_term(x) for f in arg.args])
+            arg = self.exp.as_leading_term(x)
+            if Order(1, x).contains(arg):
+                return S.One
+            return exp(arg)
+        else:
+            return exp(self.exp*log(self.base)).as_leading_term(x)
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e

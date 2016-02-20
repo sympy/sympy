@@ -267,33 +267,27 @@ def test_as_leading_term():
     assert (x**2).as_leading_term(x) == x**2
     assert (x + oo).as_leading_term(x) == oo
 
-
-def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
            (sin(1 + sin(1)), 0)
 
-
-def test_leadterm3():
     assert (y + z + x).leadterm(x) == (y + z, 0)
 
-
-def test_as_leading_term2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).as_leading_term(x) == \
         sin(1 + sin(1))
 
-
-def test_as_leading_term3():
     assert (2 + pi + x).as_leading_term(x) == 2 + pi
     assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
 
-
-def test_as_leading_term4():
     # see issue 6843
     n = Symbol('n', integer=True, positive=True)
     r = -n**3/(2*n**2 + 4*n + 2) - n**2/(n**2 + 2*n + 1) + \
         n**2/(n + 1) - n/(2*n**2 + 4*n + 2) + n/(n*x + x) + 2*n/(n + 1) - \
         1 + 1/(n*x + x) + 1/(n + 1) - 1/x
     assert r.as_leading_term(x).cancel() == n/2
+
+    # see issue sympy/sympy#9075
+    assert (6**(x + 1)).as_leading_term(x) == 6
+    assert (6**(x + n)).as_leading_term(x) == 6**n
 
 
 def test_as_leading_term_stub():
