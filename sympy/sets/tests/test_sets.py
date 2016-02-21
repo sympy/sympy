@@ -1007,4 +1007,3 @@ def test_issue_10285():
     ivl = Interval.Lopen(1, oo)
     assert FiniteSet(eq).intersect(ivl) == \
         FiniteSet(s).intersect(Interval.Lopen(2, oo))
-
