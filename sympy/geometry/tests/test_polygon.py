@@ -1,20 +1,13 @@
 from __future__ import division
 import warnings
 
-from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt
+from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, GeometryError, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
-                            convex_hull, intersection)
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
+                            convex_hull, intersection, Line)
 from sympy.utilities.pytest import raises
+from sympy.utilities.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
-
-
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-k = Symbol('k', real=True)
-x1 = Symbol('x1', real=True)
-half = Rational(1, 2)
 
 
 def feq(a, b):
@@ -24,6 +17,10 @@ def feq(a, b):
 
 
 def test_polygon():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    x1 = Symbol('x1', real=True)
+    half = Rational(1, 2)
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
     assert Polygon(a, Point(1, 0), b, c) == t
@@ -81,6 +78,8 @@ def test_polygon():
     assert p5.encloses_point(Point(1, 3))
     assert p5.encloses_point(Point(0, 0)) is False
     assert p5.encloses_point(Point(4, 0)) is False
+    assert p1.encloses(Circle(Point(2.5,2.5),5)) is False
+    assert p1.encloses(Ellipse(Point(2.5,2),5,6)) is False
     p5.plot_interval('x') == [x, 0, 1]
     assert p5.distance(
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
@@ -229,6 +228,10 @@ def test_polygon():
     assert intersection(m[p1], m[p2], m[p3]) == [t1.centroid]
     assert t1.medial == Triangle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
 
+    # Nine-point circle
+    assert t1.nine_point_circle == Circle(Point(2.5, 0), Point(0, 2.5), Point(2.5, 2.5))
+    assert t1.nine_point_circle == Circle(Point(0, 0), Point(0, 2.5), Point(2.5, 2.5))
+
     # Perpendicular
     altitudes = t1.altitudes
     assert altitudes[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
@@ -333,3 +336,43 @@ def test_triangle_kwargs():
         Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
     assert Triangle(sss=(1, 2, 5)) is None
     assert deg(rad(180)) == 180
+
+
+def test_transform():
+    pts = [Point(0, 0), Point(1/2, 1/4), Point(1, 1)]
+    pts_out = [Point(-4, -10), Point(-3, -37/4), Point(-2, -7)]
+    assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
+    assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
+        Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
+
+
+def test_reflect():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    b = Symbol('b')
+    m = Symbol('m')
+    l = Line((0, b), slope=m)
+    p = Point(x, y)
+    r = p.reflect(l)
+    dp = l.perpendicular_segment(p).length
+    dr = l.perpendicular_segment(r).length
+
+    assert verify_numerically(dp, dr)
+    t = Triangle((0, 0), (1, 0), (2, 3))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
+        == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \
+        == Triangle(Point(-1, 0), Point(-2, 0), Point(-2, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=0)) \
+        == Triangle(Point(1, 6), Point(2, 6), Point(2, 4))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
+        == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
+
+
+def test_eulerline():
+    assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).eulerline \
+        == Line(Point2D(0, 0), Point2D(1/2, 1/2))
+    assert Triangle(Point(0, 0), Point(10, 0), Point(5, 5*sqrt(3))).eulerline \
+        == Point2D(5, 5*sqrt(3)/3)
+    assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
+        == Line(Point2D(64/7, 3), Point2D(-29/14, -7/2))

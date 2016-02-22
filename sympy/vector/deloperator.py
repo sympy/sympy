@@ -3,6 +3,7 @@ from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.scalar import BaseScalar
 from sympy.core import S
 
 
@@ -171,6 +172,6 @@ def _diff_conditional(expr, base_scalar):
     """
 
     new_expr = express(expr, base_scalar.system, variables = True)
-    if base_scalar in new_expr.atoms():
+    if base_scalar in new_expr.atoms(BaseScalar):
         return Derivative(new_expr, base_scalar)
     return S(0)

@@ -4,25 +4,20 @@ from sympy import Rational, Symbol
 from sympy.geometry import Circle, Line, Point, Polygon, Segment
 from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-half = Rational(1, 2)
-
-p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
-p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
-l1 = Line(Point(0,0), Point(1,1))
-l2 = Line(Point(half, half), Point(5,5))
-l3 = Line(p2, p3)
-l4 = Line(p3, p4)
-poly1 = Polygon(p1, p2, p3, p4)
-poly2 = Polygon(p5, p6, p7)
-poly3 = Polygon(p1, p2, p5)
-
 
 def test_booleans():
     """ test basic unions and intersections """
+    half = Rational(1, 2)
+
+    p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+    p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
+    l1 = Line(Point(0,0), Point(1,1))
+    l2 = Line(Point(half, half), Point(5,5))
+    l3 = Line(p2, p3)
+    l4 = Line(p3, p4)
+    poly1 = Polygon(p1, p2, p3, p4)
+    poly2 = Polygon(p5, p6, p7)
+    poly3 = Polygon(p1, p2, p5)
     assert Union(l1, l2).equals(l1)
     assert Intersection(l1, l2).equals(l1)
     assert Intersection(l1, l4) == FiniteSet(Point(1,1))

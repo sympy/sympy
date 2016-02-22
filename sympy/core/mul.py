@@ -171,6 +171,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -265,6 +266,10 @@ class Mul(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -1567,7 +1572,7 @@ class Mul(Expr, AssocOp):
             s *= x._sage_()
         return s
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1584,7 +1589,7 @@ class Mul(Expr, AssocOp):
         coef = S.One
         args = []
         for i, a in enumerate(self.args):
-            c, p = a.as_content_primitive(radical=radical)
+            c, p = a.as_content_primitive(radical=radical, clear=clear)
             coef *= c
             if p is not S.One:
                 args.append(p)

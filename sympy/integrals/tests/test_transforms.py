@@ -10,7 +10,7 @@ from sympy.integrals.transforms import (mellin_transform,
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
-    EulerGamma, erf, besselj, bessely, besseli, besselk,
+    EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
     combsimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
@@ -478,7 +478,7 @@ def test_laplace_transform():
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == ((-erf(s/2) + 1)*exp(s**2/4)/s, 0, True)
+    assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
 
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)
@@ -773,14 +773,14 @@ def test_issue_7173():
 
 
 def test_issue_8514():
-    from sympy import simplify, refine
+    from sympy import simplify
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
     assert ft == ((exp(t*(exp(I*atan2(0, -4*a*c + b**2)/2) -
                   exp(-I*atan2(0, -4*a*c + b**2)/2))*
-                  sqrt(refine(Abs(4*a*c - b**2)))/(4*a))*exp(t*cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(refine(Abs(4*a*c - b**2)))/a) + I*sin(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(refine(Abs(4*a*c - b**2)))/(2*a)) - cos(t*sin(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(refine(Abs(4*a*c - b**2)))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(refine(Abs(4*a*c - b**2))))/(2*a))/sqrt(-4*a*c + b**2))
+                  sqrt(Abs(4*a*c - b**2))/(4*a))*exp(t*cos(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2))/a) + I*sin(t*sin(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2))/(2*a)) - cos(t*sin(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2))

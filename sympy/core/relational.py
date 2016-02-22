@@ -5,11 +5,10 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
-from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -137,14 +136,14 @@ class Relational(Boolean, Expr, EvalfMixin):
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
                 if a.func != b.func:
                     return False
-                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
-                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                l, r = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.args)]
                 if l is True:
                     return r
                 if r is True:
                     return l
-                lr = a.lhs.equals(b.rhs, failing_expression=failing_expression)
-                rl = a.rhs.equals(b.lhs, failing_expression=failing_expression)
+                lr, rl = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.reversed.args)]
                 if lr is True:
                     return rl
                 if rl is True:
@@ -172,25 +171,19 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     def _eval_simplify(self, ratio, measure):
         r = self
-        r = r.func(r.lhs.simplify(ratio=ratio, measure=measure),
-                   r.rhs.simplify(ratio=ratio, measure=measure))
-        if r not in (S.true, S.false):
-            if isinstance(r.lhs, Expr) and isinstance(r.rhs, Expr):
-                dif = r.lhs - r.rhs
-                # We want a Number to compare with zero and be sure to get a
-                # True/False answer.  Check if we can deduce that dif is
-                # definitively zero or non-zero.  If non-zero, replace with an
-                # approximation.  If .equals(0) gives None, cannot be deduced.
-                if not dif.has(Symbol):
-                    know = dif.equals(0)
-                    if know == True:
-                        dif = S.Zero
-                    elif know == False:
-                        dif = dif.evalf()
-                # Can definitively compare a Number to zero, if appropriate.
-                if dif.is_Number and (dif.is_real or r.func in (Eq, Ne)):
-                    # Always T/F (we never return an expression w/ the evalf)
-                    r = r.func._eval_relation(dif, S.Zero)
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
+            for i in r.args])
+        if r.is_Relational:
+            dif = r.lhs - r.rhs
+            # replace dif with a valid Number that will
+            # allow a definitive comparison with 0
+            v = None
+            if dif.is_comparable:
+                v = dif.n(2)
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
+            if v is not None:
+                r = r.func._eval_relation(v, S.Zero)
 
         r = r.canonical
         if measure(r) < ratio*measure(self):
@@ -316,6 +309,10 @@ class Equality(Relational):
                 r = (lhs - rhs).is_zero
                 if r is not None:
                     return _sympify(r)
+
+            # If expression have both Boolean terms
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
 
         return Relational.__new__(cls, lhs, rhs, **options)
 

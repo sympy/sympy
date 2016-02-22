@@ -5,10 +5,11 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference)
+    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
+    AccumBounds)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -160,6 +161,12 @@ def test_Interval():
     assert str(Interval(0, a, True, False)) == "(0, a]"
     assert str(Interval(0, a, False, True)) == "[0, a)"
     assert str(Interval(0, a, True, True)) == "(0, a)"
+
+
+def test_AccumBounds():
+    a = Symbol('a', real=True)
+    assert str(AccumBounds(0, a)) == "<0, a>"
+    assert str(AccumBounds(0, 1)) == "<0, 1>"
 
 
 def test_Lambda():
@@ -492,8 +499,8 @@ def test_Relational():
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
     assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
 
-def test_RootOf():
-    assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+def test_CRootOf():
+    assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
 
 def test_RootSum():

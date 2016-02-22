@@ -50,6 +50,11 @@ class MatrixExpr(Basic):
         Inverse
     """
 
+    # Should not be considered iterable by the
+    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # iterable (i.e., explicit matrices) should set this to True.
+    _iterable = False
+
     _op_priority = 11.0
 
     is_Matrix = True
@@ -101,8 +106,18 @@ class MatrixExpr(Basic):
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __matmul__(self, other):
+        return MatMul(self, other).doit()
+
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return MatMul(other, self).doit()
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmatmul__(self, other):
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)

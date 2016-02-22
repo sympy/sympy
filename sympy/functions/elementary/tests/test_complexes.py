@@ -214,7 +214,7 @@ def test_sign():
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is False
-    assert sign(x).doit() == x/Abs(x)
+    assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
@@ -289,7 +289,7 @@ def test_as_real_imag():
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
-    assert sqrt(i**2).as_real_imag() == (0, Abs(-i))
+    assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
 
 @XFAIL
@@ -317,15 +317,16 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
-    assert Abs(I*pi) == pi
-    assert Abs(-I*pi) == pi
-    assert Abs(I*x) == Abs(x)
-    assert Abs(-I*x) == Abs(x)
+    assert Abs(I * pi) == pi
+    assert Abs(-I * pi) == pi
+    assert Abs(I * x) == Abs(x)
+    assert Abs(-I * x) == Abs(x)
     assert Abs(-2*x) == 2*Abs(x)
     assert Abs(-2.0*x) == 2.0*Abs(x)
     assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)
     assert Abs(conjugate(x)) == Abs(x)
     assert conjugate(Abs(x)) == Abs(x)
+    assert Abs(x).expand(complex=True) == sqrt(re(x)**2 + im(x)**2)
 
     a = Symbol('a', positive=True)
     assert Abs(2*pi*x*a) == 2*pi*a*Abs(x)
@@ -496,6 +497,11 @@ def test_arg():
     # keep it simple -- let the user do more advanced cancellation
     e = (p + 1) + I*(p**2 - 1)
     assert arg(e).args[0] == e
+
+    f = Function('f')
+    e = 2*x*(f(0) - 1) - 2*x*f(0)
+    assert arg(e) == arg(-2*x)
+    assert arg(f(0)).func == arg and arg(f(0)).args == (f(0),)
 
 
 def test_arg_rewrite():

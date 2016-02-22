@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
@@ -215,7 +215,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.EmptySet
+    solution = S.Reals if exprs else S.EmptySet
     for _exprs in exprs:
         _eqs = []
 
@@ -251,13 +251,15 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution = Union(solution, solve_univariate_inequality(expr, gen, relational=False))
+                solution &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
-        eqs.append(_eqs)
+        if _eqs:
+            eqs.append(_eqs)
 
-    solution = Union(solution, solve_rational_inequalities(eqs))
+    if eqs:
+        solution &= solve_rational_inequalities(eqs)
 
     if not exact:
         solution = solution.evalf()
@@ -315,10 +317,8 @@ def reduce_abs_inequality(expr, rel, gen):
                     exprs = args
         elif expr.is_Pow:
             n = expr.exp
-
-            if not n.is_Integer or n < 0:
-                raise ValueError(
-                    "only non-negative integer powers are allowed")
+            if not n.is_Integer:
+                raise ValueError("Only Integer Powers are allowed on Abs.")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -454,7 +454,11 @@ def solve_univariate_inequality(expr, gen, relational=True):
                     sol_sets.append(Interval(start, S.Infinity, True, True))
                     break
 
-            if valid((start + end)/2 if start != S.NegativeInfinity else end - 1):
+            pt = ((start + end)/2 if start is not S.NegativeInfinity else
+                (end/2 if end.is_positive else
+                (2*end if end.is_negative else
+                end - 1)))
+            if valid(pt):
                 sol_sets.append(Interval(start, end, True, True))
 
             if x in singularities:
@@ -470,7 +474,11 @@ def solve_univariate_inequality(expr, gen, relational=True):
         # check a point between -oo and oo (e.g. 0) else pick a point
         # past the last solution (which is start after the end of the
         # for-loop above
-        if valid(start + 1 if start is not S.NegativeInfinity else 0):
+        pt = (0 if start is S.NegativeInfinity else
+            (start/2 if start.is_negative else
+            (2*start if start.is_positive else
+            start + 1)))
+        if valid(pt):
             sol_sets.append(Interval(start, end, True, True))
 
         rv = Union(*sol_sets).subs(gen, _gen)

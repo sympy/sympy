@@ -220,16 +220,17 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
-    def _eval_refine(self):
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask, Q
         b, e = self.as_base_exp()
-        if e.is_integer and _coeff_isneg(b):
-            if e.is_even:
+        if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
+            if ask(Q.even(e), assumptions):
                 return Pow(-b, e)
-            elif e.is_odd:
+            elif ask(Q.odd(e), assumptions):
                 return -Pow(-b, e)
 
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
+        from sympy import Abs, arg, exp, floor, im, log, re, sign
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -273,9 +274,9 @@ class Pow(Expr):
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
                     if b.is_real:
-                        b = refine(abs(b))
+                        b = abs(b)
                     if b.is_imaginary:
-                        b = refine(abs(im(b)))*S.ImaginaryUnit
+                        b = abs(im(b))*S.ImaginaryUnit
 
                 if (abs(e) < 1) == True or (e == 1) == True:
                     s = 1  # floor = 0
@@ -485,7 +486,12 @@ class Pow(Expr):
 
         if self.base.is_real is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
-            return (2*i).is_odd
+            isodd = (2*i).is_odd
+            if isodd is not None:
+                return isodd
+
+        if self.exp.is_negative:
+            return (1/self).is_imaginary
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
@@ -1022,6 +1028,8 @@ class Pow(Expr):
         if self.base.is_zero or (self.base - 1).is_zero:
             return True
         elif self.exp.is_rational:
+            if self.base.is_algebraic is False:
+                return self.exp.is_nonzero
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
@@ -1352,7 +1360,7 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1396,8 +1404,8 @@ class Pow(Expr):
         """
 
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive(radical=radical))
-        ce, pe = e.as_content_primitive(radical=radical)
+        b = _keep_coeff(*b.as_content_primitive(radical=radical, clear=clear))
+        ce, pe = e.as_content_primitive(radical=radical, clear=clear)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -1421,7 +1429,7 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive(radical=radical)  # h is positive
+            h, t = b.as_content_primitive(radical=radical, clear=clear)  # h is positive
             c, m = self.func(h, e).as_coeff_Mul()  # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true

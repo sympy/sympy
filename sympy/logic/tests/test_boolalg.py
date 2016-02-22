@@ -1,12 +1,21 @@
-from sympy import (symbols, Dummy, simplify, Equality, S, Interval,
-                   oo, EmptySet, Q)
+from __future__ import division
+
+from sympy.assumptions.ask import Q
+from sympy.core.numbers import oo
+from sympy.core.relational import Equality
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
-    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
-    SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
-    distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
-    simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term, truth_table
-)
+    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
+    POSform, SOPform, Xor, conjuncts, disjuncts,
+    distribute_or_over_and, distribute_and_over_or,
+    eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
+    to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
+    BooleanAtom, is_literal, term_to_integer, integer_to_term,
+    truth_table)
+
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
@@ -475,6 +484,12 @@ def test_ITE():
     assert ITE(Or(A, False), And(B, True), False) is false
 
 
+def test_ITE_diff():
+    # analogous to Piecewise.diff
+    x = symbols('x')
+    assert ITE(x > 0, x**2, x).diff(x) == ITE(x > 0, 2*x, 1)
+
+
 def test_is_literal():
     assert is_literal(True) is True
     assert is_literal(False) is True
@@ -646,6 +661,9 @@ def test_bool_as_set():
     assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
     assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
     assert Not(x > 2).as_set() == Interval(-oo, 2)
+    # issue 10240
+    assert Not(And(x > 2, x < 3)).as_set() == \
+        Union(Interval(-oo,2),Interval(3,oo))
     assert true.as_set() == S.UniversalSet
     assert false.as_set() == EmptySet()
 
@@ -709,3 +727,23 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_issue_8571():
+    x = symbols('x')
+    for t in (S.true, S.false):
+        raises(TypeError, lambda: +t)
+        raises(TypeError, lambda: -t)
+        raises(TypeError, lambda: abs(t))
+        # use int(bool(t)) to get 0 or 1
+        raises(TypeError, lambda: int(t))
+
+        for o in [S.Zero, S.One, x]:
+            for _ in range(2):
+                raises(TypeError, lambda: o + t)
+                raises(TypeError, lambda: o - t)
+                raises(TypeError, lambda: o % t)
+                raises(TypeError, lambda: o*t)
+                raises(TypeError, lambda: o/t)
+                raises(TypeError, lambda: o**t)
+                o, t = t, o  # do again in reversed order

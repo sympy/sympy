@@ -1,22 +1,20 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, pi, sqrt
+from sympy import Dummy, Rational, S, Symbol, pi, sqrt, oo
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.integrals.integrals import Integral
 from sympy.utilities.pytest import raises, slow
 
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-y1 = Symbol('y1', real=True)
-half = Rational(1, 2)
-
 
 @slow
 def test_ellipse_geom():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    t = Symbol('t', real=True)
+    y1 = Symbol('y1', real=True)
+    half = Rational(1, 2)
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p4 = Point(0, 1)
@@ -262,14 +260,9 @@ def test_ellipse_geom():
     assert e.rotate(pi, (1, 2)) == Ellipse(Point(2, 4), 2, 1)
     raises(NotImplementedError, lambda: e.rotate(pi/3))
 
-    # transformations
-    c = Circle((1, 1), 2)
-    assert c.scale(-1) == Circle((-1, 1), 2)
-    assert c.scale(y=-1) == Circle((1, -1), 2)
-    assert c.scale(2) == Ellipse((2, 1), 4, 2)
-
 
 def test_ellipse_random_point():
+    y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
     for ind in range(0, 5):
@@ -280,3 +273,37 @@ def test_ellipse_random_point():
 
 def test_repr():
     assert repr(Circle((0, 1), 2)) == 'Circle(Point2D(0, 1), 2)'
+
+
+def test_transform():
+    c = Circle((1, 1), 2)
+    assert c.scale(-1) == Circle((-1, 1), 2)
+    assert c.scale(y=-1) == Circle((1, -1), 2)
+    assert c.scale(2) == Ellipse((2, 1), 4, 2)
+
+    assert Ellipse((0, 0), 2, 3).scale(2, 3, (4, 5)) == \
+        Ellipse(Point(-4, -10), 4, 9)
+    assert Circle((0, 0), 2).scale(2, 3, (4, 5)) == \
+        Ellipse(Point(-4, -10), 4, 6)
+    assert Ellipse((0, 0), 2, 3).scale(3, 3, (4, 5)) == \
+        Ellipse(Point(-8, -10), 6, 9)
+    assert Circle((0, 0), 2).scale(3, 3, (4, 5)) == \
+        Circle(Point(-8, -10), 6)
+    assert Circle(Point(-8, -10), 6).scale(1/3, 1/3, (4, 5)) == \
+        Circle((0, 0), 2)
+    assert Circle((0, 0), 2).translate(4, 5) == \
+        Circle((4, 5), 2)
+    assert Circle((0, 0), 2).scale(3, 3) == \
+        Circle((0, 0), 6)
+
+
+def test_reflect():
+    b = Symbol('b')
+    m = Symbol('m')
+    l = Line((0, b), slope=m)
+    t1 = Triangle((0, 0), (1, 0), (2, 3))
+    assert t1.area == -t1.reflect(l).area
+    e = Ellipse((1, 0), 1, 2)
+    assert e.area == -e.reflect(Line((1, 0), slope=0)).area
+    assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
+    raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))

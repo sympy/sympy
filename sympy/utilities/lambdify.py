@@ -8,7 +8,6 @@ from __future__ import print_function, division
 import inspect
 import textwrap
 
-from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range, builtins
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -31,7 +30,6 @@ NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
@@ -65,7 +63,6 @@ MPMATH_TRANSLATIONS = {
 }
 
 NUMPY_TRANSLATIONS = {
-    "Abs": "abs",
     "acos": "arccos",
     "acosh": "arccosh",
     "arg": "angle",
@@ -78,8 +75,6 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Max": "amax",
-    "Min": "amin",
     "Mod": "mod",
     "oo": "inf",
     "re": "real",
@@ -116,6 +111,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    from sympy.external import import_module
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -153,10 +149,20 @@ def _import(module, reload="False"):
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
+    # For computing the modulus of a sympy expression we use the builtin abs
+    # function, instead of the previously used fabs function for all
+    # translation modules. This is because the fabs function in the math
+    # module does not accept complex valued arguments. (see issue 9474). The
+    # only exception, where we don't use the builtin abs function is the
+    # mpmath translation module, because mpmath.fabs returns mpf objects in
+    # contrast to abs().
+    if 'Abs' not in namespace:
+        namespace['Abs'] = abs
+
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True):
+             dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
