@@ -331,7 +331,7 @@ class Range(Set):
         >>> list(Range(10, 0, -2))
         [10, 8, 6, 4, 2]
 
-    Although this object it a set, it maintains the order of the elements, so
+    Although this object is a set, it maintains the order of the elements, so
     that it can be used in contexts where range would be used. However, it
     does support the usual set operations.
 
@@ -341,10 +341,6 @@ class Range(Set):
         >>> list(_)
         [4, 6]
 
-    Infinite ranges are allowed. If the starting point is -oo, the final value
-    is stop - step. For example, Range(-oo, 0, 2) represents the negative even
-    integers, {-oo, ..., -4, -2}.
-
     The stop value is canonicalized to the largest possible value for the
     given step, so that equivalent ranges always have the same args. For
     example, Range(0, 10, 3) and Range(0, 12, 3) both create the same object,
@@ -352,6 +348,11 @@ class Range(Set):
 
         >>> Range(0, 10, 3) == Range(0, 12, 3)
         True
+
+
+    Infinite ranges are allowed. If the starting point is infinite, the final value
+    is stop - step. For example, Range(-oo, 0, 2) represents the negative even
+    integers, {-oo, ..., -4, -2}.
 
     Examples
     ========
