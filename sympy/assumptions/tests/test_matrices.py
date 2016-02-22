@@ -1,4 +1,5 @@
-from sympy import Q, ask, Symbol
+from sympy import Q, ask, Symbol, I
+from sympy.matrices import Matrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
 from sympy.matrices.expressions.factorizations import LofLU
@@ -194,3 +195,25 @@ def test_matrix_element_sets_slices_blocks():
 def test_matrix_element_sets_determinant_trace():
     assert ask(Q.integer(Determinant(X)), Q.integer_elements(X))
     assert ask(Q.integer(Trace(X)), Q.integer_elements(X))
+
+def test_matrix_hermitian():
+    X = Matrix([[1, -I], [I, 1]])
+    Y = Matrix([[-I, 1+I], [-1+I, 0]])
+    assert ask(Q.hermitian(X))
+    assert ask(Q.hermitian(Y)) is False
+    X[1, 1] = 0.99999999999
+    assert ask(Q.hermitian(X))
+    X = Identity(4)
+    assert ask(Q.hermitian(X))
+    X = ZeroMatrix(4, 4)
+    assert ask(Q.hermitian(X))
+
+def test_matrix_antihermitian():
+    X = Matrix([[1, -I], [I, 1]])
+    Y = Matrix([[-I, 1+I], [-1+I, 0]])
+    assert ask(Q.antihermitian(X)) is False
+    assert ask(Q.antihermitian(Y))
+    X = Identity(4)
+    assert ask(Q.antihermitian(X)) is False
+    X = ZeroMatrix(4, 4)
+    assert ask(Q.antihermitian(X))

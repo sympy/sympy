@@ -405,6 +405,38 @@ class AskDiagonalHandler(CommonHandler):
     Factorization = staticmethod(partial(_Factorization, Q.diagonal))
 
 
+class AskHermitianHandler(CommonHandler):
+
+    Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+    @staticmethod
+    def MatrixExpr(expr, assumptions):
+        if not expr.is_square:
+            return False
+        for i in range(expr.rows):
+            for j in range(i+1):
+                if not (expr[i, j] - expr[j, i].conjugate()).is_zero:
+                    return False
+        return True
+
+
+class AskAntiHermitianHandler(CommonHandler):
+
+    Identity = staticmethod(CommonHandler.AlwaysFalse)
+
+    ZeroMatrix = staticmethod(CommonHandler.AlwaysTrue)
+
+    @staticmethod
+    def MatrixExpr(expr, assumptions):
+        if not expr.is_square:
+            return False
+        for i in range(expr.rows):
+            for j in range(i+1):
+                if not (expr[i, j] + expr[j, i].conjugate()).is_zero:
+                    return False
+        return True
+
+
 def BM_elements(predicate, expr, assumptions):
     """ Block Matrix elements """
     return all(ask(predicate(b), assumptions) for b in expr.blocks)
