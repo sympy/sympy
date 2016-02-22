@@ -381,7 +381,7 @@ def test_lambertw():
     assert LambertW(2, evaluate=False).is_real
     p = Symbol('p', positive=True)
     assert LambertW(p, evaluate=False).is_real
-    assert LambertW(p - 1, evaluate=False).is_real is False
+    assert LambertW(p - 1, evaluate=False).is_real is None
     assert LambertW(-p - 2/S.Exp1, evaluate=False).is_real is False
     assert LambertW(S.Half, -1, evaluate=False).is_real is False
     assert LambertW(-S.One/10, -1, evaluate=False).is_real
