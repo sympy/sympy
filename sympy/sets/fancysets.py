@@ -310,18 +310,62 @@ class Range(Set):
     """
     Represents a range of integers.
 
+    Mimics the Python range builtin. Can be called as Range(stop),
+    Range(start, stop), or Range(start, stop, step), where step is a nonzero
+    integer, defaulting to 1. Range(stop) is the same as Range(0, stop, 1),
+    Note that like the Python range, the stop value is not included in the
+    range.
+
+    For example, Range(2, 10, 2) represents the set {2, 4, 6, 8}. Range(4)
+    represents {0, 1, 2, 3}.
+
+        >>> from sympy import Range
+        >>> list(Range(2, 10, 2))
+        [2, 4, 6, 8]
+        >>> list(Range(4))
+        [0, 1, 2, 3]
+
+    The step can also be negative. Range(10, 0, -2) represents {10, 8, 6, 4,
+    2}.
+
+        >>> list(Range(10, 0, -2))
+        [10, 8, 6, 4, 2]
+
+    Although this object it a set, it maintains the order of the elements, so
+    that it can be used in contexts where range would be used. However, it
+    does support the usual set operations.
+
+        >>> from sympy import Interval
+        >>> Range(0, 10, 2).intersect(Interval(3, 7))
+        Range(4, 8, 2)
+        >>> list(_)
+        [4, 6]
+
+    Infinite ranges are allowed. If the starting point is -oo, the final value
+    is stop - step. For example, Range(-oo, 0, 2) represents the negative even
+    integers, {-oo, ..., -4, -2}.
+
+    The stop value is canonicalized to the largest possible value for the
+    given step, so that equivalent ranges always have the same args. For
+    example, Range(0, 10, 3) and Range(0, 12, 3) both create the same object,
+    representing {0, 3, 6, 9}.
+
+        >>> Range(0, 10, 3) == Range(0, 12, 3)
+        True
+
     Examples
     ========
 
-    >>> from sympy import Range
-    >>> list(Range(5)) # 0 to 5
+    >>> list(Range(5)) # 0 to 5 (excluding 5)
     [0, 1, 2, 3, 4]
     >>> list(Range(10, 15)) # 10 to 15
     [10, 11, 12, 13, 14]
     >>> list(Range(10, 20, 2)) # 10 to 20 in steps of 2
     [10, 12, 14, 16, 18]
     >>> list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2
-    [12, 14, 16, 18, 20]
+    [20, 18, 16, 14, 12]
+    >>> Range(4, 0) # An empty range gives the empty set
+    EmptySet()
 
     """
 
@@ -355,18 +399,16 @@ class Range(Set):
             return S.EmptySet
 
         # normalize args: regardless of how they are entered they will show
-        # canonically as Range(inf, sup, step) with step > 0
+        # canonically as Range(inf, sup + 1, step) with step > 0 or Range(sup,
+        # inf + 1, step) with step < 0
         if n.is_finite:
-            start, stop = sorted((start, start + (n - 1)*step))
-        else:
-            start, stop = sorted((start, stop - step))
+            stop = start + n*step
 
-        step = abs(step)
         if (start, stop) == (S.NegativeInfinity, S.Infinity):
-            raise ValueError("Both the start and end value of "
-                             "Range cannot be unbounded")
+            raise ValueError("The start and end value of "
+                             "Range cannot both be unbounded")
         else:
-            return Basic.__new__(cls, start, stop + step, step)
+            return Basic.__new__(cls, start, stop, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -389,14 +431,42 @@ class Range(Set):
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
             # if we are off the sequence, get back on
-            if inf.is_finite and self.inf.is_finite:
-                off = (inf - self.inf) % self.step
-            else:
-                off = S.Zero
-            if off:
-                inf += self.step - off
 
-            return Range(inf, sup + 1, self.step)
+            if self.step > 0:
+                if inf.is_finite and self.inf.is_finite:
+                    off = (inf - self.inf) % self.step
+                else:
+                    if self.start.is_infinite:
+                        if inf.is_infinite:
+                            if sup < self.sup:
+                                return Range(inf, self.sup, self.step)
+                            return Range(inf, sup + self.step, self.step)
+                        off = (self.sup - inf) % self.step
+                        inf += off
+                        return Range(inf, sup + 1, self.step)
+                    else:
+                        off = S.Zero
+                if off:
+                    inf += self.step - off
+                return Range(inf, sup + 1, self.step)
+            else:
+                if sup.is_finite and self.sup.is_finite:
+                    off = (self.sup - sup) % self.step
+                else:
+                    if self.start.is_infinite:
+                        if sup.is_infinite:
+                            if inf > self.inf:
+                                return Range(sup, self.inf, self.step)
+                            return Range(sup, inf + self.step, self.step)
+                        off = (self.inf - sup) % self.step
+                        if off != S.NaN:
+                            sup += off
+                        return Range(sup, inf - 1, self.step)
+                    off = S.Zero
+                if off:
+                    sup += off
+                return Range(sup, inf - 1, self.step)
+
 
         if other == S.Naturals:
             return self._intersect(Interval(1, S.Infinity))
@@ -415,19 +485,23 @@ class Range(Set):
             return S.false
 
     def __iter__(self):
-        if self.start is S.NegativeInfinity:
-            i = self.stop - self.step
-            step = -self.step
-        else:
-            i = self.start
-            step = self.step
+        if self.start in [S.NegativeInfinity, S.Infinity]:
+            raise ValueError("Cannot iterate over Range with infinite start")
 
-        while(i < self.stop and i >= self.start):
+        i = self.start
+        step = self.step
+
+        while True:
+            if (step > 0 and not (self.start <= i < self.stop)) or \
+               (step < 0 and not (self.stop < i <= self.start)):
+                break
             yield i
             i += step
 
+
     def __len__(self):
-        return (self.stop - self.start)//self.step
+        return abs((self.stop - self.start)//self.step)
+
 
     def __nonzero__(self):
         return True
@@ -439,20 +513,26 @@ class Range(Set):
 
     @property
     def _last_element(self):
-        if self.stop is S.Infinity:
-            return S.Infinity
-        elif self.start is S.NegativeInfinity:
+        if self.stop in [S.Infinity, S.NegativeInfinity]:
+            return self.stop
+        elif self.start in [S.Infinity, S.NegativeInfinity]:
             return self.stop - self.step
         else:
             return self._ith_element(len(self) - 1)
 
     @property
     def _inf(self):
-        return self.start
+        if self.step > 0:
+            return self.start
+        else:
+            return self._last_element
 
     @property
     def _sup(self):
-        return self.stop - self.step
+        if self.step > 0:
+            return self._last_element
+        else:
+            return self.start
 
     @property
     def _boundary(self):

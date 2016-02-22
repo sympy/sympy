@@ -113,7 +113,7 @@ def test_Range():
     assert 30 not in r
 
     assert list(Range(0, 5)) == list(range(5))
-    assert list(Range(5, 0, -1)) == list(range(1, 6))
+    assert list(Range(5, 0, -1)) == list(range(5, 0, -1))
 
     assert Range(0, 10, -1) == S.EmptySet
 
@@ -141,11 +141,13 @@ def test_Range():
     assert Range(-oo, 0)
     assert Range(0, -oo, -1)
 
-    assert Range(0, oo, 2)._last_element is oo
+    assert Range(0, oo, 2)._last_element == oo
     assert Range(-oo, 1, 1)._last_element is S.Zero
+    assert Range(oo, 1, -1)._last_element == 2
+    assert Range(0, -oo, -2)._last_element == -oo
 
     it = iter(Range(-oo, 0, 2))
-    assert (next(it), next(it)) == (-2, -4)
+    raises(ValueError, lambda: next(it))
 
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
@@ -171,24 +173,47 @@ def test_Range():
 
 
 def test_range_interval_intersection():
-    # Intersection with intervals
-    assert FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6))) == \
-        FiniteSet(2, 3, 4, 5, 6)
 
-    # Open Intervals are removed
-    assert (FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
-            == FiniteSet(3, 4, 5))
+    for r, i, result in [
+        # Intersection with intervals
+        (Range(0, 10, 1), Interval(2, 6), Range(2, 7)),
+        (Range(0, 10, 2), Interval(3, 5), Range(4, 6, 2)),
+        (Range(10), Interval(5.1, 6.9), Range(6, 7)),
 
-    # Try this with large steps
-    assert (FiniteSet(*Range(0, 100, 10).intersect(Interval(15, 55))) ==
-            FiniteSet(20, 30, 40, 50))
+        # Open Intervals are removed
+        (Range(0, 10, 1), Interval(2, 6, True, True), Range(3, 6)),
 
-    # Going backwards
-    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6))) == \
-        FiniteSet(-5, -2, 1, 4)
-    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
-        FiniteSet(-2, 1, 4)
+        # Try this with large steps
+        (Range(0, 100, 10), Interval(15, 55), Range(20, 60, 10)),
 
+        # Going backwards
+        (Range(10, -9, -3), Interval(-5, 6), Range(4, -8, -3)),
+        (Range(10, -9, -3), Interval(-5, 6, True), Range(4, -5, -3)),
+
+        # Infinite range
+        (Range(0, oo, 2), Interval(-1, 5), Range(0, 6, 2)),
+        (Range(4, -oo, -3), Interval(0, 10), Range(4, 0, -3)),
+        (Range(-oo, 4, 3), Interval(-10, 20), Range(-8, 4, 3)),
+        (Range(-oo, 4, 3), Interval(-10, -5), Range(-8, -2, 3)),
+        (Range(oo, 4, -3), Interval(0, 10), Range(10, 4, -3)),
+        (Range(oo, 4, -3), Interval(9, 20), Range(19, 9, -3)),
+
+        # Infinite interval
+        (Range(0, 10, 3), Interval(3, oo), Range(3, 10, 3)),
+        (Range(10, 0, -3), Interval(3, oo), Range(10, 2, -3)),
+        (Range(0, 10, 3), Interval(-oo, 5), Range(0, 5, 3)),
+        (Range(10, 0, -3), Interval(-oo, 5), Range(4, -1, -3)),
+
+        (Range(-oo, 1, 3), Interval(-oo, 5), Range(-oo, 1, 3)),
+        (Range(-oo, 1, 3), Interval(-oo, -3), Range(-oo, -2, 3)),
+        (Range(oo, 1, -3), Interval(-3, oo), Range(oo, 1, -3)),
+        (Range(oo, 1, -3), Interval(5, oo), Range(oo, 4, -3)),
+
+        ]:
+        assert r.intersect(i) == result, "%s.intersect(%s) == %s" % (r, i,
+        result)
+        if r.is_finite and result.is_finite:
+            assert FiniteSet(*r).intersect(i) == FiniteSet(*result), "FiniteSet(*%s).intersect(%s) == FiniteSet(*%s)" % (r, i, result)
 
 def test_fun():
     assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),

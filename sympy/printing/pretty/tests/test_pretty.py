@@ -3186,6 +3186,11 @@ def test_pretty_sets():
     assert pretty(Range(0, oo, 2)) == ascii_str
     assert upretty(Range(0, oo, 2)) == ucode_str
 
+    ascii_str = '{oo, ..., 2, 0}'
+    ucode_str = u('{∞, …, 2, 0}')
+    assert pretty(Range(oo, 1, -2)) == ascii_str
+    assert upretty(Range(oo, 1, -2)) == ucode_str
+
     ascii_str = '{-oo, ..., -3, -2}'
     ucode_str = u('{-∞, …, -3, -2}')
     assert pretty(Range(-2, -oo, -1)) == ascii_str

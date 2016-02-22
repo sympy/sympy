@@ -1469,7 +1469,7 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if s.start is S.NegativeInfinity:
+        if s.start in [S.NegativeInfinity, S.Infinity]:
             it = iter(s)
             printset = s.start, dots, s._last_element - s.step, s._last_element
         elif s.stop is S.Infinity or len(s) > 4:
