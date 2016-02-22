@@ -264,7 +264,7 @@ Here is an example::
     ...     global_vars=(height,))
     >>> print(f_code)
     !******************************************************************************
-    !*                    Code generated with sympy 1.0                           *
+    !*                    Code generated with sympy ...                           *
     !*                                                                            *
     !*              See http://www.sympy.org/ for more information.               *
     !*                                                                            *
