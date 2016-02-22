@@ -1487,7 +1487,6 @@ class LatexPrinter(Printer):
         dots = r'\ldots'
 
         if s.start.is_infinite:
-            it = iter(s)
             printset = s.start, dots, s._last_element - s.step, s._last_element
         elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
