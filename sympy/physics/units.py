@@ -201,7 +201,7 @@ ft = foot = feet = Rational('0.3048')*m
 inch = inches = Rational('25.4')*mm
 yd = yard = yards = 3*ft
 mi = mile = miles = 5280*ft
-
+nmi = nautical_mile = nautical_miles = 6076*ft
 
 # Common volume and area units
 
