@@ -204,10 +204,19 @@ def test_range_interval_intersection():
         (Range(0, 10, 3), Interval(-oo, 5), Range(0, 5, 3)),
         (Range(10, 0, -3), Interval(-oo, 5), Range(4, -1, -3)),
 
+        # Infinite interval, infinite range start
         (Range(-oo, 1, 3), Interval(-oo, 5), Range(-oo, 1, 3)),
         (Range(-oo, 1, 3), Interval(-oo, -3), Range(-oo, -2, 3)),
         (Range(oo, 1, -3), Interval(-3, oo), Range(oo, 1, -3)),
         (Range(oo, 1, -3), Interval(5, oo), Range(oo, 4, -3)),
+
+        # Infinite interval, infinite range end
+        (Range(0, oo, 3), Interval(5, oo), Range(6, oo, 3)),
+        (Range(0, oo, 3), Interval(-5, oo), Range(0, oo, 3)),
+        (Range(0, oo, 3), Interval(-oo, 5), Range(0, 5, 3)),
+        (Range(0, -oo, -3), Interval(-oo, -5), Range(-6, -oo, -3)),
+        (Range(0, -oo, -3), Interval(-oo, 5), Range(0, -oo, -3)),
+        (Range(0, -oo, -3), Interval(-5, oo), Range(0, -5, -3)),
 
         ]:
         assert r.intersect(i) == result, "%s.intersect(%s) == %s" % (r, i,
