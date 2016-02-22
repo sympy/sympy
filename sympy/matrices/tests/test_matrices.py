@@ -2684,6 +2684,13 @@ def test_issue_9457_9467_9876():
     Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: Q.col_del(-10))
 
+
+def test_issue_9480():
+    m = Matrix([[-5 + 5*sqrt(2), -5],
+                [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
+    assert m.rank() < m.rows
+
+
 def test_issue_9422():
     x, y = symbols('x y', commutative=False)
     a, b = symbols('a b')
