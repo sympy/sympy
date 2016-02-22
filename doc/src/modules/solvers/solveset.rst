@@ -316,10 +316,10 @@ What are the general methods employed by solveset to solve an equation?
  * If none of the above method is successful, then methods of polynomial is
    used as follows:
 
-   - The method to solve the rational function is called:
-     ``_solve_as_rational``.  Based on the domain, the
-     respective poly solver ``_solve_as_poly_real`` or
-     ``_solve_as_poly_complex`` is called to solve ``f`` as a polynomial.
+   - The method to solve the rational function, ``_solve_as_rational``, is
+     called.  Based on the domain, the respective poly solver
+     ``_solve_as_poly_real`` or ``_solve_as_poly_complex`` is called to solve
+     ``f`` as a polynomial.
 
    - The underlying method ``_solve_as_poly`` solves the equation using
      polynomial techniques if it's already a polynomial equation or, with
