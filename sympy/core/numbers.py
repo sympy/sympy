@@ -25,6 +25,7 @@ from mpmath.libmp.libmpf import (
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
+from sympy.mpmath.libmp.backend import MPZ
 
 rnd = mlib.round_nearest
 
@@ -814,7 +815,7 @@ class Float(Number):
                 # it's a hexadecimal (coming from a pickled object)
                 # assume that it is in standard form
                 num = list(num)
-                num[1] = long(num[1], 16)
+                num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
             else:
                 if not num[1] and len(num) == 4:
