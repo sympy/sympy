@@ -154,6 +154,7 @@ yocto = ten**-24
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
 sr = steradian = steradians = 1
+mil = angular_mil = angular_mils = 2*pi/6400
 
 # Base units
 
