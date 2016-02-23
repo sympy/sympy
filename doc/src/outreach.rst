@@ -31,12 +31,25 @@ This is an (incomplete) list of projects that use SymPy. If you use SymPy in
 your project, please let us know on our mailinglist_, so that we can add your
 project here as well.
 
-* `SfePy <http://sfepy.org/>`_ (simple finite elements in Python)
-* `Quameon <http://quameon.sourceforge.net/>`_ (Quantum Monte Carlo in Python)
-* `Lcapy <http://lcapy.elec.canterbury.ac.nz/>`_ (Experimental Python package for teaching linear circuit analysis)
-* `Quantum Programming in Python <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1072&context=physsp/>`_ (Quantum 1D Simple Harmonic Oscillator and Quantum Mapping Gate)
-* `LaTeX Expression project documentation <http://mech.fsv.cvut.cz/~stransky/software/latexexpr/doc/>`_ (easy LaTeX typesetting of algebraic expressions in symbolic form with automatic substitution and result computation)
-* `Symbolic statistical modeling <https://www.researchgate.net/publication/260585491_Symbolic_Statistics_with_SymPy/>`_ (Adding statistical operations to complex physical models)
+* `PyDy <http://www.pydy.org/>`_: Multibody dynamics in Python.
+* `galgebra <https://github.com/brombo/galgebra>`_: Geometric algebra
+  (previously ``sympy.galgebra``).
+* `yt <http://yt-project.org/>`_: Python package for analyzing and visualizing
+  volumetric data (uses SymPy (`yt.units
+  <http://yt-project.org/doc/analyzing/units/index.html>`_ uses SymPy).
+* `SfePy <http://sfepy.org/>`_: Simple finite elements in Python.
+* `Quameon <http://quameon.sourceforge.net/>`_: Quantum Monte Carlo in Python.
+* `Lcapy <http://lcapy.elec.canterbury.ac.nz/>`_: Experimental Python package for teaching linear circuit analysis.
+* `Quantum Programming in Python
+  <http://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1072&context=physsp/>`_:
+  Quantum 1D Simple Harmonic Oscillator and Quantum Mapping Gate.
+* `LaTeX Expression project
+  <http://mech.fsv.cvut.cz/~stransky/software/latexexpr/doc/>`_: Easy LaTeX
+  typesetting of algebraic expressions in symbolic form with automatic
+  substitution and result computation).
+* `Symbolic statistical modeling
+  <https://www.researchgate.net/publication/260585491_Symbolic_Statistics_with_SymPy/>`_:
+  Adding statistical operations to complex physical models.
 
 
 .. _mailinglist:        https://groups.google.com/forum/#!forum/sympy
