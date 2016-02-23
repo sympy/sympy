@@ -2,13 +2,11 @@ from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
 
-
 Vector.simp = True
-A = ReferenceFrame('A')
-
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
+    A = ReferenceFrame('A')
     assert CoordinateSym('Ax', A, 0) == A[0]
     assert CoordinateSym('Ax', A, 1) == A[1]
     assert CoordinateSym('Ax', A, 2) == A[2]
@@ -166,3 +164,9 @@ def test_orientnew_respects_parent_class():
     B = MyReferenceFrame('B')
     C = B.orientnew('C', 'Axis', [0, B.x])
     assert isinstance(C, MyReferenceFrame)
+
+
+def test_issue_10348():
+    u = dynamicsymbols('u:3')
+    I = ReferenceFrame('I')
+    A = I.orientnew('A', 'space', u, 'XYZ')

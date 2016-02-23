@@ -80,6 +80,10 @@ class elliptic_k(Function):
     def _eval_rewrite_as_meijerg(self, z):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_kc(self.args[0]._sage_())
+
 
 class elliptic_f(Function):
     r"""
@@ -223,9 +227,14 @@ class elliptic_e(Function):
         raise ArgumentIndexError(self, argindex)
 
     def _eval_conjugate(self):
-        z, m = self.args
-        if (m.is_real and (m - 1).is_positive) is False:
-            return self.func(z.conjugate(), m.conjugate())
+        if len(self.args) == 2:
+            z, m = self.args
+            if (m.is_real and (m - 1).is_positive) is False:
+                return self.func(z.conjugate(), m.conjugate())
+        else:
+            z = self.args[0]
+            if (z.is_real and (z - 1).is_positive) is False:
+                return self.func(z.conjugate())
 
     def _eval_nseries(self, x, n, logx):
         from sympy.simplify import hyperexpand

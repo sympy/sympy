@@ -118,10 +118,10 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
-from sympy.simplify import powsimp
+from sympy.simplify.powsimp import powsimp
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -144,7 +144,7 @@ def compare(a, b, x):
     c = limitinf(la/lb, x)
     if c == 0:
         return "<"
-    elif c.is_unbounded:
+    elif c.is_infinite:
         return ">"
     else:
         return "="
@@ -273,7 +273,11 @@ def mrv(e, x):
         # be simplified here, and doing so is vital for termination.
         if e.args[0].func is log:
             return mrv(e.args[0].args[0], x)
-        if limitinf(e.args[0], x).is_unbounded:
+        # if a product has an infinite factor the result will be
+        # infinite if there is no zero, otherwise NaN; here, we
+        # consider the result infinite if any factor is infinite
+        li = limitinf(e.args[0], x)
+        if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.args[0], x)
@@ -412,9 +416,9 @@ def limitinf(e, x):
         e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
-        # get all the correct mathematical bechavior from the expression.
+        # get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, bounded=True)
+        p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
@@ -497,7 +501,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, bounded=True)
+    w = Dummy("w", real=True, positive=True, finite=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     return series.leadterm(w)
@@ -638,9 +642,9 @@ def gruntz(e, z, z0, dir="+"):
     elif z0 == -oo:
         r = limitinf(e.subs(z, -z), z)
     else:
-        if dir == "-":
+        if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
-        elif dir == "+":
+        elif str(dir) == "+":
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")

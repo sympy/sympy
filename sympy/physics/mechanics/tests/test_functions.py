@@ -1,12 +1,11 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
-from sympy.physics.mechanics import (Dyadic, Particle, Point, ReferenceFrame,
+from sympy import sin, cos, tan, pi, symbols, Matrix
+from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody, Vector)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
-                                     kinetic_energy, linear_momentum, \
-                                     outer, potential_energy)
-from sympy.physics.mechanics.functions import _mat_inv_mul
-from sympy.utilities.pytest import raises
+                                     kinetic_energy, linear_momentum,
+                                     outer, potential_energy, msubs,
+                                     find_dynamicsymbols)
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -71,24 +70,27 @@ def test_linear_momentum():
 
 
 def test_angular_momentum_and_linear_momentum():
-    m, M, l1 = symbols('m M l1')
-    q1d = dynamicsymbols('q1d')
+    """A rod with length 2l, centroidal inertia I, and mass M along with a
+    particle of mass m fixed to the end of the rod rotate with an angular rate
+    of omega about point O which is fixed to the non-particle end of the rod.
+    The rod's reference frame is A and the inertial frame is N."""
+    m, M, l, I = symbols('m, M, l, I')
+    omega = dynamicsymbols('omega')
     N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
     a = ReferenceFrame('a')
-    a.set_ang_vel(N, q1d * N.z)
+    O = Point('O')
+    Ac = O.locatenew('Ac', l * N.x)
+    P = Ac.locatenew('P', l * N.x)
+    O.set_vel(N, 0 * N.x)
+    a.set_ang_vel(N, omega * N.z)
     Ac.v2pt_theory(O, N, a)
     P.v2pt_theory(O, N, a)
     Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(
-        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(
-        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
+    A = RigidBody('A', Ac, a, M, (I * outer(N.z, N.z), Ac))
+    expected = 2 * m * omega * l * N.y + M * l * omega * N.y
+    assert (linear_momentum(N, A, Pa) - expected) == Vector(0)
+    expected = (I + M * l**2 + 4 * m * l**2) * omega * N.z
+    assert (angular_momentum(O, N, A, Pa) - expected).simplify() == Vector(0)
 
 
 def test_kinetic_energy():
@@ -125,25 +127,44 @@ def test_potential_energy():
     Pa = Particle('Pa', P, m)
     I = outer(N.z, N.z)
     A = RigidBody('A', Ac, a, M, (I, Ac))
-    Pa.set_potential_energy(m * g * h)
-    A.set_potential_energy(M * g * H)
+    Pa.potential_energy = m * g * h
+    A.potential_energy = M * g * H
     assert potential_energy(A, Pa) == m * g * h + M * g * H
 
 
-def test_mat_inv_mul():
-    # Uses SymPy generated primes as matrix entries, so each entry in
-    # each matrix should be symbolic and unique, allowing proper comparison.
-    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
+def test_msubs():
+    a, b = symbols('a, b')
+    x, y, z = dynamicsymbols('x, y, z')
+    # Test simple substitution
+    expr = Matrix([[a*x + b, x*y.diff() + y],
+                   [x.diff().diff(), z + sin(z.diff())]])
+    sol = Matrix([[a + b, y],
+                  [x.diff().diff(), 1]])
+    sd = {x: 1, z: 1, z.diff(): 0, y.diff(): 0}
+    assert msubs(expr, sd) == sol
+    # Test smart substitution
+    expr = cos(x + y)*tan(x + y) + b*x.diff()
+    sd = {x: 0, y: pi/2, x.diff(): 1}
+    assert msubs(expr, sd, smart=True) == b + 1
+    N = ReferenceFrame('N')
+    v = x*N.x + y*N.y
+    d = x*(N.x|N.x) + y*(N.y|N.y)
+    v_sol = 1*N.y
+    d_sol = 1*(N.y|N.y)
+    sd = {x: 0, y: 1}
+    assert msubs(v, sd) == v_sol
+    assert msubs(d, sd) == d_sol
 
-    # going to form 3 matrices
-    # 1 n x n
-    # different n x n
-    # 1 n x 2n
-    n = 3
-    m1 = Matrix(n, n, lambda i, j: prime(i * n + j + 2))
-    m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
-    m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
 
-    assert _mat_inv_mul(m1, m2) == m1.inv() * m2
-    assert _mat_inv_mul(m1, m3) == m1.inv() * m3
+def test_find_dynamicsymbols():
+    a, b = symbols('a, b')
+    x, y, z = dynamicsymbols('x, y, z')
+    expr = Matrix([[a*x + b, x*y.diff() + y],
+                   [x.diff().diff(), z + sin(z.diff())]])
+    # Test finding all dynamicsymbols
+    sol = set([x, y.diff(), y, x.diff().diff(), z, z.diff()])
+    assert find_dynamicsymbols(expr) == sol
+    # Test finding all but those in sym_list
+    exclude = [x, y, z]
+    sol = set([y.diff(), x.diff().diff(), z.diff()])
+    assert find_dynamicsymbols(expr, exclude) == sol

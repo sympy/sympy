@@ -5,9 +5,9 @@ See sympy.unify.core for algorithmic docstring """
 
 from __future__ import print_function, division
 
-from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
+from sympy.core import Basic, Add, Mul, Pow
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
-from sympy.core.sets import Union, Intersection, FiniteSet
+from sympy.sets.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core

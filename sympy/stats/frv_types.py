@@ -14,9 +14,12 @@ Hypergeometric
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import as_int, range
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
-from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
-        Dict, Basic)
+from sympy.concrete.summations import Sum
+from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
+        Dict, Basic, KroneckerDelta, Dummy)
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
         'Binomial', 'Hypergeometric']
@@ -47,7 +50,7 @@ def FiniteRV(name, density):
 
     >>> E(X)
     2.00000000000000
-    >>> P(X>=2)
+    >>> P(X >= 2)
     0.700000000000000
     """
     return rv(name, FiniteDistributionHandmade, density)
@@ -101,16 +104,34 @@ def DiscreteUniform(name, items):
 class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
 
+    def __new__(cls, sides):
+        sides_sym = sympify(sides)
+        if fuzzy_not(fuzzy_and((sides_sym.is_integer, sides_sym.is_positive))):
+            raise ValueError("'sides' must be a positive integer.")
+        else:
+            return super(DieDistribution, cls).__new__(cls, sides)
+
+    @property
+    @cacheit
+    def dict(self):
+        sides = as_int(self.sides)
+        return super(DieDistribution, self).dict
+
     @property
     def set(self):
-        return list(map(Integer, list(range(1, self.sides+1))))
+        return list(map(Integer, list(range(1, self.sides + 1))))
 
     def pdf(self, x):
         x = sympify(x)
-        if x.is_Integer and x >= 1 and x <= self.sides:
-            return Rational(1, self.sides)
-        else:
-            return 0
+        if x.is_number:
+            if x.is_Integer and x >= 1 and x <= self.sides:
+                return Rational(1, self.sides)
+            return S.Zero
+        if x.is_Symbol:
+            i = Dummy('i', integer=True, positive=True)
+            return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
+        raise ValueError("'x' expected as an argument of type 'number' or 'symbol', "
+                        "not %s" % (type(x)))
 
 
 def Die(name, sides=6):
@@ -188,10 +209,24 @@ def Coin(name, p=S.Half):
 class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
+    def __new__(cls, *args):
+        n = args[BinomialDistribution._argnames.index('n')]
+        p = args[BinomialDistribution._argnames.index('p')]
+        n_sym = sympify(n)
+        p_sym = sympify(p)
+
+        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
+            raise ValueError("'n' must be positive integer. n = %s." % str(n))
+        elif fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
+            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
+        else:
+            return super(BinomialDistribution, cls).__new__(cls, *args)
+
     @property
     @cacheit
     def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
+        n = as_int(n)
         return dict((k*succ + (n - k)*fail,
                 binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
 
@@ -248,3 +283,39 @@ def Hypergeometric(name, N, m, n):
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
     return rv(name, HypergeometricDistribution, N, m, n)
+
+
+class RademacherDistribution(SingleFiniteDistribution):
+    @property
+    @cacheit
+    def dict(self):
+        return {-1: S.Half, 1: S.Half}
+
+
+def Rademacher(name):
+    """
+    Create a Finite Random Variable representing a Rademacher distribution.
+
+    Return a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Rademacher, density
+
+    >>> X = Rademacher('X')
+    >>> density(X).dict
+    {-1: 1/2, 1: 1/2}
+
+    See Also
+    ========
+
+    sympy.stats.Bernoulli
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Rademacher_distribution
+
+    """
+    return rv(name, RademacherDistribution)

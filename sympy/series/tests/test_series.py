@@ -1,7 +1,8 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs
+    Function, log, sqrt, Symbol, Subs, pi, symbols
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 from sympy.series.gruntz import calculate_series
 
 
@@ -36,16 +37,16 @@ def test_issue_5223():
     raises(ValueError, lambda: cos(x + y).series())
     raises(ValueError, lambda: x.series(dir=""))
 
-    assert (cos(x).series(x, 1).removeO().subs(x, x - 1) -
-            cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
+    assert (cos(x).series(x, 1) -
+            cos(x + 1).series(x).subs(x, x - 1)).removeO() == 0
     e = cos(x).series(x, 1, n=None)
     assert [next(e) for i in range(2)] == [cos(1), -((x - 1)*sin(1))]
     e = cos(x).series(x, 1, n=None, dir='-')
     assert [next(e) for i in range(2)] == [cos(1), (1 - x)*sin(1)]
     # the following test is exact so no need for x -> x - 1 replacement
     assert abs(x).series(x, 1, dir='-') == x
-    assert exp(x).series(x, 1, dir='-', n=3).removeO().subs(x, x - 1) == \
-        E + E*(x - 1) + E*(x - 1)**2/2
+    assert exp(x).series(x, 1, dir='-', n=3).removeO() == \
+        E - E*(-x + 1) + E*(-x + 1)**2/2
 
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
@@ -131,6 +132,24 @@ def test_x_is_base_detection():
     eq = (x**2)**(S(2)/3)
     assert eq.series() == x**(S(4)/3)
 
+
 def test_sin_power():
     e = sin(x)**1.2
     assert calculate_series(e, x) == x**1.2
+
+
+def test_issue_7203():
+    assert series(cos(x), x, pi, 3) == \
+        -1 + (x - pi)**2/2 + O((x - pi)**3, (x, pi))
+
+
+def test_exp_product_positive_factors():
+    a, b = symbols('a, b', positive=True)
+    x = a * b
+    assert series(exp(x), x, n=8) == 1 + a*b + a**2*b**2/2 + \
+        a**3*b**3/6 + a**4*b**4/24 + a**5*b**5/120 + a**6*b**6/720 + \
+        a**7*b**7/5040 + O(a**8*b**8, a, b)
+
+
+def test_issue_8805():
+    assert series(1, n=8) == 1

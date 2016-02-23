@@ -25,11 +25,11 @@ from sympy.polys.polytools import (
     nth_power_roots_poly,
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
-    _torational_factor_list)
+    _torational_factor_list,
+    to_rational_coeffs)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    OperationNotSupported,
     ExactQuotientFailed,
     PolificationFailed,
     ComputationFailed,
@@ -39,7 +39,6 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
     PolynomialError,
     CoercionFailed,
-    NotAlgebraic,
     DomainError,
     OptionError,
     FlagError)
@@ -48,20 +47,20 @@ from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
-    exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
+    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
+    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-x, y, z, p, q, r, s, t, u, v, w, a, b, c, d, e = symbols(
-    'x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
-
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
+from sympy import MatrixSymbol
 
 def _epsilon_eq(a, b):
     for x, y in zip(a, b):
@@ -348,7 +347,7 @@ def test_Poly__new__():
         Poly(3*x**5 + 65536*x**4 + x**3 + 65536*x** 2 + 1, x,
              modulus=65537, symmetric=False)
 
-    assert Poly(x**2 + x + 1.0).get_domain() == RR
+    assert isinstance(Poly(x**2 + x + 1.0).get_domain(), RealField)
 
 
 def test_Poly__args():
@@ -562,7 +561,7 @@ def test_Poly_get_domain():
     raises(CoercionFailed, lambda: Poly(x/2, domain='ZZ'))
     assert Poly(x/2, domain='QQ').get_domain() == QQ
 
-    assert Poly(0.2*x).get_domain() == RR
+    assert isinstance(Poly(0.2*x).get_domain(), RealField)
 
 
 def test_Poly_set_domain():
@@ -1283,6 +1282,8 @@ def test_Poly_nth():
     assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
     assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
+    raises(ValueError, lambda: Poly(x*y + 1, x, y).nth(1))
+
 
 def test_Poly_LM():
     assert Poly(0, x).LM() == (0,)
@@ -1422,6 +1423,13 @@ def test_Poly_diff():
     assert Poly(x**2*y**2 + x*y).diff(y, x) == Poly(4*x*y + 1)
 
 
+def test_issue_9585():
+    assert diff(Poly(x**2 + x)) == Poly(2*x + 1)
+    assert diff(Poly(x**2 + x), x, evaluate=False) == \
+        Derivative(Poly(x**2 + x), x)
+    assert Derivative(Poly(x**2 + x), x).doit() == Poly(2*x + 1)
+
+
 def test_Poly_eval():
     assert Poly(0, x).eval(7) == 0
     assert Poly(1, x).eval(7) == 1
@@ -1464,8 +1472,8 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval((6, 7)) == 49
     assert Poly(x*y + y, x, y).eval([6, 7]) == 49
 
-    Poly(x + 1, domain='ZZ').eval(S(1)/2) == S(3)/2
-    Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
+    assert Poly(x + 1, domain='ZZ').eval(S(1)/2) == S(3)/2
+    assert Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(ValueError, lambda: Poly(x*y + y, x, y).eval((6, 7, 8)))
     raises(DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
@@ -1833,6 +1841,8 @@ def test_gcd_list():
     assert gcd_list([1, 2]) == 1
     assert gcd_list([4, 6, 8]) == 2
 
+    assert gcd_list([x*(y + 42) - x*y - x*42]) == 0
+
     gcd = gcd_list([], x)
     assert gcd.is_Number and gcd is S.Zero
 
@@ -1851,6 +1861,8 @@ def test_lcm_list():
     assert lcm_list([]) == 1
     assert lcm_list([1, 2]) == 2
     assert lcm_list([4, 6, 8]) == 24
+
+    assert lcm_list([x*(y + 42) - x*y - x*42]) == 0
 
     lcm = lcm_list([], x)
     assert lcm.is_Number and lcm is S.One
@@ -1981,6 +1993,10 @@ def test_terms_gcd():
         3*x*(x + 1)*(sin(Mul(3, y + 1, evaluate=False)) + 1)
     assert terms_gcd(sin(x + x*y), deep=True) == \
         sin(x*(y + 1))
+
+    eq = Eq(2*x, 2*y + 2*z*y)
+    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
 
 
 def test_trunc():
@@ -2294,11 +2310,10 @@ def test_factor():
     assert factor(f) == g
     assert factor(g) == g
 
-    f = sqrt(expand((x - 1)**5*(r**2 + 1)))
-    g = sqrt(r**2 + 1)*(x - 1)**(S(5)/2)
+    g = (x - 1)**5*(r**2 + 1)
+    f = sqrt(expand(g))
 
-    assert factor(f) == g
-    assert factor(g) == g
+    assert factor(f) == sqrt(g)
 
     f = Poly(sin(1)*x + 1, x, domain=EX)
 
@@ -2381,6 +2396,8 @@ def test_factor():
     # deep option
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
+    assert factor(sqrt(x**2)) == sqrt(x**2)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -2441,7 +2458,7 @@ def test_intervals():
     assert f.intervals(eps=S(1)/100) == f.intervals(eps=0.01) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/1000) == f.intervals(eps=0.001) == \
-        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
+        [((-S(1)/1002, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/10000) == f.intervals(eps=0.0001) == \
         [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
 
@@ -2455,7 +2472,7 @@ def test_intervals():
     assert intervals(f, eps=S(1)/100) == intervals(f, eps=0.01) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/1000) == intervals(f, eps=0.001) == \
-        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
+        [((-S(1)/1002, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/10000) == intervals(f, eps=0.0001) == \
         [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
 
@@ -2467,10 +2484,10 @@ def test_intervals():
          ((1, S(3)/2), 1), ((S(3)/2, 2), 7)]
 
     assert intervals([x**5 - 200, x**5 - 201]) == \
-        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(309)/107, S(26)/9), {1: 1})]
 
     assert intervals([x**5 - 200, x**5 - 201], fast=True) == \
-        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(309)/107, S(26)/9), {1: 1})]
 
     assert intervals([x**2 - 200, x**2 - 201]) == \
         [((-S(71)/5, -S(85)/6), {1: 1}), ((-S(85)/6, -14), {0: 1}),
@@ -2613,7 +2630,7 @@ def test_Poly_root():
     assert f.root(2) == 2
     raises(IndexError, lambda: f.root(3))
 
-    assert Poly(x**5 + x + 1).root(0) == RootOf(x**3 - x**2 + 1, 0)
+    assert Poly(x**5 + x + 1).root(0) == rootof(x**3 - x**2 + 1, 0)
 
 
 def test_real_roots():
@@ -2623,20 +2640,20 @@ def test_real_roots():
     assert real_roots(x**3) == [0, 0, 0]
     assert real_roots(x**3, multiple=False) == [(0, 3)]
 
-    assert real_roots(x*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0]
-    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(RootOf(
+    assert real_roots(x*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0]
+    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 1)]
 
     assert real_roots(
-        x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
-    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(
+        x**3*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0, 0, 0]
+    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 3)]
 
     f = 2*x**3 - 7*x**2 + 4*x + 4
     g = x**3 + x + 1
 
     assert Poly(f).real_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).real_roots() == [RootOf(g, 0)]
+    assert Poly(g).real_roots() == [rootof(g, 0)]
 
 
 def test_all_roots():
@@ -2644,7 +2661,7 @@ def test_all_roots():
     g = x**3 + x + 1
 
     assert Poly(f).all_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).all_roots() == [RootOf(g, 0), RootOf(g, 1), RootOf(g, 2)]
+    assert Poly(g).all_roots() == [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
 
 
 def test_nroots():
@@ -2711,6 +2728,10 @@ def test_nroots():
     assert nroots(x + 2*I) == [-2.0*I]
 
     raises(PolynomialError, lambda: nroots(0))
+
+    # issue 8296
+    f = Poly(x**4 - 1)
+    assert f.nroots(2) == [w.n(2) for w in f.all_roots()]
 
 
 def test_ground_roots():
@@ -2855,6 +2876,12 @@ def test_cancel():
     assert cancel(1 + p3) == 1 + p4
     assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+
+    # issue 9363
+    M = MatrixSymbol('M', 5, 5)
+    assert cancel(M[0,0] + 7) == M[0,0] + 7
+    expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
+    assert cancel(expr) == expr
 
 
 def test_reduced():
@@ -3125,3 +3152,8 @@ def test_noncommutative():
     assert cancel(foo(e)) == foo(c)
     assert cancel(e + foo(e)) == c + foo(c)
     assert cancel(e*foo(c)) == c*foo(c)
+
+
+def test_to_rational_coeffs():
+    assert to_rational_coeffs(
+        Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None

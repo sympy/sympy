@@ -39,7 +39,7 @@ def parse(s):
         (r"\A\((.+)\)([\w\.].*)\Z",  # Implied multiplication - (a)b
         lambda m: "(" + parse(m.group(1)) + ")*" + parse(m.group(2))),
 
-        (r"\A([\d\.]+)([a-zA-Z].*)\Z",  # Implied multiplicatin - 2a
+        (r"\A(-? *[\d\.]+)([a-zA-Z].*)\Z",  # Implied multiplication - 2a
         lambda m: parse(m.group(1)) + "*" + parse(m.group(2))),
 
         (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z",  # Infix operator

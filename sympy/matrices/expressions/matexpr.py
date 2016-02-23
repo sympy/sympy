@@ -2,8 +2,13 @@ from __future__ import print_function, division
 
 from functools import wraps
 
+<<<<<<< HEAD
 from sympy.core import C, S, Symbol, sympify, Tuple, Integer, Basic, Expr
+=======
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
+>>>>>>> master
 from sympy.core.decorators import call_highest_priority
+from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
@@ -48,6 +53,11 @@ class MatrixExpr(Basic):
         Transpose
         Inverse
     """
+
+    # Should not be considered iterable by the
+    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # iterable (i.e., explicit matrices) should set this to True.
+    _iterable = False
 
     _op_priority = 11.0
 
@@ -100,8 +110,18 @@ class MatrixExpr(Basic):
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __matmul__(self, other):
+        return MatMul(self, other).doit()
+
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return MatMul(other, self).doit()
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmatmul__(self, other):
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
@@ -109,7 +129,9 @@ class MatrixExpr(Basic):
     def __pow__(self, other):
         if not self.is_square:
             raise ShapeError("Power of non-square matrix %s" % self)
-        if other is S.NegativeOne:
+        elif self.is_Identity:
+            return self
+        elif other is S.NegativeOne:
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
@@ -217,6 +239,22 @@ class MatrixExpr(Basic):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        elif isinstance(key, (int, Integer)):
+            # row-wise decomposition of matrix
+            rows, cols = self.shape
+            if not (isinstance(rows, Integer) and isinstance(cols, Integer)):
+                raise IndexError("Single index only supported for "
+                                 "non-symbolic matrix shapes.")
+            key = sympify(key)
+            i = key // cols
+            j = key % cols
+            if self.valid_index(i, j) != False:
+                return self._entry(i, j)
+            else:
+                raise IndexError("Invalid index %s" % key)
+        elif isinstance(key, (Symbol, Expr)):
+                raise IndexError("Single index only supported for "
+                                 "non-symbolic indices.")
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):
@@ -305,6 +343,7 @@ class MatrixElement(Expr):
     j = property(lambda self: self.args[2])
     _diff_wrt = True
 
+<<<<<<< HEAD
     def _eval_derivative_wrt(self, expr, new_name):
         """Transform derivatives wrt a MatrixElement to derivatives wrt a symbol.
 
@@ -355,6 +394,15 @@ class MatrixElement(Expr):
             return (replace_and_check(expr), new_self)
         except FoundAmbigousExpression:
             return None
+=======
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return args[0][args[1], args[2]]
+>>>>>>> master
 
 
 class MatrixSymbol(MatrixExpr):
@@ -491,6 +539,8 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
+        if other < 1:
+            raise ValueError("Matrix det == 0; not invertible.")
         return self
 
     def _eval_transpose(self):

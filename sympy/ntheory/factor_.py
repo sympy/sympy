@@ -10,10 +10,11 @@ from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
 from sympy.core.evalf import bitcount
-from sympy.core.numbers import igcd, oo, Rational
+from sympy.core.logic import fuzzy_and
+from sympy.core.numbers import igcd, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.singleton import S
 from sympy.core.function import Function
 
@@ -229,6 +230,8 @@ def multiplicity(p, n):
                 pass
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
+    if n == 0:
+        raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
     if p == 2:
         return trailing(n)
     if p < 2:
@@ -992,11 +995,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         factors[-1] = 1
         return factors
 
-    if limit:
-        if limit < 2:
-            if n == 1:
-                return {}
-            return {n: 1}
+    if limit and limit < 2:
+        if n == 1:
+            return {}
+        return {n: 1}
     elif n < 10:
         # doing this we are assured of getting a limit > 2
         # when we have to compute it later
@@ -1169,6 +1171,58 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         low, high = high, high*2
 
 
+def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
+              verbose=False, visual=None):
+    r"""
+    Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
+    the prime factors of ``r`` as keys and their respective multiplicities
+    as values. For example:
+
+    >>> from sympy.ntheory import factorrat
+    >>> from sympy.core.symbol import S
+    >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
+    {2: 3, 3: -2}
+    >>> factorrat(S(-1)/987)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
+    {-1: 1, 3: -1, 7: -1, 47: -1}
+
+    Please see the docstring for ``factorint`` for detailed explanations
+    and examples of the following keywords:
+
+        - ``limit``: Integer limit up to which trial division is done
+        - ``use_trial``: Toggle use of trial division
+        - ``use_rho``: Toggle use of Pollard's rho method
+        - ``use_pm1``: Toggle use of Pollard's p-1 method
+        - ``verbose``: Toggle detailed printing of progress
+        - ``visual``: Toggle product form of output
+    """
+    from collections import defaultdict
+    f = factorint(rat.p, limit=limit, use_trial=use_trial,
+                  use_rho=use_rho, use_pm1=use_pm1,
+                  verbose=verbose).copy()
+    f = defaultdict(int, f)
+    for p, e in factorint(rat.q, limit=limit,
+                          use_trial=use_trial,
+                          use_rho=use_rho,
+                          use_pm1=use_pm1,
+                          verbose=verbose).items():
+        f[p] += -e
+
+    if len(f) > 1 and 1 in f:
+        del f[1]
+    if not visual:
+        return dict(f)
+    else:
+        if -1 in f:
+            f.pop(-1)
+            args = [S.NegativeOne]
+        else:
+            args = []
+        args.extend([Pow(*i, evaluate=False)
+                     for i in sorted(f.items())])
+        return Mul(*args, evaluate=False)
+
+
+
 def primefactors(n, limit=None, verbose=False):
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
@@ -1220,7 +1274,7 @@ def _divisors(n):
             yield 1
         else:
             pows = [1]
-            for j in xrange(factordict[ps[n]]):
+            for j in range(factordict[ps[n]]):
                 pows.append(pows[-1] * ps[n])
             for q in rec_gen(n + 1):
                 for p in pows:
@@ -1233,7 +1287,7 @@ def _divisors(n):
 def divisors(n, generator=False):
     r"""
     Return all divisors of n sorted from 1..n by default.
-    If generator is True an unordered generator is returned.
+    If generator is ``True`` an unordered generator is returned.
 
     The number of divisors of n can be quite large if there are many
     prime factors (counting repeated factors). If only the number of
@@ -1260,7 +1314,7 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if isprime(n):
         return [1, n]
     if n == 1:
@@ -1304,6 +1358,173 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
+def _udivisors(n):
+    """Helper function for udivisors which generates the unitary divisors."""
+
+    factorpows = [p**e for p, e in factorint(n).items()]
+    for i in range(2**len(factorpows)):
+        d, j, k = 1, i, 0
+        while j:
+            if (j & 1):
+                d *= factorpows[k]
+            j >>= 1
+            k += 1
+        yield d
+
+
+def udivisors(n, generator=False):
+    r"""
+    Return all unitary divisors of n sorted from 1..n by default.
+    If generator is ``True`` an unordered generator is returned.
+
+    The number of unitary divisors of n can be quite large if there are many
+    prime factors. If only the number of unitary divisors is desired use
+    udivisor_count(n).
+
+    References
+    ==========
+
+    - http://en.wikipedia.org/wiki/Unitary_divisor
+    - http://mathworld.wolfram.com/UnitaryDivisor.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import udivisors, udivisor_count
+    >>> udivisors(15)
+    [1, 3, 5, 15]
+    >>> udivisor_count(15)
+    4
+
+    >>> sorted(udivisors(120, generator=True))
+    [1, 3, 5, 8, 15, 24, 40, 120]
+
+    See Also
+    ========
+
+    primefactors, factorint, divisors, divisor_count, udivisor_count
+    """
+
+    n = as_int(abs(n))
+    if isprime(n):
+        return [1, n]
+    if n == 1:
+        return [1]
+    if n == 0:
+        return []
+    rv = _udivisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
+
+
+def udivisor_count(n):
+    """
+    Return the number of unitary divisors of ``n``.
+
+    References
+    ==========
+
+    - http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
+    >>> from sympy.ntheory.factor_ import udivisor_count
+    >>> udivisor_count(120)
+    8
+
+    See Also
+    ========
+
+    factorint, divisors, udivisors, divisor_count, totient
+    """
+
+    if n == 0:
+        return 0
+    return 2**len([p for p in factorint(n) if p > 1])
+
+
+def _antidivisors(n):
+    """Helper function for antidivisors which generates the antidivisors."""
+
+    for d in _divisors(n):
+        y = 2*d
+        if n > y and n % y:
+            yield y
+    for d in _divisors(2*n-1):
+        if n > d >= 2 and n % d:
+            yield d
+    for d in _divisors(2*n+1):
+        if n > d >= 2 and n % d:
+            yield d
+
+
+def antidivisors(n, generator=False):
+    r"""
+    Return all antidivisors of n sorted from 1..n by default.
+
+    Antidivisors [1]_ of n are numbers that do not divide n by the largest
+    possible margin.  If generator is True an unordered generator is returned.
+
+    References
+    ==========
+
+    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisors
+    >>> antidivisors(24)
+    [7, 16]
+
+    >>> sorted(antidivisors(128, generator=True))
+    [3, 5, 15, 17, 51, 85]
+
+    See Also
+    ========
+
+    primefactors, factorint, divisors, divisor_count, antidivisor_count
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return []
+    rv = _antidivisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
+
+
+def antidivisor_count(n):
+    """
+    Return the number of antidivisors [1]_ of ``n``.
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisor_count
+    >>> antidivisor_count(13)
+    4
+    >>> antidivisor_count(27)
+    5
+
+    See Also
+    ========
+
+    factorint, divisors, antidivisors, divisor_count, totient
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return 0
+    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+        divisor_count(n) - divisor_count(n, 2) - 5
+
+
 class totient(Function):
     """
     Calculate the Euler totient function phi(n)
@@ -1330,3 +1551,234 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+
+    def _eval_is_integer(self):
+        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+
+class divisor_sigma(Function):
+    """
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
+        ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
+
+        Default for k is 1.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Divisor_function
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import divisor_sigma
+    >>> divisor_sigma(18, 0)
+    6
+    >>> divisor_sigma(39, 1)
+    56
+    >>> divisor_sigma(12, 2)
+    210
+    >>> divisor_sigma(37)
+    38
+
+    See Also
+    ========
+
+    divisor_count, totient, divisors, factorint
+    """
+
+    @classmethod
+    def eval(cls, n, k=1):
+        n = sympify(n)
+        k = sympify(k)
+        if n.is_prime:
+            return 1 + n**k
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
+                           else e + 1 for p, e in factorint(n).items()])
+
+
+def core(n, t=2):
+    """
+    Calculate core(n,t) = `core_t(n)` of a positive integer n
+
+    ``core_2(n)`` is equal to the squarefree part of n
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        core_t(n) = \prod_{i=1}^\omega p_i^{m_i \mod t}.
+
+    Parameters
+    ==========
+
+    t : core(n,t) calculates the t-th power free part of n
+
+        ``core(n, 2)`` is the squarefree part of ``n``
+        ``core(n, 3)`` is the cubefree part of ``n``
+
+        Default for t is 2.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import core
+    >>> core(24, 2)
+    6
+    >>> core(9424, 3)
+    1178
+    >>> core(379238)
+    379238
+    >>> core(15**11, 10)
+    15
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    n = as_int(n)
+    t = as_int(t)
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+    elif t <= 1:
+        raise ValueError("t must be >= 2")
+    else:
+        y = 1
+        for p, e in factorint(n).items():
+            y *= p**(e % t)
+        return y
+
+
+def digits(n, b=10):
+    """
+    Return a list of the digits of n in base b. The first element in the list
+    is b (or -b if n is negative).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import digits
+    >>> digits(35)
+    [10, 3, 5]
+    >>> digits(27, 2)
+    [2, 1, 1, 0, 1, 1]
+    >>> digits(65536, 256)
+    [256, 1, 0, 0]
+    >>> digits(-3958, 27)
+    [-27, 5, 11, 16]
+    """
+
+    b = as_int(b)
+    n = as_int(n)
+    if b <= 1:
+        raise ValueError("b must be >= 2")
+    else:
+        x, y = abs(n), []
+        while x >= b:
+            x, r = divmod(x, b)
+            y.append(r)
+        y.append(x)
+        y.append(-b if n < 0 else b)
+        y.reverse()
+        return y
+
+
+class udivisor_sigma(Function):
+    """
+    Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
+
+    ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k^*(n) = \prod_{i=1}^\omega (1+ p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``udivisor_sigma(n, 0)`` is equal to ``udivisor_count(n)``
+        ``udivisor_sigma(n, 1)`` is equal to ``sum(udivisors(n))``
+
+        Default for k is 1.
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import udivisor_sigma
+    >>> udivisor_sigma(18, 0)
+    4
+    >>> udivisor_sigma(74, 1)
+    114
+    >>> udivisor_sigma(36, 3)
+    47450
+    >>> udivisor_sigma(111)
+    152
+
+    See Also
+    ========
+
+    divisor_count, totient, divisors, udivisors, udivisor_count, divisor_sigma,
+    factorint
+    """
+
+    @classmethod
+    def eval(cls, n, k=1):
+        n = sympify(n)
+        k = sympify(k)
+        if n.is_prime:
+            return 1 + n**k
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])

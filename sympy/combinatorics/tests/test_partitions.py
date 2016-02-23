@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
@@ -8,12 +9,12 @@ from sympy.utilities.iterables import default_sort_key, partitions
 def test_partition():
     from sympy.abc import x
 
-    raises(ValueError, lambda: Partition(list(range(3))))
-    raises(ValueError, lambda: Partition([[1, 1, 2]]))
+    raises(ValueError, lambda: Partition(*list(range(3))))
+    raises(ValueError, lambda: Partition([1, 1, 2]))
 
-    a = Partition([[1, 2, 3], [4]])
-    b = Partition([[1, 2], [3, 4]])
-    c = Partition([[x]])
+    a = Partition([1, 2, 3], [4])
+    b = Partition([1, 2], [3, 4])
+    c = Partition([x])
     l = [a, b, c]
     l.sort(key=default_sort_key)
     assert l == [c, a, b]

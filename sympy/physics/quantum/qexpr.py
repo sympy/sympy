@@ -323,15 +323,15 @@ class QExpr(Expr):
         return self
 
     def _eval_rewrite(self, pattern, rule, **hints):
-        # TODO: Make Basic.rewrite get the rule using the class name rather
-        # than str(). See L1072 of basic.py.
-        # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints)
-                     for a in self.args ]
+                    for a in self.args ]
         else:
             args = self.args
 
+        # TODO: Make Basic.rewrite use hints in evaluating
+        # self.rule(*args, **hints), not having hints breaks spin state
+        # (un)coupling on rewrite
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
                 rewritten = getattr(self, rule)(*args, **hints)

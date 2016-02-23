@@ -186,25 +186,23 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations
 
-from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
-    _mexpand, bottom_up)
+from sympy.simplify.simplify import bottom_up
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt)
-from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
-from sympy.core.compatibility import ordered
-from sympy.core.core import C
+    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+from sympy.functions.elementary.hyperbolic import (
+    cosh, sinh, tanh, coth, HyperbolicFunction)
+from sympy.core.compatibility import ordered, range
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.function import expand_mul, count_ops
+from sympy.core.function import expand_mul
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.rules import Transform
+from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.basic import S
-from sympy.core.numbers import Integer, pi, I
+from sympy.core.numbers import pi, I
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 from sympy.polys.polytools import factor
@@ -340,7 +338,7 @@ def TR2i(rv, half=False):
         def factorize(d, ddone):
             newk = []
             for k in d:
-                if k.is_Add and len(k.args) > 2:
+                if k.is_Add and len(k.args) > 1:
                     knew = factor(k) if half else factor_terms(k)
                     if knew != k:
                         newk.append((k, knew))
@@ -350,10 +348,11 @@ def TR2i(rv, half=False):
                     newk[i] = knew
                 newk = Mul(*newk).as_powers_dict()
                 for k in newk:
-                    if ok(k, d[k]):
-                        d[k] += newk[k]
+                    v = d[k] + newk[k]
+                    if ok(k, v):
+                        d[k] = v
                     else:
-                        ddone.append((k, d[k]))
+                        ddone.append((k, v))
                 del newk
         factorize(n, ndone)
         factorize(d, ddone)
@@ -423,7 +422,7 @@ def TR3(rv):
     #   Argument of type : 2k*pi +/- angle
 
     def f(rv):
-        if not isinstance(rv, C.TrigonometricFunction):
+        if not isinstance(rv, TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
@@ -1071,7 +1070,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction, factor_terms
+    from sympy import factor
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
@@ -1591,7 +1590,7 @@ def L(rv):
     >>> L(cos(x)+sin(x))
     2
     """
-    return S(rv.count(C.TrigonometricFunction))
+    return S(rv.count(TrigonometricFunction))
 
 
 # ============== end of basic Fu-like tools =====================
@@ -1690,6 +1689,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     -sqrt(3)
 
     Objective function example
+
     >>> fu(sin(x)/cos(x))  # default objective function
     tan(x)
     >>> fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) # maximize op count
@@ -1705,7 +1705,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
-    if not isinstance(rv, C.Expr):
+    if not isinstance(rv, Expr):
         return rv.func(*[fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
     if rv.has(tan, cot):
@@ -2016,9 +2016,16 @@ def as_f_sign_1(e):
         return gcd, a, n2
 
 
-def _osborne(e):
+def _osborne(e, d):
     """Replace all hyperbolic functions with trig functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
+
 
     References
     ==========
@@ -2027,25 +2034,33 @@ def _osborne(e):
     """
 
     def f(rv):
-        if not isinstance(rv, C.HyperbolicFunction):
+        if not isinstance(rv, HyperbolicFunction):
             return rv
+        a = rv.args[0]
+        a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
         if rv.func is sinh:
-            return I*sin(rv.args[0])
+            return I*sin(a)
         elif rv.func is cosh:
-            return cos(rv.args[0])
+            return cos(a)
         elif rv.func is tanh:
-            return I*tan(rv.args[0])
+            return I*tan(a)
         elif rv.func is coth:
-            return cot(rv.args[0])/I
+            return cot(a)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
     return bottom_up(e, f)
 
 
-def _osbornei(e):
+def _osbornei(e, d):
     """Replace all trig functions with hyperbolic functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
 
     References
     ==========
@@ -2054,20 +2069,21 @@ def _osbornei(e):
     """
 
     def f(rv):
-        if not isinstance(rv, C.TrigonometricFunction):
+        if not isinstance(rv, TrigonometricFunction):
             return rv
+        a = rv.args[0].xreplace({d: S.One})
         if rv.func is sin:
-            return sinh(rv.args[0])/I
+            return sinh(a)/I
         elif rv.func is cos:
-            return cosh(rv.args[0])
+            return cosh(a)
         elif rv.func is tan:
-            return tanh(rv.args[0])/I
+            return tanh(a)/I
         elif rv.func is cot:
-            return coth(rv.args[0])*I
+            return coth(a)*I
         elif rv.func is sec:
-            return 1/cosh(rv.args[0])
+            return 1/cosh(a)
         elif rv.func is csc:
-            return I/sinh(rv.args[0])
+            return I/sinh(a)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2101,14 +2117,17 @@ def hyper_as_trig(rv):
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
     from sympy.simplify.simplify import signsimp
+    from sympy.simplify.radsimp import collect
 
-    # mask of trig functions
-    trigs = rv.atoms(C.TrigonometricFunction)
+    # mask off trig functions
+    trigs = rv.atoms(TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
     masked = rv.xreplace(dict(reps))
 
     # get inversion substitutions in place
     reps = [(v, k) for k, v in reps]
 
-    return _osborne(masked), lambda x: signsimp(
-        _osbornei(x).xreplace(dict(reps)))
+    d = Dummy()
+
+    return _osborne(masked, d), lambda x: collect(signsimp(
+        _osbornei(x, d).xreplace(dict(reps))), S.ImaginaryUnit)

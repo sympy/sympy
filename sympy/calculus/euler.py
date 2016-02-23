@@ -1,51 +1,59 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import combinations_with_replacement
+from sympy.core.compatibility import (
+    combinations_with_replacement, iterable, range)
+
 
 def euler_equations(L, funcs=(), vars=()):
-    """Find the Euler-Lagrange equations for a given Lagrangian.
+    r"""
+    Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
     Parameters
     ==========
+
     L : Expr
         The Lagrangian that should be a function of the functions listed
-        in the second argument and their first derivatives.
+        in the second argument and their derivatives.
 
-        For example, in the case of two functions (f(x,y), g(x,y)) and
-        two independent variables (x,y) the Lagrangian would have the form::
+        For example, in the case of two functions `f(x,y)`, `g(x,y)` and
+        two independent variables `x`, `y` the Lagrangian would have the form:
 
-            L(f(x,y),g(x,y),df/dx,df/dy,dg/dx,dg/dy,x,y)
+            .. math:: L\left(f(x,y),g(x,y),\frac{\partial f(x,y)}{\partial x},
+                      \frac{\partial f(x,y)}{\partial y},
+                      \frac{\partial g(x,y)}{\partial x},
+                      \frac{\partial g(x,y)}{\partial y},x,y\right)
 
-    funcs : Function or list/tuple of Functions
+        In many cases it is not necessary to provide anything, except the
+        Lagrangian, it will be auto-detected (and an error raised if this
+        couldn't be done).
+
+    funcs : Function or an iterable of Functions
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
 
-    vars : Symbol or list/tuple of Symbols
+    vars : Symbol or an iterable of Symbols
         The Symbols that are the independent variables of the functions.
-
-    In many cases it is not necessary to provide anything, except the
-    Lagrangian, it will be autodetected (and an error raised if this
-    couldn't be done).
 
     Returns
     =======
-    eqns : set of Eq
-        The set of differential equations, one for each function.
+
+    eqns : list of Eq
+        The list of differential equations, one for each function.
 
     Examples
     ========
 
-        >>> from sympy import Symbol, Function
-        >>> from sympy.calculus.euler import euler_equations
-        >>> x = Function('x')
-        >>> t = Symbol('t')
-        >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
-        >>> euler_equations(L, x(t), t)
-        set([-x(t) - Derivative(x(t), t, t) == 0])
-        >>> u = Function('u')
-        >>> x = Symbol('x')
-        >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
-        >>> euler_equations(L, u(t, x), [t, x])
-        set([-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0])
+    >>> from sympy import Symbol, Function
+    >>> from sympy.calculus.euler import euler_equations
+    >>> x = Function('x')
+    >>> t = Symbol('t')
+    >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
+    >>> euler_equations(L, x(t), t)
+    [Eq(-x(t) - Derivative(x(t), t, t), 0)]
+    >>> u = Function('u')
+    >>> x = Symbol('x')
+    >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
+    >>> euler_equations(L, u(t, x), [t, x])
+    [Eq(-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x), 0)]
 
     References
     ==========
@@ -54,8 +62,7 @@ def euler_equations(L, funcs=(), vars=()):
 
     """
 
-    if not isinstance(funcs, (tuple, list)):
-        funcs = (funcs,)
+    funcs = tuple(funcs) if iterable(funcs) else (funcs,)
 
     if not funcs:
         funcs = tuple(L.atoms(Function))
@@ -64,8 +71,7 @@ def euler_equations(L, funcs=(), vars=()):
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
-    if not isinstance(vars, (tuple, list)):
-        vars = (vars,)
+    vars = tuple(vars) if iterable(vars) else (vars,)
 
     if not vars:
         vars = funcs[0].args
@@ -77,9 +83,10 @@ def euler_equations(L, funcs=(), vars=()):
 
     for f in funcs:
         if not vars == f.args:
-            raise ValueError("Variables %s don't match function arguments: %s" % (vars, f))
+            raise ValueError("Variables %s don't match args: %s" % (vars, f))
 
-    order = max(len(d.variables) for d in L.atoms(Derivative) if d.expr in funcs)
+    order = max(len(d.variables) for d in L.atoms(Derivative)
+                if d.expr in funcs)
 
     eqns = []
     for f in funcs:
@@ -87,6 +94,6 @@ def euler_equations(L, funcs=(), vars=()):
         for i in range(1, order + 1):
             for p in combinations_with_replacement(vars, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
-        eqns.append(Eq(eq, 0))
+        eqns.append(Eq(eq))
 
-    return set(eqns)
+    return eqns

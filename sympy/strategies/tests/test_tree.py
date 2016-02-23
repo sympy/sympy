@@ -1,5 +1,4 @@
-from sympy.strategies.tree import (treeapply, treeapply, greedy, allresults,
-        brute)
+from sympy.strategies.tree import treeapply, greedy, allresults, brute
 from sympy.core.compatibility import reduce
 from functools import partial
 

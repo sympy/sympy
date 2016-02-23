@@ -17,19 +17,14 @@ else:
     disabled = True
 
 
-def setup_module(module):
-    """py.test support"""
-    if getattr(module, 'disabled', False):
-        import pytest
-        pytest.skip("numpy isn't available.")
-
-from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
-        symarray, symbols, Integer)
+from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
+        Matrix, lambdify, symarray, symbols, Integer)
 import sympy
 
-from sympy import mpmath
+import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+
 
 # first, systematically check, that all operations are implemented and don't
 # raise an exception
@@ -199,6 +194,28 @@ def test_Matrix_array():
     assert Matrix(matarr) == Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
 
+def test_matrix2numpy():
+    a = matrix2numpy(Matrix([[1, x**2], [3*sin(x), 0]]))
+    assert isinstance(a, ndarray)
+    assert a.shape == (2, 2)
+    assert a[0, 0] == 1
+    assert a[0, 1] == x**2
+    assert a[1, 0] == 3*sin(x)
+    assert a[1, 1] == 0
+
+
+def test_matrix2numpy_conversion():
+    a = Matrix([[1, 2, sin(x)], [x**2, x, Rational(1, 2)]])
+    b = array([[1, 2, sin(x)], [x**2, x, Rational(1, 2)]])
+    assert (matrix2numpy(a) == b).all()
+    assert matrix2numpy(a).dtype == numpy.dtype('object')
+
+    c = matrix2numpy(Matrix([[1, 2], [10, 20]]), dtype='int8')
+    d = matrix2numpy(Matrix([[1, 2], [10, 20]]), dtype='float64')
+    assert c.dtype == numpy.dtype('int8')
+    assert d.dtype == numpy.dtype('float64')
+
+
 def test_issue_3728():
     assert (Rational(1, 2)*array([2*x, 0]) == array([x, 0])).all()
     assert (Rational(1, 2) + array(
@@ -223,20 +240,20 @@ def test_lambdify():
 
 
 def test_lambdify_matrix():
-    f = lambdify(x, Matrix([[x, 2*x], [1, 2]]), "numpy")
-    assert (f(1) == matrix([[1, 2], [1, 2]])).all()
+    f = lambdify(x, Matrix([[x, 2*x], [1, 2]]), [{'ImmutableMatrix': numpy.array}, "numpy"])
+    assert (f(1) == array([[1, 2], [1, 2]])).all()
 
 
 def test_lambdify_matrix_multi_input():
     M = sympy.Matrix([[x**2, x*y, x*z],
                       [y*x, y**2, y*z],
                       [z*x, z*y, z**2]])
-    f = lambdify((x, y, z), M, "numpy")
+    f = lambdify((x, y, z), M, [{'ImmutableMatrix': numpy.array}, "numpy"])
 
     xh, yh, zh = 1.0, 2.0, 3.0
-    expected = matrix([[xh**2, xh*yh, xh*zh],
-                       [yh*xh, yh**2, yh*zh],
-                       [zh*xh, zh*yh, zh**2]])
+    expected = array([[xh**2, xh*yh, xh*zh],
+                      [yh*xh, yh**2, yh*zh],
+                      [zh*xh, zh*yh, zh**2]])
     actual = f(xh, yh, zh)
     assert numpy.allclose(actual, expected)
 
@@ -247,12 +264,12 @@ def test_lambdify_matrix_vec_input():
         [X[0]**2, X[0]*X[1], X[0]*X[2]],
         [X[1]*X[0], X[1]**2, X[1]*X[2]],
         [X[2]*X[0], X[2]*X[1], X[2]**2]])
-    f = lambdify(X, M, "numpy")
+    f = lambdify(X, M, [{'ImmutableMatrix': numpy.array}, "numpy"])
 
     Xh = array([1.0, 2.0, 3.0])
-    expected = matrix([[Xh[0]**2, Xh[0]*Xh[1], Xh[0]*Xh[2]],
-                       [Xh[1]*Xh[0], Xh[1]**2, Xh[1]*Xh[2]],
-                       [Xh[2]*Xh[0], Xh[2]*Xh[1], Xh[2]**2]])
+    expected = array([[Xh[0]**2, Xh[0]*Xh[1], Xh[0]*Xh[2]],
+                      [Xh[1]*Xh[0], Xh[1]**2, Xh[1]*Xh[2]],
+                      [Xh[2]*Xh[0], Xh[2]*Xh[1], Xh[2]**2]])
     actual = f(Xh)
     assert numpy.allclose(actual, expected)
 

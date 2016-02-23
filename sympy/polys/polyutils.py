@@ -5,12 +5,11 @@ from __future__ import print_function, division
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.exprtools import decompose_power
+from sympy.core.exprtools import decompose_power, decompose_power_rat
 
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
-from sympy.assumptions import ask, Q
 
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 import re
 
@@ -26,6 +25,40 @@ _gens_order = {
 
 _max_order = 1000
 _re_gen = re.compile(r"^(.+?)(\d*)$")
+
+
+def _nsort(roots, separated=False):
+    """Sort the numerical roots putting the real roots first, then sorting
+    according to real and imaginary parts. If ``separated`` is True, then
+    the real and imaginary roots will be returned in two lists, respectively.
+
+    This routine tries to avoid issue 6137 by separating the roots into real
+    and imaginary parts before evaluation. In addition, the sorting will raise
+    an error if any computation cannot be done with precision.
+    """
+    if not all(r.is_number for r in roots):
+        raise NotImplementedError
+    # see issue 6137:
+    # get the real part of the evaluated real and imaginary parts of each root
+    key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
+    # make sure the parts were computed with precision
+    if any(i._prec == 1 for k in key for i in k):
+        raise NotImplementedError("could not compute root with precision")
+    # insert a key to indicate if the root has an imaginary part
+    key = [(1 if i else 0, r, i) for r, i in key]
+    key = sorted(zip(key, roots))
+    # return the real and imaginary roots separately if desired
+    if separated:
+        r = []
+        i = []
+        for (im, _, _), v in key:
+            if im:
+                i.append(v)
+            else:
+                r.append(v)
+        return r, i
+    _, roots = zip(*key)
+    return list(roots)
 
 
 def _sort_gens(gens, **args):
@@ -164,10 +197,13 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
                     coeff.append(factor)
                 else:
                     try:
-                        base, exp = decompose_power(factor)
+                        if opt.series is False:
+                            base, exp = decompose_power(factor)
 
-                        if exp < 0:
-                            exp, base = -exp, Pow(base, -S.One)
+                            if exp < 0:
+                                exp, base = -exp, Pow(base, -S.One)
+                        else:
+                            base, exp = decompose_power_rat(factor)
 
                         monom[indices[base]] = exp
                     except KeyError:
@@ -195,7 +231,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor in opt.domain
     elif opt.extension is True:
         def _is_coeff(factor):
-            return ask(Q.algebraic(factor))
+            return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
             return False
@@ -218,12 +254,15 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
                 if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
-                    base, exp = decompose_power(factor)
+                    if opt.series is False:
+                        base, exp = decompose_power(factor)
 
-                    if exp < 0:
-                        exp, base = -exp, Pow(base, -S.One)
+                        if exp < 0:
+                            exp, base = -exp, Pow(base, -S.One)
+                    else:
+                        base, exp = decompose_power_rat(factor)
 
-                    elements[base] = exp
+                    elements[base] = elements.setdefault(base, 0) + exp
                     gens.add(base)
 
             terms.append((coeff, elements))
@@ -317,7 +356,10 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        expr = expr.expand()
+        try:
+            expr = expr.expand()
+        except AttributeError:
+            raise PolynomialError('expression must support expand method')
         # TODO: Integrate this into expand() itself
         while any(_is_expandable_pow(i) or i.is_Mul and
             any(_is_expandable_pow(j) for j in i.args) for i in
@@ -361,7 +403,7 @@ def _dict_reorder(rep, gens, new_gens):
     monoms = rep.keys()
     coeffs = rep.values()
 
-    new_monoms = [ [] for _ in xrange(len(rep)) ]
+    new_monoms = [ [] for _ in range(len(rep)) ]
     used_indices = set()
 
     for gen in new_gens:
@@ -389,7 +431,7 @@ class PicklableWithSlots(object):
     Mixin class that allows to pickle objects with ``__slots__``.
 
     Examples
-    --------
+    ========
 
     First define a class that mixes :class:`PicklableWithSlots` in::
 

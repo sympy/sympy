@@ -30,7 +30,7 @@ Do not enforce any naming conventions on the release branch. By tradition, the
 name of the release branch is the same as the version being released (like
 0.7.3), but this is not required. Use get_sympy_version() and
 get_sympy_short_version() to get the SymPy version (the SymPy __version__
-*must* be changed in __init__.py for this to work).
+*must* be changed in sympy/release.py for this to work).
 """
 from __future__ import print_function
 
@@ -138,7 +138,7 @@ def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
@@ -270,6 +270,7 @@ def release(branch=None, fork='sympy'):
     # This has to be run locally because it itself uses fabric. I split it out
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
+    test_sympy()
     source_tarball()
     build_docs()
     copy_release_files()
@@ -303,6 +304,7 @@ def build_docs():
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
                 run("make html-errors")
+                run("make man")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))
                     run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
@@ -379,6 +381,7 @@ git_whitelist = {
     'bin/ask_update.py',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
+    'bin/build_doc.sh',
     'bin/diagnose_imports',
     'bin/doctest',
     'bin/generate_test_list.py',
@@ -421,59 +424,6 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # We don't ship the benchmarks (why?)
-    'sympy/benchmarks/bench_meijerint.py',
-    'sympy/benchmarks/bench_symbench.py',
-    'sympy/core/benchmarks/bench_arit.py',
-    'sympy/core/benchmarks/bench_assumptions.py',
-    'sympy/core/benchmarks/bench_basic.py',
-    'sympy/core/benchmarks/bench_expand.py',
-    'sympy/core/benchmarks/bench_numbers.py',
-    'sympy/core/benchmarks/bench_sympify.py',
-    'sympy/functions/elementary/benchmarks/bench_exp.py',
-    'sympy/functions/special/benchmarks/bench_special.py',
-    # More benchmarks
-    'sympy/integrals/benchmarks/bench_integrate.py',
-    'sympy/integrals/benchmarks/bench_trigintegrate.py',
-    'sympy/logic/benchmarks/input/10.cnf',
-    'sympy/logic/benchmarks/input/100.cnf',
-    'sympy/logic/benchmarks/input/105.cnf',
-    'sympy/logic/benchmarks/input/110.cnf',
-    'sympy/logic/benchmarks/input/115.cnf',
-    'sympy/logic/benchmarks/input/120.cnf',
-    'sympy/logic/benchmarks/input/125.cnf',
-    'sympy/logic/benchmarks/input/130.cnf',
-    'sympy/logic/benchmarks/input/135.cnf',
-    'sympy/logic/benchmarks/input/140.cnf',
-    'sympy/logic/benchmarks/input/145.cnf',
-    'sympy/logic/benchmarks/input/15.cnf',
-    'sympy/logic/benchmarks/input/150.cnf',
-    'sympy/logic/benchmarks/input/20.cnf',
-    'sympy/logic/benchmarks/input/25.cnf',
-    'sympy/logic/benchmarks/input/30.cnf',
-    'sympy/logic/benchmarks/input/35.cnf',
-    'sympy/logic/benchmarks/input/40.cnf',
-    'sympy/logic/benchmarks/input/45.cnf',
-    'sympy/logic/benchmarks/input/50.cnf',
-    'sympy/logic/benchmarks/input/55.cnf',
-    'sympy/logic/benchmarks/input/60.cnf',
-    'sympy/logic/benchmarks/input/65.cnf',
-    'sympy/logic/benchmarks/input/70.cnf',
-    'sympy/logic/benchmarks/input/75.cnf',
-    'sympy/logic/benchmarks/input/80.cnf',
-    'sympy/logic/benchmarks/input/85.cnf',
-    'sympy/logic/benchmarks/input/90.cnf',
-    'sympy/logic/benchmarks/input/95.cnf',
-    'sympy/logic/benchmarks/run-solvers.py',
-    'sympy/logic/benchmarks/test-solver.py',
-    'sympy/matrices/benchmarks/bench_matrix.py',
-    # More benchmarks...
-    'sympy/polys/benchmarks/__init__.py',
-    'sympy/polys/benchmarks/bench_galoispolys.py',
-    'sympy/polys/benchmarks/bench_groebnertools.py',
-    'sympy/polys/benchmarks/bench_solvers.py',
-    'sympy/series/benchmarks/bench_limit.py',
-    'sympy/solvers/benchmarks/bench_solvers.py',
     # Example on how to use tox to test Sympy. For development.
     'tox.ini.sample',
     }
@@ -601,8 +551,7 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    # code renders better than tt or pre
-                    with tag('code'):
+                    with tag('b'):
                         table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
@@ -1009,7 +958,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 
 {htmltable}
 
-**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
+**Note**: Do not download the **Source code (zip)** or the **Source code (tar.gz)**
 files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)

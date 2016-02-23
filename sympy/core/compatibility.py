@@ -9,7 +9,6 @@ import operator
 from collections import defaultdict
 from sympy.external import import_module
 
-
 """
 Python 2 and Python 3 compatible imports
 
@@ -91,9 +90,9 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_ = getattr(builtins, "exec")
+    exec_=getattr(builtins, "exec")
 
-    xrange = range
+    range=range
 else:
     import codecs
     import types
@@ -136,8 +135,7 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-
-    xrange = xrange
+    range=xrange
 
 def with_metaclass(meta, *bases):
     """
@@ -174,14 +172,14 @@ def with_metaclass(meta, *bases):
     <class 'Meta'>
 
     """
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    # Code copied from the 'six' library.
     class metaclass(meta):
-        __call__ = type.__call__
-        __init__ = type.__init__
         def __new__(cls, name, this_bases, d):
-            if this_bases is None:
-                return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
-    return metaclass("NewBase", None, {})
+    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -207,6 +205,15 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
 
     See also: is_sequence
 
@@ -235,6 +242,8 @@ def iterable(i, exclude=(string_types, dict, NotIterable)):
     False
 
     """
+    if hasattr(i, '_iterable'):
+        return i._iterable
     try:
         iter(i)
     except TypeError:
@@ -317,6 +326,13 @@ try:
     from itertools import zip_longest
 except ImportError: # <= Python 2.7
     from itertools import izip_longest as zip_longest
+
+
+try:
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
+
 
 try:
     from itertools import combinations_with_replacement
@@ -412,11 +428,11 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key, sin, cos, sqrt
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
-    The following are eqivalent ways of getting the key for an object:
+    The following are equivalent ways of getting the key for an object:
 
     >>> x.sort_key() == default_sort_key(x)
     True
@@ -490,16 +506,26 @@ def default_sort_key(item, order=None):
     The order of terms obtained when using these keys is the order that would
     be obtained if those terms were *factors* in a product.
 
+    Although it is useful for quickly putting expressions in canonical order,
+    it does not sort expressions based on their complexity defined by the
+    number of operations, power of variables and others:
+
+    >>> sorted([sin(x)*cos(x), sin(x)], key=default_sort_key)
+    [sin(x)*cos(x), sin(x)]
+    >>> sorted([x, x**2, sqrt(x), x**3], key=default_sort_key)
+    [sqrt(x), x, x**2, x**3]
+
     See Also
     ========
 
-    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -546,8 +572,8 @@ def default_sort_key(item, order=None):
 def _nodes(e):
     """
     A helper for ordered() which returns the node count of ``e`` which
-    for Basic object is the number of Basic nodes in the expression tree
-    but for other object is 1 (unless the object is an iterable or dict
+    for Basic objects is the number of Basic nodes in the expression tree
+    but for other objects is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
     from .basic import Basic
@@ -647,7 +673,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         keys = list(keys)
-
         f = keys.pop(0)
         for a in seq:
             d[f(a)].append(a)
@@ -747,3 +772,181 @@ try:
 except ImportError:
     # running on platform like App Engine, no subprocess at all
     pass
+
+
+# lru_cache compatible with py2.6->py3.2 copied directly from
+#   http://code.activestate.com/
+#   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
+from collections import namedtuple
+from functools import update_wrapper
+from threading import RLock
+
+_CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
+
+class _HashedSeq(list):
+    __slots__ = 'hashvalue'
+
+    def __init__(self, tup, hash=hash):
+        self[:] = tup
+        self.hashvalue = hash(tup)
+
+    def __hash__(self):
+        return self.hashvalue
+
+def _make_key(args, kwds, typed,
+             kwd_mark = (object(),),
+             fasttypes = set((int, str, frozenset, type(None))),
+             sorted=sorted, tuple=tuple, type=type, len=len):
+    'Make a cache key from optionally typed positional and keyword arguments'
+    key = args
+    if kwds:
+        sorted_items = sorted(kwds.items())
+        key += kwd_mark
+        for item in sorted_items:
+            key += item
+    if typed:
+        key += tuple(type(v) for v in args)
+        if kwds:
+            key += tuple(type(v) for k, v in sorted_items)
+    elif len(key) == 1 and type(key[0]) in fasttypes:
+        return key[0]
+    return _HashedSeq(key)
+
+def lru_cache(maxsize=100, typed=False):
+    """Least-recently-used cache decorator.
+
+    If *maxsize* is set to None, the LRU features are disabled and the cache
+    can grow without bound.
+
+    If *typed* is True, arguments of different types will be cached separately.
+    For example, f(3.0) and f(3) will be treated as distinct calls with
+    distinct results.
+
+    Arguments to the cached function must be hashable.
+
+    View the cache statistics named tuple (hits, misses, maxsize, currsize) with
+    f.cache_info().  Clear the cache and statistics with f.cache_clear().
+    Access the underlying function with f.__wrapped__.
+
+    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+
+    """
+
+    # Users should only access the lru_cache through its public API:
+    #       cache_info, cache_clear, and f.__wrapped__
+    # The internals of the lru_cache are encapsulated for thread safety and
+    # to allow the implementation to change (including a possible C version).
+
+    def decorating_function(user_function):
+
+        cache = dict()
+        stats = [0, 0]                  # make statistics updateable non-locally
+        HITS, MISSES = 0, 1             # names for the stats fields
+        make_key = _make_key
+        cache_get = cache.get           # bound method to lookup key or return None
+        _len = len                      # localize the global len() function
+        lock = RLock()                  # because linkedlist updates aren't threadsafe
+        root = []                       # root of the circular doubly linked list
+        root[:] = [root, root, None, None]      # initialize by pointing to self
+        nonlocal_root = [root]                  # make updateable non-locally
+        PREV, NEXT, KEY, RESULT = 0, 1, 2, 3    # names for the link fields
+
+        if maxsize == 0:
+
+            def wrapper(*args, **kwds):
+                # no caching, just do a statistics update after a successful call
+                result = user_function(*args, **kwds)
+                stats[MISSES] += 1
+                return result
+
+        elif maxsize is None:
+
+            def wrapper(*args, **kwds):
+                # simple caching without ordering or size limit
+                key = make_key(args, kwds, typed)
+                result = cache_get(key, root)   # root used here as a unique not-found sentinel
+                if result is not root:
+                    stats[HITS] += 1
+                    return result
+                result = user_function(*args, **kwds)
+                cache[key] = result
+                stats[MISSES] += 1
+                return result
+
+        else:
+
+            def wrapper(*args, **kwds):
+                # size limited caching that tracks accesses by recency
+                try:
+                    key = make_key(args, kwds, typed) if kwds or typed else args
+                except TypeError:
+                    stats[MISSES] += 1
+                    return user_function(*args, **kwds)
+                with lock:
+                    link = cache_get(key)
+                    if link is not None:
+                        # record recent use of the key by moving it to the front of the list
+                        root, = nonlocal_root
+                        link_prev, link_next, key, result = link
+                        link_prev[NEXT] = link_next
+                        link_next[PREV] = link_prev
+                        last = root[PREV]
+                        last[NEXT] = root[PREV] = link
+                        link[PREV] = last
+                        link[NEXT] = root
+                        stats[HITS] += 1
+                        return result
+                result = user_function(*args, **kwds)
+                with lock:
+                    root, = nonlocal_root
+                    if key in cache:
+                        # getting here means that this same key was added to the
+                        # cache while the lock was released.  since the link
+                        # update is already done, we need only return the
+                        # computed result and update the count of misses.
+                        pass
+                    elif _len(cache) >= maxsize:
+                        # use the old root to store the new key and result
+                        oldroot = root
+                        oldroot[KEY] = key
+                        oldroot[RESULT] = result
+                        # empty the oldest link and make it the new root
+                        root = nonlocal_root[0] = oldroot[NEXT]
+                        oldkey = root[KEY]
+                        oldvalue = root[RESULT]
+                        root[KEY] = root[RESULT] = None
+                        # now update the cache dictionary for the new links
+                        del cache[oldkey]
+                        cache[key] = oldroot
+                    else:
+                        # put result in a new link at the front of the list
+                        last = root[PREV]
+                        link = [last, root, key, result]
+                        last[NEXT] = root[PREV] = cache[key] = link
+                    stats[MISSES] += 1
+                return result
+
+        def cache_info():
+            """Report cache statistics"""
+            with lock:
+                return _CacheInfo(stats[HITS], stats[MISSES], maxsize, len(cache))
+
+        def cache_clear():
+            """Clear the cache and cache statistics"""
+            with lock:
+                cache.clear()
+                root = nonlocal_root[0]
+                root[:] = [root, root, None, None]
+                stats[:] = [0, 0]
+
+        wrapper.__wrapped__ = user_function
+        wrapper.cache_info = cache_info
+        wrapper.cache_clear = cache_clear
+        return update_wrapper(wrapper, user_function)
+
+    return decorating_function
+### End of backported lru_cache
+
+if sys.version_info[:2] >= (3, 3):
+    # 3.2 has an lru_cache with an incompatible API
+    from functools import lru_cache

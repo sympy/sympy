@@ -7,7 +7,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
 """
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def symbol_gen(sym_str):
@@ -40,7 +40,7 @@ def comb_w_rep(n, k):
 
 
 def vandermonde(order, dim=1, syms='a b c d'):
-    """Comptutes a Vandermonde matrix of given order and dimension.
+    """Computes a Vandermonde matrix of given order and dimension.
 
     Define syms to give beginning strings for temporary variables.
 
@@ -100,7 +100,7 @@ def gen_poly(points, order, syms):
     V_pts = V.subs(subs_dict)
     V_inv = V_pts.inv()
 
-    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
+    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in range(num_pts)]))
 
     f = 0
     for j, term in enumerate(terms):
@@ -118,7 +118,7 @@ def main():
     pprint(V)
 
     print('-'*79)
-    print("Computing the determinate and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
+    print("Computing the determinant and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
 
     det_sum = 1
     for j in range(order + 1):
@@ -129,7 +129,7 @@ def main():
     det(V) = %(det)s
     \sum   = %(sum)s
            = %(sum_expand)s
-    """ % { "det": V.det(),
+    """ % {"det": V.det(),
             "sum": det_sum,
             "sum_expand": det_sum.expand(),
           })
@@ -143,7 +143,7 @@ def main():
     Quadratic function, represented by 3 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x]),
           })
 
@@ -153,7 +153,7 @@ def main():
     2D Quadratic function, represented by 6 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x, y]),
           })
 
@@ -162,7 +162,7 @@ def main():
     3D linear function, represented by 4 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 1, [x, y, z]),
           })
 

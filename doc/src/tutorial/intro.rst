@@ -105,84 +105,78 @@ The Power of Symbolic Computation
 =================================
 
 The real power of a symbolic computation system such as SymPy is the ability
-to do all sorts of computations symbolically.  SymPy can compute derivatives,
-integrals, and limits, solve equations, work with matrices, and much, much
-more, and do it all symbolically.  It includes modules for plotting, printing
-(like 2D pretty printed output of math formulas, or `\LaTeX`), code
-generation, physics, statistics, combinatorics, number theory, geometry,
-logic, and more. Here is a small sampling of the sort of symbolic power SymPy
-is capable of, to whet your appetite.
+to do all sorts of computations symbolically.  SymPy can simplify expressions,
+compute derivatives, integrals, and limits, solve equations, work with
+matrices, and much, much more, and do it all symbolically.  It includes
+modules for plotting, printing (like 2D pretty printed output of math
+formulas, or `\LaTeX`), code generation, physics, statistics, combinatorics,
+number theory, geometry, logic, and more. Here is a small sampling of the sort
+of symbolic power SymPy is capable of, to whet your appetite.
 
-   >>> from sympy import *
-   >>> x, t, z, nu = symbols('x t z nu')
+ >>> from sympy import *
+ >>> x, t, z, nu = symbols('x t z nu')
 
-- This will make all further example pretty print with unicode characters.
+This will make all further examples pretty print with unicode characters.
 
-   >>> init_printing(use_unicode=True)
+ >>> init_printing(use_unicode=True)
 
-- Take the derivative of `\sin{(x)}e^x`.
+Take the derivative of `\sin{(x)}e^x`.
 
-   >>> diff(sin(x)*exp(x), x)
-    x           x
-   ℯ ⋅sin(x) + ℯ ⋅cos(x)
+ >>> diff(sin(x)*exp(x), x)
+  x           x
+ ℯ ⋅sin(x) + ℯ ⋅cos(x)
 
-- Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
+Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
 
-   >>> integrate(exp(x)*sin(x) + exp(x)*cos(x), x)
-    x
-   ℯ ⋅sin(x)
+ >>> integrate(exp(x)*sin(x) + exp(x)*cos(x), x)
+  x
+ ℯ ⋅sin(x)
 
-- Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
+Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
 
-   >>> integrate(sin(x**2), (x, -oo, oo))
-     ___   ___
-   ╲╱ 2 ⋅╲╱ π
-   ───────────
-        2
+ >>> integrate(sin(x**2), (x, -oo, oo))
+ √2⋅√π
+ ─────
+   2
 
-- Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
+Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
 
-   >>> limit(sin(x)/x, x, 0)
-   1
+ >>> limit(sin(x)/x, x, 0)
+ 1
 
-- Solve `x^2 - 2 = 0`.
+Solve `x^2 - 2 = 0`.
 
-   >>> solve(x**2 - 2, x)
-   ⎡   ___    ___⎤
-   ⎣-╲╱ 2 , ╲╱ 2 ⎦
+ >>> solve(x**2 - 2, x)
+ [-√2, √2]
 
-- Solve the differential equation `y'' - y = e^t`.
+Solve the differential equation `y'' - y = e^t`.
 
-   >>> y = Function('y')
-   >>> dsolve(Eq(y(t).diff(t, t) - y(t), exp(t)), y(t))
-              -t   ⎛     t⎞  t
-   y(t) = C₂⋅ℯ   + ⎜C₁ + ─⎟⋅ℯ
-                   ⎝     2⎠
+ >>> y = Function('y')
+ >>> dsolve(Eq(y(t).diff(t, t) - y(t), exp(t)), y(t))
+            -t   ⎛     t⎞  t
+ y(t) = C₂⋅ℯ   + ⎜C₁ + ─⎟⋅ℯ
+                 ⎝     2⎠
 
-- Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
-  2\end{smallmatrix}\right]`.
+Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
+2\end{smallmatrix}\right]`.
 
-   >>> Matrix([[1, 2], [2, 2]]).eigenvals()
-   ⎧      ____         ____       ⎫
-   ⎪3   ╲╱ 17        ╲╱ 17    3   ⎪
-   ⎨─ + ──────: 1, - ────── + ─: 1⎬
-   ⎪2     2            2      2   ⎪
-   ⎩                              ⎭
+ >>> Matrix([[1, 2], [2, 2]]).eigenvals()
+ ⎧3   √17       √17   3   ⎫
+ ⎨─ + ───: 1, - ─── + ─: 1⎬
+ ⎩2    2         2    2   ⎭
 
-- Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the
-  spherical Bessel function `j_\nu(z)`.
+Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the
+spherical Bessel function `j_\nu(z)`.
 
-    >>> besselj(nu, z).rewrite(jn)
-      ___   ___
-    ╲╱ 2 ⋅╲╱ z ⋅jn(ν - 1/2, z)
-    ──────────────────────────
-                ___
-              ╲╱ π
+  >>> besselj(nu, z).rewrite(jn)
+  √2⋅√z⋅jn(ν - 1/2, z)
+  ────────────────────
+           √π
 
-- Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
+Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
 
-    >>> latex(Integral(cos(x)**2, (x, 0, pi)))
-    \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
+  >>> latex(Integral(cos(x)**2, (x, 0, pi)))
+  \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
 
 Why SymPy?
 ==========
@@ -193,7 +187,7 @@ article lists many of them.  What makes SymPy a better choice than the
 alternatives?
 
 First off, SymPy is completely free. It is open source, and licensed under the
-liberal BSD license, so you can even modify the source code and sell if you
+liberal BSD license, so you can modify the source code and even sell it if you
 want to.  This contrasts with popular commercial systems like Maple or
 Mathematica that cost hundreds of dollars in licenses.
 
@@ -201,12 +195,11 @@ Second, SymPy uses Python.  Most computer algebra systems invent their own
 language. Not SymPy. SymPy is written entirely in Python, and is executed
 entirely in Python. This means that if you already know Python, it is much
 easier to get started with SymPy, because you already know the syntax (and if
-you don't know Python, it is really easy to learn).  Plus, we already know
-that Python is a well-designed, battle-tested language.  The SymPy developers
-are confident in their abilities in writing mathematical software, but
-inventing a whole new programming language is a completely different thing.
-By reusing an existing language, we are able to focus on those things that
-matter, the mathematics.
+you don't know Python, it is really easy to learn).  We already know that
+Python is a well-designed, battle-tested language.  The SymPy developers are
+confident in their abilities in writing mathematical software, but programming
+language design is a completely different thing.  By reusing an existing
+language, we are able to focus on those things that matter: the mathematics.
 
 Another computer algebra system, Sage also uses Python as its language.  But
 Sage is large, with a download of over a gigabyte.  An advantage of SymPy is

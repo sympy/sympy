@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import math
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -103,7 +101,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        raise DomainError('there is no ring associated with %s' % self)
+        return self
 
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """

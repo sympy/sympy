@@ -19,6 +19,7 @@ http://aima.cs.berkeley.edu/python/logic.html
 from __future__ import print_function, division
 
 from sympy.utilities.iterables import kbins
+from sympy.core.compatibility import range
 
 class Compound(object):
     """ A little class to represent an interior node in the tree
@@ -83,8 +84,8 @@ def unify(x, y, s=None, **fns):
     outputs:
         lazy sequence of mappings {Variable: subtree}
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.unify.core import unify, Compound, Variable
     >>> expr    = Compound("Add", ("x", "y"))
@@ -200,7 +201,7 @@ def allcombinations(A, B, ordered):
     if ordered == "associative":
         ordered = None
     sm, bg = (A, B) if len(A) < len(B) else (B, A)
-    for part in kbins(range(len(bg)), len(sm), ordered=ordered):
+    for part in kbins(list(range(len(bg))), len(sm), ordered=ordered):
         if bg == B:
             yield tuple((a,) for a in A), partition(B, part)
         else:

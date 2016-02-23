@@ -10,13 +10,13 @@ Introduction
 ============
 
 SymPy runs under the `Python Programming Language
-<http://www.python.org/>`_, so there are some things that may behave
+<https://www.python.org/>`_, so there are some things that may behave
 differently than they do in other, independent computer algebra systems
 like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
 <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
-remainder of the SymPy Docs, and the `official Python Tutorial
-<http://docs.python.org/tutorial/>`_.
+remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.python.org/3/tutorial/>`_.
+
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
@@ -156,7 +156,7 @@ If you define a circular relationship, you will get a
     >>> def b():
     ...     return a()
     ...
-    >>> a()
+    >>> a() #doctest: +SKIP
     Traceback (most recent call last):
       File "...", line ..., in ...
         compileflags, 1) in test.globs
@@ -229,12 +229,11 @@ Lastly, it is recommended that you not use :obj:`I`, :obj:`E`, :obj:`S`,
 are used for the imaginary unit (:math:`i`), the base of the natural
 logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic
 Expressions<symbolic-expressions>` below), numeric evaluation (:func:`N`
-is equivalent to :ref:`evalf()<evalf-label>` ), the class registry (for
-things like :func:`C.cos`, to prevent cyclic imports in some code),
+is equivalent to :ref:`evalf()<evalf-label>` ),
 the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol
 (as in :math:`O(n\log{n})`), and the assumptions object that holds a list of
 supported ask keys (such as :obj:`Q.real`), respectively.  You can use the
-mnemonic ``QCOSINE`` to remember what Symbols are defined by default in SymPy.
+mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
 Or better yet, always use lowercase letters for Symbol names.  Python will
 not prevent you from overriding default SymPy names or functions, so be
 careful.
@@ -394,7 +393,7 @@ The values can be given as strings, integers, floats, or rationals.
     100.000000000000
     >>> Float('100', 5)
     100.00
-    
+
     - to have the precision match the number of digits, the null string
       can be used for the precision
 
@@ -423,7 +422,7 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.25000000000000000000
     >>> r.n(20)
     0.14285278320312500000
-    
+
     It is important to realize that although a Float is being displayed in
     decimal at aritrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.

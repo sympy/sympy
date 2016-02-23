@@ -15,6 +15,7 @@ from __future__ import print_function, division
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
 from sympy.core.compatibility import exec_
+from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
 # we translate the names of the functions and we translate also some strings
@@ -209,7 +210,8 @@ class lambdify(object):
                 return None
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
-                                               in str(e)):
+                                               in str(e) or 'unorderable '
+                                               'types' in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,
                                                          use_evalf=True,
                                                          use_python_math=True)
@@ -236,7 +238,7 @@ class lambdify(object):
 
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)
-    return l.lambda_func
+    return l
 
 
 class Lambdifier(object):
@@ -255,10 +257,15 @@ class Lambdifier(object):
         self.use_interval = use_interval
 
         # Constructing the argument string
+        # - check
         if not all([isinstance(a, Symbol) for a in args]):
             raise ValueError('The arguments must be Symbols.')
-        else:
-            argstr = ', '.join([str(a) for a in args])
+        # - use numbered symbols
+        syms = numbered_symbols(exclude=expr.free_symbols)
+        newargs = [next(syms) for i in args]
+        expr = expr.xreplace(dict(zip(args, newargs)))
+        argstr = ', '.join([str(a) for a in newargs])
+        del syms, newargs, args
 
         # Constructing the translation dictionaries and making the translation
         self.dict_str = self.get_dict_str()
@@ -275,6 +282,7 @@ class Lambdifier(object):
         # and sympy_expression_namespace can not catch it.
         from sympy import sqrt
         namespace.update({'sqrt': sqrt})
+        namespace.update({'Eq': lambda x, y: x == y})
         # End workaround.
         if use_python_math:
             namespace.update({'math': __import__('math')})
@@ -295,8 +303,13 @@ class Lambdifier(object):
         if self.print_lambda:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
+        self.eval_str = eval_str
         exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
+
+    def __call__(self, *args, **kwargs):
+        return self.lambda_func(*args, **kwargs)
+
 
     ##############################################################################
     # Dicts for translating from sympy to other modules
@@ -314,7 +327,7 @@ class Lambdifier(object):
     # Strings that should be translated
     builtin_not_functions = {
         'I': '1j',
-        'oo': '1e400',
+#        'oo': '1e400',
     }
 
     ###
@@ -481,7 +494,9 @@ class Lambdifier(object):
         Other expressions are (head_string, mid_tree, tail_str).
         Expressions that do not contain functions are directly returned.
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
@@ -522,7 +537,9 @@ class Lambdifier(object):
     def tree2str(cls, tree):
         """Converts a tree to string without translations.
 
-        Examples:
+        Examples
+        ========
+
         >>> from sympy.abc import x, y, z
         >>> from sympy import Integral, sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
@@ -575,7 +592,17 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-            return template % (func_name, self.tree2str(argtree))
+
+            # Wrapping should only happen on the outermost expression, which
+            # is the only thing we know will be a number.
+            float_wrap_evalf = self.float_wrap_evalf
+            complex_wrap_evalf = self.complex_wrap_evalf
+            self.float_wrap_evalf = False
+            self.complex_wrap_evalf = False
+            ret =  template % (func_name, self.tree2str_translate(argtree))
+            self.float_wrap_evalf = float_wrap_evalf
+            self.complex_wrap_evalf = complex_wrap_evalf
+            return ret
 
     ##############################################################################
     # The namespace constructors

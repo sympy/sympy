@@ -1,0 +1,1021 @@
+\documentclass[10pt,landscape]{article}
+\usepackage{multicol}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage[landscape]{geometry}
+
+% To make this come out properly in landscape mode, do one of the following
+% 1.
+%  pdflatex latexsheet.tex
+%
+% 2.
+%  latex latexsheet.tex
+%  dvips -P pdf  -t landscape latexsheet.dvi
+%  ps2pdf latexsheet.ps
+
+
+% If you're reading this, be prepared for confusion.  Making this was
+% a learning experience for me, and it shows.  Much of the placement
+% was hacked in; if you make it better, let me know...
+
+
+% 2008-04
+% Changed page margin code to use the geometry package. Also added code for
+% conditional page margins, depending on paper size. Thanks to Uwe Ziegenhagen
+% for the suggestions.
+
+% 2006-08
+% Made changes based on suggestions from Gene Cooperman. <gene at ccs.neu.edu>
+
+
+% To Do:
+% \listoffigures \listoftables
+% \setcounter{secnumdepth}{0}
+
+
+% This sets page margins to .5 inch if using letter paper, and to 1cm
+% if using A4 paper. (This probably isn't strictly necessary.)
+% If using another size paper, use default 1cm margins.
+\ifthenelse{\lengthtest { \paperwidth = 11in}}
+	{ \geometry{top=.5in,left=.5in,right=.5in,bottom=.5in} }
+	{\ifthenelse{ \lengthtest{ \paperwidth = 297mm}}
+		{\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+		{\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+	}
+
+% Turn off header and footer
+\pagestyle{empty}
+
+
+% Redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}
+\makeatother
+
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+
+
+% -----------------------------------------------------------------------
+   \newcommand{\tab}{\hspace*{2em}}
+
+\begin{document}
+
+\raggedright
+\footnotesize
+\begin{multicols}{3}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+%\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+     \Large{\textbf{Combinatoric CheatSheet \\ Sympy.org}} \\
+\end{center}
+\section{Partition}
+\verb!Path: from sympy.combinatorics.partitions!\\
+\subsection{Methods}
+\verb!random_integer_partition(n, seed=None)! \\
+Generates a random integer partition summing to n as a list of reverse-sorted integers
+
+
+\verb!RGS_generalized(m)! \\
+Computes the \verb!m + 1! generalized unrestricted growth strings and returns them as rows in matrix
+
+
+\verb!RGS_enum(m)! \\
+computes the total number of restricted growth
+ strings possible for a superset of size \verb!m!
+
+
+\verb!RGS_unrank(rank, m)! \\
+Gives the unranked restricted growth string for a given superset size
+
+
+\verb!RGS_rank(rgs)! \\
+Computes the rank of a restricted growth string.
+
+
+\subsection{Subclass \texttt{Partition}}
+A partition is a set of disjoint sets whose union equals a given set.
+This Class represent abstract partition.
+
+\begin{tabular}{@{}lp{4.5cm}l@{}}
+\verb!rgs!    & Restricted Growth String\\
+\verb!from_rgs(rgs,elements)!  & Creates a set partition from a RSG\\
+\verb!rank! & Gets the rank of a partition \\
+\verb!partition!  & Return partition as a sorted list of lists\\
+\verb!sort_key(order=None)!  & Return a canonical key that can be used for sorting.
+\end{tabular}
+
+%dump : \\
+%Used at the very beginning of a document:
+%\verb!\documentclass{!\textit{class}\verb!}!.  Use
+%\verb!\begin{document}! to start contents and \verb!\end{document}! to
+%end the document.
+%\\end dump.
+
+\subsection{Subclass \texttt{IntegerPartition}}
+This class represents an integer partition.
+\newlength{\MyLen}
+\settowidth{\MyLen}{\texttt{letterpaper}/\texttt{a4paper} \ }
+\begin{tabular}{@{}p{\the\MyLen}%
+                @{}p{\linewidth-\the\MyLen}@{}}
+\verb!as_dict()! & Return the partition as a dictionary whose keys are the
+				partition integers and the values are the multiplicity of that integer \\
+\verb!as_ferrers(char='#')! & Prints the ferrer diagram of a partition\\
+\verb!conjugate! &Computes the conjugate partition of itself\\
+\verb!next_lex()! & Return the next partition of the integer, n, in lexical order\\
+\verb!prev_lex()! & Return the previous partition of the integer, n, in lexical order\\
+\end{tabular}
+
+\section{Permutation}
+Path \verb!sympy.combinatorics.permutations.Permutation!\\
+\subsection{Methods}
+\verb!array_form! \\
+This is used to convert from cyclic notation to the canonical notation
+
+\verb!ascents()!\\
+Returns the positions of ascents in a permutation, i.e., the location where $p[i] < p[i+1]$
+
+
+\verb!descents()!
+Returns the positions of descents in a permutation, i.e., the location where $p[i] > p[i+1]$
+
+
+\verb!atoms()!\\
+Returns all the elements of a permutation
+
+\verb!cardinality!\\
+Returns the number of all possible permutations.
+
+\verb!commutator(x)!\\
+Return the commutator of self and x: \verb!~x*~self*x*self!
+
+
+\verb!commutes_with(other)!\\
+Checks if the elements are commuting.
+
+
+\verb!cycle_structure!\\
+Return the cycle structure of the permutation as a dictionary indicating the multiplicity of each cycle length.
+
+
+\verb!cycles! \\
+Returns the number of cycles contained in the permutation (including singletons).
+
+\verb!cyclic_form!\\
+This is used to convert to the cyclic notation from the canonical notation. Singletons are omitted.
+
+\verb!from_inversion_vector(inversion)!\\
+Calculates the permutation from the inversion vector.
+
+
+\verb!from_sequence(i, key=None)!\\
+Return the permutation needed to obtain \verb!i! from the sorted elements of \verb!i!.
+If custom sorting is desired, a key can be given.
+
+\verb!full_cyclic_form!\\
+Return permutation in cyclic form including singletons.
+
+
+\verb!get_adjacency_distance(other)!\\
+Computes the adjacency distance between two permutations.
+
+
+\verb!get_adjacency_matrix()!\\
+Computes the adjacency matrix of a permutation.
+
+
+\verb!get_positional_distance(other)!\\
+Computes the positional distance between two permutations.
+
+
+\verb!get_precedence_distance(other)!\\
+Computes the precedence distance between two permutations.
+
+
+\verb!get_precedence_matrix()!\\
+Gets the precedence matrix. This is used for computing the distance between two permutations.
+
+
+\verb!index()!\\
+Returns the index of a permutation.
+
+
+\verb!inversion_vector()!\\
+Return the inversion vector of the permutation.
+
+
+\verb!inversions()!\\
+Computes the number of inversions of a permutation.
+
+
+\verb!is_Empty!\\
+Checks to see if the permutation is a set with zero elements
+
+
+\verb!is_Identity!\\
+Returns True if the Permutation is an identity permutation.
+
+
+\verb!is_Singleton!\\
+Checks to see if the permutation contains only one number and
+ is thus the only possible permutation of this set of numbers.
+
+
+ \verb!is_even!\\
+Checks if a permutation is even.
+
+
+\verb!is_odd!\\
+Checks if a permutation is odd.
+
+
+\verb!josephus(m, n, s=1)!\\
+Return as a permutation the shuffling of range(\verb!n!) using the Josephus scheme
+in which every \verb!m!-th item is selected until all have been chosen.
+
+
+\verb!length()!\\
+Returns the number of integers moved by a permutation.
+
+
+\verb!list(size=None)!\\
+Return the permutation as an explicit list
+
+
+\verb!max()!\\
+The maximum element moved by the permutation.
+
+
+\verb!min()!\\
+The minimum element moved by the permutation
+
+
+\verb!next_lex()!\\
+Returns the next permutation in lexicographical order.
+
+
+\verb!next_nonlex()!\\
+Returns the next permutation in nonlex order.
+
+
+\verb!next_trotterjohnson()!\\
+Returns the next permutation in Trotter-Johnson order.
+
+
+\verb!order()!\\
+Computes the order of a permutation.
+
+
+\verb!parity()!\\
+Computes the parity of a permutation.
+
+
+\verb!random(n)!\\
+Generates a random permutation of length \verb!n!.
+
+
+\verb!rank(i=None)!\\
+Returns the lexicographic rank of the permutation
+(default) or the \verb!i!th ranked permutation of self.
+
+
+\verb!rank_nonlex(inv_perm=None)!\\
+This is a linear time ranking algorithm
+that does not enforce lexicographic order.
+
+
+\verb!rank_trotterjohnson()!\\
+Returns the Trotter Johnson rank, which we get from the minimal change algorithm.
+
+
+\verb!static rmul(*args)!\\
+Return product of Permutations $[a, b, c, \dots]$ as the Permutation whose $i$th value is $a(b(c(i)))$.
+
+
+\verb!runs()!\\
+Returns the runs of a permutation.
+
+
+\verb!signature()!\\
+Gives the signature of the permutation needed to place the elements
+ of the permutation in canonical order.
+
+
+\verb!size!\\
+Returns the number of elements in the permutation.
+
+
+\verb!support()!\\
+Return the elements in permutation, $P$, for which $P[i] \neq i$.
+
+
+
+\verb!transpositions()!\\
+Return the permutation decomposed into a list of transpositions.
+
+
+\verb!unrank_lex(size, rank)!\\
+Lexicographic permutation unranking.
+
+
+
+\verb!unrank_nonlex(n, r)!\\
+This is a linear time unranking algorithm that does not respect lexicographic order.
+
+
+\verb!unrank_trotterjohnson(size, rank)!\\
+Trotter Johnson permutation unranking.
+
+\subsection{Subclass \texttt{Cycle(*args)}}
+Wrapper around dict which provides the functionality of a disjoint cycle.
+
+
+\subsection{Subclass \texttt{Generators}}
+
+\verb!symmetric(n)!\\
+Generates the symmetric group of order \verb!n!, \verb!Sn!.
+
+
+\verb!cyclic(n)!\\
+Generates the cyclic group of order \verb!n, Cn!.
+
+
+\verb!alternating(n)!\\
+Generates the alternating group of order \verb!n, An!
+
+
+\verb!dihedral(n)!\\
+Generates the dihedral group of order \verb!2n, Dn!.
+
+
+\section{PermutationGroup}
+Path : \verb!sympy.combinatorics.perm_groups.PermutationGroup!
+
+
+\subsection{Methods}
+\verb!base!\\
+Return a base from the Schreier-Sims algorithm.
+
+\verb!baseswap(base, strong_gens, pos, randomized=False,!\\
+\verb!transversals=None, basic_orbits=None,! \\
+\verb!strong_gens_distr=None)!\\
+Swap two consecutive base points in base and strong generating set.
+
+
+
+\verb!basic_orbits!\\
+Return the basic orbits relative to a base and strong generating set.
+
+
+
+\verb!basic_stabilizers!\\
+Return a chain of stabilizers relative to a base and strong generating set.
+
+
+
+\verb!basic_transversals!\\
+Return basic transversals relative to a base and strong generating set.
+
+
+
+\verb!center()!\\
+Return the center of a permutation group.
+
+
+
+\verb!centralizer(other)!\\
+Return the centralizer of a group/set/element.
+
+
+
+\verb!commutator(G, H)!\\
+Return the commutator of two subgroups.
+
+
+\verb!contains(g, strict=True)!\\
+Test if permutation \verb!g! belong to self.
+
+
+
+\verb!coset_factor(g, af=False)!\\
+Return GÔs (selfÕs) coset factorization, \verb!f,! of \verb!g!.
+
+
+
+
+\verb!coset_rank(g)!\\
+rank using Schreier-Sims representation
+
+
+
+\verb!coset_unrank(rank, af=False)!\\
+unrank using Schreier-Sims representation
+
+
+
+\verb!degree!\\
+Returns the size of the permutations in the group.
+
+
+
+\verb!derived_series()!\\
+Return the derived series for the group.
+
+
+\verb!derived_subgroup()!\\
+Compute the derived subgroup.
+
+
+\verb!generate(method='coset', af=False)!\\
+Return iterator to generate the elements of the group
+
+
+\verb!generate_dimino(af=False)!\\
+Yield group elements using DiminoÕs algorithm
+
+
+\verb!generate_schreier_sims(af=False)!\\
+Yield group elements using the Schreier-Sims representation.
+
+
+
+\verb!generators!\\
+Returns the generators of the group.
+
+
+
+
+\verb!is_abelian!\\
+Test if the group is Abelian.
+
+
+\verb!is_alt_sym(eps=0.05, _random_prec=None)!\\
+Monte Carlo test for the symmetric/alternating group for degrees $>= 8$.
+
+
+
+\verb!is_group()!\\
+Return True if the group if identity is present, the inverse of every element is also an element, and the product of any two elements is also an element.
+
+
+
+\verb!is_nilpotent!\\
+Test if the group is nilpotent.
+
+
+\verb!is_normal(gr)!\\
+Test if G=self is a normal subgroup of \verb!gr!.
+
+
+\verb!is_primitive(randomized=True)!\\
+Test if a group is primitive.
+
+
+\verb!is_solvable!\\
+Test if the group is solvable.
+
+
+\verb!is_subgroup(G, strict=True)!\\
+Return True if all elements of self belong to G.
+
+
+
+\verb!is_transitive(strict=True)!\\
+Test if the group is transitive.
+
+
+\verb!is_trivial!\\
+Test if the group is the trivial group.
+
+
+\verb!lower_central_series()! \\
+Return the lower central series for the group.
+
+
+\verb!make_perm(n, seed=None)!\\
+Multiply n randomly selected permutations from pgroup together, starting with the identity permutation.
+
+
+
+\verb!max_div!\\
+Maximum proper divisor of the degree of a permutation group.
+
+
+
+\verb!minimal_block(points)!\\
+For a transitive group, finds the block system generated by \verb!points!.
+
+
+
+\verb!normal_closure(other, k=10)!\\
+Return the normal closure of a subgroup/set of permutations.
+
+
+\verb!orbit(alpha, action='tuples')!\\
+Compute the orbit of alpha \verb!\{g(\alpha) | g \in G\}! as a set.
+
+
+\verb!orbit_rep(alpha, beta, schreier_vector=None)!\\
+Return a group element which sends \verb!alpha! to \verb!beta!.
+
+
+\verb!orbit_transversal(alpha, pairs=False)!\\
+Computes a transversal for the orbit of \verb!alpha! as a set.
+
+
+\verb!orbits(rep=False)!\\
+Return the orbits of self, ordered according to lowest element in each orbit.
+
+
+\verb!order()!\\
+Return the number of permutations that can be generated from elements of the group.
+
+
+
+\verb!pointwise_stabilizer(points, incremental=False)!\\
+Return the pointwise stabilizer for a set of points.
+
+
+
+\verb!random(af=False)!\\
+Return a random group element.
+
+
+
+\verb!random_pr(gen_count=11, iterations=50, _random_prec=None)!\\
+Return a random group element using product replacement.
+
+
+\verb!random_stab(alpha, schreier_vector=None, _random_prec=None)!\\
+Random element from the stabilizer of \verb!alpha!.
+
+
+\verb!schreier_sims()!\\
+Schreier-Sims algorithm.
+
+
+
+\verb!schreier_sims_incremental(base=None, gens=None)!\\
+Extend a sequence of points and generating set to a base and strong generating set.
+
+
+
+\verb!schreier_sims_random(base=None, gens=None,!\\
+
+
+
+\verb! consec_succ=10, _random_prec=None)!\\
+Randomized Schreier-Sims algorithm.
+
+
+
+\verb!schreier_vector(alpha)! \\
+Computes the schreier vector for \verb!alpha!.
+
+
+\verb!stabilizer(alpha)!\\
+Return the stabilizer subgroup of \verb!alpha!.
+
+
+\verb!stabilizer_cosets(af=False)!\\
+Return a list of cosets of the stabilizer chain of the group as computed by the Schreir-Sims algorithm.
+
+
+
+\verb!stabilizer_gens(af=False)!\\
+Return the generators of the chain of stabilizers of the Schreier-Sims representation.
+
+
+
+\verb!strong_gens!\\
+Return a strong generating set from the Schreier-Sims algorithm.
+
+
+
+\verb!subgroup_search(prop, base=None, strong_gens=None,!\\
+
+
+
+\verb!tests=None, init_subgroup=None)!\\
+Find the subgroup of all elements satisfying the property prop.
+
+
+\verb!transitivity_degree!\\
+Compute the degree of transitivity of the group.
+
+
+\section{Polyhedron}
+Path : \verb!sympy.combinatorics.polyhedron.Polyhedron!\\
+Represents the polyhedral symmetry group (PSG).
+\subsection{Methods}
+\verb!array_form!\\
+Return the indices of the corners.
+
+
+\verb!corners!\\
+Get the corners of the Polyhedron.
+
+
+
+\verb!cyclic_form!\\
+Return the indices of the corners in cyclic notation.
+
+
+\verb!edges!\\
+Given the faces of the polyhedra we can get the edges.
+
+
+\verb!faces!\\
+Get the faces of the Polyhedron.
+
+
+
+\verb!pgroup!\\
+Get the permutations of the Polyhedron.
+
+
+
+\verb!reset()!\\
+Return corners to their original positions.
+
+
+
+\verb!rotate(perm)!\\
+Apply a permutation to the polyhedron in place.
+
+
+\verb!size!\\
+Get the number of corners of the Polyhedron.
+
+\verb!vertices!\\
+Get the corners of the Polyhedron.
+
+\section{Prufer}
+Path: \verb!sympy.combinatorics.prufer.Prufer!\\
+The Prufer correspondence is an algorithm that describes the bijection
+ between labeled trees and the Prufer code.
+  A Prufer code of a labeled tree is unique up to
+   isomorphism and has a length of $n - 2$.
+\subsection{Methods}
+
+
+\verb!static edges(*runs)!\\
+Return a list of edges and the number of nodes from the given
+ runs that connect nodes in an integer-labelled tree.
+
+ \verb!next(delta=1)!\\
+Generates the Prufer sequence that is delta beyond the current one.
+
+
+\verb!nodes!\\
+Returns the number of nodes in the tree.
+
+
+\verb!prev(delta=1)!\\
+Generates the Prufer sequence that is -delta before the current one.
+
+
+
+\verb!prufer_rank()!\\
+Computes the rank of a Prufer sequence.
+
+
+\verb!prufer_repr!\\
+Returns Prufer sequence for the Prufer object.
+
+
+\verb!rank!\\
+Returns the rank of the Prufer sequence.
+
+
+\verb!size!\\
+Return the number of possible trees of this Prufer object.
+
+
+
+\verb!static to_prufer(tree, n)!\\
+Return the Prufer sequence for a tree given as a list of edges where n is the number of nodes in the tree.
+
+
+
+\verb!static to_tree(prufer)!\\
+Return the tree (as a list of edges) of the given Prufer sequence.
+
+
+
+\verb!tree_repr!\\
+Returns the tree representation of the Prufer object.
+
+
+\verb!unrank(rank, n)!\\
+Finds the unranked Prufer sequence.
+
+
+\section{Subset}
+Path: \verb!sympy.combinatorics.subsets.Subset!\\
+Represents a basic subset object.
+
+\subsection{Methods}
+
+\verb!bitlist_from_subset(subset, superset)!\\
+Gets the bitlist corresponding to a subset.
+
+
+\verb!cardinality!\\
+Returns the number of all possible subsets.
+
+
+
+\verb!iterate_binary(k)!\\
+This is a helper function. It iterates over the binary subsets by k steps. This variable can be both positive or negative.
+
+
+
+\verb!iterate_graycode(k)!\\
+It performs k step overs to get the respective Gray codes.
+
+
+\verb!next_binary()!\\
+Generates the next binary ordered subset.
+
+
+\verb!next_gray()!\\
+Generates the next Gray code ordered subset.
+
+
+\verb!next_lexicographic()!\\
+Generates the next lexicographically ordered subset. NOT IMPLEMENTED
+
+\verb!prev_binary()!\\
+Generates the previous binary ordered subset.
+
+
+
+\verb!prev_gray()!\\
+Generates the previous Gray code ordered subset.
+
+
+
+\verb!prev_lexicographic()!\\
+Generates the previous lexicographically ordered subset. NOT IMPLEMENTED
+
+\verb!rank_binary!\\
+Computes the binary ordered rank.
+
+
+
+\verb!rank_gray!\\
+Computes the Gray code ranking of the subset.
+
+
+\verb!rank_lexicographic!\\
+Computes the lexicographic ranking of the subset.
+
+
+
+\verb!size!\\
+Gets the size of the subset.
+
+
+
+\verb!subset!\\
+Gets the subset represented by the current instance.
+
+
+\verb!subset_from_bitlist(super_set, bitlist)!\\
+Gets the subset defined by the \verb!bitlist!.
+
+
+
+\verb!subset_indices(subset, superset)!\\
+Return indices of subset in superset in a list;
+the list is empty if all elements of \verb!subset! are not in \verb!superset!.
+
+
+\verb!superset!\\
+Gets the superset of the subset.
+
+
+\verb!superset_size!\\
+Returns the size of the superset.
+
+
+\verb!unrank_binary(rank, superset)!\\
+Gets the binary ordered subset of the specified rank.
+
+
+
+\verb!unrank_gray(rank, superset)!\\
+Gets the Gray code ordered subset of the specified rank.
+
+
+
+\verb!subsets.ksubsets(superset, k)!\\
+Finds the subsets of size \verb!k! in lexicographic order.
+
+
+\section{Gray Code}
+Path: \verb!sympy.combinatorics.graycode.GrayCode!
+A Gray code is essentially a Hamiltonian walk on a n-dimensional
+ cube with edge length of one. The vertices of the cube are
+ represented by vectors whose values are binary.
+ The Hamilton walk visits each vertex exactly once.
+
+\subsection{Methods}
+
+\verb!current!\\
+Returns the currently referenced Gray code as a bit string.
+
+
+\verb!generate_gray(**hints)!\\
+Generates the sequence of bit vectors of a Gray Code.
+
+
+
+\verb!n!\\
+Returns the dimension of the Gray code.
+
+
+\verb!next(delta=1)!\\
+Returns the Gray code a distance delta (default = 1) from the current value in canonical order.
+
+
+
+\verb!rank!\\
+Ranks the Gray code.
+
+
+
+\verb!selections!\\
+Returns the number of bit vectors in the Gray code.
+
+
+
+\verb!skip()!\\
+Skips the bit generation.
+
+
+\verb!unrank(n, rank)!\\
+Unranks an n-bit sized Gray code of rank k.
+This method exists so that a derivative GrayCode class can define its own code of a given rank.
+
+
+\verb!graycode.random_bitstring(n)!\\
+Generates a random bitlist of length n.
+
+
+\verb!graycode.gray_to_bin(bin_list)!\\
+Convert from Gray coding to binary coding.
+
+
+\verb!graycode.bin_to_gray(bin_list)!\\
+Convert from binary coding to gray coding.
+
+
+
+\verb!graycode.get_subset_from_bitstring(super_set, bitstring)!\\
+Gets the subset defined by the bitstring.
+
+
+
+\verb!graycode.graycode_subsets(gray_code_set)!\\
+Generates the subsets as enumerated by a Gray code.
+
+
+
+\section{Named Groups}
+Path: \verb!sympy.combinatorics.named_groups!\\
+
+\subsection{Methods}
+
+\verb!SymmetricGroup(n)!\\
+Generates the symmetric group on \verb!n! elements as a permutation group.
+
+
+
+\verb!CyclicGroup(n)!\\
+Generates the cyclic group of order n as a permutation group.
+
+
+\verb!DihedralGroup(n)!\\
+Generates the dihedral group Dn as a permutation group.
+
+
+
+\verb!AlternatingGroup(n)!\\
+Generates the alternating group on \verb!n! elements as a permutation group.
+
+
+
+\verb!AbelianGroup(*cyclic_orders)!\\
+Returns the direct product of cyclic groups with the given orders.
+
+
+
+\section{Utilities}
+Path: \verb!sympy.combinatorics.util!
+
+\subsection{Methods}
+\verb!_base_ordering(base, degree)!\\
+Order $\{0,1,\dots,n\}$ so that base points come first and in order
+
+
+\verb!_check_cycles_alt_sym(perm)!\\
+Checks for cycles of prime length $p$ with $n/2 < p < n-2$.
+
+
+
+\verb!_distribute_gens_by_base(base, gens)!\\
+Distribute the group elements \verb!gens! by membership in basic stabilizers.
+
+
+\verb!_handle_precomputed_bsgs(base, strong_gens,!\\
+\verb!transversals=None, basic_orbits=None,!\\
+\verb!strong_gens_distr=None)!\\
+Calculate BSGS-related structures from those present.
+
+
+\verb!_orbits_transversals_from_bsgs(base, strong_gens_distr,!\\
+\verb!transversals_only=False)!\\
+Compute basic orbits and transversals from a base and strong generating set.
+
+
+
+\verb!_remove_gens(base, strong_gens,!
+\verb!basic_orbits=None, strong_gens_distr=None)!\\
+Remove redundant generators from a strong generating set.
+
+
+\verb!_strip(g, base, orbits, transversals)!\\
+Attempt to decompose a permutation using a (possibly partial) BSGS structure.
+
+
+\verb!_strong_gens_from_distr(strong_gens_distr)!\\
+Retrieve strong generating set from generators of basic stabilizers.
+
+
+
+\section{Group Constructors}
+Path: \verb!sympy.combinatorics.group_constructs!
+
+\subsection{Method}
+\verb!DirectProduct(*groups)!\\
+Returns the direct product of several groups as a permutation group.
+
+
+
+
+\section{Test Utilities}
+Path: \verb!sympy.combinatorics.testutil!
+
+\subsection{Methods}
+\verb!_cmp_perm_lists(first, second)!\\
+Compare two lists of permutations as sets.
+
+\verb!_naive_list_centralizer(self, other)!\\
+
+
+\verb!_verify_bsgs(group, base, gens)!\\
+Verify the correctness of a base and strong generating set.
+
+\verb!_verify_centralizer(group, arg, centr=None)!\\
+Verify the centralizer of a group/set/element inside another group.
+
+\verb!_verify_normal_closure(group, arg, closure=None)!\\
+
+
+
+\rule{0.3\linewidth}{0.25pt}
+\scriptsize\\
+http://www.sympy.org/cheatsheets
+
+
+\end{multicols}
+\end{document}

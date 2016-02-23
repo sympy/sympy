@@ -2,10 +2,10 @@ from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
                    cos, sqrt, symbols, oo, Derivative, gamma, O)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import (
     random_complex_number as randcplx,
-    test_numerically as tn,
+    verify_numerically as tn,
     test_derivative_numerically as td)
 
 
@@ -206,6 +206,7 @@ def test_hyper_unpolarify():
     assert hyper([0, 1], [0], a).argument == a
 
 
+@slow
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
@@ -294,6 +295,7 @@ def test_hyperrep():
     assert t(HyperRep_sinasin(a, z), 2*a*z*hyper([1 - a, 1 + a], [S(3)/2], z), z)
 
 
+@slow
 def test_meijerg_eval():
     from sympy import besseli, exp_polar
     from sympy.abc import l

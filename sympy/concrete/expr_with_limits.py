@@ -1,18 +1,20 @@
 from __future__ import print_function, division
 
-from sympy.core.basic import C
+from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.relational import Eq
-from sympy.core.sets import Interval
+from sympy.core.mul import Mul
+from sympy.core.relational import Equality
+from sympy.sets.sets import Interval
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Wild, Symbol)
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
-
-
+from sympy.utilities.iterables import sift
+from sympy.matrices import Matrix
+from sympy.tensor.indexed import Idx
 
 
 def _process_limits(*symbols):
@@ -24,12 +26,18 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, Symbol):
+        if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             limits.append(Tuple(V))
+            continue
+        elif isinstance(V, Idx):
+            if V.lower is None or V.upper is None:
+                limits.append(Tuple(V))
+            else:
+                limits.append(Tuple(V, V.lower, V.upper))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
-            if V[0].is_Symbol:
+            if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):
                     V[1:] = [V[1].start, V[1].end]
@@ -44,7 +52,12 @@ def _process_limits(*symbols):
                         nlim = []
                     else:
                         nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim ))
+                    limits.append(Tuple(newsymbol, *nlim))
+                    if isinstance(V[0], Idx):
+                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                            raise ValueError("Summation exceeds Idx lower range.")
+                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                            raise ValueError("Summation exceeds Idx upper range.")
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
@@ -57,6 +70,7 @@ def _process_limits(*symbols):
 
     return limits, orientation
 
+
 class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
 
@@ -65,10 +79,10 @@ class ExprWithLimits(Expr):
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
         function = sympify(function)
-        if hasattr(function, 'func') and function.func is C.Equality:
+        if hasattr(function, 'func') and function.func is Equality:
             lhs = function.lhs
             rhs = function.rhs
-            return C.Equality(cls(lhs, *symbols, **assumptions), \
+            return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
         function = piecewise_fold(function)
 
@@ -161,21 +175,9 @@ class ExprWithLimits(Expr):
 
     @property
     def free_symbols(self):
-        if self.function.is_zero:
-            return set()
-        return self._free_symbols()
-
-    def as_dummy(self):
         """
-        see _as_dummy() for documentation
-        """
-        return self._as_dummy()
-
-    def _free_symbols(self):
-        """
-        This method returns the symbols that will exist when the object is
-        evaluated. This is useful if one is trying to determine whether the
-        object contains a certain symbol or not.
+        This method returns the symbols in the object, excluding those
+        that take on a specific value (i.e. the dummy symbols).
 
         Examples
         ========
@@ -185,6 +187,9 @@ class ExprWithLimits(Expr):
         >>> Sum(x, (x, y, 1)).free_symbols
         set([y])
         """
+        # don't test for any special values -- nominal free symbols
+        # should be returned, e.g. don't return set() if the
+        # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
         isyms = function.free_symbols
         for xab in limits:
@@ -199,7 +204,12 @@ class ExprWithLimits(Expr):
                 isyms.update(i.free_symbols)
         return isyms
 
-    def _as_dummy(self):
+    @property
+    def is_number(self):
+        """Return True if the Sum has no free symbols, else False."""
+        return not self.free_symbols
+
+    def as_dummy(self):
         """
         Replace instances of the given dummy variables with explicit dummy
         counterparts to make clear what are dummy variables and what
@@ -235,7 +245,7 @@ class ExprWithLimits(Expr):
         reps = {}
         f = self.function
         limits = list(self.limits)
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = list(limits[i])
             if len(xab) == 1:
                 continue
@@ -248,6 +258,11 @@ class ExprWithLimits(Expr):
         f = f.subs(reps)
         return self.func(f, *limits)
 
+    def _eval_interval(self, x, a, b):
+        limits = [(i if i[0] != x else (x, a, b)) for i in self.limits]
+        integrand = self.function
+        return self.func(integrand, *limits)
+
     def _eval_subs(self, old, new):
         """
         Perform substitutions over non-dummy variables
@@ -258,13 +273,13 @@ class ExprWithLimits(Expr):
         ========
 
         >>> from sympy import Sum, oo
-        >>> from sympy.abc import s,n
+        >>> from sympy.abc import s, n
         >>> Sum(1/n**s, (n, 1, oo)).subs(s, 2)
         Sum(n**(-2), (n, 1, oo))
 
         >>> from sympy import Integral
-        >>> from sympy.abc import x,a
-        >>> Integral(a*x**2,x).subs(x,4)
+        >>> from sympy.abc import x, a
+        >>> Integral(a*x**2, x).subs(x, 4)
         Integral(a*x**2, (x, 4))
 
         See Also
@@ -275,6 +290,7 @@ class ExprWithLimits(Expr):
         change_index : Perform mapping on the sum and product dummy variables
 
         """
+        from sympy.core.function import AppliedUndef, UndefinedFunction
         func, limits = self.function, list(self.limits)
 
         # If one of the expressions we are replacing is used as a func index
@@ -288,7 +304,7 @@ class ExprWithLimits(Expr):
         # Reorder limits to match standard mathematical practice for scoping
         limits.reverse()
 
-        if not isinstance(old, C.Symbol) or \
+        if not isinstance(old, Symbol) or \
                 old.free_symbols.intersection(self.free_symbols):
             sub_into_func = True
             for i, xab in enumerate(limits):
@@ -298,7 +314,7 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old,C.AppliedUndef) or isinstance(old,C.UndefinedFunction):
+            if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
                 sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
@@ -324,6 +340,7 @@ class ExprWithLimits(Expr):
 
         return self.func(func, *limits)
 
+
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.
         Parent class for Integral and Sum.
@@ -337,10 +354,10 @@ class AddWithLimits(ExprWithLimits):
         # This constructor only differs from ExprWithLimits
         # in the application of the orientation variable.  Perhaps merge?
         function = sympify(function)
-        if hasattr(function, 'func') and function.func is C.Equality:
+        if hasattr(function, 'func') and function.func is Equality:
             lhs = function.lhs
             rhs = function.rhs
-            return C.Equality(cls(lhs, *symbols, **assumptions), \
+            return Equality(cls(lhs, *symbols, **assumptions), \
                 cls(rhs, *symbols, **assumptions))
         function = piecewise_fold(function)
 
@@ -354,7 +371,10 @@ class AddWithLimits(ExprWithLimits):
             free = function.free_symbols
             if len(free) != 1:
                 raise ValueError(
-                    "specify dummy variables for %s" % function)
+                    " specify dummy variables for %s. If the integrand contains"
+                    " more than one free symbol, an integration variable should"
+                    " be supplied explicitly e.g., integrate(f(x, y), x)"
+                    % function)
             limits, orientation = [Tuple(s) for s in free], 1
 
         # denest any nested calls
@@ -386,22 +406,28 @@ class AddWithLimits(ExprWithLimits):
         return None
 
     def _eval_factor(self, **hints):
-        summand = self.function.factor(**hints)
-        keep_inside = []
-        pull_outside = []
-        if summand.is_Mul and summand.is_commutative:
-            for i in summand.args:
-                if not i.atoms(C.Symbol).intersection(self.variables):
-                    pull_outside.append(i)
-                else:
-                    keep_inside.append(i)
-            return C.Mul(*pull_outside) * self.func(C.Mul(*keep_inside), *self.limits)
+        if 1 == len(self.limits):
+            summand = self.function.factor(**hints)
+            if summand.is_Mul:
+                out = sift(summand.args, lambda w: w.is_commutative \
+                    and not set(self.variables) & w.free_symbols)
+                return Mul(*out[True])*self.func(Mul(*out[False]), \
+                    *self.limits)
+        else:
+            summand = self.func(self.function, self.limits[0:-1]).factor()
+            if not summand.has(self.variables[-1]):
+                return self.func(1, [self.limits[-1]]).doit()*summand
+            elif isinstance(summand, Mul):
+                return self.func(summand, self.limits[-1]).factor()
         return self
 
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
-            return C.Add(*[ self.func(i, *self.limits) for i in summand.args ])
+            return Add(*[self.func(i, *self.limits) for i in summand.args])
+        elif summand.is_Matrix:
+            return Matrix._new(summand.rows, summand.cols,
+                [self.func(i, *self.limits) for i in summand._mat])
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

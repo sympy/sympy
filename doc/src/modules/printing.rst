@@ -136,12 +136,15 @@ For piecewise functions, the ``assign_to`` option is mandatory:
             var = x**2
           end if
 
-Note that only top-level piecewise functions are supported due to the lack of
-a conditional operator in Fortran. Nested piecewise functions would require the
-introduction of temporary variables, which is a type of expression manipulation
-that goes beyond the scope of ``fcode``.
+Note that by default only top-level piecewise functions are supported due to
+the lack of a conditional operator in Fortran 77. Inline conditionals can be
+supported using the ``merge`` function introduced in Fortran 95 by setting of
+the kwarg ``standard=95``:
 
-Loops are generated if there are Indexed objects in the expression.  This
+    >>> print(fcode(Piecewise((x,x<1),(x**2,True)), standard=95))
+          merge(x, x**2, x < 1)
+
+Loops are generated if there are Indexed objects in the expression. This
 also requires use of the assign_to option.
 
     >>> A, B = map(IndexedBase, ['A', 'B'])
@@ -181,15 +184,15 @@ function.
 When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
-    >>> print(fcode(1 - gamma(x)**2, user_functions={gamma: 'mygamma'}))
+    >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
           -mygamma(x)**2 + 1
 
 However, when the user_functions argument is not provided, ``fcode`` attempts to
 use a reasonable default and adds a comment to inform the user of the issue.
 
     >>> print(fcode(1 - gamma(x)**2))
-    C     Not Fortran:
-    C     gamma(x)
+    C     Not supported in Fortran:
+    C     gamma
           -gamma(x)**2 + 1
 
 By default the output is human readable code, ready for copy and paste. With the
@@ -205,6 +208,78 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
     (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
+
+Mathematica code printing
+-------------------------
+
+.. module:: sympy.printing.mathematica
+
+.. autodata:: sympy.printing.mathematica.known_functions
+
+.. autoclass:: sympy.printing.mathematica.MCodePrinter
+   :members:
+
+   .. autoattribute:: MCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.mathematica.mathematica_code
+
+Javascript Code printing
+------------------------
+
+.. module:: sympy.printing.jscode
+
+.. autodata:: sympy.printing.jscode.known_functions
+
+.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+   :members:
+
+   .. autoattribute:: JavascriptCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.jscode.jscode
+
+Julia code printing
+---------------------------------
+
+.. module:: sympy.printing.julia
+
+.. autodata:: sympy.printing.julia.known_fcns_src1
+
+.. autodata:: sympy.printing.julia.known_fcns_src2
+
+.. autoclass:: sympy.printing.julia.JuliaCodePrinter
+   :members:
+
+   .. autoattribute:: JuliaCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.julia.julia_code
+
+Octave (and Matlab) Code printing
+---------------------------------
+
+.. module:: sympy.printing.octave
+
+.. autodata:: sympy.printing.octave.known_fcns_src1
+
+.. autodata:: sympy.printing.octave.known_fcns_src2
+
+.. autoclass:: sympy.printing.octave.OctaveCodePrinter
+   :members:
+
+   .. autoattribute:: OctaveCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.octave.octave_code
+
+Theano Code printing
+--------------------
+
+.. module:: sympy.printing.theanocode
+
+.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+   :members:
+
+   .. autoattribute:: TheanoPrinter.printmethod
+
+.. autofunction:: sympy.printing.theanocode.theano_function
 
 Gtk
 ---
@@ -290,13 +365,31 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 
-ReprPrinter
------------
+srepr
+-----
 
 .. module:: sympy.printing.repr
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
+
+``srepr()`` gives more low level textual output than ``repr()``
+
+Example::
+
+  >>> repr(5*x**3 + sin(x))
+  '5*x**3 + sin(x)'
+
+  >>> srepr(5*x**3 + sin(x))
+  "Add(Mul(Integer(5), Pow(Symbol('x'), Integer(3))), sin(Symbol('x')))"
+
+``srepr()`` gives the ``repr`` form, which is what ``repr()`` would normally give
+but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s 
+is so verbose, it is unlikely that anyone would want it called by default.
+Another reason is that lists call repr on their elements, like ``print([a, b, c])``
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with 
+SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
+
 
 .. autoclass:: ReprPrinter
    :members:
@@ -359,6 +452,8 @@ CodePrinter
 This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.Assignment
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
 

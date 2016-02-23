@@ -10,8 +10,9 @@ Todo:
 
 from __future__ import print_function, division
 
-from sympy import floor, pi, sqrt, sympify
-from sympy.core.compatibility import u
+from sympy import floor, pi, sqrt, sympify, eye
+from sympy.core.compatibility import u, range
+from sympy.core.numbers import NegativeOne
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -168,9 +169,16 @@ class OracleGate(Gate):
     #-------------------------------------------------------------------------
 
     def _represent_ZGate(self, basis, **options):
-        raise NotImplementedError(
-            "Represent for the Oracle has not been implemented yet"
-        )
+        """
+        Represent the OracleGate in the computational basis.
+        """
+        nbasis = 2**self.nqubits  # compute it only once
+        matrixOracle = eye(nbasis)
+        # Flip the sign given the output of the oracle function
+        for i in range(nbasis):
+            if self.search_function(IntQubit(i, self.nqubits)):
+                matrixOracle[i, i] = NegativeOne()
+        return matrixOracle
 
 
 class WGate(Gate):

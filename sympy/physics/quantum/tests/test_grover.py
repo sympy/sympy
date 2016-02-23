@@ -1,4 +1,5 @@
-from sympy import sqrt
+from sympy import sqrt, Matrix
+from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
@@ -39,6 +40,10 @@ def test_OracleGate():
     assert qapply(v*IntQubit(2, nbits)) == -IntQubit(2, nbits)
     assert qapply(v*IntQubit(3, nbits)) == IntQubit(3, nbits)
 
+    # Due to a bug of IntQubit, this first assertion is buggy
+    # assert represent(OracleGate(1, lambda qubits: qubits == IntQubit(0)), nqubits=1) == \
+    #     Matrix([[-1/sqrt(2), 0], [0, 1/sqrt(2)]])
+    assert represent(v, nqubits=2) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 
 def test_WGate():
     nqubits = 2
@@ -63,17 +68,12 @@ def test_grover_iteration_2():
     v = OracleGate(numqubits, return_one_on_two)
     # After (pi/4)sqrt(pow(2, n)), IntQubit(2) should have highest prob
     # In this case, after around pi times (3 or 4)
-    # print ''
-    # print basis_states
     iterated = grover_iteration(basis_states, v)
     iterated = qapply(iterated)
-    # print iterated
     iterated = grover_iteration(iterated, v)
     iterated = qapply(iterated)
-    # print iterated
     iterated = grover_iteration(iterated, v)
     iterated = qapply(iterated)
-    # print iterated
     # In this case, probability was highest after 3 iterations
     # Probability of Qubit('0010') was 251/256 (3) vs 781/1024 (4)
     # Ask about measurement

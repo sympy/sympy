@@ -1,8 +1,9 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol, Add, ratsimp
+    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
+    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    besselj, besselk, bessely, jn
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
@@ -66,6 +67,9 @@ def test_heurisch_exp():
 
     assert heurisch(2**x, x) == 2**x/log(2)
     assert heurisch(x*2**x, x) == x*2**x/log(2) - 2**x*log(2)**(-2)
+
+    assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
+    assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
 
 def test_heurisch_trigonometric():
@@ -227,10 +231,7 @@ def test_pmint_trig():
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
-    g = log(x**2 + 2*x*exp(x) + 2*x*log(x) + exp(2*x) + 2*exp(x)*log(x) + log(x)**2)/2 + 1/(x + exp(x) + log(x))
-
-    # TODO: Optimal solution is g = 1/(x + log(x) + exp(x)) + log(x + log(x) + exp(x)),
-    # but SymPy requires a lot of guidance to properly simplify heurisch() output.
+    g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 
     assert ratsimp(heurisch(f, x)) == g
 
@@ -248,10 +249,7 @@ def test_pmint_LambertW():
 
     assert heurisch(f, x) == g
 
-@XFAIL
 def test_pmint_besselj():
-    # TODO: in both cases heurisch() gives None. Wrong besselj() derivative?
-
     f = besselj(nu + 1, x)/besselj(nu, x)
     g = nu*log(x) - log(besselj(nu, x))
 
@@ -262,8 +260,32 @@ def test_pmint_besselj():
 
     assert heurisch(f, x) == g
 
+    f = jn(nu + 1, x)/jn(nu, x)
+    g = nu*log(x) - log(jn(nu, x))
+
+    assert heurisch(f, x) == g
+
+@slow
+def test_pmint_bessel_products():
+    # Note: Derivatives of Bessel functions have many forms.
+    # Recurrence relations are needed for comparisons.
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    f = x*besselj(nu, x)*bessely(nu, 2*x)
+    g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
+
+    assert heurisch(f, x) == g
+
+    f = x*besselj(nu, x)*besselk(nu, 2*x)
+    g = -2*x*besselj(nu, x)*besselk(nu - 1, 2*x)/5 - x*besselj(nu - 1, x)*besselk(nu, 2*x)/5
+
+    assert heurisch(f, x) == g
+
 @slow # 110 seconds on 3.4 GHz
 def test_pmint_WrightOmega():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     def omega(x):
         return LambertW(exp(x))
 
@@ -271,6 +293,12 @@ def test_pmint_WrightOmega():
     g = log(x + LambertW(exp(x))) + sin(LambertW(exp(x)))
 
     assert heurisch(f, x) == g
+
+def test_RR():
+    # Make sure the algorithm does the right thing if the ring is RR. See
+    # issue 8685.
+    assert heurisch(sqrt(1 + 0.25*x**2), x, hints=[]) == \
+        0.5*x*sqrt(0.25*x**2 + 1) + 1.0*asinh(0.5*x)
 
 # TODO: convert the rest of PMINT tests:
 # Airy functions

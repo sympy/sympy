@@ -9,7 +9,8 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
+from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -35,10 +36,7 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
     assert fcode(x**-1.0) == '      1.0/x'
-    assert fcode(x**-2.0,
-                 assign_to='y',
-                 source_format='free',
-                 human=True) == 'y = x**(-2.0d0)'  # 2823
+    assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
 
@@ -70,12 +68,13 @@ def test_fcode_functions():
 #issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
-    assert fcode(x * log(10)) == "      x*log(10.0d0)"
-    assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
-    assert fcode(log(S(10))) == "      log(10.0d0)"
-    assert fcode(exp(10)) == "      exp(10.0d0)"
-    assert fcode(x * log(log(10))) == "      x*log(2.30258509299405d0)"
-    assert fcode(x * log(log(S(10)))) == "      x*log(2.30258509299405d0)"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(S(10))) == "      x*2.30258509299405d0"
+    assert fcode(log(S(10))) == "      2.30258509299405d0"
+    assert fcode(exp(10)) == "      22026.4657948067d0"
+    assert fcode(x * log(log(10))) == "      x*0.834032445247956d0"
+    assert fcode(x * log(log(S(10)))) == "      x*0.834032445247956d0"
 
 
 def test_fcode_NumberSymbol():
@@ -126,22 +125,22 @@ def test_not_fortran():
     x = symbols('x')
     g = Function('g')
     assert fcode(
-        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
 
 def test_user_functions():
     x = symbols('x')
-    assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
+    assert fcode(sin(x), user_functions={"sin": "zsin"}) == "      zsin(x)"
     x = symbols('x')
     assert fcode(
-        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+        gamma(x), user_functions={"gamma": "mygamma"}) == "      mygamma(x)"
     g = Function('g')
-    assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
+    assert fcode(g(x), user_functions={"g": "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(
-        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+        factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
 
 
 def test_inline_function():
@@ -344,8 +343,8 @@ def test_fcode_Xlogical():
 
 def test_fcode_Relational():
     x, y = symbols("x y")
-    assert fcode(Relational(x, y, "=="), source_format="free") == "x == y"
-    assert fcode(Relational(x, y, "!="), source_format="free") == "x /= y"
+    assert fcode(Relational(x, y, "=="), source_format="free") == "Eq(x, y)"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "Ne(x, y)"
     assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
     assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
     assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"
@@ -354,14 +353,11 @@ def test_fcode_Relational():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x, x < 1), (x**2, True)))
-    expected = (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else\n"
-        "         x**2\n"
-        "      end if"
-    )
+    expr = Piecewise((x, x < 1), (x**2, True))
+    # Check that inline conditional (merge) fails if standard isn't 95+
+    raises(NotImplementedError, lambda: fcode(expr))
+    code = fcode(expr, standard=95)
+    expected = "      merge(x, x**2, x < 1)"
     assert code == expected
     assert fcode(Piecewise((x, x < 1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
@@ -372,7 +368,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in xrange(10):
+    for i in range(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (
@@ -390,24 +386,12 @@ def test_fcode_Piecewise():
     )
     code = fcode(Piecewise((a, x < 0), (b, True)), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else\n"
-        "         sin(x)\n"
-        "      end if"
-    )
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else if (x > 0) then\n"
-        "         sin(x)\n"
-        "      end if"
-    )
+    code = fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True)), standard=95)
+    expected = "      merge(x, merge(x**2, sin(x), x > 1), x < 1)"
+    assert code == expected
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: fcode(expr))
 
 
 def test_wrap_fortran():
@@ -517,7 +501,7 @@ def test_free_form_continuation_line():
 
 
 def test_free_form_comment_line():
-    printer = FCodePrinter({ 'source_format': 'free'})
+    printer = FCodePrinter({'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
     expected = [
         '! This is a long comment on a single line that must be wrapped properly',
@@ -552,9 +536,6 @@ def test_loops():
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -582,11 +563,10 @@ def test_fcode_Indexed_without_looking_for_contraction():
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
         _default_settings = FCodePrinter._default_settings.copy()
-        _default_settings['assign_to'] = "bork"
 
     printer = MyFancyFCodePrinter()
     x = symbols('x')
-    assert printer.doprint(sin(x)) == "      bork = sin(x)"
+    assert printer.doprint(sin(x), "bork") == "      bork = sin(x)"
 
 
 def test_indent():
@@ -651,3 +631,37 @@ def test_indent():
     p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
+
+def test_Matrix_printing():
+    x, y, z = symbols('x,y,z')
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert fcode(mat, A) == (
+        "      A(1, 1) = x*y\n"
+        "      if (y > 0) then\n"
+        "         A(2, 1) = x + 2\n"
+        "      else\n"
+        "         A(2, 1) = y\n"
+        "      end if\n"
+        "      A(3, 1) = sin(z)")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert fcode(expr, standard=95) == (
+        "      merge(2*A(3, 1), A(3, 1), x > 0) + sin(A(2, 1)) + A(1, 1)")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert fcode(m, M) == (
+        "      M(1, 1) = sin(q(2, 1))\n"
+        "      M(2, 1) = q(2, 1) + q(3, 1)\n"
+        "      M(3, 1) = 2*q(5, 1)*1.0/q(2, 1)\n"
+        "      M(1, 2) = 0\n"
+        "      M(2, 2) = q(4, 1)\n"
+        "      M(3, 2) = 4 + sqrt(q(1, 1))\n"
+        "      M(1, 3) = cos(q(3, 1))\n"
+        "      M(2, 3) = 5\n"
+        "      M(3, 3) = 0")

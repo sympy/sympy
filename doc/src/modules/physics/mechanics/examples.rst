@@ -11,5 +11,6 @@ consider adding it here!
 .. toctree::
     :maxdepth: 1
 
-    rollingdisc_example.rst
-    bicycle_example.rst
+    examples/rollingdisc_example.rst
+    examples/bicycle_example.rst
+    examples/lin_pend_nonmin_example.rst

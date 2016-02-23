@@ -1,10 +1,11 @@
 from sympy import (
-    Symbol, Dummy, diff, Derivative, Rational, roots, sympify, S, sqrt, hyper,
-    cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, Sum, RisingFactorial,
+    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
+    cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
 
-from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x')
 
@@ -51,6 +52,9 @@ def test_jacobi():
            (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
                                     /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
 
+    raises(ValueError, lambda: jacobi(-2.1, a, b, x))
+    raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
+
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -80,8 +84,7 @@ def test_gegenbauer():
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)
 
-    assert conjugate(gegenbauer(n, a, x)) == \
-        gegenbauer(n, conjugate(a), conjugate(x))
+    assert conjugate(gegenbauer(n, a, x)) == gegenbauer(n, conjugate(a), conjugate(x))
 
     assert diff(gegenbauer(n, a, x), n) == Derivative(gegenbauer(n, a, x), n)
     assert diff(gegenbauer(n, a, x), x) == 2*a*gegenbauer(n - 1, a + 1, x)
@@ -118,6 +121,9 @@ def test_legendre():
 
     assert legendre(-n, x) == legendre(n - 1, x)
     assert legendre(n, -x) == (-1)**n*legendre(n, x)
+
+    assert conjugate(legendre(n, x)) == legendre(n, conjugate(x))
+
     assert diff(legendre(n, x), x) == \
         n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)
     assert diff(legendre(n, x), n) == Derivative(legendre(n, x), n)
@@ -157,6 +163,9 @@ def test_assoc_legendre():
     raises(ValueError, lambda: Plm(-1, 0, x))
     raises(ValueError, lambda: Plm(0, 1, x))
 
+    assert conjugate(assoc_legendre(n, m, x)) == \
+        assoc_legendre(n, conjugate(m), conjugate(x))
+
 
 def test_chebyshev():
 
@@ -186,6 +195,8 @@ def test_chebyshev():
     assert chebyshevt(n, 0) == cos(pi*n/2)
     assert chebyshevt(n, 1) == 1
 
+    assert conjugate(chebyshevt(n, x)) == chebyshevt(n, conjugate(x))
+
     assert diff(chebyshevt(n, x), x) == n*chebyshevu(n - 1, x)
 
     X = chebyshevu(n, x)
@@ -196,6 +207,8 @@ def test_chebyshev():
 
     assert chebyshevu(n, 0) == cos(pi*n/2)
     assert chebyshevu(n, 1) == n + 1
+
+    assert conjugate(chebyshevu(n, x)) == chebyshevu(n, conjugate(x))
 
     assert diff(chebyshevu(n, x), x) == \
         (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
@@ -214,11 +227,36 @@ def test_hermite():
     assert hermite(n, -x) == (-1)**n*hermite(n, x)
     assert hermite(-n, x) == hermite(-n, x)
 
+    assert conjugate(hermite(n, x)) == hermite(n, conjugate(x))
+
     assert diff(hermite(n, x), x) == 2*n*hermite(n - 1, x)
     assert diff(hermite(n, x), n) == Derivative(hermite(n, x), n)
 
 
 def test_laguerre():
+    n = Symbol("n")
+
+    # Laguerre polynomials:
+    assert laguerre(0, x) == 1
+    assert laguerre(1, x) == -x + 1
+    assert laguerre(2, x) == x**2/2 - 2*x + 1
+    assert laguerre(3, x) == -x**3/6 + 3*x**2/2 - 3*x + 1
+
+    X = laguerre(n, x)
+    assert isinstance(X, laguerre)
+
+    assert laguerre(n, 0) == 1
+
+    assert conjugate(laguerre(n, x)) == laguerre(n, conjugate(x))
+
+    assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
+
+    raises(ValueError, lambda: laguerre(-2.1, x))
+
+
+def test_assoc_laguerre():
+    n = Symbol("n")
+    m = Symbol("m")
     alpha = Symbol("alpha")
 
     # generalized Laguerre polynomials:
@@ -230,26 +268,10 @@ def test_laguerre():
         (-x**3/6 + (alpha + 3)*x**2/2 - (alpha + 2)*(alpha + 3)*x/2 +
         (alpha + 1)*(alpha + 2)*(alpha + 3)/6).expand()
 
-    # Laguerre polynomials:
-    assert assoc_laguerre(0, 0, x) == 1
-    assert assoc_laguerre(1, 0, x) == 1 - x
-    assert assoc_laguerre(2, 0, x).expand() == 1 - 2*x + x**2/2
-    assert assoc_laguerre(3, 0, x).expand() == 1 - 3*x + 3*x**2/2 - x**3/6
-
-    # Test the lowest 10 polynomials with laguerre_poly, to make sure that it
-    # works:
+    # Test the lowest 10 polynomials with laguerre_poly, to make sure it works:
     for i in range(10):
         assert assoc_laguerre(i, 0, x).expand() == laguerre_poly(i, x)
 
-    n = Symbol("n")
-    X = laguerre(n, x)
-    assert isinstance(X, laguerre)
-
-    assert laguerre(n, 0) == 1
-
-    assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
-
-    m = Symbol("m")
     X = assoc_laguerre(n, m, x)
     assert isinstance(X, assoc_laguerre)
 
@@ -258,5 +280,15 @@ def test_laguerre():
 
     assert diff(assoc_laguerre(n, alpha, x), x) == \
         -assoc_laguerre(n - 1, alpha + 1, x)
-    #k = Dummy("k")
-    #assert diff(assoc_laguerre(n, alpha, x), alpha) == Sum(assoc_laguerre(k, alpha, x)/(-alpha + n), (k, 0, n - 1))
+
+    assert conjugate(assoc_laguerre(n, alpha, x)) == \
+        assoc_laguerre(n, conjugate(alpha), conjugate(x))
+
+    raises(ValueError, lambda: assoc_laguerre(-2.1, alpha, x))
+
+
+@XFAIL
+def test_laguerre_2():
+    # This fails due to issue for Sum, like issue 2440
+    alpha, k = Symbol("alpha"), Dummy("k")
+    assert diff(assoc_laguerre(n, alpha, x), alpha) == Sum(assoc_laguerre(k, alpha, x)/(-alpha + n), (k, 0, n - 1))

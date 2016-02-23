@@ -14,6 +14,7 @@ PRECEDENCE = {
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
+    "Func": 70,
     "Not": 100,
     "Atom": 1000
 }
@@ -24,6 +25,7 @@ PRECEDENCE = {
 PRECEDENCE_VALUES = {
     "Equivalent": PRECEDENCE["Xor"],
     "Xor": PRECEDENCE["Xor"],
+    "Implies": PRECEDENCE["Xor"],
     "Or": PRECEDENCE["Or"],
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],
@@ -31,11 +33,11 @@ PRECEDENCE_VALUES = {
     "Relational": PRECEDENCE["Relational"],
     "Sub": PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
-    "factorial": PRECEDENCE["Pow"],
-    "factorial2": PRECEDENCE["Pow"],
+    "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
+    "MatPow": PRECEDENCE["Pow"],
     "HadamardProduct": PRECEDENCE["Mul"]
 }
 

@@ -14,7 +14,7 @@ import unicodedata
 
 import sympy
 from sympy.core.compatibility import exec_, StringIO
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
@@ -161,6 +161,8 @@ def _group_parentheses(recursor):
                 stacks[-1].append(token)
             else:
                 result.append(token)
+        if stacklevel:
+            raise TokenError("Mismatched parentheses")
         return result
     return _inner
 
@@ -308,7 +310,8 @@ def _implicit_application(tokens, local_dict, global_dict):
 def function_exponentiation(tokens, local_dict, global_dict):
     """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, function_exponentiation)
@@ -379,7 +382,13 @@ def split_symbols_custom(predicate):
     def _split_symbols(tokens, local_dict, global_dict):
         result = []
         split = False
+        split_previous=False
         for tok in tokens:
+            if split_previous:
+                # throw out closing parenthesis of Symbol that was split
+                split_previous=False
+                continue
+            split_previous=False
             if tok[0] == NAME and tok[1] == 'Symbol':
                 split = True
             elif split and tok[0] == NAME:
@@ -389,17 +398,18 @@ def split_symbols_custom(predicate):
                         if char in local_dict or char in global_dict:
                             # Get rid of the call to Symbol
                             del result[-2:]
-                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
+                            result.extend([(NAME, "%s" % char),
                                            (NAME, 'Symbol'), (OP, '(')])
                         else:
                             result.extend([(NAME, "'%s'" % char), (OP, ')'),
                                            (NAME, 'Symbol'), (OP, '(')])
-                    # Delete the last three tokens: get rid of the extraneous
-                    # Symbol( we just added, and also get rid of the last )
-                    # because the closing parenthesis of the original Symbol is
-                    # still there
-                    del result[-3:]
+                    # Delete the last two tokens: get rid of the extraneous
+                    # Symbol( we just added
+                    # Also, set split_previous=True so will skip
+                    # the closing parenthesis of the original Symbol
+                    del result[-2:]
                     split = False
+                    split_previous = True
                     continue
                 else:
                     split = False
@@ -423,7 +433,8 @@ def implicit_multiplication(result, local_dict, global_dict):
     Use this before :func:`implicit_application`, otherwise expressions like
     ``sin 2x`` will be parsed as ``x * sin(2)`` rather than ``sin(2*x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication)
@@ -448,7 +459,8 @@ def implicit_application(result, local_dict, global_dict):
     like ``sin 2x`` will be parsed as ``x * sin(2)`` rather than
     ``sin(2*x)``.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_application)
@@ -477,7 +489,8 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
     - Functions can be exponentiated.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication_application)
@@ -561,6 +574,8 @@ def lambda_notation(tokens, local_dict, global_dict):
                 if tokNum == OP and tokVal == ':':
                     tokVal = ','
                     flag = True
+                if not flag and tokNum == OP and tokVal in ['*', '**']:
+                    raise TokenError("Starred arguments in lambda not supported")
                 if flag:
                     result.insert(-1, (tokNum, tokVal))
                 else:
@@ -692,6 +707,72 @@ def rationalize(tokens, local_dict, global_dict):
     return result
 
 
+def _transform_equals_sign(tokens, local_dict, global_dict):
+    """Transforms the equals sign ``=`` to instances of Eq.
+
+    This is a helper function for `convert_equals_signs`.
+    Works with expressions containing one equals sign and no
+    nesting. Expressions like `(1=2)=False` won't work with this
+    and should be used with `convert_equals_signs`.
+
+    Examples: 1=2     to Eq(1,2)
+              1*2=x   to Eq(1*2, x)
+
+    This does not deal with function arguments yet.
+
+    """
+    result = []
+    if (OP, "=") in tokens:
+        result.append((NAME, "Eq"))
+        result.append((OP, "("))
+        for index, token in enumerate(tokens):
+            if token == (OP, "="):
+                result.append((OP, ","))
+                continue
+            result.append(token)
+        result.append((OP, ")"))
+    else:
+        result = tokens
+    return result
+
+
+def convert_equals_signs(result, local_dict, global_dict):
+    """ Transforms all the equals signs ``=`` to instances of Eq.
+
+    Parses the equals signs in the expression and replaces them with
+    appropriate Eq instances.Also works with nested equals signs.
+
+    Does not yet play well with function arguments.
+    For example, the expression `(x=y)` is ambiguous and can be interpreted
+    as x being an argument to a function and `convert_equals_signs` won't
+    work for this.
+
+    See also
+    ========
+    convert_equality_operators
+
+    Examples:
+    =========
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, convert_equals_signs)
+    >>> parse_expr("1*2=x", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(2, x)
+    >>> parse_expr("(1*2=x)=False", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(Eq(2, x), False)
+
+    """
+    for step in (_group_parentheses(convert_equals_signs),
+                  _apply_functions,
+                  _transform_equals_sign):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
+    return result
+
+
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
@@ -753,6 +834,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         undefined variables into SymPy symbols, and allow the use of standard
         mathematical factorial notation (e.g. ``x!``).
 
+    evaluate : bool, optional
+        When False, the order of the arguments will remain as they were in the
+        string and automatic simplification that would normally occur is
+        suppressed. (see examples)
 
     Examples
     ========
@@ -768,6 +853,23 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     ...     (implicit_multiplication_application,))
     >>> parse_expr("2x", transformations=transformations)
     2*x
+
+    When evaluate=False, some automatic simplifications will not occur:
+
+    >>> parse_expr("2**3"), parse_expr("2**3", evaluate=False)
+    (8, 2**3)
+
+    In addition the order of the arguments will not be made canonical.
+    This feature allows one to tell exactly how the expression was entered:
+
+    >>> a = parse_expr('1 + x', evaluate=False)
+    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> a == b
+    False
+    >>> a.args
+    (1, x)
+    >>> b.args
+    (x, 1)
 
     See Also
     ========
@@ -786,7 +888,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
-    if evaluate is False:
+    if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
     return eval_expr(code, local_dict, global_dict)

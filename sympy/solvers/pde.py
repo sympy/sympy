@@ -34,24 +34,24 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
-from copy import deepcopy
-
 from sympy.simplify import simplify
-from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core import Add, S
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence)
-from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef, Subs)
-from sympy.core.numbers import Rational
+    is_sequence, range)
+from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, Dummy, symbols
+from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
+from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
+from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
-from sympy.simplify.simplify import collect
+from sympy.simplify.radsimp import collect
+
 import operator
+
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
@@ -59,6 +59,7 @@ allhints = (
     "1st_linear_constant_coeff_Integral",
     "1st_linear_variable_coeff"
     )
+
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     """
@@ -128,6 +129,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
 
     **Tips**
         - You can declare the derivative of an unknown function this way:
+
             >>> from sympy import Function, Derivative
             >>> from sympy.abc import x, y # x and y are the independent variables
             >>> f = Function("f")(x, y) # f is a function of x and y
@@ -157,7 +159,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> uy = u.diff(y)
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> pdsolve(eq)
-    f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+    Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
 
@@ -195,10 +197,11 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return _helper_simplify(eq, hints['hint'],
             hints['func'], hints['order'], hints[hints['hint']], solvefun)
 
+
 def _helper_simplify(eq, hint, func, order, match, solvefun):
     """Helper function of pdsolve that calls the respective
     pde functions to solve for the partial differential
-    equations. This minimises the computation in
+    equations. This minimizes the computation in
     calling _desolve multiple times.
     """
 
@@ -209,6 +212,7 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
         solvefunc = globals()["pde_" + hint]
     return _handle_Integral(solvefunc(eq, func, order,
         match, solvefun), func, order, hint)
+
 
 def _handle_Integral(expr, func, order, hint):
     r"""
@@ -317,7 +321,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         var = set(combinations_with_replacement((x,y), order))
-        dummyvar = deepcopy(var)
+        dummyvar = var.copy()
         power = None
         for i in var:
             coeff = eq.coeff(f(x,y).diff(*i))
@@ -386,6 +390,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     else:
         return tuple(retlist)
 
+
 def checkpdesol(pde, sol, func=None, solve_for_func=True):
     """
     Checks if the given solution satisfies the partial differential
@@ -438,7 +443,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(set.union, funcs, set())
+            funcs = set().union(funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkpdesol for this case.')
@@ -447,45 +452,38 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If the given solution is in the form of a list or a set
     # then return a list or set of tuples.
     if is_sequence(sol, set):
-        return type(sol)(map(lambda i: checkpdesol(pde, i,
-            solve_for_func=solve_for_func), sol))
+        return type(sol)([checkpdesol(
+            pde, i, func=func,
+            solve_for_func=solve_for_func) for i in sol])
 
     # Convert solution into an equation
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
+    elif sol.rhs == func:
+        sol = sol.reversed
 
     # Try solving for the function
-    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
-            (sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
-                result = checkpdesol(pde, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
+                return checkpdesol(pde, Eq(func, solved[0]),
+                    func=func, solve_for_func=False)
             else:
-                result = checkpdesol(pde, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
+                return checkpdesol(pde, [Eq(func, t) for t in solved],
+                    func=func, solve_for_func=False)
 
-    # The first method includes direct substitution of the solution in
-    # the PDE and simplifying.
-    pde = pde.lhs - pde.rhs
+    # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
-        s = pde.subs(func, sol.rhs).doit()
-    elif sol.rhs == func:
-        s = pde.subs(func, sol.lhs).doit()
-    if s:
-        ss = simplify(s)
-        if ss:
-            return False, ss
-        else:
-            return True, 0
-    else:
-        return True, 0
+        pde = pde.lhs - pde.rhs
+        s = simplify(pde.subs(func, sol.rhs).doit())
+        return s is S.Zero, s
+
+    raise NotImplementedError(filldedent('''
+        Unable to test if %s is a solution to %s.''' % (sol, pde)))
+
+
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     r"""
@@ -530,7 +528,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))
-    f(x, y) == F(x - y)*exp(-x/2 - y/2)
+    Eq(f(x, y), F(x - y)*exp(-x/2 - y/2))
     >>> pprint(pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)))
                           x   y
                         - - - -
@@ -555,6 +553,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     c = match[match['c']]
     d = match[match['d']]
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+
 
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
@@ -628,7 +627,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)
+    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
 
     References
     ==========
@@ -641,7 +640,6 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     # TODO : For now homogeneous first order linear PDE's having
     # two variables are implemented. Once there is support for
     # solving systems of ODE's, this can be extended to n variables.
-
     xi, eta = symbols("xi eta")
     f = func.func
     x = func.args[0]
@@ -655,10 +653,11 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
     # Integral should remain as it is in terms of xi,
     # doit() should be done in _handle_Integral.
-    genterm = (1/S(b**2 + c**2))*C.Integral(
+    genterm = (1/S(b**2 + c**2))*Integral(
         (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
     return Eq(f(x,y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
+
 
 def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     r"""
@@ -706,7 +705,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
     >>> pdsolve(eq)
-    f(x, y) == F(x*y)*exp(y**2/2) + 1
+    Eq(f(x, y), F(x*y)*exp(y**2/2) + 1)
 
     References
     ==========
@@ -788,6 +787,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         raise NotImplementedError("Cannot solve the partial differential equation due"
             " to inability of constantsimp")
 
+
 def _simplify_variable_coeff(sol, syms, func, funcarg):
     r"""
     Helper function to replace constants by functions in 1st_linear_variable_coeff
@@ -804,6 +804,7 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
             final = sol.subs(sym, func(funcarg))
 
     return simplify(final.subs(eta, funcarg))
+
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive

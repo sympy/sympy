@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, pi, Rational
-from sympy.functions import hermite, sqrt, exp, factorial
+from sympy.functions import hermite, sqrt, exp, factorial, Abs
 from sympy.physics.quantum.constants import hbar
 
 
@@ -66,3 +66,17 @@ def E_n(n, omega):
     """
 
     return hbar * omega*(n + Rational(1, 2))
+
+
+def coherent_state(n, alpha):
+    """
+    Returns <n|alpha> for the coherent states of 1D harmonic oscillator.
+    See http://en.wikipedia.org/wiki/Coherent_states
+
+    ``n``
+        the "nodal" quantum number
+    ``alpha``
+        the eigen value of annihilation operator
+    """
+
+    return exp(- Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))

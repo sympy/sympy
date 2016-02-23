@@ -1,130 +1,78 @@
 Elementary
 ==========
 
-This module implements elementary functions, as well as functions like ``Abs``,
-``Max``, etc.
+This module implements elementary functions such as trigonometric, hyperbolic, and
+sqrt, as well as functions like ``Abs``, ``Max``, ``Min`` etc.
 
+
+sympy.functions.elementary.complexes
+====================================
+
+re
+--
+
+.. autoclass:: sympy.functions.elementary.complexes.re
+   :members:
+
+im
+--
+
+.. autoclass:: sympy.functions.elementary.complexes.im
+   :members:
+
+sign
+----
+
+.. autoclass:: sympy.functions.elementary.complexes.sign
+   :members:
 
 Abs
 ---
 
-Returns the absolute value of the argument.
-
-Examples::
-
-    >>> from sympy.functions import Abs
-    >>> Abs(-1)
-    1
-
 .. autoclass:: sympy.functions.elementary.complexes.Abs
-   :members:
-
-acos
-----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.acos
-   :members:
-
-acosh
------
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.acosh
-   :members:
-
-acot
-----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.acot
-   :members:
-
-acoth
------
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.acoth
    :members:
 
 arg
 ---
 
-Returns the argument (in radians) of a complex number. For a real
-number, the argument is always 0.
-
-Examples::
-
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
-    >>> arg(2.0)
-    0
-    >>> arg(I)
-    pi/2
-    >>> arg(sqrt(2) + I*sqrt(2))
-    pi/4
-
 .. autoclass:: sympy.functions.elementary.complexes.arg
-   :members:
-
-asin
-----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.asin
-   :members:
-
-asinh
------
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.asinh
-   :members:
-
-atan
-----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.atan
-   :members:
-
-atan2
------
-
-This function is like `\operatorname{atan}`, but considers the sign of both
-arguments in order to correctly determine the quadrant of its result.
-
-.. autoclass:: sympy.functions.elementary.trigonometric.atan2
-   :members:
-
-atanh
------
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.atanh
-   :members:
-
-ceiling
--------
-
-.. autoclass:: sympy.functions.elementary.integers.ceiling
    :members:
 
 conjugate
 ---------
 
-Returns the `complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>`_
-of an argument. In mathematics, the complex conjugate of a complex number is given
-by changing the sign of the imaginary part. Thus, the conjugate of the complex number
-
-    :math:`a + ib`
-
-(where a and b are real numbers) is
-
-    :math:`a - ib`
-
-Examples::
-
-    >>> from sympy.functions import conjugate
-    >>> from sympy import I
-    >>> conjugate(2)
-    2
-    >>> conjugate(I)
-    -I
-
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
+   :members:
+
+polar_lift
+----------
+
+.. autoclass:: sympy.functions.elementary.complexes.polar_lift
+   :members:
+
+periodic_argument
+-----------------
+
+.. autoclass:: sympy.functions.elementary.complexes.periodic_argument
+   :members:
+
+principal_branch
+-----------------
+
+.. autoclass:: sympy.functions.elementary.complexes.principal_branch
+   :members:
+
+
+sympy.functions.elementary.trigonometric
+========================================
+
+Trionometric Functions
+======================
+
+sin
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.sin
    :members:
 
 cos
@@ -133,9 +81,10 @@ cos
 .. autoclass:: sympy.functions.elementary.trigonometric.cos
    :members:
 
-cosh
-----
-.. autoclass:: sympy.functions.elementary.hyperbolic.cosh
+tan
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.tan
    :members:
 
 cot
@@ -144,31 +93,77 @@ cot
 .. autoclass:: sympy.functions.elementary.trigonometric.cot
    :members:
 
-coth
-----
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.coth
-   :members:
-
-exp
+sec
 ---
 
-.. autoclass:: sympy.functions.elementary.exponential.exp
+.. autoclass:: sympy.functions.elementary.trigonometric.sec
    :members:
 
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.log`
+csc
+---
 
-ExprCondPair
-------------
-
-.. autoclass:: sympy.functions.elementary.piecewise.ExprCondPair
+.. autoclass:: sympy.functions.elementary.trigonometric.csc
    :members:
 
-floor
+sinc
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.sinc
+   :members:
+
+
+Trigonometric Inverses
+======================
+
+asin
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.asin
+   :members:
+
+acos
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acos
+   :members:
+
+atan
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.atan
+   :members:
+
+acot
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acot
+   :members:
+
+asec
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.asec
+   :members:
+
+acsc
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acsc
+   :members:
+
+atan2
 -----
 
-.. autoclass:: sympy.functions.elementary.integers.floor
+.. autoclass:: sympy.functions.elementary.trigonometric.atan2
    :members:
+
+
+sympy.functions.elementary.hyperbolic
+======================================
+
+Hyperbolic Functions
+====================
+
 
 HyperbolicFunction
 ------------------
@@ -176,30 +171,112 @@ HyperbolicFunction
 .. autoclass:: sympy.functions.elementary.hyperbolic.HyperbolicFunction
    :members:
 
-IdentityFunction
-----------------
+sinh
+----
 
-.. autoclass:: sympy.functions.elementary.miscellaneous.IdentityFunction
+.. autoclass:: sympy.functions.elementary.hyperbolic.sinh
    :members:
 
-im
---
+cosh
+----
 
-Returns the imaginary part of an expression.
-
-Examples::
-
-
-    >>> from sympy.functions import im
-    >>> from sympy import I
-    >>> im(2+3*I)
-    3
-
-.. autoclass: sympy.functions.elementary.im
+.. autoclass:: sympy.functions.elementary.hyperbolic.cosh
    :members:
 
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.re`
+tanh
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.tanh
+   :members:
+
+coth
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.coth
+   :members:
+
+sech
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.sech
+   :members:
+
+csch
+----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.csch
+   :members:
+
+
+Hyperbolic Inverses
+===================
+
+asinh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.asinh
+   :members:
+
+acosh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acosh
+   :members:
+
+atanh
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.atanh
+   :members:
+
+acoth
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.acoth
+   :members:
+
+asech
+-----
+
+.. autoclass:: sympy.functions.elementary.hyperbolic.asech
+   :members:
+
+sympy.functions.elementary.integers
+===================================
+
+ceiling
+-------
+
+.. autoclass:: sympy.functions.elementary.integers.ceiling
+   :members:
+
+
+floor
+-----
+
+.. autoclass:: sympy.functions.elementary.integers.floor
+   :members:
+
+
+RoundFunction
+-------------
+
+.. autoclass:: sympy.functions.elementary.integers.RoundFunction
+
+
+frac
+----
+
+.. autoclass:: sympy.functions.elementary.integers.frac
+
+sympy.functions.elementary.exponential
+======================================
+
+exp
+---
+
+.. autoclass:: sympy.functions.elementary.exponential.exp
+   :members:
 
 LambertW
 --------
@@ -213,37 +290,16 @@ log
 .. autoclass:: sympy.functions.elementary.exponential.log
    :members:
 
-.. seealso:: classes :py:class:`sympy.functions.elementary.exponential.exp`
 
-Min
----
+sympy.functions.elementary.piecewise
+====================================
 
-Returns the minimum of two (comparable) expressions.
+ExprCondPair
+------------
 
-Examples::
-
-    >>> from sympy.functions import Min
-    >>> Min(1,2)
-    1
-    >>> from sympy.abc import x
-    >>> Min(1, x)
-    Min(1, x)
-
-It is named ``Min`` and not ``min`` to avoid conflicts with the built-in function ``min``.
-
-.. autoclass:: sympy.functions.elementary.miscellaneous.Min
+.. autoclass:: sympy.functions.elementary.piecewise.ExprCondPair
    :members:
 
-
-Max
----
-
-Returns the maximum of two (comparable) expressions
-
-It is named ``Max`` and not ``max`` to avoid conflicts with the built-in function ``max``.
-
-.. autoclass:: sympy.functions.elementary.miscellaneous.Max
-   :members:
 
 Piecewise
 ---------
@@ -253,75 +309,36 @@ Piecewise
 
 .. autofunction:: sympy.functions.elementary.piecewise.piecewise_fold
 
-re
---
 
-Return the real part of an expression.
+sympy.functions.elementary.miscellaneous
+========================================
 
-Examples::
+IdentityFunction
+----------------
 
-    >>> from sympy.functions import re
-    >>> from sympy import I
-    >>> re(2+3*I)
-    2
-
-.. autoclass:: sympy.functions.elementary.complexes.re
+.. autoclass:: sympy.functions.elementary.miscellaneous.IdentityFunction
    :members:
 
-.. seealso::
-   :py:class:`sympy.functions.elementary.complexes.im`
+Min
+---
+
+.. autoclass:: sympy.functions.elementary.miscellaneous.Min
+   :members:
+
+
+Max
+---
+
+.. autoclass:: sympy.functions.elementary.miscellaneous.Max
+   :members:
 
 root
 ----
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.root
 
-RoundFunction
--------------
-
-.. autoclass:: sympy.functions.elementary.integers.RoundFunction
-
-sin
----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.sin
-   :members:
-
-sinh
-----
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.sinh
-   :members:
 
 sqrt
 ----
 
-Returns the square root of an expression. It is equivalent to raise to ``Rational(1,2)``.
-
-    >>> from sympy.functions import sqrt
-    >>> from sympy import Rational
-    >>> sqrt(2) == 2**Rational(1,2)
-    True
-
-.. autoclass:: sympy.functions.elementary.miscellaneous.sqrt
-   :members:
-
-
-sign
-----
-
-.. autoclass:: sympy.functions.elementary.complexes.sign
-   :members:
-
-tan
----
-
-.. autoclass:: sympy.functions.elementary.trigonometric.tan
-   :members:
-
-tanh
-----
-
-.. autoclass:: sympy.functions.elementary.hyperbolic.tanh
-   :members:
-
+.. autofunction:: sympy.functions.elementary.miscellaneous.sqrt

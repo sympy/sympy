@@ -94,7 +94,6 @@ class AntiCommutator(Expr):
             return Integer(2)*a*b
 
         # [xA,yB]  ->  xy*[A,B]
-        # from sympy.physics.qmul import QMul
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
         c_part = ca + cb

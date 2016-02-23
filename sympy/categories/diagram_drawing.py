@@ -79,16 +79,18 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://www.tug.org/applications/Xy-pic/
+[Xypic] http://xy-pic.sourceforge.net/
+
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, FiniteSet, Dict, Symbol
+from sympy.core import Dict, Symbol
+from sympy.sets import FiniteSet
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key
 from itertools import chain
-from sympy.core.compatibility import iterable, xrange
+from sympy.core.compatibility import iterable, range
 from sympy.printing import latex
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -109,7 +111,7 @@ class _GrowableGrid(object):
         self._width = width
         self._height = height
 
-        self._array = [[None for j in xrange(width)] for i in xrange(height)]
+        self._array = [[None for j in range(width)] for i in range(height)]
 
     @property
     def width(self):
@@ -140,14 +142,14 @@ class _GrowableGrid(object):
         Appends an empty row to the grid.
         """
         self._height += 1
-        self._array.append([None for j in xrange(self._width)])
+        self._array.append([None for j in range(self._width)])
 
     def append_column(self):
         """
         Appends an empty column to the grid.
         """
         self._width += 1
-        for i in xrange(self._height):
+        for i in range(self._height):
             self._array[i].append(None)
 
     def prepend_row(self):
@@ -155,14 +157,14 @@ class _GrowableGrid(object):
         Prepends the grid with an empty row.
         """
         self._height += 1
-        self._array.insert(0, [None for j in xrange(self._width)])
+        self._array.insert(0, [None for j in range(self._width)])
 
     def prepend_column(self):
         """
         Prepends the grid with an empty column.
         """
         self._width += 1
-        for i in xrange(self._height):
+        for i in range(self._height):
             self._array[i].insert(0, None)
 
 
@@ -502,7 +504,7 @@ class DiagramGrid(object):
             grid.prepend_row()
             i = 0
             offset = (1, 0)
-            for k in xrange(len(fringe)):
+            for k in range(len(fringe)):
                 ((i1, j1), (i2, j2)) = fringe[k]
                 fringe[k] = ((i1 + 1, j1), (i2 + 1, j2))
         elif i == grid.height:
@@ -512,7 +514,7 @@ class DiagramGrid(object):
             j = 0
             offset = (offset[0], 1)
             grid.prepend_column()
-            for k in xrange(len(fringe)):
+            for k in range(len(fringe)):
                 ((i1, j1), (i2, j2)) = fringe[k]
                 fringe[k] = ((i1, j1 + 1), (i2, j2 + 1))
         elif j == grid.width:
@@ -709,8 +711,8 @@ class DiagramGrid(object):
         This method should be applied when ``_weld_triangle`` cannot
         find weldings any more.
         """
-        for i in xrange(grid.height):
-            for j in xrange(grid.width):
+        for i in range(grid.height):
+            for j in range(grid.width):
                 obj = grid[i, j]
                 if not obj:
                     continue
@@ -744,7 +746,7 @@ class DiagramGrid(object):
                 # the existing structure by a vertex.
 
                 candidates = sorted([e for e in tri if skeleton[e]],
-                                    key=lambda e: FiniteSet(e).sort_key())
+                                    key=lambda e: FiniteSet(*e).sort_key())
                 edges = [e for e in candidates if obj in e]
 
                 # Note that a meaningful edge (i.e., and edge that is
@@ -821,7 +823,7 @@ class DiagramGrid(object):
             iterable.
             """
             if iterable(group):
-                return FiniteSet(group)
+                return FiniteSet(*group)
             else:
                 return group
 
@@ -883,27 +885,27 @@ class DiagramGrid(object):
                 return (1, 1)
 
         row_heights = [max(group_size(top_grid[i, j])[0]
-                           for j in xrange(top_grid.width))
-                       for i in xrange(top_grid.height)]
+                           for j in range(top_grid.width))
+                       for i in range(top_grid.height)]
 
         column_widths = [max(group_size(top_grid[i, j])[1]
-                             for i in xrange(top_grid.height))
-                         for j in xrange(top_grid.width)]
+                             for i in range(top_grid.height))
+                         for j in range(top_grid.width)]
 
         grid = _GrowableGrid(sum(column_widths), sum(row_heights))
 
         real_row = 0
         real_column = 0
-        for logical_row in xrange(top_grid.height):
-            for logical_column in xrange(top_grid.width):
+        for logical_row in range(top_grid.height):
+            for logical_column in range(top_grid.width):
                 obj = top_grid[logical_row, logical_column]
 
                 if obj in groups_grids:
                     # This is a group.  Copy the corresponding grid in
                     # place.
                     local_grid = groups_grids[obj]
-                    for i in xrange(local_grid.height):
-                        for j in xrange(local_grid.width):
+                    for i in range(local_grid.height):
+                        for j in range(local_grid.width):
                             grid[real_row + i,
                                 real_column + j] = local_grid[i, j]
                 else:
@@ -987,7 +989,7 @@ class DiagramGrid(object):
                     remaining_objects = all_objects - placed_objects
 
                     remaining_diagram = diagram.subdiagram_from_objects(
-                        FiniteSet(remaining_objects))
+                        FiniteSet(*remaining_objects))
                     remaining_grid = DiagramGrid(remaining_diagram)
 
                     # Now, let's glue ``remaining_grid`` to ``grid``.
@@ -995,13 +997,13 @@ class DiagramGrid(object):
                     final_height = max(grid.height, remaining_grid.height)
                     final_grid = _GrowableGrid(final_width, final_height)
 
-                    for i in xrange(grid.width):
-                        for j in xrange(grid.height):
+                    for i in range(grid.width):
+                        for j in range(grid.height):
                             final_grid[i, j] = grid[i, j]
 
                     start_j = grid.width
-                    for i in xrange(remaining_grid.height):
-                        for j in xrange(remaining_grid.width):
+                    for i in range(remaining_grid.height):
+                        for j in range(remaining_grid.width):
                             final_grid[i, start_j + j] = remaining_grid[i, j]
 
                     return final_grid
@@ -1135,7 +1137,7 @@ class DiagramGrid(object):
                 current_index += 1
 
         # List the objects of the components.
-        component_objects = [[] for i in xrange(current_index)]
+        component_objects = [[] for i in range(current_index)]
         for o, idx in component_index.items():
             component_objects[idx].append(o)
 
@@ -1206,8 +1208,8 @@ class DiagramGrid(object):
             grid = _GrowableGrid(total_width, total_height)
             start_j = 0
             for g in grids:
-                for i in xrange(g.height):
-                    for j in xrange(g.width):
+                for i in range(g.height):
+                    for j in range(g.width):
                         grid[i, start_j + j] = g[i, j]
 
                 start_j += g.width
@@ -1223,8 +1225,8 @@ class DiagramGrid(object):
         if hints.get("transpose"):
             # Transpose the resulting grid.
             grid = _GrowableGrid(self._grid.height, self._grid.width)
-            for i in xrange(self._grid.height):
-                for j in xrange(self._grid.width):
+            for i in range(self._grid.height):
+                for j in range(self._grid.width):
                     grid[j, i] = self._grid[i, j]
             self._grid = grid
 
@@ -1448,7 +1450,7 @@ class ArrowStringDescription(object):
     References
     ==========
 
-    [Xypic] http://www.tug.org/applications/Xy-pic/
+    [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
@@ -1817,7 +1819,7 @@ class XypicDiagramDrawer(object):
         up = []
         down = []
         straight_horizontal = []
-        for k in xrange(start + 1, end):
+        for k in range(start + 1, end):
             obj = grid[i, k]
             if not obj:
                 continue
@@ -1924,7 +1926,7 @@ class XypicDiagramDrawer(object):
         left = []
         right = []
         straight_vertical = []
-        for k in xrange(start + 1, end):
+        for k in range(start + 1, end):
             obj = grid[k, j]
             if not obj:
                 continue
@@ -2117,14 +2119,14 @@ class XypicDiagramDrawer(object):
             free_up = True
         else:
             free_up = all([grid[dom_i - 1, j] for j in
-                           xrange(start, end + 1)])
+                           range(start, end + 1)])
 
         # Check for free space below.
         if dom_i == grid.height - 1:
             free_down = True
         else:
             free_down = all([not grid[dom_i + 1, j] for j in
-                             xrange(start, end + 1)])
+                             range(start, end + 1)])
 
         return (free_up, free_down, backwards)
 
@@ -2147,13 +2149,13 @@ class XypicDiagramDrawer(object):
             free_left = True
         else:
             free_left = all([not grid[i, dom_j - 1] for i in
-                             xrange(start, end + 1)])
+                             range(start, end + 1)])
 
         if dom_j == grid.width - 1:
             free_right = True
         else:
             free_right = all([not grid[i, dom_j + 1] for i in
-                              xrange(start, end + 1)])
+                              range(start, end + 1)])
 
         return (free_left, free_right, backwards)
 
@@ -2166,9 +2168,9 @@ class XypicDiagramDrawer(object):
         """
         def abs_xrange(start, end):
             if start < end:
-                return xrange(start, end + 1)
+                return range(start, end + 1)
             else:
-                return xrange(end, start + 1)
+                return range(end, start + 1)
 
         if dom_i < cod_i and dom_j < cod_j:
             # This morphism goes from top-left to
@@ -2358,8 +2360,8 @@ class XypicDiagramDrawer(object):
 
         result = "\\xymatrix%s{\n" % diagram_format
 
-        for i in xrange(grid.height):
-            for j in xrange(grid.width):
+        for i in range(grid.height):
+            for j in range(grid.width):
                 obj = grid[i, j]
                 if obj:
                     result += latex(obj) + " "
@@ -2473,8 +2475,8 @@ class XypicDiagramDrawer(object):
         # Build the mapping between objects and their position in the
         # grid.
         object_coords = {}
-        for i in xrange(grid.height):
-            for j in xrange(grid.width):
+        for i in range(grid.height):
+            for j in range(grid.width):
                 if grid[i, j]:
                     object_coords[grid[i, j]] = (i, j)
 

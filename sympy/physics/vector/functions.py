@@ -8,6 +8,7 @@ from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
+from sympy.utilities.iterables import iterable
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
@@ -122,7 +123,7 @@ def express(expr, frame, frame2=None, variables=False):
             frame_set = set([])
             expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in expr.atoms():
+            for x in expr.free_symbols:
                 if isinstance(x, CoordinateSym)and x.frame != frame:
                     frame_set.add(x.frame)
             subs_dict = {}
@@ -554,9 +555,9 @@ def partial_velocity(vel_list, u_list, frame):
     [[N.x]]
 
     """
-    if not hasattr(vel_list, '__iter__'):
+    if not iterable(vel_list):
         raise TypeError('Provide velocities in an iterable')
-    if not hasattr(u_list, '__iter__'):
+    if not iterable(u_list):
         raise TypeError('Provide speeds in an iterable')
     list_of_pvlists = []
     for i in vel_list:
@@ -599,7 +600,7 @@ def dynamicsymbols(names, level=0):
 
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
-    if hasattr(esses, '__iter__'):
+    if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
     else:

@@ -1,4 +1,4 @@
-from sympy import I, Integer, latex, pretty
+from sympy import I, Integer
 
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.dagger import Dagger

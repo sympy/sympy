@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -303,7 +304,7 @@ class Wigner6j(Expr):
     def doit(self, **hints):
         if self.is_symbolic:
             raise ValueError("Coefficients must be numerical")
-        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j3)
+        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j23)
 
 
 class Wigner9j(Expr):

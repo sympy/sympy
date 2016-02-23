@@ -1,12 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Expr
+from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
-from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
     true, false)
-from sympy.core.compatibility import default_sort_key, xrange
+from sympy.core.compatibility import default_sort_key, range
 
 
 class ExprCondPair(Tuple):
@@ -60,7 +59,7 @@ class Piecewise(Function):
     Usage:
 
       Piecewise( (expr,cond), (expr,cond), ... )
-        - Each argument is a 2-tuple defining a expression and condition
+        - Each argument is a 2-tuple defining an expression and condition
         - The conds are evaluated in turn returning the first that is True.
           If any of the evaluated conds are not determined explicitly False,
           e.g. x < 1, the function is returned in symbolic form.
@@ -94,7 +93,8 @@ class Piecewise(Function):
         # (Try to) sympify args first
         newargs = []
         for ec in args:
-            pair = ExprCondPair(*ec)
+            # ec could be a ExprCondPair or a tuple
+            pair = ExprCondPair(*getattr(ec, 'args', ec))
             cond = pair.cond
             if cond == false:
                 continue
@@ -352,7 +352,7 @@ class Piecewise(Function):
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)
 
-            for n in xrange(len(int_expr)):
+            for n in range(len(int_expr)):
                 # Part 2: remove any interval overlap.  For any conflicts, the
                 # iterval already there wins, and the incoming interval updates
                 # its bounds accordingly.
@@ -395,7 +395,7 @@ class Piecewise(Function):
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
 
-        for n in xrange(len(int_expr)):
+        for n in range(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
                     newval = Min(*int_expr[n][:-1])
@@ -474,8 +474,8 @@ class Piecewise(Function):
                 return when_multiple
         return b
 
-    _eval_is_bounded = lambda self: self._eval_template_is_attr(
-        'is_bounded', when_multiple=False)
+    _eval_is_finite = lambda self: self._eval_template_is_attr(
+        'is_finite', when_multiple=False)
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex')
     _eval_is_even = lambda self: self._eval_template_is_attr('is_even')
     _eval_is_imaginary = lambda self: self._eval_template_is_attr(
@@ -514,7 +514,7 @@ class Piecewise(Function):
 
     def as_expr_set_pairs(self):
         exp_sets = []
-        U = S.UniversalSet
+        U = S.Reals
         for expr, cond in self.args:
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int

@@ -15,9 +15,11 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        sympify, Equality, solve, Lambda, DiracDelta)
-from sympy.core.compatibility import reduce
-from sympy.core.sets import FiniteSet, ProductSet
+        Equality, Lambda, DiracDelta, sympify)
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
+from sympy.solvers.solveset import solveset
+from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.abc import x
 
 
@@ -121,7 +123,7 @@ class PSpace(Basic):
     A Probability Space
 
     Probability Spaces encode processes that equal different values
-    probabalistically. These underly Random Symbols which occur in SymPy
+    probabilistically. These underly Random Symbols which occur in SymPy
     expressions and contain the mechanics to evaluate statistical statements.
 
     See Also
@@ -228,7 +230,6 @@ class RandomSymbol(Expr):
             raise TypeError("pspace variable should be of type PSpace")
         return Basic.__new__(cls, pspace, symbol)
 
-    is_bounded = True
     is_finite = True
     is_Symbol = True
     is_Atom = True
@@ -239,9 +240,14 @@ class RandomSymbol(Expr):
     symbol = property(lambda self: self.args[1])
     name   = property(lambda self: self.symbol.name)
 
-    is_positive = property(lambda self: self.symbol.is_positive)
-    is_integer = property(lambda self: self.symbol.is_integer)
-    is_real = property(lambda self: self.symbol.is_real or self.pspace.is_real)
+    def _eval_is_positive(self):
+        return self.symbol.is_positive
+
+    def _eval_is_integer(self):
+        return self.symbol.is_integer
+
+    def _eval_is_real(self):
+        return self.symbol.is_real or self.pspace.is_real
 
     @property
     def is_commutative(self):
@@ -269,7 +275,7 @@ class ProductPSpace(PSpace):
             for value in space.values:
                 rs_space_dict[value] = space
 
-        symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
+        symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
         if len(symbols) < sum(len(space.symbols) for space in spaces):
@@ -296,7 +302,7 @@ class ProductPSpace(PSpace):
 
     @property
     def symbols(self):
-        return FiniteSet(val.symbol for val in self.rs_space_dict.keys())
+        return FiniteSet(*[val.symbol for val in self.rs_space_dict.keys()])
 
     @property
     def spaces(self):
@@ -347,7 +353,7 @@ class ProductDomain(RandomDomain):
                 domains2.append(domain)
             else:
                 domains2.extend(domain.domains)
-        domains2 = FiniteSet(domains2)
+        domains2 = FiniteSet(*domains2)
 
         if all(domain.is_Finite for domain in domains2):
             from sympy.stats.frv import ProductFiniteDomain
@@ -365,8 +371,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def symbols(self):
-        return FiniteSet(sym for domain in self.domains
-                             for sym    in domain.symbols)
+        return FiniteSet(*[sym for domain in self.domains
+                               for sym    in domain.symbols])
 
     @property
     def domains(self):
@@ -381,7 +387,8 @@ class ProductDomain(RandomDomain):
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
             elem = frozenset([item for item in other
-                if item[0] in domain.symbols])
+                              if sympify(domain.symbols.contains(item[0]))
+                              is S.true])
             # Test this sub-event
             if elem not in domain:
                 return False
@@ -418,9 +425,10 @@ def pspace(expr):
     True
     """
 
+    expr = sympify(expr)
     rvs = random_symbols(expr)
     if not rvs:
-        return None
+        raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
@@ -432,7 +440,7 @@ def sumsets(sets):
     """
     Union of sets
     """
-    return reduce(frozenset.union, sets, frozenset())
+    return frozenset().union(*sets)
 
 
 def rs_swap(a, b):
@@ -465,7 +473,7 @@ def given(expr, condition=None, **kwargs):
 
     >>> from sympy.stats import given, density, Die
     >>> X = Die('X', 6)
-    >>> Y = given(X, X>3)
+    >>> Y = given(X, X > 3)
     >>> density(Y).dict
     {4: 1/3, 5: 1/3, 6: 1/3}
 
@@ -499,7 +507,11 @@ def given(expr, condition=None, **kwargs):
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
-        results = solve(condition, rv)
+
+        results = solveset(condition, rv)
+        if isinstance(results, Intersection) and S.Reals in results.args:
+            results = list(results.args[1])
+
         return sum(expr.subs(rv, res) for res in results)
 
     # Get full probability space of both the expression and the condition
@@ -519,7 +531,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     Returns the expected value of a random expression
 
     Parameters
-    ----------
+    ==========
+
     expr : Expr containing RandomSymbols
         The expression of which you want to compute the expectation value
     given : Expr containing RandomSymbols
@@ -541,7 +554,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     >>> E(2*X + 1)
     8
 
-    >>> E(X, X>3) # Expectation of X given that it is above 3
+    >>> E(X, X > 3) # Expectation of X given that it is above 3
     5
     """
 
@@ -574,15 +587,15 @@ def probability(condition, given_condition=None, numsamples=None,
     Probability that a condition is true, optionally given a second condition
 
     Parameters
-    ----------
-    expr : Relational containing RandomSymbols
+    ==========
+
+    condition : Combination of Relationals containing RandomSymbols
         The condition of which you want to compute the probability
-    given_condition : Relational containing RandomSymbols
-        A conditional expression. P(X>1, X>0) is expectation of X>1 given X>0
+    given_condition : Combination of Relationals containing RandomSymbols
+        A conditional expression. P(X > 1, X > 0) is expectation of X > 1
+        given X > 0
     numsamples : int
         Enables sampling and approximates the probability with this many samples
-    evalf : Bool (defaults to True)
-        If sampling return a number rather than a complex expression
     evaluate : Bool (defaults to True)
         In case of continuous systems return unevaluated integral
 
@@ -592,13 +605,30 @@ def probability(condition, given_condition=None, numsamples=None,
     >>> from sympy.stats import P, Die
     >>> from sympy import Eq
     >>> X, Y = Die('X', 6), Die('Y', 6)
-    >>> P(X>3)
+    >>> P(X > 3)
     1/2
-    >>> P(Eq(X, 5), X>2) # Probability that X == 5 given that X > 2
+    >>> P(Eq(X, 5), X > 2) # Probability that X == 5 given that X > 2
     1/4
-    >>> P(X>Y)
+    >>> P(X > Y)
     5/12
     """
+
+    condition = sympify(condition)
+    given_condition = sympify(given_condition)
+
+    if given_condition is not None and \
+            not isinstance(given_condition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+                % (given_condition))
+    if given_condition == False:
+        return S.Zero
+    if not isinstance(condition, (Relational, Boolean)):
+        raise ValueError("%s is not a relational or combination of relationals"
+                % (condition))
+    if condition is S.true:
+        return S.One
+    if condition is S.false:
+        return S.Zero
 
     if numsamples:
         return sampling_P(condition, given_condition, numsamples=numsamples,
@@ -631,7 +661,7 @@ class Density(Basic):
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
         if not random_symbols(expr):
-            return Lambda(x, DiracDelta(x-expr))
+            return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
             isinstance(pspace(expr), SinglePSpace)):
@@ -644,16 +674,25 @@ class Density(Basic):
             return result
 
 
-def density(expr, condition=None, evaluate=True, **kwargs):
+def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     """
-    Probability density of a random expression
-
-    Optionally given a second condition
+    Probability density of a random expression, optionally given a second
+    condition.
 
     This density will take on different forms for different types of
-    probability spaces.
-    Discrete variables produce Dicts.
-    Continuous variables produce Lambdas.
+    probability spaces. Discrete variables produce Dicts. Continuous
+    variables produce Lambdas.
+
+    Parameters
+    ==========
+
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the density value
+    condition : Relational containing RandomSymbols
+        A conditional expression. density(X > 1, X > 0) is density of X > 1
+        given X > 0
+    numsamples : int
+        Enables sampling and approximates the density with this many samples
 
     Examples
     ========
@@ -672,6 +711,11 @@ def density(expr, condition=None, evaluate=True, **kwargs):
     >>> density(X)(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
     """
+
+    if numsamples:
+        return sampling_density(expr, condition, numsamples=numsamples,
+                **kwargs)
+
     return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
 
@@ -699,11 +743,11 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
     >>> cdf(D)
     {1: 1/6, 2: 1/3, 3: 1/2, 4: 2/3, 5: 5/6, 6: 1}
-    >>> cdf(3*D, D>2)
+    >>> cdf(3*D, D > 2)
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> cdf(X)
-    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    Lambda(_z, -erfc(sqrt(2)*_z/2)/2 + 1)
     """
     if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
@@ -739,8 +783,7 @@ def where(condition, given_condition=None, **kwargs):
     (-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
-    """
+    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)
@@ -759,7 +802,7 @@ def sample(expr, condition=None, **kwargs):
     >>> from sympy.stats import Die, sample
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
-    >>> die_roll = sample(X+Y+Z) # A random realization of three dice
+    >>> die_roll = sample(X + Y + Z) # A random realization of three dice
     """
     return next(sample_iter(expr, condition, numsamples=1))
 
@@ -773,7 +816,8 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     numsamples: Length of the iterator (defaults to infinity)
 
     Examples
-    --------
+    ========
+
     >>> from sympy.stats import Normal, sample_iter
     >>> X = Normal('X', 0, 1)
     >>> expr = X*X + 3
@@ -821,7 +865,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
         fn(*args)
         if condition:
             given_fn(*args)
-    except:
+    except Exception:
         raise TypeError("Expr/condition too complex for lambdify")
 
     def return_generator():
@@ -855,7 +899,6 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         ps = pspace(expr)
 
     count = 0
-
     while count < numsamples:
         d = ps.sample()  # a dictionary that maps RVs to values
 
@@ -867,7 +910,6 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
                 continue
 
         yield expr.xreplace(d)
-
         count += 1
 
 
@@ -880,6 +922,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_E
+    sampling_density
     """
 
     count_true = 0
@@ -904,7 +947,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
         return result
 
 
-def sampling_E(condition, given_condition=None, numsamples=1,
+def sampling_E(expr, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
     Sampling version of E
@@ -913,9 +956,10 @@ def sampling_E(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_P
+    sampling_density
     """
 
-    samples = sample_iter(condition, given_condition,
+    samples = sample_iter(expr, given_condition,
                           numsamples=numsamples, **kwargs)
 
     result = Add(*list(samples)) / numsamples
@@ -923,6 +967,23 @@ def sampling_E(condition, given_condition=None, numsamples=1,
         return result.evalf()
     else:
         return result
+
+def sampling_density(expr, given_condition=None, numsamples=1, **kwargs):
+    """
+    Sampling version of density
+
+    See Also
+    ========
+    density
+    sampling_P
+    sampling_E
+    """
+
+    results = {}
+    for result in sample_iter(expr, given_condition,
+                              numsamples=numsamples, **kwargs):
+        results[result] = results.get(result, 0) + 1
+    return results
 
 
 def dependent(a, b):
@@ -943,7 +1004,7 @@ def dependent(a, b):
     False
     >>> dependent(2*X + Y, -Y)
     True
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> dependent(X, Y)
     True
 
@@ -979,7 +1040,7 @@ def independent(a, b):
     True
     >>> independent(2*X + Y, -Y)
     False
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> independent(X, Y)
     False
 
@@ -995,13 +1056,17 @@ def pspace_independent(a, b):
     Tests for independence between a and b by checking if their PSpaces have
     overlapping symbols. This is a sufficient but not necessary condition for
     independence and is intended to be used internally.
-    Note:
-    pspace_independent(a,b) implies independent(a,b)
-    independent(a,b) does not imply pspace_independent(a,b)
+
+    Notes
+    =====
+
+    pspace_independent(a, b) implies independent(a, b)
+    independent(a, b) does not imply pspace_independent(a, b)
     """
-    a_symbols = pspace(b).symbols
-    b_symbols = pspace(a).symbols
-    if len(a_symbols.intersect(b_symbols)) == 0:
+    a_symbols = set(pspace(b).symbols)
+    b_symbols = set(pspace(a).symbols)
+
+    if len(a_symbols.intersection(b_symbols)) == 0:
         return True
     return None
 

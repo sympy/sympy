@@ -1,9 +1,8 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O)
+                   exp_polar, polar_lift, O, stieltjes)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, test_numerically as tn)
-from sympy.utilities.pytest import XFAIL
+                      random_complex_number as randcplx, verify_numerically as tn)
 
 x = Symbol('x')
 a = Symbol('a')
@@ -122,7 +121,7 @@ def myexpand(func, target):
 
 
 def test_polylog_expansion():
-    from sympy import factor, log
+    from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == dirichlet_eta(s)
@@ -140,7 +139,6 @@ def test_lerchphi_expansion():
     # direct summation
     assert myexpand(lerchphi(z, -1, a), a/(1 - z) + z/(1 - z)**2)
     assert myexpand(lerchphi(z, -3, a), None)
-
     # polylog reduction
     assert myexpand(lerchphi(z, s, S(1)/2),
                     2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z)
@@ -157,3 +155,44 @@ def test_lerchphi_expansion():
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
     assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)
+
+
+def test_stieltjes():
+    assert isinstance(stieltjes(x), stieltjes)
+    assert isinstance(stieltjes(x, a), stieltjes)
+
+    # Zero'th constant EulerGamma
+    assert stieltjes(0) == S.EulerGamma
+    assert stieltjes(0, 1) == S.EulerGamma
+
+    # Not defined
+    assert stieltjes(nan) == nan
+    assert stieltjes(0, nan) == nan
+    assert stieltjes(-1) == S.ComplexInfinity
+    assert stieltjes(1.5) == S.ComplexInfinity
+    assert stieltjes(z, 0) == S.ComplexInfinity
+    assert stieltjes(z, -1) == S.ComplexInfinity
+
+
+def test_stieltjes_evalf():
+    assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
+    assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
+    assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+
+
+def test_issue_10475():
+    a = Symbol('a', real=True)
+    b = Symbol('b', positive=True)
+    s = Symbol('s', zero=False)
+
+    assert zeta(2 + I).is_finite
+    assert zeta(1).is_finite is False
+    assert zeta(x).is_finite is None
+    assert zeta(x + I).is_finite is None
+    assert zeta(a).is_finite is None
+    assert zeta(b).is_finite is None
+    assert zeta(-b).is_finite is True
+    assert zeta(b**2 - 2*b + 1).is_finite is None
+    assert zeta(a + I).is_finite is True
+    assert zeta(b + 1).is_finite is True
+    assert zeta(s + 1).is_finite is True

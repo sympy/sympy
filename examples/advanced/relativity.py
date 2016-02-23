@@ -97,15 +97,6 @@ class Ricci(object):
 def curvature(Rmn):
     return Rmn.ud(0, 0) + Rmn.ud(1, 1) + Rmn.ud(2, 2) + Rmn.ud(3, 3)
 
-#class nu(Function):
-#    def getname(self):
-#        return r"\nu"
-#        return r"nu"
-
-#class lam(Function):
-#    def getname(self):
-#        return r"\lambda"
-#        return r"lambda"
 nu = Function("nu")
 lam = Function("lambda")
 
@@ -114,34 +105,13 @@ r = Symbol("r")
 theta = Symbol(r"theta")
 phi = Symbol(r"phi")
 
-#general, spherically symmetric metric
+# general, spherically symmetric metric
 gdd = Matrix((
     (-exp(nu(r)), 0, 0, 0),
     (0, exp(lam(r)), 0, 0),
     (0, 0, r**2, 0),
     (0, 0, 0, r**2*sin(theta)**2)
 ))
-#spherical - flat
-#gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, r**2, 0),
-#    (0, 0, 0, r**2*sin(theta)**2)
-#    ))
-#polar - flat
-#gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, 1, 0),
-#    (0, 0, 0, r**2)
-#    ))
-#polar - on the sphere, on the north pole
-#gdd=Matrix((
-#    (-1, 0, 0, 0),
-#    (0, 1, 0, 0),
-#    (0, 0, r**2*sin(theta)**2, 0),
-#    (0, 0, 0, r**2)
-#    ))
 g = MT(gdd)
 X = (t, r, theta, phi)
 Gamma = G(g, X)
@@ -216,9 +186,6 @@ def main():
     pprint_Rmn_dd(1, 1)
     pprint_Rmn_dd(2, 2)
     pprint_Rmn_dd(3, 3)
-    #print()
-    #print "scalar curvature:"
-    #print curvature(Rmn)
     print("-"*40)
     print("Solve Einstein's equations:")
     e = e.subs(nu(r), -lam(r)).doit()

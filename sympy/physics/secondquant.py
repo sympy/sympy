@@ -11,11 +11,9 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
-from sympy.physics.quantum.qexpr import split_commutative_parts
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import range
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
 
@@ -1034,6 +1032,7 @@ class FermionState(FockState):
         FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
+
         >>> FKet([]).up(i)
         0
 
@@ -1076,10 +1075,12 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         An annihilator acting on vacuum above fermi vanishes
+
         >>> FKet([]).down(a)
         0
 
         Also below fermi, it vanishes, unless we specify a fermi level > 0
+
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
@@ -1581,57 +1582,6 @@ class FixedBosonicBasis(BosonicBasis):
         return repr(self.basis)
 
 
-# def move(e, i, d):
-#     """
-#     Takes the expression "e" and moves the operator at the position i by "d".
-#     """
-#     if e.is_Mul:
-#         if d == 1:
-#             # e = a*b*c*d
-#             a = Mul(*e.args[:i])
-#             b = e.args[i]
-#             c = e.args[i+1]
-#             d = Mul(*e.args[i+2:])
-#             if isinstance(b, Dagger) and not isinstance(c, Dagger):
-#                 i, j = b.args[0].args[0], c.args[0]
-#                 return a*c*b*d-a*KroneckerDelta(i, j)*d
-#             elif not isinstance(b, Dagger) and isinstance(c, Dagger):
-#                 i, j = b.args[0], c.args[0].args[0]
-#                 return a*c*b*d-a*KroneckerDelta(i, j)*d
-#             else:
-#                 return a*c*b*d
-#         elif d == -1:
-#             # e = a*b*c*d
-#             a = Mul(*e.args[:i-1])
-#             b = e.args[i-1]
-#             c = e.args[i]
-#             d = Mul(*e.args[i+1:])
-#             if isinstance(b, Dagger) and not isinstance(c, Dagger):
-#                 i, j = b.args[0].args[0], c.args[0]
-#                 return a*c*b*d-a*KroneckerDelta(i, j)*d
-#             elif not isinstance(b, Dagger) and isinstance(c, Dagger):
-#                 i, j = b.args[0], c.args[0].args[0]
-#                 return a*c*b*d-a*KroneckerDelta(i, j)*d
-#             else:
-#                 return a*c*b*d
-#         else:
-#             if d > 1:
-#                 while d >= 1:
-#                     e = move(e, i, 1)
-#                     d -= 1
-#                     i += 1
-#                 return e
-#             elif d < -1:
-#                 while d <= -1:
-#                     e = move(e, i, -1)
-#                     d += 1
-#                     i -= 1
-#                 return e
-#     elif isinstance(e, Add):
-#         a, b = e.as_two_terms()
-#         return move(a, i, d) + move(b, i, d)
-#     raise NotImplementedError()
-
 class Commutator(Function):
     """
     The Commutator:  [A, B] = A*B - B*A
@@ -2038,7 +1988,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = xrange(len(ops) - 1, -1, -1)
+        iter = range(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2068,7 +2018,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = xrange(0, len(ops))
+        iter = range(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i
@@ -2104,7 +2054,6 @@ class NO(Expr):
         return ":%s:" % self.args[0]
 
 
-# @cacheit
 def contraction(a, b):
     """
     Calculates contraction of Fermionic operators a and b.
@@ -2314,7 +2263,7 @@ def evaluate_deltas(e):
         deltas = []
         indices = {}
         for i in e.args:
-            for s in i.atoms():
+            for s in i.free_symbols:
                 if s in indices:
                     indices[s] += 1
                 else:
@@ -2584,7 +2533,7 @@ def _get_ordered_dummies(mul, verbose=False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = reduce(set.union, list(fac_dum.values()), set())
+    all_dums = set().union(*fac_dum.values())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2597,8 +2546,7 @@ def _get_ordered_dummies(mul, verbose=False):
 
     def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(
-            set.union, [ fac_dum[fac] for fac in dumstruct ], set())
+        other_dums = set().union(*[fac_dum[fac] for fac in dumstruct])
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
@@ -2772,8 +2720,6 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
             c = contraction(string1[i], string1[j])
 
             if c:
-                # print "found contraction",c
-
                 sign = (j - i + 1) % 2
                 if sign:
                     coeff = S.NegativeOne*c
@@ -2811,7 +2757,6 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
     return Add(*result)
 
 
-# @cacheit
 def wicks(e, **kw_args):
     """
     Returns the normal ordered equivalent of an expression using Wicks Theorem.

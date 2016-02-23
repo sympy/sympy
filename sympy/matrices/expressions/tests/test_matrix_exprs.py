@@ -194,9 +194,58 @@ def test_indexing():
     A[l, k]
     A[l+1, k+1]
 
+
+def test_single_indexing():
+    A = MatrixSymbol('A', 2, 3)
+    assert A[1] == A[0, 1]
+    assert A[3] == A[1, 0]
+    assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
+    raises(IndexError, lambda: A[6])
+    raises(IndexError, lambda: A[n])
+    B = MatrixSymbol('B', n, m)
+    raises(IndexError, lambda: B[1])
+
+
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
 
+<<<<<<< HEAD
 def test_issue_7421():
     assert isinstance(diff((D*w)[k,0], w[p,0]), Derivative)
     assert isinstance(diff(w.T*D*w, w[0,0]), Derivative)
+=======
+
+def test_MatrixElement_doit():
+    u = MatrixSymbol('u', 2, 1)
+    v = ImmutableMatrix([3, 5])
+    assert u[0, 0].subs(u, v).doit() == v[0, 0]
+
+
+def test_identity_powers():
+    M = Identity(n)
+    assert MatPow(M, 3).doit() == M**3
+    assert M**n == M
+    assert MatPow(M, 0).doit() == M**2
+    assert M**-2 == M
+    assert MatPow(M, -2).doit() == M**0
+    N = Identity(3)
+    assert MatPow(N, 2).doit() == N**n
+    assert MatPow(N, 3).doit() == N
+    assert MatPow(N, -2).doit() == N**4
+    assert MatPow(N, 2).doit() == N**0
+
+
+def test_Zero_power():
+    z1 = ZeroMatrix(n, n)
+    assert z1**4 == z1
+    raises(ValueError, lambda:z1**-2)
+    assert z1**0 == Identity(n)
+    assert MatPow(z1, 2).doit() == z1**2
+    raises(ValueError, lambda:MatPow(z1, -2).doit())
+    z2 = ZeroMatrix(3, 3)
+    assert MatPow(z2, 4).doit() == z2**4
+    raises(ValueError, lambda:z2**-3)
+    assert z2**3 == MatPow(z2, 3).doit()
+    assert z2**0 == Identity(3)
+    raises(ValueError, lambda:MatPow(z2, -1).doit())
+>>>>>>> master

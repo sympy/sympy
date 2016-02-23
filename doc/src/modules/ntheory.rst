@@ -51,7 +51,23 @@ Ntheory Functions Reference
 
 .. autofunction:: divisor_count
 
+.. autofunction:: udivisors
+
+.. autofunction:: udivisor_count
+
+.. autofunction:: antidivisors
+
+.. autofunction:: antidivisor_count
+
 .. autofunction:: totient
+
+.. autofunction:: divisor_sigma
+
+.. autofunction:: udivisor_sigma
+
+.. autofunction:: core
+
+.. autofunction:: digits
 
 .. module:: sympy.ntheory.modular
 
@@ -112,3 +128,7 @@ Ntheory Functions Reference
 
 .. autoclass:: sympy.ntheory.mobius
     :members:
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction

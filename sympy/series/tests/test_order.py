@@ -1,7 +1,7 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function)
-from sympy.utilities.pytest import XFAIL, raises
+    Function, Add)
+from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
 
@@ -215,10 +215,6 @@ def test_issue_3468():
     assert y.is_positive is False
     assert z.is_positive is None
 
-    assert x.is_infinitesimal is None
-    assert y.is_infinitesimal is None
-    assert z.is_infinitesimal is None
-
 
 def test_leading_order():
     assert (x + 1 + 1/x**5).extract_leading_order(x) == ((1/x**5, O(1/x**5)),)
@@ -288,7 +284,7 @@ def test_eval():
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
     assert Order(x).subs(y, x) == Order(x)
-    assert Order(x).subs(x, x + y) == Order(x + y)
+    assert Order(x).subs(x, x + y) == Order(x + y, (x, -y))
     assert (O(1)**x).is_Pow
 
 
@@ -377,7 +373,7 @@ def test_order_at_infinity():
 
     # issue 7207
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
-    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == y**x
+    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
 
 
 def test_mixing_order_at_zero_and_infinity():
@@ -392,9 +388,30 @@ def test_mixing_order_at_zero_and_infinity():
     raises(NotImplementedError, lambda: Order(Order(x), (x, oo)))
 
 
+def test_order_at_some_point():
+    assert Order(x, (x, 1)) == Order(1, (x, 1))
+    assert Order(2*x - 2, (x, 1)) == Order(x - 1, (x, 1))
+    assert Order(-x + 1, (x, 1)) == Order(x - 1, (x, 1))
+    assert Order(x - 1, (x, 1))**2 == Order((x - 1)**2, (x, 1))
+    assert Order(x - 2, (x, 2)) - O(x - 2, (x, 2)) == Order(x - 2, (x, 2))
+
+
 def test_order_subs_limits():
     # issue 3333
     assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, (x, oo))
     assert (1 + Order(x)).limit(x, 0) == 1
     # issue 5769
     assert ((x + Order(x**2))/x).limit(x, 0) == 1
+
+    assert Order(x**2).subs(x, y - 1) == Order((y - 1)**2, (y, 1))
+    assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
+
+
+def test_issue_9192():
+    assert O(1)*O(1) == O(1)
+    assert O(1)**O(1) == O(1)
+
+def test_performance_of_adding_order():
+    l = list(x**i for i in range(1000))
+    l.append(O(x**1001))
+    assert Add(*l).subs(x,1) == O(1)

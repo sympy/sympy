@@ -1,6 +1,6 @@
 from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, oo, pi, sqrt, symbols,
-    transpose, Symbol, Piecewise, I, S, Eq
+    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
+    symbols, transpose, Symbol, Piecewise, I, S, Eq
 )
 
 from sympy.utilities.pytest import raises
@@ -39,13 +39,15 @@ def test_DiracDelta():
     assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
     assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
     assert DiracDelta(y).simplify(x) == DiracDelta(y)
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == \
+        DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
 
 
 def test_heaviside():
-    assert Heaviside(0) == 0.5
+    assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
     assert Heaviside(nan) == nan
@@ -71,3 +73,6 @@ def test_rewrite():
     assert Heaviside(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (S(1)/2, Eq(x, 0)), (0, True))
     assert Heaviside(y).rewrite(Piecewise) == Heaviside(y)
+
+    assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(y).rewrite(sign) == Heaviside(y)

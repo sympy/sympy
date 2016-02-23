@@ -15,7 +15,7 @@ TODO:
 from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
-from sympy.core.compatibility import u, string_types, xrange
+from sympy.core.compatibility import u, string_types, range
 
 
 class stringPict(object):
@@ -29,6 +29,7 @@ class stringPict(object):
         """Initialize from string.
         Multiline strings are centered.
         """
+        self.s = s
         #picture is a string that just can be printed
         self.picture = stringPict.equalLengths(s.splitlines())
         #baseline is the line number of the "base line"
@@ -443,7 +444,7 @@ class prettyForm(stringPict):
                 arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
-        for i in xrange(len_res):
+        for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)
@@ -453,6 +454,10 @@ class prettyForm(stringPict):
             # if there is a - sign in front of all
             # This test was failing to catch a prettyForm.__mul__(prettyForm("-1", 0, 6)) being negative
             bin = prettyForm.NEG
+            if result[0] == '-':
+                right = result[1]
+                if right.picture[right.baseline][0] == '-':
+                    result[0] = '- '
         else:
             bin = prettyForm.MUL
         return prettyForm(binding=bin, *stringPict.next(*result))
@@ -467,15 +472,22 @@ class prettyForm(stringPict):
         """Make a pretty power.
         """
         a = self
-        if a.binding > prettyForm.FUNC:
-            a = stringPict(*a.parens())
+        use_inline_func_form = False
         if b.binding == prettyForm.POW:
             b = stringPict(*b.parens())
+        if a.binding > prettyForm.FUNC:
+            a = stringPict(*a.parens())
+        elif a.binding == prettyForm.FUNC:
+            # heuristic for when to use inline power
+            if b.height() > 1:
+                a = stringPict(*a.parens())
+            else:
+                use_inline_func_form = True
 
-        if a.binding == prettyForm.FUNC:
+        if use_inline_func_form:
             #         2
             #  sin  +   + (x)
-            b.baseline = a.prettyFunc.baseline + 1
+            b.baseline = a.prettyFunc.baseline + b.height()
             func = stringPict(*a.prettyFunc.right(b))
             return prettyForm(*func.right(a.prettyArgs))
         else:

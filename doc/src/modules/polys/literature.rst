@@ -52,7 +52,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Algorithms, Springer, Second Edition, 1997
 
 .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-    http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
+    https://citeseer.ist.psu.edu/myciteseer/login, 1995
 
 .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
     Systems Theory and Applications, Springer, 2003
@@ -78,6 +78,15 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
 
+.. [Collins67] G.E. Collins, Subresultants and Reduced Polynomial 
+   Remainder Sequences. J. ACM 14 (1967) 128-142
+
+.. [BrownTraub71] W.S. Brown, J.F. Traub, On Euclid's Algorithm and
+   the Theory of Subresultants. J. ACM 18 (1971) 505-514
+
+.. [Brown78] W.S. Brown, The Subresultant PRS Algorithm.
+   ACM Transaction of Mathematical Software 4 (1978) 237-249
+
 .. [Monagan00] M. Monagan and A. Wittkopf, On the Design and Implementation
     of Brown’s Algorithm over the Integers and Number Fields, Proceedings of
     ISSAC 2000, pp. 225-233, ACM, 2000.
@@ -100,7 +109,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Computation and its Application to Indefinite Summation",
     Proceedings of the International Symposium on Symbolic and
     Algebraic Computation, 1994, Pages 175-180
-    http://doi.acm.org/10.1145/190347.190413
+    http://dl.acm.org/citation.cfm?doid=190347.190413
 
 .. [Koepf98] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
     to Summation and Special Function Identities", Advanced lectures

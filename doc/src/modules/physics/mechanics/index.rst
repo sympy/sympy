@@ -2,8 +2,6 @@
 Classical Mechanics
 ===================
 
-:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud
-
 .. topic:: Abstract
 
    In this documentation many components of the physics/mechanics module will
@@ -14,7 +12,7 @@ Vector
 ======
 
 This module derives the vector-related abilities and related functionalities
-from :mod:`physics.vector`. Please have a look at the documentation of 
+from :mod:`physics.vector`. Please have a look at the documentation of
 :mod:`physics.vector` and its necessary API to understand the vector capabilities
 of :mod:`mechanics`.
 
@@ -77,6 +75,8 @@ Guide to Mechanics
 
     masses.rst
     kane.rst
+    lagrange.rst
+    linearize.rst
     examples.rst
     advanced.rst
     reference.rst
@@ -88,5 +88,8 @@ Mechanics API
     :maxdepth: 2
 
     api/part_bod.rst
-    api/kane.rst
+    api/kane_lagrange.rst
+    api/linearize.rst
+    api/expr_manip.rst
     api/printing.rst
+    api/body.rst
