@@ -2,11 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-<<<<<<< HEAD
-from sympy.core import C, S, Symbol, sympify, Tuple, Integer, Basic, Expr
-=======
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
->>>>>>> master
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
@@ -343,7 +339,6 @@ class MatrixElement(Expr):
     j = property(lambda self: self.args[2])
     _diff_wrt = True
 
-<<<<<<< HEAD
     def _eval_derivative_wrt(self, expr, new_name):
         """Transform derivatives wrt a MatrixElement to derivatives wrt a symbol.
 
@@ -394,7 +389,7 @@ class MatrixElement(Expr):
             return (replace_and_check(expr), new_self)
         except FoundAmbigousExpression:
             return None
-=======
+
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
         if deep:
@@ -402,7 +397,6 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
->>>>>>> master
 
 
 class MatrixSymbol(MatrixExpr):

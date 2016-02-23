@@ -209,11 +209,6 @@ def test_single_indexing():
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
 
-<<<<<<< HEAD
-def test_issue_7421():
-    assert isinstance(diff((D*w)[k,0], w[p,0]), Derivative)
-    assert isinstance(diff(w.T*D*w, w[0,0]), Derivative)
-=======
 
 def test_MatrixElement_doit():
     u = MatrixSymbol('u', 2, 1)
@@ -248,4 +243,8 @@ def test_Zero_power():
     assert z2**3 == MatPow(z2, 3).doit()
     assert z2**0 == Identity(3)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
->>>>>>> master
+
+
+def test_issue_7421():
+    assert isinstance(diff((D*w)[k,0], w[p,0]), Derivative)
+    assert isinstance(diff(w.T*D*w, w[0,0]), Derivative)

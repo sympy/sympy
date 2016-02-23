@@ -6,11 +6,8 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-<<<<<<< HEAD
-    exp_polar, Lambda, expand, diff, O, Expr)
-=======
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
->>>>>>> master
+    exp_polar, Lambda, expand, diff, O, Expr, Heaviside, Si, Max)
+
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1701,7 +1698,16 @@ def test_issue_6325():
     assert diff(e, t, 2, simplify=False) != ans
 
 
-<<<<<<< HEAD
+def test_issue_7426():
+    f1 = a % c
+    f2 = x % z
+    assert f1.equals(f2) == False
+
+
+def test_issue_10161():
+    x = symbols('x', real=True)
+
+
 def test_eval_derivative_wrt():
     class MyClass(Expr):
         _diff_wrt = True
@@ -1715,14 +1721,4 @@ def test_eval_derivative_wrt():
 
     assert (x*MyClass()).diff(MyClass()) == x
     assert (y*MyClass()).diff(MyClass()) == Derivative(y*MyClass(), MyClass())
-=======
-def test_issue_7426():
-    f1 = a % c
-    f2 = x % z
-    assert f1.equals(f2) == False
-
-
-def test_issue_10161():
-    x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
->>>>>>> master

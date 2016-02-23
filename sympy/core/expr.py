@@ -40,16 +40,9 @@ class Expr(Basic, EvalfMixin):
         temporarily converts the non-Symbol vars in Symbols when performing
         the differentiation.
 
-<<<<<<< HEAD
         Non-symbol _diff_wrt=True variables must also implement a
         _eval_derivative_wrt method. See Expr._eval_derivative_wrt
         for details.
-=======
-        Note, see the docstring of Derivative for how this should work
-        mathematically. In particular, note that expr.subs(yourclass, Symbol)
-        should be well-defined on a structural level, or this will lead to
-        inconsistent results.
->>>>>>> master
 
         Examples
         ========

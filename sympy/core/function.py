@@ -1139,7 +1139,6 @@ class Derivative(Expr):
             if unhandled_non_symbol:
                 obj = None
             else:
-<<<<<<< HEAD
                 if is_symbol:
                     obj = expr._eval_derivative(v)
                 else:
@@ -1148,25 +1147,6 @@ class Derivative(Expr):
                     if obj is not None:
                         obj = obj.subs(tmp_v, v)
                 nderivs += 1
-=======
-                if not is_symbol:
-                    new_v = Dummy('xi_%i' % i)
-                    new_v.dummy_index = hash(v)
-                    expr = expr.xreplace({v: new_v})
-                    old_v = v
-                    v = new_v
-                obj = expr._eval_derivative(v)
-                nderivs += 1
-                if not is_symbol:
-                    if obj is not None:
-                        if not old_v.is_Symbol and obj.is_Derivative:
-                            # Derivative evaluated at a point that is not a
-                            # symbol
-                            obj = Subs(obj, v, old_v)
-                        else:
-                            obj = obj.xreplace({v: old_v})
-                    v = old_v
->>>>>>> master
 
             if obj is None:
                 unhandled_variables.append(v)
