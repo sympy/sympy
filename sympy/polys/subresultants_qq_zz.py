@@ -53,6 +53,15 @@ Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
+In sympy the resultant is computed with the function
+resultant(f, g, x). This function does _not_ evaluate the
+determinant of sylvester(f, g, x, 1); instead, it returns
+the last member of the subresultant prs of f, g!
+
+Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
+
+resultant(f, g, x) = (-1)**(Df*Dg) * resultant(g, f, x).
+
 For complete prs’s the sign sequence of the Euclidean prs of f, g
 is identical to the sign sequence of the subresultant prs of f, g
 and the coefficients of one sequence  are easily computed from the
@@ -268,11 +277,6 @@ def sylvester(f, g, x, method = 1):
     fp = Poly(f, x).all_coeffs()
     gp = Poly(g, x).all_coeffs()
 
-    # order lists of poly coeffs according to degree
-    if m < n:
-        fp, gp = gp, fp
-        m, n = n, m
-
     # Sylvester's matrix of 1840 (default; a.k.a. sylvester1)
     if method <= 1:
         M = zeros(m + n)
@@ -294,23 +298,28 @@ def sylvester(f, g, x, method = 1):
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
     if method >= 2:
-        dim = 2*m
+        mx = max(m, n)
+        if len(fp) < len(gp):
+            h = []
+            for i in range(len(gp) - len(fp)):
+                h.append(0)
+            fp[ : 0] = h
+        else:
+            h = []
+            for i in range(len(fp) - len(gp)):
+                h.append(0)
+            gp[ : 0] = h
+        dim = 2*mx
         M = zeros( dim )
         k = 0
-        for i in range( m ):
+        for i in range( mx ):
             j = k
             for coeff in fp:
-                if i == 0:
-                    M[i, j] = coeff
-                else:
-                    M[2*i, j] = coeff
+                M[2*i, j] = coeff
                 j = j + 1
-            j = m - n + k
+            j = k
             for coeff in gp:
-                if i == 0:
-                    M[i+1, j] = coeff
-                else:
-                    M[2*i + 1, j] = coeff
+                M[2*i + 1, j] = coeff
                 j = j + 1
             k = k + 1
         return M
