@@ -880,6 +880,7 @@ def linear_eq_to_matrix(equations, *symbols):
     [f]])
 
     """
+    from sympy.simplify.radsimp import collect
 
     if not symbols:
         raise ValueError('Symbols must be given, for which coefficients \
@@ -894,7 +895,7 @@ def linear_eq_to_matrix(equations, *symbols):
     row_no = 1
 
     for equation in equations:
-        f = sympify(equation)
+        f = collect(equation.expand() ,symbols)
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
 

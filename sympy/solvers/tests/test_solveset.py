@@ -1101,3 +1101,14 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+def test_issue_10568():
+    e = [z-1 , m*(x+3*y)+8*z-3 , y-5]
+    soln = FiniteSet((-15 - 5/m, 5, 1))
+    assert linsolve(e, [x,y,z]) == soln
+
+@XFAIL
+def test_issue_10568_not_fixed():
+    e = [z-1 , m*(x+3*y)+8*z-3 , y-5]
+    soln = FiniteSet((-15 - 5/m, 5))
+    assert linsolve(e, [x,y]) == soln
