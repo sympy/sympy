@@ -1579,7 +1579,7 @@ class Rational(Number):
         return Expr.__le__(expr, other)
 
     def __hash__(self):
-        return super(Rational, self).__hash__()
+        return hash(self.evalf())
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):

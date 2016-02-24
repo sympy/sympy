@@ -1518,6 +1518,8 @@ def test_issue_10020():
     assert oo**t == Pow(oo, t, evaluate=False)
     assert (-oo)**t == Pow(-oo, t, evaluate=False)
 
+def test_issue_10675():
+    assert hash(Rational(3, 10)) == hash(S(0.3))
 
 def test_invert_numbers():
     assert S(2).invert(5) == 3
