@@ -725,17 +725,12 @@ class Interval(Set, EvalfMixin):
         if not all(i.is_real is not False or i in inftys for i in (start, end)):
             raise ValueError("Non-real intervals are not supported")
 
-        # evaluate if possible
-        if (end < start) == True:
+        # evaluate if it is even possible to calculate the interval i.e start<less and if start==end then check the  
+        if ((end < start) == True) or ((end - start).is_negative) or (end == start and (left_open or right_open)):
             return S.EmptySet
-        elif (end - start).is_negative:
-            return S.EmptySet
-
-        if end == start and (left_open or right_open):
-            return S.EmptySet
-        if end == start and not (left_open or right_open):
+        elif (end == start and not (left_open or right_open)):
             return FiniteSet(end)
-
+    
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
             left_open = true
