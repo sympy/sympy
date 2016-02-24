@@ -56,7 +56,8 @@ the two polynomials have common roots or not.
 In sympy the resultant is computed with the function
 resultant(f, g, x). This function does _not_ evaluate the
 determinant of sylvester(f, g, x, 1); instead, it returns
-the last member of the subresultant prs of f, g!
+the last member of the subresultant prs of f, g, multiplied
+(if needed) by an appropriate power of -1; see the caveat below.
 
 Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
 
