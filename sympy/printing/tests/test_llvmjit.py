@@ -131,3 +131,30 @@ def test_callback_alt_two():
     res = float(e.subs(inp).evalf())
 
     assert isclose(jit_res, res)
+
+
+def test_multiple_statements():
+    # Match return from CSE
+    e = [[(b, 4.0*a)], [b + 5]]
+    f = g.llvm_callable([a], e)
+    b_val = e[0][0][1].subs({a: 1.5})
+    res = float(e[1][0].subs({b: b_val}).evalf())
+    jit_res = f(1.5)
+    assert isclose(jit_res, res)
+
+    f_callback = g.llvm_callable([a], e, callback_type='scipy.integrate.test')
+    m = ctypes.c_int(1)
+    array_type = ctypes.c_double * 1
+    array = array_type(1.5)
+    jit_callback_res = f_callback(m, array)
+    assert isclose(jit_callback_res, res)
+
+
+def test_cse():
+    e = a*a + b*b + sympy.exp(-a*a - b*b)
+    e2 = sympy.cse(e)
+    f = g.llvm_callable([a, b], e2)
+    res = float(e.subs({a: 2.3, b: 0.1}).evalf())
+    jit_res = f(2.3, 0.1)
+
+    assert isclose(jit_res, res)

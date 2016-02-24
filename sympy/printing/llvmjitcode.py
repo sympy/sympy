@@ -34,6 +34,10 @@ class LLVMJitPrinter(Printer):
         self.builder = builder
         self.fn = fn
         self.ext_fn = {}  # keep track of wrappers to external functions
+        self.tmp_var = {}
+
+    def _add_tmp_var(self, name, value):
+        self.tmp_var[name] = value
 
     def _print_Number(self, n, **kwargs):
         return ll.Constant(self.fp_type, float(n))
@@ -42,8 +46,11 @@ class LLVMJitPrinter(Printer):
         return ll.Constant(self.fp_type, float(expr.p))
 
     def _print_Symbol(self, s):
-        # look up parameter with name s
-        return self.func_arg_map.get(s)
+        val = self.tmp_var.get(s)
+        if not val:
+            # look up parameter with name s
+            val = self.func_arg_map.get(s)
+        return val
 
     def _print_Pow(self, expr):
         base0 = self._print(expr.base)
@@ -113,6 +120,9 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
         return value
 
     def _print_Symbol(self, s):
+        val = self.tmp_var.get(s)
+        if val:
+            return val
         array, idx = self.func_arg_map.get(s, [None, 0])
         array_ptr = self.builder.gep(array, [ll.Constant(ll.IntType(32), idx)])
         fp_array_ptr = self.builder.bitcast(array_ptr,
@@ -184,11 +194,29 @@ class LLVMJitCode(object):
         lj = LLVMJitPrinter(self.module, builder, self.fn,
                             func_arg_map=self.param_dict)
 
-        ret = lj._print(expr)
+        ret = self._convert_expr(lj, expr)
         lj.builder.ret(ret)
 
         strmod = str(self.module)
         return strmod
+
+    def _convert_expr(self, lj, expr):
+        try:
+            # Match CSE return data structure.
+            # Only supports a single expression in the final value.
+            if len(expr) == 2:
+                tmp_exprs = expr[0]
+                final_exprs = expr[1]
+                if len(final_exprs) != 1:
+                    print("Only the first value in the final expression will be returned")
+                final_expr = final_exprs[0]
+                for name, e in tmp_exprs:
+                    val = lj._print(e)
+                    lj._add_tmp_var(name, val)
+        except TypeError:
+            final_expr = expr
+
+        return lj._print(final_expr)
 
     def _compile_function(self, strmod):
         global exe_engines
@@ -238,7 +266,7 @@ class LLVMJitCodeCallback(LLVMJitCode):
         lj = LLVMJitCallbackPrinter(self.module, builder, self.fn,
                                     func_arg_map=self.param_dict)
 
-        ret = lj._print(expr)
+        ret = self._convert_expr(lj, expr)
 
         if self.signature.ret_arg:
             builder.store(ret, self.fn.args[self.signature.ret_arg])
@@ -295,7 +323,7 @@ def llvm_callable(args, expr, callback_type=None):
         Arguments to the generated function.  Usually the free symbols in
         the expression.  Currently each one is assumed to convert to
         a double precision scalar.
-    expr : Expr
+    expr : Expr, or (Replacements, Expr) as returned from 'cse'
         Expression to compile.
     callback_type : string
         Create function with signature appropriate to use as a callback.
