@@ -1706,6 +1706,7 @@ def test_issue_7426():
 
 def test_issue_10161():
     x = symbols('x', real=True)
+    assert x*abs(x)*abs(x) == x**3
 
 
 def test_eval_derivative_wrt():
@@ -1721,4 +1722,3 @@ def test_eval_derivative_wrt():
 
     assert (x*MyClass()).diff(MyClass()) == x
     assert (y*MyClass()).diff(MyClass()) == Derivative(y*MyClass(), MyClass())
-    assert x*abs(x)*abs(x) == x**3

@@ -72,7 +72,9 @@ class Expr(Basic, EvalfMixin):
         create a new expression and a corresponding symbol variable.
 
         Returns a tuple of new expr and symbol, or None if the transformation
-        could not be performed. The default implementation returns None.
+        could not be performed. The default implementation returns a tuple of
+        the 'new_expr' and 'new_self' where 'new_self' is a Dummy variable and
+        new_expr is a new expression in which 'self' is replaced with 'new_self'.
 
         Examples
         ========
@@ -94,7 +96,10 @@ class Expr(Basic, EvalfMixin):
         >>> (y*MyClass()).diff(MyClass())
         Derivative(y*MyClass(), MyClass())
         """
-        return None
+        from sympy import Dummy
+        new_self = Dummy(new_name)
+        new_expr = expr.subs(self, new_self)
+        return (new_expr, new_self)
 
     @cacheit
     def sort_key(self, order=None):
@@ -630,6 +635,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
+        from sympy.solvers.solvers import solve
         from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -944,9 +950,8 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from .add import Add
-        from .mul import Mul
-        from .exprtools import decompose_power
+        from sympy.core import Add, Mul, S
+        from sympy.core.exprtools import decompose_power
 
         gens, terms = set([]), []
 

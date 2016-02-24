@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr, Dummy
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
@@ -344,7 +344,7 @@ class MatrixElement(Expr):
 
         See Expr._eval_derivative_wrt for more information.
         """
-        new_self = C.Dummy(new_name)
+        new_self = Dummy(new_name)
 
         class FoundAmbigousExpression(Exception):
             """Signal that we have found an Expression that may or may not be equal to self"""
