@@ -12,7 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp, powsimp 
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
@@ -28,6 +28,10 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+
+def _ispow(e):
+    """Return True if e is a Pow or is exp."""
+    return isinstance(e, Expr) and (e.is_Pow or e.func is exp)
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -432,7 +436,17 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
-            result = ConditionSet(symbol, Eq(f, 0), domain)
+            try:
+                if all(_ispow(g) for g in gens):
+                    for ge in gens:
+                        f_fact = powsimp(f.factor(ge))
+                        if not f_fact == f:
+                            lhs, rhs = _invert(f_fact, 0, symbol)
+                            if not symbol in rhs.free_symbols:
+                                result = Union(*[solveset_real(lhs - rhs_s, symbol) for rhs_s in rhs])
+
+            except:
+                result = ConditionSet(symbol, Eq(f, 0), domain)            
 
     if result is not None:
         if isinstance(result, FiniteSet):
