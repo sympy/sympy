@@ -447,8 +447,8 @@ class Expr(Basic, EvalfMixin):
 
         3) finding out zeros of denominator expression with free_symbols and
         multiplicative inverse for this expression. It won't be constant
-        if there are zeros. It gives more negative answerts for non-constants
-        expression.
+        if there are zeros. It gives more negative answers for expression
+        that are not constant.
 
         If neither evaluation nor differentiation can prove the expression is
         constant, None is returned unless two numerical values happened to be
@@ -498,16 +498,14 @@ class Expr(Basic, EvalfMixin):
 
         def check_denominator_zeros(expression):
 
-            from ..sets.sets import EmptySet
             from ..solvers import solveset
+            from ..solvers.solvers import denoms
 
             free_symbols = expression.free_symbols
-            multiplicative_inverse = 1 / expression
 
             for symb in free_symbols:
-                for equation in multiplicative_inverse.as_ordered_factors():
-                    if solveset(equation, symb) != EmptySet():
-                        return True
+                if any(solveset(d, symb) is not S.EmptySet for d in denoms(expression)):
+                    return True
             return False
 
         simplify = flags.get('simplify', True)

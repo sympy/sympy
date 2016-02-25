@@ -1708,9 +1708,11 @@ def test_issue_10651():
     e1 = (-1 + x)/(1 - x)
     e2 = tan(x)*cot(x)
     e3 = (4*x**2 - 4)/((1 - x)*(1 + x))
+    e4 = 1/(cos(x)**2) - (tan(x))**2
     assert e1.is_constant() == False
     assert e2.is_constant() == False
     assert e3.is_constant() == False
+    assert e4.is_constant() == False
 
 
 def test_issue_10161():
