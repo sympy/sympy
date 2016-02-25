@@ -302,17 +302,39 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
+            elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false
 
-            # If appropriate, check if the difference evaluates.  Detect
-            # incompatibility such as lhs real and rhs not real.
+            # check finiteness
+            fin = L, R = [i.is_finite for i in (lhs, rhs)]
+            if None not in fin:
+                if L != R:
+                    return S.false
+                if L is False:
+                    return S.true
+
+            # Detect incompatibility such as lhs real and rhs not real.
             if lhs.is_complex and rhs.is_complex:
                 r = (lhs - rhs).is_zero
                 if r is not None:
                     return _sympify(r)
 
-            # If expression have both Boolean terms
-            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-                return S.false  # equal args already evaluated
+            # check infiniteness if the difference evaluates
+            try:
+                n, d = (lhs - rhs).as_numer_denom()
+                fin = [i.is_finite for i in (n, d)]
+                if None not in fin:
+                    if fin[0] != fin[1]:
+                        return _sympify(fin[0])
+                    elif fin[0]:
+                        r = n.is_zero
+                        if r is True:
+                            if d.is_zero is False:
+                                return S.true
+                        elif r is False:
+                            return S.false
+            except (TypeError, AttributeError):
+                pass
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -365,7 +387,7 @@ class Unequality(Relational):
 
         if evaluate:
             is_equal = Equality(lhs, rhs)
-            if is_equal == True or is_equal == False:
+            if isinstance(is_equal, BooleanAtom):
                 return ~is_equal
 
         return Relational.__new__(cls, lhs, rhs, **options)
