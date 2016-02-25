@@ -9,7 +9,7 @@ The find_unit function can help you find units for a given quantity:
     >>> u.find_unit('coul')
     ['coulomb', 'coulombs']
     >>> u.find_unit(u.charge)
-    ['C', 'charge', 'coulomb', 'coulombs']
+    ['C', 'charge', 'coulomb', 'coulombs','coulombs_constant']
     >>> u.coulomb
     A*s
 
