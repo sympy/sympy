@@ -136,7 +136,7 @@ def prepare_apt():
     dependencies.
     """
     sudo("apt-get -qq update")
-    sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
+    sudo("apt-get -y install git python3 make python-virtualenv zip python-dev python-mpmath")
     # Needed to build the docs
     sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
     # Our Ubuntu is too old to include Python 3.3
@@ -244,7 +244,7 @@ def test_tarball(release='2'):
     tarball_formatter_dict = tarball_formatter()
 
     with use_venv(release):
-        make_virtualenv(venv)
+        make_virtualenv(venv, dependencies=['mpmath'])
         with virtualenv(venv):
             run("cp /vagrant/release/{source} releasetar.tar".format(**tarball_formatter_dict))
             run("tar xvf releasetar.tar")
@@ -299,7 +299,7 @@ def build_docs():
     with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p dist")
         venv = "/home/vagrant/docs-virtualenv"
-        make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy'])
+        make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy', 'mpmath'])
         with virtualenv(venv):
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
@@ -941,7 +941,7 @@ def test_pypi(release='2'):
     venv = "/home/vagrant/repos/test-{release}-pip-virtualenv".format(release=release)
 
     with use_venv(release):
-        make_virtualenv(venv)
+        make_virtualenv(venv, dependencies=['mpmath'])
         with virtualenv(venv):
             run("pip install sympy")
             run('python -c "import sympy; assert sympy.__version__ == \'{version}\'"'.format(version=version))
