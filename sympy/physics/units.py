@@ -248,6 +248,8 @@ c = speed_of_light = 299792458 * m/s
 G = gravitational_constant = Rational('6.67428') * ten**-11 * m**3 / kg / s**2
 u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2
 e0 = electric_constant = 1/(u0 * c**2)
+Ke = coulombs_constant = 1/(4*pi * e0)
+R = gas_constant = Rational('8.3144621') * J / mol / K
 Z0 = vacuum_impedance = u0 * c
 
 planck = Rational('6.62606896') * ten**-34 * J*s
