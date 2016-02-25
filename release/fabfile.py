@@ -244,7 +244,7 @@ def test_tarball(release='2'):
     tarball_formatter_dict = tarball_formatter()
 
     with use_venv(release):
-        make_virtualenv(venv, dependencies=['mpmath'])
+        make_virtualenv(venv)
         with virtualenv(venv):
             run("cp /vagrant/release/{source} releasetar.tar".format(**tarball_formatter_dict))
             run("tar xvf releasetar.tar")
@@ -941,7 +941,7 @@ def test_pypi(release='2'):
     venv = "/home/vagrant/repos/test-{release}-pip-virtualenv".format(release=release)
 
     with use_venv(release):
-        make_virtualenv(venv, dependencies=['mpmath'])
+        make_virtualenv(venv)
         with virtualenv(venv):
             run("pip install sympy")
             run('python -c "import sympy; assert sympy.__version__ == \'{version}\'"'.format(version=version))
