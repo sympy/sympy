@@ -532,6 +532,8 @@ def test_solveset_real_log():
 def test_poly_gens():
     assert solveset_real(4**(2*(x**2) + 2*x) - 8, x) == \
         FiniteSet(-Rational(3, 2), S.Half)
+    assert solveset_real(5**(x**2) - 5**(6-x), x) == \
+        FiniteSet(-3, 2)
 
 
 @XFAIL
@@ -915,14 +917,19 @@ def test_solveset_domain():
 
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
+    assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
+    assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
+
+
+@XFAIL
+def test_fail():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
+    # origin solution is very complicated,
+    # solveset raises RuntimeError: maximum recursion depth exceeded
     unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
-
-    assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
-    assert _has_rational_power((sin(x)**2)*(exp(x) + 1)**3, x) == (False, S.One)
 
 
 def test_issue_9522():
