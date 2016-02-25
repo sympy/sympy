@@ -7,7 +7,7 @@ The find_unit function can help you find units for a given quantity:
 
     >>> import sympy.physics.units as u
     >>> u.find_unit('coul')
-    ['coulomb', 'coulombs','coulombs_constant']
+    ['coulomb', 'coulombs', 'coulombs_constant']
     >>> u.find_unit(u.charge)
     ['C', 'charge', 'coulomb', 'coulombs']
     >>> u.coulomb
