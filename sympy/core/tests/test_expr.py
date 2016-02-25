@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+    sin, cos, tan, cot, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
     WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
@@ -1701,6 +1701,16 @@ def test_issue_7426():
     f1 = a % c
     f2 = x % z
     assert f1.equals(f2) == False
+
+
+def test_issue_10651():
+    x = Symbol('x', real=True)
+    e1 = (-1 + x)/(1 - x)
+    e2 = tan(x)*cot(x)
+    e3 = (4*x**2 - 4)/((1 - x)*(1 + x))
+    assert e1.is_constant() == False
+    assert e2.is_constant() == False
+    assert e3.is_constant() == False
 
 
 def test_issue_10161():

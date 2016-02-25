@@ -430,7 +430,7 @@ class Expr(Basic, EvalfMixin):
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
         constant, perhaps (but not necessarily) zero. To test such
-        expressions, two strategies are tried:
+        expressions, few strategies are tried:
 
         1) numerical evaluation at two random points. If two such evaluations
         give two different values and the values have a precision greater than
@@ -444,6 +444,11 @@ class Expr(Basic, EvalfMixin):
         expression is constant (see added test in test_expr.py). If
         all derivatives are zero then self is constant with respect to the
         given symbols.
+
+        3) finding out zeros of denominator expression with free_symbols and
+        multiplicative inverse for this expression. It won't be constant
+        if there are zeros. It gives more negative answerts for non-constants
+        expression.
 
         If neither evaluation nor differentiation can prove the expression is
         constant, None is returned unless two numerical values happened to be
@@ -490,6 +495,20 @@ class Expr(Basic, EvalfMixin):
         >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
         True
         """
+
+        def check_denominator_zeros(expression):
+
+            from ..sets.sets import EmptySet
+            from ..solvers import solveset
+
+            free_symbols = expression.free_symbols
+            multiplicative_inverse = 1 / expression
+
+            for symb in free_symbols:
+                for equation in multiplicative_inverse.as_ordered_factors():
+                    if solveset(equation, symb) != EmptySet():
+                        return True
+            return False
 
         simplify = flags.get('simplify', True)
 
@@ -576,6 +595,8 @@ class Expr(Basic, EvalfMixin):
                         # dead line provided _random returns None in such cases
                         return None
                 return False
+        if check_denominator_zeros(self) or check_denominator_zeros(1/self):
+            return False
         return True
 
     def equals(self, other, failing_expression=False):
