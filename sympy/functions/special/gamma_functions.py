@@ -197,6 +197,10 @@ class gamma(Function):
     def _latex_no_arg(printer):
         return r'\Gamma'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_())
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -470,6 +474,10 @@ class uppergamma(Function):
     def _eval_rewrite_as_expint(self, s, x):
         from sympy import expint
         return expint(1 - s, x)*x**s
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 ###############################################################################
