@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And
-from sympy.core import oo
+from sympy.core.numbers import oo
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
@@ -308,16 +308,13 @@ class ImageSet(Set):
 
 class Range(Set):
     """
-    Represents a range of integers.
+    Represents a range of 1 or more integers.
 
     Mimics the Python range builtin. Can be called as Range(stop),
-    Range(start, stop), or Range(start, stop, step), where step is a nonzero
-    integer, defaulting to 1. Range(stop) is the same as Range(0, stop, 1),
-    Note that like the Python range, the stop value is not included in the
-    range.
-
-    For example, Range(2, 10, 2) represents the set {2, 4, 6, 8}. Range(4)
-    represents {0, 1, 2, 3}.
+    Range(start, stop), or Range(start, stop, step), where step is a
+    nonzero integer, defaulting to 1. Range(stop) is the same as
+    Range(0, stop, 1) and the stop value (juse as for Python ranges)
+    is not included in the Range values. For example:
 
         >>> from sympy import Range
         >>> list(Range(2, 10, 2))
@@ -325,15 +322,14 @@ class Range(Set):
         >>> list(Range(4))
         [0, 1, 2, 3]
 
-    The step can also be negative. Range(10, 0, -2) represents {10, 8, 6, 4,
-    2}.
+    The step can also be negative:
 
         >>> list(Range(10, 0, -2))
         [10, 8, 6, 4, 2]
 
-    Although this object is a set, it maintains the order of the elements, so
-    that it can be used in contexts where range would be used. However, it
-    does support the usual set operations.
+    Although this object is a set (and supports the normal set
+    operations) it maintains the order of the elements and can
+    be used in contexts where range would be used.
 
         >>> from sympy import Interval
         >>> Range(0, 10, 2).intersect(Interval(3, 7))
@@ -341,18 +337,28 @@ class Range(Set):
         >>> list(_)
         [4, 6]
 
-    The stop value is canonicalized to the largest possible value for the
-    given step, so that equivalent ranges always have the same args. For
-    example, Range(0, 10, 3) and Range(0, 12, 3) both create the same object,
-    representing {0, 3, 6, 9}.
+    The stop value is made canonical so equivalent ranges always
+    have the same args. For example, Range(0, 10, 3) and
+    Range(0, 11, 3) both create the same object, Range(0, 12, 3):
 
-        >>> Range(0, 10, 3) == Range(0, 12, 3)
+        >>> Range(0, 10, 3) == Range(0, 11, 3) == Range(0, 12, 3)
         True
-
 
     Infinite ranges are allowed. If the starting point is infinite, the final value
     is stop - step. For example, Range(-oo, 0, 2) represents the negative even
-    integers, {-oo, ..., -4, -2}.
+    integers, {-oo, ..., -4, -2}. To iterate such a range, it needs to be
+    reversed:
+
+        >>> from sympy import oo
+        >>> Range(oo, 10, -1)
+        Range(oo, 10, -1)
+        >>> _.reversed
+        Range(11, oo, 1)
+
+    Finally, a Range will always be returned unless it has no elements:
+
+        >>> Range(3, 3)
+        EmptySet()
 
     Examples
     ========
@@ -384,90 +390,83 @@ class Range(Set):
             raise ValueError("step cannot be 0")
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
-                                 for w in (start, stop, step)]
+            start, stop, step = [
+                w if w in [S.NegativeInfinity, S.Infinity]
+                else sympify(as_int(w))
+                for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
                     "Use ImageSets of Ranges for other cases")
 
         if not step.is_finite:
             raise ValueError("Infinite step is not allowed")
-        if start == stop:
-            return S.EmptySet
 
-        n = ceiling((stop - start)/step)
-        if n <= 0:
-            return S.EmptySet
-
-        # normalize args: regardless of how they are entered they will show
-        # canonically as Range(inf, sup + 1, step) with step > 0 or Range(sup,
-        # inf + 1, step) with step < 0
-        if n.is_finite:
-            stop = start + n*step
-
-        if (start, stop) == (S.NegativeInfinity, S.Infinity):
+        if all(i.is_infinite for i in  (start, stop)):
             raise ValueError("The start and end value of "
                              "Range cannot both be unbounded")
+
+        dif = stop - start
+        if dif.is_infinite:
+            end = stop
         else:
-            return Basic.__new__(cls, start, stop, step)
+            if dif is S.Zero:
+                return S.EmptySet
+            n, r = divmod(dif, step)
+            if n < 0:
+                return S.EmptySet
+            if r:
+                n += 1
+            end = start + n*step
+        return Basic.__new__(cls, start, end, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
     step = property(lambda self: self.args[2])
 
+    @property
+    def reversed(self):
+        """Return an equivalent Range in the opposite order.
+
+        Examples
+        ========
+
+        >>> from sympy import Range
+        >>> Range(10).reversed
+        Range(9, -1, -1)
+        """
+        return self.func(self.stop - self.step, self.start - self.step, -self.step)
+
     def _intersect(self, other):
-        from sympy.functions.elementary.integers import floor, ceiling
-        from sympy.functions.elementary.miscellaneous import Min, Max
+        from sympy.functions.elementary.integers import ceiling, floor
         if other.is_Interval:
-            osup = other.sup
-            oinf = other.inf
-            # if other is [0, 10) we can only go up to 9
-            if osup.is_integer and other.right_open:
-                osup -= 1
-            if oinf.is_integer and other.left_open:
-                oinf += 1
+            if not all(i.is_number for i in other.args[:2]):
+                return
 
-            # Take the most restrictive of the bounds set by the two sets
-            # round inwards
-            inf = ceiling(Max(self.inf, oinf))
-            sup = floor(Min(self.sup, osup))
-            # if we are off the sequence, get back on
-
-            if self.step > 0:
-                if inf.is_finite and self.inf.is_finite:
-                    off = (inf - self.inf) % self.step
-                else:
-                    if self.start.is_infinite:
-                        if inf.is_infinite:
-                            if sup < self.sup:
-                                return Range(inf, self.sup, self.step)
-                            return Range(inf, sup + self.step, self.step)
-                        off = (self.sup - inf) % self.step
-                        inf += off
-                        return Range(inf, sup + 1, self.step)
-                    else:
-                        off = S.Zero
-                if off:
-                    inf += self.step - off
-                return Range(inf, sup + 1, self.step)
+            o = other.intersect(Interval(self.inf, self.sup))
+            if o is S.EmptySet:
+                return o
+            elif isinstance(o, FiniteSet):
+                assert len(o) == 1
+                inf = sup = list(o)[0]
             else:
-                if sup.is_finite and self.sup.is_finite:
-                    off = (self.sup - sup) % self.step
-                else:
-                    if self.start.is_infinite:
-                        if sup.is_infinite:
-                            if inf > self.inf:
-                                return Range(sup, self.inf, self.step)
-                            return Range(sup, inf + self.step, self.step)
-                        off = (self.inf - sup) % self.step
-                        if off != S.NaN:
-                            sup += off
-                        return Range(sup, inf - 1, self.step)
-                    off = S.Zero
-                if off:
-                    sup += off
-                return Range(sup, inf - 1, self.step)
+                assert isinstance(o, Interval)
+                sup = o.sup
+                inf = o.inf
 
+            # get onto sequence
+            step = abs(self.step)
+            ref = self.start if self.start.is_finite else self.stop
+            a = ref + ceiling((inf - ref)/step)*step
+            if a not in other:
+                a += step
+            b = ref + floor((sup - ref)/step)*step
+            if b not in other:
+                b -= step
+            if self.step < 0:
+                a, b = b, a
+
+            # make sure to include end point
+            return Range(a, b + self.step, self.step)
 
         if other == S.Naturals:
             return self._intersect(Interval(1, S.Infinity))
@@ -478,12 +477,12 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        if (((self.start - other)/self.step).is_integer or
-            ((self.stop - other)/self.step).is_integer):
-            return _sympify(other >= self.inf and other <= self.sup)
-        elif (((self.start - other)/self.step).is_integer is False and
-            ((self.stop - other)/self.step).is_integer is False):
+        if not other.is_Integer:
             return S.false
+        ref = self.start if self.start.is_finite else self.stop
+        if (ref - other) % self.step:  # off sequence
+            return S.false
+        return _sympify(other >= self.inf and other <= self.sup)
 
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:
@@ -501,6 +500,8 @@ class Range(Set):
 
 
     def __len__(self):
+        if self.start.is_infinite or self.stop.is_infinite:
+            return S.Infinity
         return abs((self.stop - self.start)//self.step)
 
 
@@ -510,13 +511,13 @@ class Range(Set):
     __bool__ = __nonzero__
 
     def _ith_element(self, i):
+        if self.start.is_infinite:
+            return self.start
         return self.start + i*self.step
 
     @property
     def _last_element(self):
-        if self.stop in [S.Infinity, S.NegativeInfinity]:
-            return self.stop
-        elif self.start in [S.Infinity, S.NegativeInfinity]:
+        if self.start.is_infinite or self.stop.is_infinite:
             return self.stop - self.step
         else:
             return self._ith_element(len(self) - 1)

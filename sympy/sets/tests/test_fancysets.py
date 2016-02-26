@@ -130,6 +130,7 @@ def test_Range():
     assert Range(1, 1) == S.EmptySet
     raises(ValueError, lambda: Range(0, oo, oo))
     raises(ValueError, lambda: Range(-oo, oo))
+    raises(ValueError, lambda: Range(oo, -oo, -1))
     raises(ValueError, lambda: Range(-oo, oo, 2))
     raises(ValueError, lambda: Range(0, pi, 1))
     raises(ValueError, lambda: Range(1, 10, 0))
@@ -157,6 +158,11 @@ def test_Range():
 
     assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
+    for r in (Range(1, 10, 2), Range(1, oo, 2)):
+        rev = r.reversed
+        assert r.inf == rev.inf and r.sup == rev.sup
+        assert r.step == -rev.step
+
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)
     if PY3:
@@ -174,10 +180,30 @@ def test_Range():
 
 def test_range_interval_intersection():
 
-    for r, i, result in [
+    txt = txt = "FiniteSet(*%s).intersect(%s) == FiniteSet(*%s)"
+    for line, (r, i, hand_checked) in enumerate([
         # Intersection with intervals
         (Range(0, 10, 1), Interval(2, 6), Range(2, 7)),
+        (Range(0, 2, 1), Interval(2, 6), None),
+        (Range(0, 3, 1), Interval(2, 6), None),
+        (Range(0, 4, 1), Interval(2, 6), None),
+        (Range(0, 7, 1), Interval(2, 6), None),
+        (Range(0, 10, 1), Interval(2, 6), None),
+        (Range(2, 3, 1), Interval(2, 6), None),
+        (Range(2, 4, 1), Interval(2, 6), None),
+        (Range(2, 7, 1), Interval(2, 6), None),
+        (Range(2, 10, 1), Interval(2, 6), None),
+        (Range(3, 4, 1), Interval(2, 6), None),
+        (Range(3, 7, 1), Interval(2, 6), None),
+        (Range(3, 10, 1), Interval(2, 6), None),
+        (Range(6, 7, 1), Interval(2, 6), None),
+        (Range(6, 10, 1), Interval(2, 6), None),
+        (Range(7, 10, 1), Interval(2, 6), None),
         (Range(0, 10, 2), Interval(3, 5), Range(4, 6, 2)),
+        (Range(1, 10, 2), Interval(2, 6), None),
+        (Range(2, 10, 2), Interval(2, 6), None),
+        (Range(3, 10, 2), Interval(2, 6), None),
+        (Range(6, 10, 2), Interval(2, 6), None),
         (Range(10), Interval(5.1, 6.9), Range(6, 7)),
 
         # Open Intervals are removed
@@ -186,43 +212,81 @@ def test_range_interval_intersection():
         # Try this with large steps
         (Range(0, 100, 10), Interval(15, 55), Range(20, 60, 10)),
 
-        # Going backwards
-        (Range(10, -9, -3), Interval(-5, 6), Range(4, -8, -3)),
-        (Range(10, -9, -3), Interval(-5, 6, True), Range(4, -5, -3)),
 
         # Infinite range
         (Range(0, oo, 2), Interval(-1, 5), Range(0, 6, 2)),
-        (Range(4, -oo, -3), Interval(0, 10), Range(4, 0, -3)),
         (Range(-oo, 4, 3), Interval(-10, 20), Range(-8, 4, 3)),
         (Range(-oo, 4, 3), Interval(-10, -5), Range(-8, -2, 3)),
-        (Range(oo, 4, -3), Interval(0, 10), Range(10, 4, -3)),
-        (Range(oo, 4, -3), Interval(9, 20), Range(19, 9, -3)),
 
         # Infinite interval
+        (Range(-3, 0, 3), Interval(-oo, 0), Range(-3, 0, 3)),
         (Range(0, 10, 3), Interval(3, oo), Range(3, 10, 3)),
-        (Range(10, 0, -3), Interval(3, oo), Range(10, 2, -3)),
         (Range(0, 10, 3), Interval(-oo, 5), Range(0, 5, 3)),
-        (Range(10, 0, -3), Interval(-oo, 5), Range(4, -1, -3)),
 
         # Infinite interval, infinite range start
         (Range(-oo, 1, 3), Interval(-oo, 5), Range(-oo, 1, 3)),
         (Range(-oo, 1, 3), Interval(-oo, -3), Range(-oo, -2, 3)),
-        (Range(oo, 1, -3), Interval(-3, oo), Range(oo, 1, -3)),
-        (Range(oo, 1, -3), Interval(5, oo), Range(oo, 4, -3)),
 
         # Infinite interval, infinite range end
         (Range(0, oo, 3), Interval(5, oo), Range(6, oo, 3)),
         (Range(0, oo, 3), Interval(-5, oo), Range(0, oo, 3)),
         (Range(0, oo, 3), Interval(-oo, 5), Range(0, 5, 3)),
-        (Range(0, -oo, -3), Interval(-oo, -5), Range(-6, -oo, -3)),
-        (Range(0, -oo, -3), Interval(-oo, 5), Range(0, -oo, -3)),
-        (Range(0, -oo, -3), Interval(-5, oo), Range(0, -5, -3)),
 
-        ]:
-        assert r.intersect(i) == result, "%s.intersect(%s) == %s" % (r, i,
-        result)
-        if r.is_finite and result.is_finite:
-            assert FiniteSet(*r).intersect(i) == FiniteSet(*result), "FiniteSet(*%s).intersect(%s) == FiniteSet(*%s)" % (r, i, result)
+        ]):
+        assert r
+        for rev in range(2):
+            if rev:
+                r = r.reversed
+                if hand_checked:
+                    hand_checked = hand_checked.reversed
+            result = r.intersection(i)
+
+            # compute the answer a different way
+            ans = []
+            if result:
+                _r = r
+                if _r.start.is_infinite:
+                    _r = _r.reversed
+                if _r.step < 0:
+                    if _r.start >= i.inf:
+                        for e in iter(_r):
+                            if e < i.inf:
+                                break
+                            if e in i:
+                                if len(ans) > 1:
+                                    ans[1] = e
+                                else:
+                                    ans.append(e)
+                            if ans and i.inf.is_infinite and _r.stop.is_infinite:
+                                ans.append(i.inf)
+                                break
+                else:
+                    if _r.start <= i.sup:
+                        for e in iter(_r):
+                            if e > i.sup:
+                                break
+                            if e in i:
+                                if len(ans) > 1:
+                                    ans[1] = e
+                                else:
+                                    ans.append(e)
+                            if ans and i.sup.is_infinite and _r.stop.is_infinite:
+                                ans.append(i.sup)
+                                break
+            if not ans:
+                assert not result
+            else:
+                if len(ans) == 1:
+                    ans.append(ans[0])
+                A, B = ans
+                ans = Range(A, B + _r.step, _r.step)
+                if r.step != ans.step:
+                    ans = ans.reversed
+                assert r.step == ans.step
+                assert result == ans, "%s.intersect(%s) == %s" % (r, i, ans)
+                if hand_checked:
+                    assert result == hand_checked, txt % (r, i, hand_checked)
+
 
 def test_fun():
     assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),
