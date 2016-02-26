@@ -25,7 +25,7 @@ from mpmath.libmp.libmpf import (
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
-from sympy.mpmath.libmp.backend import MPZ
+from mpmath.libmp.backend import MPZ
 
 rnd = mlib.round_nearest
 
