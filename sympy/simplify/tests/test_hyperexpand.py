@@ -543,6 +543,15 @@ def test_meijerg_confluence():
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
 
 
+def test_meijerg_with_Floats():
+    # see issue #10681
+    from sympy import RR
+    f = meijerg(((3.0, 1), ()), ((S(3)/2,), (0,)), z)
+    a = -2.3632718012073
+    g = a*z**(S(3)/2)*hyper((-0.5, S(3)/2), (S(5)/2,), z*exp_polar(I*pi))
+    assert RR.almosteq((hyperexpand(f)/g).n(), 1.0, 1e-12)
+
+
 def test_lerchphi():
     from sympy import combsimp, exp_polar, polylog, log, lerchphi
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
