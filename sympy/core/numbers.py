@@ -29,6 +29,7 @@ from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from mpmath.libmp.backend import MPZ
 
 rnd = mlib.round_nearest
 
