@@ -158,3 +158,25 @@ def test_cse():
     jit_res = f(2.3, 0.1)
 
     assert isclose(jit_res, res)
+
+
+def test_cse_multiple():
+    e1 = a*a
+    e2 = a*a + b*b
+    e3 = sympy.cse([e1, e2])
+    try:
+        g.llvm_callable([a, b], e3)
+    except NotImplementedError:
+        pass
+    else:
+        assert False, "Multiple expressions not implemented"
+
+
+def test_symbol_not_found():
+    e = a*a + b
+    try:
+        g.llvm_callable([a], e)
+    except LookupError:
+        pass
+    else:
+        assert False, "Undefined symbol should be caught"

@@ -50,6 +50,8 @@ class LLVMJitPrinter(Printer):
         if not val:
             # look up parameter with name s
             val = self.func_arg_map.get(s)
+        if not val:
+            raise LookupError("Symbol not found: %s" % s)
         return val
 
     def _print_Pow(self, expr):
@@ -123,7 +125,10 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
         val = self.tmp_var.get(s)
         if val:
             return val
+
         array, idx = self.func_arg_map.get(s, [None, 0])
+        if not array:
+            raise LookupError("Symbol not found: %s" % s)
         array_ptr = self.builder.gep(array, [ll.Constant(ll.IntType(32), idx)])
         fp_array_ptr = self.builder.bitcast(array_ptr,
                                             ll.PointerType(self.fp_type))
@@ -208,7 +213,7 @@ class LLVMJitCode(object):
                 tmp_exprs = expr[0]
                 final_exprs = expr[1]
                 if len(final_exprs) != 1:
-                    print("Only the first value in the final expression will be returned")
+                    raise NotImplementedError("Returning multiple expressions not implemented")
                 final_expr = final_exprs[0]
                 for name, e in tmp_exprs:
                     val = lj._print(e)
