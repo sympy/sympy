@@ -59,6 +59,9 @@ determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
 (if needed) by an appropriate power of -1; see the caveat below.
 
+In this module we use the function res(f, g, x) to compute the
+resultant of f, g by evaluating the determinant of sylvester(f, g, x, 1).
+
 Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
 
 resultant(f, g, x) = (-1)**(Df*Dg) * resultant(g, f, x).
@@ -223,8 +226,8 @@ from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
     '''
-      The input polynomials f, g are in Z[x] or in Q[x].
-      Let mx = max( degree(f, x) , degree(g, x) ).
+      The input polynomials f, g are in Z[x] or in Q[x]. Let m = degree(f, x),
+      n = degree(g, x) and mx = max( m , n ).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -325,6 +328,20 @@ def sylvester(f, g, x, method = 1):
                 j = j + 1
             k = k + 1
         return M
+
+def res(f, g, x):
+    """
+    The input polynomials f, g are in Z[x] or in Q[x].
+
+    The output is the resultant of f, g computed by evaluating
+    the determinant of the matrix sylvestr(f, g, x, 1).
+
+    """
+    if f == 0 or g == 0:
+        print("The resultant of ",f," and ", g," is not defined")
+        return
+    else:
+        return sylvester(f, g, x, 1).det()
 
 def sign_seq(poly_seq, x):
     """
