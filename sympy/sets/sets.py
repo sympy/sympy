@@ -166,7 +166,7 @@ class Set(Basic):
 
     def complement(self, universe):
         """
-        The complement of 'self' w.r.t the given the universe.
+        The complement of 'self' w.r.t the given universe.
 
         Examples
         ========
@@ -190,9 +190,9 @@ class Set(Basic):
             # We can conveniently represent these options easily using a
             # ProductSet
 
-            # XXX: this doesn't work if the dimentions of the sets isn't same.
+            # XXX: this doesn't work if the dimensions of the sets isn't same.
             # A - B is essentially same as A if B has a different
-            # dimentionality than A
+            # dimensionality than A
             switch_sets = ProductSet(FiniteSet(o, o - s) for s, o in
                                      zip(self.sets, other.sets))
             product_sets = (ProductSet(*set) for set in switch_sets)
@@ -428,7 +428,7 @@ class Set(Basic):
         A point x is on the boundary of a set S if
 
         1.  x is in the closure of S.
-            I.e. Every neighborhood of x contains a point in S.
+            I.e. Every neighbourhood of x contains a point in S.
         2.  x is not in the interior of S.
             I.e. There does not exist an open set centered on x contained
             entirely within S.
@@ -1877,10 +1877,10 @@ class FiniteSet(Set, EvalfMixin):
 
     def _contains(self, other):
         """
-        Tests whether an element, other, is in the set.
+        Tests whether an element 'other' is in the set.
 
         Relies on Python's set class. This tests for object equality
-        All inputs are sympified
+        All inputs are simplified
 
         Examples
         ========
