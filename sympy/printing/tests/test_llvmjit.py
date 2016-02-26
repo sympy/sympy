@@ -131,3 +131,13 @@ def test_callback_alt_two():
     res = float(e.subs(inp).evalf())
 
     assert isclose(jit_res, res)
+
+
+def test_bad_callback():
+    e = a
+    try:
+        g.llvm_callable([a], e, callback_type='bad_callback')
+    except ValueError:
+        pass
+    else:
+        assert False, "Should raise exception with unknown callback"

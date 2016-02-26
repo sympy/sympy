@@ -369,8 +369,7 @@ def llvm_callable(args, expr, callback_type=None):
         signature.input_arg = 1
         signature.ret_arg = 4
     else:
-        print("Unknown callback type: %s" % callback_type)
-        return None
+        raise ValueError("Unknown callback type: %s" % callback_type)
 
     signature.arg_ctypes = arg_ctypes
 
