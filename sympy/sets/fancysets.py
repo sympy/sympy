@@ -477,7 +477,9 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        if not other.is_Integer:
+        if other.is_integer is None:
+            return
+        if other.is_integer is False:
             return S.false
         ref = self.start if self.start.is_finite else self.stop
         if (ref - other) % self.step:  # off sequence
@@ -511,8 +513,6 @@ class Range(Set):
     __bool__ = __nonzero__
 
     def _ith_element(self, i):
-        if self.start.is_infinite:
-            return self.start
         return self.start + i*self.step
 
     @property

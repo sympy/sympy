@@ -103,6 +103,14 @@ def test_ImageSet_iterator_not_injetive():
     assert (next(i), next(i), next(i), next(i)) == (0, 2, 4, 6)
 
 
+@XFAIL
+def test_inf_Range_len():
+    assert len(Range(0, oo, 2)) == oo
+    assert len(Range(0, -oo, -2)) == oo
+    assert len(Range(oo, 0, -2)) == oo
+    assert len(Range(-oo, 0, 2)) == oo
+
+
 def test_Range():
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
 
@@ -125,8 +133,8 @@ def test_Range():
     assert Range(60, 7, -10).inf == 10
 
     assert len(Range(10, 38, 10)) == 3
-    assert Range(0, 0, 5) == S.EmptySet
 
+    assert Range(0, 0, 5) == S.EmptySet
     assert Range(1, 1) == S.EmptySet
     raises(ValueError, lambda: Range(0, oo, oo))
     raises(ValueError, lambda: Range(-oo, oo))
@@ -180,7 +188,6 @@ def test_Range():
 
 def test_range_interval_intersection():
 
-    txt = txt = "FiniteSet(*%s).intersect(%s) == FiniteSet(*%s)"
     for line, (r, i, hand_checked) in enumerate([
         # Intersection with intervals
         (Range(0, 10, 1), Interval(2, 6), Range(2, 7)),
@@ -283,9 +290,9 @@ def test_range_interval_intersection():
                 if r.step != ans.step:
                     ans = ans.reversed
                 assert r.step == ans.step
-                assert result == ans, "%s.intersect(%s) == %s" % (r, i, ans)
                 if hand_checked:
-                    assert result == hand_checked, txt % (r, i, hand_checked)
+                    assert hand_checked == ans, "%s.intersect(%s) -> %s or %s" % (r, i, ans, hand_checked)
+                assert result == ans, "%s.intersect(%s) == %s" % (r, i, ans)
 
 
 def test_fun():
