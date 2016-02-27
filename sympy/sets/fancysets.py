@@ -498,10 +498,18 @@ class Range(Set):
 
 
     def __len__(self):
-        if self.start.is_infinite or self.stop.is_infinite:
-            return S.Infinity
-        return abs((self.stop - self.start)//self.step)
+        dif = self.stop - self.start
+        if dif.is_infinite:
+            raise ValueError(
+                "Use .size to get the length of an infinite Range")
+        return abs(dif//self.step)
 
+    @property
+    def size(self):
+        dif = self.stop - self.start
+        if dif.is_infinite:
+            return S.Infinity
+        return abs(dif//self.step)
 
     def __nonzero__(self):
         return True

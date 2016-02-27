@@ -103,12 +103,12 @@ def test_ImageSet_iterator_not_injetive():
     assert (next(i), next(i), next(i), next(i)) == (0, 2, 4, 6)
 
 
-@XFAIL
 def test_inf_Range_len():
-    assert len(Range(0, oo, 2)) == oo
-    assert len(Range(0, -oo, -2)) == oo
-    assert len(Range(oo, 0, -2)) == oo
-    assert len(Range(-oo, 0, 2)) == oo
+    raises(ValueError, lambda: len(Range(0, oo, 2)))
+    assert Range(0, oo, 2).size is S.Infinity
+    assert Range(0, -oo, -2).size is S.Infinity
+    assert Range(oo, 0, -2).size is S.Infinity
+    assert Range(-oo, 0, 2).size is S.Infinity
 
 
 def test_Range():
