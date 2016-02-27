@@ -188,56 +188,56 @@ def test_Range():
 
 def test_range_interval_intersection():
 
-    for line, (r, i, manual) in enumerate([
+    for line, (r, i) in enumerate([
         # Intersection with intervals
-        (Range(0, 10, 1), Interval(2, 6), Range(2, 7)),
-        (Range(0, 2, 1), Interval(2, 6), None),
-        (Range(0, 3, 1), Interval(2, 6), None),
-        (Range(0, 4, 1), Interval(2, 6), None),
-        (Range(0, 7, 1), Interval(2, 6), None),
-        (Range(0, 10, 1), Interval(2, 6), None),
-        (Range(2, 3, 1), Interval(2, 6), None),
-        (Range(2, 4, 1), Interval(2, 6), None),
-        (Range(2, 7, 1), Interval(2, 6), None),
-        (Range(2, 10, 1), Interval(2, 6), None),
-        (Range(3, 4, 1), Interval(2, 6), None),
-        (Range(3, 7, 1), Interval(2, 6), None),
-        (Range(3, 10, 1), Interval(2, 6), None),
-        (Range(6, 7, 1), Interval(2, 6), None),
-        (Range(6, 10, 1), Interval(2, 6), None),
-        (Range(7, 10, 1), Interval(2, 6), None),
-        (Range(0, 10, 2), Interval(3, 5), Range(4, 6, 2)),
-        (Range(1, 10, 2), Interval(2, 6), None),
-        (Range(2, 10, 2), Interval(2, 6), None),
-        (Range(3, 10, 2), Interval(2, 6), None),
-        (Range(6, 10, 2), Interval(2, 6), None),
-        (Range(10), Interval(5.1, 6.9), Range(6, 7)),
+        (Range(0, 10, 1), Interval(2, 6)),
+        (Range(0, 2, 1), Interval(2, 6)),
+        (Range(0, 3, 1), Interval(2, 6)),
+        (Range(0, 4, 1), Interval(2, 6)),
+        (Range(0, 7, 1), Interval(2, 6)),
+        (Range(0, 10, 1), Interval(2, 6)),
+        (Range(2, 3, 1), Interval(2, 6)),
+        (Range(2, 4, 1), Interval(2, 6)),
+        (Range(2, 7, 1), Interval(2, 6)),
+        (Range(2, 10, 1), Interval(2, 6)),
+        (Range(3, 4, 1), Interval(2, 6)),
+        (Range(3, 7, 1), Interval(2, 6)),
+        (Range(3, 10, 1), Interval(2, 6)),
+        (Range(6, 7, 1), Interval(2, 6)),
+        (Range(6, 10, 1), Interval(2, 6)),
+        (Range(7, 10, 1), Interval(2, 6)),
+        (Range(0, 10, 2), Interval(3, 5)),
+        (Range(1, 10, 2), Interval(2, 6)),
+        (Range(2, 10, 2), Interval(2, 6)),
+        (Range(3, 10, 2), Interval(2, 6)),
+        (Range(6, 10, 2), Interval(2, 6)),
+        (Range(10), Interval(5.1, 6.9)),
 
         # Open Intervals are removed
-        (Range(0, 10, 1), Interval(2, 6, True, True), Range(3, 6)),
+        (Range(0, 10, 1), Interval(2, 6, True, True)),
 
         # Try this with large steps
-        (Range(0, 100, 10), Interval(15, 55), Range(20, 60, 10)),
+        (Range(0, 100, 10), Interval(15, 55)),
 
 
         # Infinite range
-        (Range(0, oo, 2), Interval(-1, 5), Range(0, 6, 2)),
-        (Range(-oo, 4, 3), Interval(-10, 20), Range(-8, 4, 3)),
-        (Range(-oo, 4, 3), Interval(-10, -5), Range(-8, -2, 3)),
+        (Range(0, oo, 2), Interval(-1, 5)),
+        (Range(-oo, 4, 3), Interval(-10, 20)),
+        (Range(-oo, 4, 3), Interval(-10, -5)),
 
         # Infinite interval
-        (Range(-3, 0, 3), Interval(-oo, 0), Range(-3, 0, 3)),
-        (Range(0, 10, 3), Interval(3, oo), Range(3, 10, 3)),
-        (Range(0, 10, 3), Interval(-oo, 5), Range(0, 5, 3)),
+        (Range(-3, 0, 3), Interval(-oo, 0)),
+        (Range(0, 10, 3), Interval(3, oo)),
+        (Range(0, 10, 3), Interval(-oo, 5)),
 
         # Infinite interval, infinite range start
-        (Range(-oo, 1, 3), Interval(-oo, 5), Range(-oo, 1, 3)),
-        (Range(-oo, 1, 3), Interval(-oo, -3), Range(-oo, -2, 3)),
+        (Range(-oo, 1, 3), Interval(-oo, 5)),
+        (Range(-oo, 1, 3), Interval(-oo, -3)),
 
         # Infinite interval, infinite range end
-        (Range(0, oo, 3), Interval(5, oo), Range(6, oo, 3)),
-        (Range(0, oo, 3), Interval(-5, oo), Range(0, oo, 3)),
-        (Range(0, oo, 3), Interval(-oo, 5), Range(0, 5, 3)),
+        (Range(0, oo, 3), Interval(5, oo)),
+        (Range(0, oo, 3), Interval(-5, oo)),
+        (Range(0, oo, 3), Interval(-oo, 5)),
 
         ]):
 
