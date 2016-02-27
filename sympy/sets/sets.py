@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import _sympify, sympify, converter
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
@@ -1967,6 +1967,10 @@ class FiniteSet(Set, EvalfMixin):
         if not isinstance(other, Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
+
+
+converter[set] = lambda x: FiniteSet(*x)
+converter[frozenset] = lambda x: FiniteSet(*x)
 
 
 class SymmetricDifference(Set):
