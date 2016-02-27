@@ -501,10 +501,10 @@ class Expr(Basic, EvalfMixin):
             from ..solvers import solveset
             from ..solvers.solvers import denoms
 
-            free_symbols = expression.free_symbols
-
-            for symb in free_symbols:
-                if any(solveset(d, symb) is not S.EmptySet for d in denoms(expression)):
+            for den in denoms(expression):
+                if (den.is_zero or
+                    any(solveset(den, symb) is not S.EmptySet
+                        for symb in den.free_symbols)):
                     return True
             return False
 
