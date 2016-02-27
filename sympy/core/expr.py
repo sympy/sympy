@@ -593,7 +593,7 @@ class Expr(Basic, EvalfMixin):
                         # dead line provided _random returns None in such cases
                         return None
                 return False
-        if check_denominator_zeros(self) or check_denominator_zeros(1/self):
+        if check_denominator_zeros(self):
             return False
         return True
 
