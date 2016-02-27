@@ -405,18 +405,14 @@ class Range(Set):
             raise ValueError("The start and end value of "
                              "Range cannot both be unbounded")
 
-        dif = stop - start
-        if dif.is_infinite:
+        if start.is_infinite:
             end = stop
         else:
-            if dif is S.Zero:
+            ref = start if start.is_finite else stop
+            n = ceiling((stop - ref)/step)
+            if n <= 0:
                 return S.EmptySet
-            n, r = divmod(dif, step)
-            if n < 0:
-                return S.EmptySet
-            if r:
-                n += 1
-            end = start + n*step
+            end = ref + n*step
         return Basic.__new__(cls, start, end, step)
 
     start = property(lambda self: self.args[0])

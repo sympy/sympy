@@ -188,7 +188,7 @@ def test_Range():
 
 def test_range_interval_intersection():
 
-    for line, (r, i, hand_checked) in enumerate([
+    for line, (r, i, manual) in enumerate([
         # Intersection with intervals
         (Range(0, 10, 1), Interval(2, 6), Range(2, 7)),
         (Range(0, 2, 1), Interval(2, 6), None),
@@ -240,59 +240,28 @@ def test_range_interval_intersection():
         (Range(0, oo, 3), Interval(-oo, 5), Range(0, 5, 3)),
 
         ]):
-        assert r
+
         for rev in range(2):
             if rev:
                 r = r.reversed
-                if hand_checked:
-                    hand_checked = hand_checked.reversed
             result = r.intersection(i)
 
-            # compute the answer a different way
-            ans = []
-            if result:
-                _r = r
-                if _r.start.is_infinite:
-                    _r = _r.reversed
-                if _r.step < 0:
-                    if _r.start >= i.inf:
-                        for e in iter(_r):
-                            if e < i.inf:
-                                break
-                            if e in i:
-                                if len(ans) > 1:
-                                    ans[1] = e
-                                else:
-                                    ans.append(e)
-                            if ans and i.inf.is_infinite and _r.stop.is_infinite:
-                                ans.append(i.inf)
-                                break
-                else:
-                    if _r.start <= i.sup:
-                        for e in iter(_r):
-                            if e > i.sup:
-                                break
-                            if e in i:
-                                if len(ans) > 1:
-                                    ans[1] = e
-                                else:
-                                    ans.append(e)
-                            if ans and i.sup.is_infinite and _r.stop.is_infinite:
-                                ans.append(i.sup)
-                                break
-            if not ans:
-                assert not result
+            msg = "line %s: %s.intersect(%s) != %s" % (line, r, i, result)
+            if result is S.EmptySet:
+                assert (
+                    r.sup < i.inf or
+                        r.sup == i.inf and i.left_open) or (
+                    r.inf > i.sup or
+                        r.inf == i.sup and i.right_open), msg
             else:
-                if len(ans) == 1:
-                    ans.append(ans[0])
-                A, B = ans
-                ans = Range(A, B + _r.step, _r.step)
-                if r.step != ans.step:
-                    ans = ans.reversed
-                assert r.step == ans.step
-                if hand_checked:
-                    assert hand_checked == ans, "%s.intersect(%s) -> %s or %s" % (r, i, ans, hand_checked)
-                assert result == ans, "%s.intersect(%s) == %s" % (r, i, ans)
+                checks = a, b, c, d = [
+                result.inf in i or result.inf == i.inf,
+                result.inf - abs(result.step) not in i or \
+                    result.inf == r.inf,
+                result.sup in i or result.sup == i.sup,
+                result.sup + abs(result.step) not in i or \
+                    result.sup == r.sup]
+                assert all(_ for _ in checks), msg
 
 
 def test_fun():
