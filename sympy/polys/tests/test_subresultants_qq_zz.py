@@ -1,6 +1,6 @@
 from sympy import var, sturm, subresultants, prem, pquo
 from sympy.matrices import Matrix, eye
-from sympy.polys.subresultants_qq_zz import (sylvester, bezout,
+from sympy.polys.subresultants_qq_zz import (sylvester, res, bezout,
     subresultants_bezout, modified_subresultants_bezout,
     process_bezout_output, backward_eye,
     sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
@@ -33,6 +33,11 @@ def test_sylvester():
 
     assert sylvester(x**3 - 7*x + 7, 3*x**2 - 7, x, 2) == Matrix([
 [1, 0, -7,  7,  0,  0], [0, 3,  0, -7,  0,  0], [0, 1,  0, -7,  7,  0], [0, 0,  3,  0, -7,  0], [0, 0,  1,  0, -7,  7], [0, 0,  0,  3,  0, -7]])
+
+def test_res():
+    x = var('x')
+
+    assert res(3, 5, x) == 1
 
 def test_bezout():
     x = var('x')
