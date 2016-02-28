@@ -223,6 +223,7 @@ from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
 from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
+from sympy.polys.polyerrors import PolynomialError
 
 def sylvester(f, g, x, method = 1):
     '''
@@ -343,7 +344,7 @@ def res(f, g, x):
 
     """
     if f == 0 or g == 0:
-         raise ValueError("The resultant of %s and %s is not defined" % (f, g))
+         raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
     else:
         return sylvester(f, g, x, 1).det()
 
