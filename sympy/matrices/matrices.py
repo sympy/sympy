@@ -2736,7 +2736,7 @@ class MatrixBase(object):
             pivot += 1
         return self._new(r), pivotlist
 
-    def rank(self, iszerofunc=_iszero, simplify=True):
+    def rank(self, iszerofunc=_iszero, simplify=False):
         """
         Returns the rank of a matrix
 
