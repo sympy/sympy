@@ -940,7 +940,9 @@ class Interval(Set, EvalfMixin):
 
     @property
     def _boundary(self):
-        return FiniteSet(self.start, self.end)
+        finite_points = [p for p in (self.start, self.end)
+                         if abs(p) != S.Infinity]
+        return FiniteSet(*finite_points)
 
     def _contains(self, other):
         if not isinstance(other, Expr) or (
