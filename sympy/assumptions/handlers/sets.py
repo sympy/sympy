@@ -6,7 +6,6 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
-from sympy.logic.boolalg import conjuncts
 from sympy.functions.elementary.exponential import exp, log
 from sympy import I
 

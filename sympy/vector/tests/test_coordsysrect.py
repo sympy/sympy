@@ -1,7 +1,7 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros
+     symbols, simplify, zeros, expand
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
@@ -69,15 +69,18 @@ def test_coordinate_vars():
     reorientation of coordinate systems.
     """
     A = CoordSysCartesian('A')
-    assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
-    assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
-    assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
-    assert BaseScalar('Ax', 0, A, ' ', ' ').__hash__() == A.x.__hash__()
+    # Note that the name given on the lhs is different from A.x._name
+    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
+    assert BaseScalar('A.y', 1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
+    assert BaseScalar('A.z', 2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
+    assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
+    assert A.x*A.y == A.y*A.x
     assert A.scalar_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
     assert A.x.system == A
+    assert A.x.diff(A.x) == 1
     B = A.orient_new_axis('B', q, A.k)
     assert B.scalar_map(A) == {B.z: A.z, B.y: -A.x*sin(q) + A.y*cos(q),
                                  B.x: A.x*cos(q) + A.y*sin(q)}
@@ -86,8 +89,8 @@ def test_coordinate_vars():
     assert express(B.x, A, variables=True) == A.x*cos(q) + A.y*sin(q)
     assert express(B.y, A, variables=True) == -A.x*sin(q) + A.y*cos(q)
     assert express(B.z, A, variables=True) == A.z
-    assert express(B.x*B.y*B.z, A, variables=True) == \
-           A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q))
+    assert expand(express(B.x*B.y*B.z, A, variables=True)) == \
+           expand(A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q)))
     assert express(B.x*B.i + B.y*B.j + B.z*B.k, A) == \
            (B.x*cos(q) - B.y*sin(q))*A.i + (B.x*sin(q) + \
            B.y*cos(q))*A.j + B.z*A.k

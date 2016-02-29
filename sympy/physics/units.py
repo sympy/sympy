@@ -154,6 +154,7 @@ yocto = ten**-24
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
 sr = steradian = steradians = 1
+mil = angular_mil = angular_mils = 2*pi/6400
 
 # Base units
 
@@ -201,7 +202,7 @@ ft = foot = feet = Rational('0.3048')*m
 inch = inches = Rational('25.4')*mm
 yd = yard = yards = 3*ft
 mi = mile = miles = 5280*ft
-
+nmi = nautical_mile = nautical_miles = 6076*ft
 
 # Common volume and area units
 
@@ -222,6 +223,7 @@ minute = minutes = 60*s
 h = hour = hours = 60*minute
 day = days = 24*hour
 
+anomalistic_year = anomalistic_years = Rational('365.259636')*day
 sidereal_year = sidereal_years = Rational('31558149.540')*s
 tropical_year = tropical_years = Rational('365.24219')*day
 common_year = common_years = Rational('365')*day
