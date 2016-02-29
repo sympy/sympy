@@ -28,7 +28,6 @@ def _iszero(x):
     """Returns True if x is zero."""
     if len(x.free_symbols) == 0:
         x = _simplify(x)
-        
     return x.is_zero
 
 
