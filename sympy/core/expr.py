@@ -445,10 +445,9 @@ class Expr(Basic, EvalfMixin):
         all derivatives are zero then self is constant with respect to the
         given symbols.
 
-        3) finding out zeros of denominator expression with free_symbols and
-        multiplicative inverse for this expression. It won't be constant
-        if there are zeros. It gives more negative answers for expression
-        that are not constant.
+        3) finding out zeros of denominator expression with free_symbols.
+        It won't be constant if there are zeros. It gives more negative
+        answers for expression that are not constant.
 
         If neither evaluation nor differentiation can prove the expression is
         constant, None is returned unless two numerical values happened to be
