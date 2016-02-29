@@ -479,6 +479,7 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
+
 def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
@@ -493,6 +494,7 @@ def test_issue_8821_highprec_from_str():
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
 
+
 def test_Range():
     # Only works in Python 3 where range returns a range type
     if PY3:
@@ -503,10 +505,12 @@ def test_Range():
     assert sympify(builtin_range(10)) == Range(10)
     assert _sympify(builtin_range(10)) == Range(10)
 
+
 def test_sympify_set():
     n = Symbol('n')
     assert sympify(set([n])) == FiniteSet(n)
     assert sympify(set()) == EmptySet()
+
 
 @XFAIL
 def test_sympify_rational_numbers_set():
