@@ -282,9 +282,11 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
     assert euler(k) == 0
+    assert euler(x) == euler(x)
     raises(ValueError, lambda: euler(-1))
     raises(ValueError, lambda: euler(-k))
     raises(ValueError, lambda: euler(-p))
+    raises(ValueError, lambda: euler(n + S(1)/2))
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
