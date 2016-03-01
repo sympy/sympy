@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import Matrix, I, Expr, Integer
 from sympy.core.compatibility import range
-from sympy.matrices import eye, zeros
+from sympy.matrices import eye, zeros, MatrixBase
 from sympy.external import import_module
 
 __all__ = [
@@ -189,7 +189,7 @@ def _sympy_tensor_product(*matrices):
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices
-    if not all(isinstance(m, Matrix) for m in matrices):
+    if not all(isinstance(m, MatrixBase) for m in matrices):
         raise TypeError(
             'Sequence of Matrices expected, got: %s' % repr(matrices)
         )
@@ -216,7 +216,12 @@ def _sympy_tensor_product(*matrices):
             else:
                 next = next.col_join(start)
         matrix_expansion = next
-    return matrix_expansion
+
+    MatrixClass = max(matrices, key=lambda M: M._class_priority).__class__
+    if isinstance(matrix_expansion, MatrixClass):
+        return matrix_expansion
+    else:
+        return MatrixClass(matrix_expansion)
 
 
 def _numpy_tensor_product(*product):
@@ -243,7 +248,7 @@ def _scipy_sparse_tensor_product(*product):
 
 def matrix_tensor_product(*product):
     """Compute the matrix tensor product of sympy/numpy/scipy.sparse matrices."""
-    if isinstance(product[0], Matrix):
+    if isinstance(product[0], MatrixBase):
         return _sympy_tensor_product(*product)
     elif isinstance(product[0], numpy_ndarray):
         return _numpy_tensor_product(*product)
