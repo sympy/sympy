@@ -156,17 +156,17 @@ def test_Integral():
 
 def test_Interval():
     a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "[0, a]"
-    assert str(Interval(0, a, False, False)) == "[0, a]"
-    assert str(Interval(0, a, True, False)) == "(0, a]"
-    assert str(Interval(0, a, False, True)) == "[0, a)"
-    assert str(Interval(0, a, True, True)) == "(0, a)"
+    assert str(Interval(0, a)) == "Interval(0, a)"
+    assert str(Interval(0, a, False, False)) == "Interval(0, a)"
+    assert str(Interval(0, a, True, False)) == "Interval(0, a, True, False)"
+    assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
+    assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
 
 
 def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(AccumBounds(0, a)) == "<0, a>"
-    assert str(AccumBounds(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
+    assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
 
 def test_Lambda():
@@ -671,8 +671,8 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == 'FiniteSet(1, 2, 3, ..., 48, 49, 50)'
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
 
 
 def test_PrettyPoly():
@@ -733,8 +733,8 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Interval(-oo, oo, True, True) \ Naturals()'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
-           'SymmetricDifference([2, 3], [3, 4])'
+           'SymmetricDifference(Interval(2, 3), Interval(3, 4))'
