@@ -1,4 +1,4 @@
-from sympy import I, symbols, Matrix
+from sympy import I, symbols, Matrix, ImmutableMatrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -32,6 +32,15 @@ def test_tensor_product_abstract():
     assert isinstance(TP(A, B), TP)
     assert TP(A, B).subs(A, C) == TP(C, B)
 
+def test_tensor_product_matrix():
+    assert isinstance(TensorProduct(mat1, mat2), Matrix)
+    assert isinstance(TensorProduct(mat1, mat2.as_immutable()),
+                      ImmutableMatrix)
+    assert isinstance(TensorProduct(mat1.as_immutable(), mat2),
+                      ImmutableMatrix)
+    assert isinstance(TensorProduct(mat1.as_immutable(),
+                                    mat2.as_immutable()),
+                      ImmutableMatrix)
 
 def test_tensor_product_expand():
     assert TP(A + B, B + C).expand(tensorproduct=True) == \
