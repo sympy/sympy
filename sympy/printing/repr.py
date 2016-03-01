@@ -82,6 +82,18 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
+    def _print_Integers(self, expr):
+        return "S.Integers"
+
+    def _print_Naturals(self, expr):
+        return "S.Naturals"
+
+    def _print_Naturals0(self, expr):
+        return "S.Naturals0"
+
+    def _print_Complexes(self, expr):
+        return "S.Complexes"
+
     def _print_MatrixBase(self, expr):
         # special case for some empty matrices
         if (expr.rows == 0) ^ (expr.cols == 0):
