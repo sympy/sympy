@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
+    Piecewise)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -88,6 +89,21 @@ def test_Eq():
     assert Eq(x**2) != Eq(x**2, 1)
 
     assert Eq(x, x)  # issue 5719
+
+    # issue 10633
+    assert Eq(True, False) is S.false
+    yes = Piecewise((False, x > 0), (True, True))
+    maybe = Piecewise((1, x > 0), (True, True))
+    no = Piecewise((1, x > 0), (0, True))
+    assert Eq(True, yes).is_Relational
+    assert Eq(True, maybe).is_Relational
+    assert Eq(True, no) is S.false
+    assert Eq(False, yes).is_Relational
+    assert Eq(False, maybe).is_Relational
+    assert Eq(False, no) is S.false
+    assert Eq(yes, no) is S.false
+    assert Eq(yes, maybe).is_Relational
+    assert Eq(no, maybe).is_Relational
 
     # issue 6116
     p = Symbol('p', positive=True)
