@@ -28,5 +28,6 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
     reduce_abs_inequalities, solve_poly_inequality, solve_rational_inequalities, solve_univariate_inequality
 
 from .decompogen import decompogen
+from .genform import genform
 
 from .solveset import solveset, linsolve, linear_eq_to_matrix
