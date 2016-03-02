@@ -994,6 +994,12 @@ def test_issue_2799():
     assert (R + inf_interval == inf_interval + R) is True
 
 
+def test_issue_9706():
+    assert Interval(-oo, 0).closure == Interval(-oo, 0, True, False)
+    assert Interval(0, oo).closure == Interval(0, oo, False, True)
+    assert Interval(-oo, oo).closure == Interval(-oo, oo)
+
+
 def test_issue_10285():
     assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
         FiniteSet(x).intersect(Interval.Lopen(-3, -2))

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import _sympify, sympify, converter
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
@@ -942,7 +942,9 @@ class Interval(Set, EvalfMixin):
 
     @property
     def _boundary(self):
-        return FiniteSet(self.start, self.end)
+        finite_points = [p for p in (self.start, self.end)
+                         if abs(p) != S.Infinity]
+        return FiniteSet(*finite_points)
 
     def _contains(self, other):
         if not isinstance(other, Expr) or (
@@ -1969,6 +1971,10 @@ class FiniteSet(Set, EvalfMixin):
         if not isinstance(other, Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
+
+
+converter[set] = lambda x: FiniteSet(*x)
+converter[frozenset] = lambda x: FiniteSet(*x)
 
 
 class SymmetricDifference(Set):
