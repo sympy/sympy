@@ -341,6 +341,20 @@ Octave (and Matlab) Code printing
 
 .. autofunction:: sympy.printing.octave.octave_code
 
+Rust code printing
+------------------
+
+.. module:: sympy.printing.rust
+
+.. autodata:: sympy.printing.rust.known_functions
+
+.. autoclass:: sympy.printing.rust.RustCodePrinter
+   :members:
+
+   .. autoattribute:: RustCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.rust.rust_code
+
 Theano Code printing
 --------------------
 

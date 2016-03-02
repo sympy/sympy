@@ -1,8 +1,8 @@
 """
-module for generating C, C++, Fortran77, Fortran90, Julia and Octave/Matlab
-routines that evaluate sympy expressions.  This module is work in progress.
-Only the milestones with a '+' character in the list below have been
-completed.
+module for generating C, C++, Fortran77, Fortran90, Julia, Rust
+and Octave/Matlab routines that evaluate sympy expressions.
+This module is work in progress.
+Only the milestones with a '+' character in the list below have been completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
 
@@ -74,6 +74,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - C++
 - Python
 - Julia
+- Rust
 - ...
 
 """
@@ -91,6 +92,7 @@ from sympy.printing.ccode import ccode, c_code_printers
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.printing.julia import julia_code, JuliaCodePrinter
 from sympy.printing.octave import octave_code, OctaveCodePrinter
+from sympy.printing.rust import rust_code, RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
@@ -102,6 +104,7 @@ __all__ = [
     "Argument", "InputArgument", "Result",
     # routines -> code
     "CodeGen", "CCodeGen", "FCodeGen", "JuliaCodeGen", "OctaveCodeGen",
+    "RustCodeGen",
     # friendly functions
     "codegen", "make_routine",
 ]
@@ -225,17 +228,18 @@ class Routine(object):
 
 class DataType(object):
     """Holds strings for a certain datatype in different languages."""
-    def __init__(self, cname, fname, pyname, jlname, octname):
+    def __init__(self, cname, fname, pyname, jlname, octname, rsname):
         self.cname = cname
         self.fname = fname
         self.pyname = pyname
         self.jlname = jlname
         self.octname = octname
+        self.rsname = rsname
 
 
 default_datatypes = {
-    "int": DataType("int", "INTEGER*4", "int", "", ""),
-    "float": DataType("double", "REAL*8", "float", "", "")
+    "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
+    "float": DataType("double", "REAL*8", "float", "", "", "f64"),
 }
 
 
@@ -293,7 +297,8 @@ class Variable(object):
             'FORTRAN': datatype.fname,
             'JULIA': datatype.jlname,
             'OCTAVE': datatype.octname,
-            'PYTHON': datatype.pyname
+            'PYTHON': datatype.pyname,
+            'RUST': datatype.rsname,
         }
         self.dimensions = dimensions
         self.precision = precision
@@ -1602,6 +1607,224 @@ class OctaveCodeGen(CodeGen):
     # functions it has to call.
     dump_fns = [dump_m]
 
+class RustCodeGen(CodeGen):
+    """Generator for Rust code.
+
+    The .write() method inherited from CodeGen will output a code file
+    <prefix>.rs
+
+    """
+
+    code_extension = "rs"
+
+    def routine(self, name, expr, argument_sequence, global_vars):
+        """Specialized Routine creation for Rust."""
+
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # global variables
+        global_vars = set() if global_vars is None else set(global_vars)
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars - global_vars
+
+        # Rust supports multiple return values
+        return_vals = []
+        output_args = []
+        for (i, expr) in enumerate(expressions):
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                symbol = out_arg
+                if isinstance(out_arg, Indexed):
+                    dims = tuple([ (S.One, dim) for dim in out_arg.shape])
+                    symbol = out_arg.base.label
+                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
+                if not expr.has(symbol):
+                    # this is a pure output: remove from the symbols list, so
+                    # it doesn't become an input.
+                    symbols.remove(symbol)
+
+            else:
+                # we have no name for this output
+                return_vals.append(Result(expr, name='out%d' % (i+1)))
+
+        # setup input argument list
+        output_args.sort(key=lambda x: str(x.name))
+        arg_list = list(output_args)
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            arg_list.append(InputArgument(symbol))
+
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                msg = "Argument list didn't specify: {0} "
+                msg = msg.format(", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError(msg, missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_vals, local_vars, global_vars)
+
+
+    def _get_header(self):
+        """Writes a common header for the generated files."""
+        code_lines = []
+        code_lines.append("/*\n")
+        tmp = header_comment % {"version": sympy_version,
+                                "project": self.project}
+        for line in tmp.splitlines():
+            code_lines.append((" *%s" % line.center(76)).rstrip() + "\n")
+        code_lines.append(" */\n")
+        return code_lines
+
+    def get_prototype(self, routine):
+        """Returns a string for the function prototype of the routine.
+
+        If the routine has multiple result objects, an CodeGenError is
+        raised.
+
+        See: http://en.wikipedia.org/wiki/Function_prototype
+
+        """
+        results = [i.get_datatype('Rust') for i in routine.results]
+
+        if len(results) == 1:
+            rstype = " -> " + results[0]
+        elif len(routine.results) > 1:
+            rstype = " -> (" + ", ".join(results) + ")"
+        else:
+            rstype = ""
+
+        type_args = []
+        for arg in routine.arguments:
+            name = rust_code(arg.name)
+            if arg.dimensions or isinstance(arg, ResultBase):
+                type_args.append(("*%s" % name, arg.get_datatype('Rust')))
+            else:
+                type_args.append((name, arg.get_datatype('Rust')))
+        arguments = ", ".join([ "%s: %s" % t for t in type_args])
+        return "fn %s(%s)%s" % (routine.name, arguments, rstype)
+
+    def _preprocessor_statements(self, prefix):
+        code_lines = []
+        # code_lines.append("use std::f64::consts::*;\n")
+        return code_lines
+
+    def _get_routine_opening(self, routine):
+        prototype = self.get_prototype(routine)
+        return ["%s {\n" % prototype]
+
+    def _declare_arguments(self, routine):
+        # arguments are declared in prototype
+        return []
+
+    def _declare_globals(self, routine):
+        # global variables are not explicitly declared within C functions
+        return []
+
+    def _declare_locals(self, routine):
+        # loop variables are declared in loop statement
+        return []
+
+    def _call_printer(self, routine):
+
+        code_lines = []
+        declarations = []
+        returns = []
+
+        # Compose a list of symbols to be dereferenced in the function
+        # body. These are the arguments that were passed by a reference
+        # pointer, excluding arrays.
+        dereference = []
+        for arg in routine.arguments:
+            if isinstance(arg, ResultBase) and not arg.dimensions:
+                dereference.append(arg.name)
+
+        for i, result in enumerate(routine.results):
+            if isinstance(result, Result):
+                assign_to = result.result_var
+                returns.append(str(result.result_var))
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+
+            constants, not_supported, rs_expr = rust_code(result.expr,
+                assign_to=assign_to, human=False)
+
+            for name, value in sorted(constants, key=str):
+                declarations.append("const %s: f64 = %s;\n" % (name, value))
+
+            for obj in sorted(not_supported, key=str):
+                if isinstance(obj, Function):
+                    name = obj.func
+                else:
+                    name = obj
+                declarations.append("// unsupported: %s\n" % (name))
+
+            code_lines.append("let %s\n" % rs_expr);
+
+        if len(returns) > 1:
+            returns = ['(' + ', '.join(returns) + ')']
+
+        returns.append('\n')
+
+        return declarations + code_lines + returns
+
+    def _indent_code(self, codelines):
+        p = RustCodePrinter()
+        return p.indent_code(codelines)
+
+    def _get_routine_ending(self, routine):
+        return ["}\n"]
+
+    def dump_rs(self, routines, f, prefix, header=True, empty=True):
+        self.dump_code(routines, f, prefix, header, empty)
+
+    dump_rs.extension = code_extension
+    dump_rs.__doc__ = CodeGen.dump_code.__doc__
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_rs]
+
+
+
 
 def get_code_generator(language, project, standard=None):
     if language == 'C':
@@ -1613,7 +1836,8 @@ def get_code_generator(language, project, standard=None):
             language = 'C99'
     CodeGenClass = {"C": CCodeGen, "C89": C89CodeGen, "C99": C99CodeGen,
                     "F95": FCodeGen, "JULIA": JuliaCodeGen,
-                    "OCTAVE": OctaveCodeGen}.get(language.upper())
+                    "OCTAVE": OctaveCodeGen,
+                    "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
     return CodeGenClass(project)
