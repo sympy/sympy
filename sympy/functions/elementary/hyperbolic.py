@@ -1233,3 +1233,106 @@ class asech(Function):
 
     def _eval_rewrite_as_log(self, arg):
         return log(1/arg + sqrt(1/arg**2 - 1))
+
+
+class acsch(Function):
+    """
+    The inverse hyperbolic cosecant function.
+
+    * acsch(x) -> Returns the inverse hyperbolic cosecant of x
+
+    Examples
+    ========
+
+    >>> from sympy import acsch, sqrt, S
+    >>> from sympy.abc import x
+    >>> acsch(x).diff(x)
+    -1/(x**2*sqrt(1 + 1/x**2))
+    >>> acsch(1).diff(x)
+    0
+    >>> acsch(1)
+    log(1 + sqrt(2))
+    >>> acsch(I)
+    -I*pi/2
+    >>> acsch(-2I)
+    I*pi/6
+    >>> acsch(I*(sqrt(6) - sqrt(2)))
+    -5*I*pi/12
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [2] http://dlmf.nist.gov/4.37
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
+
+    """
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return -1/(z**2*sqrt(1 + 1/z**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        arg = sympify(arg)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero;
+            elif arg is S.NegativeInfinity:
+                return S.Zero;
+            elif arg is S.Zero:
+                return S.Infinity
+            elif arg is S.One:
+                return log(1 + sqrt(2))
+            elif arg is S.NegativeOne:
+                return - log(1 + sqrt(2))
+
+        if arg.is_number:
+            cst_table = {
+
+                S.ImaginaryUnit: -S.Pi / 2,
+                -S.ImaginaryUnit: S.Pi / 2,
+                -S.ImaginaryUnit*(sqrt(6) + sqrt(2)): S.Pi / 12,
+                S.ImaginaryUnit*(sqrt(2) - sqrt(6)): -S.Pi / 12,
+                -S.ImaginaryUnit*(1 + sqrt(5)): S.Pi / 10,
+                S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
+                -S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): S.Pi / 8,
+                S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
+                -S.ImaginaryUnit*2: S.Pi / 6,
+                S.ImaginaryUnit*2: -S.Pi / 6,
+                -S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): S.Pi / 5,
+                S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
+                -S.ImaginaryUnit*sqrt(2): S.Pi / 4,
+                S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
+                -S.ImaginaryUnit*(sqrt(5)-1): 3*S.Pi / 10,
+                S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
+                -S.ImaginaryUnit*2 / sqrt(3): S.Pi / 3,
+                S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
+                -S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): 3*S.Pi / 8,
+                S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
+                -S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): 2*S.Pi / 5,
+                S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
+                -S.ImaginaryUnit*(sqrt(6) - sqrt(2)): 5*S.Pi / 12,
+                S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
+            }
+
+            if arg in cst_table:
+                return cst_table[arg]*S.ImaginaryUnit
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return csch
+
+    def _eval_rewrite_as_log(self, arg):
+        return log(1/arg + sqrt(1/arg**2 + 1))
