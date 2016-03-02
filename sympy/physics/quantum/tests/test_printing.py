@@ -344,7 +344,7 @@ C \
     assert upretty(h3) == u('F')
     assert latex(h3) == r'\mathcal{F}'
     sT(h3, "FockSpace()")
-    assert str(h4) == 'L2([0, oo))'
+    assert str(h4) == 'L2(Interval(0, oo, False, True))'
     ascii_str = \
 """\
  2\n\
@@ -863,7 +863,7 @@ u("""\
     assert latex(e3) == \
         r'\left(\begin{array}{ccc} 1 & 3 & 5 \\ 2 & 4 & 6 \end{array}\right) {\left[B^{\dag} + A,C + D\right]}\otimes \left({- J^2 + J_z}\right) {\left|1,0\right\rangle }{\left\langle 1,1\right|} \left({{\left|1,0,j_{1}=1,j_{2}=1\right\rangle } + {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }}\right)\otimes {{\left|1,-1,j_{1}=1,j_{2}=1\right\rangle }}'
     sT(e3, "Mul(Wigner3j(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6)), TensorProduct(Commutator(Add(Dagger(Operator(Symbol('B'))), Operator(Symbol('A'))),Add(Operator(Symbol('C')), Operator(Symbol('D')))), Add(Mul(Integer(-1), J2Op(Symbol('J'))), JzOp(Symbol('J')))), OuterProduct(JzKet(Integer(1),Integer(0)),JzBra(Integer(1),Integer(1))), TensorProduct(Add(JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))), JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))), JzKetCoupled(Integer(1),Integer(-1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))))")
-    assert str(e4) == '(C(1)*C(2)+F**2)*(L2([0, oo))+H)'
+    assert str(e4) == '(C(1)*C(2)+F**2)*(L2(Interval(0, oo, False, True))+H)'
     ascii_str = \
 """\
 // 1    2\\    x2\\   / 2    \\\n\

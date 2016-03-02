@@ -343,7 +343,7 @@ class SeqExpr(SeqBase):
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
-    [0, 10]
+    Interval(0, 10)
     >>> s.length
     11
 
@@ -684,7 +684,7 @@ class SeqExprOp(SeqBase):
     >>> s.gen
     (n**2, (1, 2, 3))
     >>> s.interval
-    [5, 10]
+    Interval(5, 10)
     >>> s.length
     6
 

@@ -206,9 +206,9 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> from sympy import Symbol, Eq
         >>> x = Symbol('x', real=True)
         >>> (x>0).as_set()
-        (0, oo)
+        Interval(0, oo, True, True)
         >>> Eq(x, 0).as_set()
-        {0}
+        FiniteSet(0)
 
         """
         from sympy.solvers.inequalities import solve_univariate_inequality

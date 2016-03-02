@@ -486,7 +486,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        Class({Object("A"), Object("B")})
+        Class(FiniteSet(Object("A"), Object("B")))
 
         """
         return self.args[1]
@@ -681,7 +681,7 @@ class Diagram(Basic):
         True
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
-        {unique}
+        FiniteSet(unique)
 
         """
         premises = {}
@@ -813,7 +813,7 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        {Object("A"), Object("B"), Object("C")}
+        FiniteSet(Object("A"), Object("B"), Object("C"))
 
         """
         return self.args[2]

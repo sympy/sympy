@@ -47,9 +47,9 @@ class Polyhedron(Basic):
 
             >>> from sympy.combinatorics.polyhedron import Polyhedron
             >>> Polyhedron(list('abc'), [(1, 2, 0)]).faces
-            {(0, 1, 2)}
+            FiniteSet((0, 1, 2))
             >>> Polyhedron(list('abc'), [(1, 0, 2)]).faces
-            {(0, 1, 2)}
+            FiniteSet((0, 1, 2))
 
         The allowed transformations are entered as allowable permutations
         of the vertices for the polyhedron. Instance of Permutations
@@ -92,7 +92,7 @@ class Polyhedron(Basic):
         >>> tetra.size
         4
         >>> tetra.edges
-        {(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}
+        FiniteSet((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
         >>> tetra.corners
         (w, x, y, z)
 
@@ -365,7 +365,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> cube.edges
-        {(0, 1), (0, 3), (0, 4), '...', (4, 7), (5, 6), (6, 7)}
+        FiniteSet((0, 1), (0, 3), (0, 4), '...', (4, 7), (5, 6), (6, 7))
 
         If you want to use letters or other names for the corners you
         can still use the pre-calculated faces:
@@ -492,7 +492,7 @@ class Polyhedron(Basic):
         >>> corners = (a, b, c)
         >>> faces = [(0, 1, 2)]
         >>> Polyhedron(corners, faces).edges
-        {(0, 1), (0, 2), (1, 2)}
+        FiniteSet((0, 1), (0, 2), (1, 2))
 
         """
         if self._edges is None:
