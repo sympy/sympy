@@ -1283,9 +1283,9 @@ class acsch(Function):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
-                return S.Zero;
+                return S.Zero
             elif arg is S.NegativeInfinity:
-                return S.Zero;
+                return S.Zero
             elif arg is S.Zero:
                 return S.Infinity
             elif arg is S.One:
@@ -1295,7 +1295,6 @@ class acsch(Function):
 
         if arg.is_number:
             cst_table = {
-
                 S.ImaginaryUnit: -S.Pi / 2,
                 -S.ImaginaryUnit: S.Pi / 2,
                 -S.ImaginaryUnit*(sqrt(6) + sqrt(2)): S.Pi / 12,
