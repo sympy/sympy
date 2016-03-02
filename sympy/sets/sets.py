@@ -930,13 +930,13 @@ class Interval(Set, EvalfMixin):
         # If I have open end points and these endpoints are contained in other.
         # But only in case, when endpoints are finite. Because
         # interval does not contain oo or -oo.
-        left_in_other_and_finite = (self.left_open and
-                                    sympify(other.contains(self.start)) is S.true and
-                                    self.start.is_finite)
-        right_in_other_and_finite = (self.right_open and
-                                     sympify(other.contains(self.end)) is S.true and
-                                     self.end.is_finite)
-        if left_in_other_and_finite or right_in_other_and_finite:
+        open_left_in_other_and_finite = (self.left_open and
+                                         sympify(other.contains(self.start)) is S.true and
+                                         self.start.is_finite)
+        open_right_in_other_and_finite = (self.right_open and
+                                          sympify(other.contains(self.end)) is S.true and
+                                          self.end.is_finite)
+        if open_left_in_other_and_finite or open_right_in_other_and_finite:
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
