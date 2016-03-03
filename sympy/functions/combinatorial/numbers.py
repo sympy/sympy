@@ -734,18 +734,19 @@ class euler(Function):
 
     @classmethod
     def eval(cls, m):
-        if m.is_integer is True and fuzzy_or([m.is_positive, m.is_negative]) is None:
-            return
-        elif m.is_negative:
+        if m.is_integer:
+            if fuzzy_or([m.is_positive, m.is_negative]) is None:
+                return
+            elif m.is_odd and m >= 1:
+                return S.Zero
+            elif m.is_nonnegative:
+                from mpmath import mp
+                m = m._to_mpmath(mp.prec)
+                res = mp.eulernum(m, exact=True)
+                return Integer(res)
+        if m.is_negative:
             raise ValueError('Euler numbers are not defined on negative numbers')
-        elif m.is_odd and m >= 1:
-            return S.Zero
-        elif m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
-        elif m.is_rational or (m.is_positive is False and m.is_negative is None):
+        elif m.is_rational or m.is_positive is False:
             raise ValueError('Euler numbers are not defined on this input numbers')
 
     def _eval_rewrite_as_Sum(self, arg):
