@@ -1298,7 +1298,7 @@ class acsch(Function):
                 S.ImaginaryUnit: -S.Pi / 2,
                 -S.ImaginaryUnit: S.Pi / 2,
                 -S.ImaginaryUnit*(sqrt(6) + sqrt(2)): S.Pi / 12,
-                S.ImaginaryUnit*(sqrt(2) - sqrt(6)): -S.Pi / 12,
+                S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
                 -S.ImaginaryUnit*(1 + sqrt(5)): S.Pi / 10,
                 S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
                 -S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): S.Pi / 8,
@@ -1319,6 +1319,8 @@ class acsch(Function):
                 S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
                 -S.ImaginaryUnit*(sqrt(6) - sqrt(2)): 5*S.Pi / 12,
                 S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
+                S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
+                S(-2): S.ImaginaryUnit*log((1+sqrt(5))/2),
             }
 
             if arg in cst_table:

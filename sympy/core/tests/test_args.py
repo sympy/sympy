@@ -1199,6 +1199,9 @@ def test_sympy__functions__elementary__hyperbolic__asech():
     from sympy.functions.elementary.hyperbolic import asech
     assert _test_args(asech(2))
 
+def test_sympy__functions__elementary__hyperbolic__acsch():
+    from sympy.functions.elementary.hyperbolic import acsch
+    assert _test_args(acsch(2))
 
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
