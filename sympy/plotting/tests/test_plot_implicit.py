@@ -9,7 +9,6 @@ from sympy.external import import_module
 #Set plots not to show
 unset_show()
 
-
 def tmp_file(name=''):
     return NamedTemporaryFile(suffix='.png').name
 
@@ -54,8 +53,11 @@ def plot_implicit_tests(name):
     plot_and_save(y - cos(pi / x))
 
     #Test plots which cannot be rendered using the adaptive algorithm
-    #TODO: catch the warning.
-    plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name)
+    with warnings.catch_warnings(record=True) as w:
+        plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "Adaptive meshing could not be applied" in str(w[0].message)
 
     with warnings.catch_warnings(record=True) as w:
         plot_and_save(x**2 - 1, legend='An implicit plot')
