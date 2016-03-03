@@ -1247,16 +1247,16 @@ class acsch(Function):
     >>> from sympy import acsch, sqrt, S
     >>> from sympy.abc import x
     >>> acsch(x).diff(x)
-    -1/(x**2*sqrt(1 + 1/x**2))
+    -1/(x**2*sqrt(1 + x**(-2)))
     >>> acsch(1).diff(x)
     0
     >>> acsch(1)
     log(1 + sqrt(2))
-    >>> acsch(I)
+    >>> acsch(S.ImaginaryUnit)
     -I*pi/2
-    >>> acsch(-2I)
+    >>> acsch(-2*S.ImaginaryUnit)
     I*pi/6
-    >>> acsch(I*(sqrt(6) - sqrt(2)))
+    >>> acsch(S.ImaginaryUnit*(sqrt(6) - sqrt(2)))
     -5*I*pi/12
 
     References
