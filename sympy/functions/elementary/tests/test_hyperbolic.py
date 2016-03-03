@@ -583,7 +583,7 @@ def test_acsch():
     x = Symbol('x')
 
     assert acsch(-x) == acsch(-x)
-    assert acsch(x) == -acsch(-x)
+    assert - acsch(x) == acsch(-x)
 
     # values at fixed points
     assert acsch(1) == log(1 + sqrt(2))
@@ -594,28 +594,28 @@ def test_acsch():
 
     assert acsch(I) == - I*pi/2
     assert acsch(-I) == I*pi/2
-    assert acsch(-I*(sqrt(6) + sqrt(2))): I*pi / 12,
-    assert acsch(I*(sqrt(2) + sqrt(6))): -I*pi / 12,
-    assert acsch(-I*(1 + sqrt(5))): I*pi / 10,
-    assert acsch(I*(1 + sqrt(5))): -I*pi / 10,
-    assert acsch(-I*2 / sqrt(2 - sqrt(2))): I*pi / 8,
-    assert acsch(I*2 / sqrt(2 - sqrt(2))): -I*pi / 8,
-    assert acsch(-I*2): I*pi / 6,
-    assert acsch(I*2): -I*pi / 6,
-    assert acsch(-I*sqrt(2 + 2/sqrt(5))): I*pi / 5,
-    assert acsch(I*sqrt(2 + 2/sqrt(5))): -I*pi / 5,
-    assert acsch(-I*sqrt(2)): I*pi / 4,
-    assert acsch(I*sqrt(2)): -I*pi / 4,
-    assert acsch(-I*(sqrt(5)-1)): 3*I*pi / 10,
-    assert acsch(I*(sqrt(5)-1)): -3*I*pi / 10,
-    assert acsch(-I*2 / sqrt(3)): I*pi / 3,
-    assert acsch(I*2 / sqrt(3)): -I*pi / 3,
-    assert acsch(-I*2 / sqrt(2 + sqrt(2))): 3*I*pi / 8,
-    assert acsch(I*2 / sqrt(2 + sqrt(2))): -3*I*pi / 8,
-    assert acsch(-I*sqrt(2 - 2/sqrt(5))): 2*I*pi / 5,
-    assert acsch(I*sqrt(2 - 2/sqrt(5))): -2*I*pi / 5,
-    assert acsch(-I*(sqrt(6) - sqrt(2))): 5*I*pi / 12,
-    assert acsch(I*(sqrt(6) - sqrt(2))): -5*I*pi / 12,
+    assert acsch(-I*(sqrt(6) + sqrt(2))) == I*pi / 12
+    assert acsch(I*(sqrt(2) + sqrt(6))) == -I*pi / 12
+    assert acsch(-I*(1 + sqrt(5))) == I*pi / 10
+    assert acsch(I*(1 + sqrt(5))) == -I*pi / 10
+    assert acsch(-I*2 / sqrt(2 - sqrt(2))) == I*pi / 8
+    assert acsch(I*2 / sqrt(2 - sqrt(2))) == -I*pi / 8
+    assert acsch(-I*2) == I*pi / 6
+    assert acsch(I*2) == -I*pi / 6
+    assert acsch(-I*sqrt(2 + 2/sqrt(5))) == I*pi / 5
+    assert acsch(I*sqrt(2 + 2/sqrt(5))) == -I*pi / 5
+    assert acsch(-I*sqrt(2)) == I*pi / 4
+    assert acsch(I*sqrt(2)) == -I*pi / 4
+    assert acsch(-I*(sqrt(5)-1)) == 3*I*pi / 10
+    assert acsch(I*(sqrt(5)-1)) == -3*I*pi / 10
+    assert acsch(-I*2 / sqrt(3)) == I*pi / 3
+    assert acsch(I*2 / sqrt(3)) == -I*pi / 3
+    assert acsch(-I*2 / sqrt(2 + sqrt(2))) == 3*I*pi / 8
+    assert acsch(I*2 / sqrt(2 + sqrt(2))) == -3*I*pi / 8
+    assert acsch(-I*sqrt(2 - 2/sqrt(5))) == 2*I*pi / 5
+    assert acsch(I*sqrt(2 - 2/sqrt(5))) == -2*I*pi / 5
+    assert acsch(-I*(sqrt(6) - sqrt(2))) == 5*I*pi / 12
+    assert acsch(I*(sqrt(6) - sqrt(2))) == -5*I*pi / 12
 
     # properties
     # acsch(x) == asinh(1/x)
