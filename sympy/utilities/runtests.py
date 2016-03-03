@@ -268,7 +268,8 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
