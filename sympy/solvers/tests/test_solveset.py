@@ -1,7 +1,7 @@
 from sympy import (
     Abs, Dummy, Eq, Gt, Function,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
+    asin, acos, acsc, asec, atan, atanh, cos, cosh, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
@@ -858,6 +858,15 @@ def test_solve_lambert():
     assert solveset_real(5**(x/2) - 2**(x/3), x) == FiniteSet(0)
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solveset_real(5**(x/2) - 2**(3/x), x) == FiniteSet(-b, b)
+
+
+def test_solve_hyperbolic():
+    x = Symbol('x')
+    n = Dummy('n')
+    assert solveset(sinh(x), x) == ImageSet(Lambda(n, n*I*pi),S.Integers)
+    assert solveset(sinh(x)+cosh(x) + 1,x) == ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers)
+    assert solveset(sinh(x)+cosh(x),x) == S.EmptySet
+    assert solveset(sinh(x)+cos(x),x) == ConditionSet(x, Eq(cos(x) + sinh(x), 0), S.Complexes)
 
 
 def test_solveset():
