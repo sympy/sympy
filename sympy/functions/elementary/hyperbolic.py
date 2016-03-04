@@ -1329,6 +1329,9 @@ class acsch(Function):
         if arg is S.ComplexInfinity:
             return S.NaN
 
+        if _coeff_isneg(arg):
+            return -cls(-arg)
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
