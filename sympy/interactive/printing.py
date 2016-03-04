@@ -390,12 +390,20 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             # This will be True if we are in the qtconsole or notebook
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
                     and 'ipython-console' not in ''.join(sys.argv):
+                try:
+                    import qtconsole
+                except ImportError:
+                    pass    
+                from qtconsole.jupyter_widget import JupyterWidget        
                 if use_unicode is None:
                     debug("init_printing: Setting use_unicode to True")
                     use_unicode = True
                 if use_latex is None:
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
+                if JupyterWidget.style_sheet:
+                    debug("init_printing: Setting forecolor to white ")
+                    forecolor = 'white'
 
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
