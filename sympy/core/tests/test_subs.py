@@ -678,3 +678,15 @@ def test_RootOf_issue_10092():
     eq = x**3 - 17*x**2 + 81*x - 118
     r = RootOf(eq, 0)
     assert (x < r).subs(x, r) is S.false
+
+
+def test_issue_8886():
+    from sympy.physics.mechanics import ReferenceFrame as R
+    from sympy.abc import x
+    # if something can't be sympified we assume that it
+    # doesn't play well with SymPy and disallow the
+    # substitution
+    v = R('A').x
+    assert x.subs(x, v) == x
+    assert v.subs(v, x) == v
+    assert v.__eq__(x) is False
