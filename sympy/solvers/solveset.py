@@ -366,10 +366,14 @@ def _solve_as_rational(f, symbol, domain):
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
-    f_original = f
+    f_orig = f
     f = f.rewrite(exp)
-    f = together(f)
-    return _solveset(f, symbol, domain)
+    soln = _solveset(f, symbol, domain)
+    if isinstance(soln, ConditionSet):
+        # try to solve without converting it into exp form
+        # TODO need more improvement here.
+        soln = _solve_as_poly(f_orig, symbol, domain)
+    return soln
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):

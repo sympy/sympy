@@ -732,11 +732,13 @@ def test_solve_trig():
         Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
               imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
 
+
+@XFAIL
+def test_inverse_trig():
     y, a = symbols('y,a')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        Union(imageset(Lambda(n, 2*n*pi), S.Integers),
-        imageset(Lambda(n,
-        -I*(I*(2*n*pi +arg(-exp(-2*I*y))) + 2*im(y))), S.Integers))
+        Union(imageset(Lambda(n, -y - asin(sin(y))+ 2*n*pi +pi), S.Integers),\
+         imageset(Lambda(n, -y - asin(sin(y))+ 2*n*pi), S.Integers))
 
 
 @XFAIL
@@ -1089,22 +1091,6 @@ def test_issue_7914():
     assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1 ,x) ==\
     ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers) +\
       ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
-
-
-def test_issue_10426():
-    # Commented test-case need another PR from updated fancysets, printer branch.
-    from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
-                                  ComplexRegion)
-    # Assertion error for below test but works fine locally.
-    a =symbols('a')
-    assert solveset(sin(x + a) - sin(x), a) ==\
-    Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
-        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
-    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == imageset(Lambda(n, 2*n*pi), S.Integers)
-    assert solveset(sin(x + a) - sin(x), a) == \
-    ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
-    assert solveset(sin(x + a) - sin(x), a) == (ImageSet(Lambda(n, 2*n*pi), S.Integers) +\
-        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
 
 
 def test_issue_8715():
