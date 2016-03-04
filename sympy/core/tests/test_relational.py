@@ -662,6 +662,25 @@ def test_issue_10304():
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
 
+
+def test_issue_10401():
+    g = 1/(1 + 1/x)
+    fin = symbols('fin', finite=True)
+    inf = symbols('inf', infinite=True)
+    inf2 = symbols('inf2', infinite=True)
+    zero = symbols('z', zero=True)
+    nonzero = symbols('nz', zero=False, finite=True)
+
+    assert Eq(g, 1).subs(x, zoo) is S.true
+    assert Eq(fin, inf) is S.false
+    assert Eq(inf, inf2) is S.true and inf != inf2
+    assert Eq(inf/inf2, 0) is S.false
+    assert Eq(inf/fin, fin) is S.false
+    assert Ne(fin/inf, 0) is S.false
+    assert Ne(zero/nonzero, 0) is S.false and ((zero/nonzero) != 0)
+    assert Ne(fin/(fin + 1), 1) is S.true
+
+
 def test_issue_10633():
     assert Eq(True, False) == False
     assert Eq(False, True) == False
