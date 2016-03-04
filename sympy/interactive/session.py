@@ -75,7 +75,7 @@ def _make_message(ipython=True, quiet=False, source=None):
         if 'dev' in doc_version:
             doc_version = "dev"
         else:
-            doc_version = "%s/" % '.'.join(doc_version.split('.')[:3])
+            doc_version = "%s/" % doc_version
 
         message += '\n' + verbose_message % {'source': _source,
                                              'version': doc_version}
