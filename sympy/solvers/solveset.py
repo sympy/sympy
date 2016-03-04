@@ -218,7 +218,7 @@ def _invert_complex(f, g_ys, symbol):
 
     if hasattr(f, 'inverse') and \
        not isinstance(f, TrigonometricFunction) and \
-       not isinstance(f, exp):
+       not isinstance(f, exp) and not isinstance(f, HyperbolicFunction):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_complex(f.args[0],
@@ -363,28 +363,13 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 
-def _solve_real_trig(f, symbol):
+def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
     f = together(f)
-    g, h = fraction(f)
-    y = Dummy('y')
-    g, h = g.expand(), h.expand()
-    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
-
-    solns = solveset_complex(g, y) - solveset_complex(h, y)
-
-    if isinstance(solns, FiniteSet):
-        return Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                       for s in solns])
-    elif solns is S.EmptySet:
-        return S.EmptySet
-    else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+    return _solveset(f, symbol, domain)
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
@@ -574,7 +559,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
-        result = _solve_real_trig(f, symbol)
+        result = _solve_trig(f, symbol, domain)
     elif f.is_Piecewise:
         dom = domain
         result = EmptySet()

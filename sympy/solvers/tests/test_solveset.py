@@ -715,19 +715,16 @@ def test_solveset_complex_tan():
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
+        imageset(Lambda(n, n*pi), S.Integers)
+
+    assert solveset_real(cos(x), x) == \
+        imageset(Lambda(n, n*pi + pi/2), S.Integers)
+
+    assert solveset_real(cos(x) + sin(x), x) == \
+        imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
-
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
@@ -752,19 +749,6 @@ def test_solve_trig_abs():
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
-
-
-@XFAIL
-def test_solve_trig_simplified():
-    from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        imageset(Lambda(n, n*pi), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        imageset(Lambda(n, n*pi + pi/2), S.Integers)
-
-    assert solveset_real(cos(x) + sin(x), x) == \
-        imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
 
 @XFAIL
@@ -1087,6 +1071,40 @@ def test_issue_10555():
     f = Function('f')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
         ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+
+
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) ==\
+     ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
+
+def test_issue_9531_and_9606():
+    # complex solution
+    assert solveset(sinh(x)) == ImageSet(Lambda(n, n*I*pi), S.Integers)
+    # real solution
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+
+
+def test_issue_7914():
+    assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1 ,x) ==\
+    ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers) +\
+      ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
+
+
+def test_issue_10426():
+    # Commented test-case need another PR from updated fancysets, printer branch.
+    from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
+                                  ComplexRegion)
+    # Assertion error for below test but works fine locally.
+    a =symbols('a')
+    assert solveset(sin(x + a) - sin(x), a) ==\
+    Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
+    assert solveset(sin(x + a) - sin(x), a, domain=S.Reals) == imageset(Lambda(n, 2*n*pi), S.Integers)
+    assert solveset(sin(x + a) - sin(x), a) == \
+    ConditionSet(a, Eq(-sin(x) + sin(a + x), 0), Complexes(Lambda((_x, _y), _x + _y*I), Interval(-oo, oo)))
+    assert solveset(sin(x + a) - sin(x), a) == (ImageSet(Lambda(n, 2*n*pi), S.Integers) +\
+        ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))), S.Integers))
 
 
 def test_issue_8715():
