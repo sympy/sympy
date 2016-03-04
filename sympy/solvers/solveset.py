@@ -386,6 +386,10 @@ def _solve_real_trig(f, symbol):
     else:
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
+def _solve_hyperbolic(f, symbol):
+    """ Helper to solve hyperbolic equations """
+    g = f.rewrite(exp)
+    return solveset_complex(g, symbol)
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
@@ -572,9 +576,10 @@ def _solveset(f, symbol, domain, _check=False):
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
         result = Union(*[solver(m, symbol) for m in f.args])
-    elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
-            _is_function_class_equation(HyperbolicFunction, f, symbol):
+    elif _is_function_class_equation(TrigonometricFunction, f, symbol):
         result = _solve_real_trig(f, symbol)
+    elif _is_function_class_equation(HyperbolicFunction, f, symbol):
+        result = _solve_hyperbolic(f, symbol)
     elif f.is_Piecewise:
         dom = domain
         result = EmptySet()
