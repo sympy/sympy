@@ -164,7 +164,7 @@ the result of ``==``.  There is a separate object, called ``Eq``, which can be
 used to create symbolic equalities
 
     >>> Eq(x + 1, 4)
-    Eq(x + 1, 4)
+    x + 1 = 4
 
 There is one additional caveat about ``==`` as well.  Suppose we want to know
 if `(x + 1)^2 = x^2 + 2x + 1`.  We might try something like this:
