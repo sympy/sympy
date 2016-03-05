@@ -238,7 +238,7 @@ def _is_ipython(shell):
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
-                  backcolor='Transparent', fontsize='10pt',
+                  backcolor='white', fontsize='10pt',
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
                   latex_printer=None):
@@ -389,11 +389,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         else:
             # This will be True if we are in the qtconsole or notebook
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
-                    and 'ipython-console' not in ''.join(sys.argv):
-                try:
-                    import qtconsole
-                except ImportError:
-                    pass    
+                    and 'ipython-console' not in ''.join(sys.argv)
                 from qtconsole.jupyter_widget import JupyterWidget        
                 if use_unicode is None:
                     debug("init_printing: Setting use_unicode to True")
@@ -401,10 +397,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                 if use_latex is None:
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
-                if JupyterWidget.style_sheet:
-                    debug("init_printing: Setting forecolor to white ")
-                    forecolor = 'white'
-
+                    
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
