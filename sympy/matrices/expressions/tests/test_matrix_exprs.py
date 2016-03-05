@@ -1,4 +1,6 @@
+from sympy import Abs
 from sympy.core import S, symbols, Add, Mul
+from sympy.core.function import Derivative, diff
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -242,3 +244,10 @@ def test_Zero_power():
     assert z2**3 == MatPow(z2, 3).doit()
     assert z2**0 == Identity(3)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+
+
+def test_issue_10265():
+    M = MatrixSymbol('M', n, m, real=True)
+    assert M[0, 0].is_real
+    assert diff(Abs(M[0,0]), M[0,0]) == Derivative(M[0, 0], M[0, 0])*M[0, 0]/Abs(M[0, 0])
+    assert diff(M[0, 0], M[0, 0]) == Derivative(M[0, 0], M[0, 0])

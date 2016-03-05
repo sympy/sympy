@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
+from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range
@@ -334,10 +335,18 @@ class MatrixExpr(Basic):
 
 
 class MatrixElement(Expr):
-    parent = property(lambda self: self.args[0])
-    i = property(lambda self: self.args[1])
-    j = property(lambda self: self.args[2])
+
     _diff_wrt = True
+
+    def __new__(cls, *args):
+        obj = Expr.__new__(cls)
+        obj._args = args
+        obj.parent = args[0]
+        obj.i = args[1]
+        obj.j = args[2]
+        element_assumptions = getattr(args[0], "element_assumptions", dict())
+        obj._assumptions = StdFactKB(element_assumptions)
+        return obj
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -346,6 +355,11 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    @property
+    def assumptions0(self):
+        return dict((key, value) for key, value
+                in self._assumptions.items() if value is not None)
 
 
 class MatrixSymbol(MatrixExpr):
@@ -364,9 +378,10 @@ class MatrixSymbol(MatrixExpr):
     """
     is_commutative = False
 
-    def __new__(cls, name, n, m):
+    def __new__(cls, name, n, m, **element_assumptions):
         n, m = sympify(n), sympify(m)
         obj = Basic.__new__(cls, name, n, m)
+        obj.element_assumptions = element_assumptions
         return obj
 
     def _hashable_content(self):
