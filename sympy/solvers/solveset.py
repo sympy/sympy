@@ -12,7 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp, logcombine
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
@@ -109,7 +109,6 @@ def invert_real(f_x, y, x, domain=S.Reals):
 
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
-
     if f == symbol:
         return (f, g_ys)
 
@@ -192,6 +191,11 @@ def _invert_real(f, g_ys, symbol):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
 
+    if (isinstance(a,log) for a in f.args):
+        f_tmp = logcombine(f , force = True)
+        if isinstance(f_tmp,log):
+            invs = E**(list(g_ys)[0])
+            return _invert_real(simplify(f_tmp.args[0]), FiniteSet(invs), symbol)
     return (f, g_ys)
 
 
@@ -733,11 +737,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
+    {n*pi | n in Integers()} \ {0}
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+    {n*pi | n in Integers()}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
