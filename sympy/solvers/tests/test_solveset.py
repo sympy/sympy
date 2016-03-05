@@ -1092,6 +1092,10 @@ def test_issue_7914():
     ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers) +\
       ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
 
+def test_issue_10671():
+    assert solveset(sin(y), y, Interval(0, pi)) == \
+    Intersection([0, pi], ImageSet(Lambda(_n, _n*pi), Integers()))
+
 
 def test_issue_8715():
     eq = x + 1/x > -2 + 1/x

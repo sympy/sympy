@@ -117,7 +117,7 @@ def _invert_real(f, g_ys, symbol):
     if hasattr(f, 'inverse') and not isinstance(f, (
             TrigonometricFunction,
             HyperbolicFunction,
-            )):
+            exp)):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_real(f.args[0],
@@ -191,6 +191,13 @@ def _invert_real(f, g_ys, symbol):
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
+
+    if isinstance(f, exp):
+        if isinstance(g_ys, FiniteSet):
+            exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
+                                               log(Abs(g_y))), S.Integers)
+                               for g_y in g_ys if g_y != 0])
+            return _invert_real(f.args[0], exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -625,7 +632,7 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
-    return result
+    return Intersection(result, domain)
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
