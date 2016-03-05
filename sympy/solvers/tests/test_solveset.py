@@ -237,7 +237,7 @@ def test_garbage_input():
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
-        FiniteSet(-b/a, log(3))
+        Union(FiniteSet(log(3)), Intersection(S.Reals, FiniteSet(-b/a)))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
     assert solveset_real(x/log(x), x) == EmptySet()
 
@@ -733,12 +733,11 @@ def test_solve_trig():
               imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
 
 
-@XFAIL
-def test_inverse_trig():
-    y, a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        Union(imageset(Lambda(n, -y - asin(sin(y))+ 2*n*pi +pi), S.Integers),\
-         imageset(Lambda(n, -y - asin(sin(y))+ 2*n*pi), S.Integers))
+
+def test_issue_10426_inverse_trig_solution():
+    y, a = symbols('y, a')
+    assert solveset(sin(y + a) - sin(y), a) == \
+        ImageSet(Lambda(n, (-1)**n*asin(sin(y)) + n*pi - y), S.Integers)
 
 
 @XFAIL
@@ -1040,8 +1039,8 @@ def test_issue_9778():
         FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
 
 
-@XFAIL
-def test_issue_failing_pow():
+
+def test_issue_pow_fixed_10733():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
 
 
@@ -1094,7 +1093,7 @@ def test_issue_7914():
 
 def test_issue_10671():
     assert solveset(sin(y), y, Interval(0, pi)) == \
-    Intersection([0, pi], ImageSet(Lambda(_n, _n*pi), Integers()))
+    Intersection(Interval(0, pi), ImageSet(Lambda(n, n*pi), S.Integers))
 
 
 def test_issue_8715():
