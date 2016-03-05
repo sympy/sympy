@@ -316,9 +316,12 @@ class Equality(Relational):
             # see if the difference evaluates
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
                 dif = lhs - rhs
-                r = dif.is_zero
-                if r is not None:
-                    return _sympify(r)
+                z = dif.is_zero
+                if z is not None:
+                    if z is False and dif.is_commutative:  # issue 10728
+                        return S.false
+                    if z:
+                        return S.true
                 n, d = dif.as_numer_denom()
                 fin = [i.is_finite for i in (n, d)]
                 if fin[0] != fin[1] and None not in fin:
