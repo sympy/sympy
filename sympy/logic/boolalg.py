@@ -84,9 +84,30 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    _op_priority = 11  # higher than Expr
+
     @property
     def canonical(self):
         return self
+
+    def _noop(self, other=None):
+        raise TypeError('BooleanAtom not allowed in this context.')
+
+    __add__ = _noop
+    __radd__ = _noop
+    __sub__ = _noop
+    __rsub__ = _noop
+    __mul__ = _noop
+    __rmul__ = _noop
+    __pow__ = _noop
+    __rpow__ = _noop
+    __rdiv__ = _noop
+    __truediv__ = _noop
+    __div__ = _noop
+    __rtruediv__ = _noop
+    __mod__ = _noop
+    __rmod__ = _noop
+    _eval_power = _noop
 
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):

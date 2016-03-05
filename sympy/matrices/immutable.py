@@ -106,7 +106,9 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __add__ = MatrixBase.__add__
     __radd__ = MatrixBase.__radd__
     __mul__ = MatrixBase.__mul__
+    __matmul__ = MatrixBase.__matmul__
     __rmul__ = MatrixBase.__rmul__
+    __rmatmul__ = MatrixBase.__rmatmul__
     __pow__ = MatrixBase.__pow__
     __sub__ = MatrixBase.__sub__
     __rsub__ = MatrixBase.__rsub__

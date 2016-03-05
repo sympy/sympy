@@ -252,7 +252,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
@@ -1959,17 +1959,17 @@ def checksysodesol(eqs, sols, func=None):
     t = funcs[0].args[0]
     dictsol = dict()
     for sol in sols:
-        sol_func = list(sol.atoms(AppliedUndef))[0]
-        if not (sol.lhs == sol_func and not sol.rhs.has(sol_func)) and not (\
-        sol.rhs == sol_func and not sol.lhs.has(sol_func)):
-            solved = solve(sol, sol_func)
-            if not solved:
+        func = list(sol.atoms(AppliedUndef))[0]
+        if sol.rhs == func:
+            sol = sol.reversed
+        solved = sol.lhs == func and not sol.rhs.has(func)
+        if not solved:
+            rhs = solve(sol, func)
+            if not rhs:
                 raise NotImplementedError
-            dictsol[sol_func] = solved
-        if sol.lhs == sol_func:
-            dictsol[sol_func] = sol.rhs
-        if sol.rhs == sol_func:
-            dictsol[sol_func] = sol.lhs
+        else:
+            rhs = sol.rhs
+        dictsol[func] = rhs
     checkeq = []
     for eq in eqs:
         for func in funcs:
@@ -2115,7 +2115,8 @@ def odesimp(eq, func, order, constants, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solve(eq, func, force=True)
+            floats = any(i.is_Float for i in eq.atoms(Number))
+            eqsol = solve(eq, func, force=True, rational=False if floats else None)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
@@ -2242,15 +2243,13 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         order = ode_order(ode, func)
     solved = sol.lhs == func and not sol.rhs.has(func)
     if solve_for_func and not solved:
-        solved = solve(sol, func)
-        if solved:
-            if len(solved) == 1:
-                result = checkodesol(ode, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
-            else:
-                result = checkodesol(ode, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
-            return result
+        rhs = solve(sol, func)
+        if rhs:
+            eqs = [Eq(func, t) for t in rhs]
+            if len(rhs) == 1:
+                eqs = eqs[0]
+            return checkodesol(ode, eqs, order=order,
+                solve_for_func=False)
 
     s = True
     testnum = 0

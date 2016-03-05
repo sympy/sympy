@@ -522,9 +522,10 @@ def default_sort_key(item, order=None):
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)

@@ -8,7 +8,7 @@ from sympy.core.function import count_ops
 from sympy.core.logic import fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
-from sympy.core.numbers import Integer, ilcm, Rational, Float
+from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, NotIterable
@@ -513,10 +513,14 @@ class MatrixBase(object):
             return self._new(self.rows, self.cols,
                 [i*other for i in self._mat])
 
+    __matmul__ = __mul__
+
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
             return self._new(a)*self
         return self._new(self.rows, self.cols, [a*i for i in self._mat])
+
+    __rmatmul__ = __rmul__
 
     def __pow__(self, num):
         from sympy.matrices import eye, diag, MutableMatrix

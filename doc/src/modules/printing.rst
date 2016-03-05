@@ -237,6 +237,22 @@ Javascript Code printing
 
 .. autofunction:: sympy.printing.jscode.jscode
 
+Julia code printing
+---------------------------------
+
+.. module:: sympy.printing.julia
+
+.. autodata:: sympy.printing.julia.known_fcns_src1
+
+.. autodata:: sympy.printing.julia.known_fcns_src2
+
+.. autoclass:: sympy.printing.julia.JuliaCodePrinter
+   :members:
+
+   .. autoattribute:: JuliaCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.julia.julia_code
+
 Octave (and Matlab) Code printing
 ---------------------------------
 

@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And
-from sympy.core import oo
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
