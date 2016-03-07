@@ -171,3 +171,8 @@ def test_cse_multiple():
 def test_symbol_not_found():
     e = a*a + b
     raises(LookupError, lambda: g.llvm_callable([a], e))
+
+
+def test_bad_callback():
+    e = a
+    raises(ValueError, lambda: g.llvm_callable([a], e, callback_type='bad_callback'))

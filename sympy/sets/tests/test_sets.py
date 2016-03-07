@@ -423,6 +423,8 @@ def test_contains():
     assert Interval(0, 2, True, True).contains(0) is S.false
     assert Interval(0, 2, True, True).contains(2) is S.false
 
+    assert (Interval(0, 2) in Interval(0, 2)) is False
+
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
@@ -982,6 +984,12 @@ def test_issue_10326():
     assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))
     assert Interval(-oo, oo).contains(oo) is S.false
     assert Interval(-oo, oo).contains(-oo) is S.false
+
+
+def test_issue_9706():
+    assert Interval(-oo, 0).closure == Interval(-oo, 0, True, False)
+    assert Interval(0, oo).closure == Interval(0, oo, False, True)
+    assert Interval(-oo, oo).closure == Interval(-oo, oo)
 
 
 def test_issue_10285():

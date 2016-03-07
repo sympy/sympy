@@ -539,8 +539,8 @@ def test_asech():
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
     assert asech(S(2)) == acosh(1/S(2))
 
-    # asech(x) == I*acos(x)
-    # (Note: the exact formula is asech(x) == +/- I*acos(x))
+    # asech(x) == I*acos(1/x)
+    # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
     assert asech(-2/sqrt(3)) == I*acos(-sqrt(3)/2)
     assert asech(-S(2)) == I*acos(-S.Half)

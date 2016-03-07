@@ -849,15 +849,20 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i in range(len(sequence)):
-            o, n = sequence[i]
-            so, sn = sympify(o), sympify(n)
-            if not isinstance(so, Basic):
-                if type(o) is str:
-                    so = Symbol(o)
-            sequence[i] = (so, sn)
-            if _aresame(so, sn):
-                sequence[i] = None
-                continue
+            s = list(sequence[i])
+            for j, si in enumerate(s):
+                try:
+                    si = sympify(si, strict=True)
+                except SympifyError:
+                    if type(si) is str:
+                        si = Symbol(si)
+                    else:
+                        # if it can't be sympified, skip it
+                        sequence[i] = None
+                        break
+                s[j] = si
+            else:
+                sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:

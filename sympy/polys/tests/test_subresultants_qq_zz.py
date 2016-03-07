@@ -21,7 +21,7 @@ def test_sylvester():
     assert sylvester(x**3 -7, 7, x).det() == sylvester(x**3 -7, 7, x, 1).det() == 343
     assert sylvester(7, x**3 -7, x).det() == sylvester(7, x**3 -7, x, 1).det() == 343
     assert sylvester(x**3 -7, 7, x, 2).det() == -343
-    assert sylvester(7, x**3 -7, x, 2).det() == -343
+    assert sylvester(7, x**3 -7, x, 2).det() == 343
 
     assert sylvester(3, 7, x).det() == sylvester(3, 7, x, 1).det() == sylvester(3, 7, x, 2).det() == 1
 

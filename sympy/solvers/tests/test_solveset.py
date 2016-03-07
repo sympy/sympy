@@ -737,9 +737,7 @@ def test_solve_trig():
 
     y, a = symbols('y,a')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        Union(imageset(Lambda(n, 2*n*pi), S.Integers),
-        imageset(Lambda(n,
-        -I*(I*(2*n*pi +arg(-exp(-2*I*y))) + 2*im(y))), S.Integers))
+        imageset(Lambda(n, 2*n*pi), S.Integers)
 
 
 @XFAIL

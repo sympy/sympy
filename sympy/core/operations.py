@@ -304,32 +304,36 @@ class AssocOp(Basic):
         walks the args of the non-number part recursively (doing the same
         thing).
         """
-        from sympy import Symbol
-        from sympy.core.function import AppliedUndef
-        x, tail = self.as_independent(Symbol, AppliedUndef)
-
-        # if x is an AssocOp Function then the _evalf below will
-        # call _eval_evalf (here) so we must break the recursion
-        if not (tail is self.identity or
-                isinstance(x, AssocOp) and x.is_Function):
-            # here, we have a number so we just call to _evalf with prec;
-            # prec is not the same as n, it is the binary precision so
-            # that's why we don't call to evalf.
-            x = x._evalf(prec) if x is not self.identity else self.identity
-            args = []
-            for a in self.func.make_args(tail):
-                # here we call to _eval_evalf since we don't know what we
-                # are dealing with and all other _eval_evalf routines should
-                # be doing the same thing (i.e. taking binary prec and
-                # finding the evalf-able args)
-                newa = a._eval_evalf(prec)
-                if newa is None:
-                    args.append(a)
-                else:
-                    args.append(newa)
-            if not _aresame(tuple(args), self.func.make_args(tail)):
-                tail = self.func(*args)
-            return self.func(x, tail)
+        from .add import Add
+        from .mul import Mul
+        from .symbol import Symbol
+        from .function import AppliedUndef
+        if isinstance(self, (Mul, Add)):
+            x, tail = self.as_independent(Symbol, AppliedUndef)
+            # if x is an AssocOp Function then the _evalf below will
+            # call _eval_evalf (here) so we must break the recursion
+            if not (tail is self.identity or
+                    isinstance(x, AssocOp) and x.is_Function or
+                    x is self.identity and isinstance(tail, AssocOp)):
+                # here, we have a number so we just call to _evalf with prec;
+                # prec is not the same as n, it is the binary precision so
+                # that's why we don't call to evalf.
+                x = x._evalf(prec) if x is not self.identity else self.identity
+                args = []
+                tail_args = tuple(self.func.make_args(tail))
+                for a in tail_args:
+                    # here we call to _eval_evalf since we don't know what we
+                    # are dealing with and all other _eval_evalf routines should
+                    # be doing the same thing (i.e. taking binary prec and
+                    # finding the evalf-able args)
+                    newa = a._eval_evalf(prec)
+                    if newa is None:
+                        args.append(a)
+                    else:
+                        args.append(newa)
+                if not _aresame(tuple(args), tail_args):
+                    tail = self.func(*args)
+                return self.func(x, tail)
 
         # this is the same as above, but there were no pure-number args to
         # deal with

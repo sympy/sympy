@@ -433,10 +433,7 @@ class zeta(Function):
             elif z is S.Infinity:
                 return S.One
             elif z is S.Zero:
-                if a.is_negative:
-                    return S.Half - a - 1
-                else:
-                    return S.Half - a
+                return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
             elif z.is_Integer:
