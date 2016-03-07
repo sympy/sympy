@@ -188,8 +188,8 @@ class ImageSet(Set):
     """
     Image of a set under a mathematical function. The transformation
     must be given as a Lambda function which has as many arguments
-    as the elements of the set upon which it operates (e.g. 1 argument
-    for acting on the set of integers or 2 arguments when acting on
+    as the elements of the set upon which it operates, e.g. 1 argument
+    when acting on the set of integers or 2 arguments when acting on
     a complex region.
 
     This function is not normally called directly, but is called
@@ -265,11 +265,11 @@ class ImageSet(Set):
                 raise NotImplementedError(filldedent('''
     Dimensions of input and output of Lambda are different.'''))
             eqs = [expr - val for val, expr in zip(other, L.expr)]
-            vars = L.variables
-            free = set(vars)
-            if all(i.is_number for i in list(Matrix(eqs).jacobian(vars))):
+            variables = L.variables
+            free = set(variables)
+            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
                 solns = list(linsolve([e - val for e, val in
-                zip(L.expr, other)], L.variables))
+                zip(L.expr, other)], variables))
             else:
                 syms = [e.free_symbols & free for e in eqs]
                 solns = {}
@@ -290,7 +290,7 @@ class ImageSet(Set):
                             raise NotImplementedError
                     else:
                         raise NotImplementedError
-                solns = cartes(*[solns[s] for s in vars])
+                solns = cartes(*[solns[s] for s in variables])
         else:
             # assume scalar -> scalar mapping
             solnsSet = solveset(L.expr - other, L.variables[0])
