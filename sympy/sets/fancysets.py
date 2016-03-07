@@ -252,14 +252,45 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.matrices import Matrix
         L = self.lamda
+        from sympy.utilities.iterables import iterable, cartes
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in
-            zip(other, L.expr)], L.variables).args[0])
+            if not iterable(L.expr):
+                raise NotImplementedError(filldedent('''
+    Dimensions of input and output of Lambda are different.'''))
+            eqs = [expr - val for val, expr in zip(other, L.expr)]
+            vars = L.variables
+            free = set(vars)
+            if all(i.is_number for i in list(Matrix(eqs).jacobian(vars))):
+                solns = list(linsolve([e - val for e, val in
+                zip(L.expr, other)], L.variables))
+            else:
+                syms = [e.free_symbols & free for e in eqs]
+                solns = []
+                for e, s, v in zip(eqs, syms, other):
+                    if not s:
+                        if e != v:
+                            return S.false
+                        solns.append([v])
+                        continue
+                    elif len(s) == 1:
+                        sol = solveset(e, s.pop())
+                        if sol is S.EmptySet:
+                            return S.false
+                        elif isinstance(sol, FiniteSet):
+                            solns.append(list(sol))
+                        else:
+                            raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+                solns = cartes(*solns)
+
         else:
-            solnsSet = solveset(L.expr-other, L.variables[0])
+            # assume scalar -> scalar mapping
+            solnsSet = solveset(L.expr - other, L.variables[0])
             if solnsSet.is_FiniteSet:
-                solns = list(solveset(L.expr - other, L.variables[0]))
+                solns = list(solnsSet)
             else:
                 raise NotImplementedError(filldedent('''
                 Determining whether an ImageSet contains %s has not
@@ -862,10 +893,14 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-
+        from sympy.core.containers import Tuple
+        other = sympify(other)
+        isTuple = isinstance(other, Tuple)
+        if isTuple and len(other) != 2:
+            raise ValueError('expecting Tuple of length 2')
         # self in rectangular form
         if not self.polar:
-            re, im = other.as_real_imag()
+            re, im = other if isTuple else other.as_real_imag()
             for element in self.psets:
                 if And(element.args[0]._contains(re),
                         element.args[1]._contains(im)):
@@ -874,7 +909,9 @@ class ComplexRegion(Set):
 
         # self in polar form
         elif self.polar:
-            if sympify(other).is_zero:
+            if isTuple:
+                r, theta = other
+            elif other.is_zero:
                 r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)

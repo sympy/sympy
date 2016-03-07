@@ -5,11 +5,13 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, Abs, I)
+                   Rational, sqrt, tan, log, Abs, I, Tuple)
 from sympy.utilities.pytest import XFAIL, raises
+
 import itertools
 
 x = Symbol('x')
+y = Symbol('y')
 
 
 def test_naturals():
@@ -56,6 +58,9 @@ def test_integers():
 
 
 def test_ImageSet():
+    assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
+    assert ImageSet(Lambda(x, y), S.Integers) == FiniteSet(y)
+
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
@@ -74,6 +79,14 @@ def test_ImageSet():
     assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
+
+    c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
+    assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
+    assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
+    assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
+    assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
+    raises(NotImplementedError, lambda: 2/pi in ImageSet(Lambda((x, y), 2/x), c))
+
 
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
