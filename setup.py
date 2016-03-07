@@ -37,6 +37,9 @@ import glob
 
 mpmath_version = '0.19'
 
+# This directory
+dir_setup = os.path.dirname(os.path.realpath(__file__))
+
 try:
     from setuptools import setup, Command
 except ImportError:
@@ -176,7 +179,6 @@ class clean(Command):
         pass
 
     def run(self):
-        dir_setup = os.path.dirname(os.path.realpath(__file__))
         curr_dir = os.getcwd()
         for root, dirs, files in os.walk(dir_setup):
             for file in files:
@@ -310,8 +312,11 @@ to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python.'''
 
-exec(open('sympy/release.py').read())
-with open('sympy/__init__.py') as f:
+with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
+    # Defines __version__
+    exec(f.read())
+
+with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
     long_description = f.read().split('"""')[1]
 
 setup(name='sympy',
