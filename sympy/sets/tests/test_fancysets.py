@@ -7,11 +7,10 @@ from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, Abs, I, Tuple)
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.abc import x, y, z
 
 import itertools
 
-x = Symbol('x')
-y = Symbol('y')
 
 
 def test_naturals():
@@ -85,7 +84,9 @@ def test_ImageSet():
     assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
     assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
     assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
-    raises(NotImplementedError, lambda: 2/pi in ImageSet(Lambda((x, y), 2/x), c))
+    assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
+    assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
+    assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
 
 
 def test_image_is_ImageSet():
