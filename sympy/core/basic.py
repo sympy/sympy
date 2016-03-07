@@ -1,5 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
+from collections import Mapping
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -833,7 +834,7 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
-            elif isinstance(sequence, (Dict, dict)):
+            elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
