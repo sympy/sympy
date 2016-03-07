@@ -423,6 +423,8 @@ def test_contains():
     assert Interval(0, 2, True, True).contains(0) is S.false
     assert Interval(0, 2, True, True).contains(2) is S.false
 
+    assert (Interval(0, 2) in Interval(0, 2)) is False
+
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
