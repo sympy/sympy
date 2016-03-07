@@ -615,6 +615,8 @@ def is_nthpow_residue(a, n, m):
 
     P. Hackman "Elementary Number Theory" (2009),  page 76
     """
+    if( primitive_root(m) == None ):
+        raise NotImplementedError("Not implemented for m which do not have any primitive root")
     if n == 1:
         return True
     if n == 2:
