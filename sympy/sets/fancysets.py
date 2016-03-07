@@ -5,11 +5,10 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
-from sympy.core.singleton import Singleton, S, sympify
-from sympy.core.sympify import _sympify, converter
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.singleton import Singleton, S
 from sympy.core.function import Lambda
 from sympy.utilities.misc import filldedent, func_name
-
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -187,7 +186,15 @@ class Reals(with_metaclass(Singleton, Interval)):
 
 class ImageSet(Set):
     """
-    Image of a set under a mathematical function
+    Image of a set under a mathematical function. The transformation
+    must be given as a Lambda function which has as many arguments
+    as the elements of the set upon which it operates (e.g. 1 argument
+    for acting on the set of integers or 2 arguments when acting on
+    a complex region.
+
+    This function is not normally called directly, but is called
+    from `imageset`.
+
 
     Examples
     ========
@@ -212,8 +219,19 @@ class ImageSet(Set):
     4
     9
     16
+
+    See Also
+    ========
+    sympy.sets.sets.imageset
     """
     def __new__(cls, lamda, base_set):
+        if not isinstance(lamda, Lambda):
+            raise ValueError('first argument must be a Lambda')
+        if lamda is S.IdentityFunction:
+            return base_set
+        if not lamda.expr.free_symbols or not lamda.expr.args:
+            return FiniteSet(lamda.expr)
+
         return Basic.__new__(cls, lamda, base_set)
 
     lamda = property(lambda self: self.args[0])
@@ -339,8 +357,10 @@ class Range(Set):
             start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
                                  for w in (start, stop, step)]
         except ValueError:
-            raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use ImageSets of Ranges for other cases")
+            raise ValueError(filldedent('''
+    Inputs to Range must be integers;
+    use ImageSets of Ranges for other cases, e.g.
+    `ImageSet(Lambda(i, i/10), Range(2))` to give [0, .1].'''))
 
         if not step.is_finite:
             raise ValueError("Infinite step is not allowed")
