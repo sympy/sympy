@@ -402,7 +402,8 @@ class StrPrinter(Printer):
             return numer + "/" + denom
 
     def _print_Poly(self, expr):
-        terms, gens = [], [ self._print(s) for s in expr.gens ]
+        ATOM_PREC = PRECEDENCE["Atom"] - 1
+        terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
 
         for monom, coeff in expr.terms():
             s_monom = []
@@ -459,6 +460,10 @@ class StrPrinter(Printer):
             format += ", domain='%s'" % expr.get_domain()
 
         format += ")"
+
+        for index, item in enumerate(gens):
+            if len(item) > 2 and (item[:1] == "(" and item[len(item) - 1:] == ")"):
+                gens[index] = item[1:len(item) - 1]
 
         return format % (' '.join(terms), ', '.join(gens))
 

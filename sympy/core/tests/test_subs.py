@@ -622,14 +622,14 @@ def test_mul2():
 
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
-    assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+    assert (x*y*x).subs([(x, x*y), (y, x)], simultaneous=True) == (x*y*x**2*y)
 
 
 def test_issue_2877():
     f = Float(2.0)
     assert (x + f).subs({f: 2}) == x + 2
 
-    def r(a,b,c):
+    def r(a, b, c):
         return factor(a*x**2 + b*x + c)
     e = r(5/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
@@ -678,3 +678,15 @@ def test_RootOf_issue_10092():
     eq = x**3 - 17*x**2 + 81*x - 118
     r = RootOf(eq, 0)
     assert (x < r).subs(x, r) is S.false
+
+
+def test_issue_8886():
+    from sympy.physics.mechanics import ReferenceFrame as R
+    from sympy.abc import x
+    # if something can't be sympified we assume that it
+    # doesn't play well with SymPy and disallow the
+    # substitution
+    v = R('A').x
+    assert x.subs(x, v) == x
+    assert v.subs(v, x) == v
+    assert v.__eq__(x) is False

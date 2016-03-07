@@ -308,7 +308,7 @@ tests = [
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external libraries.'''
+SymPy is written entirely in Python.'''
 
 exec(open('sympy/release.py').read())
 with open('sympy/__init__.py') as f:

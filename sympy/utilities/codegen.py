@@ -1,7 +1,8 @@
 """
-module for generating C, C++, Fortran77, Fortran90 and Octave/Matlab routines
-that evaluate sympy expressions.  This module is work in progress.  Only the
-milestones with a '+' character in the list below have been completed.
+module for generating C, C++, Fortran77, Fortran90, Julia and Octave/Matlab
+routines that evaluate sympy expressions.  This module is work in progress.
+Only the milestones with a '+' character in the list below have been
+completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
 
@@ -72,6 +73,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - Fortran 77
 - C++
 - Python
+- Julia
 - ...
 
 """
@@ -87,6 +89,7 @@ from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
+from sympy.printing.julia import julia_code, JuliaCodePrinter
 from sympy.printing.octave import octave_code, OctaveCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
@@ -98,7 +101,7 @@ __all__ = [
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
     "Argument", "InputArgument", "Result",
     # routines -> code
-    "CodeGen", "CCodeGen", "FCodeGen", "OctaveCodeGen",
+    "CodeGen", "CCodeGen", "FCodeGen", "JuliaCodeGen", "OctaveCodeGen",
     # friendly functions
     "codegen", "make_routine",
 ]
@@ -220,16 +223,17 @@ class Routine(object):
 
 class DataType(object):
     """Holds strings for a certain datatype in different languages."""
-    def __init__(self, cname, fname, pyname, octname):
+    def __init__(self, cname, fname, pyname, jlname, octname):
         self.cname = cname
         self.fname = fname
         self.pyname = pyname
+        self.jlname = jlname
         self.octname = octname
 
 
 default_datatypes = {
-    "int": DataType("int", "INTEGER*4", "int", ""),
-    "float": DataType("double", "REAL*8", "float", "")
+    "int": DataType("int", "INTEGER*4", "int", "", ""),
+    "float": DataType("double", "REAL*8", "float", "", "")
 }
 
 
@@ -285,6 +289,7 @@ class Variable(object):
         self._datatype = {
             'C': datatype.cname,
             'FORTRAN': datatype.fname,
+            'JULIA': datatype.jlname,
             'OCTAVE': datatype.octname,
             'PYTHON': datatype.pyname
         }
@@ -1124,6 +1129,202 @@ class FCodeGen(CodeGen):
     dump_fns = [dump_f95, dump_h]
 
 
+class JuliaCodeGen(CodeGen):
+    """Generator for Julia code.
+
+    The .write() method inherited from CodeGen will output a code file
+    <prefix>.jl.
+
+    """
+
+    code_extension = "jl"
+
+    def routine(self, name, expr, argument_sequence, global_vars):
+        """Specialized Routine creation for Julia."""
+
+        if is_sequence(expr) and not isinstance(expr, (MatrixBase, MatrixExpr)):
+            if not expr:
+                raise ValueError("No expression given")
+            expressions = Tuple(*expr)
+        else:
+            expressions = Tuple(expr)
+
+        # local variables
+        local_vars = set([i.label for i in expressions.atoms(Idx)])
+
+        # global variables
+        global_vars = set() if global_vars is None else set(global_vars)
+
+        # symbols that should be arguments
+        symbols = expressions.free_symbols - local_vars - global_vars
+
+        # Julia supports multiple return values
+        return_vals = []
+        output_args = []
+        for (i, expr) in enumerate(expressions):
+            if isinstance(expr, Equality):
+                out_arg = expr.lhs
+                expr = expr.rhs
+                symbol = out_arg
+                if isinstance(out_arg, Indexed):
+                    dims = tuple([ (S.One, dim) for dim in out_arg.shape])
+                    symbol = out_arg.base.label
+                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                if not isinstance(out_arg, (Indexed, Symbol, MatrixSymbol)):
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
+
+                return_vals.append(Result(expr, name=symbol, result_var=out_arg))
+                if not expr.has(symbol):
+                    # this is a pure output: remove from the symbols list, so
+                    # it doesn't become an input.
+                    symbols.remove(symbol)
+
+            else:
+                # we have no name for this output
+                return_vals.append(Result(expr, name='out%d' % (i+1)))
+
+        # setup input argument list
+        output_args.sort(key=lambda x: str(x.name))
+        arg_list = list(output_args)
+        array_symbols = {}
+        for array in expressions.atoms(Indexed):
+            array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
+
+        for symbol in sorted(symbols, key=str):
+            arg_list.append(InputArgument(symbol))
+
+        if argument_sequence is not None:
+            # if the user has supplied IndexedBase instances, we'll accept that
+            new_sequence = []
+            for arg in argument_sequence:
+                if isinstance(arg, IndexedBase):
+                    new_sequence.append(arg.label)
+                else:
+                    new_sequence.append(arg)
+            argument_sequence = new_sequence
+
+            missing = [x for x in arg_list if x.name not in argument_sequence]
+            if missing:
+                msg = "Argument list didn't specify: {0} "
+                msg = msg.format(", ".join([str(m.name) for m in missing]))
+                raise CodeGenArgumentListError(msg, missing)
+
+            # create redundant arguments to produce the requested sequence
+            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            new_args = []
+            for symbol in argument_sequence:
+                try:
+                    new_args.append(name_arg_dict[symbol])
+                except KeyError:
+                    new_args.append(InputArgument(symbol))
+            arg_list = new_args
+
+        return Routine(name, arg_list, return_vals, local_vars, global_vars)
+
+    def _get_symbol(self, s):
+        """Print the symbol appropriately."""
+        return julia_code(s).strip()
+
+    def _get_header(self):
+        """Writes a common header for the generated files."""
+        code_lines = []
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
+        for line in tmp.splitlines():
+            if line == '':
+                code_lines.append("#\n")
+            else:
+                code_lines.append("#   %s\n" % line)
+        return code_lines
+
+    def _preprocessor_statements(self, prefix):
+        return []
+
+    def _get_routine_opening(self, routine):
+        """Returns the opening statements of the routine."""
+        code_list = []
+        code_list.append("function ")
+
+        # Inputs
+        args = []
+        for i, arg in enumerate(routine.arguments):
+            if isinstance(arg, OutputArgument):
+                raise CodeGenError("Julia: invalid argument of type %s" %
+                                   str(type(arg)))
+            if isinstance(arg, (InputArgument, InOutArgument)):
+                args.append("%s" % self._get_symbol(arg.name))
+        args = ", ".join(args)
+        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list = [ "".join(code_list) ]
+
+        return code_list
+
+    def _declare_arguments(self, routine):
+        return []
+
+    def _declare_globals(self, routine):
+        return []
+
+    def _declare_locals(self, routine):
+        return []
+
+    def _get_routine_ending(self, routine):
+        outs = []
+        for result in routine.results:
+            if isinstance(result, Result):
+                # Note: name not result_var; want `y` not `y[i]` for Indexed
+                s = self._get_symbol(result.name)
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+            outs.append(s)
+        return ["return " + ", ".join(outs) + "\nend\n"]
+
+    def _call_printer(self, routine):
+        declarations = []
+        code_lines = []
+        for i, result in enumerate(routine.results):
+            if isinstance(result, Result):
+                assign_to = result.result_var
+            else:
+                raise CodeGenError("unexpected object in Routine results")
+
+            constants, not_supported, jl_expr = julia_code(result.expr,
+                assign_to=assign_to, human=False)
+
+            for obj, v in sorted(constants, key=str):
+                declarations.append(
+                    "%s = %s\n" % (obj, v))
+            for obj in sorted(not_supported, key=str):
+                if isinstance(obj, Function):
+                    name = obj.func
+                else:
+                    name = obj
+                declarations.append(
+                    "# unsupported: %s\n" % (name))
+            code_lines.append("%s\n" % (jl_expr))
+        return declarations + code_lines
+
+    def _indent_code(self, codelines):
+        # Note that indenting seems to happen twice, first
+        # statement-by-statement by JuliaPrinter then again here.
+        p = JuliaCodePrinter({'human': False})
+        return p.indent_code(codelines)
+        return codelines
+
+    def dump_jl(self, routines, f, prefix, header=True, empty=True):
+        self.dump_code(routines, f, prefix, header, empty)
+
+    dump_jl.extension = code_extension
+    dump_jl.__doc__ = CodeGen.dump_code.__doc__
+
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
+    dump_fns = [dump_jl]
+
+
 class OctaveCodeGen(CodeGen):
     """Generator for Octave code.
 
@@ -1367,7 +1568,7 @@ class OctaveCodeGen(CodeGen):
 
 
 def get_code_generator(language, project):
-    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen,
+    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen, "JULIA": JuliaCodeGen,
                     "OCTAVE": OctaveCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)

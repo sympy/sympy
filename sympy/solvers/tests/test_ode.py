@@ -2391,7 +2391,7 @@ def test_heuristic1():
     i4 = infinitesimals(eq4, hint='abaco1_simple')
     assert i4 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
         {eta(x, f(x)): 0,
-        xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 + 2*a4*x**4)}]
+        xi(x, f(x)): sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4)}]
     i5 = infinitesimals(eq5, hint='abaco1_simple')
     assert i5 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
 
@@ -2666,3 +2666,9 @@ def test_C1_function_9239():
     sol = [Eq(C1(t), 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t)), \
     Eq(C2(t), -6*sqrt(3)*C1*exp(-6*sqrt(3)*t) + 6*sqrt(3)*C2*exp(6*sqrt(3)*t))]
     assert dsolve(eq) == sol
+
+def test_issue_10379():
+    t,y = symbols('t,y')
+    sol =  dsolve(f(t).diff(t)-(1-51.05*y*f(t)), rational=False)
+    ans =  Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)
+    assert str(sol) == str(ans)

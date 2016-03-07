@@ -281,7 +281,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Cycle(self, expr):
-        from sympy.combinatorics.permutations import Permutation, Cycle
+        from sympy.combinatorics.permutations import Permutation
         if str(expr) == '()':
             return r"\left( \right)"
         expr = Permutation(expr)

@@ -64,6 +64,9 @@ class MatMul(MatrixExpr):
         if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
             return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
         result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        if not X.cols.is_number:
+            # Don't waste time in result.doit() if the sum bounds are symbolic
+            expand = False
         return result.doit() if expand else result
 
     def as_coeff_matrices(self):

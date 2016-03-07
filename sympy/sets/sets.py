@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import _sympify, sympify, converter
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
@@ -12,7 +12,7 @@ from sympy.core.compatibility import iterable, with_metaclass, ordered, range
 from sympy.core.evaluate import global_evaluate
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.contains import Contains
 from sympy.utilities.misc import func_name
 
@@ -940,7 +940,9 @@ class Interval(Set, EvalfMixin):
 
     @property
     def _boundary(self):
-        return FiniteSet(self.start, self.end)
+        finite_points = [p for p in (self.start, self.end)
+                         if abs(p) != S.Infinity]
+        return FiniteSet(*finite_points)
 
     def _contains(self, other):
         if not isinstance(other, Expr) or (
@@ -1426,23 +1428,21 @@ class Intersection(Set):
     def _handle_finite_sets(args):
         from sympy.core.logic import fuzzy_and, fuzzy_bool
         from sympy.core.compatibility import zip_longest
+        from sympy.utilities.iterables import sift
 
-        new_args = []
-        fs_args = []
-        for s in args:
-            if s.is_FiniteSet:
-                fs_args.append(s)
-            else:
-                new_args.append(s)
+        sifted = sift(args, lambda x: x.is_FiniteSet)
+        fs_args = sifted.pop(True, [])
         if not fs_args:
             return
         s = fs_args[0]
         fs_args = fs_args[1:]
+        other = sifted.pop(False, [])
+
         res = []
         unk = []
         for x in s:
             c = fuzzy_and(fuzzy_bool(o.contains(x))
-                for o in fs_args + new_args)
+                for o in fs_args + other)
             if c:
                 res.append(x)
             elif c is None:
@@ -1474,13 +1474,13 @@ class Intersection(Set):
                     contained = [x for x in symbolic_s_list
                         if sympify(v.contains(x)) is S.true]
                     if contained != symbolic_s_list:
-                        new_args.append(
+                        other.append(
                             v - FiniteSet(
                             *contained, evaluate=False))
                     else:
                         pass  # for coverage
 
-            other_sets = Intersection(*new_args)
+            other_sets = Intersection(*other)
             if not other_sets:
                 return S.EmptySet  # b/c we use evaluate=False below
             res += Intersection(
@@ -1491,14 +1491,15 @@ class Intersection(Set):
     @staticmethod
     def reduce(args):
         """
-        Simplify an intersection using known rules
+        Return a simplified intersection by applying rules.
 
         We first start with global rules like
-        'if any empty sets return empty set' and 'distribute any unions'
+        'if any empty sets, return empty set' and 'distribute unions'.
 
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
         """
+        from sympy.simplify.simplify import clear_coefficients
 
         # ===== Global Rules =====
         # If any EmptySets return EmptySet
@@ -1508,6 +1509,22 @@ class Intersection(Set):
         # Handle Finite sets
         rv = Intersection._handle_finite_sets(args)
         if rv is not None:
+            # simplify symbolic intersection between a FiniteSet
+            # and an interval
+            if isinstance(rv, Intersection) and len(rv.args) == 2:
+                ivl, s = rv.args
+                if isinstance(s, FiniteSet) and len(s) == 1 and isinstance(ivl, Interval):
+                    e = list(s)[0]
+                    if e.free_symbols:
+                        rhs = Dummy()
+                        e, r = clear_coefficients(e, rhs)
+                        if r != rhs:
+                            iargs = list(ivl.args)
+                            iargs[0] = r.subs(rhs, ivl.start)
+                            iargs[1] = r.subs(rhs, ivl.end)
+                            if iargs[0] > iargs[1]:
+                                iargs = iargs[:2][::-1] + iargs[-2:][::-1]
+                            rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
             return rv
 
         # If any of the sets are unions, return a Union of Intersections
@@ -1522,8 +1539,8 @@ class Intersection(Set):
 
         for s in args:
             if s.is_Complement:
+                args.remove(s)
                 other_sets = args + [s.args[0]]
-                other_sets.remove(s)
                 return Complement(Intersection(*other_sets), s.args[1])
 
         # At this stage we are guaranteed not to have any
@@ -1653,7 +1670,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return false
 
     def as_relational(self, symbol):
-        return False
+        return false
 
     def __len__(self):
         return 0
@@ -1726,7 +1743,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
         return true
 
     def as_relational(self, symbol):
-        return True
+        return true
 
     def _union(self, other):
         return self
@@ -1952,6 +1969,10 @@ class FiniteSet(Set, EvalfMixin):
         if not isinstance(other, Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
+
+
+converter[set] = lambda x: FiniteSet(*x)
+converter[frozenset] = lambda x: FiniteSet(*x)
 
 
 class SymmetricDifference(Set):
