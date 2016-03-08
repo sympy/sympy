@@ -410,7 +410,7 @@ class AskHermitianHandler(CommonHandler):
     Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
     @staticmethod
-    def MatrixExpr(expr, assumptions):
+    def ImmutableMatrix(expr, assumptions):
         if not expr.is_square:
             return False
         for i in range(expr.rows):
@@ -427,7 +427,7 @@ class AskAntiHermitianHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysTrue)
 
     @staticmethod
-    def MatrixExpr(expr, assumptions):
+    def ImmutableMatrix(expr, assumptions):
         if not expr.is_square:
             return False
         for i in range(expr.rows):
