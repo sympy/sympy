@@ -452,21 +452,13 @@ def test_solve_polynomial_symbolic_param():
         FiniteSet(sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
                   sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a)))
 
-    # By attempt to make Set.contains behave symbolically SetDifference on
-    # FiniteSet isn't working very well.
-    # Simple operations like `FiniteSet(a) - FiniteSet(-b)` raises `TypeError`
-    # The likely course of action will making such operations return
-    # SetDifference object. That will also change the expected output of
-    # the given tests. Till the SetDifference becomes well behaving again the
-    # following tests are kept as comments.
+    # issue 4507
+    assert solveset_complex(y - b/(1 + a*x), x) == \
+        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
 
-    # # issue 4508
-    # assert solveset_complex(y - b*x/(a + x), x) == \
-    #     FiniteSet(-a*y/(y - b))
-    #
-    # # issue 4507
-    # assert solveset_complex(y - b/(1 + a*x), x) == \
-    #     FiniteSet((b - y)/(a*y))
+    # issue 4508
+    assert solveset_complex(y - b*x/(a + x), x) == \
+        FiniteSet(-a*y/(y - b)) - FiniteSet(-a)
 
 
 def test_solve_rational():
