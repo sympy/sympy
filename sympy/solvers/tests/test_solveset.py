@@ -317,16 +317,15 @@ def test_return_root_of():
     assert solveset_complex(s, x) == \
         FiniteSet(*Poly(s*4, domain='ZZ').all_roots())
 
-    # XXX: this comparison should work without converting the FiniteSet to list
-    # See #7876
+    # Refer issue #7876
     eq = x*(x - 1)**2*(x + 1)*(x**6 - x + 1)
-    assert list(solveset_complex(eq, x)) == \
-        list(FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
+    assert solveset_complex(eq, x) == \
+        FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
                        CRootOf(x**6 - x + 1, 1),
                        CRootOf(x**6 - x + 1, 2),
                        CRootOf(x**6 - x + 1, 3),
                        CRootOf(x**6 - x + 1, 4),
-                       CRootOf(x**6 - x + 1, 5)))
+                       CRootOf(x**6 - x + 1, 5))
 
 
 def test__has_rational_power():
