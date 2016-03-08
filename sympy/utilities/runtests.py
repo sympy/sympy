@@ -619,6 +619,7 @@ def _doctest(*paths, **kwargs):
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
     ])
 
     if import_module('numpy') is None:
