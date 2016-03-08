@@ -389,7 +389,10 @@ def _solve_as_rational(f, symbol, domain):
 
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
-    f = trigsimp(f)
+    if _is_function_class_equation(TrigonometricFunction, f, symbol):
+        f = trigsimp(f)
+    # trigsimp is not defined for hyperbolic
+    # TODO trigh function for Hyperbolic Functions
     f_orig = f
     f = f.rewrite(exp)
     soln = _solveset(f, symbol, S.Complexes)

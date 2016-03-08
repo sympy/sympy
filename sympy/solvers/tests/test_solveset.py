@@ -2,7 +2,7 @@ from sympy import (
     Abs, Dummy, Eq, Gt, Function,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sec, sqrt, symbols,
+    exp, log, pi, sin, sinh, cosh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
@@ -573,15 +573,29 @@ def test_solve_abs():
     raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
+
+def test_rewrite_trigh_fixed_by_10733():
     from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
+    assert solveset_real(sinh(x) + sech(x), x) == \
+    FiniteSet(log(sqrt(-2 + sqrt(5))))
+    assert solveset(sinh(x), x) == ImageSet(Lambda(n, n*I*pi), S.Integers)
+    assert solveset(sinh(x) + cosh(x) + 1, x) == ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers)
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x) + cos(x), x) == ConditionSet(x, Eq(cos(x) + sinh(x), 0), S.Complexes)
+
+
+@SKIP("comparison error")
+def test_rewrite_trigh_fail():
+    from sympy import sech
+    assert solveset_complex(sinh(x) + sech(x), x) == Union(
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers) -\
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers) - \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers) - \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers)- \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)))
 
 
 def test_real_imag_splitting():
