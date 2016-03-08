@@ -1,6 +1,8 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
 
+from collections import ChainMap, OrderedDict
+
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
@@ -64,6 +66,8 @@ def test_subs():
     assert b21.subs([(b2, b1), (b1, b2)]) == Basic(b2, b2)
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
+    assert b21.subs(ChainMap({b1: b2}, {b2: b1})) == Basic(b2, b2)
+    assert b21.subs(OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))
     raises(ValueError, lambda: b21.subs(b1, b2, b3))
