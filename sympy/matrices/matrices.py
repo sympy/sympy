@@ -3079,10 +3079,18 @@ class MatrixBase(object):
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
+
+        If the given matrix is empty matrix then an empty dictionary 
+        is returned.
         """
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+
+        empty_dict = {}
+        if self.is_empty:
+            return empty_dict
+
         mat = self
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
