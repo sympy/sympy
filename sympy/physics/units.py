@@ -246,17 +246,17 @@ ug = microgram = micrograms = micro * g
 # Physical constants
 #
 c = speed_of_light = 299792458 * m/s
-G = gravitational_constant = Rational('6.67428') * ten**-11 * m**3 / kg / s**2
+G = gravitational_constant = Rational('6.67408') * ten**-11 * m**3 / kg / s**2
 u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2
 e0 = electric_constant = 1/(u0 * c**2)
 Z0 = vacuum_impedance = u0 * c
 
-planck = Rational('6.62606896') * ten**-34 * J*s
+planck = Rational('6.62607004') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
-avogadro_number = Rational('6.02214179') * 10**23
+avogadro_number = Rational('6.02214086') * 10**23
 avogadro = avogadro_constant = avogadro_number / mol
-boltzmann = Rational('1.3806505') * ten**-23 * J / K
+boltzmann = Rational('1.3806485') * ten**-23 * J / K
 
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
@@ -270,7 +270,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = 1.602176487e-19 * J
+eV = 1.602176621e-19 * J
 
 # Other convenient units and magnitudes
 
