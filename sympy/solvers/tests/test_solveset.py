@@ -190,6 +190,8 @@ def test_is_function_class_equation():
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x)**2 + sin(x) - 1, x) is True
     assert _is_function_class_equation(TrigonometricFunction,
+                                       tan(x) + x, x) is False
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2), x) is False
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2) + sin(x), x) is False
@@ -215,6 +217,8 @@ def test_is_function_class_equation():
                                        a*tanh(x) - 1, x) is True
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x)**2 + sinh(x) - 1, x) is True
+    assert _is_function_class_equation(HyperbolicFunction,
+                                       tanh(x) + x, x) is False
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x**2), x) is False
     assert _is_function_class_equation(HyperbolicFunction,
