@@ -140,6 +140,8 @@ def prepare_apt():
     # Need 7.1.2 for Python 3.2 support
     sudo("easy_install3 pip==7.1.2")
     sudo("pip3 install mpmath")
+    # Be sure to use the Python 2 pip
+    sudo("/usr/bin/pip install twine")
     # Needed to build the docs
     sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
     # Our Ubuntu is too old to include Python 3.3
@@ -930,8 +932,8 @@ def pypi_upload():
     Upload files to PyPI. You will need to enter a password.
     """
     with cd("/home/vagrant/repos/sympy"):
-        # See http://stackoverflow.com/a/17657183/161801
-        run("python setup.py sdist --dry-run upload")
+        run("twine upload dist/*.tar.gz")
+        run("twine upload dist/*.exe")
 
 @task
 def test_pypi(release='2'):
