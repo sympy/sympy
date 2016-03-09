@@ -3114,7 +3114,19 @@ class MatrixBase(object):
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
+
+        If the given matrix is an empty matrix then an empty list is returned
+
+        Examples
+        ========
+
+        >>> 
         """
+
+        empty_list = []
+        if self.is_empty:
+            return empty_list
+
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
