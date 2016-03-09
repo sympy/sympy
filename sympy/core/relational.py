@@ -284,6 +284,10 @@ class Equality(Relational):
     is_Equality = True
 
     def __new__(cls, lhs, rhs=0, **options):
+        from sympy.core.add import Add
+        from sympy.core.logic import fuzzy_bool
+        from sympy.simplify.simplify import clear_coefficients
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
@@ -313,8 +317,8 @@ class Equality(Relational):
                 if L is False:
                     return S.true
 
-            # see if the difference evaluates
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
+                # see if the difference evaluates
                 dif = lhs - rhs
                 z = dif.is_zero
                 if z is not None:
@@ -322,17 +326,29 @@ class Equality(Relational):
                         return S.false
                     if z:
                         return S.true
+                # see if the ratio evaluates
                 n, d = dif.as_numer_denom()
-                fin = [i.is_finite for i in (n, d)]
-                if fin[0] != fin[1] and None not in fin:
-                    return _sympify(fin[0])
-                elif fin[0]:
-                    r = n.is_zero
-                    if r is True:
-                        if d.is_zero is False:
-                            return S.true
-                    elif r is False:
-                        return S.false
+                rv = None
+                if n.is_zero:
+                    rv = d.is_nonzero
+                elif n.is_finite:
+                    if d.is_infinite:
+                        rv = S.true
+                    elif n.is_zero is False:
+                        rv = d.is_infinite
+                        if rv is None:
+                            # if the condition that makes the denominator infinite does not
+                            # make the original expression True then False can be returned
+                            l, r = clear_coefficients(d, S.Infinity)
+                            args = [_.subs(l, r) for _ in (lhs, rhs)]
+                            if args != [lhs, rhs]:
+                                rv = fuzzy_bool(Eq(*args))
+                                if rv is True:
+                                    rv = None
+                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                    rv = S.false
+                if rv is not None:
+                    return _sympify(rv)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 

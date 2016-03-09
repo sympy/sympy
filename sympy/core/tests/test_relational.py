@@ -664,27 +664,24 @@ def test_issue_10304():
 
 
 def test_issue_10401():
+    x = symbols('x')
     fin = symbols('inf', finite=True)
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
     zero = symbols('z', zero=True)
     nonzero = symbols('nz', zero=False, finite=True)
-    E = Eq
+
+    assert Eq(1/(1/x + 1), 1).func is Eq
+    assert Eq(1/(1/fin + 1), 1) is S.false
+
     T, F = S.true, S.false
-    assert E(fin, inf) is F
-    assert E(inf, inf2) is T and inf != inf2
-    assert E(inf/inf2, 0) is F
-    assert E(inf/fin, 0) is F
-    assert E(fin/inf, 0) is T
-    assert E(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
-    E = Ne
-    T, F = F, T
-    assert E(fin, inf) is F
-    assert E(inf, inf2) is T and inf != inf2
-    assert E(inf/inf2, 0) is F
-    assert E(inf/fin, 0) is F
-    assert E(fin/inf, 0) is T
-    assert E(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(fin, inf) is F
+    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf/inf2, 0) is F
+    assert Eq(inf/fin, 0) is F
+    assert Eq(fin/inf, 0) is T
+    assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+
 
     assert Eq(fin/(fin + 1), 1) is S.false
 
@@ -692,7 +689,7 @@ def test_issue_10401():
     assert Eq(o, 2*o) is S.false
 
     p = symbols('p', positive=True)
-    assert Eq(p/(p - 1), 1) is S.false
+    assert Eq(p/(p - 1), 1) is F
 
 
 def test_issue_10633():
