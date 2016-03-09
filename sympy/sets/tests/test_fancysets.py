@@ -59,7 +59,7 @@ def test_integers():
 def test_ImageSet():
     assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
     assert ImageSet(Lambda(x, y), S.Integers) == FiniteSet(y)
-
+    z = Interval(1,2)*Interval(2,3)*Interval(0,3)
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
@@ -84,6 +84,8 @@ def test_ImageSet():
     assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
     assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
     assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
+    assert Tuple(3,1,0) in imageset(Lambda((a,y,x),(y,a,x)),z)
+    assert Tuple(S(1)/3,1,0) in imageset(Lambda((a,y,x),(1/y,a,x)),z)
     assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
