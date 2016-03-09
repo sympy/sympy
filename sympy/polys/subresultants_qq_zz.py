@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 This module contains functions for the computation
-of Euclidean, generalized Sturmian and (modified) subresultant
-polynomial remainder sequences (prs's).
+of Euclidean, (generalized) Sturmian, (modified) subresultant
+polynomial remainder sequences (prs's) of two polynomials;
+included are also three functions for the computation of the
+resultant of two polynomials.
 
-The pseudo-remainder function prem() of sympy is _not_ used
-by any of the functions in the module.
+Except for the function res_z(), which computes the resultant
+of two polynomials, the pseudo-remainder function prem()
+of sympy is _not_ used by any of the functions in the module.
 
 Instead of prem() we use the function
 
 rem_z().
 
 Included is also the function quo_z().
+
+An explanation of why we avoid prem() can be found in the
+references stated in the docstring of rem_z().
 
 1. Theoretical background:
 ==========================
@@ -34,7 +40,7 @@ degree difference between any two consecutive polynomials is 1;
 otherwise, it called incomplete.
 
 It is understood that f, g belong to the sequences mentioned in
-the two definitions.
+the two definitions above.
 
 1A. Euclidean and subresultant prs's:
 =====================================
@@ -59,8 +65,14 @@ determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
 (if needed) by an appropriate power of -1; see the caveat below.
 
-In this module we use the function res(f, g, x) to compute the
-resultant of f, g by evaluating the determinant of sylvester(f, g, x, 1).
+In this module we use three functions to compute the
+resultant of f, g:
+a) res(f, g, x) computes the resultant by evaluating
+the determinant of sylvester(f, g, x, 1);
+b) res_q(f, g, x) computes the resultant recursively, by
+performing polynomial divisions in Q[x] with the function rem();
+c) res_z(f, g, x) computes the resultant recursively, by
+performing polynomial divisions in Z[x] with the function prem().
 
 Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
 
@@ -216,13 +228,19 @@ For clearly historical reasons --- since the Collins-Brown-Traub
 coefficients-reduction factor β_i was not available in 1917 ---
 we have implemented the Pell-Gordon theorem with the function
 rem(f, g, x) and the A-M-V Theorem  with the function rem_z(f, g, x).
+
+2H. Resultants:
+===============
+res(f, g, x)
+res_q(f, g, x)
+res_z(f, g, x)
 """
 
 
 from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (QQ, quo, prem, rem, S, sign, simplify, summation, var, zeros)
 from sympy.polys.polyerrors import PolynomialError
 
 def sylvester(f, g, x, method = 1):
@@ -347,6 +365,65 @@ def res(f, g, x):
          raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
     else:
         return sylvester(f, g, x, 1).det()
+
+def res_q(f, g, x):
+    """
+    The input polynomials f, g are in Z[x] or in Q[x].
+
+    The output is the resultant of f, g computed recursively
+    by polynomial divisions in Q[x], using the function rem.
+    See Cohen's book p. 281.
+
+    References:
+    ===========
+    1. J. S. Cohen: Computer Algebra and Symbolic Computation
+     - Mathematical Methods. A. K. Peters, 2003.
+    """
+    m = degree(f, x)
+    n = degree(g, x)
+    if m < n:
+        return (-1)**(m*n) * res_q(g, f, x)
+    elif n == 0:  # g is a constant
+        return g**m
+    else:
+        r = rem(f, g, x)
+        if r == 0:
+            return 0
+        else:
+            s = degree(r, x)
+            l = LC(g, x)
+            return (-1)**(m*n) * l**(m-s)*res_q(g, r, x)
+
+def res_z(f, g, x):
+    """
+    The input polynomials f, g are in Z[x] or in Q[x].
+
+    The output is the resultant of f, g computed recursively
+    by polynomial divisions in Z[x], using the function prem().
+    See Cohen's book p. 283.
+
+    References:
+    ===========
+    1. J. S. Cohen: Computer Algebra and Symbolic Computation
+     - Mathematical Methods. A. K. Peters, 2003.
+    """
+    m = degree(f, x)
+    n = degree(g, x)
+    if m < n:
+        return (-1)**(m*n) * res_z(g, f, x)
+    elif n == 0:  # g is a constant
+        return g**m
+    else:
+        r = prem(f, g, x)
+        if r == 0:
+            return 0
+        else:
+            delta = m - n + 1
+            w = (-1)**(m*n) * res_z(g, r, x)
+            s = degree(r, x)
+            l = LC(g, x)
+            k = delta * n - m + s
+            return quo(w, l**k, x)
 
 def sign_seq(poly_seq, x):
     """

@@ -1,6 +1,6 @@
 from sympy import var, sturm, subresultants, prem, pquo
 from sympy.matrices import Matrix, eye
-from sympy.polys.subresultants_qq_zz import (sylvester, res, bezout,
+from sympy.polys.subresultants_qq_zz import (sylvester, res, res_q, res_z, bezout,
     subresultants_bezout, modified_subresultants_bezout,
     process_bezout_output, backward_eye,
     sturm_pg, sturm_q, sturm_amv, euclid_pg, euclid_q,
@@ -38,6 +38,17 @@ def test_res():
     x = var('x')
 
     assert res(3, 5, x) == 1
+
+def test_res_q():
+    x = var('x')
+
+    assert res_q(3, 5, x) == 1
+
+def test_res_z():
+    x = var('x')
+
+    assert res_z(3, 5, x) == 1
+    assert res(3, 5, x) == res_q(3, 5, x) == res_z(3, 5, x)
 
 def test_bezout():
     x = var('x')
