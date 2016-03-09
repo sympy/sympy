@@ -4,7 +4,7 @@ from sympy.logic.boolalg import And
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+                             FiniteSet, ProductSet)
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.core.singleton import Singleton, S
 from sympy.core.function import Lambda
@@ -357,6 +357,50 @@ class ImageSet(Set):
             return imageset(Lambda(n_, re),
                             self.base_set.intersect(
                                 solveset_real(im, n_)))
+
+
+class Rationals(with_metaclass(Singleton, ImageSet)):
+    """
+    Represents all rationals numbers which are the numbers that can be
+    expressed as the fraction p/q of two integers, a numerator p and
+    a non-zero denominator q. This set is also available as
+    the Singleton, S.Rationals.
+
+    Examples
+    ========
+
+    >>> from sympy import S, pi, sqrt, ImageSet
+    >>> 1/2 in S.Rationals
+    True
+    >>> pi in S.Rationals
+    False
+    >>> sqrt(2) in S.Rationals
+    False
+
+    """
+
+    def __new__(cls):
+        from sympy import symbols, Dummy
+        x, y = symbols('x, y', cls=Dummy)
+
+        lamda = Lambda((x, y), x/y)
+        base_set = ProductSet(S.Integers, S.Naturals)
+        return ImageSet.__new__(cls, lamda, base_set)
+
+    def _contains(self, other):
+        return other in ImageSet(self.lamda, self.base_set)
+
+    def __eq__(self, other):
+        return other == ImageSet(self.lamda, self.base_set)
+
+    def __hash__(self):
+        return hash(ImageSet(self.lamda, self.base_set))
+
+    def __str__(self):
+        return "S.Rationals"
+
+    def __repr__(self):
+        return "S.Rationals"
 
 
 class Range(Set):
