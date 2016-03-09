@@ -927,8 +927,9 @@ def test_eigen():
     sevals = list(sorted(evals.keys()))
     assert all(abs(nevals[i] - sevals[i]) < 1e-9 for i in range(len(nevals)))
 
-    # issue _
+    # issue 10719
     assert Matrix([]).eigenvals() == {}
+    assert Matrix([]).eigenvects() == []
 
 
 def test_subs():

@@ -3034,7 +3034,7 @@ class MatrixBase(object):
         # been done, e.g. in eigenvects
         mat = self
 
-        if( not mat ):
+        if not mat:
             return {}
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
