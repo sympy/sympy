@@ -398,7 +398,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    ([0, ∞) ∩ {n}) ∪ ((-∞, 0] ∩ {-n})
+    [0, ∞) ∩ {n}
 
  Though, there still a lot of work needs to be done in this regard.
 

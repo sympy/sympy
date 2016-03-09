@@ -4,12 +4,13 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
+from sympy.sets import FiniteSet, EmptySet
 
 import mpmath
 
@@ -151,7 +152,6 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(set(['.3', '.2']), rational=True) == set(ans)
     assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
@@ -412,7 +412,7 @@ def test_issue_3982():
     a = [3, 2.0]
     assert sympify(a) == [Integer(3), Float(2.0)]
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
-    assert sympify(set(a)) == set([Integer(3), Float(2.0)])
+    assert sympify(set(a)) == FiniteSet(Integer(3), Float(2.0))
 
 
 def test_S_sympify():
@@ -479,6 +479,7 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
+
 def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
@@ -493,6 +494,7 @@ def test_issue_8821_highprec_from_str():
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
 
+
 def test_Range():
     # Only works in Python 3 where range returns a range type
     if PY3:
@@ -502,3 +504,15 @@ def test_Range():
 
     assert sympify(builtin_range(10)) == Range(10)
     assert _sympify(builtin_range(10)) == Range(10)
+
+
+def test_sympify_set():
+    n = Symbol('n')
+    assert sympify(set([n])) == FiniteSet(n)
+    assert sympify(set()) == EmptySet()
+
+
+@XFAIL
+def test_sympify_rational_numbers_set():
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(set(['.3', '.2']), rational=True) == FiniteSet(*ans)

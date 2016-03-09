@@ -139,19 +139,13 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
-                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
-
-    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+    h1 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
                       imageset(Lambda(n, n - a - 3), Interval(0, oo)))
 
-    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+    h2 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
                       imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
 
-    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
-                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
-
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2, h3, h4))
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2))
 
 
 def test_invert_complex():
@@ -743,9 +737,7 @@ def test_solve_trig():
 
     y, a = symbols('y,a')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        Union(imageset(Lambda(n, 2*n*pi), S.Integers),
-        imageset(Lambda(n,
-        -I*(I*(2*n*pi +arg(-exp(-2*I*y))) + 2*im(y))), S.Integers))
+        imageset(Lambda(n, 2*n*pi), S.Integers)
 
 
 @XFAIL

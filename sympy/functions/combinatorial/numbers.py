@@ -164,6 +164,7 @@ class lucas(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+
 class bernoulli(Function):
     r"""
     Bernoulli numbers / Bernoulli polynomials
@@ -1000,7 +1001,6 @@ class genocchi(Function):
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
         return (n - 8).is_zero
-
 
 
 #######################################################################
