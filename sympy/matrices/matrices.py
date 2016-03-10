@@ -3069,7 +3069,6 @@ class MatrixBase(object):
 
     def eigenvals(self, **flags):
         """Return eigen values using the berkowitz_eigenvals routine.
-
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
@@ -3088,14 +3087,12 @@ class MatrixBase(object):
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
-
         The flag ``simplify`` has two effects:
             1) if bool(simplify) is True, as_content_primitive()
             will be used to tidy up normalization artifacts;
             2) if nullspace needs simplification to compute the
             basis, the simplify flag will be passed on to the
             nullspace routine which will interpret it there.
-
         If the matrix contains any Floats, they will be changed to Rationals
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
