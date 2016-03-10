@@ -260,16 +260,9 @@ given prefix.
 Here is an example::
 
     >>> [(f_name, f_code), header] = codegen(("volume", length*breadth*height),
-    ...     "F95", header=True, empty=False, argument_sequence=(breadth, length),
+    ...     "F95", header=False, empty=False, argument_sequence=(breadth, length),
     ...     global_vars=(height,))
     >>> print(f_code)
-    !******************************************************************************
-    !*                    Code generated with sympy 1.0.1.dev                     *
-    !*                                                                            *
-    !*              See http://www.sympy.org/ for more information.               *
-    !*                                                                            *
-    !*                       This file is part of 'project'                       *
-    !******************************************************************************
     REAL*8 function volume(breadth, length)
     implicit none
     REAL*8, intent(in) :: breadth
