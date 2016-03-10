@@ -218,6 +218,30 @@ def test_Reals():
     assert S.Reals != Interval(0, oo)
 
 
+def test_Rationals():
+    assert 1/5 in S.Rationals
+    assert 10 in S.Rationals
+    assert S.Half in S.Rationals
+    assert pi not in S.Rationals
+    assert sqrt(2) not in S.Rationals
+    assert I not in S.Rationals
+    assert sqrt(2)**2 in S.Rationals
+
+    a, b = symbols('a, b', cls=Dummy)
+    assert ImageSet(Lambda((a, b), a / b), S.Integers*S.Naturals) == S.Rationals
+
+    assert str(S.Rationals) in "S.Rationals"
+
+@XFAIL
+def test_Rationals_subsets():
+    # We need to make the `_contains` method of ImageSet class more robust
+    # for these tests to pass
+    assert S.Naturals in S.Rationals
+    assert S.Integers in S.Rationals
+
+    a, b = symbols('a, b', cls=Dummy)
+    assert ImageSet(Lambda(a, a), S.Integers) == S.Rationals
+
 def test_Complex():
     assert 5 in S.Complexes
     assert 5 + 4*I in S.Complexes
