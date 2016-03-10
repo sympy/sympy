@@ -2028,6 +2028,31 @@ class MatrixBase(object):
         return self.rows == self.cols
 
     @property
+    def is_empty(self):
+        """Checks if a matrix is an empty matrix.
+
+        A matrix is called empty if it has its number of columns or number of
+        rows or both as zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, zeros
+        >>> a = Matrix([])
+        >>> a.is_empty
+        True
+        >>> b = Matrix([0])
+        >>> b.is_empty
+        False
+        >>> c = Matrix([[1, 2], [3, 4]])
+        >>> c.is_empty
+        False
+        """
+        if not self.rows or not self.cols:
+            return True
+        return False
+
+    @property
     def is_zero(self):
         """Checks if a matrix is a zero matrix.
 
