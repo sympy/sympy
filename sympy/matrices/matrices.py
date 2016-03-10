@@ -3220,7 +3220,8 @@ class MatrixBase(object):
 
         singular_values
         """
-
+        if not self:
+            return 0
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
