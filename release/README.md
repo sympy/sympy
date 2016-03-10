@@ -1,3 +1,5 @@
+TODO Fix release script
+
 # Prepare the VM
 
 First execute:
