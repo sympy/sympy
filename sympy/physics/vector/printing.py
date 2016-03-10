@@ -182,11 +182,11 @@ class VectorPrettyPrinter(PrettyPrinter):
         if len(pform.picture) > 1:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        dots = {0 : u(""),
-                1 : u("\N{COMBINING DOT ABOVE}"),
-                2 : u("\N{COMBINING DIAERESIS}"),
-                3 : u("\N{COMBINING THREE DOTS ABOVE}"),
-                4 : u("\N{COMBINING FOUR DOTS ABOVE}")}
+        dots = {0 : u"",
+                1 : u"\N{COMBINING DOT ABOVE}",
+                2 : u"\N{COMBINING DIAERESIS}",
+                3 : u"\N{COMBINING THREE DOTS ABOVE}",
+                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         pic = d['picture'][0]

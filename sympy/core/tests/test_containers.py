@@ -114,7 +114,7 @@ def test_tuple_wrapper():
 def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u('')]
+    not_sympy_iterable = [{}, '', u'']
     assert all(is_sequence(i) for i in ordered)
     assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)

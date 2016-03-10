@@ -94,7 +94,7 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u('')
+    _label_separator = u''
 
     @property
     def free_symbols(self):
