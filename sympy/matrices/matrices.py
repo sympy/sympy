@@ -3963,11 +3963,17 @@ class MatrixBase(object):
         row
         col_join
         """
+        from sympy.matrices import MutableMatrix
+        if (self.rows <= 0 or self.cols <= 0) and rhs.cols == 1:
+            newmat = MutableMatrix.zeros(rhs.rows,rhs.cols)
+            newmat = rhs
+            return type(self)(newmat)
+        
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
-        from sympy.matrices import MutableMatrix
+        
         newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
@@ -3995,11 +4001,16 @@ class MatrixBase(object):
         col
         row_join
         """
+        from sympy.matrices import MutableMatrix
+        if (self.rows <= 0 or self.cols <= 0) and bott.rows == 1:
+            newmat = MutableMatrix.zeros(bott.rows,bott.cols)
+            newmat = bott
+            return type(self)(newmat)
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
 
-        from sympy.matrices import MutableMatrix
+        
         newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
         newmat[self.rows:, :] = bott
@@ -4027,6 +4038,11 @@ class MatrixBase(object):
         row
         col_insert
         """
+        from sympy.matrices import MutableMatrix
+        if (self.rows <= 0 or self.cols <= 0) and mti.rows == 1:
+            newmat = MutableMatrix.zeros(mti.rows,mti.cols)
+            newmat = mti
+            return type(self)(newmat)
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4068,6 +4084,11 @@ class MatrixBase(object):
         col
         row_insert
         """
+        from sympy.matrices import MutableMatrix
+        if (self.rows <= 0 or self.cols <= 0) and mti.cols == 1:
+            newmat = MutableMatrix.zeros(mti.rows,mti.cols)
+            newmat = mti
+            return type(self)(newmat)
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
