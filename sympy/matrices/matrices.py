@@ -2027,6 +2027,37 @@ class MatrixBase(object):
         """
         return self.rows == self.cols
 
+
+    @property
+    def is_empty(self):
+        """Checks if a matrix is an empty matrix.
+
+        An empty matrix is a matrix in which number of columns or rows or both 
+        is zero. A zero matrix is not an empty matrix but an empty matrix is a 
+        zero matrix by the principle of vacuous truth. 
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, zeros
+        >>> a = Matrix([])
+        >>> b = Matrix([1])
+        >>> c = Matrix([0])
+        >>> d = zeros(3, 4)
+        >>> a.is_empty
+        True
+        >>> b.is_empty
+        False
+        >>> c.is_empty
+        False
+        >>> d.is_empty
+        False
+        """
+        if not self.rows or not self.cols:
+            return True
+        return False
+
+
     @property
     def is_empty(self):
         """Checks if a matrix is an empty matrix.
@@ -3072,10 +3103,18 @@ class MatrixBase(object):
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
+
+        If the given matrix is empty matrix then an empty dictionary 
+        is returned.
         """
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+
+        empty_dict = {}
+        if self.is_empty:
+            return empty_dict
+
         mat = self
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
@@ -3097,7 +3136,19 @@ class MatrixBase(object):
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
+
+        If the given matrix is an empty matrix then an empty list is returned
+
+        Examples
+        ========
+
+        >>> 
         """
+
+        empty_list = []
+        if self.is_empty:
+            return empty_list
+
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
