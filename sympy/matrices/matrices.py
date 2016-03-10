@@ -3072,10 +3072,15 @@ class MatrixBase(object):
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
+
+        if the matrix given is an empty matrix, then empty dict is returned.
         """
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        if self.is_empty:
+            return {}
+
         mat = self
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
@@ -3097,7 +3102,12 @@ class MatrixBase(object):
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
+
+        If the given matrix is an empty matrix, then empty list is returned
         """
+        if self.is_empty:
+            return []
+
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
