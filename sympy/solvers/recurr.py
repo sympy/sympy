@@ -801,7 +801,7 @@ def rsolve(f, y, init=None):
 
     if symbols and init is not None:
         if type(init) is list:
-            init = dict([(i, init[i]) for i in range(len(init))])
+            init = {i: init[i] for i in range(len(init))}
 
         equations = []
 

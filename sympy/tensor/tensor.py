@@ -386,8 +386,8 @@ class TIDS(CantSympify):
         dum = TIDS._check_matrix_indices(f_free, g_free, nc1)
 
         # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in f_free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in g_free])
+        free_dict1 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in f_free}
+        free_dict2 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in g_free}
         free_names = set(free_dict1.keys()) & set(free_dict2.keys())
         # find the new `free` and `dum`
 

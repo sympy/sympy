@@ -435,7 +435,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     # sort mapping expressions from largest to smallest (last is always x).
     mapping = list(reversed(list(zip(*ordered(                          #
         [(a[0].as_independent(x)[1], a) for a in zip(terms, V)])))[1])) #
-    rev_mapping = dict([(v, k) for k, v in mapping])                    #
+    rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
         assert mapping[-1][0] == x  # if not, find it and correct this comment

@@ -949,7 +949,7 @@ def solve(f, *symbols, **flags):
         swap_sym = list(zip(symbols, symbols_new))
         f = [fi.subs(swap_sym) for fi in f]
         symbols = symbols_new
-        swap_sym = dict([(v, k) for k, v in swap_sym])
+        swap_sym = {v: k for k, v in swap_sym}
     else:
         swap_sym = {}
 
@@ -1993,7 +1993,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     for xi in sorted(symbols, key=default_sort_key):  # canonical order
         # if there are derivatives in this var, calculate them now
         if type(derivs[xi]) is list:
-            derivs[xi] = dict([(der, der.doit()) for der in derivs[xi]])
+            derivs[xi] = {der: der.doit() for der in derivs[xi]}
         newn = n.subs(derivs[xi])
         dnewn_dxi = newn.diff(xi)
         # dnewn_dxi can be nonzero if it survives differentation by any

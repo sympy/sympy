@@ -970,7 +970,7 @@ def get_transversals(base, gens):
         return []
     stabs = _distribute_gens_by_base(base, gens)
     orbits, transversals = _orbits_transversals_from_bsgs(base, stabs)
-    transversals = [dict((x, h._array_form) for x, h in y.items()) for y in
+    transversals = [{x: h._array_form for x, h in y.items()} for y in
                     transversals]
     return transversals
 

@@ -2519,7 +2519,7 @@ def _get_constant_subexpressions(expr, Cs):
     return Ces
 
 def __remove_linear_redundancies(expr, Cs):
-    cnts = dict([(i, expr.count(i)) for i in Cs])
+    cnts = {i: expr.count(i) for i in Cs}
     Cs = [i for i in Cs if cnts[i] > 0]
 
     def _linear(expr):
@@ -3864,7 +3864,7 @@ def _nth_linear_match(eq, func, order):
     """
     x = func.args[0]
     one_x = set([x])
-    terms = dict([(i, S.Zero) for i in range(-1, order + 1)])
+    terms = {i: S.Zero for i in range(-1, order + 1)}
     for i in Add.make_args(eq):
         if not i.has(func):
             terms[-1] += i
