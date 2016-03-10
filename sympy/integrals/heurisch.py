@@ -69,7 +69,7 @@ def components(f, x):
                 if f.exp.is_Rational:
                     result.add(f.base**Rational(1, f.exp.q))
                 else:
-                    result |= components(f.exp, x) | set([f])
+                    result |= components(f.exp, x) | {f}
         else:
             for g in f.args:
                 result |= components(g, x)

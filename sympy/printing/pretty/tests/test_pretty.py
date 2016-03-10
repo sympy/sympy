@@ -3140,7 +3140,7 @@ def test_any_object_in_sequence():
     assert pretty(expr) == "[Basic(Basic()), Basic()]"
     assert upretty(expr) == u("[Basic(Basic()), Basic()]")
 
-    expr = set([b2, b1])
+    expr = {b2, b1}
     assert pretty(expr) == "set([Basic(), Basic(Basic())])"
     assert upretty(expr) == u("set([Basic(), Basic(Basic())])")
 

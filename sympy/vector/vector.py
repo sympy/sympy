@@ -384,7 +384,7 @@ class BaseVector(Vector, AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     __repr__ = __str__
     _sympystr = __str__

@@ -2726,8 +2726,8 @@ class TensAdd(TensExpr):
     @staticmethod
     def _tensAdd_check(args):
         # check that all addends have the same free indices
-        indices0 = set([x[0] for x in get_tids(args[0]).free])
-        list_indices = [set([y[0] for y in get_tids(x).free]) for x in args[1:]]
+        indices0 = {x[0] for x in get_tids(args[0]).free}
+        list_indices = [{y[0] for y in get_tids(x).free} for x in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 

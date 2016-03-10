@@ -98,7 +98,7 @@ class QExpr(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.

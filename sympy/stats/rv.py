@@ -258,7 +258,7 @@ class RandomSymbol(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class ProductPSpace(PSpace):

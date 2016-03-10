@@ -1245,7 +1245,7 @@ class PermutationGroup(Basic):
         idn = list(range(self.degree))
         order = 0
         element_list = [idn]
-        set_element_list = set([tuple(idn)])
+        set_element_list = {tuple(idn)}
         if af:
             yield idn
         else:
@@ -2110,9 +2110,9 @@ class PermutationGroup(Basic):
         >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
-        set([0, 1, 2])
+        {0, 1, 2}
         >>> G.orbit([0, 4], 'union')
-        set([0, 1, 2, 3, 4, 5, 6])
+        {0, 1, 2, 3, 4, 5, 6}
 
         See Also
         ========
@@ -2204,7 +2204,7 @@ class PermutationGroup(Basic):
         >>> b = Permutation(1, 5)(3, 4)(2, 6, 0)
         >>> G = PermutationGroup([a, b])
         >>> G.orbits()
-        [set([0, 2, 3, 4, 6]), set([1, 5])]
+        [{0, 2, 3, 4, 6}, {1, 5}]
         """
         return _orbits(self._degree, self._generators)
 
@@ -3186,9 +3186,9 @@ def _orbit(degree, generators, alpha, action='tuples'):
     >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
     >>> G = PermutationGroup([a])
     >>> _orbit(G.degree, G.generators, 0)
-    set([0, 1, 2])
+    {0, 1, 2}
     >>> _orbit(G.degree, G.generators, [0, 4], 'union')
-    set([0, 1, 2, 3, 4, 5, 6])
+    {0, 1, 2, 3, 4, 5, 6}
 
     See Also
     ========
@@ -3215,7 +3215,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
     elif action == 'tuples':
         alpha = tuple(alpha)
         orb = [alpha]
-        used = set([alpha])
+        used = {alpha}
         for b in orb:
             for gen in gens:
                 temp = tuple([gen[x] for x in b])
@@ -3226,14 +3226,14 @@ def _orbit(degree, generators, alpha, action='tuples'):
     elif action == 'sets':
         alpha = frozenset(alpha)
         orb = [alpha]
-        used = set([alpha])
+        used = {alpha}
         for b in orb:
             for gen in gens:
                 temp = frozenset([gen[x] for x in b])
                 if temp not in used:
                     orb.append(temp)
                     used.add(temp)
-        return set([tuple(x) for x in orb])
+        return {tuple(x) for x in orb}
 
 def _orbits(degree, generators):
     """Compute the orbits of G.
@@ -3249,7 +3249,7 @@ def _orbits(degree, generators):
     >>> a = Permutation([0, 2, 1])
     >>> b = Permutation([1, 0, 2])
     >>> _orbits(a.size, [a, b])
-    [set([0, 1, 2])]
+    [{0, 1, 2}]
     """
 
     seen = set()  # elements that have already appeared in orbits

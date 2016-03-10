@@ -653,7 +653,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        symbols |= set([s for s, k in sk])
+        symbols |= {s for s, k in sk}
         return (result, list(symbols))
     else:
         return result

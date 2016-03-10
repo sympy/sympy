@@ -421,7 +421,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
             sgensx1 = [_af_new(_) for _ in sgensx]
             deltab = _orbit(size, sgensx1, b)
         else:
-            deltab = set([b])
+            deltab = {b}
         # p1 = min(IMAGES) = min(Union D_p*h*deltab for h in TAB)
         if all_metrics_with_sym:
             md = _min_dummies(dumx, sym, indices)
