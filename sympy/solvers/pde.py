@@ -34,10 +34,10 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement
 from sympy.simplify import simplify
 from sympy.core import Add, S
-from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence, range)
+from sympy.core.compatibility import (reduce, is_sequence, range)
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
