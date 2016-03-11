@@ -22,10 +22,11 @@ def _integer_instance(n):
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
     n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
                 for s in 'nm']
-    pat = sin(a*x)**n * cos(a*x)**m
-    return pat, a, n, m
+    pat = sin(a*x)**n * cos(b*x)**m
+    return pat, a, b, n, m
 
 _u = Dummy('u')
 
@@ -58,7 +59,7 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral
     """
     from sympy.integrals.integrals import integrate
-    pat, a, n, m = _pat_sincos(x)
+    pat, a, b, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')
     M = f.match(pat)
@@ -72,6 +73,14 @@ def trigintegrate(f, x, conds='piecewise'):
     zz = x if n is S.Zero else S.Zero
 
     a = M[a]
+    b = M[b]
+    
+    if m == 1 and n == 1:
+        if a == b:
+            return 1/2 * -cos(2*a*x)/2*a
+        else:
+            sol = (-cos((a+b)*x)/(2*(a+b))) - (cos((a-b)*x)/(2*(a-b)))
+            return sol   
 
     if n.is_odd or m.is_odd:
         u = _u
