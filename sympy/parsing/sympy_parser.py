@@ -942,9 +942,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     if isinstance(node.right,ast.UnaryOp):
-                        temp = right
-                        right = left
-                        left = temp
+                        left, right = right, left
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
