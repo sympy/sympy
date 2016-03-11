@@ -1,6 +1,6 @@
 from sympy.core.compatibility import range, PY3
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
-                                  ComplexRegion)
+                                  ComplexRegion, Rationals)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
@@ -219,28 +219,56 @@ def test_Reals():
 
 
 def test_Rationals():
-    assert 1/5 in S.Rationals
-    assert 10 in S.Rationals
-    assert S.Half in S.Rationals
-    assert pi not in S.Rationals
-    assert sqrt(2) not in S.Rationals
-    assert I not in S.Rationals
-    assert sqrt(2)**2 in S.Rationals
+    Q = Rationals()
+    assert S(1)/5 in Q
+    assert S(10) in Q
+    assert S.Half in Q
+    assert pi not in Q
+    assert sqrt(2) not in Q
+    assert I not in Q
+    assert sqrt(2)**2 in Q
 
     a, b = symbols('a, b', cls=Dummy)
-    assert ImageSet(Lambda((a, b), a / b), S.Integers*S.Naturals) == S.Rationals
+    assert ImageSet(Lambda((a, b), a / b), S.Integers*S.Naturals) == Q
 
-    assert str(S.Rationals) in "S.Rationals"
+    assert str(Q) == "Rationals(%s)" %S.Infinity
+
+
+def test_denom_Rationals():
+    Q5 = Rationals(5)
+    assert S(1)/5 in Q5
+    assert S(10) in Q5
+    assert S.Half in Q5
+    assert S(2)/10 in Q5
+    assert S(1)/10 not in Q5  
+    assert pi not in Q5
+    assert sqrt(2) not in Q5
+    assert I not in Q5
+    assert sqrt(2)**2 in Q5
+
+    a, b = symbols('a, b', cls=Dummy)
+    assert ImageSet(Lambda((a, b), a / b), S.Integers*Interval(1, 5)) == Q5
+
+    assert str(Q5) == "Rationals(5)"
+
 
 @XFAIL
 def test_Rationals_subsets():
     # We need to make the `_contains` method of ImageSet class more robust
     # for these tests to pass
-    assert S.Naturals in S.Rationals
-    assert S.Integers in S.Rationals
+    Q = Rationals()
+    assert S.Naturals in Q
+    assert S.Naturals0 in Q
+    assert S.Integers in Q
 
     a, b = symbols('a, b', cls=Dummy)
-    assert ImageSet(Lambda(a, a), S.Integers) == S.Rationals
+    assert ImageSet(Lambda(a, a), S.Integers) == Q
+
+    Q5 = Rationals(5)
+    assert S.Naturals in Q5
+    assert S.Naturals0 in Q5
+    assert S.Integers in Q5
+    
 
 def test_Complex():
     assert 5 in S.Complexes
