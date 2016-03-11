@@ -26,6 +26,8 @@ def test_components():
     assert components(f(x)*diff(f(x), x), x) == \
         set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
 
+def test_issue_10680():
+    assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
