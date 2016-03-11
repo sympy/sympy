@@ -931,14 +931,11 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
-            left = self.visit(node.left) 
-            if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul'):
-                temp = right
-                right = left
-                left = temp
-            
+            left = self.visit(node.left)
+            if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
+                left, right = right, left
             if isinstance(node.op, ast.Sub):
-                right = ast.UnaryOp(op=ast.USub(), operand=right) 
+                right = ast.UnaryOp(op=ast.USub(), operand=right)
             if isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.UnaryOp):
                     if isinstance(node.right,ast.UnaryOp):
