@@ -3968,12 +3968,9 @@ class MatrixBase(object):
             newmat = MutableMatrix.zeros(rhs.rows,rhs.cols)
             newmat = rhs
             return type(self)(newmat)
-        
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-
-        
         newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
@@ -4009,8 +4006,6 @@ class MatrixBase(object):
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
-
-        
         newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
         newmat[self.rows:, :] = bott
