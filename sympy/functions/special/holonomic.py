@@ -1,7 +1,9 @@
 """Holonomic Functions"""
 
 from __future__ import print_function, division
+
 from sympy import symbols, poly, diff, Symbol, sstr, pretty_print, printing, Function, dsolve
+
 
 class DifferentialOperator(object):
     """
@@ -36,7 +38,7 @@ class DifferentialOperator(object):
         sol = init_coeff*poly_comm
         def noncomm_mul(b):
             return b*Dx + b.diff('x')
-        for i in xrange(1, deg+1):
+        for i in xrange(1, deg + 1):
             poly_comm = noncomm_mul(poly_comm)
             sol = sol + poly(eq, Dx).nth(i)*poly_comm
         return DifferentialOperator(sol.expand())
@@ -76,58 +78,67 @@ class HoloFunc(object):
     For details see ore_algebra package in Sage
     """
 
-    def __init__(self, annihilator, x, *args):
+    def __init__(self, ann, x, *args):
         if len(args) is 2:
             self.cond = args[0]
             self.cond_point = args[1]
         elif len(args) is 1:
             self.cond = args[0]
             self.cond_point = 0
-        self.annihilator = annihilator
+        self.ann = ann
         Dx = symbols('Dx')
-        self.generator = Dx
+        self.gen = Dx
         self.var = x
 
         
     def __repr__(self):
-        return 'holonomic(%s)' % sstr(self.annihilator)
+        return 'holonomic(%s)' % sstr(self.ann)
 
     def __add__(self, other):
 
-        deg1 = poly(self.annihilator, self.generator).degree()
-        deg2 = poly(other.annihilator, other.generator).degree()
+        deg1 = poly(self.ann, self.gen).degree()
+        deg2 = poly(other.ann, other.gen).degree()
         dim = max(deg1, deg2)
-        rowsself = [self.annihilator]; rowsother = [other.annihilator]
+        rowsself = [self.ann]
+        rowsother = [other.ann]
+        gen = DifferentialOperator(self.gen)
+
         for i in range(dim - deg1):
-            derivative1 = (DifferentialOperator(self.generator)*DifferentialOperator(rowsself[-1])).eq
-            rowsself.append(derivative1)
+            diff1 = (gen*DifferentialOperator(rowsself[-1])).eq
+            rowsself.append(diff1)
+
         for i in range(dim - deg2):
-            derivative2 = (DifferentialOperator(other.generator)*DifferentialOperator(rowsother[-1])).eq
-            rowsother.append(derivative2)
+            diff2 = (gen*DifferentialOperator(rowsother[-1])).eq
+            rowsother.append(diff2)
+
         row = rowsself + rowsother
-        r = [[poly(expr, self.generator).nth(i) for i in xrange(dim+1)] for expr in (row)]
-        homogeneous = [[0 for q in xrange(dim+1)]]
+        r = [[poly(expr, self.gen).nth(i) for i in xrange(dim + 1)] for expr in (row)]
         from sympy.matrices import Matrix
-        solcomp = (Matrix(r).transpose()).gauss_jordan_solve(Matrix(homogeneous).transpose())
-        sol = (Matrix(r).transpose()).gauss_jordan_solve(Matrix(homogeneous).transpose())[0]
+        r = Matrix(r).transpose()
+        homosys = [[0 for q in xrange(dim + 1)]]
+        homosys = Matrix(homosys).transpose()
+        solcomp = r.gauss_jordan_solve(homosys)
+        sol = (r).gauss_jordan_solve(homosys)[0]
         while sol.is_zero:
             dim += 1
-            derivative1 = (DifferentialOperator(self.generator)*DifferentialOperator(rowsself[-1])).eq
-            rowsself.append(derivative1)
-            derivative2 = (DifferentialOperator(other.generator)*DifferentialOperator(rowsother[-1])).eq
-            rowsother.append(derivative2)
+            diff1 = (gen*DifferentialOperator(rowsself[-1])).eq
+            rowsself.append(diff1)
+            diff2 = (gen*DifferentialOperator(rowsother[-1])).eq
+            rowsother.append(diff2)
             row = rowsself + rowsother
-            r = [[poly(expr, self.generator).nth(i) for i in xrange(dim+1)] for expr in (row)]
-            homogeneous = [[0 for q in xrange(dim+1)]]
-            solcomp = (Matrix(r).transpose()).gauss_jordan_solve(Matrix(homogeneous).transpose())
-            sol = (Matrix(r).transpose()).gauss_jordan_solve(Matrix(homogeneous).transpose())[0]
+            r = [[poly(expr, self.gen).nth(i) for i in xrange(dim + 1)] for expr in (row)]
+            r = Matrix(r).transpose()
+            homosys = [[0 for q in xrange(dim + 1)]]
+            homosys = Matrix(homosys).transpose()
+            solcomp = r.gauss_jordan_solve(homosys)
+            sol = r.gauss_jordan_solve(homosys)[0]
         if sol.is_symbolic():
             sol = solcomp[0]/solcomp[1]
         sol = sol[:dim + 1 - deg1]
-        solution = 0
+        expr = 0
         for i, j in enumerate(sol):
-            solution += ((self.generator)**i)*j
-        return(HoloFunc((DifferentialOperator(solution)*DifferentialOperator(self.annihilator)), self.var))
+            expr += ((self.gen)**i)*j
+        return(HoloFunc((DifferentialOperator(expr)*DifferentialOperator(self.ann)), self.var))
 
         
 
