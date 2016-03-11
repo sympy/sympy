@@ -432,6 +432,7 @@ def test_berkowitz_minors():
 
     assert B.berkowitz_minors() == (1, -3)
     assert Matrix([]).berkowitz_eigenvals() == {}
+    assert Matrix([]).berkowitz_minors() == ()
 
 
 def test_slicing():

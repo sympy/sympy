@@ -2985,6 +2985,8 @@ class MatrixBase(object):
         berkowitz
         """
         sign, minors = S.NegativeOne, []
+        if not self:
+            return tuple(minors)
 
         for poly in self.berkowitz():
             minors.append(sign*poly[-1])
