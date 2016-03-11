@@ -71,7 +71,9 @@ def test_heurisch_exp():
     assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
     assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
-
+def test_issue_10680():
+    assert integrate(x**log(x**log(x**log(x))),x)
+ 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
     assert heurisch(pi*sin(x) + 1, x) == x - pi*cos(x)
