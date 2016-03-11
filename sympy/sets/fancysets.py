@@ -359,33 +359,39 @@ class ImageSet(Set):
                                 solveset_real(im, n_)))
 
 
-class Rationals(with_metaclass(Singleton, ImageSet)):
+class Rationals(ImageSet):
     """
-    Represents all rationals numbers which are the numbers that can be
-    expressed as the fraction p/q of two integers, a numerator p and
-    a non-zero denominator q. This set is also available as
-    the Singleton, S.Rationals.
+    Represents a class of all rationals numbers with their denominator
+    lying in a range of natural numbers. By default, this class represents
+    the set of all rational numbers.
 
     Examples
     ========
 
-    >>> from sympy import S, pi, sqrt, ImageSet
-    >>> 1/2 in S.Rationals
+    >>> from sympy import pi, sqrt, ImageSet
+    >>> Q = Rationals()
+    >>> Q5 = Rationals(5)
+    >>> S(1)/2 in Q
     True
-    >>> pi in S.Rationals
+    >>> pi in Q
     False
-    >>> sqrt(2) in S.Rationals
+    >>> sqrt(2) in Q
     False
-
+    >>> S(1)/5 in Q5
+    True
+    >>> S(1)/6 in Q5
+    False
     """
 
-    def __new__(cls):
+    def __new__(cls, limit_denom=S.Infinity):
         from sympy import symbols, Dummy
         x, y = symbols('x, y', cls=Dummy)
 
         lamda = Lambda((x, y), x/y)
-        base_set = ProductSet(S.Integers, S.Naturals)
+        base_set = ProductSet(S.Integers, Interval(1, limit_denom))
         return ImageSet.__new__(cls, lamda, base_set)
+
+    limit_denom = property(lambda self: self.base_set.args[1].end)
 
     def _contains(self, other):
         return other in ImageSet(self.lamda, self.base_set)
@@ -397,10 +403,10 @@ class Rationals(with_metaclass(Singleton, ImageSet)):
         return hash(ImageSet(self.lamda, self.base_set))
 
     def __str__(self):
-        return "S.Rationals"
+        return "Rationals(%s)" %self.limit_denom
 
     def __repr__(self):
-        return "S.Rationals"
+        return "Rationals(%s)" %self.limit_denom
 
 
 class Range(Set):
