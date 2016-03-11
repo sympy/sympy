@@ -926,8 +926,8 @@ class _IndexStructure(CantSympify):
         for ipos1, ipos2 in dum:
             typ1 = new_indices[ipos1].tensor_index_type
             indname = generate_dummy_name(typ1)
-            new_indices[ipos1] = TensorIndex(indname, typ1, True, is_matrix_index=indices[ipos1].is_matrix_index)
-            new_indices[ipos2] = TensorIndex(indname, typ1, False, is_matrix_index=indices[ipos1].is_matrix_index)
+            new_indices[ipos1] = TensorIndex(indname, typ1, True)
+            new_indices[ipos2] = TensorIndex(indname, typ1, False)
         return new_indices
 
     def get_free_indices(self):
@@ -1912,6 +1912,10 @@ class TensorIndexType(Basic):
             del _tensor_data_substitution_dict[delta]
 
 
+class MatrixIndexType(TensorIndexType):
+    pass
+
+
 @doctest_depends_on(modules=('numpy',))
 class TensorIndex(Basic):
     """
@@ -1971,7 +1975,7 @@ class TensorIndex(Basic):
     >>> A(i0)*B(-i0)
     A(L_0)*B(-L_0)
     """
-    def __new__(cls, name, tensortype, is_up=True, is_matrix_index=False):
+    def __new__(cls, name, tensortype, is_up=True):
         if isinstance(name, string_types):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -1984,12 +1988,10 @@ class TensorIndex(Basic):
             raise ValueError("invalid name")
 
         is_up = sympify(is_up)
-        is_matrix_index = sympify(is_matrix_index)
-        obj = Basic.__new__(cls, name_symbol, tensortype, is_up, is_matrix_index)
+        obj = Basic.__new__(cls, name_symbol, tensortype, is_up)
         obj._name = str(name)
         obj._tensor_index_type = tensortype
         obj._is_up = is_up
-        obj._is_matrix_index = is_matrix_index
         return obj
 
     @property
@@ -2009,10 +2011,6 @@ class TensorIndex(Basic):
     def is_up(self):
         return self._is_up
 
-    @property
-    def is_matrix_index(self):
-        return self._is_matrix_index
-
     def _print(self):
         s = self._name
         if not self._is_up:
@@ -2024,7 +2022,7 @@ class TensorIndex(Basic):
 
     def __neg__(self):
         t1 = TensorIndex(self.name, self.tensor_index_type,
-                (not self.is_up), self.is_matrix_index)
+                (not self.is_up))
         return t1
 
 
@@ -2237,8 +2235,27 @@ class TensorType(Basic):
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
+        # Check that matrix index types are at the end:
+        mat_flag = False
+        mat_start_index = len(index_types)
+
+        for i, ind in enumerate(index_types):
+            if mat_flag:
+                assert isinstance(ind, MatrixIndexType)
+            else:
+                if isinstance(ind, MatrixIndexType):
+                    mat_flag = True
+                    mat_start_index = i
+
+        nonmatrix_types = index_types[:mat_start_index]
+        matrix_types = index_types[mat_start_index:]
+
+        # Get non-matrix index types
+        # non_matrix_index_types = [i for i in index_types if not isinstance(i, MatrixIndexType)]
         assert symmetry.rank == len(index_types)
         obj = Basic.__new__(cls, Tuple(*index_types), symmetry, **kw_args)
+        obj._matrix_index_types = matrix_types
+        obj._nonmatrix_index_types = nonmatrix_types
         return obj
 
     @property
@@ -2256,7 +2273,7 @@ class TensorType(Basic):
     def __str__(self):
         return 'TensorType(%s)' % ([str(x) for x in self.index_types])
 
-    def __call__(self, s, comm=0, matrix_behavior=0):
+    def __call__(self, s, comm=0):
         """
         Return a TensorHead object or a list of TensorHead objects.
 
@@ -2289,12 +2306,12 @@ class TensorType(Basic):
         else:
             raise ValueError('expecting a string')
         if len(names) == 1:
-            return TensorHead(names[0], self, comm, matrix_behavior=matrix_behavior)
+            return TensorHead(names[0], self, comm)
         else:
-            return [TensorHead(name, self, comm, matrix_behavior=matrix_behavior) for name in names]
+            return [TensorHead(name, self, comm) for name in names]
 
 
-def tensorhead(name, typ, sym, comm=0, matrix_behavior=0):
+def tensorhead(name, typ, sym, comm=0):
     """
     Function generating tensorhead(s).
 
@@ -2324,7 +2341,7 @@ def tensorhead(name, typ, sym, comm=0, matrix_behavior=0):
     """
     sym = tensorsymmetry(*sym)
     S = TensorType(typ, sym)
-    th = S(name, comm, matrix_behavior=matrix_behavior)
+    th = S(name, comm)
     return th
 
 
@@ -2510,7 +2527,7 @@ class TensorHead(Basic):
     """
     is_commutative = False
 
-    def __new__(cls, name, typ, comm=0, matrix_behavior=0, **kw_args):
+    def __new__(cls, name, typ, comm=0, **kw_args):
         if isinstance(name, string_types):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -2522,12 +2539,11 @@ class TensorHead(Basic):
 
         obj = Basic.__new__(cls, name_symbol, typ, **kw_args)
 
-        obj._matrix_behavior = matrix_behavior
-
         obj._name = obj.args[0].name
         obj._rank = len(obj.index_types)
         obj._symmetry = typ.symmetry
         obj._comm = comm2i
+        obj._matrix_index_types = typ._matrix_index_types
         return obj
 
     @property
@@ -2573,72 +2589,72 @@ class TensorHead(Basic):
     def _print(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
-    def _check_auto_matrix_indices_in_call(self, *indices):
-        matrix_behavior_kinds = dict()
+    # def _check_auto_matrix_indices_in_call(self, *indices):
+    #     matrix_behavior_kinds = dict()
+    #
+    #     if len(indices) != len(self.index_types):
+    #         if not self._matrix_behavior:
+    #             raise ValueError('wrong number of indices')
+    #
+    #         # Take the last one or two missing
+    #         # indices as auto-matrix indices:
+    #         ldiff = len(self.index_types) - len(indices)
+    #         if ldiff > 2:
+    #             raise ValueError('wrong number of indices')
+    #         if ldiff == 2:
+    #             mat_ind = [len(indices), len(indices) + 1]
+    #         elif ldiff == 1:
+    #             mat_ind = [len(indices)]
+    #         not_equal = True
+    #     else:
+    #         not_equal = False
+    #         mat_ind = [i for i, e in enumerate(indices) if e is True]
+    #         if mat_ind:
+    #             not_equal = True
+    #         indices = tuple([_ for _ in indices if _ is not True])
+    #
+    #         for i, el in enumerate(indices):
+    #             if not isinstance(el, TensorIndex):
+    #                 not_equal = True
+    #                 break
+    #             if el.tensor_index_type != self.index_types[i]:
+    #                 not_equal = True
+    #                 break
+    #
+    #     if not_equal:
+    #         for el in mat_ind:
+    #             eltyp = self.index_types[el]
+    #             if eltyp in matrix_behavior_kinds:
+    #                 fmt0 = self.index_types[el]._get_matrix_fmt(0)
+    #                 elind = TensorIndex(fmt0, self.index_types[el], False, is_matrix_index=True)
+    #                 matrix_behavior_kinds[eltyp].append(elind)
+    #             else:
+    #                 fmt1 = self.index_types[el]._get_matrix_fmt(1)
+    #                 elind = TensorIndex(fmt1, self.index_types[el], True, is_matrix_index=True)
+    #                 matrix_behavior_kinds[eltyp] = [elind]
+    #             indices = indices[:el] + (elind,) + indices[el:]
+    #
+    #     return indices, matrix_behavior_kinds
 
-        if len(indices) != len(self.index_types):
-            if not self._matrix_behavior:
-                raise ValueError('wrong number of indices')
-
-            # Take the last one or two missing
-            # indices as auto-matrix indices:
-            ldiff = len(self.index_types) - len(indices)
-            if ldiff > 2:
-                raise ValueError('wrong number of indices')
-            if ldiff == 2:
-                mat_ind = [len(indices), len(indices) + 1]
-            elif ldiff == 1:
-                mat_ind = [len(indices)]
-            not_equal = True
-        else:
-            not_equal = False
-            mat_ind = [i for i, e in enumerate(indices) if e is True]
-            if mat_ind:
-                not_equal = True
-            indices = tuple([_ for _ in indices if _ is not True])
-
-            for i, el in enumerate(indices):
-                if not isinstance(el, TensorIndex):
-                    not_equal = True
-                    break
-                if el.tensor_index_type != self.index_types[i]:
-                    not_equal = True
-                    break
-
-        if not_equal:
-            for el in mat_ind:
-                eltyp = self.index_types[el]
-                if eltyp in matrix_behavior_kinds:
-                    fmt0 = self.index_types[el]._get_matrix_fmt(0)
-                    elind = TensorIndex(fmt0, self.index_types[el], False, is_matrix_index=True)
-                    matrix_behavior_kinds[eltyp].append(elind)
-                else:
-                    fmt1 = self.index_types[el]._get_matrix_fmt(1)
-                    elind = TensorIndex(fmt1, self.index_types[el], True, is_matrix_index=True)
-                    matrix_behavior_kinds[eltyp] = [elind]
-                indices = indices[:el] + (elind,) + indices[el:]
-
-        return indices, matrix_behavior_kinds
-
-    @staticmethod
-    def _rename_matrix_indices(indices):
-        type_counter = defaultdict(int)
-        for i, idx in enumerate(indices):
-            if not idx.is_matrix_index:
-                continue
-            tc = type_counter[idx.tensor_index_type]
-            indices[i] = TensorIndex(
-                idx.tensor_index_type._get_matrix_fmt(tc),
-                idx.tensor_index_type,
-                idx.is_up,
-                is_matrix_index=True
-            )
-            tc += 1
-            if tc > 2:
-                raise ValueError("one tensor index type cannot have more than two matrix indices in a Tensor instance")
-            type_counter[idx.tensor_index_type] = tc
-
-        return indices
+    # @staticmethod
+    # def _rename_matrix_indices(indices):
+    #     type_counter = defaultdict(int)
+    #     for i, idx in enumerate(indices):
+    #         if not idx.is_matrix_index:
+    #             continue
+    #         tc = type_counter[idx.tensor_index_type]
+    #         indices[i] = TensorIndex(
+    #             idx.tensor_index_type._get_matrix_fmt(tc),
+    #             idx.tensor_index_type,
+    #             idx.is_up,
+    #             is_matrix_index=True
+    #         )
+    #         tc += 1
+    #         if tc > 2:
+    #             raise ValueError("one tensor index type cannot have more than two matrix indices in a Tensor instance")
+    #         type_counter[idx.tensor_index_type] = tc
+    #
+    #     return indices
 
     def __call__(self, *indices, **kw_args):
         """
@@ -2714,8 +2730,8 @@ class TensorHead(Basic):
 
         """
 
-        indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
-        indices = self._rename_matrix_indices(list(indices))
+        #indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
+        #indices = self._rename_matrix_indices(list(indices))
         tensor = Tensor._new_with_dummy_replacement(self, indices, **kw_args)
         return tensor
 
@@ -3476,11 +3492,10 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
+        assert tensor_head.rank - len(tensor_head._matrix_index_types) == len(indices)
         obj._indices = indices
         obj._is_canon_bp = is_canon_bp
         obj._index_map = Tensor._build_index_map(indices, obj._index_structure)
-        # TODO: remove
-        assert len(obj._index_structure.index_types) == len(indices)
         return obj
 
     @staticmethod
@@ -3853,7 +3868,8 @@ class TensMul(TensExpr):
 
         obj._index_types = index_types
         # TODO: remove
-        assert len(obj._index_types) == index_structure._ext_rank
+        obj._nonmatrix_index_types = [i for i in index_types if not isinstance(i, MatrixIndexType)]
+        assert len(obj._nonmatrix_index_types) == index_structure._ext_rank
         obj._index_structure = index_structure
         obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
         obj._coeff = coeff
@@ -3873,14 +3889,6 @@ class TensMul(TensExpr):
         def standardize_matrix_free_indices(arg):
             type_counter = defaultdict(int)
             indices = arg.get_indices()
-            for indx, i in sorted(arg.free, key=lambda x: x[1]):
-                if indx.is_matrix_index:
-                    tit = indx.tensor_index_type
-                    type_counter[tit] += 1
-                    if type_counter[tit] == 1: # and not indx.is_up:
-                        indices[i] = TensorIndex(tit._get_matrix_fmt(0), tit, True, True)
-                    elif type_counter[tit] == 2: # and indx.is_up:
-                        indices[i] = TensorIndex(tit._get_matrix_fmt(1), tit, False, True)
             arg = arg._set_indices(*indices)
             return arg
 
@@ -3890,11 +3898,11 @@ class TensMul(TensExpr):
 
             arg = standardize_matrix_free_indices(arg)
 
-            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free if not i.is_matrix_index]) # TODO: if needed?
-            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free if not i.is_matrix_index])
+            free_dict1 = dict([(index_up(i), (pos, i)) for i, pos in free])
+            free_dict2 = dict([(index_up(i), (pos, i)) for i, pos in arg.free])
 
-            mat_dict1 = dict([(i, pos) for i, pos in free if i.is_matrix_index]) # TODO: if needed?
-            mat_dict2 = dict([(i, pos) for i, pos in arg.free if i.is_matrix_index])
+            mat_dict1 = dict([(i, pos) for i, pos in free])
+            mat_dict2 = dict([(i, pos) for i, pos in arg.free])
 
             # Get a set containing all indices to contract in upper form:
             indices_to_contract = set(free_dict1.keys()) & set(free_dict2.keys())
