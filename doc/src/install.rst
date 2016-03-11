@@ -10,7 +10,7 @@ mpmath, as well as several other useful libraries.  Alternatively, executables
 are available for Windows, and some Linux distributions have SymPy packages
 available.
 
-SymPy officially supports Python 2.6, 2.7, 3.2, 3.3, 3.4, and PyPy.
+SymPy officially supports Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, and PyPy.
 
 Anaconda
 ========
@@ -78,7 +78,7 @@ For a starter guide on using SymPy effectively, refer to the :ref:`tutorial`.
 Mpmath
 ======
 
-Versions of SymPy prior to 0.7.7 included `mpmath`_, but it now depends on it as
+Versions of SymPy prior to 1.0 included `mpmath`_, but it now depends on it as
 an external dependency.  If you installed SymPy with Anaconda, it will already
 include mpmath. Use::
 

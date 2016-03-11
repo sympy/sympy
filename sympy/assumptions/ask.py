@@ -357,7 +357,7 @@ class AssumptionKeys(object):
         return Predicate('finite')
 
     @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
     def bounded(self):
         """
         See documentation of ``Q.finite``.
@@ -377,7 +377,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
     def infinity(self):
         """
         See documentation of ``Q.infinite``.
@@ -385,7 +385,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
