@@ -2482,8 +2482,8 @@ def nfloat(expr, n=15, exponent=False):
     rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
     if not exponent:
-        reps = {p: Pow(p.base, Dummy()) for p in rv.atoms(Pow)}
-        rv = rv.xreplace(reps)
+        reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
+        rv = rv.xreplace(dict(reps))
     rv = rv.n(n)
     if not exponent:
         rv = rv.xreplace({d.exp: p.exp for p, d in reps})
