@@ -33,11 +33,13 @@ class DifferentialOperator(object):
             deg = 0
         else:
             deg = poly(eq).degree('Dx')
+
         poly_comm = right.eq
-        init_coeff = poly(eq, Dx).nth(0)
-        sol = init_coeff*poly_comm
+        sol = poly(eq, Dx).nth(0)*poly_comm
+        # returns Dx*b
         def noncomm_mul(b):
             return b*Dx + b.diff('x')
+
         for i in xrange(1, deg + 1):
             poly_comm = noncomm_mul(poly_comm)
             sol = sol + poly(eq, Dx).nth(i)*poly_comm
@@ -103,6 +105,7 @@ class HoloFunc(object):
         rowsother = [other.ann]
         gen = DifferentialOperator(self.gen)
 
+        # constructing annihilators up to order dim
         for i in range(dim - deg1):
             diff1 = (gen*DifferentialOperator(rowsself[-1])).eq
             rowsself.append(diff1)
@@ -112,13 +115,19 @@ class HoloFunc(object):
             rowsother.append(diff2)
 
         row = rowsself + rowsother
+
+        # constructing the matrix of the ansatz
         r = [[poly(expr, self.gen).nth(i) for i in xrange(dim + 1)] for expr in (row)]
         from sympy.matrices import Matrix
         r = Matrix(r).transpose()
         homosys = [[0 for q in xrange(dim + 1)]]
         homosys = Matrix(homosys).transpose()
+
+        # solving the linear system using gauss jordan solver
         solcomp = r.gauss_jordan_solve(homosys)
         sol = (r).gauss_jordan_solve(homosys)[0]
+
+        # if a solution is not obtained then increasing the order by 1 in each iteration
         while sol.is_zero:
             dim += 1
             diff1 = (gen*DifferentialOperator(rowsself[-1])).eq
@@ -132,12 +141,20 @@ class HoloFunc(object):
             homosys = Matrix(homosys).transpose()
             solcomp = r.gauss_jordan_solve(homosys)
             sol = r.gauss_jordan_solve(homosys)[0]
+
+        # removing the symbol if any from the solution
         if sol.is_symbolic():
             sol = solcomp[0]/solcomp[1]
+
+        # taking only the coefficients needed to multiply with `self`
+        # can be also be done the other way by taking R.H.S and multiply with `other`
         sol = sol[:dim + 1 - deg1]
+
+        #construct expression from the coefficients
         expr = 0
         for i, j in enumerate(sol):
             expr += ((self.gen)**i)*j
+
         return(HoloFunc((DifferentialOperator(expr)*DifferentialOperator(self.ann)), self.var))
 
         
