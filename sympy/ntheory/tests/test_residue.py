@@ -123,6 +123,10 @@ def test_residue():
     assert type(next(sqrt_mod_iter(1, 7, ZZ))) is type(ZZ(1))
 
     assert is_nthpow_residue(2, 1, 5)
+
+    #issue 7858
+    raises(NotImplementedError, lambda: is_nthpow_residue(676, 3, 5364))
+
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert nthroot_mod(1801, 11, 2663) == 44

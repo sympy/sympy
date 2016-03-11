@@ -3053,6 +3053,9 @@ class MatrixBase(object):
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
         mat = self
+
+        if not mat:
+            return {}
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
                 mat = mat._new(mat.rows, mat.cols,
