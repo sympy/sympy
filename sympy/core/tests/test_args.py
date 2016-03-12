@@ -1710,6 +1710,11 @@ def test_sympy__functions__special__hyper__HyperRep_sinasin():
     assert _test_args(HyperRep_sinasin(x, y))
 
 
+def test_sympy__functions__special__holonomic__DifferentialOperator():
+    from sympy.functions.special.holonomic import DifferentialOperator
+    assert _test_args(DifferentialOperator(x))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
     pass
