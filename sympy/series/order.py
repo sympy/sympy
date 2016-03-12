@@ -180,7 +180,7 @@ class Order(Expr):
         if variables:
             if any(p != point[0] for p in point):
                 raise NotImplementedError
-            if point[0] is S.Infinity:
+            if point[0] in [S.Infinity, S.NegativeInfinity]:
                 s = dict([(k, 1/Dummy()) for k in variables])
                 rs = dict([(1/v, 1/k) for k, v in s.items()])
             elif point[0] is not S.Zero:
