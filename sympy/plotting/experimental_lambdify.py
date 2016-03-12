@@ -116,10 +116,10 @@ class vectorized_lambdify(object):
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
+            self.lambda_func = experimental_lambdify(self.args, self.expr, use_evalf=True,complex_wrap_evalf=True)
+            self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
             results = self.vector_func(*temp_args)
-            results = np.ma.masked_where(
-                                np.abs(results.imag) > 1e-7 * np.abs(results),
-                                results.real, copy=False)
+            results = np.ma.masked_where(np.abs(results.imag) > 1e-7 * np.abs(results),results.real, copy=False)
         except Exception as e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
@@ -592,7 +592,6 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-
             # Wrapping should only happen on the outermost expression, which
             # is the only thing we know will be a number.
             float_wrap_evalf = self.float_wrap_evalf
@@ -603,7 +602,6 @@ class Lambdifier(object):
             self.float_wrap_evalf = float_wrap_evalf
             self.complex_wrap_evalf = complex_wrap_evalf
             return ret
-
     ##############################################################################
     # The namespace constructors
     ##############################################################################
