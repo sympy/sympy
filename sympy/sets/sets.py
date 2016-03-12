@@ -24,6 +24,28 @@ from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import subsets
 
 
+def _oo_free_relational(i, x):
+    if i == S.Reals:
+        yield S.true
+    elif i == S.EmptySet:
+        yield S.false
+    elif isinstance(i, (Union, Intersection)):
+        for i in i.args:
+            for j in _oo_free_relational(i, x):
+                yield j
+    elif isinstance(i, Interval):
+        a, b, oa, ob = i.args
+        if a != S.NegativeInfinity:
+            yield (x > a) if oa else (x >= a)
+        if b != S.Infinity:
+            yield (x < b) if ob else (x <= b)
+    elif isinstance(i, FiniteSet):
+        for i in i:
+            yield Eq(x, i)
+    else:
+        raise NotImplementedError(i)
+
+
 class Set(Basic):
     """
     The base class for any kind of set.

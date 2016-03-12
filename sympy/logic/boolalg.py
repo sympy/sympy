@@ -340,21 +340,110 @@ class And(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        newargs = []
-        rel = []
-        for x in reversed(list(args)):
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
+        from sympy.sets.sets import _oo_free_relational
+        from sympy.solvers.inequalities import _solve_inequality
+        newargs = set()
+        rel = set()
+        did_rel = False
+        args = list(args)
+        while args:
+            x = args.pop()
             if x.is_Relational:
-                c = x.canonical
-                if c in rel:
+                free = x.free_symbols
+                if len(free) == 1:
+                    try:
+                        x = _solve_inequality(x, free.pop(), linear=True)
+                    except NotImplementedError:
+                        pass
+                if x.is_Relational:
+                    x = x.canonical
+                    rel.add(x)
+                else:
+                    args.append(x)
+            elif isinstance(x, cls):
+                args.extend(x.args)
+            else:
+                if isinstance(x, Number):
+                    if x.is_zero is None:
+                        pass
+                    else:
+                        x = sympify(not x.is_zero)
+                if x is S.false:
+                    return [x]
+                elif x is S.true:
                     continue
-                nc = (~c).canonical
-                if any(r == nc for r in rel):
-                    return [S.false]
-                rel.append(c)
-            newargs.append(x)
+                newargs.add(x)
+            if not args and not did_rel and rel:
+                from sympy.utilities.iterables import sift
+                lhs = sift(rel, lambda x: x.lhs)
+                for l in lhs:
+                    if not l.is_Symbol:
+                        continue
+                    c = sift(lhs[l], lambda x: x.rhs.is_comparable and
+                        x.rhs not in (S.Infinity, S.NegativeInfinity))
+                    cargs = []
+                    for i in c[True]:
+                        rel.remove(i)
+                        cargs.append(i)
+                    if len(cargs) == 1:
+                        rel.add(cargs.pop())
+                        continue
+                    c = S.Reals
+                    for i in cargs:
+                        c = c.intersection(i.as_set())
+                    args.extend(_oo_free_relational(c, l))
+                    did_rel = True
+                    del cargs
+
+        # make two inequalities like x < 2 & x > 1 look like 1 < x < 2
+        if len(rel) == 2:
+            rel = list(rel)
+            was = rel[:]  # copy
+            if len([i for i in rel if i.rel_op.strip('=!')]) == 2:
+                # there are 2 signs involving < and/or >
+                a, b = rel
+                free = a.free_symbols & b.free_symbols
+                if len(free) != 1:
+                    free = (set([i for i in a.args
+                        if len(i.free_symbols) == 1]) &
+                        set([i for i in b.args if
+                        len(i.free_symbols) == 1]))
+                if len(free) == 1:
+                    x = free.pop()
+                    try:
+                        from sympy.solvers.inequalities import (
+                            _solve_inequality)
+                        rel = [_solve_inequality(i, x, linear=True)
+                            for i in rel]
+                        a, b = [i.rhs for i in rel]
+                        literal = True
+                        asmall = (a < b)
+                        if asmall is not S.true and asmall is not S.false:
+                            literal = False
+                            asmall = list(ordered((a, b))) == [a, b]
+                        if not asmall:
+                            rel = rel[::-1]
+                            was = was[::-1]
+                        rel[0] = rel[0].reversed
+                        if literal:
+                            # -> small op1 x, x op2 big
+                            if all('<' in i.rel_op for i in rel):
+                                # -> small < x, x < big
+                                pass  # nothing to do
+                            elif all('>' in i.rel_op for i in rel):
+                                # -> small > x, x > big
+                                pass  # already handled
+                            elif '<' in rel[0].rel_op:
+                                # -> small < x, x > big
+                                pass  # already handled
+                            else:
+                                # -> small > x, x < big
+                                rel[1] = S.true
+                                rel[0] = rel[0].reversed
+                    except (TypeError, NotImplementedError):
+                        pass
+
+        newargs.update(rel)
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -411,21 +500,87 @@ class Or(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
-        newargs = []
-        rel = []
-        for x in args:
-            if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True if x else False)
-                continue
+        from sympy.sets.sets import _oo_free_relational
+        from sympy.solvers.inequalities import _solve_inequality
+        newargs = set()
+        rel = set()
+        args = list(args)
+        cargs = []
+        did_rel = False
+        while args:
+            x = args.pop()
             if x.is_Relational:
-                c = x.canonical
-                if c in rel:
+                free = x.free_symbols
+                if len(free) == 1:
+                    try:
+                        x = _solve_inequality(x, free.pop(), linear=True)
+                    except NotImplementedError:
+                        pass
+                if x.is_Relational:
+                    x = x.canonical
+                    rel.add(x)
+                else:
+                    args.append(x)
+            elif isinstance(x, cls):
+                args.extend(x.args)
+            else:
+                if isinstance(x, Number):
+                    if x.is_zero is None:
+                        pass
+                    else:
+                        x = sympify(not x.is_zero)
+                if x is S.true:
+                    return [x]
+                elif x is S.false:
                     continue
-                nc = (~c).canonical
-                if any(r == nc for r in rel):
-                    return [S.true]
-                rel.append(c)
-            newargs.append(x)
+                newargs.add(x)
+            if not args and not did_rel and rel:
+                from sympy.utilities.iterables import sift
+                from sympy.core.relational import Ne
+                lhs = sift(rel, lambda x: x.lhs)
+                for l in lhs:
+                    c = sift(lhs[l], lambda x: x.rhs.is_comparable and
+                        x.rhs not in (S.Infinity, S.NegativeInfinity))
+                    cargs = []
+                    ne = []
+                    for i in c[True]:
+                        rel.remove(i)
+                        if isinstance(i, Ne):
+                            ne.append(i)
+                        else:
+                            cargs.append(i)
+                    if len(cargs) == 1:
+                        rargs = [cargs.pop()]
+                    else:
+                        c = S.EmptySet
+                        for i in cargs:
+                            c = c.union(i.as_set())
+                        rargs = list(_oo_free_relational(c, l))
+                        if len(rargs) == 1 and rargs[0] is S.true:
+                            if l.is_real is None:
+                                rargs = [And(S.NegativeInfinity <= l, l <= S.Infinity)]
+                            elif l.is_real is False:
+                                rargs = [S.false]
+                    if not ne:
+                        args.extend(rargs)
+                    else:
+                        cne = [~i for i in ne]
+                        for r in rargs:
+                            # if x != y and x == y are encountered the result is
+                            # true since one of them must always be true
+                            if r in cne:
+                                return [S.true]
+                            # if the rhs of Ne makes a Relational false then
+                            # that relational is already handled by the more
+                            # general Ne so ignore it.
+                            if all(r.subs(l, i.rhs) for i in ne
+                                    if i.rhs.is_real):
+                                args.append(r)
+                        args.extend(ne)
+                    did_rel = True
+                    del cargs
+
+        newargs.update(rel)
         return LatticeOp._new_args_filter(newargs, Or)
 
     def as_set(self):
@@ -437,7 +592,7 @@ class Or(LatticeOp, BooleanFunction):
 
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
-        >>> Or(x>2, x<-2).as_set()
+        >>> Or(x > 2, x < -2).as_set()
         (-oo, -2) U (2, oo)
         """
         from sympy.sets.sets import Union
@@ -793,7 +948,7 @@ class Implies(BooleanFunction):
         try:
             newargs = []
             for x in args:
-                if isinstance(x, Number) or x in (0, 1):
+                if isinstance(x, Number):
                     newargs.append(True if x else False)
                 else:
                     newargs.append(x)

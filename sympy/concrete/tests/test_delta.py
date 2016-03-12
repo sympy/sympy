@@ -258,7 +258,7 @@ def test_deltasummation_basic_numerical():
         ds(KD(j, k)*KD(i, j), (j, 1, 3))
 
     assert ds(KD(i, k), (k, -oo, oo)) == 1
-    assert ds(KD(i, k), (k, 0, oo)) == Piecewise((1, S(0) <= i), (0, True))
+    assert ds(KD(i, k), (k, 0, oo)) == Piecewise((1, i >= S(0)), (0, True))
     assert ds(KD(i, k), (k, 1, 3)) == \
         Piecewise((1, And(S(1) <= i, i <= 3)), (0, True))
     assert ds(k*KD(i, j)*KD(j, k), (k, -oo, oo)) == j*KD(i, j)

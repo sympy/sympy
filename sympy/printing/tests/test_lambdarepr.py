@@ -66,9 +66,9 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x) if (x < 1) else (((x**2) if (((x <= 4) and " \
-        "(x > 3))) else (((0) if (True) else None)))))"
-
+    ans = "((x) if (x < 1) else (((x**2) if (((x <= 4) and " \
+        "(3 < x))) else (((0) if (True) else None)))))"
+    assert l == ans
     p = Piecewise(
         (x**2, x < 0),
         (x, Interval(0, 1, False, True).contains(x)),
@@ -77,8 +77,9 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and (x < 1))) " \
+    ans = "((x**2) if (x < 0) else (((x) if (((0 <= x) and (x < 1))) " \
         "else (((-x + 2) if (x >= 1) else (((0) if (True) else None)))))))"
+    assert l == ans
 
     p = Piecewise(
         (x**2, x < 0),
@@ -87,7 +88,7 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and " \
+    assert l == "((x**2) if (x < 0) else (((x) if (((0 <= x) and " \
         "(x < 1))) else (((-x + 2) if (x >= 1) else None)))))"
 
     p = Piecewise(

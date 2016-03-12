@@ -662,6 +662,12 @@ def test_issue_10304():
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
 
+
+def test_issue_10401():
+    assert Ne(x/(x + 1), 1) is S.true
+    assert Ne(x/(x - 1), 1) is S.true
+
+
 def test_issue_10633():
     assert Eq(True, False) == False
     assert Eq(False, True) == False

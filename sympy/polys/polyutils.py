@@ -28,25 +28,45 @@ _re_gen = re.compile(r"^(.+?)(\d*)$")
 
 
 def _nsort(roots, separated=False):
-    """Sort the numerical roots putting the real roots first, then sorting
+    """Sort roots putting the real roots first, then sorting
     according to real and imaginary parts. If ``separated`` is True, then
     the real and imaginary roots will be returned in two lists, respectively.
 
-    This routine tries to avoid issue 6137 by separating the roots into real
-    and imaginary parts before evaluation. In addition, the sorting will raise
-    an error if any computation cannot be done with precision.
+    For numerical roots, an error will be raised if a definitive comparison
+    cannot be made between any roots.
     """
     if not all(r.is_number for r in roots):
+        key = None
+        if len(roots) == 1:
+            if not separated:
+                return list(roots)
+            r = list(roots)[0]
+            if r.is_complex and r.is_real is not None:
+                return [[r], []] if r.is_real else [[], [r]]
+        elif all(r.is_complex for r in roots):
+            key = [i.as_real_imag() for i in roots]
+            if not any(i[1].is_zero is None for i in key):
+                key = [(1 if i.is_zero is False else 0, r, i)
+                    for r, i in key]
+    else:
+        # see issue 6137:
+        # get the real part of the evaluated real and imaginary parts of each root
+        key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
+        # insert a key to indicate if the root has an imaginary part
+        key = [(1 if i else 0, r, i) for r, i in key]
+        # check that parts are computed with precision
+        if len(key) > 1:
+            for _, r, i in key:
+                if r._prec == 1 or i._prec == 1:
+                    key = None
+                    break
+
+    if key is None:
         raise NotImplementedError
-    # see issue 6137:
-    # get the real part of the evaluated real and imaginary parts of each root
-    key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
-    # make sure the parts were computed with precision
-    if any(i._prec == 1 for k in key for i in k):
-        raise NotImplementedError("could not compute root with precision")
-    # insert a key to indicate if the root has an imaginary part
-    key = [(1 if i else 0, r, i) for r, i in key]
-    key = sorted(zip(key, roots))
+    try:
+        key = sorted(zip(key, roots))
+    except TypeError:
+        raise NotImplementedError
     # return the real and imaginary roots separately if desired
     if separated:
         r = []

@@ -1119,6 +1119,12 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(y*A + 2*A)
 
+    >>> eq = sqrt(2) + sqrt(10)
+    >>> factor_terms(eq)
+    sqrt(2) + sqrt(10)
+    >>> factor_terms(eq, radical=True)
+    sqrt(2)*(1 + sqrt(5))
+
     When ``clear`` is False, a rational will only be factored out of an
     Add expression if all terms of the Add have coefficients that are
     fractions:

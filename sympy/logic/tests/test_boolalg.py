@@ -1,8 +1,9 @@
 from __future__ import division
 
 from sympy.assumptions.ask import Q
+from sympy.core.compatibility import ordered
 from sympy.core.numbers import oo
-from sympy.core.relational import Equality
+from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.sets.sets import (EmptySet, Interval, Union)
@@ -56,6 +57,11 @@ def test_And():
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert And(g, l, ge, le) == And(l, le)
+    a = A > 2
+    b = S(4) > A
+    ans = And(a.reversed, b.reversed)
+    assert And(a, b) == ans
+    assert And(b, a) == ans
 
 
 def test_Or():
@@ -73,11 +79,18 @@ def test_Or():
     assert Or(True, False, A) is true
     assert Or(False, False, A) == A
     assert Or(2, A) is true
-    assert Or(A < 1, A >= 1) is true
     e = A > 1
     assert Or(e, e.canonical) == e
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert Or(g, l, ge, le) == Or(g, ge)
+    a = A > 2
+    b = S(4) > A
+    ans = Or(b.canonical, a.canonical)
+    assert Or(a, b) == ans
+    assert Or(b, a) == ans
+    y = 1/A
+    print(Or(y < 1, y <= 1))
+    assert Or(y < 1, y <= 1) == And(-oo < y, y <= oo)
 
 
 def test_Xor():
@@ -727,6 +740,83 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_issue_5473():
+    x, y, z = symbols('x:z')
+    assert And(x < 0, x <= 0) == (x < 0)
+    assert And(x < 0, x > 0) == False
+    assert And(x < 0, x >= 0) == False
+    assert And(x < 0, Ne(x, 0)) == (x < 0)
+    assert And(x < 0, Eq(x, 0)) == False
+    assert And(x <= 0, x > 0) == False
+    assert And(x <= 0, x >= 0) == Eq(x, 0)
+    assert And(x <= 0, Ne(x, 0)) == (x < 0)
+    assert And(x <= 0, Eq(x, 0)) == Eq(x, 0)
+    assert And(x > 0, x >= 0) == (x > 0)
+    assert And(x > 0, Ne(x, 0)) == (x > 0)
+    assert And(x > 0, Eq(x, 0)) == False
+    assert And(x >= 0, Ne(x, 0)) == (x > 0)
+    assert And(x >= 0, Eq(x, 0)) == Eq(x, 0)
+    assert And(Ne(x, 0), Eq(x, 0)) == False
+
+    assert Or(x < 0, x <= 0) == (x <= 0)
+    assert list(ordered(Or(x < 0, x > 0).args)) == list(ordered((x < 0, x > 0)))
+    assert Or(x < 0, x >= 0) == And(-oo <= x, x <= oo)
+    assert Or(x < 0, Ne(x, 0)) == Ne(x, 0)
+    assert Or(x < 0, Eq(x, 0)) == (x <= 0)
+    assert Or(x <= 0, x > 0) == And(-oo <= x, x <= oo)
+    r = symbols('r', real=True)
+    assert Or(r <= 0, r > 0) is S.true
+    c = symbols('c', real=False)
+    assert Or(c <= 0, c > 0) is S.false
+    assert Or(x <= 0, x >= 0) == And(-oo <= x, x <= oo)
+    args = x <= 0, Ne(x, 0)
+    assert all(i in args for i in Or(*args).args)
+    assert Or(x <= 0, Eq(x, 0)) == (x <= 0)
+    assert Or(x > 0, x >= 0) == (x >= 0)
+    assert Or(x > 0, Ne(x, 0)) == Ne(x, 0)
+    assert Or(x > 0, Eq(x, 0)) == (x >= 0)
+    args = x >= 0, Ne(x, 0)
+    assert all(i in args for i in Or(*args).args)
+    assert Or(x >= 0, Eq(x, 0)) == (x >= 0)
+    assert Or(Ne(x, 0), Eq(x, 0)) == True
+    assert Or(x <= 1, x > 4, Ne(x, 2), Ne(x, 3)) == \
+        Or(Ne(x, 2), Ne(x, 3))
+
+    assert And(z > x, x > y) == And(x < z, y < x)
+    assert And(z > x, x < y) == And(x < z, y > x)
+    assert And(z < x, x < y) == And(x > z, y > x)
+    assert And(z < x, x > y) == And(x > z, y < x)
+    z = 3
+    assert And(z > x, x > y) == And(3 > x, x > y)
+    assert And(z > x, x < y) == And(3 > x, x < y)
+    assert And(z < x, x < y) == And(3 < x, x < y)
+    assert And(z < x, x > y) == And(3 < x, x > y)
+    y = 2
+    assert And(z > x, x > y) == And(2 < x, x < 3)
+    assert And(z > x, x < y) == (x < 2)
+    assert And(z < x, x < y) == False
+    assert And(z < x, x > y) == (x > 3)
+
+    assert Or(x - 1 <= 0, 2*x - 2 > 0) == And(-oo <= x, x <= oo)
+    assert Or(x - 1 <= 0, 2*x - 2 > 0, y < 1) == Or(And(-oo <= x, x <= oo), y < 1)
+    assert And(x - 1 <= 0, 2*x - 2 > 0) is S.false
+    assert And(And(S(1) < x, x < y), And(x < 2, x < z)) == \
+        And(x > 1, x < y, x < z, x < 2)
+    assert And(x < 11, x <= 12, x > 1, x >= 2, Ne(x, 4)) == And(x < 11, x >= 2, Ne(x, 4))
+    assert And(x <= 11, x <= 12, x > 1, x > 2) == And(x <= 11, x > 2)
+    assert Or(Or(x < 1, x > 3), Or(x <= 0, x > 4), Ne(x, 4)) == Or(x < 1, x > 3, Ne(x, 4))
+    assert Or(Or(x <= 1, x >= 3), Or(x < 0, x > 4)) == Or(x <= 1, x >= 3)
+    assert And(x < 0, x > 1, x > 3) is S.false
+    assert Or(x > 1, x < 3) == And(-oo <= x, x <= oo)
+
+
+@XFAIL
+def test_mv_issue_5473():
+    p = symbols('p', positive=True)
+    assert And(x > -p, x > 2) == (x > 2)
+    assert Or(x > -p, x < 2) is S.true
 
 
 def test_issue_8571():

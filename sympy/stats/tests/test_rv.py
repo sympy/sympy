@@ -26,9 +26,9 @@ def test_where():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     XX = given(X, And(X**2 <= 1, X >= 0))
-    assert XX.pspace.domain.set == Interval(0, 1)
-    assert XX.pspace.domain.as_boolean() == \
-        And(0 <= X.symbol, X.symbol**2 <= 1, -oo < X.symbol, X.symbol < oo)
+    ans = Interval(0, 1)
+    assert XX.pspace.domain.set == ans
+    assert XX.pspace.domain.as_boolean().as_set() == ans
 
     with raises(TypeError):
         XX = given(X, X + 3)

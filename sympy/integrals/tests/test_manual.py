@@ -138,7 +138,7 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(a*x**2 - 4), x) == \
         Piecewise((sqrt(1/a)*acosh(sqrt(a)*x/2), a > 0))
     assert manualintegrate(1/sqrt(-a + 4*x**2), x) == \
-        Piecewise((asinh(2*x*sqrt(-1/a))/2, -a > 0), (acosh(2*x*sqrt(1/a))/2, -a < 0))
+        Piecewise((asinh(2*x*sqrt(-1/a))/2, a < 0), (acosh(2*x*sqrt(1/a))/2, a > 0))
 
     # piecewise
     assert manualintegrate(1/sqrt(a-b*x**2), x) == \

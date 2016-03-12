@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg,
+    And, Eq, Or, Ne, re, im, polar_lift, meijerg,
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -1107,9 +1107,11 @@ def test_issue_8368():
         Piecewise(
             (   -1/(s + 1)/2 - 1/(-s + 1)/2,
                 And(
-                    Ne(1/s, 1),
                     Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
+                    Ne(1/s, 1),
+                    Or(
+                        Abs(periodic_argument(s, oo)) < pi/2,
+                        Eq(pi/2, Abs(periodic_argument(s, oo)))),
                     cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
             (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
                 True))

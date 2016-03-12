@@ -1,6 +1,7 @@
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, SKIP
 from sympy.core.compatibility import range
+from sympy.core.singleton import S
 
 theano = import_module('theano')
 if theano:
@@ -46,7 +47,7 @@ def theq(a, b):
 
     return astr == bstr
 
-def test_symbol():
+def test_theano_symbol():
     xt = theano_code(x)
     assert isinstance(xt, (tt.TensorVariable, ts.ScalarVariable))
     assert xt.name == x.name
@@ -54,7 +55,7 @@ def test_symbol():
     assert theano_code(x, broadcastables={x: (False,)}).broadcastable == (False,)
     assert theano_code(x, broadcastables={x: (False,)}).name == x.name
 
-def test_add():
+def test_theano_add():
     expr = x + y
     comp = theano_code(expr)
     assert comp.owner.op == theano.tensor.add
@@ -66,70 +67,70 @@ def test_add():
     assert comp.broadcastable == (False, False)
 
 
-def test_trig():
+def test_theano_trig():
     assert theq(theano_code(sympy.sin(x)), tt.sin(xt))
     assert theq(theano_code(sympy.tan(x)), tt.tan(xt))
 
-def test_many():
+def test_theano_many():
     expr = sy.exp(x**2 + sy.cos(y)) * sy.log(2*z)
     comp = theano_code(expr)
     expected = tt.exp(xt**2 + tt.cos(yt)) * tt.log(2*zt)
     # assert theq(comp, expected)
 
-def test_dtype():
+def test_theano_dtype():
     assert theano_code(x, dtypes={x: 'float32'}).type.dtype == 'float32'
     assert theano_code(x, dtypes={x: 'float64'}).type.dtype == 'float64'
     assert theano_code(x+1, dtypes={x: 'float32'}).type.dtype == 'float32'
     assert theano_code(x+y, dtypes={x: 'float64', y: 'float32'}).type.dtype == 'float64'
 
-def test_MatrixSymbol():
+def test_theano_MatrixSymbol():
     X = sympy.MatrixSymbol('X', 4, 5)
     Xt = theano_code(X)
     assert isinstance(Xt, tt.TensorVariable)
     assert Xt.broadcastable == (False, False)
 
-def test_MatMul():
+def test_theano_MatMul():
     X = sympy.MatrixSymbol('X', 4, 4)
     Y = sympy.MatrixSymbol('X', 4, 4)
     Z = sympy.MatrixSymbol('X', 4, 4)
     expr = X*Y*Z
     assert isinstance(theano_code(expr).owner.op, tt.Dot)
 
-def test_Transpose():
+def test_theano_Transpose():
     X = sympy.MatrixSymbol('X', 4, 4)
     assert isinstance(theano_code(X.T).owner.op, tt.DimShuffle)
 
-def test_MatAdd():
+def test_theano_MatAdd():
     X = sympy.MatrixSymbol('X', 4, 4)
     Y = sympy.MatrixSymbol('X', 4, 4)
     Z = sympy.MatrixSymbol('X', 4, 4)
     expr = X+Y+Z
     assert isinstance(theano_code(expr).owner.op, tt.Elemwise)
 
-def test_symbols_are_created_once():
+def test_theano_symbols_are_created_once():
     expr = x**x
     comp = theano_code(expr)
 
     assert theq(comp, xt**xt)
 
-def test_dim_handling():
+def test_theano_dim_handling():
     assert dim_handling([x], dim=2) == {x: (False, False)}
     assert dim_handling([x, y], dims={x: 1, y: 2}) == {x: (False, True),
                                                        y: (False, False)}
     assert dim_handling([x], broadcastables={x: (False,)}) == {x: (False,)}
 
-def test_Rationals():
+def test_theano_Rationals():
     assert theq(theano_code(sympy.Integer(2) / 3), tt.true_div(2, 3))
     assert theq(theano_code(S.Half), tt.true_div(1, 2))
 
-def test_Integers():
+def test_theano_Integers():
     assert theano_code(sympy.Integer(3)) == 3
 
-def test_factorial():
+def test_theano_factorial():
     n = sympy.Symbol('n')
     assert theano_code(sympy.factorial(n))
 
-def test_Derivative():
+def test_theano_Derivative():
     simp = lambda expr: theano_simplify(fgraph_of(expr))
     assert theq(simp(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False))),
                 simp(theano.grad(tt.sin(xt), xt)))
@@ -163,12 +164,12 @@ def test_theano_function_kwargs():
     zz = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy, zz) - 3*np.arange(3)) < 1e-9
 
-def test_slice():
+def test_theano_slice():
     assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
     assert str(theano_code(slice(1, x, 3), dtypes={x: 'int32'})) ==\
            str(slice(1, xt, 3))
 
-def test_MatrixSlice():
+def test_theano_MatrixSlice():
     n = sympy.Symbol('n', integer=True)
     X = sympy.MatrixSymbol('X', n, n)
 
@@ -198,7 +199,7 @@ def test_MatrixSlice():
     Yt = theano_code(Y, dtypes={n: 'int32', k: 'int32'})
     # assert Yt.owner.op.idx_list[0].stop == kt
 
-def test_BlockMatrix():
+def test_theano_BlockMatrix():
     n = sympy.Symbol('n', integer=True)
     A = sympy.MatrixSymbol('A', n, n)
     B = sympy.MatrixSymbol('B', n, n)
@@ -212,7 +213,7 @@ def test_BlockMatrix():
     assert any(theq(Blockt, solution) for solution in solutions)
 
 @SKIP
-def test_BlockMatrix_Inverse_execution():
+def test_theano_BlockMatrix_Inverse_execution():
     k, n = 2, 4
     dtype = 'float32'
     A = sympy.MatrixSymbol('A', n, k)
@@ -237,7 +238,7 @@ def test_BlockMatrix_Inverse_execution():
 
     assert np.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
 
-def test_DenseMatrix():
+def test_theano_DenseMatrix():
     t = sy.Symbol('theta')
     for MatrixType in [sy.Matrix, sy.ImmutableMatrix]:
         X = MatrixType([[sy.cos(t), -sy.sin(t)], [sy.sin(t), sy.cos(t)]])
@@ -245,27 +246,27 @@ def test_DenseMatrix():
         assert isinstance(tX, tt.TensorVariable)
         assert tX.owner.op == tt.join
 
-def test_AppliedUndef():
+def test_theano_AppliedUndef():
     t = sy.Symbol('t')
     f = sy.Function('f')
     ft = theano_code(f(t))
     assert isinstance(ft, tt.TensorVariable)
     assert ft.name == 'f_t'
 
-def test_bad_keyword_args_raise_error():
+def test_theano_bad_keyword_args_raise_error():
     raises(Exception, lambda : theano_function([x], [x+1], foobar=3))
 
-def test_cache():
+def test_theano_cache():
     sx = sy.Symbol('x')
     cache = {}
     tx = theano_code(sx, cache=cache)
     assert theano_code(sx, cache=cache) is tx
     assert theano_code(sx, cache={}) is not tx
 
-def test_Piecewise():
+def test_theano_Piecewise():
     # A piecewise linear
     xt, yt = theano_code(x), theano_code(y)
-    expr = sy.Piecewise((0, x<0), (x, x<2), (1, True))  # ___/III
+    expr = sy.Piecewise((0, S(0)>x), (x, S(2)>x), (1, True))  # ___/III
     result = theano_code(expr)
     assert result.owner.op == tt.switch
 
@@ -284,7 +285,7 @@ def test_Piecewise():
         tt.switch(tt.or_(xt>2, xt<0), xt, np.nan))
     assert theq(result, expected)
 
-def test_Relationals():
+def test_theano_Relationals():
     xt, yt = theano_code(x), theano_code(y)
     assert theq(theano_code(x > y), xt > yt)
     assert theq(theano_code(x < y), xt < yt)
