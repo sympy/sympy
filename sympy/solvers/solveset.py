@@ -20,7 +20,7 @@ from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
-from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
+from sympy.sets import (FiniteSet, EmptySet, imageset, ImageSet, Interval, Intersection,
                         Union, ConditionSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
@@ -172,8 +172,7 @@ def _invert_real(f, g_ys, symbol):
                 imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
 
     if isinstance(f, TrigonometricFunction):
-        if isinstance(g_ys, FiniteSet):
-            def inv(trig):
+        def inv(trig):
                 if isinstance(f, (sin, csc)):
                     F = asin if isinstance(f, sin) else acsc
                     return (lambda a: n*pi + (-1)**n*F(a),)
@@ -185,6 +184,16 @@ def _invert_real(f, g_ys, symbol):
                 if isinstance(f, (tan, cot)):
                     return (lambda a: n*pi + f.inverse()(a),)
 
+        if isinstance(g_ys, FiniteSet):
+            n = Dummy('n', integer=True)
+            invs = S.EmptySet
+            for L in inv(f):
+                invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
+            return _invert_real(f.args[0], invs, symbol)
+        if isinstance(g_ys, ImageSet):
+            lamb = g_ys.args[0]
+            # mostly base_set is S.Integers. taking starting value and after one period value.
+            g_ys = lamb(0),lamb(1)
             n = Dummy('n', integer=True)
             invs = S.EmptySet
             for L in inv(f):
@@ -253,7 +262,7 @@ def _invert_complex(f, g_ys, symbol):
             invs = S.EmptySet
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
-            return _invert_real(f.args[0], invs, symbol)
+            return _invert_complex(f.args[0], invs, symbol)
     #TODO similarly for HyperbolicFunction
     return (f, g_ys)
 

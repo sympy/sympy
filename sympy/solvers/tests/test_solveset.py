@@ -129,7 +129,8 @@ def test_invert_real():
         (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+        (x, Union(ImageSet(Lambda(n, n*pi + atan(atan(y))), S.Integers),\
+         ImageSet(Lambda(n, n*pi + atan(atan(y) + pi)), S.Integers)))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -1116,6 +1117,14 @@ def test_issue_7914():
 def test_issue_10671():
     assert solveset(sin(y), y, Interval(0, pi)) == \
     Intersection(Interval(0, pi), ImageSet(Lambda(n, n*pi), S.Integers))
+
+
+def test_issue_10217():
+    eq=cos((sin(x)+1))-1
+    soln = Union(ImageSet(Lambda(n, -(-1)**n*pi/2 + n*pi), S.Integers),\
+     ImageSet(Lambda(n, -(-1)**n*asin(-2*pi + 1) + n*pi), S.Integers))
+    assert solveset(eq,x,domain=S.Reals) == soln
+    assert solveset(eq,x) == ConditionSet(x, Eq(cos(sin(x) + 1) - 1, 0), S.Complexes)
 
 
 def test_issue_8715():
