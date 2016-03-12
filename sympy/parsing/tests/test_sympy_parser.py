@@ -90,19 +90,19 @@ def test_issue_7663():
 
 def test_issue_10560():
     inputs = {
-        str(4*-3) : -Integer(3)*Integer(4),
-        str(-4*3) : -Integer(4)*Integer(3),
+        '4*-3' : '(-3)*4',
+        '-4*3' : '(-4)*3',
     }
     for text, result in inputs.items():
-        assert parse_expr(text, evaluate=False) == result
+        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
 def test_issue_10773():
     inputs = {
-    str(-10/5): -Integer(10)/Integer(5),
-    str(-10/-5) : -Integer(10)/-Integer(5),
+    '-10/5': '(-10)/5',
+    '-10/-5' : '(-10)/(-5)',
     }
     for text, result in inputs.items():
-        assert parse_expr(text, evaluate=False) == result
+        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
 
 def test_split_symbols():
