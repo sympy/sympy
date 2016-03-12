@@ -51,7 +51,7 @@ will obtain Avogadro's number. To obtain the answer in moles you
 should divide by the unit ``avogadro``:
 
     >>> u.grams/u.amu
-    602214086000000000000000
+    602214085700000000000000
     >>> _/u.avogadro
     mol
 
@@ -68,9 +68,9 @@ If you need the number of atoms in a mol as a pure number you can use
 quantity.)
 
     >>> u.avogadro_number
-    602214086000000000000000
+    602214085700000000000000
     >>> u.avogadro_constant
-    602214086000000000000000/mol
+    602214085700000000000000/mol
 """
 
 from __future__ import print_function, division
@@ -254,9 +254,9 @@ Z0 = vacuum_impedance = u0 * c
 planck = Rational('6.62607004') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
-avogadro_number = Rational('6.02214086') * 10**23
+avogadro_number = Rational('6.022140857') * 10**23
 avogadro = avogadro_constant = avogadro_number / mol
-boltzmann = Rational('1.3806485') * ten**-23 * J / K
+boltzmann = Rational('1.38064852') * ten**-23 * J / K
 
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
@@ -270,7 +270,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = 1.602176621e-19 * J
+eV = 1.6021766208e-19 * J
 
 # Other convenient units and magnitudes
 
