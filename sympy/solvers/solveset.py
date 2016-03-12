@@ -312,7 +312,22 @@ def _invert_complex(f, g_ys, symbol):
 
 
 def _invert_abs(f, g_ys, symbol):
-    """Helper function for inverting absolute value functions"""
+    """Helper function for inverting absolute value functions.
+
+    Returns the complete result of inverting an absolute value function.
+    Alongwith finding all the possible solutions of the given function,
+    the routine determines a set of conditions which must be satified
+    for their existence.
+
+    The returned values are determined by the condition
+    If it is certain that all these conditions are met, a `FiniteSet` of all
+    possible solutions is returned.
+    If it can be concluded that atleast one condition cannot be satified, an
+    `EmptySet` is returned.
+    In all other cases, a `ConditionSet` of the solutions, with all the required
+    conditions specified, is returned.
+
+    """
 
     n = Dummy('n', real=True)
 
