@@ -2924,6 +2924,8 @@ class MatrixBase(object):
         berkowitz_eigenvals
         """
         from sympy.matrices import zeros
+        if not self:
+            return (1,)
 
         if not self.is_square:
             raise NonSquareMatrixError()
