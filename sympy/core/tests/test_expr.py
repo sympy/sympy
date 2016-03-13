@@ -442,6 +442,7 @@ def test_is_algebraic_expr():
     assert (cos(y)/sqrt(x)).is_algebraic_expr(y) is False
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
 
+
 def test_SAGE1():
     #see https://github.com/sympy/sympy/issues/3346
     class MyInt:
@@ -1426,9 +1427,11 @@ def test_issue_4199():
     assert a._eval_interval(x, -oo, oo) == -y
     assert a._eval_interval(x, oo, -oo) == y
 
+
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
     assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
+
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1657,6 +1660,7 @@ def test_round():
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
+
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
     # it's too slow
@@ -1668,6 +1672,7 @@ def test_round_exception_nostr():
     else:
         # Did not raise
         raise AssertionError("Did not raise")
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
@@ -1706,3 +1711,9 @@ def test_issue_7426():
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
+
+
+def test_issue_10755():
+    x = symbols('x')
+    raises(TypeError, lambda: int(log(x)))
+    raises(TypeError, lambda: log(x).round(2))
