@@ -667,6 +667,7 @@ def _nthroot_mod_prime_power(a, n, p, k):
                 return False
             return True
 
+
 def _nthroot_mod2(s, q, p):
     f = factorint(q)
     v = []
