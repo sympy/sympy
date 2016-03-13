@@ -615,15 +615,57 @@ def is_nthpow_residue(a, n, m):
 
     P. Hackman "Elementary Number Theory" (2009),  page 76
     """
-    if( primitive_root(m) == None ):
-        raise NotImplementedError("Not implemented for m which do not have any primitive root")
-    if n == 1:
-        return True
     if n == 2:
         return is_quad_residue(a, m)
+    if n == 1:
+        return True
+    if primitive_root(m) == None:
+        x = factorint(m)
+        for prime, power in x.iteritems():
+                if not _nthroot_mod_prime_power(a, n, prime, power):
+                    return False
+        return True
     f = totient(m)
     k = f // igcd(f, n)
     return pow(a, k, m) == 1
+
+
+def _nthroot_mod_prime_power(a, n, p, k):
+    """Returns true if solution for ``x**n == a (mod(p**k))`` exists."""
+    if (a % p) != 0:
+        if p == 2:
+            c = bin(n)[::-1].find('1')
+            r = n // pow(2,c)
+            if k == 1:
+                return True
+            elif k == 2:
+                if c > 0 and a % 4 == 3:
+                    return False
+                return True
+            c = min(c, k - 2)
+            if c == 0:
+                return True
+            t = pow(1, c + 2)
+            t = a % t
+            if t != 1:
+                return False
+            return True
+        else:
+            return is_nthpow_residue(a, n, pow(p, k))
+    else:
+        pk = pow(p, k)
+        _a = a % pk
+        if _a == 0:
+            return True
+        else:
+            r = 1
+            _a /= p
+            while _a % p == 0:
+                _a /= p
+                r += 1
+            if r < n or r % n != 0 or not _nthroot_mod_prime_power(_a, n, p, k - r):
+                return False
+            return True
 
 def _nthroot_mod2(s, q, p):
     f = factorint(q)

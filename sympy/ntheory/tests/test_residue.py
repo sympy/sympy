@@ -124,9 +124,12 @@ def test_residue():
 
     assert is_nthpow_residue(2, 1, 5)
 
-    #issue 7858
-    raises(NotImplementedError, lambda: is_nthpow_residue(676, 3, 5364))
-
+    #issue 10816
+    assert is_nthpow_residue(676, 3, 5364)
+    assert is_nthpow_residue(9,12,36)
+    assert is_nthpow_residue(32,10,41)
+    assert is_nthpow_residue(4,2,64)
+    assert is_nthpow_residue(31,4,41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert nthroot_mod(1801, 11, 2663) == 44
