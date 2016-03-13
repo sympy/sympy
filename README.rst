@@ -57,7 +57,16 @@ Everything is at:
 
 http://docs.sympy.org/
 
-You can generate everything at the above site in your local copy of SymPy by::
+You can generate everything at the above site in your local copy of SymPy by:
+
+first, install the prerequisites to make the html, e.g. on Debian/Ubuntu (similarly for other distributions)::
+
+    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x
+
+also, mpmath must be installed. refer to the doc:
+http://docs.sympy.org/latest/install.html#mpmath
+
+then enter::
 
     $ cd doc
     $ make html
