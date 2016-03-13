@@ -2694,3 +2694,14 @@ def test_issue_9422():
     assert x*M1 != M1*x
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
+def test_issue_10770():
+    M = Matrix([[1, 2], [3, 4]])
+    M.row_del(0)
+    assert M == Matrix([[3, 4]])
+    M.row_del(0)
+    a = Matrix([[9, 6, 3]])
+    b = Matrix([9, 6, 3])
+    assert M.row_insert(0, a) == Matrix([[9, 6, 3]])
+    assert M.col_join(a) == Matrix([[9, 6, 3]])
+    assert M.col_insert(0, b) == Matrix([9, 6, 3])
+    assert M.row_join(b) == Matrix([9, 6, 3])
