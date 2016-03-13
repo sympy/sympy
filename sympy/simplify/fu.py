@@ -192,7 +192,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.functions.elementary.hyperbolic import (
-    cosh, sinh, tanh, coth, HyperbolicFunction)
+    cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -2046,6 +2046,10 @@ def _osborne(e, d):
             return I*tan(a)
         elif rv.func is coth:
             return cot(a)/I
+        elif rv.func is sech:
+            return sec(a)
+        elif rv.func is csch:
+            return -I*csc(a)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2081,9 +2085,9 @@ def _osbornei(e, d):
         elif rv.func is cot:
             return coth(a)*I
         elif rv.func is sec:
-            return 1/cosh(a)
+            return sech(a)
         elif rv.func is csc:
-            return I/sinh(a)
+            return I*csch(a)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 

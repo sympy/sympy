@@ -1,8 +1,9 @@
 from sympy import (
     Abs, Dummy, Eq, Gt, Function,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
-    asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sec, sqrt, symbols,
+    asin, acos, acsc, asec, atan, atanh, cos, cosh, csc,
+    erf, erfinv, erfc, erfcinv,
+    exp, log, pi, sech, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
@@ -567,15 +568,27 @@ def test_solve_abs():
     raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
-    from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
+def test_solveset_hyperbolic():
+    x = Symbol('x')
+    n = Dummy('n')
+    pi_2n = 2*n*pi
+    l1 = log(sqrt(-2 + sqrt(5)))
+
+    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(l1)
+
+    l2 = log(sqrt(2 + sqrt(5)))
+    Int = lambda x: ImageSet(Lambda(n, x), S.Integers)
+    assert solveset(sinh(x) + sech(x), x) == Union(
+        imageset(n,I*pi_2n + l1, S.Integers),
+        imageset(n, I*(pi_2n + pi) + l1, S.Integers),
+        imageset(n, I*(pi_2n - pi/2) + l2, S.Integers),
+        imageset(n, I*(pi_2n + pi/2) + l2, S.Integers))
+
+    assert solveset(sinh(x), x) == Union(Int(I*pi_2n), Int(I*(pi_2n + pi)))
+    assert solveset(sinh(x) + cosh(x) + 1, x) == Int(I*(pi_2n + pi))
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    u = sinh(x) + cos(x)
+    assert solveset(u, x) == ConditionSet(x, Eq(u, 0), S.Complexes)
 
 
 def test_real_imag_splitting():
@@ -706,7 +719,7 @@ def test_solveset_complex_tan():
 
 
 def test_solve_trig():
-    from sympy.abc import n
+    n = symbols('n', real=True)
     assert solveset_real(sin(x), x) == \
         Union(imageset(Lambda(n, 2*pi*n), S.Integers),
               imageset(Lambda(n, 2*pi*n + pi), S.Integers))
@@ -714,6 +727,7 @@ def test_solve_trig():
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
+    # XXX this fails if n is not real
     assert solveset_real(cos(x), x) == \
         Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
               imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))

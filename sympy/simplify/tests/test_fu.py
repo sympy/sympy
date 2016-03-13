@@ -1,6 +1,6 @@
 from sympy import (
     Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root,
-    powsimp, symbols, sinh, cosh, tanh, coth, Dummy)
+    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy)
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
@@ -349,7 +349,9 @@ def test_hyper_as_trig():
     assert o(tanh(x), d) == I*tan(x*d)
     assert o(coth(x), d) == cot(x*d)/I
     assert o(cosh(x), d) == cos(x*d)
-    for func in (sinh, cosh, tanh, coth):
+    assert o(sech(x), d) == sec(x*d)
+    assert o(csch(x), d) == -I*csc(x*d)
+    for func in (sinh, cosh, tanh, coth, sech, csch):
         h = func(pi)
         assert i(o(h, d), d) == h
     # /!\ the _osborne functions are not meant to work
@@ -359,8 +361,8 @@ def test_hyper_as_trig():
     assert i(sin(x*y), y) == sinh(x)/I
     assert i(tan(x*y), y) == tanh(x)/I
     assert i(cot(x*y), y) == coth(x)*I
-    assert i(sec(x*y), y) == 1/cosh(x)
-    assert i(csc(x*y), y) == I/sinh(x)
+    assert i(sec(x*y), y) == sech(x)
+    assert i(csc(x*y), y) == I*csch(x)
 
 
 def test_TR12i():
