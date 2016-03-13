@@ -3965,7 +3965,6 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         if (self.rows <= 0 or self.cols <= 0) and rhs.cols == 1:
-            newmat = MutableMatrix.zeros(rhs.rows,rhs.cols)
             newmat = rhs
             return type(self)(newmat)
         if self.rows != rhs.rows:
@@ -4000,7 +3999,6 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         if (self.rows <= 0 or self.cols <= 0) and bott.rows == 1:
-            newmat = MutableMatrix.zeros(bott.rows,bott.cols)
             newmat = bott
             return type(self)(newmat)
         if self.cols != bott.cols:
@@ -4035,7 +4033,6 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         if (self.rows <= 0 or self.cols <= 0) and mti.rows == 1:
-            newmat = MutableMatrix.zeros(mti.rows,mti.cols)
             newmat = mti
             return type(self)(newmat)
         if pos == 0:
@@ -4081,7 +4078,6 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         if (self.rows <= 0 or self.cols <= 0) and mti.cols == 1:
-            newmat = MutableMatrix.zeros(mti.rows,mti.cols)
             newmat = mti
             return type(self)(newmat)
         if pos == 0:
