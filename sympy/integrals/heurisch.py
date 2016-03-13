@@ -642,9 +642,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         coeff_ring = PolyRing(poly_coeffs, ground)
         ring = PolyRing(V, coeff_ring)
-
-        numer = ring.from_expr(raw_numer)
-
+        try:
+            numer = ring.from_expr(raw_numer)
+        except ValueError:
+            raise PolynomialError
         solution = solve_lin_sys(numer.coeffs(), coeff_ring, _raw=False)
 
         if solution is None:

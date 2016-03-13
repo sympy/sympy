@@ -4,7 +4,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     besselj, besselk, bessely, jn
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
-
+from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
@@ -26,6 +26,8 @@ def test_components():
     assert components(f(x)*diff(f(x), x), x) == \
         set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
 
+def test_issue_10680():
+    assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
@@ -70,7 +72,6 @@ def test_heurisch_exp():
 
     assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
     assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
-
 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
