@@ -924,7 +924,7 @@ class Expr(Basic, EvalfMixin):
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
-                    if factor.is_number:
+                    if factor.is_complex:
                         try:
                             coeff *= complex(factor)
                         except TypeError:

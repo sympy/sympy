@@ -1407,6 +1407,9 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
+    # issue sympy/sympy/10800
+    (Integral(sin(exp(x)), (x, 0, 1)) + 1).__str__()# test to see if this takes forever
+
 
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
