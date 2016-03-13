@@ -1390,8 +1390,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # restore subexpressions in mapping
                 for o, n in mask:
                     r = {o: n}
-                    mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.items()])
+                    mapping = {k.xreplace(r): v.xreplace(r)
+                        for k, v in mapping.items()}
             return rv, mapping
 
     def find(self, query, group=False):
@@ -1715,7 +1715,7 @@ def _atomic(e):
     try:
         free = e.free_symbols
     except AttributeError:
-        return set([e])
+        return {e}
     atoms = set()
     for p in pot:
         if p in seen:

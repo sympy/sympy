@@ -258,7 +258,7 @@ class RandomSymbol(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class ProductPSpace(PSpace):
@@ -1081,7 +1081,7 @@ def rv_subs(expr, symbols=None):
         symbols = random_symbols(expr)
     if not symbols:
         return expr
-    swapdict = dict([(rv, rv.symbol) for rv in symbols])
+    swapdict = {rv: rv.symbol for rv in symbols}
     return expr.xreplace(swapdict)
 
 class NamedArgsMixin(object):

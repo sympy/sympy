@@ -42,7 +42,7 @@ class BaseScalar(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     _diff_wrt = True
 
