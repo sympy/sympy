@@ -210,7 +210,7 @@ class ImageSet(Set):
     False
 
     >>> FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)
-    {1, 4, 9}
+    FiniteSet(1, 4, 9)
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
@@ -542,17 +542,17 @@ def normalize_theta_set(theta):
     >>> from sympy.sets.fancysets import normalize_theta_set
     >>> from sympy import Interval, FiniteSet, pi
     >>> normalize_theta_set(Interval(9*pi/2, 5*pi))
-    [pi/2, pi]
+    Interval(pi/2, pi)
     >>> normalize_theta_set(Interval(-3*pi/2, pi/2))
-    [0, 2*pi)
+    Interval(0, 2*pi, False, True)
     >>> normalize_theta_set(Interval(-pi/2, pi/2))
-    [0, pi/2] U [3*pi/2, 2*pi)
+    Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
     >>> normalize_theta_set(Interval(-4*pi, 3*pi))
-    [0, 2*pi)
+    Interval(0, 2*pi, False, True)
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
-    [pi/2, 3*pi/2]
+    Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
-    {0, pi}
+    FiniteSet(0, pi)
 
     """
     from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
@@ -632,7 +632,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion([2, 3] x [4, 6], False)
+    ComplexRegion(Interval(2, 3) * Interval(4, 6), False)
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -640,7 +640,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion([2, 3] x [4, 6] U [4, 6] x [1, 8], False)
+    ComplexRegion(Union(Interval(2, 3) * Interval(4, 6), Interval(4, 6) * Interval(1, 8)), False)
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -656,7 +656,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion([0, 1] x [0, 2*pi), True)
+    ComplexRegion(Interval(0, 1) * Interval(0, 2*pi, False, True), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -670,7 +670,7 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion([0, 1] x [0, pi], True)
+    ComplexRegion(Interval(0, 1) * Interval(0, pi), True)
     >>> intersection == upper_half_unit_disk
     True
 
@@ -749,10 +749,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.sets
-        [2, 3] x [4, 5]
+        Interval(2, 3) * Interval(4, 5)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.sets
-        [2, 3] x [4, 5] U [4, 5] x [1, 7]
+        Union(Interval(2, 3) * Interval(4, 5), Interval(4, 5) * Interval(1, 7))
 
         """
         return self._sets
@@ -783,10 +783,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.psets
-        ([2, 3] x [4, 5],)
+        (Interval(2, 3) * Interval(4, 5),)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.psets
-        ([2, 3] x [4, 5], [4, 5] x [1, 7])
+        (Interval(2, 3) * Interval(4, 5), Interval(4, 5) * Interval(1, 7))
 
         """
         if self.sets.is_ProductSet:
@@ -812,10 +812,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.a_interval
-        [2, 3]
+        Interval(2, 3)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.a_interval
-        [2, 3] U [4, 5]
+        Union(Interval(2, 3), Interval(4, 5))
 
         """
         a_interval = []
@@ -841,10 +841,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.b_interval
-        [4, 5]
+        Interval(4, 5)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.b_interval
-        [1, 7]
+        Interval(1, 7)
 
         """
         b_interval = []

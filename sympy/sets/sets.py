@@ -73,18 +73,18 @@ class Set(Basic):
 
         >>> from sympy import Interval, FiniteSet
         >>> Interval(0, 1).union(Interval(2, 3))
-        [0, 1] U [2, 3]
+        Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(0, 1) + Interval(2, 3)
-        [0, 1] U [2, 3]
+        Union(Interval(0, 1), Interval(2, 3))
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        (1, 2] U {3}
+        Union(Interval(1, 2, True, False), FiniteSet(3))
 
         Similarly it is possible to use the '-' operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
-        (1, 2]
+        Interval(1, 2, True, False)
         >>> Interval(1, 3) - FiniteSet(2)
-        [1, 2) U (2, 3]
+        Union(Interval(1, 2, False, True), Interval(2, 3, True, False))
 
         """
         return Union(self, other)
@@ -96,7 +96,7 @@ class Set(Basic):
         >>> from sympy import Interval
 
         >>> Interval(1, 3).intersect(Interval(1, 2))
-        [1, 2]
+        Interval(1, 2)
 
         >>> from sympy import imageset, Lambda, symbols, S
         >>> n, m = symbols('n m')
@@ -176,10 +176,10 @@ class Set(Basic):
 
         >>> from sympy import Interval, S
         >>> Interval(0, 1).complement(S.Reals)
-        (-oo, 0) U (1, oo)
+        Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        UniversalSet() \ [0, 1]
+        UniversalSet() \ Interval(0, 1)
 
         """
         return Complement(universe, self)
@@ -392,7 +392,7 @@ class Set(Basic):
         >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet()
         >>> A.powerset()
-        {EmptySet()}
+        FiniteSet(EmptySet())
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
@@ -447,9 +447,9 @@ class Set(Basic):
 
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
-        {0, 1}
+        FiniteSet(0, 1)
         >>> Interval(0, 1, True, False).boundary
-        {0, 1}
+        FiniteSet(0, 1)
         """
         return self._boundary
 
@@ -529,13 +529,13 @@ class ProductSet(Set):
     >>> from sympy import Interval, FiniteSet, ProductSet
     >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
     >>> ProductSet(I, S)
-    [0, 5] x {1, 2, 3}
+    Interval(0, 5) * FiniteSet(1, 2, 3)
 
     >>> (2, 2) in ProductSet(I, S)
     True
 
     >>> Interval(0, 1) * Interval(0, 1) # The unit square
-    [0, 1] x [0, 1]
+    Interval(0, 1) * Interval(0, 1)
 
     >>> coin = FiniteSet('H', 'T')
     >>> set(coin**2)
@@ -682,19 +682,19 @@ class Interval(Set, EvalfMixin):
 
     >>> from sympy import Symbol, Interval
     >>> Interval(0, 1)
-    [0, 1]
+    Interval(0, 1)
     >>> Interval(0, 1, False, True)
-    [0, 1)
+    Interval(0, 1, False, True)
     >>> Interval.Ropen(0, 1)
-    [0, 1)
+    Interval(0, 1, False, True)
     >>> Interval.Lopen(0, 1)
-    (0, 1]
+    Interval(0, 1, True, False)
     >>> Interval.open(0, 1)
-    (0, 1)
+    Interval(0, 1, True, True)
 
     >>> a = Symbol('a', real=True)
     >>> Interval(0, a)
-    [0, a]
+    Interval(0, a)
 
     Notes
     =====
@@ -1122,13 +1122,13 @@ class Union(Set, EvalfMixin):
 
     >>> from sympy import Union, Interval
     >>> Union(Interval(1, 2), Interval(3, 4))
-    [1, 2] U [3, 4]
+    Union(Interval(1, 2), Interval(3, 4))
 
     The Union constructor will always try to merge overlapping intervals,
     if possible. For example:
 
     >>> Union(Interval(1, 2), Interval(2, 3))
-    [1, 3]
+    Interval(1, 3)
 
     See Also
     ========
@@ -1341,12 +1341,12 @@ class Intersection(Set):
 
     >>> from sympy import Intersection, Interval
     >>> Intersection(Interval(1, 3), Interval(2, 4))
-    [2, 3]
+    Interval(2, 3)
 
     We often use the .intersect method
 
     >>> Interval(1,3).intersect(Interval(2,4))
-    [2, 3]
+    Interval(2, 3)
 
     See Also
     ========
@@ -1589,7 +1589,7 @@ class Complement(Set, EvalfMixin):
 
     >>> from sympy import Complement, FiniteSet
     >>> Complement(FiniteSet(0, 1, 2), FiniteSet(1))
-    {0, 2}
+    FiniteSet(0, 2)
 
     See Also
     =========
@@ -1714,7 +1714,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     UniversalSet()
 
     >>> Interval(1, 2).intersect(S.UniversalSet)
-    [1, 2]
+    Interval(1, 2)
 
     See Also
     ========
@@ -1765,13 +1765,13 @@ class FiniteSet(Set, EvalfMixin):
 
     >>> from sympy import FiniteSet
     >>> FiniteSet(1, 2, 3, 4)
-    {1, 2, 3, 4}
+    FiniteSet(1, 2, 3, 4)
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
     >>> members = [1, 2, 3, 4]
     >>> FiniteSet(*members)
-    {1, 2, 3, 4}
+    FiniteSet(1, 2, 3, 4)
 
     References
     ==========
@@ -1987,7 +1987,7 @@ class SymmetricDifference(Set):
 
     >>> from sympy import SymmetricDifference, FiniteSet
     >>> SymmetricDifference(FiniteSet(1, 2, 3), FiniteSet(3, 4, 5))
-    {1, 2, 4, 5}
+    FiniteSet(1, 2, 4, 5)
 
     See Also
     ========
@@ -2034,13 +2034,13 @@ def imageset(*args):
     >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
-    [0, 4]
+    Interval(0, 4)
 
     >>> imageset(lambda x: 2*x, Interval(0, 2))
-    [0, 4]
+    Interval(0, 4)
 
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
-    ImageSet(Lambda(x, sin(x)), [-2, 1])
+    ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
 
     >>> imageset(sin, Interval(-2, 1))
     ImageSet(Lambda(x, sin(x)), [-2, 1])

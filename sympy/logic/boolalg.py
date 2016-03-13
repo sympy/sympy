@@ -367,7 +367,7 @@ class And(LatticeOp, BooleanFunction):
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
         >>> And(x<2, x>-2).as_set()
-        (-2, 2)
+        Interval(-2, 2, True, True)
         """
         from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
@@ -438,7 +438,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
         >>> Or(x>2, x<-2).as_set()
-        (-oo, -2) U (2, oo)
+        Union(Interval(-oo, -2, True, True), Interval(2, oo, True, True))
         """
         from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
@@ -531,7 +531,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x', real=True)
         >>> Not(x>0).as_set()
-        (-oo, 0]
+        Interval(-oo, 0, True, False)
         """
         if len(self.free_symbols) == 1:
             return self.args[0].as_set().complement(S.Reals)

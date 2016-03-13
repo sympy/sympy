@@ -145,7 +145,7 @@ class StrPrinter(Printer):
             printset = s[:3] + ['...'] + s[-3:]
         else:
             printset = s
-        return '{' + ', '.join(self._print(el) for el in printset) + '}'
+        return 'FiniteSet(' + ', '.join(self._print(el) for el in printset) + ')'
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
@@ -173,28 +173,20 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
-        else:
-            left = '['
 
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+        if not i.left_open and not i.right_open:
+            return "Interval(%s, %s)" % \
+                   (self._print(i.start), self._print(i.end))
+        return "Interval(%s, %s, %s, %s)" % \
+               (self._print(i.start), self._print(i.end), i.left_open, i.right_open)
 
     def _print_AccumulationBounds(self, i):
-        left = '<'
-        right = '>'
 
-        return "%s%s, %s%s" % \
-                (left, self._print(i.min), self._print(i.max), right)
+        return "AccumBounds(%s, %s)" % \
+               (self._print(i.min), self._print(i.max))
 
     def _print_Inverse(self, I):
-        return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
+        return "%s**-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
         args, expr = obj.args
@@ -468,7 +460,7 @@ class StrPrinter(Printer):
         return format % (' '.join(terms), ', '.join(gens))
 
     def _print_ProductSet(self, p):
-        return ' x '.join(self._print(set) for set in p.sets)
+        return ' * '.join(self._print(set) for set in p.sets)
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
@@ -663,7 +655,7 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(' + ', '.join(self._print(set) for set in expr.args) + ')'
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
@@ -683,6 +675,18 @@ class StrPrinter(Printer):
 
     def _print_Zero(self, expr):
         return "0"
+
+    def _print_Integers(self, expr):
+        return "S.Integers"
+
+    def _print_Naturals(self, expr):
+        return "S.Naturals"
+
+    def _print_Naturals0(self, expr):
+        return "S.Naturals0"
+
+    def _print_Complexes(self, expr):
+        return "S.Complexes"
 
     def _print_DMP(self, p):
         from sympy.core.sympify import SympifyError
