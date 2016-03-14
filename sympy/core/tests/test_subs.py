@@ -142,7 +142,7 @@ def test_dict_ambigous():   # see issue 3566
     assert e.subs({x: y, y: 2}) == 5
     # here, there are no obviously clashing keys or values
     # but the results depend on the order
-    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == exp(y + 1)
+    assert exp(x/2 + y).subs({exp(y + 1): 2, x: 2}) == exp(y + 1)
 
 
 def test_deriv_sub_bug3():

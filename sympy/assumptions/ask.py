@@ -1357,7 +1357,7 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
-        mapping[key] = set([key])
+        mapping[key] = {key}
         for other_key in known_facts_keys:
             if other_key != key:
                 if ask_full_inference(other_key, key, known_facts_cnf):
