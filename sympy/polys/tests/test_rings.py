@@ -2,7 +2,7 @@
 
 from operator import add, mul
 
-from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
+from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement, OreDifferentialOperator, OreAlgebra, createOreAlgebra
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
@@ -1335,3 +1335,22 @@ def test_PolyElement_factor_list():
     w = x**2 + x + 1
 
     assert f.factor_list() == (1, [(u, 1), (v, 2), (w, 1)])
+
+def test_OreDifferentialOperator():
+    ore_ring = createOreAlgebra()
+    (R, D, x) = ore_ring
+
+    L1 = OreDifferentialOperator(D, R)
+    L2 = OreDifferentialOperator(x**2*D**2 + x*D + x**2, R)
+    L3 = OreDifferentialOperator(x**3*D**2 + x**4*D + x**3, R)
+    L4 = OreDifferentialOperator(D*x, R)
+    L5 = OreDifferentialOperator(D**2*x, R)
+
+    assert (L2 + L3).ore_polynomial == x**2*D**2 + x**3*D**2 + x**4*D + x*D + x**3 + x**2
+    assert (L1*L1*x).ore_polynomial == x*D**2 + 2*D
+    assert (L1*L1*x**2).ore_polynomial == x**2*D**2 + 4*x*D + 2
+    assert (L1*L1*x**3).ore_polynomial == x**3*D**2 + 6*x**2*D + 6*x
+    assert L4.ore_polynomial == x*D + 1
+    assert L5.ore_polynomial == x*D**2 + 2*D
+    assert L4.annihilator_integral().ore_polynomial == x*D**2 + D
+    assert L5.annihilator_integral().ore_polynomial == 2*D**2 + x*D**3

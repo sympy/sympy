@@ -5,6 +5,8 @@ from __future__ import print_function, division
 from operator import add, mul, lt, le, gt, ge
 from types import GeneratorType
 
+from sympy import S, diff
+from sympy.core import Basic, AtomicExpr, Add, Mul
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd, oo
@@ -2425,3 +2427,205 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
+
+def createOreAlgebra(gen = None, base = None):
+    """Creates an OreAlgebra object which is the parent ring
+       of an ore differential operator. It calls the constructor
+       of the OreAlgebra class and returns a tuple containing
+       the parent ore ring, the generator of the ore ring, and the
+       generator of the base polynomial ring.
+
+       Examples
+       ========
+       >>> from sympy import createOreAlgebra
+       >>> ore_ring = createOreAlgebra()
+       (OreAlgebra(D, x), D, x)
+
+    """
+    if base is None:
+        base = Symbol('x', commutative = False)
+    if gen is None:
+        gen = Symbol('D', commutative = False)
+    obj = OreAlgebra(gen, base)
+    return (obj, obj.gen, obj.base)
+
+class OreAlgebra(Basic):
+    """This class represents an Ore Polynomial Ring.
+       It contains the generator of the ring which by
+       default it the symbol 'D' with 'commutative' set
+       to False.  It also contains the symbol for the
+       generator of the base ring which is the symbol 'x'
+       by default.
+
+    """
+    def __init__(self, gen = None, base = None):
+        if base is None:
+            base = Symbol('x', commutative = False)
+        self.base = base
+        if gen is None:
+            gen = Symbol('D', commutative = False)
+        self.gen = gen
+
+class OreDifferentialOperator(AtomicExpr):
+    """This class represents the an ore operator or polynomial.
+       Ore polynomials are elements of the ore polynomial ring
+       (ore algebra).They can constructed by addition and multiplication
+       from generators and elements of the base ring. To create an
+       OreDifferentialOperator, one needs to specify the Ore algebra.
+
+       Examples
+       ========
+       >>> from sympy import createOreAlgebra
+       >>> ore_ring = createOreAlgebra()
+       >>> L = OreDifferentialOperator(x**2*D**2 + x*D + x**2, R)
+
+    """
+    def __init__(self,  ore_polynomial, ore_ring ):
+        self.ore_polynomial = ore_polynomial
+        self.parent = ore_ring
+        self.ore_polynomial = self._convert_to_right()
+
+    def __mul__(self, right):
+        """Multiplication in ore algebra is not commutative.
+           The multiplication of two generators is commutative.
+           However, the multiplication of a generator
+           with an element of the base ring is not commutative.
+           D*a(x)  =  a(x)*D + a'(x)
+
+           Examples
+           ========
+           >>> from sympy import createOreAlgebra
+           >>> ore_ring = createOreAlgebra()
+           >>> L = OreDifferentialOperator(D, R)
+           >>> L*x
+           x*D + 1
+
+        """
+        if self is S(0):
+            return self
+        if right is S(0):
+            return right
+
+        coeffs = self._coeff_list()
+        if isinstance(right, OreDifferentialOperator):
+            poly = right.ore_polynomial
+        else:
+            poly = right
+
+        prod = coeffs[0] * poly
+
+        def times_gen(expr):
+            return (expr*self.parent.gen).expand() + diff(expr, self.parent.base)
+
+        for i in xrange(1, len(coeffs)):
+            poly = times_gen(poly)
+            prod = prod + coeffs[i] * poly
+        prod = prod.expand()
+        return OreDifferentialOperator(prod, self.parent)
+
+    def __add__(self, right):
+        coeff_self = self._coeff_list()
+        coeff_right = right._coeff_list()
+
+        if len(coeff_self) < len(coeff_right):
+            n = len(coeff_right) - len(coeff_self)
+            listofzeros = [0]*n
+            coeff_self.extend(listofzeros)
+
+        elif len(coeff_self) > len(coeff_right) :
+            n = len(coeff_self) - len(coeff_right)
+            listofzeros = [0]*n
+            coeff_right.extend(listofzeros)
+
+        sum_coeff = [i + j for i, j in zip(coeff_self, coeff_right) ]
+
+        D = self.parent.gen
+        for i in range(0, len(sum_coeff)):
+            sum_coeff[i] =  sum_coeff[i] * D**i
+        sum_res =  Add(*sum_coeff)
+        return OreDifferentialOperator(sum_res, self.parent)
+
+    def __pow__(self, other):
+        prod = self
+        for i in range(0, other-1):
+            prod = prod * self
+        return prod
+
+    def __str__(self):
+        return sstr(self.ore_polynomial, order=None)
+
+    def __repr__(self):
+        return sstr(self.ore_polynomial, order=None)
+
+    def annihilator_integral(self):
+        """Given the annihilator operator for a function f, returns
+           the annihilator operator of the integral of f.
+
+           Examples
+           ========
+           >>> from sympy import createOreAlgebra
+           >>> ore_ring = createOreAlgebra()
+           >>> L = OreDifferentialOperator(D**2*x, R)
+           >>> L.annihilator_integral()
+           2*D**2 + x*D**3
+
+        """
+        operator = (self.ore_polynomial*self.parent.gen).expand()
+        return OreDifferentialOperator(operator, self.parent)
+
+    def _coeff_list(self):
+        """returns a list of coefficients of the powers of D.
+           The first element of the list is the coefficient of
+           D**0 and the last element is the coefficient of D**degree.
+
+           Examples
+           ========
+           >>> from sympy import createOreAlgebra
+           >>> ore_ring = createOreAlgebra()
+           >>> L = OreDifferentialOperator((x**3+4*x**2)*D**7 + (x + x**4)*D**6 + x**3*D**2+ x**2*D + x, R )
+           >>> L._coeff_list()
+           [x, x**2, x**3, 0, 0, 0, x + x**4, 4*x**2 + x**3]
+
+         """
+        from sympy import collect
+
+        D = self.parent.gen
+        poly = self.ore_polynomial
+        num_terms = len(poly.collect(D).as_ordered_terms())
+        count = 0
+        term = D**0
+        lst = []
+        indep_term = poly.collect(D).coeff(D, 0)
+
+        lst.append(indep_term)
+        if indep_term:
+            count += 1
+        exp = 1
+        while(1):
+            term = term*D
+            coeff = collect(poly, D, evaluate = False)
+            coeff_term = 0
+            if term in coeff.keys():
+                coeff_term = coeff[term]
+            exp += 1
+            if count == num_terms:
+                break
+            if coeff_term:
+                count += 1
+
+            lst.append(coeff_term)
+
+        return lst
+
+    def _convert_to_right(self):
+        poly = self.ore_polynomial
+        poly_subs = None
+        D = self.parent.gen
+        x = self.parent.base
+        while(1):
+            poly_subs = poly.subs(D*x, x*D + 1).expand()
+            if poly == poly_subs:
+                break
+            poly = poly_subs
+
+        return poly_subs
