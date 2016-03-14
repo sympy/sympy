@@ -24,8 +24,8 @@ class StrPrinter(Printer):
 
     _relationals = dict()
 
-    def parenthesize(self, item, level):
-        if precedence(item) <= level:
+    def parenthesize(self, item, level, strict=False):
+        if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
             return "(%s)" % self._print(item)
         else:
             return self._print(item)
@@ -287,8 +287,8 @@ class StrPrinter(Printer):
 
         a = a or [S.One]
 
-        a_str = [self.parenthesize(x, prec) for x in a]
-        b_str = [self.parenthesize(x, prec) for x in b]
+        a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+        b_str = [self.parenthesize(x, prec, strict=False) for x in b]
 
         if len(b) == 0:
             return sign + '*'.join(a_str)
@@ -397,8 +397,8 @@ class StrPrinter(Printer):
         if frac.denom == 1:
             return self._print(frac.numer)
         else:
-            numer = self.parenthesize(frac.numer, PRECEDENCE["Add"])
-            denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"]-1)
+            numer = self.parenthesize(frac.numer, PRECEDENCE["Mul"], strict=True)
+            denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"], strict=True)
             return numer + "/" + denom
 
     def _print_Poly(self, expr):
@@ -489,20 +489,20 @@ class StrPrinter(Printer):
                 return "1/sqrt(%s)" % self._print(expr.base)
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
-                return '1/%s' % self.parenthesize(expr.base, PREC)
+                return '1/%s' % self.parenthesize(expr.base, PREC, strict=False)
 
-        e = self.parenthesize(expr.exp, PREC)
+        e = self.parenthesize(expr.exp, PREC, strict=False)
         if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
             # the parenthesized exp should be '(Rational(a, b))' so strip parens,
             # but just check to be sure.
             if e.startswith('(Rational'):
-                return '%s**%s' % (self.parenthesize(expr.base, PREC), e[1:-1])
-        return '%s**%s' % (self.parenthesize(expr.base, PREC), e)
+                return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
+        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s**%s' % (self.parenthesize(expr.base, PREC),
-                         self.parenthesize(expr.exp, PREC))
+        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
+                         self.parenthesize(expr.exp, PREC, strict=False))
 
     def _print_ImmutableDenseNDimArray(self, expr):
         return str(expr)

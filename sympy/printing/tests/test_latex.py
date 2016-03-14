@@ -491,6 +491,12 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+    # fix issue #10806
+    assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"
+    assert latex(Integral(x + z, z)) == r"\int \left(x + z\right)\, dz"
+    assert latex(Integral(x+z/2, z)) == r"\int \left(x + \frac{z}{2}\right)\, dz"
+    assert latex(Integral(x**y, z)) == r"\int x^{y}\, dz"
+
 
 def test_latex_sets():
     for s in (frozenset, set):
