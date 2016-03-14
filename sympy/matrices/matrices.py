@@ -3984,7 +3984,8 @@ class MatrixBase(object):
         col_join
         """
         if not self:
-            return rhs
+            typ = type(self)
+            return typ(rhs)
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
@@ -4018,7 +4019,8 @@ class MatrixBase(object):
         row_join
         """
         if not self:
-            return bott
+            typ = type(self)
+            return typ(bott)
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
@@ -4052,7 +4054,8 @@ class MatrixBase(object):
         col_insert
         """
         if not self:
-            return mti
+            typ = type(self)
+            return typ(mti)
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4095,7 +4098,8 @@ class MatrixBase(object):
         row_insert
         """
         if not self:
-            return mti
+            typ = type(self)
+            return typ(mti)
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
