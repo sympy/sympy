@@ -130,7 +130,7 @@ def test_residue():
     assert is_nthpow_residue(32, 10, 41)
     assert is_nthpow_residue(4, 2, 64)
     assert is_nthpow_residue(31, 4, 41)
-    assert not is_nthpow_residue(2 ,2 ,5)
+    assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),

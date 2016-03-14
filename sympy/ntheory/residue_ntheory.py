@@ -666,7 +666,7 @@ def _nthroot_mod_prime_power(a, n, p, k):
             while a % p == 0:
                 a /= p
                 r += 1
-            if r < n or r % n != 0 or not _nthroot_mod_prime_power( a, n, p, k - r):
+            if  r % n != 0 or not _nthroot_mod_prime_power( a, n, p, k - r):
                 return False
             return True
 
