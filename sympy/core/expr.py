@@ -922,9 +922,11 @@ class Expr(Basic, EvalfMixin):
             coeff = complex(coeff)
             cpart, ncpart = {}, []
 
+
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
-                    if factor.is_complex:
+                    if (factor.is_Number or factor.is_NumberSymbol or isinstance(factor, ImaginaryUnit)
+                            or factor.is_Function or factor.is_Pow) and factor.is_number:
                         try:
                             coeff *= complex(factor)
                         except TypeError:
@@ -3255,4 +3257,4 @@ from .power import Pow
 from .function import Derivative, Function
 from .mod import Mod
 from .exprtools import factor_terms
-from .numbers import Integer, Rational
+from .numbers import Integer, Rational, ImaginaryUnit
