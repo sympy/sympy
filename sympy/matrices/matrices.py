@@ -3964,9 +3964,8 @@ class MatrixBase(object):
         col_join
         """
         from sympy.matrices import MutableMatrix
-        if (self.rows <= 0 or self.cols <= 0) and rhs.cols == 1:
-            newmat = rhs
-            return type(self)(newmat)
+        if (self.rows <= 0 and self.cols <= 0):
+            return type(self)(rhs)
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
@@ -3998,9 +3997,8 @@ class MatrixBase(object):
         row_join
         """
         from sympy.matrices import MutableMatrix
-        if (self.rows <= 0 or self.cols <= 0) and bott.rows == 1:
-            newmat = bott
-            return type(self)(newmat)
+        if (self.rows <= 0 and self.cols <= 0):
+            return type(self)(bott)
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
@@ -4032,9 +4030,8 @@ class MatrixBase(object):
         col_insert
         """
         from sympy.matrices import MutableMatrix
-        if (self.rows <= 0 or self.cols <= 0) and mti.rows == 1:
-            newmat = mti
-            return type(self)(newmat)
+        if (self.rows <= 0 and self.cols <= 0):
+            return type(self)(mti)
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4077,9 +4074,8 @@ class MatrixBase(object):
         row_insert
         """
         from sympy.matrices import MutableMatrix
-        if (self.rows <= 0 or self.cols <= 0) and mti.cols == 1:
-            newmat = mti
-            return type(self)(newmat)
+        if (self.rows <= 0 and self.cols <= 0):
+            return type(self)(mti)
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
@@ -4092,7 +4088,6 @@ class MatrixBase(object):
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
 
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
         newmat[:, :i] = self[:, :i]
