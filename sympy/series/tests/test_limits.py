@@ -455,13 +455,15 @@ def test_issue_4503():
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
 
+def test_issue_10801():
+    assert limit(16**x/(x*binomial(2*x,x)**2), x, oo) == pi
 
 def test_issue_9205():
     x, y, a = symbols('x, y, a')
-    assert Limit(x, x, a).free_symbols == set([a])
-    assert Limit(x, x, a, '-').free_symbols == set([a])
-    assert Limit(x + y, x + y, a).free_symbols == set([a])
-    assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])
+    assert Limit(x, x, a).free_symbols == {a}
+    assert Limit(x, x, a, '-').free_symbols == {a}
+    assert Limit(x + y, x + y, a).free_symbols == {a}
+    assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
 def test_limit_seq():
