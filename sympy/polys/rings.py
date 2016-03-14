@@ -2437,7 +2437,7 @@ def createOreAlgebra(gen = None, base = None):
 
        Examples
        ========
-       >>> from sympy import createOreAlgebra
+       >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra
        >>> ore_ring = createOreAlgebra()
        (OreAlgebra(D, x), D, x)
 
@@ -2475,8 +2475,9 @@ class OreDifferentialOperator(AtomicExpr):
 
        Examples
        ========
-       >>> from sympy import createOreAlgebra
+       >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra, OreDifferentialOperator
        >>> ore_ring = createOreAlgebra()
+       >>> (R, D, x) = ore_ring
        >>> L = OreDifferentialOperator(x**2*D**2 + x*D + x**2, R)
 
     """
@@ -2494,8 +2495,9 @@ class OreDifferentialOperator(AtomicExpr):
 
            Examples
            ========
-           >>> from sympy import createOreAlgebra
+           >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra, OreDifferentialOperator
            >>> ore_ring = createOreAlgebra()
+           >>> (R, D, x) = ore_ring
            >>> L = OreDifferentialOperator(D, R)
            >>> L*x
            x*D + 1
@@ -2517,7 +2519,7 @@ class OreDifferentialOperator(AtomicExpr):
         def times_gen(expr):
             return (expr*self.parent.gen).expand() + diff(expr, self.parent.base)
 
-        for i in xrange(1, len(coeffs)):
+        for i in range(1, len(coeffs)):
             poly = times_gen(poly)
             prod = prod + coeffs[i] * poly
         prod = prod.expand()
@@ -2563,8 +2565,9 @@ class OreDifferentialOperator(AtomicExpr):
 
            Examples
            ========
-           >>> from sympy import createOreAlgebra
+           >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra, OreDifferentialOperator
            >>> ore_ring = createOreAlgebra()
+           >>> (R, D, x) = ore_ring
            >>> L = OreDifferentialOperator(D**2*x, R)
            >>> L.annihilator_integral()
            2*D**2 + x*D**3
@@ -2580,9 +2583,10 @@ class OreDifferentialOperator(AtomicExpr):
 
            Examples
            ========
-           >>> from sympy import createOreAlgebra
+           >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra, OreDifferentialOperator
            >>> ore_ring = createOreAlgebra()
-           >>> L = OreDifferentialOperator((x**3+4*x**2)*D**7 + (x + x**4)*D**6 + x**3*D**2+ x**2*D + x, R )
+           >>> (R, D, x) = ore_ring
+           >>> L = OreDifferentialOperator((x**3+4*x**2)*D**7 + (x + x**4)*D**6 + x**3*D**2 + x**2*D + x, R )
            >>> L._coeff_list()
            [x, x**2, x**3, 0, 0, 0, x + x**4, 4*x**2 + x**3]
 
