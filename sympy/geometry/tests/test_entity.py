@@ -26,7 +26,7 @@ def test_subs():
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs((1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
-    assert Point(1, 2).subs(set([(1, 2)])) == Point(2, 2)
+    assert Point(1, 2).subs({(1, 2)}) == Point(2, 2)
     raises(ValueError, lambda: Point(1, 2).subs(1))
     raises(ValueError, lambda: Point(1, 1).subs((Point(1, 1), Point(1,
            2)), 1, 2))

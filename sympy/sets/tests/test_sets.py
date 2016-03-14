@@ -275,7 +275,7 @@ def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
     assert i.is_iterable
-    assert set(i) == set([S(2), S(3)])
+    assert set(i) == {S(2), S(3)}
 
     # challenging intervals
     x = Symbol('x', real=True)
@@ -727,7 +727,7 @@ def test_Interval_free_symbols():
     # issue 6211
     assert Interval(0, 1).free_symbols == set()
     x = Symbol('x', real=True)
-    assert Interval(0, x).free_symbols == set([x])
+    assert Interval(0, x).free_symbols == {x}
 
 
 def test_image_interval():

@@ -384,7 +384,7 @@ class BaseVector(Vector, AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     __repr__ = __str__
     _sympystr = __str__
@@ -443,7 +443,7 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u('0')
+    _pretty_form = u'0'
     _latex_form = '\mathbf{\hat{0}}'
 
     def __new__(cls):
