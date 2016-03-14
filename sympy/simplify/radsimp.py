@@ -534,7 +534,7 @@ def collect_const(expr, *vars, **kwargs):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(7)*(sqrt(2) + 2) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
