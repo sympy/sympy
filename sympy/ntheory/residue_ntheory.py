@@ -615,13 +615,17 @@ def is_nthpow_residue(a, n, m):
 
     P. Hackman "Elementary Number Theory" (2009),  page 76
     """
-    if n == 2:
-        return is_quad_residue(a, m)
+    if n == 0:
+        if m == 1:
+            return False
+        return a == 1
     if n == 1:
         return True
+    if n == 2:
+        return is_quad_residue(a, m)
     if primitive_root(m) == None:
         x = factorint(m)
-        for prime, power in x.iteritems():
+        for prime, power in x.items():
                 if not _nthroot_mod_prime_power(a, n, prime, power):
                     return False
         return True
@@ -634,8 +638,13 @@ def _nthroot_mod_prime_power(a, n, p, k):
     """Returns true if solution for ``x**n == a (mod(p**k))`` exists."""
     if (a % p) != 0:
         if p == 2:
-            c = bin(n)[::-1].find('1')
-            r = n // pow(2,c)
+            c = 0
+            tmp = 1
+            while True:
+                if n & tmp:
+                    break
+                tmp = tmp<<1
+                c += 1
             if k == 1:
                 return True
             elif k == 2:
@@ -645,25 +654,21 @@ def _nthroot_mod_prime_power(a, n, p, k):
             c = min(c, k - 2)
             if c == 0:
                 return True
-            t = pow(1, c + 2)
-            t = a % t
-            if t != 1:
-                return False
-            return True
+            return a % pow(2, c + 2) == 1
         else:
             return is_nthpow_residue(a, n, pow(p, k))
     else:
         pk = pow(p, k)
-        _a = a % pk
-        if _a == 0:
+        a = a % pk
+        if a == 0:
             return True
         else:
             r = 1
-            _a /= p
-            while _a % p == 0:
-                _a /= p
+            a /= p
+            while a % p == 0:
+                a /= p
                 r += 1
-            if r < n or r % n != 0 or not _nthroot_mod_prime_power(_a, n, p, k - r):
+            if r < n or r % n != 0 or not _nthroot_mod_prime_power( a, n, p, k - r):
                 return False
             return True
 
