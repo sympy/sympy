@@ -866,7 +866,7 @@ def test_M5():
 
 def test_M6():
     assert set(solveset(x**7 - 1, x)) == \
-        set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
+        {cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)}
     # The paper asks for exp terms, but sin's and cos's may be acceptable;
     # if the results are simplified, exp terms appear for all but
     # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which

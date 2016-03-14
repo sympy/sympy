@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import cmp_to_key, reduce, is_sequence, range
+from .compatibility import reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp

@@ -2047,6 +2047,9 @@ def test_condition_number():
     assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in
         [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
 
+    #issue 10782
+    assert Matrix([]).condition_number() == 0
+
 
 def test_equality():
     A = Matrix(((1, 2, 3), (4, 5, 6), (7, 8, 9)))
@@ -2264,7 +2267,7 @@ def test_issue_5964():
 
 
 def test_issue_7604():
-    x, y = symbols(u("x y"))
+    x, y = symbols(u"x y")
     assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
         'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
 
@@ -2380,7 +2383,7 @@ def test_cross():
 
 def test_hash():
     for cls in classes[-2:]:
-        s = set([cls.eye(1), cls.eye(1)])
+        s = {cls.eye(1), cls.eye(1)}
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
@@ -2434,8 +2437,8 @@ def test_replace_map():
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])
-    assert m.atoms() == set([S(1),S(2),S(-1), x])
-    assert m.atoms(Symbol) == set([x])
+    assert m.atoms() == {S(1),S(2),S(-1), x}
+    assert m.atoms(Symbol) == {x}
 
 @slow
 def test_pinv():
@@ -2628,7 +2631,7 @@ def test_issue_7201():
 
 def test_free_symbols():
     for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
-        assert M([[x], [0]]).free_symbols == set([x])
+        assert M([[x], [0]]).free_symbols == {x}
 
 def test_from_ndarray():
     """See issue 7465."""

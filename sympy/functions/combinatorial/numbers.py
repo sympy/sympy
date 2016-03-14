@@ -20,6 +20,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.memoization import recurrence_memo
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -31,7 +32,6 @@ def _product(a, b):
         p *= k
     return p
 
-from sympy.utilities.memoization import recurrence_memo
 
 
 # Dummy symbol used for computing polynomial sequences
