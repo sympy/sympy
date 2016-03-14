@@ -544,7 +544,12 @@ class DifferentialExtension(object):
         from sympy.integrals.prde import is_deriv_k
 
         new_extension = False
-        logargs = [i.args[0] for i in logs]
+        logargs = []
+        for j in logs:
+            a , d = j.args[0].as_numer_denom()
+            logargs.append(a)
+            if d != 1:
+                logargs.append(-d)
         for arg in ordered(logargs):
             # The log case is easier, because whenever a logarithm is algebraic
             # over the base field, it is of the form a1*t1 + ... an*tn + c,
