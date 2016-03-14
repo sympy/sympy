@@ -4,6 +4,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
@@ -135,7 +136,12 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
-
+        #limit is not working with binomial,gruntz raise an exception
+        #limit can work with binomial by converting to factorial first.
+        #we have to also check that given limit should not be limits
+        #of sequences.
+        if e.has(binomial) and not (hints.get('sequence', True) and z0 is S.Infinity):
+            e=e.rewrite(factorial)
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
@@ -185,5 +191,4 @@ class Limit(Expr):
                     raise NotImplementedError()
             else:
                 raise NotImplementedError()
-
         return r
