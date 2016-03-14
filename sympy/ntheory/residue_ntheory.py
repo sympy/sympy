@@ -638,19 +638,17 @@ def _nthroot_mod_prime_power(a, n, p, k):
     """Returns true if solution for ``x**n == a (mod(p**k))`` exists."""
     if (a % p) != 0:
         if p == 2:
-            c = 0
-            tmp = 1
-            while True:
-                if n & tmp:
-                    break
-                tmp = tmp<<1
-                c += 1
             if k == 1:
                 return True
             elif k == 2:
-                if c > 0 and a % 4 == 3:
+                if not n & 1 and a % 4 == 3:
                     return False
                 return True
+            c = 0
+            tmp = 1
+            while not n & tmp:
+                tmp = tmp << 1
+                c += 1
             c = min(c, k - 2)
             if c == 0:
                 return True
