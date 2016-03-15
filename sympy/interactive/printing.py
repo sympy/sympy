@@ -357,6 +357,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     else:
         if str_printer is not None:
             stringify_func = str_printer
+        elif use_latex is not None:
+            stringify_func = default_latex
         else:
             from sympy.printing import sstrrepr as stringify_func
 
