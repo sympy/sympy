@@ -16,14 +16,6 @@ AST Type Tree
      |                                    |--->MulAugmentedAssignment
      |                                    |--->DivAugmentedAssignment
      |                                    |--->ModAugmentedAssignment
-     |
-     |--->DataType
-     |           |--------|--->NativeBool
-     |                    |--->NativeInteger
-     |                    |--->NativeFloat
-     |                    |--->NativeDouble
-     |                    |--->NativeVoid
-     |
      |--->For
 """
 
