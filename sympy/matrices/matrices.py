@@ -3964,8 +3964,10 @@ class MatrixBase(object):
         col_join
         """
         from sympy.matrices import MutableMatrix
+        #Allows you to build a matrix even if it is null matrix
         if (self.rows <= 0 and self.cols <= 0):
             return type(self)(rhs)
+
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
@@ -3997,8 +3999,10 @@ class MatrixBase(object):
         row_join
         """
         from sympy.matrices import MutableMatrix
+        #Allows you to build a matrix even if it is null matrix
         if (self.rows <= 0 and self.cols <= 0):
             return type(self)(bott)
+
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
@@ -4030,8 +4034,10 @@ class MatrixBase(object):
         col_insert
         """
         from sympy.matrices import MutableMatrix
+        #Allows you to build a matrix even if it is null matrix
         if (self.rows <= 0 and self.cols <= 0):
             return type(self)(mti)
+
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4074,8 +4080,10 @@ class MatrixBase(object):
         row_insert
         """
         from sympy.matrices import MutableMatrix
+        #Allows you to build a matrix even if it is null matrix
         if (self.rows <= 0 and self.cols <= 0):
             return type(self)(mti)
+
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
