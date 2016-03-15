@@ -157,11 +157,18 @@ backward_eye(deg(f))*bezout(f, g, x, method='bz')*backward_eye(deg(f))
 
 2B. Subresultant and modified subresultant prs's by
 ===================================================
-determinant evaluation:
+determinant evaluations:
 =======================
-Instead of utilizing the Sylvester matrices, we employ
-the Bezout matrix of smaller dimensions.
+We use the Sylvester matrices of 1840 and 1853 to
+compute, respectively, subresultant and modified
+subresultant polynomial remainder sequences. However,
+for large matrices this approach takes a lot of time.
 
+Instead of utilizing the Sylvester matrices, we can
+employ the Bezout matrix which is of smaller dimensions.
+
+subresultants_sylv(f, g, x)
+modified_subresultants_sylv(f, g, x)
 subresultants_bezout(f, g, x)
 modified_subresultants_bezout(f, g, x)
 
@@ -348,6 +355,174 @@ def sylvester(f, g, x, method = 1):
             k = k + 1
         return M
 
+def process_matrix_output(poly_seq, x):
+    """
+    poly_seq is a polynomial remainder sequence computed either by
+    (modified_)subresultants_bezout or by (modified_)subresultants_sylv.
+
+    This function removes from poly_seq all zero polynomials as well
+    as all those whose degree is equal to the degree of a preceding
+    polynomial in poly_seq, as we scan it from left to right.
+
+    """
+    L = poly_seq[:]  # get a copy of the input sequence
+    d = degree(L[1], x)
+    i = 2
+    while i < len(L):
+        d_i = degree(L[i], x)
+        if d_i < 0:          # zero poly
+            L.remove(L[i])
+            i = i - 1
+        if d == d_i:         # poly degree equals degree of previous poly
+            L.remove(L[i])
+            i = i - 1
+        if d_i >= 0:
+            d = d_i
+        i = i + 1
+
+    return L
+
+def subresultants_sylv(f, g, x):
+    """
+    The input polynomials f, g are in Z[x] or in Q[x]. It is assumed
+    that deg(f) >= deg(g).
+
+    Computes the subresultant polynomial remainder sequence (prs)
+    of f, g by evaluating determinants of appropriately selected
+    submatrices of sylvester(f, g, x, 1). The dimensions of the
+    latter are (deg(f) + deg(g)) x (deg(f) + deg(g)).
+
+    Each coefficient is computed by evaluating the determinant of the
+    corresponding submatrix of sylvester(f, g, x, 1).
+
+    If the subresultant prs is complete, then the output coincides
+    with the Euclidean sequence of the polynomials f, g.
+
+    References:
+    ===========
+    1. G.M.Diaz-Toca,L.Gonzalez-Vega: Various New Expressions for Subresultants
+    and Their Applications. Appl. Algebra in Engin., Communic. and Comp.,
+    Vol. 15, 233–266, 2004.
+
+    """
+
+    # make sure neither f nor g is 0
+    if f == 0 or g == 0:
+        return [f, g]
+
+    n = degF = degree(f, x)
+    m = degG = degree(g, x)
+
+    # make sure proper degrees
+    if n == 0 and m == 0:
+        return [f, g]
+    if n < m:
+        n, m, degF, degG, f, g = m, n, degG, degF, g, f
+    if n > 0 and m == 0:
+        return [f, g]
+
+    SR_L = [f, g]      # subresultant list
+
+    # form matrix sylvester(f, g, x, 1)
+    S = sylvester(f, g, x, 1)
+
+    # pick appropriate submatrices of S
+    # and form subresultant polys
+    j = m - 1
+
+    while j > 0:
+        Sp = S[:, :]  # copy of S
+        # delete last j rows of coeffs of g
+        for ind in range(m + n - j, m + n):
+            Sp.row_del(m + n - j)
+        # delete last j rows of coeffs of f
+        for ind in range(m - j, m):
+            Sp.row_del(m - j)
+
+        # evaluate determinants and form coefficients list
+        coeff_L, k, l = [], Sp.rows, 0
+        while l <= j:
+            coeff_L.append(Sp[ : , 0 : k].det())
+            Sp.col_swap(k - 1, k + l)
+            l += 1
+
+        # form poly and append to SP_L
+        SR_L.append(Poly(coeff_L, x).as_expr())
+        j -= 1
+
+    # j = 0
+    SR_L.append(S.det())
+
+    return process_matrix_output(SR_L, x)
+
+def modified_subresultants_sylv(f, g, x):
+    """
+    The input polynomials f, g are in Z[x] or in Q[x]. It is assumed
+    that deg(f) >= deg(g).
+
+    Computes the modified subresultant polynomial remainder sequence (prs)
+    of f, g by evaluating determinants of appropriately selected
+    submatrices of sylvester(f, g, x, 2). The dimensions of the
+    latter are (2*deg(f)) x (2*deg(f)).
+
+    Each coefficient is computed by evaluating the determinant of the
+    corresponding submatrix of sylvester(f, g, x, 2).
+
+    If the modified subresultant prs is complete, then the output coincides
+    with the Sturmian sequence of the polynomials f, g.
+
+    References:
+    ===========
+    1. A. G. Akritas,G.I. Malaschonok and P.S. Vigklas:
+    Sturm Sequences and Modified Subresultant Polynomial Remainder
+    Sequences. Serdica Journal of Computing, Vol. 8, No 1, 29--46, 2014.
+
+    """
+
+    # make sure neither f nor g is 0
+    if f == 0 or g == 0:
+        return [f, g]
+
+    n = degF = degree(f, x)
+    m = degG = degree(g, x)
+
+    # make sure proper degrees
+    if n == 0 and m == 0:
+        return [f, g]
+    if n < m:
+        n, m, degF, degG, f, g = m, n, degG, degF, g, f
+    if n > 0 and m == 0:
+        return [f, g]
+
+    SR_L = [f, g]      # modified subresultant list
+
+    # form matrix sylvester(f, g, x, 2)
+    S = sylvester(f, g, x, 2)
+
+    # pick appropriate submatrices of S
+    # and form modified subresultant polys
+    j = m - 1
+
+    while j > 0:
+        # delete last 2*j rows of pairs of coeffs of f, g
+        Sp = S[0:2*n - 2*j, :]  # copy of first 2*n - 2*j rows of S
+
+        # evaluate determinants and form coefficients list
+        coeff_L, k, l = [], Sp.rows, 0
+        while l <= j:
+            coeff_L.append(Sp[ : , 0 : k].det())
+            Sp.col_swap(k - 1, k + l)
+            l += 1
+
+        # form poly and append to SP_L
+        SR_L.append(Poly(coeff_L, x).as_expr())
+        j -= 1
+
+    # j = 0
+    SR_L.append(S.det())
+
+    return process_matrix_output(SR_L, x)
+
 def res(f, g, x):
     """
     The input polynomials f, g are in Z[x] or in Q[x].
@@ -532,33 +707,6 @@ def backward_eye(n):
 
     return M
 
-def process_bezout_output(poly_seq, x):
-    """
-    poly_seq is a polynomial remainder sequence computed either by
-    subresultants_bezout or by modified_subresultants_bezout.
-
-    This function removes from poly_seq all zero polynomials as well
-    as all those whose degree is equal to the degree of a previous
-    polynomial in poly_seq, as we scan it from left to right.
-
-    """
-    L = poly_seq[:]  # get a copy of the input sequence
-    d = degree(L[1], x)
-    i = 2
-    while i < len(L):
-        d_i = degree(L[i], x)
-        if d_i < 0:          # zero poly
-            L.remove(L[i])
-            i = i - 1
-        if d == d_i:         # poly degree equals degree of previous poly
-            L.remove(L[i])
-            i = i - 1
-        if d_i >= 0:
-            d = d_i
-        i = i + 1
-
-    return L
-
 def subresultants_bezout(p, q, x):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
@@ -628,7 +776,7 @@ def subresultants_bezout(p, q, x):
         SR_L.append((int((-1)**(j*(j-1)/2)) * Poly(coeff_L, x) / F).as_expr())
         j = j + 1
 
-    return process_bezout_output(SR_L, x)
+    return process_matrix_output(SR_L, x)
 
 def modified_subresultants_bezout(p, q, x):
     """
@@ -704,7 +852,7 @@ def modified_subresultants_bezout(p, q, x):
         SR_L.append(( Poly(coeff_L, x)).as_expr())
         j = j + 1
 
-    return process_bezout_output(SR_L, x)
+    return process_matrix_output(SR_L, x)
 
 def sturm_pg(p, q, x, method=0):
     """
