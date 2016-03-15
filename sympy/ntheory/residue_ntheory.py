@@ -632,41 +632,37 @@ def is_nthpow_residue(a, n, m):
         return True
     if n == 2:
         return is_quad_residue(a, m)
+    if a == m:
+        return bool(n)
     if primitive_root(m) is None:
-        for prime, power in factorint(m).items():
-            if not _nthroot_mod_prime_power(a, n, prime, power):
-                return False
-        return True
+        return _nthroot_mod_prime_power(a, n, m)
     f = totient(m)
     k = f // igcd(f, n)
     return pow(a, k, m) == 1
 
 
-def _nthroot_mod_prime_power(a, n, p, k):
+def _nthroot_mod_prime_power(a, n, m):
     """Returns true if solution for ``x**n == a (mod(p**k))`` exists."""
-    if k == 0:
-        return not a
-    if a % p:
-        if p != 2:
-            return is_nthpow_residue(a, n, pow(p, k))
-        if k == 1:
-            return True
-        if n & 1:
-            return True
-        c = trailing(n)
-        if k == 2:
-            return a % 4 != 3
-        return a % pow(2, min(c + 2, k)) == 1
-    else:
-        pk = pow(p, k)
-        a = a % pk
-        if not a:
-            return True
-        m = multiplicity(p, a)
-        a //= p**m
-        if m % n:
-            return False
-        return _nthroot_mod_prime_power(a, n, p, k - m)
+    for p, k in factorint(m).items():
+        if a % p:
+            if p != 2:
+                return is_nthpow_residue(a, n, pow(p, k))
+            if k == 1:
+                return True
+            if n & 1:
+                return True
+            c = trailing(n)
+            if k == 2:
+                return a % 4 != 3
+            return a % pow(2, min(c + 2, k)) == 1
+        else:
+            mu = multiplicity(p, a)
+            pm = pow(p, mu)
+            a //= m
+            if mu % n:
+                return False
+            m //= pm
+            return _nthroot_mod_prime_power(a, n, m)
 
 
 def _nthroot_mod2(s, q, p):
