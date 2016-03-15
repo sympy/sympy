@@ -12,7 +12,7 @@ from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
-def _init_python_printing(stringify_func):
+def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
     from sympy.core.compatibility import builtins
@@ -27,7 +27,7 @@ def _init_python_printing(stringify_func):
         """
         if arg is not None:
             builtins._ = None
-            print(stringify_func(arg))
+            print(stringify_func(arg, **settings))
             builtins._ = arg
 
     sys.displayhook = _displayhook
@@ -35,7 +35,7 @@ def _init_python_printing(stringify_func):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer):
+                           latex_printer, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -162,7 +162,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
         """
         if self.rc.pprint:
-            out = stringify_func(arg)
+            out = stringify_func(arg, **settings)
 
             if '\n' in out:
                 print
@@ -241,7 +241,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None):
+                  latex_printer=None, **settings):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -415,6 +415,6 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if in_ipython:
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer)
+                               print_builtin, latex_printer, **settings)
     else:
-        _init_python_printing(stringify_func)
+        _init_python_printing(stringify_func, **settings)
