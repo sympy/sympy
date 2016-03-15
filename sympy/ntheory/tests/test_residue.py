@@ -125,6 +125,9 @@ def test_residue():
     assert is_nthpow_residue(2, 1, 5)
 
     #issue 10816
+    assert is_nthpow_residue(1, 0, 1) is False
+    assert is_nthpow_residue(1, 0, 2) is True
+    assert is_nthpow_residue(2, 0, 2) is False
     assert is_nthpow_residue(676, 3, 5364)
     assert is_nthpow_residue(9, 12, 36)
     assert is_nthpow_residue(32, 10, 41)
