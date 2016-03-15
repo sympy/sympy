@@ -2,7 +2,9 @@ from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, sign)
+from sympy.sets import Range
 from sympy.logic import ITE
+from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -476,3 +478,15 @@ def test_ccode_sign():
 
     expr = sign(cos(x))
     assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'
+
+def test_ccode_Assignment():
+    assert ccode(Assignment(x, y + z)) == 'x = y + z;'
+    assert ccode(aug_assign(x, '+', y + z)) == 'x += y + z;'
+
+
+def test_ccode_For():
+    f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
+    sol = ccode(f)
+    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
+                   "   y *= x;\n"
+                   "}")
