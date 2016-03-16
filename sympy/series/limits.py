@@ -1,8 +1,11 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
-from sympy.functions import tan, cot, factorial, gamma
+from sympy.core.symbol import Dummy
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.special.gamma_functions import gamma
+from sympy.series.order import Order
 from .gruntz import gruntz
 
 
@@ -106,8 +109,20 @@ class Limit(Expr):
         obj._args = (e, z, z0, dir)
         return obj
 
+
+    @property
+    def free_symbols(self):
+        e = self.args[0]
+        isyms = e.free_symbols
+        isyms.difference_update(self.args[1].free_symbols)
+        isyms.update(self.args[2].free_symbols)
+        return isyms
+
+
     def doit(self, **hints):
         """Evaluates limit"""
+        from sympy.series.limitseq import limit_seq
+
         e, z, z0, dir = self.args
 
         if hints.get('deep', True):
@@ -141,7 +156,7 @@ class Limit(Expr):
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
-                    u = C.Dummy(positive=(z0 is S.Infinity))
+                    u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
@@ -151,7 +166,7 @@ class Limit(Expr):
                         return r
 
         if e.is_Order:
-            return C.Order(limit(e.expr, z, z0), *e.args[1:])
+            return Order(limit(e.expr, z, z0), *e.args[1:])
 
         try:
             r = gruntz(e, z, z0, dir)
@@ -161,5 +176,14 @@ class Limit(Expr):
             r = heuristics(e, z, z0, dir)
             if r is None:
                 return self
+        except NotImplementedError:
+            # Trying finding limits of sequences
+            if hints.get('sequence', True) and z0 is S.Infinity:
+                trials = hints.get('trials', 5)
+                r = limit_seq(e, z, trials)
+                if r is None:
+                    raise NotImplementedError()
+            else:
+                raise NotImplementedError()
 
         return r

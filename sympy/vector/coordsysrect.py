@@ -1,9 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy import (sin, cos, eye, sympify, trigsimp,
-                   ImmutableMatrix as Matrix, S, Symbol, rot_axis1,
-                   rot_axis2, rot_axis3)
-from sympy.core.compatibility import string_types
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
+from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
@@ -47,6 +45,7 @@ class CoordSysCartesian(Basic):
 
         """
 
+        name = str(name)
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
@@ -72,6 +71,8 @@ class CoordSysCartesian(Basic):
             if location is None:
                 location = Vector.zero
             else:
+                if not isinstance(location, Vector):
+                    raise TypeError("location should be a Vector")
                 #Check that location does not contain base
                 #scalars
                 for x in location.free_symbols:
@@ -80,12 +81,9 @@ class CoordSysCartesian(Basic):
                                          " BaseScalars")
             origin = parent.origin.locate_new(name + '.origin',
                                               location)
-            arg_parent = parent
-            arg_self = Symbol('default')
         else:
+            location = Vector.zero
             origin = Point(name + '.origin')
-            arg_parent = Symbol('default')
-            arg_self = Symbol(name)
 
         #All systems that are defined as 'roots' are unequal, unless
         #they have the same name.
@@ -96,8 +94,12 @@ class CoordSysCartesian(Basic):
         #However, coincident systems may be seen as unequal if
         #positioned/oriented wrt different parents, even though
         #they may actually be 'coincident' wrt the root system.
-        obj = super(CoordSysCartesian, cls).__new__(
-            cls, arg_self, parent_orient, origin, arg_parent)
+        if parent is not None:
+            obj = super(CoordSysCartesian, cls).__new__(
+                cls, Symbol(name), location, parent_orient, parent)
+        else:
+            obj = super(CoordSysCartesian, cls).__new__(
+                cls, Symbol(name), location, parent_orient)
         obj._name = name
 
         #Initialize the base vectors
@@ -144,7 +146,7 @@ class CoordSysCartesian(Basic):
 
         #Assign a Del operator instance
         from sympy.vector.deloperator import Del
-        obj._del = Del(obj)
+        obj._delop = Del(obj)
 
         #Assign params
         obj._parent = parent
@@ -174,7 +176,7 @@ class CoordSysCartesian(Basic):
 
     @property
     def delop(self):
-        return self._del
+        return self._delop
 
     @property
     def i(self):
@@ -311,7 +313,7 @@ class CoordSysCartesian(Basic):
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
-        {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
+        {A.x: -sin(q)*B.y + cos(q)*B.x, A.y: sin(q)*B.x + cos(q)*B.y, A.z: B.z}
 
         """
 
@@ -436,6 +438,12 @@ class CoordSysCartesian(Basic):
                 final_matrix = orienters.rotation_matrix(self)
             else:
                 final_matrix = orienters.rotation_matrix()
+            # TODO: trigsimp is needed here so that the matrix becomes
+            # canonical (scalar_map also calls trigsimp; without this, you can
+            # end up with the same CoordinateSystem that compares differently
+            # due to a differently formatted matrix). However, this is
+            # probably not so good for performance.
+            final_matrix = trigsimp(final_matrix)
         else:
             final_matrix = Matrix(eye(3))
             for orienter in orienters:
@@ -638,11 +646,17 @@ class CoordSysCartesian(Basic):
         Quaternion orientation orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
+
         This orientation is described by four parameters:
+
         q0 = cos(theta/2)
+
         q1 = lambda_x sin(theta/2)
+
         q2 = lambda_y sin(theta/2)
+
         q3 = lambda_z sin(theta/2)
+
         Quaternion does not take in a rotation order.
 
         Parameters

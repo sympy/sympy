@@ -136,7 +136,12 @@ def prepare_apt():
     dependencies.
     """
     sudo("apt-get -qq update")
-    sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
+    sudo("apt-get -y install git python3 make python-virtualenv zip python-dev python-mpmath python3-setuptools")
+    # Need 7.1.2 for Python 3.2 support
+    sudo("easy_install3 pip==7.1.2")
+    sudo("pip3 install mpmath")
+    # Be sure to use the Python 2 pip
+    sudo("/usr/bin/pip install twine")
     # Needed to build the docs
     sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
     # Our Ubuntu is too old to include Python 3.3
@@ -270,6 +275,7 @@ def release(branch=None, fork='sympy'):
     # This has to be run locally because it itself uses fabric. I split it out
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
+    test_sympy()
     source_tarball()
     build_docs()
     copy_release_files()
@@ -298,7 +304,7 @@ def build_docs():
     with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p dist")
         venv = "/home/vagrant/docs-virtualenv"
-        make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy'])
+        make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy', 'mpmath'])
         with virtualenv(venv):
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
@@ -368,20 +374,22 @@ git_whitelist = {
     '.mailmap',
     # Travis
     '.travis.yml',
-    # This is the file you should edit if not enough ends up in the tarball
-    'MANIFEST.in',
-    # Experimental Cythonization support. Not for production
-    'Makefile',
+    # Code of conduct
+    'CODE_OF_CONDUCT.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
     # sympy.doctest().
     'bin/adapt_paths.py',
     'bin/ask_update.py',
+    'bin/authors_update.py',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
+    'bin/build_doc.sh',
+    'bin/deploy_doc.sh',
     'bin/diagnose_imports',
     'bin/doctest',
+    'bin/generate_test_list.py',
     'bin/get_sympy.py',
     'bin/py.bench',
     'bin/mailmap_update.py',
@@ -393,8 +401,6 @@ git_whitelist = {
     'bin/test_import.py',
     'bin/test_isolated',
     'bin/test_travis.sh',
-    # This is also related to Cythonization
-    'build.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferrably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
@@ -413,6 +419,7 @@ git_whitelist = {
     'examples/notebooks/sho1d_example.ipynb',
     'examples/notebooks/spin.ipynb',
     'examples/notebooks/trace.ipynb',
+    'examples/notebooks/README.txt',
     # This stuff :)
     'release/.gitignore',
     'release/README.md',
@@ -421,59 +428,6 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # We don't ship the benchmarks (why?)
-    'sympy/benchmarks/bench_meijerint.py',
-    'sympy/benchmarks/bench_symbench.py',
-    'sympy/core/benchmarks/bench_arit.py',
-    'sympy/core/benchmarks/bench_assumptions.py',
-    'sympy/core/benchmarks/bench_basic.py',
-    'sympy/core/benchmarks/bench_expand.py',
-    'sympy/core/benchmarks/bench_numbers.py',
-    'sympy/core/benchmarks/bench_sympify.py',
-    'sympy/functions/elementary/benchmarks/bench_exp.py',
-    'sympy/functions/special/benchmarks/bench_special.py',
-    # More benchmarks
-    'sympy/integrals/benchmarks/bench_integrate.py',
-    'sympy/integrals/benchmarks/bench_trigintegrate.py',
-    'sympy/logic/benchmarks/input/10.cnf',
-    'sympy/logic/benchmarks/input/100.cnf',
-    'sympy/logic/benchmarks/input/105.cnf',
-    'sympy/logic/benchmarks/input/110.cnf',
-    'sympy/logic/benchmarks/input/115.cnf',
-    'sympy/logic/benchmarks/input/120.cnf',
-    'sympy/logic/benchmarks/input/125.cnf',
-    'sympy/logic/benchmarks/input/130.cnf',
-    'sympy/logic/benchmarks/input/135.cnf',
-    'sympy/logic/benchmarks/input/140.cnf',
-    'sympy/logic/benchmarks/input/145.cnf',
-    'sympy/logic/benchmarks/input/15.cnf',
-    'sympy/logic/benchmarks/input/150.cnf',
-    'sympy/logic/benchmarks/input/20.cnf',
-    'sympy/logic/benchmarks/input/25.cnf',
-    'sympy/logic/benchmarks/input/30.cnf',
-    'sympy/logic/benchmarks/input/35.cnf',
-    'sympy/logic/benchmarks/input/40.cnf',
-    'sympy/logic/benchmarks/input/45.cnf',
-    'sympy/logic/benchmarks/input/50.cnf',
-    'sympy/logic/benchmarks/input/55.cnf',
-    'sympy/logic/benchmarks/input/60.cnf',
-    'sympy/logic/benchmarks/input/65.cnf',
-    'sympy/logic/benchmarks/input/70.cnf',
-    'sympy/logic/benchmarks/input/75.cnf',
-    'sympy/logic/benchmarks/input/80.cnf',
-    'sympy/logic/benchmarks/input/85.cnf',
-    'sympy/logic/benchmarks/input/90.cnf',
-    'sympy/logic/benchmarks/input/95.cnf',
-    'sympy/logic/benchmarks/run-solvers.py',
-    'sympy/logic/benchmarks/test-solver.py',
-    'sympy/matrices/benchmarks/bench_matrix.py',
-    # More benchmarks...
-    'sympy/polys/benchmarks/__init__.py',
-    'sympy/polys/benchmarks/bench_galoispolys.py',
-    'sympy/polys/benchmarks/bench_groebnertools.py',
-    'sympy/polys/benchmarks/bench_solvers.py',
-    'sympy/series/benchmarks/bench_limit.py',
-    'sympy/solvers/benchmarks/bench_solvers.py',
     # Example on how to use tox to test Sympy. For development.
     'tox.ini.sample',
     }
@@ -481,7 +435,15 @@ git_whitelist = {
 # Files that should be in the tarball should not be in git
 
 tarball_whitelist = {
-    "PKG-INFO", # Generated by setup.py. Contains metadata for PyPI.
+    # Generated by setup.py. Contains metadata for PyPI.
+    "PKG-INFO",
+    # Generated by setuptools. More metadata.
+    'setup.cfg',
+    'sympy.egg-info/PKG-INFO',
+    'sympy.egg-info/SOURCES.txt',
+    'sympy.egg-info/dependency_links.txt',
+    'sympy.egg-info/requires.txt',
+    'sympy.egg-info/top_level.txt',
     }
 
 @task
@@ -601,8 +563,7 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    # code renders better than tt or pre
-                    with tag('code'):
+                    with tag('b'):
                         table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
@@ -971,8 +932,8 @@ def pypi_upload():
     Upload files to PyPI. You will need to enter a password.
     """
     with cd("/home/vagrant/repos/sympy"):
-        # See http://stackoverflow.com/a/17657183/161801
-        run("python setup.py sdist --dry-run upload")
+        run("twine upload dist/*.tar.gz")
+        run("twine upload dist/*.exe")
 
 @task
 def test_pypi(release='2'):
@@ -1009,7 +970,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 
 {htmltable}
 
-**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
+**Note**: Do not download the **Source code (zip)** or the **Source code (tar.gz)**
 files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)

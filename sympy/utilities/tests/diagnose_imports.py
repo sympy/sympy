@@ -117,7 +117,7 @@ if __name__ == "__main__":
         """Is module relevant for import checking?
 
         Only imports between relevant modules will be checked."""
-        return in_module(module, 'sympy') and not in_module(module, 'sympy.mpmath')
+        return in_module(module, 'sympy')
 
     sorted_messages = []
 

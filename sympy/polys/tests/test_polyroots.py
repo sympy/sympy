@@ -1,33 +1,26 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, default_sort_key, root)
+from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
+    powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
+    acos, root)
 
-from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots, RootOf,
-    PolynomialError)
+from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
     roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
+from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
-import sympy
+from sympy.core.compatibility import range
+import mpmath
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
-
-
-def _nsort(roots):
-    key = [r.n(2) for r in roots]
-    key = [(1 if not r.is_real else 0, re(r), im(r))
-        for r in key]
-    _, roots = zip(*sorted(zip(key, roots)))
-    return list(roots)
 
 
 def test_roots_linear():
@@ -41,10 +34,9 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
-
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
-         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
+        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c),
+         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c)]
 
     # check for simplification
     f = Poly(y*x**2 - 2*x - 2*y, x)
@@ -52,7 +44,7 @@ def test_roots_quadratic():
         [-sqrt(2*y**2 + 1)/y + 1/y, sqrt(2*y**2 + 1)/y + 1/y]
     f = Poly(x**2 + (-y**2 - 2)*x + y**2 + 1, x)
     assert roots_quadratic(f) == \
-        [y**2/2 - sqrt(y**4)/2 + 1, y**2/2 + sqrt(y**4)/2 + 1]
+        [1,y**2 + 1]
 
     f = Poly(sqrt(2)*x**2 - 1, x)
     r = roots_quadratic(f)
@@ -67,12 +59,22 @@ def test_roots_quadratic():
         roots = roots_quadratic(f)
         assert roots == _nsort(roots)
 
+def test_issue_8438():
+    p = Poly([1, y, -2, -3], x).as_expr()
+    roots = roots_cubic(Poly(p, x), x)
+    z = -S(3)/2 - 7*I/2  # this will fail in code given in commit msg
+    post = [r.subs(y, z) for r in roots]
+    assert set(post) == \
+    set(roots_cubic(Poly(p.subs(y, z), x)))
+    # /!\ if p is not made an expression, this is *very* slow
+    assert all(p.subs({y: z, x: i}).n(2, chop=True) == 0 for i in post)
+
 
 def test_issue_8285():
     roots = (Poly(4*x**8 - 1, x)*Poly(x**2 + 1)).all_roots()
     assert roots == _nsort(roots)
     f = Poly(x**4 + 5*x**2 + 6, x)
-    ro = [RootOf(f, i) for i in range(4)]
+    ro = [rootof(f, i) for i in range(4)]
     roots = Poly(x**4 + 5*x**2 + 6, x).all_roots()
     assert roots == ro
     assert roots == _nsort(roots)
@@ -240,8 +242,14 @@ def test_roots_binomial():
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
         p = Poly(a*x**n + s*b)
-        roots = roots_binomial(p)
-        assert roots == _nsort(roots)
+        ans = roots_binomial(p)
+        assert ans == _nsort(ans)
+
+    # issue 8813
+    assert roots(Poly(2*x**3 - 16*y**3, x)) == {
+        2*y*(-S(1)/2 - sqrt(3)*I/2): 1,
+        2*y: 1,
+        2*y*(-S(1)/2 + sqrt(3)*I/2): 1}
 
 
 def test_roots_preprocessing():
@@ -304,7 +312,7 @@ def test_roots_preprocessing():
     assert preprocess_roots(f) == (x, g)
 
 
-def test_roots():
+def test_roots0():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
@@ -329,6 +337,8 @@ def test_roots():
 
     assert roots(((a*x - b)**5).expand(), x) == { b/a: 5}
     assert roots(((a*x + b)**5).expand(), x) == {-b/a: 5}
+
+    assert roots(x**2 + (-a - 1)*x + a, x) == {a: 1, S.One: 1}
 
     assert roots(x**4 - 2*x**2 + 1, x) == {S.One: 2, -S.One: 2}
 
@@ -361,17 +371,18 @@ def test_roots():
     assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
         {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
-    r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r)
-        for r in ((1, 2), (1, 3), (1, 9), (4, 9), (19, 27)) ]
+    r1_2, r1_3 = Rational(1, 2), Rational(1, 3)
 
-    U = -r1_2 - r1_2*I*3**r1_2
-    V = -r1_2 + r1_2*I*3**r1_2
-    W = (r19_27 + r1_9*33**r1_2)**r1_3
-
+    x0 = (3*sqrt(33) + 19)**r1_3
+    x1 = 4/x0/3
+    x2 = x0/3
+    x3 = sqrt(3)*I/2
+    x4 = x3 - r1_2
+    x5 = -x3 - r1_2
     assert roots(x**3 + x**2 - x + 1, x, cubics=True) == {
-        -r1_3 - U*W - r4_9*(U*W)**(-1): 1,
-        -r1_3 - V*W - r4_9*(V*W)**(-1): 1,
-        -r1_3 - W - r4_9*(  W)**(-1): 1,
+        -x1 - x2 - r1_3: 1,
+        -x1/x4 - x2*x4 - r1_3: 1,
+        -x1/x5 - x2*x5 - r1_3: 1,
     }
 
     f = (x**2 + 2*x + 3).subs(x, 2*x**2 + 3*x).subs(x, 5*x - 4)
@@ -447,8 +458,8 @@ def test_roots():
 
     r = roots(x**3 + 40*x + 64)
     real_root = [rx for rx in r if rx.is_real][0]
-    cr = 4 + 2*sqrt(1074)/9
-    assert real_root == -2*root(cr, 3) + 20/(3*root(cr, 3))
+    cr = 108 + 6*sqrt(1074)
+    assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
     assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
@@ -488,9 +499,7 @@ def test_roots_slow():
     f = x**3 + 2*x**2 + 8
     R = list(roots(f).keys())
 
-    assert f.subs(x, R[0]).simplify() == 0
-    assert f.subs(x, R[1]).simplify() == 0
-    assert f.subs(x, R[2]).simplify() == 0
+    assert not any(i for i in [f.subs(x, ri).n(chop=True) for ri in R])
 
 
 def test_roots_inexact():
@@ -580,11 +589,13 @@ def test_root_factors():
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 
+
+@slow
 def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)
 
-    raises(sympy.mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
+    raises(mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
 
     roots = p.nroots(n=3)
     # The order of roots matters. They are ordered from smallest to the
@@ -616,3 +627,7 @@ def test_nroots2():
     assert [str(r) for r in roots] == \
             ['-0.33199', '-0.83907 - 0.94385*I', '-0.83907 + 0.94385*I',
               '1.0051 - 0.93726*I', '1.0051 + 0.93726*I']
+
+
+def test_roots_composite():
+    assert len(roots(Poly(y**3 + y**2*sqrt(x) + y + x, y, composite=True))) == 3

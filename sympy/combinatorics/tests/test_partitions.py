@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
@@ -60,7 +61,7 @@ def test_integer_partition():
         next = set()
         prev = set()
         a = IntegerPartition([i])
-        ans = set([IntegerPartition(p) for p in partitions(i)])
+        ans = {IntegerPartition(p) for p in partitions(i)}
         n = len(ans)
         for j in range(n):
             next.add(a)

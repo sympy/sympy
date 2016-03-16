@@ -1,8 +1,5 @@
 from __future__ import print_function, division
 
-from sympy import expand
-from sympy import diff
-from sympy import Sum
 
 def finite_diff(expression, variable, increment=1):
     """
@@ -12,7 +9,7 @@ def finite_diff(expression, variable, increment=1):
     other than one supply it as a third argument.
 
     Examples
-    =========
+    ========
 
     >>> from sympy.abc import x, y, z, k, n
     >>> from sympy.series.kauers import finite_diff

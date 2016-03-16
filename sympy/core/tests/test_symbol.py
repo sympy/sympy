@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )
 
 from sympy.core.compatibility import u
@@ -328,7 +328,7 @@ def test_call():
     raises(TypeError, lambda: Wild('x')(1))
 
 def test_unicode():
-    xu = Symbol(u('x'))
+    xu = Symbol(u'x')
     x = Symbol('x')
     assert x == xu
 

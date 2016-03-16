@@ -9,7 +9,6 @@ from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
-# import test:
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
@@ -402,9 +401,6 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -727,10 +723,8 @@ def test_intrinsic_math_codegen():
         ("test_acos", acos(x)),
         ("test_asin", asin(x)),
         ("test_atan", atan(x)),
-        # ("test_ceil", ceiling(x)),
         ("test_cos", cos(x)),
         ("test_cosh", cosh(x)),
-        # ("test_floor", floor(x)),
         ("test_log", log(x)),
         ("test_ln", ln(x)),
         ("test_sin", sin(x)),
@@ -1055,9 +1049,6 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -1407,4 +1398,32 @@ def test_fcode_matrixsymbol_slice_autoname():
     b = a.split('_')
     out = b[1]
     expected = expected % {'hash': out}
+    assert source == expected
+
+def test_global_vars():
+    x, y, z, t = symbols("x y z t")
+    result = codegen(('f', x*y), "F95", header=False, empty=False,
+                     global_vars=(y,))
+    source = result[0][1]
+    expected = (
+        "REAL*8 function f(x)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "f = x*y\n"
+        "end function\n"
+        )
+    assert source == expected
+
+    result = codegen(('f', x*y+z), "C", header=False, empty=False,
+                     global_vars=(z, t))
+    source = result[0][1]
+    expected = (
+        '#include "f.h"\n'
+        '#include <math.h>\n'
+        'double f(double x, double y) {\n'
+        '   double f_result;\n'
+        '   f_result = x*y + z;\n'
+        '   return f_result;\n'
+        '}\n'
+    )
     assert source == expected

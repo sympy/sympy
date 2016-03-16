@@ -17,7 +17,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import Mul
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, range
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
 from sympy.core.core import BasicMeta
@@ -346,7 +346,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u('M_z')
+    gate_name_latex=u'M_z'
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate.
@@ -356,7 +356,7 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u('M_x')
+    gate_name_latex=u'M_x'
 
 class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):

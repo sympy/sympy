@@ -1,9 +1,10 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
-    Add, Mul, pi, cos, sin, exp)
+from sympy import (S, Rational, Symbol, Poly, sqrt, I, oo, Tuple, expand,
+    pi, cos, sin, exp)
 
 from sympy.utilities.pytest import raises, slow
+from sympy.core.compatibility import range
 
 from sympy.polys.numberfields import (
     minimal_polynomial,
@@ -24,11 +25,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import rootof
 from sympy.polys.polytools import degree
-from sympy.solvers import solve
-
-from sympy.utilities.pytest import skip
 
 from sympy.abc import x, y, z
 
@@ -211,7 +209,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
-    ex = RootOf(x**3 +x*4 + 1, 0)
+    ex = rootof(x**3 +x*4 + 1, 0)
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)
@@ -547,6 +545,8 @@ def test_AlgebraicNumber():
     assert a.is_aliased is True
 
     assert AlgebraicNumber(sqrt(2), []).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), ()).rep == DMP([], QQ)
+    assert AlgebraicNumber(sqrt(2), (0, 0)).rep == DMP([], QQ)
 
     assert AlgebraicNumber(sqrt(2), [8]).rep == DMP([QQ(8)], QQ)
     assert AlgebraicNumber(sqrt(2), [S(8)/3]).rep == DMP([QQ(8, 3)], QQ)
@@ -639,9 +639,9 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(sqrt(2))
     b = to_number_field(sqrt(2))
-    assert a.args == b.args == (sqrt(2), Tuple())
+    assert a.args == b.args == (sqrt(2), Tuple(1, 0))
     b = AlgebraicNumber(sqrt(2), alias='alpha')
-    assert b.args == (sqrt(2), Tuple(), Symbol('alpha'))
+    assert b.args == (sqrt(2), Tuple(1, 0), Symbol('alpha'))
 
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))

@@ -164,7 +164,7 @@ the result of ``==``.  There is a separate object, called ``Eq``, which can be
 used to create symbolic equalities
 
     >>> Eq(x + 1, 4)
-    x + 1 == 4
+    Eq(x + 1, 4)
 
 There is one additional caveat about ``==`` as well.  Suppose we want to know
 if `(x + 1)^2 = x^2 + 2x + 1`.  We might try something like this:
@@ -244,6 +244,11 @@ object.
     >>> type(1 + 1)
     <... 'int'>
 
+.. note::
+
+   On running the example above in SymPy Live, (1+1) is wrapped
+   by Integer, so it does not show the correct output.
+
 This is usually not a big deal. Python ints work much the same as SymPy
 Integers, but there is one important exception:  division.  In SymPy, the
 division of two Integers gives a Rational:
@@ -261,6 +266,11 @@ on whether or not you have run ``from __future__ import division``:
     >>> 1/2 #doctest: +SKIP
     0.5
 
+.. note::
+
+   On running the example above in SymPy Live, (1/2) is wrapped
+   by Integer, so it does not show the correct output.
+
 To avoid this, we can construct the rational object explicitly
 
     >>> Rational(1, 2)
@@ -271,6 +281,11 @@ This problem also comes up whenever we have a larger symbolic expression with
 
     >>> x + 1/2 #doctest: +SKIP
     x + 0.5
+
+.. note::
+
+   On running the example above in SymPy Live, (1/2) is wrapped
+   by Integer, so it does not show the correct output.
 
 This happens because Python first evaluates ``1/2`` into ``0.5``, and then
 that is cast into a SymPy type when it is added to ``x``.  Again, we can get

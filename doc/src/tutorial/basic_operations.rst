@@ -177,12 +177,6 @@ the given numerical library, usually NumPy.  For example
     >>> f(a) # doctest:+SKIP
     [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
      -0.2794155   0.6569866   0.98935825  0.41211849]
-     
-Previously ``lambdify`` defaulted to expressing ``sympy.Matrix`` as
-``numpy.Matrix``.  This behavior is deprecated in favor of ``numpy.array``, and
-will be removed in the next release. For now, setting ``default_array=True``
-will provide the new behavior, and avoid a ``SymPyDeprecationWarning``.
-See issue `#7853 <https://github.com/sympy/sympy/issues/7853>`_ for more information.
 
 You can use other libraries than NumPy. For example, to use the standard
 library math module, use ``"math"``.
@@ -196,7 +190,7 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
 
     >>> def mysin(x):
     ...     """
-    ...     My sine. Not only accurate for small x.
+    ...     My sine. Note that this is only accurate for small x.
     ...     """
     ...     return x
     >>> f = lambdify(x, expr, {"sin":mysin})

@@ -1,14 +1,14 @@
-from sympy.core import (pi, oo, symbols, Function, Rational, Integer,
+from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, sign)
+from sympy.logic import ITE
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-# import test
 from sympy import ccode
 
 x, y, z = symbols('x,y,z')
@@ -189,6 +189,17 @@ def test_ccode_Piecewise_deep():
             ")) + cos(z) - 1;")
 
 
+def test_ccode_ITE():
+    expr = ITE(x < 1, x, x**2)
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            "))")
+
+
 def test_ccode_settings():
     raises(TypeError, lambda: ccode(sin(x), method="garbage"))
 
@@ -245,9 +256,6 @@ def test_ccode_loops_matrix_vector():
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')

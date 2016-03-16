@@ -1,15 +1,24 @@
-"""SymPy is a Python library for symbolic mathematics. It aims to become a
-full-featured computer algebra system (CAS) while keeping the code as
-simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external
-libraries, except optionally for plotting support.
+"""
+SymPy is a Python library for symbolic mathematics. It aims to become a
+full-featured computer algebra system (CAS) while keeping the code as simple
+as possible in order to be comprehensible and easily extensible.  SymPy is
+written entirely in Python. It depends on mpmath, and other external libraries
+may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
     http://sympy.org
+
 """
 
 from __future__ import absolute_import, print_function
+del absolute_import, print_function
+
+try:
+    import mpmath
+except ImportError:
+    raise ImportError("SymPy now depends on mpmath as an external library. "
+    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
 from sympy.release import __version__
 
@@ -59,8 +68,8 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, mathematica_code, octave_code, \
-    latex, preview
+from .printing import ccode, fcode, jscode, julia_code, mathematica_code, \
+    octave_code, latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 
@@ -68,3 +77,5 @@ evalf._create_evalf_table()
 
 # This is slow to import:
 #import abc
+
+from .deprecated import *

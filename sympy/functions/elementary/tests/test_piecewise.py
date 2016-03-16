@@ -1,9 +1,10 @@
 from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
+    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol
+    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    cos, exp, Abs, Not, Symbol, S
 )
+from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
@@ -127,7 +128,7 @@ def test_piecewise():
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x, a < 0), (y, True))
-    assert f.free_symbols == set([x, y, a])
+    assert f.free_symbols == {x, y, a}
 
 
 def test_piecewise_integrate():
@@ -489,3 +490,9 @@ def test_as_expr_set_pairs():
 
     assert Piecewise(((x - 2)**2, x >= 0), (0, True)).as_expr_set_pairs() == \
         [((x - 2)**2, Interval(0, oo)), (0, Interval(-oo, 0, True, True))]
+
+
+def test_S_srepr_is_identity():
+    p = Piecewise((10, Eq(x, 0)), (12, True))
+    q = S(srepr(p))
+    assert p == q

@@ -6,6 +6,8 @@ from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         random_symbols, sample)
 from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import range
+from sympy.abc import x
 
 
 def test_where():
@@ -44,7 +46,8 @@ def test_random_symbols():
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert not pspace(5 + 3)
+    raises(ValueError, lambda: pspace(5 + 3))
+    raises(ValueError, lambda: pspace(x < 1))
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
     assert pspace(2*X + Y) == ProductPSpace(Y.pspace, X.pspace)
@@ -194,3 +197,15 @@ def test_density_constant():
 def test_real():
     x = Normal('x', 0, 1)
     assert x.is_real
+
+
+def test_issue_10052():
+    X = Exponential('X', 3)
+    assert P(X < oo) == 1
+    assert P(X > oo) == 0
+    assert P(X < 2, X > oo) == 0
+    assert P(X < oo, X > oo) == 0
+    assert P(X < oo, X > 2) == 1
+    assert P(X < 3, X == 2) == 0
+    raises(ValueError, lambda: P(1))
+    raises(ValueError, lambda: P(X < 1, 2))

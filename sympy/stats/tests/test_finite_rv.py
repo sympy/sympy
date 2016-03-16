@@ -1,12 +1,16 @@
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
+from sympy.core.compatibility import range
+from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor, cancel)
+        cancel, KroneckerDelta)
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, given, independent, dependent, where, FiniteRV, pspace, cdf,
+    density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment)
+from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises, slow
-from sympy.abc import p
+from sympy.abc import p, x, i
 
 oo = S.Infinity
 
@@ -112,7 +116,7 @@ def test_domains():
 
     raises(ValueError, lambda: P(X > Z))  # Two domains with same internal symbol
 
-    pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
+    assert pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
@@ -152,8 +156,8 @@ def test_bernoulli():
 
     assert E(X) == p
     assert simplify(variance(X)) == p*(1 - p)
-    E(a*X + b) == a*E(X) + b
-    variance(a*X + b) == a**2 * variance(X)
+    assert E(a*X + b) == a*E(X) + b
+    assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
 
 def test_cdf():
@@ -258,3 +262,19 @@ def test_density_call():
     assert 0 in d
     assert 5 not in d
     assert d(S(0)) == d[S(0)]
+
+
+def test_DieDistribution():
+    X = DieDistribution(6)
+    assert X.pdf(S(1)/2) == S.Zero
+    assert X.pdf(x).subs({x: 1}).doit() == S(1)/6
+    assert X.pdf(x).subs({x: 7}).doit() == 0
+    assert X.pdf(x).subs({x: -1}).doit() == 0
+    assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
+    raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
+    raises(ValueError, lambda: X.pdf(x**2 - 1))
+
+def test_FinitePSpace():
+    X = Die('X', 6)
+    space = pspace(X)
+    assert space.density == DieDistribution(6)

@@ -107,7 +107,6 @@ class Commutator(Expr):
             return S.Zero
 
         # [xA,yB]  ->  xy*[A,B]
-        # from sympy.physics.qmul import QMul
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
         c_part = ca + cb
@@ -203,7 +202,7 @@ class Commutator(Expr):
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u(',')))))
+        pform = prettyForm(*pform.right((prettyForm(u','))))
         pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
         pform = prettyForm(*pform.parens(left='[', right=']'))
         return pform

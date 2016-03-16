@@ -3,13 +3,15 @@ from __future__ import print_function, division
 from os.path import join
 import tempfile
 import shutil
+import io
 from io import BytesIO
 
 try:
-    from subprocess import STDOUT, CalledProcessError
-    from sympy.core.compatibility import check_output
+    from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
+
+from sympy.core.compatibility import unicode, u_decode
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -183,8 +185,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        with open(join(workdir, 'texput.tex'), 'w') as fh:
-            fh.write(latex_main % latex_string)
+        with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+            fh.write(unicode(latex_main) % u_decode(latex_string))
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
@@ -265,11 +267,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             offset = 25
 
+            config = gl.Config(double_buffer=False)
             win = window.Window(
                 width=img.width + 2*offset,
                 height=img.height + 2*offset,
                 caption="sympy",
-                resizable=False
+                resizable=False,
+                config=config
             )
 
             win.set_vsync(False)

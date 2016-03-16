@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
@@ -67,7 +67,7 @@ def gosper_normal(f, g, n, polys=True):
         A = A.quo(d)
         B = B.quo(d.shift(-i))
 
-        for j in xrange(1, i + 1):
+        for j in range(1, i + 1):
             C *= d.shift(-j)
 
     A = A.mul_ground(Z)
@@ -118,11 +118,11 @@ def gosper_term(f, n):
     K = S(C.degree())
 
     if (N != M) or (A.LC() != B.LC()):
-        D = set([K - max(N, M)])
+        D = {K - max(N, M)}
     elif not N:
-        D = set([K - N + 1, S(0)])
+        D = {K - N + 1, S(0)}
     else:
-        D = set([K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()])
+        D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
 
     for d in set(D):
         if not d.is_Integer or d < 0:

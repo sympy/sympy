@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 """
 Algorithms and classes to support enumerative combinatorics.
@@ -147,7 +147,7 @@ class PartComponent(object):
 # - flag variable x takes on values True/False instead of 1/0
 #
 def multiset_partitions_taocp(multiplicities):
-    """Enumerates partions of a multiset.
+    """Enumerates partitions of a multiset.
 
     Parameters
     ==========
@@ -204,7 +204,7 @@ def multiset_partitions_taocp(multiplicities):
     See Also
     ========
 
-    sympy.utilities.iterables.multiset_partititions: Takes a multiset
+    sympy.utilities.iterables.multiset_partitions: Takes a multiset
         as input and directly yields multiset partitions.  It
         dispatches to a number of functions, including this one, for
         implementation.  Most users will find it more convenient to
@@ -225,12 +225,12 @@ def multiset_partitions_taocp(multiplicities):
     # Note: allocation of space for stack is conservative.  Knuth's
     # exercise 7.2.1.5.68 gives some indication of how to tighten this
     # bound, but this is not implemented.
-    pstack = [PartComponent() for i in xrange(n * m + 1)]
+    pstack = [PartComponent() for i in range(n * m + 1)]
     f = [0] * (n + 1)
 
     # Step M1 in Knuth (Initialize)
     # Initial state - entire multiset in one part.
-    for j in xrange(m):
+    for j in range(m):
         ps = pstack[j]
         ps.c = j
         ps.u = multiplicities[j]
@@ -294,7 +294,7 @@ def multiset_partitions_taocp(multiplicities):
                 # Return to M5
             else:
                 pstack[j].v = pstack[j].v - 1
-                for k in xrange(j + 1, b):
+                for k in range(j + 1, b):
                     pstack[k].v = pstack[k].u
                 break  # GOTO M2
 
@@ -332,7 +332,7 @@ def factoring_visitor(state, primes):
     """
     f, lpart, pstack = state
     factoring = []
-    for i in xrange(lpart + 1):
+    for i in range(lpart + 1):
         factor = 1
         for ps in pstack[f[i]: f[i + 1]]:
             if ps.v > 0:
@@ -360,7 +360,7 @@ def list_visitor(state, components):
     f, lpart, pstack = state
 
     partition = []
-    for i in xrange(lpart+1):
+    for i in range(lpart+1):
         part = []
         for ps in pstack[f[i]:f[i+1]]:
             if ps.v > 0:
@@ -448,11 +448,11 @@ class MultisetPartitionTraverser():
         # pstack is the partition stack, which is segmented by
         # f into parts.
         self.pstack = [PartComponent() for i in
-                       xrange(num_components * cardinality + 1)]
+                       range(num_components * cardinality + 1)]
         self.f = [0] * (cardinality + 1)
 
         # Initial state - entire multiset in one part.
-        for j in xrange(num_components):
+        for j in range(num_components):
             ps = self.pstack[j]
             ps.c = j
             ps.u = multiplicities[j]
@@ -484,12 +484,12 @@ class MultisetPartitionTraverser():
 
         """
         plen = len(part)
-        for j in xrange(plen - 1, -1, -1):
+        for j in range(plen - 1, -1, -1):
             if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
-                for k in xrange(j + 1, plen):
+                for k in range(j + 1, plen):
                     part[k].v = part[k].u
                 return True
         return False
@@ -549,7 +549,7 @@ class MultisetPartitionTraverser():
             self.p1 += 1  # increment to keep track of usefulness of tests
             return False
         plen = len(part)
-        for j in xrange(plen - 1, -1, -1):
+        for j in range(plen - 1, -1, -1):
             # Knuth's mod, (answer to problem 7.2.1.5.69)
             if (j == 0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
@@ -559,7 +559,7 @@ class MultisetPartitionTraverser():
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
-                for k in xrange(j + 1, plen):
+                for k in range(j + 1, plen):
                     part[k].v = part[k].u
 
                 # Have now decremented part, but are we doomed to
@@ -628,7 +628,7 @@ class MultisetPartitionTraverser():
         if deficit <= 0:
             return True
 
-        for i in xrange(len(part) - 1, -1, -1):
+        for i in range(len(part) - 1, -1, -1):
             if i == 0:
                 if part[0].v > deficit:
                     part[0].v -= deficit
@@ -702,7 +702,7 @@ class MultisetPartitionTraverser():
         changed = False  # Set to true when the new part (so far) is
                          # strictly less than (as opposed to less than
                          # or equal) to the old.
-        for j in xrange(self.f[self.lpart], self.f[self.lpart + 1]):
+        for j in range(self.f[self.lpart], self.f[self.lpart + 1]):
             self.pstack[k].u = self.pstack[j].u - self.pstack[j].v
             if self.pstack[k].u == 0:
                 changed = True

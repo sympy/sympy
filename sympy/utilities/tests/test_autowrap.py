@@ -117,6 +117,11 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
+    f = autowrap(Eq(z, x + y + z), backend='dummy', args=(y, x, z))
+    assert f() == str(x + y + z)
+    assert f.args == "y, x, z"
+    assert f.returns == "z"
+
 
 def test_autowrap_store_files():
     x, y = symbols('x y')
@@ -136,7 +141,6 @@ def test_binary_function():
 
 
 def test_ufuncify_source():
-    from sympy import Equality
     x, y, z = symbols('x,y,z')
     code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"))
     CodeWrapper._module_counter = 0

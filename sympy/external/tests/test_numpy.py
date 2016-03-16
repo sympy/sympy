@@ -21,7 +21,7 @@ from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
         Matrix, lambdify, symarray, symbols, Integer)
 import sympy
 
-from sympy import mpmath
+import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
 

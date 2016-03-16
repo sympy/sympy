@@ -1,13 +1,14 @@
 from __future__ import print_function, division
 
 from .basic import S
+from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
-from .symbol import Symbol
+from .function import _coeff_isneg
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -38,7 +39,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
-    y == x**2 + x
+    Eq(y, x**2 + x)
 
     """
     __slots__ = []
@@ -70,37 +71,128 @@ class Relational(Boolean, Expr, EvalfMixin):
         """The right-hand side of the relation."""
         return self._args[1]
 
+    @property
+    def reversed(self):
+        """Return the relationship with sides (and sign) reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.reversed
+        Eq(1, x)
+        >>> x < 1
+        x < 1
+        >>> _.reversed
+        1 > x
+        """
+        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        a, b = self.args
+        return ops.get(self.func, self.func)(b, a, evaluate=False)
+
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
-    def _eval_simplify(self, ratio, measure):
-        r = self.func(self.lhs.simplify(ratio=ratio, measure=measure),
-                      self.rhs.simplify(ratio=ratio, measure=measure))
-        if r not in (S.true, S.false):
-            if isinstance(self.lhs, Expr) and isinstance(self.rhs, Expr):
-                dif = self.lhs - self.rhs
-                # We want a Number to compare with zero and be sure to get a
-                # True/False answer.  Check if we can deduce that dif is
-                # definitively zero or non-zero.  If non-zero, replace with an
-                # approximation.  If .equals(0) gives None, cannot be deduced.
-                if not dif.has(Symbol):
-                    know = dif.equals(0)
-                    if know == True:
-                        dif = S.Zero
-                    elif know == False:
-                        dif = dif.evalf()
-                # Can definitively compare a Number to zero, if appropriate.
-                if dif.is_Number and (dif.is_real or self.func in (Eq, Ne)):
-                    # Always T/F (we never return an expression w/ the evalf)
-                    r = self.func._eval_relation(dif, S.Zero)
+    @property
+    def canonical(self):
+        """Return a canonical form of the relational.
 
+        The rules for the canonical form, in order of decreasing priority are:
+            1) Number on right if left is not a Number;
+            2) Symbol on the left;
+            3) Gt/Ge changed to Lt/Le;
+            4) Lt/Le are unchanged;
+            5) Eq and Ne get ordered args.
+        """
+        r = self
+        if r.func in (Ge, Gt):
+            r = r.reversed
+        elif r.func in (Lt, Le):
+            pass
+        elif r.func in (Eq, Ne):
+            r = r.func(*ordered(r.args), evaluate=False)
+        else:
+            raise NotImplemented
+        if r.lhs.is_Number and not r.rhs.is_Number:
+            r = r.reversed
+        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
+            r = r.reversed
+        if _coeff_isneg(r.lhs):
+            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
+        return r
+
+    def equals(self, other, failing_expression=False):
+        """Return True if the sides of the relationship are mathematically
+        identical and the type of relationship is the same.
+        If failing_expression is True, return the expression whose truth value
+        was unknown."""
+        if isinstance(other, Relational):
+            if self == other or self.reversed == other:
+                return True
+            a, b = self, other
+            if a.func in (Eq, Ne) or b.func in (Eq, Ne):
+                if a.func != b.func:
+                    return False
+                l, r = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.args)]
+                if l is True:
+                    return r
+                if r is True:
+                    return l
+                lr, rl = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.reversed.args)]
+                if lr is True:
+                    return rl
+                if rl is True:
+                    return lr
+                e = (l, r, lr, rl)
+                if all(i is False for i in e):
+                    return False
+                for i in e:
+                    if i not in (True, False):
+                        return i
+            else:
+                if b.func != a.func:
+                    b = b.reversed
+                if a.func != b.func:
+                    return False
+                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
+                if l is False:
+                    return False
+                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                if r is False:
+                    return False
+                if l is True:
+                    return r
+                return l
+
+    def _eval_simplify(self, ratio, measure):
+        r = self
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
+            for i in r.args])
+        if r.is_Relational:
+            dif = r.lhs - r.rhs
+            # replace dif with a valid Number that will
+            # allow a definitive comparison with 0
+            v = None
+            if dif.is_comparable:
+                v = dif.n(2)
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
+            if v is not None:
+                r = r.func._eval_relation(v, S.Zero)
+
+        r = r.canonical
         if measure(r) < ratio*measure(self):
             return r
         else:
             return self
 
     def __nonzero__(self):
-        raise TypeError("cannot determine truth value of\n%s" % self)
+        raise TypeError("cannot determine truth value of Relational")
 
     __bool__ = __nonzero__
 
@@ -144,13 +236,26 @@ class Equality(Relational):
     Equality object.  Use the ``simplify`` function on this object for
     more nontrivial evaluation of the equality relation.
 
+    As usual, the keyword argument ``evaluate=False`` can be used to
+    prevent any evaluation.
+
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
-    >>> Eq(y, x+x**2)
-    y == x**2 + x
+    >>> Eq(y, x + x**2)
+    Eq(y, x**2 + x)
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    Eq(2, 5)
+    >>> _.doit()
+    False
+    >>> Eq(exp(x), exp(x).rewrite(cos))
+    Eq(exp(x), sinh(x) + cosh(x))
+    >>> simplify(_)
+    True
 
     See Also
     ========
@@ -205,6 +310,10 @@ class Equality(Relational):
                 if r is not None:
                     return _sympify(r)
 
+            # If expression have both Boolean terms
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
+
         return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
@@ -228,7 +337,7 @@ class Unequality(Relational):
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
-    y != x**2 + x
+    Ne(y, x**2 + x)
 
     See Also
     ========
@@ -578,9 +687,9 @@ class GreaterThan(_Greater):
        `Issue 6059 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
-    rel_op = '>='
-
     __slots__ = ()
+
+    rel_op = '>='
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):

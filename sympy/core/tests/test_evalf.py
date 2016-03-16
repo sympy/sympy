@@ -1,14 +1,15 @@
-from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
-                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, sympify, S, integrate, atan, product,
-                   Sum, Product, Integral)
-from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
-from sympy.core.compatibility import long
-from sympy.mpmath import inf, ninf, nan
-from sympy.abc import n, x, y
-from sympy.mpmath.libmp.libmpf import from_float
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
+    scaled_zero, get_integer_part, as_mpmath)
+from mpmath import inf, ninf
+from mpmath.libmp.libmpf import from_float
+from sympy.core.compatibility import long, range
 from sympy.utilities.pytest import raises, XFAIL
 
+from sympy.abc import n, x, y
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -127,6 +128,7 @@ def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
+    assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
 
 
 def test_evalf_trig():
@@ -205,25 +207,20 @@ def test_evalf_bugs():
     # >>> n = Some Number
     # n*nan, n/nan, n*inf, n/inf
     # n+nan, n-nan, n+inf, n-inf
-    assert (0*sin(oo)).n() == S.Zero
-    assert (0/sin(oo)).n() == S.Zero
     assert (0*E**(oo)).n() == S.NaN
     assert (0/E**(oo)).n() == S.Zero
 
-    assert (0+sin(oo)).n() == S.NaN
-    assert (0-sin(oo)).n() == S.NaN
     assert (0+E**(oo)).n() == S.Infinity
     assert (0-E**(oo)).n() == S.NegativeInfinity
 
-    assert (5*sin(oo)).n() == S.NaN
-    assert (5/sin(oo)).n() == S.NaN
     assert (5*E**(oo)).n() == S.Infinity
     assert (5/E**(oo)).n() == S.Zero
 
-    assert (5+sin(oo)).n() == S.NaN
-    assert (5-sin(oo)).n() == S.NaN
     assert (5+E**(oo)).n() == S.Infinity
     assert (5-E**(oo)).n() == S.NegativeInfinity
+
+    #issue 7416
+    assert as_mpmath(0.0, 10, {'chop': True}) == 0
 
 
 def test_evalf_integer_parts():
@@ -246,6 +243,9 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3}) == 3
     assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.}) == 3
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
 
 
 def test_evalf_trig_zero_detection():
@@ -262,6 +262,14 @@ def test_evalf_sum():
     assert Sum(n,(n,1,2)).doit().evalf() == 3.
     # the next test should return instantly
     assert Sum(1/n,(n,1,2)).evalf() == 1.5
+
+    # issue 8219
+    assert Sum(E/factorial(n), (n, 0, oo)).evalf() == (E*E).evalf()
+    # issue 8254
+    assert Sum(2**n*n/factorial(n), (n, 0, oo)).evalf() == (2*E*E).evalf()
+    # issue 8411
+    s = Sum(1/x**2, (x, 100, oo))
+    assert s.n() == s.doit().n()
 
 
 def test_evalf_divergent_series():
@@ -347,7 +355,6 @@ def test_bugs():
 
 
 def test_subs():
-    from sympy import besseli
     assert NS('besseli(-x, y) - besseli(x, y)', subs={x: 3.5, y: 20.0}) == \
         '-4.92535585957223e-10'
     assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x: 0.1}) == \
@@ -440,3 +447,59 @@ def test_evalf_integral():
     # test that workprec has to increase in order to get a result other than 0
     eps = Rational(1, 1000000)
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
+
+
+def test_issue_8821_highprec_from_str():
+    s = str(pi.evalf(128))
+    p = N(s)
+    assert Abs(sin(p)) < 1e-15
+    p = N(s, 64)
+    assert Abs(sin(p)) < 1e-64
+
+
+def test_issue_8853():
+    p = Symbol('x', even=True, positive=True)
+    assert floor(-p - S.Half).is_even == False
+    assert floor(-p + S.Half).is_even == True
+    assert ceiling(p - S.Half).is_even == True
+    assert ceiling(p + S.Half).is_even == False
+
+    assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
+    assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
+    assert get_integer_part(-S.Half, -1, {}, True) == (-1, 0)
+    assert get_integer_part(-S.Half, 1, {}, True) == (0, 0)
+
+
+def test_issue_9326():
+    from sympy import Dummy
+    d1 = Dummy('d')
+    d2 = Dummy('d')
+    e = d1 + d2
+    assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+
+
+def test_issue_10323():
+    assert ceiling(sqrt(2**30 + 1)) == 2**15 + 1
+
+
+def test_AssocOp_Function():
+    e = S('''
+    Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
+    sqrt(3)*sin(pi/18)/6 + im(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
+    sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
+    I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''')
+    # the following should not raise a recursion error; it
+    # should raise a value error because the first arg computes
+    # a non-comparable (prec=1) imaginary part
+    raises(ValueError, lambda: e._eval_evalf(2))
+
+
+def test_issue_10395():
+    eq = x*Max(0, y)
+    assert nfloat(eq) == eq
+    eq = x*Max(y, -1.1)
+    assert nfloat(eq) == eq
+    assert Max(y, 4).n() == Max(4.0, y)

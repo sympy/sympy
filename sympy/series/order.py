@@ -1,11 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, C, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
 from sympy.utilities.iterables import uniq
+from sympy.sets.sets import Complement
 
 
 class Order(Expr):
@@ -180,8 +181,8 @@ class Order(Expr):
             if any(p != point[0] for p in point):
                 raise NotImplementedError
             if point[0] is S.Infinity:
-                s = dict([(k, 1/Dummy()) for k in variables])
-                rs = dict([(1/v, 1/k) for k, v in s.items()])
+                s = {k: 1/Dummy() for k in variables}
+                rs = {1/v: 1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
                 s = dict((k, Dummy() + point[0]) for k in variables)
                 rs = dict((v - point[0], k - point[0]) for k, v in s.items())
@@ -294,6 +295,8 @@ class Order(Expr):
     def _eval_power(b, e):
         if e.is_Number and e.is_nonnegative:
             return b.func(b.expr ** e, *b.args[1:])
+        if e == O(1):
+            return b
         return
 
     def as_expr_variables(self, order_symbols):
@@ -304,7 +307,7 @@ class Order(Expr):
                not all(p == self.point[0] for p in self.point):
                 raise NotImplementedError('Order at points other than 0 '
                     'or oo not supported, got %s as a point.' % point)
-            if order_symbols[0][1] != self.point[0]:
+            if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")
             order_symbols = dict(order_symbols)
@@ -365,12 +368,24 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
+            if (self.expr.is_Pow and self.expr.base.is_Symbol
+                and self.expr.exp.is_positive):
+                if expr.expr.is_Pow and self.expr.base == expr.expr.base:
+                    return not (self.expr.exp-expr.expr.exp).is_positive
+                if expr.expr.is_Mul:
+                    for arg in expr.expr.args:
+                        if (arg.is_Pow and self.expr.base == arg.base
+                            and (expr.expr/arg).is_number):
+                            r = (self.expr.exp-arg.exp).is_positive
+                            if not (r is None):
+                                return not r
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
                 l = ratio.limit(s, point)
-                if not isinstance(l, C.Limit):
+                from sympy.series.limits import Limit
+                if not isinstance(l, Limit):
                     l = l != 0
                 else:
                     l = None
@@ -380,6 +395,17 @@ class Order(Expr):
                     if r != l:
                         return
             return r
+        if (self.expr.is_Pow and self.expr.base.is_Symbol
+            and self.expr.exp.is_positive):
+            if expr.is_Pow and self.expr.base == expr.base:
+                return not (self.expr.exp-expr.exp).is_positive
+            if expr.is_Mul:
+                for arg in expr.args:
+                    if (arg.is_Pow and self.expr.base == arg.base
+                        and (expr/arg).is_number):
+                        r = (self.expr.exp-arg.exp).is_positive
+                        if not (r is None):
+                            return not r
         obj = self.func(expr, *self.args[1:])
         return self.contains(obj)
 
@@ -409,9 +435,14 @@ class Order(Expr):
                     # E.g.  O(y).subs(y, sin(x))
                     point = new.subs(var, self.point[i])
                     if point != self.point[i]:
-                        from sympy.solvers import solve
+                        from sympy.solvers.solveset import solveset
                         d = Dummy()
-                        res = solve(old - new.subs(var, d), d, dict=True)
+                        sol = solveset(old - new.subs(var, d), d)
+                        if isinstance(sol, Complement):
+                            e1 = sol.args[0]
+                            e2 = sol.args[1]
+                            sol = set(e1) - set(e2)
+                        res = [dict(zip((d, ), sol))]
                         point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var
                     newpt[i] = point

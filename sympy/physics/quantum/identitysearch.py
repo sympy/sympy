@@ -3,14 +3,10 @@ from __future__ import print_function, division
 from collections import deque
 from random import randint
 
+from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy import Mul, Basic, Number, Pow, Integer
-from sympy.matrices import Matrix, eye
-from sympy.physics.quantum.gate import (Gate, X, Y, Z, H, S, T, CNOT,
-        IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
-from sympy.physics.quantum.operator import (UnitaryOperator,
-        HermitianOperator)
 from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [
@@ -465,9 +461,9 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     if isinstance(gate_seq, Number):
         if return_as_muls:
-            return set([(Integer(1), Integer(1))])
+            return {(Integer(1), Integer(1))}
         else:
-            return set([((), ())])
+            return {((), ())}
 
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
@@ -580,7 +576,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """
 
     if isinstance(gate_seq, Number):
-        return set([Integer(1)])
+        return {Integer(1)}
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
 

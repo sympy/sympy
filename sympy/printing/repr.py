@@ -9,8 +9,9 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps, repr_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps, repr_dps
+from sympy.core.compatibility import range
 
 
 class ReprPrinter(Printer):
@@ -48,6 +49,9 @@ class ReprPrinter(Printer):
         args = self._as_ordered_terms(expr, order=order)
         args = map(self._print, args)
         return "Add(%s)" % ", ".join(args)
+
+    def _print_Cycle(self, expr):
+        return expr.__repr__()
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
@@ -140,7 +144,13 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Symbol(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        d = expr._assumptions.generator
+        if d == {}:
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
@@ -161,8 +171,8 @@ class ReprPrinter(Printer):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
 
     def _print_AlgebraicNumber(self, expr):
-        return "%s(%s, %s)" % (self.__class__.__name__,
-            self._print(self.coeffs()), self._print(expr.root))
+        return "%s(%s, %s)" % (expr.__class__.__name__,
+            self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
         return "%s(%s, %s, %s)" % (ring.__class__.__name__,

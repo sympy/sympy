@@ -4,7 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def symmetric(n):
@@ -18,8 +18,7 @@ def symmetric(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
-    [Permutation(2), Permutation(1, 2), Permutation(2)(0, 1),
-     Permutation(0, 1, 2), Permutation(0, 2, 1), Permutation(0, 2)]
+    [(2), (1 2), (2)(0 1), (0 1 2), (0 2 1), (0 2)]
     """
     for perm in variations(list(range(n)), n):
         yield Permutation(perm)
@@ -36,15 +35,15 @@ def cyclic(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
-    [Permutation(4), Permutation(0, 1, 2, 3, 4), Permutation(0, 2, 4, 1, 3),
-     Permutation(0, 3, 1, 4, 2), Permutation(0, 4, 3, 2, 1)]
+    [(4), (0 1 2 3 4), (0 2 4 1 3),
+     (0 3 1 4 2), (0 4 3 2 1)]
 
     See Also
     ========
     dihedral
     """
     gen = list(range(n))
-    for i in xrange(n):
+    for i in range(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
 
@@ -60,7 +59,7 @@ def alternating(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
-    [Permutation(2), Permutation(0, 1, 2), Permutation(0, 2, 1)]
+    [(2), (0 1 2), (0 2 1)]
     """
     for perm in variations(list(range(n)), n):
         p = Permutation(perm)
@@ -83,8 +82,7 @@ def dihedral(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
-    [Permutation(2), Permutation(0, 2), Permutation(0, 1, 2),
-     Permutation(1, 2), Permutation(0, 2, 1), Permutation(2)(0, 1)]
+    [(2), (0 2), (0 1 2), (1 2), (0 2 1), (2)(0 1)]
 
     See Also
     ========
@@ -100,7 +98,7 @@ def dihedral(n):
         yield Permutation([3, 2, 1, 0])
     else:
         gen = list(range(n))
-        for i in xrange(n):
+        for i in range(n):
             yield Permutation(gen)
             yield Permutation(gen[::-1])
             gen = rotate_left(gen, 1)

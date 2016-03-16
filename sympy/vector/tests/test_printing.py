@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
-from sympy import Integral, pretty, latex, Function
-from sympy.vector import CoordSysCartesian, Vector, Dyadic, express
+from sympy import Integral, latex, Function
+from sympy import pretty as xpretty
+from sympy.vector import CoordSysCartesian, Vector, express
 from sympy.abc import a, b, c
 from sympy.core.compatibility import u_decode as u
+from sympy.utilities.pytest import XFAIL
 
+def pretty(expr):
+    """ASCII pretty-printing"""
+    return xpretty(expr, use_unicode=False, wrap_line=False)
+
+
+def upretty(expr):
+    """Unicode pretty-printing"""
+    return xpretty(expr, use_unicode=True, wrap_line=False)
 
 #Initialize the basic and tedious vector/dyadic expressions
 #needed for testing.
@@ -23,35 +33,63 @@ v.append((a**2 + N.x)*N.i + N.k)
 v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)
 f = Function('f')
 v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)
-pretty_v_8 = u(
+upretty_v_8 = u(
 """\
 N_j + ⎛   2   ⌠        ⎞ N_k\n\
       ⎜C_x  - ⎮ f(b) db⎟    \n\
       ⎝       ⌡        ⎠    \
 """)
+pretty_v_8 = u(
+"""\
+N_j + /         /       \\\n\
+      |   2    |        |\n\
+      |C_x  -  | f(b) db|\n\
+      |        |        |\n\
+      \\       /         / \
+""")
+
 v.append(N.i + C.k)
 v.append(express(N.i, C))
 v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)
-pretty_v_11 = u(
+upretty_v_11 = u(
 """\
 ⎛ 2    ⎞ N_i + ⎛⌠        ⎞ N_k\n\
 ⎝a  + b⎠       ⎜⎮ f(b) db⎟    \n\
                ⎝⌡        ⎠    \
 """)
+pretty_v_11 = u(
+"""\
+/ 2    \\ + /  /       \\\n\
+\\a  + b/ N_i| |        |\n\
+           | | f(b) db|\n\
+           | |        |\n\
+           \\/         / \
+""")
+
 for x in v:
     d.append(x | N.k)
 s = 3*N.x**2*C.y
-pretty_s = u(
+upretty_s = u(
 """\
          2\n\
 3⋅C_y⋅N_x \
 """)
+pretty_s = u(
+"""\
+         2\n\
+3*C_y*N_x \
+""")
 
 #This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
+upretty_d_7 = u(
+"""\
+⎛ 2    ⎞ (N_i|N_k) + (-3⋅c + 3⋅C_y) (N_k|N_k)\n\
+⎝a  + b⎠                                     \
+""")
 pretty_d_7 = u(
 """\
-⎛ 2    ⎞ (N_i|N_k) + (3⋅C_y - 3⋅c) (N_k|N_k)\n\
-⎝a  + b⎠                                    \
+/ 2    \\ (N_i|N_k) + (3*C_y - 3*c) (N_k|N_k)\n\
+\\a  + b/                                    \
 """)
 
 
@@ -70,19 +108,34 @@ def test_str_printing():
     assert str(d[8]) == ('(N.j|N.k) + (C.x**2 - ' +
                          'Integral(f(b), b))*(N.k|N.k)')
 
-
-def test_pretty_printing():
-    assert pretty(v[0]) == u('0')
-    assert pretty(v[1]) == u('N_i')
-    assert pretty(v[5]) == u('(a) N_i + (-b) N_j')
+@XFAIL
+def test_pretty_printing_ascii():
+    assert pretty(v[0]) == u'0'
+    assert pretty(v[1]) == u'N_i'
+    assert pretty(v[5]) == u'(a) N_i + (-b) N_j'
     assert pretty(v[8]) == pretty_v_8
-    assert pretty(v[2]) == u('(-1) N_i')
+    assert pretty(v[2]) == u'(-1) N_i'
     assert pretty(v[11]) == pretty_v_11
     assert pretty(s) == pretty_s
-    assert pretty(d[0]) == u('(0|0)')
-    assert pretty(d[5]) == u('(a) (N_i|N_k) + (-b) (N_j|N_k)')
+    assert pretty(d[0]) == u'(0|0)'
+    assert pretty(d[5]) == u'(a) (N_i|N_k) + (-b) (N_j|N_k)'
     assert pretty(d[7]) == pretty_d_7
-    assert pretty(d[10]) == u('(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)')
+    assert pretty(d[10]) == u'(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)'
+
+def test_pretty_print_unicode():
+    assert upretty(v[0]) == u'0'
+    assert upretty(v[1]) == u'N_i'
+    assert upretty(v[5]) == u'(a) N_i + (-b) N_j'
+    # Make sure the printing works in other objects
+    assert upretty(v[5].args) == u'((a) N_i, (-b) N_j)'
+    assert upretty(v[8]) == upretty_v_8
+    assert upretty(v[2]) == u'(-1) N_i'
+    assert upretty(v[11]) == upretty_v_11
+    assert upretty(s) == upretty_s
+    assert upretty(d[0]) == u'(0|0)'
+    assert upretty(d[5]) == u'(a) (N_i|N_k) + (-b) (N_j|N_k)'
+    assert upretty(d[7]) == upretty_d_7
+    assert upretty(d[10]) == u'(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)'
 
 
 def test_latex_printing():
@@ -91,7 +144,7 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
                            '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\' +
+    assert latex(v[6]) == ('(a^{2} + \\mathbf{{x}_{N}})\\mathbf{\\' +
                            'hat{i}_{N}} + \\mathbf{\\hat{k}_{N}}')
     assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
                            '{C}}^{2} - \\int f{\\left (b \\right )}\\,' +

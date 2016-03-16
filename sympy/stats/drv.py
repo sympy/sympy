@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, solve, Sum)
+        Piecewise, S, cacheit, Sum)
+from sympy.solvers.solveset import solveset
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
 
@@ -40,7 +41,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(self.cdf(x) - z, x)
+            inverse_cdf = list(solveset(self.cdf(x) - z, x))
         except NotImplementedError:
             inverse_cdf = None
         if not inverse_cdf or len(inverse_cdf) != 1:
@@ -70,7 +71,6 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
         if evaluate:
             return summation(expr * self.pdf(var),

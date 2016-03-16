@@ -1,5 +1,5 @@
 from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, oo, pi, sign, sqrt,
+    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
     symbols, transpose, Symbol, Piecewise, I, S, Eq
 )
 
@@ -47,7 +47,7 @@ def test_DiracDelta():
 
 
 def test_heaviside():
-    assert Heaviside(0) == 0.5
+    assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
     assert Heaviside(nan) == nan

@@ -7,10 +7,10 @@ from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.polys.polyerrors import PolynomialError
 
-from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Expr
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.core.basic import preorder_traversal
 from sympy.utilities import numbered_symbols, take, xthreaded, public
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 @xthreaded
 @public
@@ -87,7 +87,7 @@ def apart(f, x=None, full=False, **options):
         # non-commutative
         if f.is_Mul:
             c, nc = f.args_cnc(split_1=False)
-            nc = f.func(*[apart(i, x=x, full=full, **_options) for i in nc])
+            nc = f.func(*nc)
             if c:
                 c = apart(f.func._from_args(c), x=x, full=full, **_options)
                 return c*nc
@@ -159,7 +159,7 @@ def apart_undetermined_coeffs(P, Q):
     for f, k in factors:
         n, q = f.degree(), Q
 
-        for i in xrange(1, k + 1):
+        for i in range(1, k + 1):
             coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)

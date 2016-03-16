@@ -2,7 +2,6 @@ from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
-from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
 import sympy.vector
@@ -254,7 +253,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
-    _pretty_form = u('(0|0)')
+    _pretty_form = u'(0|0)'
     _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):

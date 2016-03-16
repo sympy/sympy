@@ -1,6 +1,7 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow
+from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
+from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.basisdependent import BasisDependent, \
@@ -249,6 +250,33 @@ class Vector(BasisDependent):
 
         return DyadicAdd(*args)
 
+    def projection(self, other, scalar=False):
+        """
+        Returns the vector or scalar projection of the 'other' on 'self'.
+
+        Examples
+        ========
+
+        >>> from sympy.vector.coordsysrect import CoordSysCartesian
+        >>> from sympy.vector.vector import Vector, BaseVector
+        >>> C = CoordSysCartesian('C')
+        >>> i, j, k = C.base_vectors()
+        >>> v1 = i + j + k
+        >>> v2 = 3*i + 4*j
+        >>> v1.projection(v2)
+        7/3*C.i + 7/3*C.j + 7/3*C.k
+        >>> v1.projection(v2, scalar=True)
+        7/3
+
+        """
+        if self.equals(Vector.zero):
+            return S.zero if scalar else Vector.zero
+
+        if scalar:
+            return self.dot(other) / self.dot(self)
+        else:
+            return self.dot(other) / self.dot(self) * self
+
     def __or__(self, other):
         return self.outer(other)
     __or__.__doc__ = outer.__doc__
@@ -315,16 +343,18 @@ class BaseVector(Vector, AtomicExpr):
     """
 
     def __new__(cls, name, index, system, pretty_str, latex_str):
+        name = str(name)
+        pretty_str = str(pretty_str)
+        latex_str = str(latex_str)
         #Verify arguments
         if not index in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(name, str):
-            raise TypeError("name must be a valid string")
         if not isinstance(system, CoordSysCartesian):
             raise TypeError("system should be a CoordSysCartesian")
         #Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, S(index),
-                                             system)
+        obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
+                                             system, Symbol(pretty_str),
+                                             Symbol(latex_str))
         #Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S(1)}
@@ -351,6 +381,10 @@ class BaseVector(Vector, AtomicExpr):
 
     def __str__(self, printer=None):
         return self._name
+
+    @property
+    def free_symbols(self):
+        return {self}
 
     __repr__ = __str__
     _sympystr = __str__
@@ -409,7 +443,7 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u('0')
+    _pretty_form = u'0'
     _latex_form = '\mathbf{\hat{0}}'
 
     def __new__(cls):

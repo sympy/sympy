@@ -16,7 +16,6 @@ from plot_object import PlotObject
 from plot_axes import PlotAxes
 from plot_window import PlotWindow
 from plot_mode import PlotMode
-import plot_modes
 
 from time import sleep
 from os import getcwd, listdir

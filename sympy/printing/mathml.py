@@ -7,7 +7,7 @@ from __future__ import print_function, division
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.alphabets import greeks
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, range
 from .printer import Printer
 from .pretty.pretty_symbology import greek_unicode
 from .conventions import split_super_sub, requires_partial
@@ -196,7 +196,7 @@ class MathMLPrinter(Printer):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
-        x.appendChild(self.dom.createTextNode(u("\u03c6")))
+        x.appendChild(self.dom.createTextNode(u"\N{GREEK SMALL LETTER PHI}"))
         return x
 
     def _print_Exp1(self, e):

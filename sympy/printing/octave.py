@@ -11,11 +11,10 @@ complete source code files.
 """
 
 from __future__ import print_function, division
-from sympy.core import C, Add, Mul, Pow, S, Rational
-from sympy.core.compatibility import string_types
+from sympy.core import Mul, Pow, S, Rational
+from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 from re import search
 
@@ -25,6 +24,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
                    "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
                    "log", "exp", "erf", "gamma", "sign", "floor", "csc",
                    "sec", "cot", "coth", "acot", "acoth", "erfc",
+                   "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv", "factorial" ]
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
@@ -32,6 +32,8 @@ known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
     "conjugate": "conj",
+    "DiracDelta": "dirac",
+    "Heaviside": "heaviside",
 }
 
 
@@ -43,8 +45,8 @@ class OctaveCodePrinter(CodePrinter):
     language = "Octave"
 
     _operators = {
-        'and': '&&',
-        'or': '||',
+        'and': '&',
+        'or': '|',
         'not': '~',
     }
 
@@ -150,8 +152,8 @@ class OctaveCodePrinter(CodePrinter):
 
         a = a or [S.One]
 
-        a_str = list(map(lambda x: self.parenthesize(x, prec), a))
-        b_str = list(map(lambda x: self.parenthesize(x, prec), b))
+        a_str = [self.parenthesize(x, prec) for x in a]
+        b_str = [self.parenthesize(x, prec) for x in b]
 
         # from here it differs from str.py to deal with "*" and ".*"
         def multjoin(a, a_str):
@@ -226,11 +228,13 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
-        if not self._settings["inline"] and isinstance(expr.rhs, C.Piecewise):
+        if not self._settings["inline"] and isinstance(expr.rhs, Piecewise):
             # Here we modify Piecewise so each expression is now
             # an Assignment, and then continue on the print.
             expressions = []
@@ -238,10 +242,10 @@ class OctaveCodePrinter(CodePrinter):
             for (e, c) in rhs.args:
                 expressions.append(Assignment(lhs, e))
                 conditions.append(c)
-            temp = C.Piecewise(*zip(expressions, conditions))
+            temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
-        if self._settings["contract"] and (lhs.has(C.IndexedBase) or
-                rhs.has(C.IndexedBase)):
+        if self._settings["contract"] and (lhs.has(IndexedBase) or
+                rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
@@ -364,6 +368,47 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
+
+
+    def _print_hankel1(self, expr):
+        return "besselh(%s, 1, %s)" % (self._print(expr.order),
+                                       self._print(expr.argument))
+
+
+    def _print_hankel2(self, expr):
+        return "besselh(%s, 2, %s)" % (self._print(expr.order),
+                                       self._print(expr.argument))
+
+
+    # Note: as of 2015, Octave doesn't have spherical Bessel functions
+    def _print_jn(self, expr):
+        from sympy.functions import sqrt, besselj
+        x = expr.argument
+        expr2 = sqrt(S.Pi/(2*x))*besselj(expr.order + S.Half, x)
+        return self._print(expr2)
+
+
+    def _print_yn(self, expr):
+        from sympy.functions import sqrt, bessely
+        x = expr.argument
+        expr2 = sqrt(S.Pi/(2*x))*bessely(expr.order + S.Half, x)
+        return self._print(expr2)
+
+
+    def _print_airyai(self, expr):
+        return "airy(0, %s)" % self._print(expr.args[0])
+
+
+    def _print_airyaiprime(self, expr):
+        return "airy(1, %s)" % self._print(expr.args[0])
+
+
+    def _print_airybi(self, expr):
+        return "airy(2, %s)" % self._print(expr.args[0])
+
+
+    def _print_airybiprime(self, expr):
+        return "airy(3, %s)" % self._print(expr.args[0])
 
 
     def _print_Piecewise(self, expr):
@@ -560,6 +605,7 @@ def octave_code(expr, assign_to=None, **settings):
     ``contract=True`` these expressions will be turned into loops, whereas
     ``contract=False`` will just print the assignment expression that should be
     looped over:
+
     >>> from sympy import Eq, IndexedBase, Idx, ccode
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))

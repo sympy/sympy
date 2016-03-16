@@ -22,6 +22,7 @@ import traceback
 import pdb
 import re
 import linecache
+import time
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
@@ -33,8 +34,7 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, get_function_code,
-                                      string_types, xrange)
+from sympy.core.compatibility import exec_, PY3, string_types, range
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -262,13 +262,17 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or PY3):
+        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
+            # Only run Sage tests if 'bin/test' is present (it is missing from
+            # our release because everything in the 'bin' directory gets
+            # installed).
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -425,7 +429,7 @@ def test(*paths, **kwargs):
 
     if subprocess:
         # loop backwards so last i is 0
-        for i in xrange(rerun, -1, -1):
+        for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_test",
                         function_args=paths, function_kwargs=kwargs)
@@ -437,7 +441,7 @@ def test(*paths, **kwargs):
                 return val
 
     # rerun even if hash randomization is not supported
-    for i in xrange(rerun, -1, -1):
+    for i in range(rerun, -1, -1):
         print_counter(i)
         val = not bool(_test(*paths, **kwargs))
         if not val or i == 0:
@@ -472,14 +476,14 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     blacklist = kwargs.get('blacklist', [])
-    blacklist.extend([
-        "sympy/mpmath", # needs to be fixed upstream
-    ])
     blacklist = convert_to_native_paths(blacklist)
+    fast_threshold = kwargs.get('fast_threshold', None)
+    slow_threshold = kwargs.get('slow_threshold', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
-    t = SymPyTests(r, kw, post_mortem, seed)
-
+    t = SymPyTests(r, kw, post_mortem, seed,
+                   fast_threshold=fast_threshold,
+                   slow_threshold=slow_threshold)
 
     # Disable warnings for external modules
     import sympy.external
@@ -506,6 +510,11 @@ def _test(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
+
+    if slow:
+        # Seed to evenly shuffle slow tests among splits
+        random.seed(41992450)
+        random.shuffle(matched)
 
     if split:
         matched = split_list(matched, split)
@@ -572,7 +581,7 @@ def doctest(*paths, **kwargs):
 
     if subprocess:
         # loop backwards so last i is 0
-        for i in xrange(rerun, -1, -1):
+        for i in range(rerun, -1, -1):
             print_counter(i)
             ret = run_in_subprocess_with_hash_randomization("_doctest",
                         function_args=paths, function_kwargs=kwargs)
@@ -584,7 +593,7 @@ def doctest(*paths, **kwargs):
                 return val
 
     # rerun even if hash randomization is not supported
-    for i in xrange(rerun, -1, -1):
+    for i in range(rerun, -1, -1):
         print_counter(i)
         val = not bool(_doctest(*paths, **kwargs))
         if not val or i == 0:
@@ -603,14 +612,14 @@ def _doctest(*paths, **kwargs):
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
+    colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
-        "doc/src/modules/mpmath",  # needs to be fixed upstream
-        "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
     ])
 
     if import_module('numpy') is None:
@@ -631,9 +640,14 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot3d.py"
             ])
         else:
+            # Use a non-windowed backend, so that the tests work on Travis
+            import matplotlib
+            matplotlib.use('Agg')
+
             # don't display matplotlib windows
             from sympy.plotting.plot import unset_show
             unset_show()
+
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
@@ -647,14 +661,6 @@ def _doctest(*paths, **kwargs):
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
         ])
-
-    # pytest = import_module('pytest')
-    # py = import_module('py')
-    # if py is None or pytest is None:
-    #     blacklist.extend([
-    #         "sympy/conftest.py",
-    #         "sympy/utilities/benchmarking.py"
-    #     ])
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
@@ -673,7 +679,8 @@ def _doctest(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
-    r = PyTestReporter(verbose, split=split)
+    r = PyTestReporter(verbose, split=split, colors=colors,\
+                       force_colors=force_colors)
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
@@ -745,9 +752,6 @@ def _doctest(*paths, **kwargs):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(
-            #    rst_file, module_relative=False, encoding='utf-8',
-            #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -953,7 +957,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 class SymPyTests(object):
 
     def __init__(self, reporter, kw="", post_mortem=False,
-                 seed=None):
+                 seed=None, fast_threshold=None, slow_threshold=None):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -963,6 +967,20 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
 
+        # Defaults in seconds, from human / UX design limits
+        # http://www.nngroup.com/articles/response-times-3-important-limits/
+        #
+        # These defaults are *NOT* set in stone as we are measuring different
+        # things, so others feel free to come up with a better yardstick :)
+        if fast_threshold:
+            self._fast_threshold = float(fast_threshold)
+        else:
+            self._fast_threshold = 0.1
+        if slow_threshold:
+            self._slow_threshold = float(slow_threshold)
+        else:
+            self._slow_threshold = 10
+
     def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
@@ -971,10 +989,11 @@ class SymPyTests(object):
         """
         if sort:
             self._testfiles.sort()
+        elif slow:
+            pass
         else:
-            from random import shuffle
             random.seed(self._seed)
-            shuffle(self._testfiles)
+            random.shuffle(self._testfiles)
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
@@ -1017,6 +1036,7 @@ class SymPyTests(object):
         return fix_missing_locations(new_tree)
 
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+        reporter = self._reporter
         funcs = []
         try:
             gl = {'__file__': filename}
@@ -1047,8 +1067,11 @@ class SymPyTests(object):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
-                self._reporter.import_error(filename, sys.exc_info())
+                reporter.import_error(filename, sys.exc_info())
                 return
+            except Exception:
+                reporter.test_exception(sys.exc_info())
+
             clear_cache()
             self._count += 1
             random.seed(self._seed)
@@ -1092,14 +1115,16 @@ class SymPyTests(object):
             if not funcs:
                 return
         except Exception:
-            self._reporter.entering_filename(filename, len(funcs))
+            reporter.entering_filename(filename, len(funcs))
             raise
 
-        self._reporter.entering_filename(filename, len(funcs))
+        reporter.entering_filename(filename, len(funcs))
         if not sort:
             random.shuffle(funcs)
+
         for f in funcs:
-            self._reporter.entering_test(f)
+            start = time.time()
+            reporter.entering_test(f)
             try:
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
@@ -1110,7 +1135,7 @@ class SymPyTests(object):
                     f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):
-                    self._reporter.test_skip("KeyboardInterrupt")
+                    reporter.test_skip("KeyboardInterrupt")
                 else:
                     raise
             except Exception:
@@ -1118,22 +1143,28 @@ class SymPyTests(object):
                     signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
-                    self._reporter.test_fail((t, v, tr))
+                    reporter.test_fail((t, v, tr))
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip(v)
+                    reporter.test_skip(v)
                 elif t.__name__ == "XFail":
-                    self._reporter.test_xfail()
+                    reporter.test_xfail()
                 elif t.__name__ == "XPass":
-                    self._reporter.test_xpass(v)
+                    reporter.test_xpass(v)
                 else:
-                    self._reporter.test_exception((t, v, tr))
+                    reporter.test_exception((t, v, tr))
                     if self._post_mortem:
                         pdb.post_mortem(tr)
             else:
-                self._reporter.test_pass()
-        self._reporter.leaving_filename()
+                reporter.test_pass()
+            taken = time.time() - start
+            if taken > self._slow_threshold:
+                reporter.slow_test_functions.append((f.__name__, taken))
+            if getattr(f, '_slow', False) and slow:
+                if taken < self._fast_threshold:
+                    reporter.fast_test_functions.append((f.__name__, taken))
+        reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
         def callback(x, y):
@@ -1239,9 +1270,14 @@ class SymPyDocTests(object):
 
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                if not self._process_dependencies(test.globs['_doctest_depends_on']):
-                    self._reporter.test_skip()
+                has_dependencies = self._process_dependencies(test.globs['_doctest_depends_on'])
+                if has_dependencies is not True:
+                    # has_dependencies is either True or a message
+                    self._reporter.test_skip(v="\n" + has_dependencies)
                     continue
+
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
@@ -1323,9 +1359,8 @@ class SymPyDocTests(object):
         if executables is not None:
             for ex in executables:
                 found = find_executable(ex)
-                # print "EXE %s found %s" %(ex, found)
                 if found is None:
-                    return False
+                    return "Could not find %s" % ex
         if moduledeps is not None:
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
@@ -1336,11 +1371,8 @@ class SymPyDocTests(object):
                         min_module_version='1.0.0', catch=(RuntimeError,))
                     if matplotlib is not None:
                         pass
-                        # print "EXTMODULE matplotlib version %s found" % \
-                        #     matplotlib.__version__
                     else:
-                        # print "EXTMODULE matplotlib > 1.0.0 not found"
-                        return False
+                        return "Could not import matplotlib"
                 else:
                     # TODO min version support
                     mod = import_module(extmod)
@@ -1348,10 +1380,8 @@ class SymPyDocTests(object):
                         version = "unknown"
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
-                        # print "EXTMODULE %s version %s found" %(extmod, version)
                     else:
-                        # print "EXTMODULE %s not found" %(extmod)
-                        return False
+                        return "Could not import %s" % mod
         if viewers is not None:
             import tempfile
             tempdir = tempfile.mkdtemp()
@@ -1793,6 +1823,10 @@ class PyTestReporter(Reporter):
         self._default_width = 80
         self._split = split
 
+        # TODO: Should these be protected?
+        self.slow_test_functions = []
+        self.fast_test_functions = []
+
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
         self._write_pos = 0
@@ -1857,9 +1891,11 @@ class PyTestReporter(Reporter):
                         columns = match.group('columns')
 
                         try:
-                            return int(columns)
+                            width = int(columns)
                         except ValueError:
                             pass
+                        if width != 0:
+                            return width
 
             return self._default_width
 
@@ -2042,6 +2078,19 @@ class PyTestReporter(Reporter):
             add_text("%d exceptions, " % len(self._exceptions))
         add_text("in %.2f seconds" % (self._t_end - self._t_start))
 
+        if self.slow_test_functions:
+            self.write_center('slowest tests', '_')
+            sorted_slow = sorted(self.slow_test_functions, key=lambda r: r[1])
+            for slow_func_name, taken in sorted_slow:
+                print('%s - Took %.3f seconds' % (slow_func_name, taken))
+
+        if self.fast_test_functions:
+            self.write_center('unexpectedly fast tests', '_')
+            sorted_fast = sorted(self.fast_test_functions,
+                                 key=lambda r: r[1])
+            for fast_func_name, taken in sorted_fast:
+                print('%s - Took %.3f seconds' % (fast_func_name, taken))
+
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
@@ -2049,7 +2098,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
-            #self.write_center("These tests raised an exception", "_")
             for e in self._exceptions:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2062,7 +2110,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
@@ -2071,7 +2118,6 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if self._tb_style != "no" and len(self._failed_doctest) > 0:
-            #self.write_center("Failed", "_")
             for e in self._failed_doctest:
                 filename, msg = e
                 self.write_center("", "_")
@@ -2147,11 +2193,12 @@ class PyTestReporter(Reporter):
                 char = "T"
             elif message == "Slow":
                 char = "w"
-        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Blue")
             if v is not None:
-                self.write(message, "Blue")
+                self.write(message + ' ', "Blue")
+            else:
+                self.write(" - ", "Blue")
+        self.write(char, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

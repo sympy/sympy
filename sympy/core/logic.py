@@ -8,7 +8,33 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import range
+
+
+def _torf(args):
+    """Return True if all args are True, False if they
+    are all False, else None.
+
+    >>> from sympy.core.logic import _torf
+    >>> _torf((True, True))
+    True
+    >>> _torf((False, False))
+    False
+    >>> _torf((True, False))
+    """
+    sawT = sawF = False
+    for a in args:
+        if a is True:
+            if sawF:
+                return
+            sawT = True
+        elif a is False:
+            if sawT:
+                return
+            sawF = True
+        else:
+            return
+    return sawT
 
 
 def _fuzzy_group(args, quick_exit=False):
@@ -64,11 +90,23 @@ def fuzzy_bool(x):
     """Return True, False or None according to x.
 
     Whereas bool(x) returns True or False, fuzzy_bool allows
-    for the None value.
+    for the None value and non-false values (which become None), too.
+
+    Examples
+    ========
+
+    >>> from sympy.core.logic import fuzzy_bool
+    >>> from sympy.abc import x
+    >>> fuzzy_bool(x), fuzzy_bool(None)
+    (None, None)
+    >>> bool(x), bool(None)
+    (True, False)
+
     """
     if x is None:
         return None
-    return bool(x)
+    if x in (True, False):
+        return bool(x)
 
 
 def fuzzy_and(args):
@@ -179,18 +217,18 @@ class Logic(object):
         else:
             return a.args != b.args
 
-    def __lt__(cls, other):
-        if cls.__cmp__(other) == -1:
+    def __lt__(self, other):
+        if self.__cmp__(other) == -1:
             return True
         return False
 
-    def __cmp__(a, b):
-        if type(a) is not type(b):
-            a = str(type(a))
-            b = str(type(b))
+    def __cmp__(self, other):
+        if type(self) is not type(other):
+            a = str(type(self))
+            b = str(type(other))
         else:
-            a = a.args
-            b = b.args
+            a = self.args
+            b = other.args
         return (a > b) - (a < b)
 
     def __str__(self):
@@ -260,8 +298,7 @@ class AndOr_Base(Logic):
                 continue    # skip this argument
             bargs.append(a)
 
-        args = cls.flatten(bargs)
-        args = set(args)
+        args = sorted(set(cls.flatten(bargs)), key=hash)
 
         for a in args:
             if Not(a) in args:
@@ -272,7 +309,7 @@ class AndOr_Base(Logic):
         elif len(args) == 0:
             return not cls.op_x_notx
 
-        return Logic.__new__(cls, *sorted(args, key=hash))
+        return Logic.__new__(cls, *args)
 
     @classmethod
     def flatten(cls, args):

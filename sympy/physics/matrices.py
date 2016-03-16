@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def msigma(i):
@@ -174,12 +174,12 @@ def mdft(n):
     [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
     [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
     """
-    mat = [[None for x in xrange(n)] for y in xrange(n)]
+    mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)
     mat[0] = [1]*n
     for i in range(n):
         mat[i][0] = 1
-    for i in xrange(1, n):
-        for j in xrange(i, n):
+    for i in range(1, n):
+        for j in range(i, n):
             mat[i][j] = mat[j][i] = base**(i*j)
     return (1/sqrt(n))*Matrix(mat)

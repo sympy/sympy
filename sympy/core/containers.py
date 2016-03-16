@@ -9,7 +9,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, range
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -32,9 +32,9 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         args = [ sympify(arg) for arg in args ]
-        obj = Basic.__new__(cls, *args, **assumptions)
+        obj = Basic.__new__(cls, *args)
         return obj
 
     def __getitem__(self, i):
@@ -194,8 +194,7 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args) == 1 and ((args[0].__class__ is dict) or
-                             (args[0].__class__ is Dict)):
+        if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]

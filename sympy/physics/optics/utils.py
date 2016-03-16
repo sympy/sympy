@@ -6,6 +6,7 @@
 * lens_makers_formula
 * mirror_formula
 * lens_formula
+* hyperfocal_distance
 """
 
 from __future__ import division
@@ -14,10 +15,12 @@ __all__ = ['refraction_angle',
            'deviation',
            'lens_makers_formula',
            'mirror_formula',
-           'lens_formula'
+           'lens_formula',
+           'hyperfocal_distance'
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
+from sympy.core.compatibility import is_sequence
 from sympy.geometry.line3d import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
@@ -41,13 +44,13 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, tuple or list
+    incident : Matrix, Ray3D, or sequence
         Incident vector
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 2 or its refractive index
-    normal : Matrix, Ray3D, tuple or list
+    normal : Matrix, Ray3D, or sequence
         Normal vector
     plane : Plane
         Plane of separation of the two media.
@@ -89,12 +92,13 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         raise ValueError("Either plane or normal is acceptable.")
 
     if not isinstance(incident, Matrix):
-        if type(incident) == type(()) or type(incident) == type([]):
+        if is_sequence(incident):
             _incident = Matrix(incident)
         elif isinstance(incident, Ray3D):
             _incident = Matrix(incident.direction_ratio)
         else:
-            raise TypeError("incident should be a Matrix, Ray3D, tuple or list")
+            raise TypeError(
+                "incident should be a Matrix, Ray3D, or sequence")
     else:
         _incident = incident
 
@@ -109,24 +113,24 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         if isinstance(incident, Ray3D):
             return_ray = True
             intersection_pt = plane.intersection(incident)[0]
-        _normal = plane.normal_vector
-        if isinstance(_normal, list):
-            _normal = Matrix(_normal)
+        _normal = Matrix(plane.normal_vector)
     else:
         if not isinstance(normal, Matrix):
-            if type(normal) == type(()) or type(normal) == type([]):
+            if is_sequence(normal):
                 _normal = Matrix(normal)
             elif isinstance(normal, Ray3D):
                 _normal = Matrix(normal.direction_ratio)
                 if isinstance(incident, Ray3D):
                     intersection_pt = intersection(incident, normal)
                     if len(intersection_pt) == 0:
-                        raise ValueError("Normal isn't concurrent with the incident ray.")
+                        raise ValueError(
+                            "Normal isn't concurrent with the incident ray.")
                     else:
                         return_ray = True
                         intersection_pt = intersection_pt[0]
             else:
-                raise TypeError("Normal should be a Matrix, Ray3D, tuple or list")
+                raise TypeError(
+                    "Normal should be a Matrix, Ray3D, or sequence")
         else:
             _normal = normal
 
@@ -171,13 +175,13 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, tuple or list
+    incident : Matrix, Ray3D, or sequence
         Incident vector
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 2 or its refractive index
-    normal : Matrix, Ray3D, tuple or list
+    normal : Matrix, Ray3D, or sequence
         Normal vector
     plane : Plane
         Plane of separation of the two media.
@@ -209,29 +213,29 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
             refracted = Matrix(refracted.direction_ratio)
 
         if not isinstance(incident, Matrix):
-            if type(incident) == type(()) or type(incident) == type([]):
+            if is_sequence(incident):
                 _incident = Matrix(incident)
             elif isinstance(incident, Ray3D):
                 _incident = Matrix(incident.direction_ratio)
             else:
-                raise TypeError("incident should be a Matrix, Ray3D, tuple or list")
+                raise TypeError(
+                    "incident should be a Matrix, Ray3D, or sequence")
         else:
             _incident = incident
 
         if plane is None:
             if not isinstance(normal, Matrix):
-                if type(normal) == type(()) or type(normal) == type([]):
+                if is_sequence(normal):
                     _normal = Matrix(normal)
                 elif isinstance(normal, Ray3D):
                     _normal = Matrix(normal.direction_ratio)
                 else:
-                    raise TypeError("normal should be a Matrix, Ray3D, tuple or list")
+                    raise TypeError(
+                        "normal should be a Matrix, Ray3D, or sequence")
             else:
                 _normal = normal
         else:
-            _normal = plane.normal_vector
-            if isinstance(_normal, list):
-                _normal = Matrix(_normal)
+            _normal = Matrix(plane.normal_vector)
 
         mag_incident = sqrt(sum([i**2 for i in _incident]))
         mag_normal = sqrt(sum([i**2 for i in _normal]))
@@ -420,3 +424,31 @@ def lens_formula(focal_length=None, u=None, v=None):
         if focal_length == oo:
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
+
+def hyperfocal_distance(f, N, c):
+    """
+
+    Parameters
+    ==========
+    f: sympifiable
+    Focal length of a given lens
+
+    N: sympifiable
+    F-number of a given lens
+
+    c: sympifiable
+    Circle of Confusion (CoC) of a given image format
+
+    Example
+    =======
+    >>> from sympy.physics.optics import hyperfocal_distance
+    >>> from sympy.abc import f, N, c
+    >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
+    9.47
+    """
+
+    f = sympify(f)
+    N = sympify(N)
+    c = sympify(c)
+
+    return (1/(N * c))*(f**2)

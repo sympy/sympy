@@ -3,17 +3,16 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Expr, Rational, AlgebraicNumber,
-    Symbol, Add, Mul, sympify, Dummy, Tuple, expand_mul, I, pi
+    S, Rational, AlgebraicNumber,
+    Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
+
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
-)
-
-from sympy.polys.polyclasses import (
-    ANP, DMP,
 )
 
 from sympy.polys.polyerrors import (
@@ -23,7 +22,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
 from sympy.polys.specialpolys import cyclotomic_poly
 
@@ -44,13 +43,15 @@ from sympy.utilities import (
 )
 
 from sympy.core.exprtools import Factors
-from sympy.simplify.simplify import _mexpand, _is_sum_surds
+from sympy.core.function import _mexpand
+from sympy.simplify.radsimp import _split_gcd
+from sympy.simplify.simplify import _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
-from sympy.mpmath import pslq, mp
+from mpmath import pslq, mp
 
 from sympy.core.compatibility import reduce
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
@@ -117,7 +118,6 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.simplify.simplify import _split_gcd, _mexpand
     from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
@@ -249,7 +249,6 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
     "Degrees of sums in a separable field extension".
     """
-    from sympy import gcd
     y = Dummy(str(x))
     if mp1 is None:
         mp1 = _minpoly_compose(ex1, x, dom)
@@ -397,7 +396,6 @@ def _minpoly_sin(ex, x):
     Returns the minimal polynomial of ``sin(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
-    from sympy.functions.combinatorial.factorials import binomial
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
@@ -424,7 +422,7 @@ def _minpoly_sin(ex, x):
                 res = _choose_factor(factors, x, ex)
                 return res
 
-            expr = ((1 - C.cos(2*c*pi))/2)**S.Half
+            expr = ((1 - cos(2*c*pi))/2)**S.Half
             res = _minpoly_compose(expr, x, QQ)
             return res
 
@@ -502,7 +500,7 @@ def _minpoly_exp(ex, x):
 
 def _minpoly_rootof(ex, x):
     """
-    Returns the minimal polynomial of a ``RootOf`` object.
+    Returns the minimal polynomial of a ``CRootOf`` object.
     """
     p = ex.expr
     p = p.subs({ex.poly.gens[0]:x})
@@ -568,13 +566,13 @@ def _minpoly_compose(ex, x, dom):
             res = _minpoly_mul(x, dom, *ex.args)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
-    elif ex.__class__ is C.sin:
+    elif ex.__class__ is sin:
         res = _minpoly_sin(ex, x)
-    elif ex.__class__ is C.cos:
+    elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
-    elif ex.__class__ is C.exp:
+    elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
-    elif ex.__class__ is RootOf:
+    elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
     else:
         raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
@@ -637,6 +635,9 @@ def minimal_polynomial(ex, x=None, **args):
     dom = args.get('domain', None)
 
     ex = sympify(ex)
+    if ex.is_number:
+        # not sure if it's always needed but try it for numbers (issue 8354)
+        ex = _mexpand(ex, recursive=True)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
             compose = False
@@ -930,7 +931,7 @@ def field_isomorphism_pslq(a, b):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)

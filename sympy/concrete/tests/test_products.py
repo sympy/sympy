@@ -6,6 +6,7 @@ from sympy import simplify
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
 
+
 def test_karr_convention():
     # Test the Karr product convention that we want to hold.
     # See his paper "Summation in Finite Terms" for a detailed
@@ -118,11 +119,11 @@ def test_karr_proposition_2a():
         assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    test_the_product(u,   u+v)
+    test_the_product(u, u+v)
     # m = n
-    test_the_product(u,   u  )
+    test_the_product(u, u)
     # m > n
-    test_the_product(u+v, u  )
+    test_the_product(u+v, u)
 
 
 def test_karr_proposition_2b():
@@ -151,23 +152,23 @@ def test_karr_proposition_2b():
         assert simplify(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    test_the_product(u,     u+v,   u+v+w)
+    test_the_product(u, u+v, u+v+w)
     # l < m = n
-    test_the_product(u,     u+v,   u+v  )
+    test_the_product(u, u+v, u+v)
     # l < m > n
-    test_the_product(u,     u+v+w, v    )
+    test_the_product(u, u+v+w, v)
     # l = m < n
-    test_the_product(u,     u,     u+v  )
+    test_the_product(u, u, u+v)
     # l = m = n
-    test_the_product(u,     u,     u    )
+    test_the_product(u, u, u)
     # l = m > n
-    test_the_product(u+v,   u+v,   u    )
+    test_the_product(u+v, u+v, u)
     # l > m < n
-    test_the_product(u+v,   u,     u+w  )
+    test_the_product(u+v, u, u+w)
     # l > m = n
-    test_the_product(u+v,   u,     u    )
+    test_the_product(u+v, u, u)
     # l > m > n
-    test_the_product(u+v+w, u+v,   u    )
+    test_the_product(u+v+w, u+v, u)
 
 
 def test_simple_products():
@@ -191,6 +192,10 @@ def test_simple_products():
     raises(ValueError, lambda: Product(n, k, 1))
     raises(ValueError, lambda: Product(n, k, 1, 10))
     raises(ValueError, lambda: Product(n, (k, 1)))
+
+    assert product(1, (n, 1, oo)) == 1  # issue 8301
+    assert product(2, (n, 1, oo)) == oo
+    assert product(-1, (n, 1, oo)).func is Product
 
 
 def test_multiple_products():
@@ -278,15 +283,15 @@ def test_simplify():
 def test_change_index():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert Product(x, (x, a, b)).change_index( x, x + 1, y) == \
+    assert Product(x, (x, a, b)).change_index(x, x + 1, y) == \
         Product(y - 1, (y, a + 1, b + 1))
-    assert Product(x**2, (x, a, b)).change_index( x, x - 1) == \
+    assert Product(x**2, (x, a, b)).change_index(x, x - 1) == \
         Product((x + 1)**2, (x, a - 1, b - 1))
-    assert Product(x**2, (x, a, b)).change_index( x, -x, y) == \
+    assert Product(x**2, (x, a, b)).change_index(x, -x, y) == \
         Product((-y)**2, (y, -b, -a))
-    assert Product(x, (x, a, b)).change_index( x, -x - 1) == \
+    assert Product(x, (x, a, b)).change_index(x, -x - 1) == \
         Product(-x - 1, (x, - b - 1, -a - 1))
-    assert Product(x*y, (x, a, b), (y, c, d)).change_index( x, x - 1, z) == \
+    assert Product(x*y, (x, a, b), (y, c, d)).change_index(x, x - 1, z) == \
         Product((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
 
 
@@ -309,6 +314,14 @@ def test_reorder():
         Product(x*y, (y, c, d), (x, a, b))
     assert Product(x*y, (x, a, b), (y, c, d)).reorder((y, x)) == \
         Product(x*y, (y, c, d), (x, a, b))
+
+
+def test_Product_is_convergent():
+    assert Product(1/n**2, (n, 1, oo)).is_convergent() is S.false
+    assert Product(exp(1/n**2), (n, 1, oo)).is_convergent() is S.true
+    assert Product(1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n**2, (n, 1, oo)).is_convergent() is S.true
 
 
 def test_reverse_order():
@@ -336,5 +349,5 @@ def test_reverse_order():
 
 
 def test_rewrite_Sum():
-    assert Product(1 - S.Half**2/k**2,(k,1,oo)).rewrite(Sum) == \
+    assert Product(1 - S.Half**2/k**2, (k, 1, oo)).rewrite(Sum) == \
         exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))

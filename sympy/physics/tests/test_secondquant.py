@@ -12,7 +12,8 @@ from sympy.physics.secondquant import (
 from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
 
-from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, slow
 
 
 def test_PermutationOperator():
@@ -91,7 +92,7 @@ def test_create():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -103,7 +104,7 @@ def test_annihilate():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
     assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n - 1])
     o = B(n)
@@ -201,6 +202,7 @@ def test_matrix_elements():
         assert m[i + 1, i] == sqrt(i + 1)
 
 
+@slow
 def test_sho():
     n, m = symbols('n,m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))
@@ -256,7 +258,7 @@ def test_create_f():
     o = Fd(i)
     assert isinstance(o, CreateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Fd(1)
     assert o.apply_operator(FKet([n])) == FKet([1, n])
     assert o.apply_operator(FKet([n])) == -FKet([n, 1])
@@ -279,7 +281,7 @@ def test_annihilate_f():
     o = F(i)
     assert isinstance(o, AnnihilateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = F(1)
     assert o.apply_operator(FKet([1, n])) == FKet([n])
     assert o.apply_operator(FKet([n, 1])) == -FKet([n])
@@ -300,7 +302,7 @@ def test_create_b():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -312,7 +314,7 @@ def test_annihilate_b():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
 
 

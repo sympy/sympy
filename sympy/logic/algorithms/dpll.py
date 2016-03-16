@@ -9,8 +9,8 @@ References:
 """
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy import default_sort_key
-from sympy.core.compatibility import reduce
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr, _find_predicates
 from sympy.logic.inference import pl_true, literal_symbol
@@ -212,7 +212,7 @@ def unit_propagate_int_repr(clauses, s):
     [set([3])]
 
     """
-    negated = set([-s])
+    negated = {-s}
     return [clause - negated for clause in clauses if s not in clause]
 
 
@@ -251,7 +251,7 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     (1, True)
 
     """
-    all_symbols = reduce(set.union, unknown_clauses, set())
+    all_symbols = set().union(*unknown_clauses)
     found_pos = all_symbols.intersection(symbols)
     found_neg = all_symbols.intersection([-s for s in symbols])
     for p in found_pos:

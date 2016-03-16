@@ -5,6 +5,7 @@ from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
+from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
@@ -69,7 +70,7 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
-    assert flatten(set([1, 11, 2])) == list(set([1, 11, 2]))
+    assert flatten({1, 11, 2}) == list({1, 11, 2})
 
 
 def test_group():
@@ -456,7 +457,7 @@ def test_involutions():
     for n, N in enumerate(lengths):
         i = list(generate_involutions(n + 1))
         assert len(i) == N
-        assert len(set([Permutation(j)**2 for j in i])) == 1
+        assert len({Permutation(j)**2 for j in i}) == 1
 
 
 def test_derangements():
@@ -598,8 +599,8 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
-    assert reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)]) == \
-        [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+    assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
+        [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
 
 def test_uniq():

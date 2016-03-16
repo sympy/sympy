@@ -2,12 +2,11 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt, Rational
+from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
 from sympy.core.trace import Tr
-from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import HermitianOperator, OuterProduct, Operator
+from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
@@ -25,7 +24,7 @@ class Density(HermitianOperator):
     Each tuple/list should be of form (state, prob) or [state,prob]
 
     Examples
-    =========
+    ========
 
     Create a density operator with 2 states represented by Kets.
 
@@ -55,7 +54,7 @@ class Density(HermitianOperator):
         """Return list of all states.
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -70,7 +69,7 @@ class Density(HermitianOperator):
         """Return list of all probabilities.
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -90,7 +89,7 @@ class Density(HermitianOperator):
         index : index of state to be returned
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -111,7 +110,7 @@ class Density(HermitianOperator):
         index : index of states whose probability is returned.
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -132,7 +131,7 @@ class Density(HermitianOperator):
         op : Operator
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -150,7 +149,7 @@ class Density(HermitianOperator):
         """Expand the density operator into an outer product format.
 
         Examples
-        =========
+        ========
 
         >>> from sympy.physics.quantum.state import Ket
         >>> from sympy.physics.quantum.density import Density
@@ -202,7 +201,7 @@ class Density(HermitianOperator):
         return printer._print(r'\rho', *args)
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(unichr('\u03C1'))
+        return prettyForm(unichr('\N{GREEK SMALL LETTER RHO}'))
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', [])
@@ -229,7 +228,7 @@ def entropy(density):
     density : density matrix of type Density, sympy matrix,
     scipy.sparse or numpy.ndarray
 
-    Examples:
+    Examples
     ========
 
     >>> from sympy.physics.quantum.density import Density, entropy
@@ -274,8 +273,8 @@ def fidelity(state1, state2):
     state1, state2 : a density matrix or Matrix
 
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy import S, sqrt
     >>> from sympy.physics.quantum.dagger import Dagger
