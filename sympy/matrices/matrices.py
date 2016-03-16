@@ -3965,7 +3965,7 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         #Allows you to build a matrix even if it is null matrix
-        if (self.rows <= 0 and self.cols <= 0):
+        if not self:
             return type(self)(rhs)
 
         if self.rows != rhs.rows:
@@ -4000,7 +4000,7 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         #Allows you to build a matrix even if it is null matrix
-        if (self.rows <= 0 and self.cols <= 0):
+        if not self:
             return type(self)(bott)
 
         if self.cols != bott.cols:
@@ -4035,7 +4035,7 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         #Allows you to build a matrix even if it is null matrix
-        if (self.rows <= 0 and self.cols <= 0):
+        if not self:
             return type(self)(mti)
 
         if pos == 0:
@@ -4081,7 +4081,7 @@ class MatrixBase(object):
         """
         from sympy.matrices import MutableMatrix
         #Allows you to build a matrix even if it is null matrix
-        if (self.rows <= 0 and self.cols <= 0):
+        if not self:
             return type(self)(mti)
 
         if pos == 0:
