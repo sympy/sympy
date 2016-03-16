@@ -704,7 +704,8 @@ class KanesMethod(object):
             A list of all RigidBody's and Particle's in the system.
 
         """
-
+        if len(FL) == 0:
+            FL = [(self._inertial, 0*self._inertial.x)]
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')

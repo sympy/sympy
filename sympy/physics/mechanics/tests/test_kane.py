@@ -43,6 +43,7 @@ def test_one_dof():
         F_A_old, F_B_old, r_old = KM.linearize()
     M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
     assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
+    assert KM.kanes_equations((), BL)[0] == Matrix([0])
 
 
 def test_two_dof():
@@ -79,6 +80,7 @@ def test_two_dof():
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
+    assert KM.kanes_equations((), BL)[0] == Matrix([0, 0])
 
 
 def test_pend():
