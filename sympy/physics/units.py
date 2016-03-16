@@ -71,6 +71,9 @@ quantity.)
     602214085700000000000000
     >>> u.avogadro_constant
     602214085700000000000000/mol
+
+Values of constants are recommended by Committee on Data for Science and
+Technology (CODATA) as of 2014. See more at http://arxiv.org/pdf/1507.07956.pdf
 """
 
 from __future__ import print_function, division
@@ -270,7 +273,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = 1.6021766208e-19 * J
+eV = Float('1.6021766208','') * 10**-19 * J
 
 # Other convenient units and magnitudes
 
