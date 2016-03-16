@@ -2439,7 +2439,6 @@ def createOreAlgebra(gen = None, base = None):
        ========
        >>> from sympy.polys.rings import OreAlgebra, createOreAlgebra
        >>> ore_ring = createOreAlgebra()
-       (OreAlgebra(D, x), D, x)
 
     """
     if base is None:
@@ -2500,7 +2499,7 @@ class OreDifferentialOperator(AtomicExpr):
            >>> (R, D, x) = ore_ring
            >>> L = OreDifferentialOperator(D, R)
            >>> L*x
-           x*D + 1
+           OreDifferentialOperator(1 + x*D, OreAlgebra(D, x))
 
         """
         if self is S(0):
@@ -2570,7 +2569,7 @@ class OreDifferentialOperator(AtomicExpr):
            >>> (R, D, x) = ore_ring
            >>> L = OreDifferentialOperator(D**2*x, R)
            >>> L.annihilator_integral()
-           2*D**2 + x*D**3
+           OreDifferentialOperator(2*D**2 + x*D**3, OreAlgebra(D, x))
 
         """
         operator = (self.ore_polynomial*self.parent.gen).expand()

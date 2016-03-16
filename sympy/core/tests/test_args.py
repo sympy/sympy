@@ -3121,6 +3121,16 @@ def test_sympy__polys__polytools__PurePoly():
     from sympy.polys.polytools import PurePoly
     assert _test_args(PurePoly(2, x, y))
 
+def test_sympy__polys__rings__OreAlgebra():
+    from sympy.polys.rings import OreAlgebra
+    assert _test_args(OreAlgebra())
+
+def test_sympy__polys__rings__OreDifferentialOperator():
+    from sympy.polys.rings import OreDifferentialOperator, OreAlgebra, createOreAlgebra
+    ore_ring = createOreAlgebra()
+    (R, D, x) = ore_ring
+    assert _test_args(OreDifferentialOperator(D*x, R))
+
 
 @SKIP('abstract class')
 def test_sympy__polys__rootoftools__RootOf():
