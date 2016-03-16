@@ -7,8 +7,10 @@ from sympy.core.numbers import igcd, igcdex
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
-from .factor_ import factorint, trailing, totient
+from .factor_ import factorint, trailing, totient, multiplicity
 from random import randint
+
+
 
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
@@ -52,6 +54,7 @@ def n_order(a, n):
             exponent = exponent // p
     return order
 
+
 def _primitive_root_prime_iter(p):
     """
     Generates the primitive roots for a prime ``p``
@@ -78,6 +81,7 @@ def _primitive_root_prime_iter(p):
         else:
             yield a
         a += 1
+
 
 def primitive_root(p):
     """
@@ -143,6 +147,7 @@ def primitive_root(p):
 
     return next(_primitive_root_prime_iter(p))
 
+
 def is_primitive_root(a, p):
     """
     Returns True if ``a`` is a primitive root of ``p``
@@ -173,6 +178,7 @@ def is_primitive_root(a, p):
         a = a % p
     return n_order(a, p) == totient(p)
 
+
 def _sqrt_mod_tonelli_shanks(a, p):
     """
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
@@ -202,6 +208,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     #assert A*pow(D, m, p) % p == 1
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
     return x
+
 
 def sqrt_mod(a, p, all_roots=False):
     """
@@ -253,6 +260,7 @@ def sqrt_mod(a, p, all_roots=False):
             return r
     except StopIteration:
         return None
+
 
 def _product(*iters):
     """
@@ -465,6 +473,7 @@ def _sqrt_mod_prime_power(a, p, k):
             r = (r - fr*frinv) % px
         return [r, px - r]
 
+
 def _sqrt_mod1(a, p, n):
     """
     find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
@@ -615,15 +624,63 @@ def is_nthpow_residue(a, n, m):
 
     P. Hackman "Elementary Number Theory" (2009),  page 76
     """
-    if( primitive_root(m) == None ):
-        raise NotImplementedError("Not implemented for m which do not have any primitive root")
+    a, n, m = [as_int(i) for i in (a, n, m)]
+    if m <= 0:
+        raise ValueError('m must be > 0')
+    if n < 0:
+        raise ValueError('n must be >= 0')
+    if a < 0:
+        raise ValueError('a must be >= 0')
+    if n == 0:
+        if m == 1:
+            return False
+        return a == 1
     if n == 1:
         return True
     if n == 2:
         return is_quad_residue(a, m)
+    return _is_nthpow_residue_bign(a, n, m)
+
+
+def _is_nthpow_residue_bign(a, n, m):
+    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    # assert n > 2
+    # assert a > 0 and m > 0
+    if primitive_root(m) is None:
+        # assert m >= 8
+        for prime, power in factorint(m).items():
+            if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
+                return False
+        return True
     f = totient(m)
     k = f // igcd(f, n)
     return pow(a, k, m) == 1
+
+
+def _is_nthpow_residue_bign_prime_power(a, n, p, k):
+    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
+    does/doesn't exist."""
+    # assert a > 0
+    # assert n > 2
+    # assert p is prime
+    # assert k > 0
+    if a % p:
+        if p != 2:
+            return _is_nthpow_residue_bign(a, n, pow(p, k))
+        if n & 1:
+            return True
+        c = trailing(n)
+        return a % pow(2, min(c + 2, k)) == 1
+    else:
+        a %= pow(p, k)
+        if not a:
+            return True
+        mu = multiplicity(p, a)
+        if mu % n:
+            return False
+        pm = pow(p, mu)
+        return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
+
 
 def _nthroot_mod2(s, q, p):
     f = factorint(q)
@@ -633,6 +690,7 @@ def _nthroot_mod2(s, q, p):
     for qx in v:
         s = _nthroot_mod1(s, qx, p, False)
     return s
+
 
 def _nthroot_mod1(s, q, p, all_roots):
     """
@@ -687,6 +745,7 @@ def _nthroot_mod1(s, q, p, all_roots):
         res.sort()
         return res
     return min(res)
+
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
@@ -750,6 +809,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
+
 
 def quadratic_residues(p):
     """
