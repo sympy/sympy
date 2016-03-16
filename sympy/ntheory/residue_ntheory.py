@@ -624,6 +624,13 @@ def is_nthpow_residue(a, n, m):
 
     P. Hackman "Elementary Number Theory" (2009),  page 76
     """
+    a, n, m = [as_int(i) for i in (a, n, m)]
+    if m <= 0:
+        raise ValueError('m must be > 0')
+    if n < 0:
+        raise ValueError('n must be >= 0')
+    if a < 0:
+        raise ValueError('a must be >= 0')
     if n == 0:
         if m == 1:
             return False
@@ -632,9 +639,17 @@ def is_nthpow_residue(a, n, m):
         return True
     if n == 2:
         return is_quad_residue(a, m)
+    return _is_nthpow_residue_bign(a, n, m)
+
+
+def _is_nthpow_residue_bign(a, n, m):
+    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    # assert n > 2
+    # assert a > 0 and m > 0
     if primitive_root(m) is None:
-        for prime , power in factorint(m).items():
-            if not _nthroot_mod_prime_power(a, n, prime, power):
+        # assert m >= 8
+        for prime, power in factorint(m).items():
+            if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
                 return False
         return True
     f = totient(m)
@@ -642,11 +657,16 @@ def is_nthpow_residue(a, n, m):
     return pow(a, k, m) == 1
 
 
-def _nthroot_mod_prime_power(a, n, p, k):
-    """Returns true if solution for ``x**n == a (mod(p**k))`` exists."""
+def _is_nthpow_residue_bign_prime_power(a, n, p, k):
+    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
+    does/doesn't exist."""
+    # assert a > 0
+    # assert n > 2
+    # assert p is prime
+    # assert k > 0
     if a % p:
         if p != 2:
-            return is_nthpow_residue(a, n, pow(p, k) )
+            return _is_nthpow_residue_bign(a, n, pow(p, k))
         if n & 1:
             return True
         c = trailing(n)
@@ -659,7 +679,7 @@ def _nthroot_mod_prime_power(a, n, p, k):
         if mu % n:
             return False
         pm = pow(p, mu)
-        return _nthroot_mod_prime_power(a//pm, n, p, k - mu)
+        return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
 
 
 def _nthroot_mod2(s, q, p):
