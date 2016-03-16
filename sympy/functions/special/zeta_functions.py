@@ -244,7 +244,7 @@ class polylog(Function):
     >>> polylog(s, 1)
     zeta(s)
     >>> polylog(s, -1)
-    dirichlet_eta(s)
+    -dirichlet_eta(s)
 
     If :math:`s` is a negative integer, :math:`0` or :math:`1`, the
     polylogarithm can be expressed using elementary functions. This can be
@@ -274,7 +274,7 @@ class polylog(Function):
         if z == 1:
             return zeta(s)
         elif z == -1:
-            return dirichlet_eta(s)
+            return -dirichlet_eta(s)
         elif z == 0:
             return 0
 

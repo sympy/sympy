@@ -193,7 +193,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     https://github.com/pydata/numexpr#supported-functions
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
-    by default. As of release 0.7.7 ``numpy.array`` is the default.
+    by default. As of release 1.0 ``numpy.array`` is the default.
     To get the old default behavior you must pass in ``[{'ImmutableMatrix':
     numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
 

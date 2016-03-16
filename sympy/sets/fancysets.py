@@ -5,11 +5,10 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
-from sympy.core.singleton import Singleton, S, sympify
-from sympy.core.sympify import _sympify, converter
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.singleton import Singleton, S
 from sympy.core.function import Lambda
 from sympy.utilities.misc import filldedent, func_name
-
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -187,7 +186,15 @@ class Reals(with_metaclass(Singleton, Interval)):
 
 class ImageSet(Set):
     """
-    Image of a set under a mathematical function
+    Image of a set under a mathematical function. The transformation
+    must be given as a Lambda function which has as many arguments
+    as the elements of the set upon which it operates, e.g. 1 argument
+    when acting on the set of integers or 2 arguments when acting on
+    a complex region.
+
+    This function is not normally called directly, but is called
+    from `imageset`.
+
 
     Examples
     ========
@@ -212,8 +219,19 @@ class ImageSet(Set):
     4
     9
     16
+
+    See Also
+    ========
+    sympy.sets.sets.imageset
     """
     def __new__(cls, lamda, base_set):
+        if not isinstance(lamda, Lambda):
+            raise ValueError('first argument must be a Lambda')
+        if lamda is S.IdentityFunction:
+            return base_set
+        if not lamda.expr.free_symbols or not lamda.expr.args:
+            return FiniteSet(lamda.expr)
+
         return Basic.__new__(cls, lamda, base_set)
 
     lamda = property(lambda self: self.args[0])
@@ -233,15 +251,51 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
+        from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.utilities.iterables import iterable, cartes
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in
-            zip(other, L.expr)], L.variables).args[0])
+            if not iterable(L.expr):
+                if iterable(other):
+                    return S.false
+                return other.as_numer_denom() in self.func(
+                    Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
+            if len(L.expr) != len(self.lamda.variables):
+                raise NotImplementedError(filldedent('''
+    Dimensions of input and output of Lambda are different.'''))
+            eqs = [expr - val for val, expr in zip(other, L.expr)]
+            variables = L.variables
+            free = set(variables)
+            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
+                solns = list(linsolve([e - val for e, val in
+                zip(L.expr, other)], variables))
+            else:
+                syms = [e.free_symbols & free for e in eqs]
+                solns = {}
+                for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
+                    if not s:
+                        if e != v:
+                            return S.false
+                        solns[vars[i]] = [v]
+                        continue
+                    elif len(s) == 1:
+                        sy = s.pop()
+                        sol = solveset(e, sy)
+                        if sol is S.EmptySet:
+                            return S.false
+                        elif isinstance(sol, FiniteSet):
+                            solns[sy] = list(sol)
+                        else:
+                            raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+                solns = cartes(*[solns[s] for s in variables])
         else:
-            solnsSet = solveset(L.expr-other, L.variables[0])
+            # assume scalar -> scalar mapping
+            solnsSet = solveset(L.expr - other, L.variables[0])
             if solnsSet.is_FiniteSet:
-                solns = list(solveset(L.expr - other, L.variables[0]))
+                solns = list(solnsSet)
             else:
                 raise NotImplementedError(filldedent('''
                 Determining whether an ImageSet contains %s has not
@@ -339,8 +393,10 @@ class Range(Set):
             start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
                                  for w in (start, stop, step)]
         except ValueError:
-            raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use ImageSets of Ranges for other cases")
+            raise ValueError(filldedent('''
+    Inputs to Range must be integers;
+    use ImageSets of Ranges for other cases, e.g.
+    `ImageSet(Lambda(i, i/10), Range(2))` to give [0, .1].'''))
 
         if not step.is_finite:
             raise ValueError("Infinite step is not allowed")
@@ -842,10 +898,14 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-
+        from sympy.core.containers import Tuple
+        other = sympify(other)
+        isTuple = isinstance(other, Tuple)
+        if isTuple and len(other) != 2:
+            raise ValueError('expecting Tuple of length 2')
         # self in rectangular form
         if not self.polar:
-            re, im = other.as_real_imag()
+            re, im = other if isTuple else other.as_real_imag()
             for element in self.psets:
                 if And(element.args[0]._contains(re),
                         element.args[1]._contains(im)):
@@ -854,7 +914,9 @@ class ComplexRegion(Set):
 
         # self in polar form
         elif self.polar:
-            if sympify(other).is_zero:
+            if isTuple:
+                r, theta = other
+            elif other.is_zero:
                 r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)
