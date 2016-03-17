@@ -193,6 +193,38 @@ class Sieve:
 sieve = Sieve()
 
 
+def prime(nth):
+    """ Return the nth prime, with the primes indexed as prime(1) = 2,
+        prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
+        can never be larger than 2**n.
+
+        References
+        ==========
+
+        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+
+        Examples
+        ========
+
+        >>> from sympy import prime
+        >>> prime(10)
+        29
+        >>> prime(1)
+        2
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        primepi : Return the number of primes less than or equal to n
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; prime(1) == 2")
+    return sieve[n]
+
+
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
@@ -244,6 +276,7 @@ def primepi(n):
         for j in range(lim,i*i-1,-1):
             arr1[j]-=arr1[j//i]-p	
     return arr2[1] #pi(n)
+
 
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
