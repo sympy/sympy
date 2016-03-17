@@ -138,6 +138,19 @@ class FunctionClass(ManagedProperties):
         cls._nargs = nargs
 
     @property
+    def __signature__(self):
+        """
+        Allow Python 3's inspect.signature to give a useful signature for
+        Function subclasses.
+        """
+        # Python 3 only, but this method is also only ever called in Python
+        # 3.
+        from inspect import signature
+
+        # TODO: Look at nargs
+        return signature(self.eval)
+
+    @property
     def nargs(self):
         """Return a set of the allowed number of arguments for the function.
 
