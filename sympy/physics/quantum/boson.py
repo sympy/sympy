@@ -121,7 +121,7 @@ class BosonOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u('\N{DAGGER}'))
+            return pform**prettyForm(u'\N{DAGGER}')
 
 
 class BosonFockKet(Ket):

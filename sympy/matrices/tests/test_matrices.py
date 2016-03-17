@@ -950,6 +950,10 @@ def test_eigen():
     sevals = list(sorted(evals.keys()))
     assert all(abs(nevals[i] - sevals[i]) < 1e-9 for i in range(len(nevals)))
 
+    # issue 10719
+    assert Matrix([]).eigenvals() == {}
+    assert Matrix([]).eigenvects() == []
+
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
@@ -1185,6 +1189,8 @@ def test_is_nilpotent():
     assert a.is_nilpotent()
     a = Matrix([[1, 0], [0, 1]])
     assert not a.is_nilpotent()
+    a = Matrix([])
+    assert a.is_nilpotent()
 
 
 def test_zeros_ones_fill():
@@ -2043,6 +2049,9 @@ def test_condition_number():
     assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in
         [Rational(1, 5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
 
+    #issue 10782
+    assert Matrix([]).condition_number() == 0
+
 
 def test_equality():
     A = Matrix(((1, 2, 3), (4, 5, 6), (7, 8, 9)))
@@ -2260,7 +2269,7 @@ def test_issue_5964():
 
 
 def test_issue_7604():
-    x, y = symbols(u("x y"))
+    x, y = symbols(u"x y")
     assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
         'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
 
@@ -2376,7 +2385,7 @@ def test_cross():
 
 def test_hash():
     for cls in classes[-2:]:
-        s = set([cls.eye(1), cls.eye(1)])
+        s = {cls.eye(1), cls.eye(1)}
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 3979
     for cls in classes[:2]:
@@ -2430,8 +2439,8 @@ def test_replace_map():
 
 def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])
-    assert m.atoms() == set([S(1),S(2),S(-1), x])
-    assert m.atoms(Symbol) == set([x])
+    assert m.atoms() == {S(1),S(2),S(-1), x}
+    assert m.atoms(Symbol) == {x}
 
 @slow
 def test_pinv():
@@ -2624,7 +2633,7 @@ def test_issue_7201():
 
 def test_free_symbols():
     for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
-        assert M([[x], [0]]).free_symbols == set([x])
+        assert M([[x], [0]]).free_symbols == {x}
 
 def test_from_ndarray():
     """See issue 7465."""
@@ -2694,14 +2703,29 @@ def test_issue_9422():
     assert x*M1 != M1*x
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
+
+
 def test_issue_10770():
     M = Matrix([])
-    a = Matrix([[9, 6, 3]])
-    b = Matrix([9, 6, 3])
-    c = Matrix([[1, 2],[3, 4]])
-    assert M.row_insert(0, a) == Matrix([[9, 6, 3]])
-    assert M.col_join(a) == Matrix([[9, 6, 3]])
-    assert M.col_insert(0, b) == Matrix([9, 6, 3])
-    assert M.row_join(b) == Matrix([9, 6, 3])
-    assert M.row_insert(0, c) == Matrix([[1, 2],[3, 4]])
-    assert M.col_insert(0, c) == Matrix([[1, 2],[3, 4]])
+    a = ['col_insert', 'row_join'], Matrix([9, 6, 3])
+    b = ['row_insert', 'col_join'], a[1].T
+    c = ['row_insert', 'col_insert'], Matrix([[1, 2], [3, 4]])
+    for ops, m in (a, b, c):
+        for op in ops:
+            f = getattr(M, op)
+            new = f(m) if 'join' in op else f(42, m)
+            assert new == m and id(new) != id(m)
+
+
+def test_issue_10658():
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert A.extract([0, 1, 2], [True, True, False]) == \
+        Matrix([[1, 2], [4, 5], [7, 8]])
+    assert A.extract([0, 1, 2], [True, False, False]) == Matrix([[1], [4], [7]])
+    assert A.extract([True, False, False], [0, 1, 2]) == Matrix([[1, 2, 3]])
+    assert A.extract([True, False, True], [0, 1, 2]) == \
+        Matrix([[1, 2, 3], [7, 8, 9]])
+    assert A.extract([0, 1, 2], [False, False, False]) == Matrix(3, 0, [])
+    assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
+    assert A.extract([True, False, True], [False, True, False]) == \
+        Matrix([[2], [8]])

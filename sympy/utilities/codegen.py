@@ -524,7 +524,7 @@ class CodeGen(object):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
@@ -610,7 +610,7 @@ class CodeGen(object):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1077,8 +1077,8 @@ class FCodeGen(CodeGen):
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         # check that symbols are unique with ignorecase
         for r in routines:
-            lowercase = set([str(x).lower() for x in r.variables])
-            orig_case = set([str(x) for x in r.variables])
+            lowercase = {str(x).lower() for x in r.variables}
+            orig_case = {str(x) for x in r.variables}
             if len(lowercase) < len(orig_case):
                 raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
@@ -1150,7 +1150,7 @@ class JuliaCodeGen(CodeGen):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
@@ -1213,7 +1213,7 @@ class JuliaCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1357,7 +1357,7 @@ class OctaveCodeGen(CodeGen):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
@@ -1416,7 +1416,7 @@ class OctaveCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:

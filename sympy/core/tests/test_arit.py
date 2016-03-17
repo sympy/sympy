@@ -260,7 +260,7 @@ def test_pow_im():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -288,7 +288,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
