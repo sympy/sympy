@@ -1,5 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
+from collections import Mapping
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -833,7 +834,7 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
-            elif isinstance(sequence, (Dict, dict)):
+            elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
@@ -1390,8 +1391,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # restore subexpressions in mapping
                 for o, n in mask:
                     r = {o: n}
-                    mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.items()])
+                    mapping = {k.xreplace(r): v.xreplace(r)
+                        for k, v in mapping.items()}
             return rv, mapping
 
     def find(self, query, group=False):
@@ -1715,7 +1716,7 @@ def _atomic(e):
     try:
         free = e.free_symbols
     except AttributeError:
-        return set([e])
+        return {e}
     atoms = set()
     for p in pot:
         if p in seen:

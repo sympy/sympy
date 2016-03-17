@@ -252,12 +252,12 @@ def posify(eq):
             reps.update(dict((v, k) for k, v in posify(s)[1].items()))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r, s) for s, r in reps.items()])
+        return f(eq), {r: s for s, r in reps.items()}
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.free_symbols if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.items()])
+    return eq, {r: s for s, r in reps.items()}
 
 
 def hypersimp(f, k):
@@ -377,7 +377,7 @@ def signsimp(expr, evaluate=None):
     if e.is_Add:
         return e.func(*[signsimp(a) for a in e.args])
     if evaluate:
-        e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
+        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
 
 

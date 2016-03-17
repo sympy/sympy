@@ -212,7 +212,7 @@ def unit_propagate_int_repr(clauses, s):
     [set([3])]
 
     """
-    negated = set([-s])
+    negated = {-s}
     return [clause - negated for clause in clauses if s not in clause]
 
 

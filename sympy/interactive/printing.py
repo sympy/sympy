@@ -307,8 +307,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     pretty_printer: function, optional, default=None
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
-        A custom LaTeX printer. This should mimic sympy.printing.latex()
-        This should mimic sympy.printing.latex().
+        A custom LaTeX printer. This should mimic sympy.printing.latex().
 
     Examples
     ========

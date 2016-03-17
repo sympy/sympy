@@ -229,20 +229,20 @@ def opt_cse(exprs, order='canonical'):
                     # over them, to allow recursive matches
 
                     diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | set([com_func])
+                    func_args[i] = diff_i | {com_func}
                     if diff_i:
                         opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
                                                   evaluate=False)
 
                     diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | set([com_func])
+                    func_args[j] = diff_j | {com_func}
                     opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
                                               evaluate=False)
 
                     for k in range(j + 1, len(func_args)):
                         if not com_args.difference(func_args[k]):
                             diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | set([com_func])
+                            func_args[k] = diff_k | {com_func}
                             opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
                                                       evaluate=False)
 
