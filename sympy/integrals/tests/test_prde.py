@@ -187,6 +187,12 @@ def test_is_deriv_k():
     assert is_deriv_k(Poly(1 + x, t0), Poly(1, t0), DE) == \
         ([(t0, S(1)/2)], t0/2, 1)
 
+    # Issue 10798
+    # DE = DifferentialExtension(log(1/x), x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-1/x, t)],
+        'L_K': [1], 'E_K': [], 'L_args': [1/x], 'E_args': []})
+    assert is_deriv_k(Poly(1, t), Poly(x, t), DE) == ([(t, 1)], t, 1)
+
 
 def test_is_log_deriv_k_t_radical_in_field():
     # NOTE: any potential constant factor in the second element of the result
