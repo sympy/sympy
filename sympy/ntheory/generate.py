@@ -235,9 +235,9 @@ def primepi(n):
         >>> from sympy import primepi
         >>> primepi(25)
         9
-        >>>primepi(100)
+        >>> primepi(100)
         25
-        >>>primepi(10000000000)
+        >>> primepi(10000000000)
         455052511
         See Also
         ========
