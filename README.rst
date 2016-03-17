@@ -223,7 +223,7 @@ Citation
 
 To cite SymPy in publications use::
 
-    SymPy Development Team (2014). SymPy: Python library for symbolic mathematics
+    SymPy Development Team (2016). SymPy: Python library for symbolic mathematics
     URL http://www.sympy.org.
 
 A BibTeX entry for LaTeX users is::
@@ -231,7 +231,7 @@ A BibTeX entry for LaTeX users is::
     @Manual{,
     title = {SymPy: Python library for symbolic mathematics},
     author = {{SymPy Development Team}},
-    year = {2014},
+    year = {2016},
     url = {http://www.sympy.org},
     }
 
