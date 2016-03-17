@@ -212,3 +212,11 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
+
+
+def test_issue_10798():
+    from sympy import integrate, pi, I, log, polylog, exp_polar
+    from sympy.abc import x, y
+    assert integrate(1/(1-(x*y)**2), (x, 0, 1), y) == \
+        I*pi*log(y)/2 + polylog(2, exp_polar(I*pi)/y)/2 - \
+        polylog(2, exp_polar(2*I*pi)/y)/2
