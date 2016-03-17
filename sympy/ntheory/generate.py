@@ -193,38 +193,6 @@ class Sieve:
 sieve = Sieve()
 
 
-def prime(nth):
-    """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
-        can never be larger than 2**n.
-
-        References
-        ==========
-
-        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
-
-        Examples
-        ========
-
-        >>> from sympy import prime
-        >>> prime(10)
-        29
-        >>> prime(1)
-        2
-
-        See Also
-        ========
-
-        sympy.ntheory.primetest.isprime : Test if n is prime
-        primerange : Generate all primes in a given range
-        primepi : Return the number of primes less than or equal to n
-    """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2")
-    return sieve[n]
-
-
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
@@ -248,34 +216,34 @@ def primepi(n):
     """
     n = int(n)
     if n<2:
-		return 0	
-	lim = int(n**0.5) #lim = floor(sqrt(n))
-	lim-=1
-	lim = max(lim,0)
-	while lim*lim<=n:
-		lim+=1
-	lim-=1
-	arr1 = [0]*(lim+1) # stores values of pi(i)
-	arr2 = [0]*(lim+1) # stores values of pi(n/i)
-	for i in range(1,lim+1):
-		arr1[i] = i-1
-		if i==0:
-			arr2[i] = 0
-		else:
-			arr2[i] = n//i-1
-	for i in range(2,lim+1):
-		if arr1[i] == arr1[i-1]:
-			continue
-		p = arr1[i-1]
-		for j in range(1,min(n//(i*i),lim)+1):
-			st = i*j
-			if st<=lim:
-				arr2[j]-=arr2[st]-p
-			else:
-				arr2[j]-=arr1[n//st]-p
-		for j in range(lim,i*i-1,-1):
-			arr1[j]-=arr1[j//i]-p
-	return arr2[1] #pi(n)
+    	return 0	
+    lim = int(n**0.5) #lim = floor(sqrt(n))
+    lim-=1
+    lim = max(lim,0)
+    while lim*lim<=n:
+        lim+=1
+    lim-=1
+    arr1 = [0]*(lim+1) # stores values of pi(i)
+    arr2 = [0]*(lim+1) # stores values of pi(n/i)
+    for i in range(1,lim+1):
+    	arr1[i] = i - 1
+    	if i == 0:
+    	    arr2[i] = 0
+    	else:
+    	    arr2[i] = n // i -1	
+    for i in range(2,lim+1):
+    	if arr1[i] == arr1[i-1]:
+    	    continue
+    	p = arr1[i-1]
+    	for j in range(1,min(n//(i*i),lim)+1):
+    	    st = i*j
+    	    if st<=lim:
+    	        arr2[j]-=arr2[st]-p	
+    	    else:
+    	    	arr2[j]-=arr1[n//st]-p
+        for j in range(lim,i*i-1,-1):
+            arr1[j]-=arr1[j//i]-p	
+    return arr2[1] #pi(n)
 
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
