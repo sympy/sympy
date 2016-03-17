@@ -1484,9 +1484,13 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        if len(s) > 4:
+        dots = r'\ldots'
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = next(it), next(it), '\ldots', s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 

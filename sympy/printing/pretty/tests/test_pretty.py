@@ -3181,15 +3181,26 @@ def test_pretty_sets():
     assert pretty(Range(0, 30, 1)) == ascii_str
     assert upretty(Range(0, 30, 1)) == ucode_str
 
+    ascii_str = '{30, 29, ..., 2}'
+    ucode_str = u('{30, 29, …, 2}')
+    assert pretty(Range(30, 1, -1)) == ascii_str
+    assert upretty(Range(30, 1, -1)) == ucode_str
+
     ascii_str = '{0, 2, ..., oo}'
     ucode_str = u'{0, 2, …, ∞}'
     assert pretty(Range(0, oo, 2)) == ascii_str
     assert upretty(Range(0, oo, 2)) == ucode_str
 
-    ascii_str = '{-oo, ..., -3, -2}'
-    ucode_str = u'{-∞, …, -3, -2}'
+    ascii_str = '{oo, ..., 2, 0}'
+    ucode_str = u('{∞, …, 2, 0}')
+    assert pretty(Range(oo, -2, -2)) == ascii_str
+    assert upretty(Range(oo, -2, -2)) == ucode_str
+
+    ascii_str = '{-2, -3, ..., -oo}'
+    ucode_str = u('{-2, -3, …, -∞}')
     assert pretty(Range(-2, -oo, -1)) == ascii_str
     assert upretty(Range(-2, -oo, -1)) == ucode_str
+
 
 
 def test_pretty_ConditionSet():
