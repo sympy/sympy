@@ -6,7 +6,6 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, resultant, ZZ
-from sympy.polys.polytools import count_roots
 from sympy.core.compatibility import range
 
 def ratint(f, x, **flags):
@@ -80,7 +79,7 @@ def ratint(f, x, **flags):
 
                 atoms = p.atoms() | q.atoms()
 
-            for elt in atoms - set([x]):
+            for elt in atoms - {x}:
                 if not elt.is_real:
                     real = False
                     break

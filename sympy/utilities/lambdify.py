@@ -8,7 +8,6 @@ from __future__ import print_function, division
 import inspect
 import textwrap
 
-from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range, builtins
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -112,6 +111,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    from sympy.external import import_module
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -193,7 +193,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     https://github.com/pydata/numexpr#supported-functions
 
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
-    by default. As of release 0.7.7 ``numpy.array`` is the default.
+    by default. As of release 1.0 ``numpy.array`` is the default.
     To get the old default behavior you must pass in ``[{'ImmutableMatrix':
     numpy.matrix}, 'numpy']`` to the ``modules`` kwarg.
 

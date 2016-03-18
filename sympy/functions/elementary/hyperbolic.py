@@ -879,7 +879,6 @@ class acosh(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import acos
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1156,7 +1155,6 @@ class asech(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import asec
         arg = sympify(arg)
 
         if arg.is_Number:

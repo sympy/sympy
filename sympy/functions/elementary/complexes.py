@@ -430,7 +430,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.basic import Atom
         from sympy.core.function import expand_mul
 
         if hasattr(arg, '_eval_Abs'):
@@ -494,7 +493,7 @@ class Abs(Function):
             return
         if arg != conj and arg != -conj:
             ignore = arg.atoms(Abs)
-            abs_free_arg = arg.xreplace(dict([(i, Dummy(real=True)) for i in ignore]))
+            abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
             unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
@@ -737,7 +736,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u('\N{DAGGER}'))
+            pform = pform**prettyForm(u'\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform
@@ -1075,9 +1074,9 @@ def polarify(eq, subs=True, lift=False):
     eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
-    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.free_symbols])
+    reps = {s: Dummy(s.name, polar=True) for s in eq.free_symbols}
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.items()])
+    return eq, {r: s for s, r in reps.items()}
 
 
 def _unpolarify(eq, exponents_only, pause=False):

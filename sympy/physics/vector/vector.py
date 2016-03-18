@@ -128,7 +128,10 @@ class Vector(object):
 
         if other == 0:
             other = Vector(0)
-        other = _check_vector(other)
+        try:
+            other = _check_vector(other)
+        except TypeError:
+            return False
         if (self.args == []) and (other.args == []):
             return True
         elif (self.args == []) or (other.args == []):
@@ -268,10 +271,10 @@ class Vector(object):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            ol.append(u(" + ") + ar[i][1].pretty_vecs[j])
+                            ol.append(u" + " + ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            ol.append(u(" - ") + ar[i][1].pretty_vecs[j])
+                            ol.append(u" - " + ar[i][1].pretty_vecs[j])
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
@@ -282,15 +285,15 @@ class Vector(object):
                                 arg_str = (vp.doprint(
                                     ar[i][0][j]))
 
-                            if arg_str[0] == u("-"):
+                            if arg_str[0] == u"-":
                                 arg_str = arg_str[1:]
-                                str_start = u(" - ")
+                                str_start = u" - "
                             else:
-                                str_start = u(" + ")
+                                str_start = u" + "
                             ol.append(str_start + arg_str + ' ' +
                                       ar[i][1].pretty_vecs[j])
-                outstr = u("").join(ol)
-                if outstr.startswith(u(" + ")):
+                outstr = u"".join(ol)
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]

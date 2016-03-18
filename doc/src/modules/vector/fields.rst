@@ -25,11 +25,11 @@ already been elaborated upon in the earlier section of this module's
 documentation.
 
 On the other hand, base scalars (or coordinate variables) are implemented
-in a special class called ``BaseScalar``, and are assigned to every 
-coordinate system, one for each axis from :math:`X`, :math:`Y` and 
+in a special class called ``BaseScalar``, and are assigned to every
+coordinate system, one for each axis from :math:`X`, :math:`Y` and
 :math:`Z`. These coordinate variables are used to form the expressions of
 vector or scalar fields in 3D space.
-For a system ``R``, the :math:`X`, :math:`Y` and :math:`Z` 
+For a system ``R``, the :math:`X`, :math:`Y` and :math:`Z`
 ``BaseScalars`` instances can be accessed using the ``R.x``, ``R.y``
 and ``R.z`` expressions respectively.
 
@@ -60,10 +60,10 @@ use the ``diff`` method.
 
 It is worth noting that having a ``BaseScalar`` in the expression implies
 that a 'field' changes with position, in 3D space. Technically speaking, a
-simple ``Expr`` with no ``BaseScalar`` s is still a field, though 
+simple ``Expr`` with no ``BaseScalar`` s is still a field, though
 constant.
 
-Like scalar fields, vector fields that vary with position can also be 
+Like scalar fields, vector fields that vary with position can also be
 constructed using ``BaseScalar`` s in the measure-number expressions.
 
   >>> from sympy.vector import CoordSysCartesian
@@ -74,7 +74,7 @@ The Del operator
 ----------------
 
 The Del, or 'Nabla' operator - written as :math:`\mathbf{\nabla}` is
-commonly known as the vector differential operator. Depending on its 
+commonly known as the vector differential operator. Depending on its
 usage in a mathematical expression, it may denote the gradient of a
 scalar field, or the divergence of a vector field, or the curl of a
 vector field.
@@ -85,7 +85,7 @@ aforementioned field operations.
 
 In :mod:`sympy.vector`, :math:`\mathbf{\nabla}` has been implemented
 as the ``delop`` property of the ``CoordSysCartesian`` class.
-Hence, assuming ``C`` is a coordinate system, the 
+Hence, assuming ``C`` is a coordinate system, the
 :math:`\mathbf{\nabla}` operator corresponding to the vector
 differentials wrt ``C``'s coordinate variables and basis vectors
 would be accessible as ``C.delop``.
@@ -132,7 +132,7 @@ denoted by :math:`\nabla \times \mathbf{F}` is given by:
 
 where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 
-Computing the curl of a vector field in :mod:`sympy.vector` can be 
+Computing the curl of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
 One, by using the ``delop`` property
@@ -169,7 +169,7 @@ denoted by :math:`\nabla\cdot\mathbf{F}` is given by:
 where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 :math:`Z` components of :math:`\mathbf{F}` respectively.
 
-Computing the divergence of a vector field in :mod:`sympy.vector` can be 
+Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
 One, by using the ``delop`` property
@@ -202,7 +202,7 @@ denoted by :math:`\nabla f` is given by -
 \frac{\partial f}{\partial y}  \mathbf{\hat{j}} +
 \frac{\partial f}{\partial z} \mathbf{\hat{k}}`
 
-Computing the divergence of a vector field in :mod:`sympy.vector` can be 
+Computing the divergence of a vector field in :mod:`sympy.vector` can be
 accomplished in two ways.
 
 One, by using the ``delop`` property
@@ -228,7 +228,7 @@ it is also possible to compute the directional derivative of a field wrt
 a ``Vector`` in :mod:`sympy.vector`.
 
 By definition, the directional derivative of a field :math:`\mathbf{F}`
-along a vector :math:`v` at point :math:`x` represents the instantaneous 
+along a vector :math:`v` at point :math:`x` represents the instantaneous
 rate of change of :math:`\mathbf{F}` moving through :math:`x` with the
 velocity :math:`v`. It is represented mathematically as:
 :math:`(\vec v \cdot \nabla) \, \mathbf{F}(x)`.
@@ -260,7 +260,7 @@ curl of a conservative field is always zero.
 In physics, conservative fields represent forces in physical systems where
 energy is conserved.
 
-To check if a vector field is conservative in :mod:`sympy.vector`, the 
+To check if a vector field is conservative in :mod:`sympy.vector`, the
 ``is_conservative`` function can be used.
 
   >>> from sympy.vector import CoordSysCartesian, is_conservative
@@ -274,7 +274,7 @@ To check if a vector field is conservative in :mod:`sympy.vector`, the
 A solenoidal field, on the other hand, is a vector field whose divergence
 is zero at all points in space.
 
-To check if a vector field is solenoidal in :mod:`sympy.vector`, the 
+To check if a vector field is solenoidal in :mod:`sympy.vector`, the
 ``is_solenoidal`` function can be used.
 
   >>> from sympy.vector import CoordSysCartesian, is_solenoidal

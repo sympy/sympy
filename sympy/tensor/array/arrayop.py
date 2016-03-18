@@ -2,6 +2,7 @@ import itertools
 
 import collections
 
+from sympy import S, Tuple, MatrixBase
 from sympy import S, Tuple, diff, MatrixBase
 
 from sympy.tensor.array import ImmutableDenseNDimArray
@@ -142,13 +143,13 @@ def tensorcontraction(array, *contraction_axes):
 
 
 def derive_by_array(expr, dx):
-    """
+    r"""
     Derivative by arrays. Supports both arrays and scalars.
 
     Given the array `A_{i_1, \ldots, i_N}` and the array `X_{j_1, \ldots, j_M}`
     this function will return a new array `B` defined by
 
-    `B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}`
+    `B_{j_1,\ldots,j_M,i_1,\ldots,i_N} := \frac{\partial A_{i_1,\ldots,i_N}}{\partial X_{j_1,\ldots,j_M}}`
 
     Examples
     ========

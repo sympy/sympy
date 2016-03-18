@@ -1605,7 +1605,7 @@ def meijerint_indefinite(f, x):
     from sympy import hyper, meijerg
 
     results = []
-    for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
+    for a in sorted(_find_splitting_points(f, x) | {S(0)}, key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
@@ -1739,7 +1739,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import arg, exp, I, And, DiracDelta, count_ops
+    from sympy import arg, exp, I, And, DiracDelta
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
@@ -1850,7 +1850,7 @@ def _guess_expansion(f, x):
     res = [(f, 'original integrand')]
 
     orig = res[-1][0]
-    saw = set([orig])
+    saw = {orig}
     expanded = expand_mul(orig)
     if expanded not in saw:
         res += [(expanded, 'expand_mul')]

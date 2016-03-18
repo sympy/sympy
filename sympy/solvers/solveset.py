@@ -12,11 +12,11 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp, signsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, atan, acsc, asec, arg,
-                             Piecewise, piecewise_fold)
+                             acos, asin, acsc, asec, arg,
+                             piecewise_fold)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
@@ -28,8 +28,6 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-
-import warnings
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -299,7 +297,7 @@ def _is_finite_with_finite_vars(f, domain=S.Complexes):
         A.setdefault('real', domain.is_subset(S.Reals))
         return A
 
-    reps = dict([(s, Dummy(**assumptions(s))) for s in f.free_symbols])
+    reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
     return f.xreplace(reps).is_finite
 
 
@@ -365,7 +363,7 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 
-def _solve_real_trig(f, symbol):
+def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
@@ -381,8 +379,9 @@ def _solve_real_trig(f, symbol):
     solns = solveset_complex(g, y) - solveset_complex(h, y)
 
     if isinstance(solns, FiniteSet):
-        return Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
+        return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
@@ -540,6 +539,7 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
 
+    from sympy.simplify.simplify import signsimp
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -575,7 +575,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
-        result = _solve_real_trig(f, symbol)
+        result = _solve_trig(f, symbol, domain)
     elif f.is_Piecewise:
         dom = domain
         result = EmptySet()

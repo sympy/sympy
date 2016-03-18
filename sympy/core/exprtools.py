@@ -16,7 +16,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered, cartes)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -1322,7 +1322,7 @@ def _mask_nc(eq, name=None):
 
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
+    return expr, {v: k for k, v in rep} or None, nc_syms
 
 
 def factor_nc(expr):

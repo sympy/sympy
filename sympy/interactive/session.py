@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
@@ -76,7 +75,7 @@ def _make_message(ipython=True, quiet=False, source=None):
         if 'dev' in doc_version:
             doc_version = "dev"
         else:
-            doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
+            doc_version = "%s/" % doc_version
 
         message += '\n' + verbose_message % {'source': _source,
                                              'version': doc_version}

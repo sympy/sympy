@@ -192,6 +192,8 @@ class Expr(Basic, EvalfMixin):
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
         from sympy import Dummy
+        if not self.is_number:
+            raise TypeError("can't convert symbols to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
@@ -594,7 +596,6 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvers.solvers import solve
         from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -909,8 +910,9 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from sympy.core import Add, Mul, S
-        from sympy.core.exprtools import decompose_power
+        from .add import Add
+        from .mul import Mul
+        from .exprtools import decompose_power
 
         gens, terms = set([]), []
 
@@ -3139,7 +3141,9 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import Float
         x = self
-        if x.is_number and not x.is_Atom:
+        if not x.is_number:
+            raise TypeError("can't round symbolic expression")
+        if not x.is_Atom:
             xn = x.n(2)
             if not pure_complex(xn, or_real=True):
                 raise TypeError('Expected a number but got %s:' %

@@ -352,7 +352,7 @@ class SparseMatrix(MatrixBase):
                 temp = Akj*Bjn
                 Cdict[k, n] += temp
         rv = self.zeros(A.rows, B.cols)
-        rv._smat = dict([(k, v) for k, v in Cdict.items() if v])
+        rv._smat = {k: v for k, v in Cdict.items() if v}
         return rv
 
     def scalar_multiply(self, scalar):
@@ -395,6 +395,8 @@ class SparseMatrix(MatrixBase):
             return other._new(self*self._new(other))
         return self.scalar_multiply(other)
 
+    __matmul__ = __mul__
+
     def __rmul__(self, other):
         """Return product the same type as other (if a Matrix).
 
@@ -416,6 +418,8 @@ class SparseMatrix(MatrixBase):
         if isinstance(other, MatrixBase):
             return other*other._new(self)
         return self.scalar_multiply(other)
+
+    __rmatmul__ = __rmul__
 
     def __add__(self, other):
         """Add other to self, efficiently if possible.
@@ -1134,7 +1138,7 @@ class SparseMatrix(MatrixBase):
     def eye(cls, n):
         """Return an n x n identity matrix."""
         n = as_int(n)
-        return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
+        return cls(n, n, {(i, i): S.One for i in range(n)})
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod

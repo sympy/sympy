@@ -8,7 +8,7 @@ from sympy.core.function import count_ops
 from sympy.core.logic import fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
-from sympy.core.numbers import Integer, ilcm, Rational, Float
+from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, NotIterable
@@ -513,10 +513,14 @@ class MatrixBase(object):
             return self._new(self.rows, self.cols,
                 [i*other for i in self._mat])
 
+    __matmul__ = __mul__
+
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
             return self._new(a)*self
         return self._new(self.rows, self.cols, [a*i for i in self._mat])
+
+    __rmatmul__ = __rmul__
 
     def __pow__(self, num):
         from sympy.matrices import eye, diag, MutableMatrix
@@ -1049,9 +1053,25 @@ class MatrixBase(object):
         [2],
         [8]])
 
+        RowsList or colsList can also be a list of booleans, in which case
+        the rows or columns corresponding to the True values will be selected:
+
+        >>> m.extract([0, 1, 2, 3], [True, False, True])
+        Matrix([
+        [0,  2],
+        [3,  5],
+        [6,  8],
+        [9, 11]])
         """
+
         cols = self.cols
         flat_list = self._mat
+        if rowsList and all(isinstance(i, bool) for i in rowsList):
+            rowsList = [index for index, item in enumerate(rowsList) if item]
+
+        if colsList and all(isinstance(i, bool) for i in colsList):
+            colsList = [index for index, item in enumerate(colsList) if item]
+
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),
@@ -2060,6 +2080,8 @@ class MatrixBase(object):
         >>> a.is_nilpotent()
         False
         """
+        if not self:
+            return True
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
@@ -3033,6 +3055,9 @@ class MatrixBase(object):
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
         mat = self
+
+        if not mat:
+            return {}
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
                 mat = mat._new(mat.rows, mat.cols,
@@ -3197,7 +3222,8 @@ class MatrixBase(object):
 
         singular_values
         """
-
+        if not self:
+            return S.Zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 

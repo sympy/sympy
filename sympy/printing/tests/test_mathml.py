@@ -333,7 +333,7 @@ def test_symbol():
 def test_mathml_greek():
     mml = mp._print(Symbol('alpha'))
     assert mml.nodeName == 'ci'
-    assert mml.childNodes[0].nodeValue == u('\N{GREEK SMALL LETTER ALPHA}')
+    assert mml.childNodes[0].nodeValue == u'\N{GREEK SMALL LETTER ALPHA}'
 
     assert mp.doprint(Symbol('alpha')) == '<ci>&#945;</ci>'
     assert mp.doprint(Symbol('beta')) == '<ci>&#946;</ci>'

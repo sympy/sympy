@@ -594,7 +594,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def as_expr_dict(self):
         to_sympy = self.ring.domain.to_sympy
-        return dict([ (monom, to_sympy(coeff)) for monom, coeff in self.iterterms() ])
+        return {monom: to_sympy(coeff) for monom, coeff in self.iterterms()}
 
     def clear_denoms(self):
         domain = self.ring.domain
