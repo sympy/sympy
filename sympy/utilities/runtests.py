@@ -649,8 +649,8 @@ def _doctest(*paths, **kwargs):
             unset_show()
 
 
-    if import_module('pyglet') is None:
-        blacklist.extend(["sympy/plotting/pygletplot"])
+    # not supported anymore
+    blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
         blacklist.extend(["doc/src/modules/numeric-computation.rst"])
