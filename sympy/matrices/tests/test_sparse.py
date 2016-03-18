@@ -18,6 +18,10 @@ def test_sparse_matrix():
     ))
     assert SparseMatrix(a) == a
 
+    a = MutableSparseMatrix([])
+    assert a.row_join(Matrix([1, 3])) == Matrix([1, 3])
+    assert a.col_join(Matrix([1, 3])) == Matrix([1, 3])
+
     # test element assignment
     a = SparseMatrix((
         (1, 0),
