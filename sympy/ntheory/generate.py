@@ -228,13 +228,17 @@ def prime(nth):
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
+
         Examples
         ========
+
         >>> from sympy import primepi
         >>> primepi(25)
         9
+
         See Also
         ========
+
         sympy.ntheory.primetest.isprime : Test if n is prime
         primerange : Generate all primes in a given range
         prime : Return the nth prime
@@ -266,7 +270,7 @@ def primepi(n):
         for j in range(lim,i*i-1,-1):
             arr1[j] -= arr1[j // i] - p
     return arr2[1]
-
+    
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
 
