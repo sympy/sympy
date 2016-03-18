@@ -1399,6 +1399,7 @@ class PrettyPrinter(Printer):
 
     def _print_Pow(self, power):
         from sympy.simplify.simplify import fraction
+        from sympy.series.limits import Limit
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:
@@ -1409,7 +1410,7 @@ class PrettyPrinter(Printer):
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 
-        if b.is_Relational:
+        if isinstance(b,Limit) or b.is_Relational:
             return prettyForm(*self._print(b).parens()).__pow__(self._print(e))
 
         return self._print(b)**self._print(e)
