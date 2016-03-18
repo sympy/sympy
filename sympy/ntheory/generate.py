@@ -229,6 +229,24 @@ def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 
+        Algorithm Description:
+
+        Let phi(a,b) denote the number of integers
+        2<=n<=a which have no prime factors less
+        than equal to b.
+
+        Clearly pi(n) = phi(n,sqrt(n))
+        Following recursion is used and implemented as dp:
+        phi(a,b) = phi(a,b-1) , if b is not a prime
+        phi(a,b) = phi(a,b-1)-phi(a/b,b-1), if b is prime
+
+        Clearly a is always of the form floor(n/k),
+        which can take at most 2*sqrt(n) values.
+        Two arrays arr1,arr2 are maintained
+        arr1[i] = phi(i,j),
+        arr2[i] = phi(n//i,j)
+        Finally the answer is arr2[1]
+
         Examples
         ========
 
@@ -258,6 +276,8 @@ def primepi(n):
         arr1[i] = i-1
         arr2[i] = 0 if i==0 else n//i - 1
     for i in range(2, lim+1):
+        #Presently, arr1[k]=phi(k,i-1),
+        #arr2[k] = phi(n//k,i-1)
         if arr1[i] == arr1[i-1]:
             continue
         p = arr1[i-1]
