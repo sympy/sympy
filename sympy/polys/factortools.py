@@ -1223,7 +1223,8 @@ def dup_factor_list(f, K0):
                 coeff = coeff/denom
             else:
                 for i, (f, k) in enumerate(factors):
-                    f = dup_quo_ground(f, denom, K0)
+                    if i == 0:
+                        f = dup_quo_ground(f, denom, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
 
@@ -1302,7 +1303,8 @@ def dmp_factor_list(f, u, K0):
                 coeff = coeff/denom
             else:
                 for i, (f, k) in enumerate(factors):
-                    f = dmp_quo_ground(f, denom, u, K0)
+                    if i == 0:
+                        f = dmp_quo_ground(f, denom, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
 

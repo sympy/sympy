@@ -561,6 +561,10 @@ def test_dup_factor_list():
     R, x = ring("x", EX)
     raises(DomainError, lambda: R.dup_factor_list(EX(sin(1))))
 
+    R, x = ring("x", RR)
+    expr = x**2 - 0.01
+    (a, ((b, c), (d, e))) = R.dup_factor_list(expr)
+    assert a*b*c*d*e == expr
 
 def test_dmp_factor_list():
     R, x, y = ring("x,y", ZZ)
@@ -657,6 +661,10 @@ def test_dmp_factor_list():
     R, x, y = ring("x,y", EX)
     raises(DomainError, lambda: R.dmp_factor_list(EX(sin(1))))
 
+    R, x, y = ring("x,y", RR)
+    expr = x**2 - 0.01*y**2
+    (a, ((b, c), (d, e))) = R.dmp_factor_list(expr)
+    assert a*b*c*d*e == expr
 
 def test_dup_irreducible_p():
     R, x = ring("x", ZZ)
