@@ -154,9 +154,7 @@ def test_Range_set():
 
     assert Range(0, 0, 5) == empty
     assert Range(oo, oo, 1) == empty
-    assert Range(1, 4, oo) == Range(1, 2)
-    assert Range(4, 1, -oo) == Range(4, 3, -1)
-    raises(ValueError, lambda: Range(0, oo, oo))
+    raises(ValueError, lambda: Range(1, 4, oo))
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(oo, -oo, -1))
     raises(ValueError, lambda: Range(-oo, oo, 2))
@@ -164,9 +162,16 @@ def test_Range_set():
     raises(ValueError, lambda: Range(1, 10, 0))
 
     assert 5 in Range(0, oo, 5)
-    assert oo in Range(0, oo)
-    assert oo in Range(oo, 0, -1)
     assert -5 in Range(-oo, 0, 5)
+    assert oo not in Range(0, oo)
+    ni = symbols('ni', integer=False)
+    assert ni not in Range(oo)
+    u = symbols('u', integer=None)
+    assert Range(oo).contains(u) is not False
+    inf = symbols('inf', infinite=True)
+    assert inf not in Range(oo)
+    inf = symbols('inf', infinite=True)
+    assert inf not in Range(oo)
     assert Range(0, oo, 2)[-1] == oo
     assert Range(-oo, 1, 1)[-1] is S.Zero
     assert Range(oo, 1, -1)[-1] == 2
@@ -185,6 +190,8 @@ def test_Range_set():
     assert Range(1, 12, 2)[5] == 11
     assert Range(1, 10, 1)[-1] == 9
     assert Range(1, 10, 3)[-1] == 7
+    raises(ValueError, lambda: Range(oo,0,-1)[1:3:0])
+    raises(ValueError, lambda: Range(oo,0,-1)[:1])
     raises(ValueError, lambda: Range(1, oo)[-2])
     raises(ValueError, lambda: Range(-oo, 1)[2])
     raises(IndexError, lambda: Range(10)[-20])
@@ -211,35 +218,17 @@ def test_Range_set():
     assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
     assert Range(oo, 0, -2)[-10:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
-    assert Range(oo, 0, -2)[0::-2] == Range(oo, 0, -oo)
+    raises(ValueError, lambda: Range(oo, 0, -2)[0::-2])
     assert Range(oo, 0, -2)[0:-4:-2] == empty
     assert Range(oo, 0, -2)[:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 
-    # test empty Range and single-infinite-element Ranges
-    single = Range(oo, 0, -oo)
-    inf = symbols('inf', infinite=True)
-    raises(TypeError, lambda: inf in single)
-    pinf = symbols('pinf', infinite=True, positive=True)
-    assert pinf in single
-    assert single._is_infinite_singleton
-    assert Range(-oo, 0, oo)._is_infinite_singleton
-    assert Range(oo, 0, oo) == empty
-    assert Range(oo, 0, -1)[:1] == single
-    assert Range(oo, 2, -oo) == single
-    assert single.reversed == single
+    # test empty Range
     assert empty.reversed == empty
-    assert oo in single
-    assert -oo not in single
-    assert 1 not in single
     assert 0 not in empty
-    assert list(single) == [oo]
     assert list(empty) == []
-    assert len(single) == 1
-    assert single.size is S.One
     assert len(empty) == 0
     assert empty.size is S.Zero
-    assert single.intersect(FiniteSet(oo)) == FiniteSet(oo)
     assert empty.intersect(FiniteSet(0)) is S.EmptySet
     assert bool(empty) is False
     raises(IndexError, lambda: empty[0])
@@ -286,10 +275,38 @@ def test_Range_set():
             Range(1000000000000)
 
 
+def test_range_range_intersection():
+    for a, b, r in [
+            (Range(0), Range(1), S.EmptySet),
+            (Range(3), Range(4, oo), S.EmptySet),
+            (Range(3), Range(-3, -1), S.EmptySet),
+            (Range(1, 3), Range(0, 3), Range(1, 3)),
+            (Range(1, 3), Range(1, 4), Range(1, 3)),
+            (Range(1, oo, 2), Range(2, oo, 2), S.EmptySet),
+            (Range(0, oo, 2), Range(oo), Range(0, oo, 2)),
+            (Range(0, oo, 2), Range(100), Range(0, 100, 2)),
+            (Range(2, oo, 2), Range(oo), Range(2, oo, 2)),
+            (Range(0, oo, 2), Range(5, 6), S.EmptySet),
+            (Range(2, 80, 1), Range(55, 71, 4), Range(55, 71, 4)),
+            (Range(0, 6, 3), Range(-oo, 5, 3), S.EmptySet),
+            (Range(0, oo, 2), Range(5, oo, 3), Range(8, oo, 6)),
+            (Range(4, 6, 2), Range(2, 16, 7), S.EmptySet),]:
+        assert a.intersect(b) == r
+        assert a.intersect(b.reversed) == r
+        assert a.reversed.intersect(b) == r
+        assert a.reversed.intersect(b.reversed) == r
+        a, b = b, a
+        assert a.intersect(b) == r
+        assert a.intersect(b.reversed) == r
+        assert a.reversed.intersect(b) == r
+        assert a.reversed.intersect(b.reversed) == r
+
+
 def test_range_interval_intersection():
     empty = Range(0)
     p = symbols('p', positive=True)
     assert isinstance(Range(3).intersect(Interval(p, p + 2)), Intersection)
+    assert Range(0, 4, 3).intersect(Interval(1, 2)) is S.EmptySet
     for line, (r, i) in enumerate([
         # Intersection with intervals
         (Range(0, 10, 1), Interval(2, 6)),
@@ -357,14 +374,10 @@ def test_range_interval_intersection():
                         r.inf == i.sup and i.right_open), msg
             else:
                 checks = a, b, c, d = [
-                result == Range(0) or
                     result.inf in i or result.inf == i.inf,
-                result == Range(0) or
                     result.inf - abs(result.step) not in i or \
-                    result.inf == r.inf,
-                result == Range(0) or 
+                        result.inf == r.inf,
                     result.sup in i or result.sup == i.sup,
-                result == Range(0) or 
                     result.sup + abs(result.step) not in i or \
                     result.sup == r.sup]
                 assert all(_ for _ in checks), msg

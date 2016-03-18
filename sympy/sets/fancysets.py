@@ -4,9 +4,10 @@ from sympy.logic.boolalg import And
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+                             FiniteSet, imageset)
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.core.singleton import Singleton, S
+from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.function import Lambda
 from sympy.utilities.misc import filldedent, func_name
 
@@ -152,7 +153,6 @@ class Integers(with_metaclass(Singleton, Set)):
         return self
 
     def _eval_imageset(self, f):
-        from sympy import Wild
         expr = f.expr
         if len(f.variables) > 1:
             return
@@ -313,9 +313,7 @@ class ImageSet(Set):
         return self.base_set.is_iterable
 
     def _intersect(self, other):
-        from sympy import Dummy
         from sympy.solvers.diophantine import diophantine
-        from sympy.sets.sets import imageset
         if self.base_set is S.Integers:
             if isinstance(other, ImageSet) and other.base_set is S.Integers:
                 f, g = self.lamda.expr, other.lamda.expr
@@ -400,52 +398,28 @@ class Range(Set):
 
     Although Range is a set (and supports the normal set
     operations) it maintains the order of the elements and can
-    be used in contexts where `range` would be used. It will
-    also (in set operations) always remain a Range; an empty
-    set result is represented as an empty Range:
+    be used in contexts where `range` would be used.
 
         >>> from sympy import Interval
         >>> Range(0, 10, 2).intersect(Interval(3, 7))
         Range(4, 8, 2)
         >>> list(_)
         [4, 6]
+
+    Athough slicing of a Range will always return a Range -- possibly
+    empty -- an empty set will be returned from any intersection that
+    is empty:
+
+        >>> Range(3)[:0]
+        Range(0, 0, 1)
         >>> Range(3).intersect(Interval(4, oo))
-        Range(0, 0, 1)
-
-    There are 2 types of special ranges:
-
-        a) the empty range is always represented the same; it differs
-        from the builtin range in that the step will always be 1:
-
-        >>> Range(4, 3, 2)
-        Range(0, 0, 1)
-
-        b) Ranges that contain a single infinite value have an infinite
-        step:
-
-        >>> Range(oo, 0, -1)[:1]
-        Range(oo, 0, -oo)
-        >>> Range(-oo, 0)[:1]
-        Range(-oo, 0, oo)
-
-        The infinite step (in general) gives a canonical Range with
-        only the starting value but raises an error if the stop value
-        is infinte -- the stop and step can never both be infinite:
-
-        >>> Range(1, 3, oo)
-        Range(1, 2, 1)
-        >>> Range(0, oo, oo)
-        Traceback (most recent call last):
-        ...
-        ValueError: Infinite step is not allowed to infinite end point
+        EmptySet()
+        >>> Range(3).intersect(Range(4, oo))
+        EmptySet()
 
     """
 
     is_iterable = True
-
-    @property
-    def _is_infinite_singleton(self):
-        return self.start.is_infinite and self.start == -self.step
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
@@ -471,6 +445,10 @@ class Range(Set):
     other cases, e.g. use `imageset(i, i/10, Range(3))` to give
     [0, 1/10, 1/5].'''))
 
+        if not step.is_Integer:
+            raise ValueError(filldedent('''
+    Ranges must have a literal integer step.'''))
+
         if all(i.is_infinite for i in  (start, stop)):
             if start == stop:
                 # canonical null handled below
@@ -478,19 +456,6 @@ class Range(Set):
             else:
                 raise ValueError(filldedent('''
     Either the start or end value of the Range must be finite.'''))
-
-        if step.is_infinite:
-            from sympy.functions.elementary.complexes import sign
-            if sign(step*(stop - start)) < 0:
-                # recast as finite; canonical null handled below
-                start = stop = step = S.One
-            elif start.is_finite and stop.is_finite:
-                step = sign(step)
-                stop = start + step
-            elif start.is_finite:  # stop is infinite
-                raise ValueError("Infinite step is not allowed to infinite end point")
-            else:  # start is infinite and stop is finite
-                stop = S.Zero
 
         if start.is_infinite:
             end = stop
@@ -522,19 +487,18 @@ class Range(Set):
         """
         if not self:
             return self
-        if self._is_infinite_singleton:
-            return self
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
 
     def _intersect(self, other):
         from sympy.functions.elementary.integers import ceiling, floor
-        if not self:
+        from sympy.functions.elementary.complexes import sign
+
+        if other is S.Naturals:
+            return self._intersect(Interval(1, S.Infinity))
+
+        if other is S.Integers:
             return self
-        if self._is_infinite_singleton:
-            if self.start in other:
-                return self
-            return self.func(0)  # null
 
         if other.is_Interval:
             if not all(i.is_number for i in other.args[:2]):
@@ -542,8 +506,10 @@ class Range(Set):
 
             o = other.intersect(Interval(self.inf, self.sup))
             if o is S.EmptySet:
-                return self.func(0)  # null
-            elif isinstance(o, FiniteSet):
+                return o
+
+            # get inf/sup and handle below
+            if isinstance(o, FiniteSet):
                 assert len(o) == 1
                 inf = sup = list(o)[0]
             else:
@@ -562,39 +528,127 @@ class Range(Set):
                 b -= step
             if self.step < 0:
                 a, b = b, a
-
             # make sure to include end point
-            return Range(a, b + self.step, self.step)
+            b += self.step
 
-        if other == S.Naturals:
-            return self._intersect(Interval(1, S.Infinity))
+            rv = Range(a, b, self.step)
+            if not rv:
+                return S.EmptySet
+            return rv
 
-        if other == S.Integers:
-            return self
+        elif isinstance(other, Range):
+            from sympy.solvers.diophantine import diop_linear
+            from sympy.core.numbers import ilcm
 
-        return
+            # non-overlap quick exits
+            if not other:
+                return S.EmptySet
+            if not self:
+                return S.EmptySet
+            if other.sup < self.inf:
+                return S.EmptySet
+            if other.inf > self.sup:
+                return S.EmptySet
+
+            # work with finite end at the start
+            r1 = self
+            if r1.start.is_infinite:
+                r1 = r1.reversed
+            r2 = other
+            if r2.start.is_infinite:
+                r2 = r2.reversed
+
+            # this equation represents the values of the Range;
+            # it's a linear equation
+            eq = lambda r, i: r.start + i*r.step
+
+            # we want to know when the two equations might
+            # have integer solutions so we use the diophantine
+            # solver
+            a, b = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+
+            # check for no solution
+            no_solution = a is None and b is None
+            if no_solution:
+                return S.EmptySet
+
+            # there is a solution
+            # -------------------
+
+            # find the coincident point, c
+            a0 = a.as_coeff_Add()[0]
+            c = eq(r1, a0)
+
+            # find the first point, if possible, in each range
+            # since c may not be that point
+            def _first_finite_point(r1, c):
+                if c == r1.start:
+                    return c
+                # st is the signed step we need to take to
+                # get from c to r1.start
+                st = sign(r1.start - c)*step
+                # use Range to calculate the first point:
+                # we want to get as close as possible to
+                # r1.start; the Range will not be null since
+                # it will at least contain c
+                s1 = Range(c, r1.start + st, st)[-1]
+                if s1 == r1.start:
+                    pass
+                else:
+                    # if we didn't hit r1.start then, if the
+                    # sign of st didn't match the sign of r1.step
+                    # we are off by one and s1 is not in r1
+                    if sign(r1.step) != sign(st):
+                        s1 -= st
+                if s1 not in r1:
+                    return
+                return s1
+
+            # calculate the step size of the new Range
+            step = abs(ilcm(r1.step, r2.step))
+            s1 = _first_finite_point(r1, c)
+            if s1 is None:
+                return S.EmptySet
+            s2 = _first_finite_point(r2, c)
+            if s2 is None:
+                return S.EmptySet
+
+            # replace the corresponding start or stop in
+            # the original Ranges with these points; the
+            # result must have at least one point since
+            # we know that s1 and s2 are in the Ranges
+            def _updated_range(r, first):
+                st = sign(r.step)*step
+                if r.start.is_finite:
+                    rv = Range(first, r.stop, st)
+                else:
+                    rv = Range(r.start, first + st, st)
+                return rv
+            r1 = _updated_range(self, s1)
+            r2 = _updated_range(other, s2)
+
+            # work with them both in the increasing direction
+            if sign(r1.step) < 0:
+                r1 = r1.reversed
+            if sign(r2.step) < 0:
+                r2 = r2.reversed
+
+            # return clipped Range with positive step; it
+            # can't be empty at this point
+            start = max(r1.start, r2.start)
+            stop = min(r1.stop, r2.stop)
+            return Range(start, stop, step)
+        else:
+            return
+
 
     def _contains(self, other):
         if not self:
             return S.false
-        # XXX one can create infinite integers
-        # of infinite non-integers -- does that
-        # have any meaning?
         if other.is_infinite:
-            if self.start.is_infinite:
-                inf = self.start
-            elif self.stop.is_infinite:
-                inf = self.stop
-            else:
-                return S.false
-            if other.is_positive is None:
-                return
-            return _sympify(
-                other.is_positive == inf.is_positive)
-        if other.is_integer is None:
-            return
-        if other.is_integer is False:
             return S.false
+        if not other.is_integer:
+            return other.is_integer
         ref = self.start if self.start.is_finite else self.stop
         if (ref - other) % self.step:  # off sequence
             return S.false
@@ -602,10 +656,7 @@ class Range(Set):
 
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:
-            if self.start == -self.step:
-                yield self.start
-            else:
-                raise ValueError("Cannot iterate over Range with infinite start")
+            raise ValueError("Cannot iterate over Range with infinite start")
         elif self:
             i = self.start
             step = self.step
@@ -620,8 +671,6 @@ class Range(Set):
     def __len__(self):
         if not self:
             return 0
-        if self._is_infinite_singleton:
-            return 1
         dif = self.stop - self.start
         if dif.is_infinite:
             raise ValueError(
@@ -650,8 +699,6 @@ class Range(Set):
         ambiguous = "cannot unambiguously re-stride from the end " + \
             "with an infinite value"
         if isinstance(i, slice):
-            if not self.step:
-                raise ValueError(zerostep)
             if self.size.is_finite:
                 start, stop, step = i.indices(self.size)
                 n = ceiling((stop - start)/step)
@@ -707,7 +754,7 @@ class Range(Set):
                             raise ValueError(ooslice)
                     elif stop == 1:
                         if step > 0:
-                            return Range(self.start, 0, -self.start)
+                            raise ValueError(ooslice)  # infinite singleton
                         else:  # < 0
                             raise ValueError(ooslice)
                     else:  # > 1
@@ -730,7 +777,7 @@ class Range(Set):
                 elif start == 0:
                     if stop is None:
                         if step < 0:
-                            return Range(self.start, 0, -self.start)
+                            raise ValueError(ooslice)  # infinite singleton
                         elif step > 1:
                             raise ValueError(ambiguous)
                         else:  # == 1
@@ -954,7 +1001,7 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols, Dummy, sympify, sin, cos
+        from sympy import sin, cos
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
