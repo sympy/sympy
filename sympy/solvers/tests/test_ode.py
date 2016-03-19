@@ -2639,9 +2639,10 @@ def test_2nd_linear_bessel_equation():
     assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
-    assert dsolve(eq) == Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
-
-
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 -S(1)/9)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(-1/3, x) + C2*besselj(1/3, x))
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error

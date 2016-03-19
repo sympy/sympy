@@ -1208,6 +1208,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             if p==1:
                                 b4 = Wild('b4', exclude=[x,f(x),df])
                                 rn = r[c3].match(x**2-b4*b4)
+                                if check==0: # if r[c3] becomes zero at x0
+                                    rn={}
+                                    rn[b4]=0
                                 if rn:
                                     rn = {'n':rn[b4]}
                                     matching_hints["2nd_linear_bessel"] = rn
@@ -3824,13 +3827,20 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     Gives solution of the Bessel differential equation
 
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
+
+       if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)) as both the solutions are linearly independant
+       else if n is a fract
     """
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']
-    from sympy.functions import besselj, bessely
-    return Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))
+    if n%1==0:
+        from sympy.functions import besselj, bessely
+        return Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))
+    else:
+        from sympy.functions import besselj
+        return Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
