@@ -125,14 +125,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
-            s = latex(o, mode=latex_mode)
+            s = latex(o, mode=latex_mode, **settings)
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
                 debug('preview failed with:', repr(e),
                       ' Falling back to matplotlib backend')
                 if latex_mode != 'inline':
-                    s = latex(o, mode='inline')
+                    s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
 
     def _print_latex_matplotlib(o):
@@ -140,7 +140,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by mathtext
         """
         if _can_print_latex(o):
-            s = latex(o, mode='inline')
+            s = latex(o, mode='inline', **settings)
             return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
@@ -148,7 +148,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain')
+            s = latex(o, mode='plain', **settings)
             s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
@@ -162,7 +162,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
         """
         if self.rc.pprint:
-            out = stringify_func(arg, **settings)
+            out = stringify_func(arg)
 
             if '\n' in out:
                 print
@@ -413,6 +413,10 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if in_ipython:
+        mode_in_settings = settings.pop("mode", None)
+        if mode_in_settings:
+            debug("init_printing: Mode is not able to be set due to internals"
+                  "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
                                print_builtin, latex_printer, **settings)
