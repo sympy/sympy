@@ -1352,10 +1352,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
-
-                            #If the ODE has regular singular point at x0 and is of the form 
+                            #If the ODE has regular singular point at x0 and is of the form
                             #Eq(x**2*Derivative(y(x),x,x)+x*Derivative(y(x),x) thus Bessel's equation
-
                             if p==1:
                                 b4 = Wild('b4', exclude=[x,f(x),df])
                                 rn = r[c3].match(x**2-b4*b4)
@@ -1373,24 +1371,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if rn and rn[b4] != 0:
                         rn = {'b':rn[a4],'m':rn[b4]}
                         matching_hints["2nd_linear_airy"] = rn
-
     if order > 0:
-        # Any ODE that can be solved with a substitution and
-        # repeated integration e.g.:
-        # `d^2/dx^2(y) + x*d/dx(y) = constant
-        #f'(x) must be finite for this to work
-        r = _order_reducible_match(reduced_eq, func)
-        if r:
-            matching_hints['order_reducible'] = r
-
-        # Any ODE that can be solved with a combination of algebra and
-        # integrals e.g.:
-        # d^3/dx^3(x y) = F(x)
-        r = _nth_algebraic_match(reduced_eq, func)
-        if r['solutions']:
-            matching_hints['nth_algebraic'] = r
-            matching_hints['nth_algebraic_Integral'] = r
-
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
@@ -4048,6 +4029,8 @@ def ode_Bessel_Equation(eq, func, order, match):
     Gives solution of the Bessel differential equation
 
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
+    """
+    x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']
