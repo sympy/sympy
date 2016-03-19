@@ -1,14 +1,16 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet, imageset)
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.expr import Expr
+from sympy.core.function import Lambda, _coeff_isneg
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Wild
-from sympy.core.function import Lambda
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
+                             FiniteSet, imageset)
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -154,22 +156,32 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def _eval_imageset(self, f):
         expr = f.expr
+        if not isinstance(expr, Expr):
+            return
+
         if len(f.variables) > 1:
             return
+
         n = f.variables[0]
 
-        a = Wild('a')
-        b = Wild('b')
+        # f(x) + c and f(-x) + c cover the same integers
+        # so choose the form that has the fewest negatives
+        c = f(0)
+        fx = f(n) - c
+        f_x = f(-n) - c
+        neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+        if neg_count(f_x) < neg_count(fx):
+            expr = f_x + c
 
+        a = Wild('a', exclude=[n])
+        b = Wild('b', exclude=[n])
         match = expr.match(a*n + b)
-        if match[a].is_negative:
-            expr = -expr
+        if match and match[a]:
+            # canonical shift
+            expr = match[a]*n + match[b] % match[a]
 
-        match = expr.match(a*n + b)
-        if match[a] is S.One and match[b].is_integer:
-            expr = expr - match[b]
-
-        return ImageSet(Lambda(n, expr), S.Integers)
+        if expr != f.expr:
+            return ImageSet(Lambda(n, expr), S.Integers)
 
 
 class Reals(with_metaclass(Singleton, Interval)):
