@@ -87,6 +87,7 @@ def diophantine(eq, param=symbols("t", integer=True)):
 
         var_t, jnk, eq_type = classify_diop(base)
         solution = diop_solve(base, param)
+        # XXX what if solution is None as for test_infinitely_indexed_failed_diophantine
 
         if eq_type in ["linear", "homogeneous_ternary_quadratic", "general_pythagorean"]:
             if merge_solution(var, var_t, solution) != ():

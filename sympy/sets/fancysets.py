@@ -327,10 +327,15 @@ class ImageSet(Set):
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
         if self.base_set is S.Integers:
+            g = None
             if isinstance(other, ImageSet) and other.base_set is S.Integers:
-                f, g = self.lamda.expr, other.lamda.expr
-                n, m = self.lamda.variables[0], other.lamda.variables[0]
-
+                g = other.lamda.expr
+                m = other.lamda.variables[0]
+            elif other is S.Integers:
+                m = g = Dummy('x')
+            if g is not None:
+                f = self.lamda.expr
+                n = self.lamda.variables[0]
                 # Diophantine sorts the solutions according to the alphabetic
                 # order of the variable names, since the result should not depend
                 # on the variable name, they are replaced by the dummy variables
@@ -341,13 +346,14 @@ class ImageSet(Set):
                 if solns_set == set():
                     return EmptySet()
                 solns = list(diophantine(f - g))
-                if len(solns) == 1:
-                    t = list(solns[0][0].free_symbols)[0]
-                else:
-                    return None
 
-                # since 'a' < 'b'
-                return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
+                if len(solns) != 1:
+                    return
+
+                # since 'a' < 'b', select soln for n
+                nsol = solns[0][0]
+                t = nsol.free_symbols.pop()
+                return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
 
         if other == S.Reals:
             from sympy.solvers.solveset import solveset_real
