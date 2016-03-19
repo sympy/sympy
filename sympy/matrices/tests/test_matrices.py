@@ -1189,6 +1189,8 @@ def test_is_nilpotent():
     assert a.is_nilpotent()
     a = Matrix([[1, 0], [0, 1]])
     assert not a.is_nilpotent()
+    a = Matrix([])
+    assert a.is_nilpotent()
 
 
 def test_zeros_ones_fill():
@@ -2702,12 +2704,28 @@ def test_issue_9422():
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
 
+
+def test_issue_10770():
+    M = Matrix([])
+    a = ['col_insert', 'row_join'], Matrix([9, 6, 3])
+    b = ['row_insert', 'col_join'], a[1].T
+    c = ['row_insert', 'col_insert'], Matrix([[1, 2], [3, 4]])
+    for ops, m in (a, b, c):
+        for op in ops:
+            f = getattr(M, op)
+            new = f(m) if 'join' in op else f(42, m)
+            assert new == m and id(new) != id(m)
+
+
 def test_issue_10658():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert A.extract([0, 1, 2], [True, True, False]) == Matrix([[1, 2], [4, 5], [7, 8]])
+    assert A.extract([0, 1, 2], [True, True, False]) == \
+        Matrix([[1, 2], [4, 5], [7, 8]])
     assert A.extract([0, 1, 2], [True, False, False]) == Matrix([[1], [4], [7]])
     assert A.extract([True, False, False], [0, 1, 2]) == Matrix([[1, 2, 3]])
-    assert A.extract([True, False, True], [0, 1, 2]) == Matrix([[1, 2, 3], [7, 8, 9]])
+    assert A.extract([True, False, True], [0, 1, 2]) == \
+        Matrix([[1, 2, 3], [7, 8, 9]])
     assert A.extract([0, 1, 2], [False, False, False]) == Matrix(3, 0, [])
     assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
-    assert A.extract([True, False, True], [False, True, False]) == Matrix([[2], [8]])
+    assert A.extract([True, False, True], [False, True, False]) == \
+        Matrix([[2], [8]])

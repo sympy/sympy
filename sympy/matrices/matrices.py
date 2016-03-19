@@ -2080,6 +2080,8 @@ class MatrixBase(object):
         >>> a.is_nilpotent()
         False
         """
+        if not self:
+            return True
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
@@ -3983,11 +3985,14 @@ class MatrixBase(object):
         row
         col_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(rhs)
+
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
@@ -4015,11 +4020,14 @@ class MatrixBase(object):
         col
         row_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(bott)
+
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
         newmat[self.rows:, :] = bott
@@ -4047,6 +4055,11 @@ class MatrixBase(object):
         row
         col_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4088,6 +4101,11 @@ class MatrixBase(object):
         col
         row_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
@@ -4100,7 +4118,6 @@ class MatrixBase(object):
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
 
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
         newmat[:, :i] = self[:, :i]

@@ -124,9 +124,39 @@ def test_residue():
 
     assert is_nthpow_residue(2, 1, 5)
 
-    #issue 7858
-    raises(NotImplementedError, lambda: is_nthpow_residue(676, 3, 5364))
-
+    #issue 10816
+    assert is_nthpow_residue(1, 0, 1) is False
+    assert is_nthpow_residue(1, 0, 2) is True
+    assert is_nthpow_residue(3, 0, 2) is False
+    assert is_nthpow_residue(0, 1, 8) is True
+    assert is_nthpow_residue(2, 3, 2) is False
+    assert is_nthpow_residue(2, 3, 9) is False
+    assert is_nthpow_residue(3, 5, 30) is True
+    assert is_nthpow_residue(21, 11, 20) is True
+    assert is_nthpow_residue(7, 10, 20) is False
+    assert is_nthpow_residue(5, 10, 20) is True
+    assert is_nthpow_residue(3, 10, 48) is False
+    assert is_nthpow_residue(1, 10, 40) is True
+    assert is_nthpow_residue(3, 10, 24) is False
+    assert is_nthpow_residue(1, 10, 24) is True
+    assert is_nthpow_residue(3, 10, 24) is False
+    assert is_nthpow_residue(2, 10, 48) is False
+    assert is_nthpow_residue(81, 3, 972) is False
+    assert is_nthpow_residue(243, 5, 5103) is True
+    assert is_nthpow_residue(243, 3, 1240029) is False
+    x = set([pow(i, 56, 1024) for i in range(1024)])
+    assert set([a for a in range(1024) if is_nthpow_residue(a, 56, 1024)]) == x
+    x = set([ pow(i, 256, 2048) for i in range(2048)])
+    assert set([a for a in range(2048) if is_nthpow_residue(a, 256, 2048)]) == x
+    x = set([ pow(i, 11, 324000) for i in range(1000)])
+    assert [ is_nthpow_residue(a, 11, 324000) for a in x]
+    x = set([ pow(i, 17, 22217575536) for i in range(1000)])
+    assert [ is_nthpow_residue(a, 17, 22217575536) for a in x]
+    assert is_nthpow_residue(676, 3, 5364)
+    assert is_nthpow_residue(9, 12, 36)
+    assert is_nthpow_residue(32, 10, 41)
+    assert is_nthpow_residue(4, 2, 64)
+    assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert nthroot_mod(1801, 11, 2663) == 44

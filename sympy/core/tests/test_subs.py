@@ -656,6 +656,12 @@ def test_issue_5217():
     assert q.subs(sub) == 2*y**2*s
 
 
+def test_issue_10829():
+    from sympy.abc import x, y
+
+    assert (4**x).subs(2**x, y) == y**2
+    assert (9**x).subs(3**x, y) == y**2
+
 def test_pow_eval_subs_no_cache():
     # Tests pull request 9376 is working
     from sympy.core.cache import clear_cache
