@@ -231,14 +231,13 @@ def primepi(n):
 
         Algorithm Description:
 
-        Let phi(a,b) denote the number of integers
-        2<=n<=a which have no prime factors less
-        than equal to b.
+        Let phi(a,b) denote the number of integers<=a
+        which remain after sieving from primes <= b
 
         Clearly pi(n) = phi(n,sqrt(n))
         Following recursion is used and implemented as dp:
         phi(a,b) = phi(a,b-1) , if b is not a prime
-        phi(a,b) = phi(a,b-1)-phi(a/b,b-1), if b is prime
+        phi(a,b) = phi(a,b-1)-phi(a/b,b-1) + phi(p-1,p-1), if b is prime
 
         Clearly a is always of the form floor(n/k),
         which can take at most 2*sqrt(n) values.
