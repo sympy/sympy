@@ -1203,10 +1203,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             not check.has(zoo) and not check.has(-oo):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
-
-                            #If the ODE has regular singular point at x0 and is of the form 
+                            #If the ODE has regular singular point at x0 and is of the form
                             #Eq(x**2*Derivative(y(x),x,x)+x*Derivative(y(x),x) thus Bessel's equation
-
                             if p==1:
                                 b4 = Wild('b4', exclude=[x,f(x),df])
                                 rn = r[c3].match(x**2-b4*b4)
@@ -1224,10 +1222,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if rn and rn[b4] != 0:
                         rn = {'b':rn[a4],'m':rn[b4]}
                         matching_hints["2nd_linear_airy"] = rn
-
-                
-
-
     if order > 0:
         # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
@@ -3830,6 +3824,8 @@ def ode_Bessel_Equation(eq, func, order, match):
     Gives solution of the Bessel differential equation
 
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
+    """
+    x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']

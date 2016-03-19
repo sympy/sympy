@@ -209,13 +209,7 @@ def test_linear_2eq_order2():
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = ("[Eq(x(t), -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
-    "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) - (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) - 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
-    "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192), Eq(y(t), -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
-    "sqrt(133)*t**3/2 + 1) + C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266)]")
+    sol8 = "[Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) + 4*C1*airyai(-t*(1 + sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) + (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 + sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3))))/3192), Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) - C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3)))/266)]"
     assert str(dsolve(eq8)) == sol8
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
@@ -2590,16 +2584,6 @@ def test_issue_7081():
 
 def test_2nd_power_series_ordinary():
     C1, C2 = symbols("C1 C2")
-    eq = f(x).diff(x, 2) - x*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq) == Eq(f(x),
-        C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
-    assert dsolve(eq, x0=-2) == Eq(f(x),
-        C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
-        + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
-        + O(x**6))
-    assert dsolve(eq, n=2) == Eq(f(x), C2*x + C1 + O(x**2))
-
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
@@ -2616,10 +2600,16 @@ def test_2nd_power_series_ordinary():
         -x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2
         + 1) + O(x**6))
 
-    eq = f(x).diff(x, 2) + x*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
-    assert dsolve(eq, n=7) == Eq(f(x), C2*(
-        x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+def test_Airy_equation():
+    C1, C2 = symbols("C1 C2")
+    from sympy.functions import airyai, airybi
+    eq = f(x).diff(x, 2) - x*f(x)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert dsolve(eq) == Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    eq = f(x).diff(x, 2) + 2*x*f(x)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert str(dsolve(eq)) == "Eq(f(x), C1*airyai(-2**(1/3)*x) + C2*airybi(-2**(1/3)*x))"
+
 
 
 def test_2nd_power_series_regular():
@@ -2639,12 +2629,19 @@ def test_2nd_power_series_regular():
         x**2/2 + x/2 + 1)/x + C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1)
         + O(x**6))
 
-    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
-        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
-
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
+
+def test_Bessel_equation():
+    C1, C2 = symbols("C1 C2")
+    from sympy.functions import besselj, bessely
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
+    assert classify_ode(eq) == ('Bessel_Equation', '2nd_power_series_regular')
+    assert dsolve(eq) == Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
+
+
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
