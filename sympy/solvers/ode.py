@@ -1204,12 +1204,18 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
+                            #If the ODE has regular singular point at x0 and is of the form 
+                            #Eq(x**2*Derivative(y(x),x,x)+x*Derivative(y(x),x) thus Bessel's equation
+
                             if p==1:
                                 b4 = Wild('b4', exclude=[x,f(x),df])
                                 rn = r[c3].match(x**2-b4*b4)
                                 if rn:
                                     rn = {'n':rn[b4]}
                                     matching_hints["Bessel_Equation"] = rn
+
+                #If the ODE is ordinary and is of the form of Airy's Equation
+                #Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
 
                 if p.is_zero:
                     a4 = Wild('a4', exclude=[x,f(x),df])
@@ -3679,7 +3685,6 @@ def ode_2nd_linear_airy(eq, func, order, match):
 
     in terms of Airy special functions airyai and airybi.
     """
-    print("ok")
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
