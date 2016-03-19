@@ -303,84 +303,16 @@ def test_range_range_intersection():
 
 
 def test_range_interval_intersection():
-    empty = Range(0)
     p = symbols('p', positive=True)
     assert isinstance(Range(3).intersect(Interval(p, p + 2)), Intersection)
-    assert Range(0, 4, 3).intersect(Interval(1, 2)) is S.EmptySet
-    for line, (r, i) in enumerate([
-        # Intersection with intervals
-        (Range(0, 10, 1), Interval(2, 6)),
-        (Range(0, 2, 1), Interval(2, 6)),
-        (Range(0, 3, 1), Interval(2, 6)),
-        (Range(0, 4, 1), Interval(2, 6)),
-        (Range(0, 7, 1), Interval(2, 6)),
-        (Range(0, 10, 1), Interval(2, 6)),
-        (Range(2, 3, 1), Interval(2, 6)),
-        (Range(2, 4, 1), Interval(2, 6)),
-        (Range(2, 7, 1), Interval(2, 6)),
-        (Range(2, 10, 1), Interval(2, 6)),
-        (Range(3, 4, 1), Interval(2, 6)),
-        (Range(3, 7, 1), Interval(2, 6)),
-        (Range(3, 10, 1), Interval(2, 6)),
-        (Range(6, 7, 1), Interval(2, 6)),
-        (Range(6, 10, 1), Interval(2, 6)),
-        (Range(7, 10, 1), Interval(2, 6)),
-        (Range(0, 10, 2), Interval(3, 5)),
-        (Range(1, 10, 2), Interval(2, 6)),
-        (Range(2, 10, 2), Interval(2, 6)),
-        (Range(3, 10, 2), Interval(2, 6)),
-        (Range(6, 10, 2), Interval(2, 6)),
-        (Range(10), Interval(5.1, 6.9)),
-
-        # Open Intervals are removed
-        (Range(0, 10, 1), Interval(2, 6, True, True)),
-
-        # Try this with large steps
-        (Range(0, 100, 10), Interval(15, 55)),
-
-
-        # Infinite range
-        (Range(0, oo, 2), Interval(-1, 5)),
-        (Range(-oo, 4, 3), Interval(-10, 20)),
-        (Range(-oo, 4, 3), Interval(-10, -5)),
-
-        # Infinite interval
-        (Range(-3, 0, 3), Interval(-oo, 0)),
-        (Range(0, 10, 3), Interval(3, oo)),
-        (Range(0, 10, 3), Interval(-oo, 5)),
-
-        # Infinite interval, infinite range start
-        (Range(-oo, 1, 3), Interval(-oo, 5)),
-        (Range(-oo, 1, 3), Interval(-oo, -3)),
-
-        # Infinite interval, infinite range end
-        (Range(0, oo, 3), Interval(5, oo)),
-        (Range(0, oo, 3), Interval(-5, oo)),
-        (Range(0, oo, 3), Interval(-oo, 5)),
-
-        ]):
-
-        for rev in range(2):
-            if rev:
-                r = r.reversed
-            result = r.intersection(i)
-
-            msg = "line %s: %s.intersect(%s) != %s" % (line, r, i, result)
-            if result is S.EmptySet:
-                assert (
-                    r.sup < i.inf or
-                        r.sup == i.inf and i.left_open) or (
-                    r.inf > i.sup or
-                        r.inf == i.sup and i.right_open), msg
-            else:
-                checks = a, b, c, d = [
-                    result.inf in i or result.inf == i.inf,
-                    result.inf - abs(result.step) not in i or \
-                        result.inf == r.inf,
-                    result.sup in i or result.sup == i.sup,
-                    result.sup + abs(result.step) not in i or \
-                    result.sup == r.sup]
-                assert all(_ for _ in checks), msg
+    assert Range(4).intersect(Interval(0, 3)) == Range(4)
+    assert Range(4).intersect(Interval(-oo, oo)) == Range(4)
+    assert Range(4).intersect(Interval(1, oo)) == Range(1, 4)
+    assert Range(4).intersect(Interval(1.1, oo)) == Range(2, 4)
+    assert Range(4).intersect(Interval(0.1, 3)) == Range(1, 4)
+    assert Range(4).intersect(Interval(0.1, 3.1)) == Range(1, 4)
+    assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
+    assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
 
 
 def test_fun():

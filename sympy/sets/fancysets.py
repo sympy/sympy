@@ -504,39 +504,17 @@ class Range(Set):
             if not all(i.is_number for i in other.args[:2]):
                 return
 
-            o = other.intersect(Interval(self.inf, self.sup))
-            if o is S.EmptySet:
-                return o
+            # trim down to self's size, and represent
+            # as a Range with step 1
+            start = ceiling(max(other.inf, self.inf))
+            if start not in other:
+                start += 1
+            end = floor(min(other.sup, self.sup))
+            if end not in other:
+                end -= 1
+            return self.intersect(Range(start, end + 1))
 
-            # get inf/sup and handle below
-            if isinstance(o, FiniteSet):
-                assert len(o) == 1
-                inf = sup = list(o)[0]
-            else:
-                assert isinstance(o, Interval)
-                sup = o.sup
-                inf = o.inf
-
-            # get onto sequence
-            step = abs(self.step)
-            ref = self.start if self.start.is_finite else self.stop
-            a = ref + ceiling((inf - ref)/step)*step
-            if a not in other:
-                a += step
-            b = ref + floor((sup - ref)/step)*step
-            if b not in other:
-                b -= step
-            if self.step < 0:
-                a, b = b, a
-            # make sure to include end point
-            b += self.step
-
-            rv = Range(a, b, self.step)
-            if not rv:
-                return S.EmptySet
-            return rv
-
-        elif isinstance(other, Range):
+        if isinstance(other, Range):
             from sympy.solvers.diophantine import diop_linear
             from sympy.core.numbers import ilcm
 
