@@ -502,6 +502,23 @@ def test_imps():
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
 
 
+def test_imps_errors():
+    # Test errors that implemented functions can return, and still be able to
+    # form expressions.
+    # See: https://github.com/sympy/sympy/issues/10810
+    for val, error_class in product((0, 0., 2, 2.0),
+                                    (AttributeError, TypeError, ValueError)):
+
+        def myfunc(a):
+            if a == 0:
+                raise error_class
+            return 1
+
+        f = implemented_function('f', myfunc)
+        expr = f(val)
+        assert expr == f(val)
+
+
 def test_imps_wrong_args():
     raises(ValueError, lambda: implemented_function(sin, lambda x: x))
 
