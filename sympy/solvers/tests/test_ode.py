@@ -2632,13 +2632,13 @@ def test_2nd_power_series_regular():
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
 
-def test_Bessel_equation():
+def test_2nd_linear_bessel_equation():
     C1, C2 = symbols("C1 C2")
     from sympy.functions import besselj, bessely
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
     assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
-    assert classify_ode(eq) == ('Bessel_Equation', '2nd_power_series_regular')
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
     assert dsolve(eq) == Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
 
 

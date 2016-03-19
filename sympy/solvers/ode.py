@@ -305,7 +305,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_power_series_ordinary",
-    "Bessel_Equation",
+    "2nd_linear_bessel",
     "2nd_power_series_regular",
     "separable_Integral",
     "1st_exact_Integral",
@@ -1210,7 +1210,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                                 rn = r[c3].match(x**2-b4*b4)
                                 if rn:
                                     rn = {'n':rn[b4]}
-                                    matching_hints["Bessel_Equation"] = rn
+                                    matching_hints["2nd_linear_bessel"] = rn
 
                 #If the ODE is ordinary and is of the form of Airy's Equation
                 #Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
@@ -3819,7 +3819,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             return Eq(f(x), collect(finalseries1 + finalseries2,
                 [C0, C1]) + Order(x**terms))
 
-def ode_Bessel_Equation(eq, func, order, match):
+def ode_2nd_linear_bessel(eq, func, order, match):
     r"""
     Gives solution of the Bessel differential equation
 
