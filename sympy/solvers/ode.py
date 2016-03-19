@@ -3829,11 +3829,7 @@ def ode_Bessel_Equation(eq, func, order, match):
     r"""
     Gives solution of the Bessel differential equation
 
-    .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) = 0
-
-    in terms of Bessel special functions besselj and bessely.
-    """
-    x = func.args[0]
+    .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']
