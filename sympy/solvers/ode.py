@@ -248,7 +248,7 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate
+    atan2, conjugate, cbrt
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -303,7 +303,9 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
+    "2nd_linear_airy",
     "2nd_power_series_ordinary",
+    "Bessel_Equation",
     "2nd_power_series_regular",
     "separable_Integral",
     "1st_exact_Integral",
@@ -623,7 +625,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         hints = _desolve(eq, func=func,
             hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
             x0=x0, n=n, **kwargs)
-
         eq = hints.pop('eq', eq)
         all_ = hints.pop('all', False)
         if all_:
@@ -1203,6 +1204,23 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
+                            if p==1:
+                                b4 = Wild('b4', exclude=[x,f(x),df])
+                                rn = r[c3].match(x**2-b4*b4)
+                                if rn:
+                                    rn = {'n':rn[b4]}
+                                    matching_hints["Bessel_Equation"] = rn
+
+                if p.is_zero:
+                    a4 = Wild('a4', exclude=[x,f(x),df])
+                    b4 = Wild('b4', exclude=[x,f(x),df])
+                    rn = q.match(a4+b4*x)
+                    if rn and rn[b4] != 0:
+                        rn = {'b':rn[a4],'m':rn[b4]}
+                        matching_hints["2nd_linear_airy"] = rn
+
+                
+
 
     if order > 0:
         # nth order linear ODE
@@ -1270,7 +1288,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
-
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
@@ -3654,6 +3671,29 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     return Eq(f(x), series)
 
 
+def ode_2nd_linear_airy(eq, func, order, match):
+    r"""
+    Gives solution of the Airy differential equation
+
+    .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
+
+    in terms of Airy special functions airyai and airybi.
+    """
+    print("ok")
+    x = func.args[0]
+    f = func.func
+    C0, C1 = get_numbered_constants(eq, num=2)
+    b = match['b']
+    m = match['m']
+    if m.is_positive:
+        arg = - b/cbrt(m)**2 - cbrt(m)*x
+    elif m.is_negative:
+        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+    else:
+        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+    from sympy.functions import airyai, airybi
+    return Eq(f(x), C0*airyai(arg) + C1*airybi(arg))
+
 
 def ode_2nd_power_series_regular(eq, func, order, match):
     r"""
@@ -3779,6 +3819,21 @@ def ode_2nd_power_series_regular(eq, func, order, match):
                 finalseries2 = (x - x0)**m2*finalseries2
             return Eq(f(x), collect(finalseries1 + finalseries2,
                 [C0, C1]) + Order(x**terms))
+
+def ode_Bessel_Equation(eq, func, order, match):
+    r"""
+    Gives solution of the Bessel differential equation
+
+    .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) = 0
+
+    in terms of Bessel special functions besselj and bessely.
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = get_numbered_constants(eq, num=2)
+    n = match['n']
+    from sympy.functions import besselj, bessely
+    return Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
@@ -7460,21 +7515,10 @@ def sysode_linear_3eq_order1(match_):
     r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
     r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
     r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    forcing = [S(0), S(0), S(0)]
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                forcing[i] += j
-    if not (forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t)):
-        # We can handle homogeneous case and simple constant forcings
-        r['d1'] = -forcing[0]
-        r['d2'] = -forcing[1]
-        r['d3'] = -forcing[2]
-    else:
-        # Issue #9244: nonhomogeneous linear systems are not supported
-        raise NotImplementedError("Only homogeneous problems are supported" +
-                                  " (and constant inhomogeneity)")
-
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':
