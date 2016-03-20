@@ -318,7 +318,8 @@ def primepi(n):
                 arr2[j] -= arr2[st] - p
             else:
                 arr2[j] -= arr1[n // st] - p
-        for j in range(lim,i * i - 1, -1):
+        lim2 = min(lim, i*i - 1)
+        for j in range(lim, lim2, -1):
             arr1[j] -= arr1[j // i] - p
     return arr2[1]
 
