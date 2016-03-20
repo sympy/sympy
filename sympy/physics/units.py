@@ -80,6 +80,7 @@ from __future__ import print_function, division
 
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
+from sympy.core.numbers import Float
 
 
 class Unit(AtomicExpr):
