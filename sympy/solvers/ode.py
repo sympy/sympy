@@ -1203,16 +1203,17 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             not check.has(zoo) and not check.has(-oo):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
-                            #If the ODE has regular singular point at x0 and is of the form
-                            #Eq(x**2*Derivative(y(x),x,x)+x*Derivative(y(x),x) thus Bessel's equation
+                            # If the ODE has regular singular point at x0 and is of the form
+                            # Eq((x)**2*Derivative(y(x),x,x)+x*Derivative(y(x),x)+(a4**2*x**2-n**2)*y(x) thus Bessel's equation
                             if p==1:
+                                a4 = Wild('a4', exclude=[x,f(x),df])
                                 b4 = Wild('b4', exclude=[x,f(x),df])
-                                rn = r[c3].match(x**2-b4*b4)
+                                rn = r[c3].match(a4*a4*x**2-b4*b4)
                                 if check==0: # if r[c3] becomes zero at x0
-                                    rn={}
+                                    rn = r[c3].match(a4*a4*x**2)
                                     rn[b4]=0
                                 if rn:
-                                    rn = {'n':rn[b4]}
+                                    rn = {'n':rn[b4],'a4':rn[a4]}
                                     matching_hints["2nd_linear_bessel"] = rn
 
                 #If the ODE is ordinary and is of the form of Airy's Equation
@@ -3829,18 +3830,19 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
 
        if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)) as both the solutions are linearly independant
-       else if n is a fract
+       else if n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x))
     """
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']
+    a4= match['a4']
     if n%1==0:
         from sympy.functions import besselj, bessely
-        return Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))
+        return (Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))).subs(x,a4*x)
     else:
         from sympy.functions import besselj
-        return Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x))
+        return Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x)).subs(x,a4*x)
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
