@@ -4812,7 +4812,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
 
-    eqs = expand(eqs)
+    eqs = _mexpand(eqs)
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
