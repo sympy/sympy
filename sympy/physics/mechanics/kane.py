@@ -684,7 +684,7 @@ class KanesMethod(object):
             f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
-    def kanes_equations(self, FL, BL):
+    def kanes_equations(self, FL=None, BL=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -704,7 +704,9 @@ class KanesMethod(object):
             A list of all RigidBody's and Particle's in the system.
 
         """
-        if len(FL) == 0:
+        if FL is None:
+            FL = [(self._inertial, 0*self._inertial.x)]
+        elif len(FL) == 0:
             FL = [(self._inertial, 0*self._inertial.x)]
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
