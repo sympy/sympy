@@ -136,21 +136,14 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
-<<<<<<< HEAD
 
-        #limit is not working with binomial,gruntz raise not exception
-=======
         #limit is not working with binomial,gruntz raise an exception
->>>>>>> b939ad9c1ddea3233028aafa177f86fb2afa0e94
         #limit can work with binomial by converting to factorial first.
         #we have to also check that given limit should not be limits
         #of sequences.
         if e.has(binomial) and not (hints.get('sequence', True) and z0 is S.Infinity):
-<<<<<<< HEAD
-            e = e.rewrite(factorial)
-=======
-            e=e.rewrite(factorial)
->>>>>>> b939ad9c1ddea3233028aafa177f86fb2afa0e94
+           e = e.rewrite(factorial)
+ 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
@@ -200,4 +193,5 @@ class Limit(Expr):
                     raise NotImplementedError()
             else:
                 raise NotImplementedError()
+
         return r

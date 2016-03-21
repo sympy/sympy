@@ -456,11 +456,7 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
 
 def test_issue_10801():
-<<<<<<< HEAD
     assert limit(16**x/(x*binomial(2*x, x)**2), x, oo) == pi
-=======
-    assert limit(16**x/(x*binomial(2*x,x)**2), x, oo) == pi
->>>>>>> b939ad9c1ddea3233028aafa177f86fb2afa0e94
 
 def test_issue_9205():
     x, y, a = symbols('x, y, a')
