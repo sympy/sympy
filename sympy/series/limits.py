@@ -136,11 +136,10 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
-
-        #limit is not working with binomial,gruntz raise an exception
-        #limit can work with binomial by converting to factorial first.
-        #we have to also check that given limit should not be limits
-        #of sequences.
+        # limit is not working with binomial, gruntz raise an exception
+        # limit can work with binomial by converting to factorial first.
+        # we have to also check that given limit should not be limits
+        # of sequences.
         if e.has(binomial) and not (hints.get('sequence', True) and z0 is S.Infinity):
            e = e.rewrite(factorial)
 
