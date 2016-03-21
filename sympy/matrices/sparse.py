@@ -1370,17 +1370,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> C == A.col_insert(A.cols, B)
         True
         """
-<<<<<<< HEAD
         if not self:
             typ = type(self)
             return typ(other)
 
-=======
-        #this helps to build a sparse matrix from an empty sparse matrix
-        if not self:
-            typ = type(self)
-            return typ(other)
->>>>>>> bd3f1f36091cdeeae73abb155ef9f6aa45085d97
         A, B = self, other
         if not A.rows == B.rows:
             raise ShapeError()
