@@ -143,9 +143,12 @@ class FunctionClass(ManagedProperties):
         Allow Python 3's inspect.signature to give a useful signature for
         Function subclasses.
         """
-        # Python 3 only, but this method is also only ever called in Python
-        # 3.
-        from inspect import signature
+        # Python 3 only, but backports (like the one in IPython) still might
+        # call this.
+        try:
+            from inspect import signature
+        except ImportError:
+            return None
 
         # TODO: Look at nargs
         return signature(self.eval)
