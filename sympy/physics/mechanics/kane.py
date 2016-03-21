@@ -708,8 +708,12 @@ class KanesMethod(object):
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-
-        fr = self._form_fr(FL)
+        #Create a dummy load (inertial, zero vector) if no load is given
+        if FL == () or len(FL[0]) == 0:
+            fr = self._form_fr([(self._inertial, 0 * self._inertial.x)])
+        #Compute load as usual
+        else:
+            fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
         if self._uaux:
             if not self._udep:
