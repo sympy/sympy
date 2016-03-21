@@ -143,7 +143,7 @@ class Limit(Expr):
         #of sequences.
         if e.has(binomial) and not (hints.get('sequence', True) and z0 is S.Infinity):
            e = e.rewrite(factorial)
- 
+
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
