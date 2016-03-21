@@ -265,17 +265,26 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
-        from sympy.utilities.iterables import iterable, cartes
+        from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
+        if is_sequence(other):
+            if not is_sequence(L.expr):
+                return S.false
+            if len(L.expr) != len(other):
+                raise ValueError(filldedent('''
+    Dimensions of other and output of Lambda are different.'''))
+        elif iterable(other):
+                raise ValueError(filldedent('''
+    `other` should be an ordered object like a Tuple.'''))
+
+        solns = None
         if self._is_multivariate():
-            if not iterable(L.expr):
-                if iterable(other):
-                    return S.false
+            if not is_sequence(L.expr):
+                # exprs -> (numer, denom) and check again
+                # XXX this is a bad idea -- make the user
+                # remap self to desired form
                 return other.as_numer_denom() in self.func(
                     Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
-            if len(L.expr) != len(self.lamda.variables):
-                raise NotImplementedError(filldedent('''
-    Dimensions of input and output of Lambda are different.'''))
             eqs = [expr - val for val, expr in zip(other, L.expr)]
             variables = L.variables
             free = set(variables)
@@ -304,14 +313,35 @@ class ImageSet(Set):
                         raise NotImplementedError
                 solns = cartes(*[solns[s] for s in variables])
         else:
-            # assume scalar -> scalar mapping
-            solnsSet = solveset(L.expr - other, L.variables[0])
-            if solnsSet.is_FiniteSet:
-                solns = list(solnsSet)
+            x = L.variables[0]
+            if isinstance(L.expr, Expr):
+                # scalar -> scalar mapping
+                solnsSet = solveset(L.expr - other, x)
+                if solnsSet.is_FiniteSet:
+                    solns = list(solnsSet)
+                else:
+                    msgset = solnsSet
             else:
-                raise NotImplementedError(filldedent('''
-                Determining whether an ImageSet contains %s has not
-                been implemented.''' % func_name(other)))
+                # scalar -> vector
+                for e, o in zip(L.expr, other):
+                    solns = solveset(e - o, x)
+                    if solns is S.EmptySet:
+                        return S.false
+                    for soln in solns:
+                        try:
+                            if soln in self.base_set:
+                                break  # check next pair
+                        except TypeError:
+                            if self.base_set.contains(soln.evalf()):
+                                break
+                    else:
+                        return S.false  # never broke so there was no True
+                return S.true
+
+        if solns is None:
+            raise NotImplementedError(filldedent('''
+            Determining whether %s contains %s has not
+            been implemented.''' % (msgset, other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
@@ -636,7 +666,6 @@ class Range(Set):
             return Range(start, stop, step)
         else:
             return
-
 
     def _contains(self, other):
         if not self:
