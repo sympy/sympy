@@ -317,14 +317,11 @@ def test_transformation_to_normal():
 
 
 def test_diop_ternary_quadratic():
-    # Commented out test cases should be uncommented after
-    # the bug with factor_list() gets merged.
-
     assert check_solutions(2*x**2 + z**2 + y**2 - 4*x*y)
     assert check_solutions(x**2 - y**2 - z**2 - x*y - y*z)
     assert check_solutions(3*x**2 - x*y - y*z - x*z)
     assert check_solutions(x**2 - y*z - x*z)
-    #assert check_solutions(5*x**2 - 3*x*y - x*z)
+    assert check_solutions(5*x**2 - 3*x*y - x*z)
     assert check_solutions(4*x**2 - 5*y**2 - x*z)
     assert check_solutions(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
     assert check_solutions(8*x**2 - 12*y*z)
@@ -375,12 +372,9 @@ def test_parametrize_ternary_quadratic():
 
 
 def test_no_square_ternary_quadratic():
-    # Commented out test cases should be uncommented after
-    # the bug with factor_list() gets merged.
-
     assert check_solutions(2*x*y + y*z - 3*x*z)
     assert check_solutions(189*x*y - 345*y*z - 12*x*z)
-    #assert check_solutions(23*x*y + 34*y*z)
+    assert check_solutions(23*x*y + 34*y*z)
     assert check_solutions(x*y + y*z + z*x)
     assert check_solutions(23*x*y + 23*y*z + 23*x*z)
 
@@ -394,24 +388,21 @@ def test_descent():
 
 
 def test_diophantine():
-    # Commented out test cases should be uncommented after
-    # the bug with factor_list() gets merged.
-
     assert check_solutions((x - y)*(y - z)*(z - x))
     assert check_solutions((x - y)*(x**2 + y**2 - z**2))
     assert check_solutions((x - 3*y + 7*z)*(x**2 + y**2 - z**2))
     assert check_solutions((x**2 - 3*y**2 - 1))
-    #assert check_solutions(y**2 + 7*x*y)
-    #assert check_solutions(x**2 - 3*x*y + y**2)
-    #assert check_solutions(z*(x**2 - y**2 - 15))
-    #assert check_solutions(x*(2*y - 2*z + 5))
+    assert check_solutions(y**2 + 7*x*y)
+    assert check_solutions(x**2 - 3*x*y + y**2)
+    assert check_solutions(z*(x**2 - y**2 - 15))
+    assert check_solutions(x*(2*y - 2*z + 5))
     assert check_solutions((x**2 - 3*y**2 - 1)*(x**2 - y**2 - 15))
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
     # Following test case caused problems in parametric representation
     # But this can be solved by factroing out y.
     # No need to use methods for ternary quadratic equations.
-    #assert check_solutions(y**2 - 7*x*y + 4*y*z)
+    assert check_solutions(y**2 - 7*x*y + 4*y*z)
     assert check_solutions(x**2 - 2*x + 1)
 
 
