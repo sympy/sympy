@@ -2076,6 +2076,8 @@ def test_col_join():
                 [0, 1, 0],
                 [0, 0, 1],
                 [7, 7, 7]])
+    a = Matrix([1, 2])
+    assert Matrix([]).col_join(a) == a
 
 
 def test_row_insert():
@@ -2084,6 +2086,9 @@ def test_row_insert():
         l = [1, 0, 0]
         l.insert(i, 4)
         assert flatten(eye(3).row_insert(i, r4).col(0).tolist()) == l
+    a = Matrix([1, 2])
+    assert Matrix([]).row_insert(10, a) == a
+    assert Matrix([]).row_join(a) == a
 
 
 def test_col_insert():
@@ -2092,6 +2097,9 @@ def test_col_insert():
         l = [0, 0, 0]
         l.insert(i, 4)
         assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
+    a = Matrix([1, 2])
+    assert Matrix([]).col_insert(10, a) == a
+
 
 
 def test_normalized():

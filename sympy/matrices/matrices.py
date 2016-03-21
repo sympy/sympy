@@ -4020,6 +4020,7 @@ class MatrixBase(object):
         col
         row_join
         """
+
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -4101,7 +4102,6 @@ class MatrixBase(object):
         col
         row_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return type(self)(mti)
