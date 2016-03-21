@@ -424,17 +424,15 @@ def test_imageset_intersect_real():
     assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
-@XFAIL
-def test_infinitely_indexed_failed_diophantine():
-    from sympy.abc import n, m, t
-    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(imageset(Lambda(n, 3*pi*n), S.Integers)) == \
-            ImageSet(Lambda(t, -6*pi*t), S.Integers)
-
-
 def test_infinitely_indexed_set_3():
-    from sympy.abc import n
-    assert imageset(Lambda(n, 2*n + 1), S.Integers) == imageset(Lambda(n, 2*n - 1), S.Integers)
-    assert imageset(Lambda(n, 3*n + 2), S.Integers) == imageset(Lambda(n, 3*n - 1), S.Integers)
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
+            imageset(Lambda(n, 3*pi*n), S.Integers)) == \
+        ImageSet(Lambda(t, 6*pi*t), S.Integers)
+    assert imageset(Lambda(n, 2*n + 1), S.Integers) == \
+        imageset(Lambda(n, 2*n - 1), S.Integers)
+    assert imageset(Lambda(n, 3*n + 2), S.Integers) == \
+        imageset(Lambda(n, 3*n - 1), S.Integers)
 
 
 def test_ImageSet_simplification():
