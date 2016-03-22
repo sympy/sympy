@@ -31,6 +31,9 @@ def test_one_dof():
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
     assert (KM.linearize(A_and_B=True, new_method=True)[0] ==
             Matrix([[0, 1], [-k/m, -c/m]]))
+    assert KM.kanes_equations((), BL)[0] == Matrix([0])
+    assert KM.kanes_equations(None, BL)[0] == Matrix([0])
+    assert KM.kanes_equations([()], BL)[0] == Matrix([0])
 
     # Ensure that the old linearizer still works and that the new linearizer
     # gives the same results. The old linearizer is deprecated and should be
