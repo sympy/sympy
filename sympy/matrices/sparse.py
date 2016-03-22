@@ -1371,8 +1371,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         True
         """
         if not self:
-            typ = type(self)
-            return typ(other)
+            return type(self)(other)
         A, B = self, other
         if not A.rows == B.rows:
             raise ShapeError()
@@ -1432,8 +1431,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         True
         """
         if not self:
-            typ = type(self)
-            return typ(other)
+            return type(self)(other)
         A, B = self, other
         if not A.cols == B.cols:
             raise ShapeError()
