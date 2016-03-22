@@ -195,13 +195,33 @@ sieve = Sieve()
 
 def prime(nth):
     """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
-        can never be larger than 2**n.
+        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+
+        Logarithmic integral of x is a pretty nice approximation for number of
+        primes <= x, i.e.
+        li(x) ~ pi(x)
+        Infact, for the numbers we are concerned( x<1e11 ),
+        li(x) - pi(x) < 50000
+
+        Also,
+        li(x) > pi(x) can be safely assumed for the numbers which
+        can be evaluated by this function.
+
+        Here, we find the least integer m such that li(m) > n using binary search.
+        Now pi(m-1) < li(m-1) <= n,
+
+        We find pi(m-1) using primepi function.
+
+        Starting from m, we have to find n - pi(m-1) more primes.
+
+        For the inputs this implementation can handle, we will have to test
+        primality for at max about 10**5 numbers, to get our answer.
 
         References
         ==========
 
-        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        - https://en.wikipedia.org/wiki/Skewes%27_number
 
         Examples
         ========
@@ -211,6 +231,8 @@ def prime(nth):
         29
         >>> prime(1)
         2
+        >>> prime(100000)
+        1299709
 
         See Also
         ========
@@ -219,10 +241,31 @@ def prime(nth):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-    n = as_int(nth)
+    n = int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    return sieve[n]
+    if n<=2:
+        return n+1
+    from sympy.functions.special.error_functions import li
+    from sympy.functions.elementary.exponential import log
+    a = 2 # Lower bound for binary search
+    b = int(n*(log(n).evalf() + log(log(n).evalf()).evalf())) + 100 # Upper bound for the search.
+
+    while a < b:
+        mid = (a + b) >> 1
+        x = li(mid).evalf()
+        if x > n:
+            b = mid
+        else:
+            a = mid + 1
+    m = a
+    n_primes = primepi(m-1)
+    N = m
+    while n_primes < n:
+        if isprime(N):
+            n_primes += 1
+        N += 1
+    return N - 1
 
 
 def primepi(n):
@@ -318,7 +361,8 @@ def primepi(n):
                 arr2[j] -= arr2[st] - p
             else:
                 arr2[j] -= arr1[n // st] - p
-        for j in range(lim,i * i - 1, -1):
+        lim2 = min(lim, i*i - 1)
+        for j in range(lim, lim2, -1):
             arr1[j] -= arr1[j // i] - p
     return arr2[1]
 
