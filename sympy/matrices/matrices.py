@@ -2894,15 +2894,18 @@ class MatrixBase(object):
 
            >>> M = Matrix([[x, y, z], [1, 0, 0], [y, z, x]])
 
-           >>> p, q, r = M.berkowitz()
+           >>> p, q, r, s = M.berkowitz()
 
-           >>> p # 1 x 1 M's sub-matrix
+           >>> p # 0 x 0 M's sub-matrix
+           (1,)
+
+           >>> q # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> q # 2 x 2 M's sub-matrix
+           >>> r # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> r # 3 x 3 M's sub-matrix
+           >>> s # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2991,7 +2994,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        sign, minors = S.NegativeOne, []
+        sign, minors = S.One, []
 
         for poly in self.berkowitz():
             minors.append(sign*poly[-1])

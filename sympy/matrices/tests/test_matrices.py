@@ -430,9 +430,9 @@ def test_det_LU_decomposition():
 def test_berkowitz_minors():
     B = Matrix(2, 2, [1, 2, 2, 1])
 
-    assert B.berkowitz_minors() == (1, -3)
+    assert B.berkowitz_minors() == (1, 1, -3)
     E = Matrix([])
-    assert E.berkowitz() == (1,)
+    assert E.berkowitz() == ((1,),)
 
 def test_slicing():
     m0 = eye(4)
