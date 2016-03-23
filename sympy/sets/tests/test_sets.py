@@ -781,6 +781,7 @@ def test_image_FiniteSet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
 
+
 def test_image_Union():
     x = Symbol('x', real=True)
     assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
@@ -1021,3 +1022,13 @@ def test_issue_10285():
     ivl = Interval.Lopen(1, oo)
     assert FiniteSet(eq).intersect(ivl) == \
         FiniteSet(s).intersect(Interval.Lopen(2, oo))
+
+
+
+def test_bool_ProductSet():
+    assert bool(Interval(0,2) * Interval(1,3))
+    assert not bool(Interval(1,0) * Interval(0,2))
+    assert not bool(Interval(1,0) * Interval(2,0))
+    assert bool(FiniteSet(1,2,3,4) * Interval(0,2))
+    assert not bool(FiniteSet(1,2,3,4) * Interval(1,0))
+    assert bool(FiniteSet(1,2,3,4) * FiniteSet(3,4))
