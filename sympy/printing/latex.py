@@ -1225,7 +1225,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
-            s += r'\rightarrow'
+            s += r'\rightarrow '
             if len(expr.point) > 1:
                 s += self._print(expr.point)
             else:
