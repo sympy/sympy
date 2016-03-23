@@ -221,6 +221,7 @@ def prime(nth):
         ==========
 
         - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
         - https://en.wikipedia.org/wiki/Skewes%27_number
 
         Examples
