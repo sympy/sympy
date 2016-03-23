@@ -192,7 +192,6 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-
 def prime(nth):
     """ Return the nth prime, with the primes indexed as prime(1) = 2,
         prime(2) = 3, etc.... The nth prime is approximately n*log(n).
@@ -200,7 +199,7 @@ def prime(nth):
         Logarithmic integral of x is a pretty nice approximation for number of
         primes <= x, i.e.
         li(x) ~ pi(x)
-        Infact, for the numbers we are concerned( x<1e11 ),
+        In fact, for the numbers we are concerned about( x<1e11 ),
         li(x) - pi(x) < 50000
 
         Also,
@@ -242,15 +241,18 @@ def prime(nth):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
     """
-    n = int(nth)
+    n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    if n<=2:
-        return n+1
+    prime_arr = [2,3,5,7,11,13,17]
+    if n<=6:
+        return prime_arr[n-1]
+        
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
+
     a = 2 # Lower bound for binary search
-    b = int(n*(log(n).evalf() + log(log(n).evalf()).evalf())) + 100 # Upper bound for the search.
+    b = int(n*(log(n).evalf() + log(log(n).evalf()).evalf())) # Upper bound for the search.
 
     while a < b:
         mid = (a + b) >> 1
