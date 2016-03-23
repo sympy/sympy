@@ -1024,7 +1024,6 @@ def test_issue_10285():
         FiniteSet(s).intersect(Interval.Lopen(2, oo))
 
 
-
 def test_bool_ProductSet():
     assert bool(Interval(0,2) * Interval(1,3))
     assert not bool(Interval(1,0) * Interval(0,2))
@@ -1032,3 +1031,4 @@ def test_bool_ProductSet():
     assert bool(FiniteSet(1,2,3,4) * Interval(0,2))
     assert not bool(FiniteSet(1,2,3,4) * Interval(1,0))
     assert bool(FiniteSet(1,2,3,4) * FiniteSet(3,4))
+    
