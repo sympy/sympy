@@ -245,9 +245,9 @@ def prime(nth):
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
     prime_arr = [2,3,5,7,11,13,17]
-    if n<=6:
+    if n<=7:
         return prime_arr[n-1]
-        
+
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
 
@@ -261,14 +261,12 @@ def prime(nth):
             b = mid
         else:
             a = mid + 1
-    m = a
-    n_primes = primepi(m-1)
-    N = m
+    n_primes = primepi(a-1)
     while n_primes < n:
-        if isprime(N):
+        if isprime(a):
             n_primes += 1
-        N += 1
-    return N - 1
+        a += 1
+    return a - 1
 
 
 def primepi(n):
