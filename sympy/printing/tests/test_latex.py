@@ -27,6 +27,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -601,6 +602,12 @@ def test_latex_AccumuBounds():
 
 def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
+
+def test_latex_commutator():
+    A = Operator('A')
+    B = Operator('B')
+    comm = Commutator(B, A)
+    assert latex(comm.doit()) == r"- (A B - B A)"
 
 
 def test_latex_union():
