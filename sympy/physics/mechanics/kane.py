@@ -267,10 +267,8 @@ class KanesMethod(object):
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
-        if not fl or len(fl) == 0 or len(fl[0]) == 0:
-            fl = [(self._inertial, 0 * self._inertial.x)]
-        elif not iterable(fl):
-            raise TypeError('Force pairs must be supplied in an iterable.')
+        if fl and not iterable(fl):
+            raise TypeError('Force pairs must be supplied in an iterable or empty.')
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
