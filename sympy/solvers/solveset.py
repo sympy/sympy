@@ -398,6 +398,8 @@ def _solve_as_rational(f, symbol, domain):
 
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
+    from sympy.polys import factor
+    from sympy.sets import ImageSet
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
@@ -405,6 +407,58 @@ def _solve_trig(f, symbol, domain):
     f_orig = f
     f = f.rewrite(exp)
     soln = _solveset(f, symbol, S.Complexes)
+    if isinstance(soln,Union) and all(isinstance(s, ImageSet) for s in soln.args):
+        soln_2pi = []
+        soln_list = []
+        soln_len = len(soln.args)
+        for i in xrange(0,soln_len):
+            soln_list.append(soln.args[i])
+        for s in soln_list:
+            lamb = s.args[0]
+            val = lamb(0)
+            soln_2pi.append(val)
+        soln_2pi.sort()
+        a = Dummy('a', real=True)
+        b = Dummy('b', real=True)
+        n = Dummy('n', real =True)
+        equations = []
+        positive_eq = []
+        negative_eq = []
+        for j in xrange(0,len(soln_2pi)):
+            if soln_2pi[j]<0:
+                negative_eq.append(soln_2pi[j])
+            elif soln_2pi[j] > 0:
+                positive_eq.append(soln_2pi[j])
+        plen = len(positive_eq)
+        nlen = len(negative_eq)
+        if not (plen == 1 and nlen == 1):
+            positive_eq.sort()
+            negative_eq.sort()
+            negative_eq.reverse()
+            if not nlen == 1:
+                for i in xrange(0,len(negative_eq)):
+                    eq = a*(i+1) + b - negative_eq[i]
+                    equations.append(eq)
+
+                a, b= list(linsolve(equations,(a,b)))[0]
+                res1 = a*n + b
+            else:
+                res1 = 2*n*pi + negative_eq[0]
+            equations = []
+            c = Dummy('c', real=True)
+            d = Dummy('d', real=True)
+            if not plen == 1: 
+                for i in xrange(0,len(positive_eq)):
+                    eq = c*(i+1) + d - positive_eq[i]
+                    equations.append(eq)
+
+                c, d= list(linsolve(equations,(c,d)))[0]
+
+                res2 = c*n + d
+            else:
+                res2 = 2*n*pi + positive_eq[0]
+            soln = Union(imageset(Lambda(n, res1), S.Integers),\
+             imageset(Lambda(n, res2), S.Integers))
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form
         # TODO need more improvement here.
