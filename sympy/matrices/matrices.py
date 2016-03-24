@@ -20,6 +20,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
+from sympy.assumptions.refine import refine
 
 from types import FunctionType
 
@@ -997,6 +998,7 @@ class MatrixBase(object):
 
         For a list of possible inversion methods, see the .inv() docstring.
         """
+
         if not self.is_square:
             if self.rows < self.cols:
                 raise ValueError('Under-determined system. '
@@ -1241,6 +1243,26 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
     _eval_simplify = simplify
+
+    def refine(self, assumptions=True):
+        """Apply refine to each element of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
+        Matrix([
+        [ Abs(x)**2, sqrt(x**2)],
+        [sqrt(x**2),  Abs(x)**2]])
+        >>> _.refine(Q.real(x))
+        Matrix([
+        [  x**2, Abs(x)],
+        [Abs(x),   x**2]])
+
+        """
+        return self.applyfunc(lambda x: refine(x, assumptions))
 
     def doit(self, **kwargs):
         return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
