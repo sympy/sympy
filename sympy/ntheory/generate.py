@@ -209,7 +209,7 @@ def prime(nth):
         Here, we find the least integer m such that li(m) > n using binary search.
         Now pi(m-1) < li(m-1) <= n,
 
-        We find pi(m-1) using primepi function.
+        We find pi(m - 1) using primepi function.
 
         Starting from m, we have to find n - pi(m-1) more primes.
 
