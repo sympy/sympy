@@ -5307,3 +5307,19 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+def test_issue_10803():
+    from sympy.functions.special.bessel import airyai
+    from sympy.functions.elementary.miscellaneous import root
+    expr = 1/Limit(airyai(x)*2*root(x, 4)*exp(2*x**(S(3)/2)/3), x, oo)**2
+    ucode_str = \
+u("""\
+                               -2\n\
+⎛                3/2          ⎞  \n\
+⎜             2⋅x             ⎟  \n\
+⎜             ──────          ⎟  \n\
+⎜      4 ___    3             ⎟  \n\
+⎜lim 2⋅╲╱ x ⋅ℯ      ⋅airyai(x)⎟  \n\
+⎝x─→∞                         ⎠  \
+""")
+    assert upretty(expr) == ucode_str
