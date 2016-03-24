@@ -576,9 +576,6 @@ def test_solve_abs():
 
 
 def test_rewrite_trigh_fixed_by_10733():
-    from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == \
-    FiniteSet(log(sqrt(-2 + sqrt(5))))
     assert solveset(sinh(x), x) == ImageSet(Lambda(n, n*I*pi), S.Integers)
     assert solveset(sinh(x) + cosh(x) + 1, x) == ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers)
     assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
@@ -588,6 +585,8 @@ def test_rewrite_trigh_fixed_by_10733():
 @SKIP("comparison error")
 def test_rewrite_trigh_fail():
     from sympy import sech
+    assert solveset_real(sinh(x) + sech(x), x) == \
+    FiniteSet(log(sqrt(-2 + sqrt(5))))
     assert solveset_complex(sinh(x) + sech(x), x) == Union(
         (ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers) -\
          ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
@@ -1125,6 +1124,10 @@ def test_issue_10217():
     assert solveset(eq,x,domain=S.Reals) == soln
     assert solveset(eq,x) == ConditionSet(x, Eq(cos(sin(x) + 1) - 1, 0), S.Complexes)
 
+
+def test_simplifed_trig_solution():
+    assert solveset(cos(x) + cos(3*x) + cos(5*x),x,S.Reals) == \
+    ImageSet(Lambda(n, n*pi/6), S.Integers)
 
 def test_issue_8715():
     eq = x + 1/x > -2 + 1/x

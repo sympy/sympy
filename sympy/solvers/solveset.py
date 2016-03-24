@@ -411,7 +411,7 @@ def _solve_trig(f, symbol, domain):
         soln_2pi = []
         soln_list = []
         soln_len = len(soln.args)
-        for i in xrange(0,soln_len):
+        for i in range(0,soln_len):
             soln_list.append(soln.args[i])
         for s in soln_list:
             lamb = s.args[0]
@@ -424,7 +424,7 @@ def _solve_trig(f, symbol, domain):
         equations = []
         positive_eq = []
         negative_eq = []
-        for j in xrange(0,len(soln_2pi)):
+        for j in range(0,len(soln_2pi)):
             if soln_2pi[j]<0:
                 negative_eq.append(soln_2pi[j])
             elif soln_2pi[j] > 0:
@@ -436,7 +436,7 @@ def _solve_trig(f, symbol, domain):
             negative_eq.sort()
             negative_eq.reverse()
             if not nlen == 1:
-                for i in xrange(0,len(negative_eq)):
+                for i in range(0,len(negative_eq)):
                     eq = a*(i+1) + b - negative_eq[i]
                     equations.append(eq)
 
@@ -447,8 +447,8 @@ def _solve_trig(f, symbol, domain):
             equations = []
             c = Dummy('c', real=True)
             d = Dummy('d', real=True)
-            if not plen == 1: 
-                for i in xrange(0,len(positive_eq)):
+            if not plen == 1:
+                for i in range(0,len(positive_eq)):
                     eq = c*(i+1) + d - positive_eq[i]
                     equations.append(eq)
 
