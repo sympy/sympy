@@ -853,6 +853,9 @@ class binomial(CombinatorialFunction):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
+    def _eval_rewrite_as_tractable(self, n, k):
+        return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
+
     def _eval_rewrite_as_FallingFactorial(self, n, k):
         if k.is_integer:
             return ff(n, k) / factorial(k)
