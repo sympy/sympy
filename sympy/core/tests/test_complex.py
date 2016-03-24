@@ -210,3 +210,8 @@ def test_issue_5429():
 def test_issue_4124():
     from sympy import oo
     assert expand_complex(I*oo) == oo*I
+
+def test_issue_10897():
+    x = Symbol('x')
+    assert re(x).rewrite(im) == x - S.ImaginaryUnit * im(x)
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * ( x - re(x))
