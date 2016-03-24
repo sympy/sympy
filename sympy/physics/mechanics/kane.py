@@ -267,8 +267,8 @@ class KanesMethod(object):
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
-        if fl and not iterable(fl):
-            raise TypeError('Force pairs must be supplied in an iterable or empty.')
+        if fl != None and (len(fl) == 0 or not iterable(fl)):
+            raise TypeError('Force pairs must be supplied in an non-empty iterable or None.')
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
@@ -683,7 +683,7 @@ class KanesMethod(object):
             f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
-    def kanes_equations(self, FL, BL):
+    def kanes_equations(self, loads=None, bodies=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -696,10 +696,12 @@ class KanesMethod(object):
         Parameters
         ==========
 
-        FL : list
+        loads : list
             Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
-        BL : list
+            Must be either a non-empty list of tuples or None which corresponds
+            to a system with no constraints.
+        bodies : list
             A list of all RigidBody's and Particle's in the system.
 
         """
@@ -707,8 +709,8 @@ class KanesMethod(object):
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-        fr = self._form_fr(FL)
-        frstar = self._form_frstar(BL)
+        fr = self._form_fr(loads)
+        frstar = self._form_frstar(bodies)
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
@@ -720,8 +722,8 @@ class KanesMethod(object):
                         self._f_nh))
             km._qdot_u_map = self._qdot_u_map
             self._km = km
-            fraux = km._form_fr(FL)
-            frstaraux = km._form_frstar(BL)
+            fraux = km._form_fr(loads)
+            frstaraux = km._form_frstar(bodies)
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
