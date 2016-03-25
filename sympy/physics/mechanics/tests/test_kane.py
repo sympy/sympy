@@ -320,7 +320,7 @@ def test_input_format():
     BL = [pa1, pa2]
 
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
-    # test for input format 
+    # test for input format
     # kane.kanes_equations(bodies_and_particles=(body1, body2), loads=(load1, load2))
     KM.kanes_equations(bodies=BL, loads=FL)
     MM = KM.mass_matrix
