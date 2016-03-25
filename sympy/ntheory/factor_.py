@@ -1541,7 +1541,7 @@ def max_pow_in_number(x,y):
     1
     """
     if(y==1) :
-    	return 1/0
+        return 1/0
     if y<=0 :
 	return false
     ans=0;
@@ -1565,14 +1565,14 @@ def max_pow_of_prime_in_factorial(x,y):
     
     """
     if isprime(y)==false :
-	return false
+    	return false
     ans=0
     y1=y
     ans1=x
     while(ans1!=0):
-        ans1=int(x/y1)
-        ans+=ans1
-        y1*=y
+    	ans1=int(x/y1)
+    	ans+=ans1
+    	y1*=y
     return ans
   
 def max_pow_in_factorial(x,y):
@@ -1609,8 +1609,6 @@ def max_pow_in_factorial(x,y):
 	if (min>pow or i==array[0]):
 	    min=pow
     return min
-
-
 
 
 class totient(Function):
