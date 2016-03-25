@@ -1540,14 +1540,14 @@ def max_pow_in_number(x,y):
     >>> max_pow_in_number(250,2)
     1
     """
-    if(y==1) :
+    if y==1 :
         return 1/0
     if y<=0 :
-	return false
+        return false
     ans=0;
     while(x%y==0):
-	ans+=1
-	x=x/y
+        ans+=1
+        x=x/y
     return ans;
 		
 
@@ -1564,15 +1564,15 @@ def max_pow_of_prime_in_factorial(x,y):
     http://www.campusgate.co.in/2011/10/finding-maximum-power-of-number-divide.html
     
     """
-    if isprime(y)==false :
-    	return false
+    if isprime(y)==0 :
+        return false
     ans=0
     y1=y
     ans1=x
     while(ans1!=0):
-    	ans1=int(x/y1)
-    	ans+=ans1
-    	y1*=y
+        ans1=int(x/y1)
+        ans+=ans1
+        y1*=y
     return ans
   
 def max_pow_in_factorial(x,y):
@@ -1601,13 +1601,13 @@ def max_pow_in_factorial(x,y):
     if(y==0) :
         return 1/0
     if y<=0 :
-	return false
+        return false
     array = primefactors(y);
     for i in array:
-	pow=max_pow_of_prime_in_factorial(x,i)
-	pow=int(pow/max_pow_in_number(y,i))
-	if (min>pow or i==array[0]):
-	    min=pow
+        pow=max_pow_of_prime_in_factorial(x,i)
+        pow=int(pow/max_pow_in_number(y,i))
+        if (min>pow or i==array[0]):
+            min=pow
     return min
 
 
