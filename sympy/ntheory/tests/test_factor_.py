@@ -5,7 +5,7 @@ from sympy.core.compatibility import long, range
 from sympy.ntheory import totient, factorint, primefactors, divisors, nextprime, pollard_rho, \
     perfect_power, multiplicity, trailing, divisor_count, primorial, pollard_pm1, divisor_sigma, factorrat
 
-from sympy.ntheory.factor_ import smoothness, smoothness_p, \
+from sympy.ntheory.factor_ import max_pow_in_number,max_pow_in_factorial,max_pow_of_prime_in_factorial,smoothness, smoothness_p, \
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma, \
     udivisor_count
 from sympy.utilities.pytest import raises
