@@ -1250,8 +1250,8 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy.abc import x
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
+        >>> x = Symbol('x')
         >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
         Matrix([
         [ Abs(x)**2, sqrt(x**2)],
