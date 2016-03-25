@@ -369,8 +369,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._latex_form = latex_str
         obj._system = system
 
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
 
         # This attr is used for re-expression to one of the systems

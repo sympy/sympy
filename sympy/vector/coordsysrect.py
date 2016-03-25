@@ -203,10 +203,10 @@ class CoordSysCartesian(Basic):
         return self._z
 
     def base_vectors(self):
-        return (self._i, self._j, self._k)
+        return self._i, self._j, self._k
 
     def base_scalars(self):
-        return (self._x, self._y, self._z)
+        return self._x, self._y, self._z
 
     @cacheit
     def rotation_matrix(self, other):
@@ -283,7 +283,7 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian
         >>> N = CoordSysCartesian('N')
         >>> N1 = N.locate_new('N1', 10 * N.i)
         >>> N.position_wrt(N1)

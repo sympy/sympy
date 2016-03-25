@@ -125,7 +125,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return (self, 1)
+        return self, 1
 
     def factor(self, *args, **kwargs):
         """
@@ -149,7 +149,7 @@ class BasisDependent(Expr):
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation. """
         l = [x * self.components[x] for x in self.components]
-        return (0, tuple(l))
+        return 0, tuple(l)
 
     def diff(self, *args, **kwargs):
         """
@@ -216,8 +216,7 @@ class BasisDependentAdd(BasisDependent, Add):
                                                     *newargs, **options)
         if isinstance(obj, Mul):
             return cls._mul_func(*obj.args)
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
         obj._sys = (list(components.keys()))[0]._sys
@@ -278,8 +277,7 @@ class BasisDependentMul(BasisDependent, Mul):
             return cls._add_func(*obj.args)
         obj._base_instance = expr._base_instance
         obj._measure_number = measure_number
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = {expr._base_instance: measure_number}
         obj._sys = expr._base_instance._sys
