@@ -360,10 +360,12 @@ class sin(TrigonometricFunction):
         return 2*cot_half/(1 + cot_half**2)
 
     def _eval_rewrite_as_pow(self, arg):
-        return self.rewrite(cos).rewrite(pow)
+        return self.rewrite(sqrt)
 
     def _eval_rewrite_as_sqrt(self, arg):
-        return self.rewrite(cos).rewrite(sqrt)
+        y = self.rewrite(cos)
+        if self != y:
+            return y.rewrite(sqrt)
 
     def _eval_rewrite_as_csc(self, arg):
         return 1/csc(arg)
