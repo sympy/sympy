@@ -244,30 +244,28 @@ def prime(nth):
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    prime_arr = [2,3,5,7,11,13,17]
-    if n<=7:
-        return prime_arr[n-1]
+    prime_arr = [2, 3, 5, 7, 11, 13, 17]
+    if n <= 7:
+        return prime_arr[n - 1]
 
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
 
     a = 2 # Lower bound for binary search
-    b = int(n*(log(n).evalf() + log(log(n).evalf()).evalf())) # Upper bound for the search.
+    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
     while a < b:
         mid = (a + b) >> 1
-        x = li(mid).evalf()
-        if x > n:
+        if li(mid) > n:
             b = mid
         else:
             a = mid + 1
-    n_primes = primepi(a-1)
+    n_primes = primepi(a - 1)
     while n_primes < n:
         if isprime(a):
             n_primes += 1
         a += 1
     return a - 1
-
 
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
