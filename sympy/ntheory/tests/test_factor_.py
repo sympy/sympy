@@ -218,7 +218,29 @@ def test_factorint():
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
 
+def test_max_pow_in_number():
+    assert max_pow_in_number(12,2) == 4
+    assert max_pow_in_number(25,2) == 0
+    assert max_pow_in_number(250,5) == 3
+    assert max_pow_in_number(250,2) == 1
+    assert max_pow_in_number(250,1) == 1/0
+    
+def test_max_pow_of_prime_in_factorial():
+    assert max_pow_of_prime_in_factorial(60,5) == 14
+    assert max_pow_of_prime_in_factorial(25,5) == 6
+    assert max_pow_of_prime_in_factorial(49,2) == 46
+    assert max_pow_of_prime_in_factorial(49,3) == 23
 
+def test_max_pow_in_factorial():
+    assert max_pow_in_factorial(60,5) == 14
+    assert max_pow_in_factorial(25,5) == 6
+    assert max_pow_in_factorial(49,2) == 46
+    assert max_pow_in_factorial(49,3) == 23  
+    assert max_pow_in_factorial(49,12) == 22  
+    assert max_pow_in_factorial(49,24) == 15
+    assert max_pow_in_factorial(100,10) == 24  
+    assert max_pow_in_factorial(49,1) == 1/0
+    
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
