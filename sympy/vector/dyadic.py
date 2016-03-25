@@ -1,5 +1,5 @@
-from sympy.vector.basisdependent import BasisDependent, \
-    BasisDependentAdd, BasisDependentMul, BasisDependentZero
+from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
+                                         BasisDependentMul, BasisDependentZero)
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix

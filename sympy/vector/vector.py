@@ -4,8 +4,8 @@ from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.basisdependent import BasisDependent, \
-    BasisDependentAdd, BasisDependentMul, BasisDependentZero
+from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
+                                         BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
 from sympy.core.compatibility import u
 
