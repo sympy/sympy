@@ -219,7 +219,7 @@ def test_factorint():
     raises(ValueError, lambda: factorint(4.5))
 
 def test_max_pow_in_number():
-    assert max_pow_in_number(12,2) == 4
+    assert max_pow_in_number(12,2) == 2
     assert max_pow_in_number(25,2) == 0
     assert max_pow_in_number(250,5) == 3
     assert max_pow_in_number(250,2) == 1
