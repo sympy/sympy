@@ -22,92 +22,6 @@ small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
 
 
-def max_pow_in_number(x,y):
-    
-    """
-    Returns the maximum power of y in factorization of x
-    
-    >>> from sympy.ntheory.factor_ import max_pow_in_number
-    >>> max_pow_in_number(12,2)
-    4                   
-    >>> max_pow_in_number(25,2)
-    0
-    >>> max_pow_in_number(250,5)
-    3
-    >>> max_pow_in_number(250,2)
-    1
-    """
-	if(y==1) :
-	    return 1/0
-	if y<=0 :
-		return false
-	ans=0;
-	while(x%y==0):
-		ans+=1
-		x=x/y
-	return ans;
-		
-
-def max_pow_of_prime_in_factorial(x,y):
-    
-    """
-    Returns the maximum power of a prime number y that divides factorial of x without calculating factorial of x
-    
-    We can also use max_pow_in_number(factorial(x),y) ,
-    But if fact(x) is very large then max_pow_in_num() will take some more time
-    
-    this function is internally used in "max_pow_in_factorial" function
-    
-    http://www.campusgate.co.in/2011/10/finding-maximum-power-of-number-divide.html
-    
-    """
-    if isprime(y)==false :
-		return false
-    ans=0
-    y1=y
-    ans1=x
-    while(ans1!=0):
-        ans1=int(x/y1)
-        ans+=ans1
-        y1*=y
-    return ans
-  
-def max_pow_in_factorial(x,y):
-    
-    """
-    Returns the maximum power of a number y that divides factorial of x without calculating factorial of x
-    
-    We can also use max_pow_in_number(factorial(x),y) ,
-    But if fact(x) is very large then max_pow_in_num() will take some more time
-    
-    reference : http://www.campusgate.co.in/2011/10/finding-maximum-power-of-number-divide.html
-    
-    >>> from sympy.ntheory.factor_ import max_pow_of_prime_in_factorial,max_pow_in_factorial,primefactors
-    >>> max_pow_in_factorial(60,5)
-    14                   
-    >>> max_pow_in_factorial(25,5)
-    6
-    >>> max_pow_in_factorial(49,12)
-    22                   
-    >>> max_pow_in_factorial(100,10)
-    24
-    
-    """
-
-    min = 0
-    if(y==0) :
-        return 1/0
-	if y<=0 :
-		return false
-	array = primefactors(y);
-	for i in array:
-		pow=max_pow_of_prime_in_factorial(x,i)
-		pow=int(pow/max_pow_in_number(y,i))
-		if (min>pow or i==array[0]):
-		    min=pow
-	return min
-
-
 def smoothness(n):
     """
     Return the B-smooth and B-power smooth values of n.
@@ -1609,6 +1523,94 @@ def antidivisor_count(n):
         return 0
     return divisor_count(2*n-1) + divisor_count(2*n+1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
+
+
+def max_pow_in_number(x,y):
+    
+    """
+    Returns the maximum power of y in factorization of x
+    
+    >>> from sympy.ntheory.factor_ import max_pow_in_number
+    >>> max_pow_in_number(12,2)
+    4                   
+    >>> max_pow_in_number(25,2)
+    0
+    >>> max_pow_in_number(250,5)
+    3
+    >>> max_pow_in_number(250,2)
+    1
+    """
+    if(y==1) :
+    	return 1/0
+    if y<=0 :
+	return false
+    ans=0;
+    while(x%y==0):
+	ans+=1
+	x=x/y
+    return ans;
+		
+
+def max_pow_of_prime_in_factorial(x,y):
+    
+    """
+    Returns the maximum power of a prime number y that divides factorial of x without calculating factorial of x
+    
+    We can also use max_pow_in_number(factorial(x),y) ,
+    But if fact(x) is very large then max_pow_in_num() will take some more time
+    
+    Helper function. This function is internally used in "max_pow_in_factorial" function. 
+    
+    http://www.campusgate.co.in/2011/10/finding-maximum-power-of-number-divide.html
+    
+    """
+    if isprime(y)==false :
+	return false
+    ans=0
+    y1=y
+    ans1=x
+    while(ans1!=0):
+        ans1=int(x/y1)
+        ans+=ans1
+        y1*=y
+    return ans
+  
+def max_pow_in_factorial(x,y):
+    
+    """
+    Returns the maximum power of a number y that divides factorial of x without calculating factorial of x
+    
+    We can also use max_pow_in_number(factorial(x),y) ,
+    But if fact(x) is very large then max_pow_in_num() will take some more time
+    
+    reference : http://www.campusgate.co.in/2011/10/finding-maximum-power-of-number-divide.html
+    
+    >>> from sympy.ntheory.factor_ import max_pow_of_prime_in_factorial,max_pow_in_factorial,primefactors
+    >>> max_pow_in_factorial(60,5)
+    14                   
+    >>> max_pow_in_factorial(25,5)
+    6
+    >>> max_pow_in_factorial(49,12)
+    22                   
+    >>> max_pow_in_factorial(100,10)
+    24
+    
+    """
+
+    min = 0
+    if(y==0) :
+        return 1/0
+    if y<=0 :
+	return false
+    array = primefactors(y);
+    for i in array:
+	pow=max_pow_of_prime_in_factorial(x,i)
+	pow=int(pow/max_pow_in_number(y,i))
+	if (min>pow or i==array[0]):
+	    min=pow
+    return min
+
+
 
 
 class totient(Function):
