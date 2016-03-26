@@ -11,7 +11,7 @@ from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
 from sympy.core.evalf import bitcount
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import igcd, Rational
+from sympy.core.numbers import igcd, ilcm, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
@@ -1550,6 +1550,42 @@ class totient(Function):
             t = 1
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
+            return t
+
+    def _eval_is_integer(self):
+        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+
+class reduced_totient(Function):
+    """
+    Calculate the Carmichael reduced totient function lambda(n)
+
+    >>> from sympy.ntheory import reduced_totient
+    >>> reduced_totient(1)
+    1
+    >>> reduced_totient(8)
+    2
+    >>> reduced_totient(30)
+    4
+
+    See Also
+    ========
+
+    totient
+    """
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n < 1:
+                raise ValueError("n must be a positive integer")
+            factors = factorint(n)
+            t = 1
+            for p, k in factors.items():
+                if p == 2 and k > 2:
+                    t = ilcm(t, 2**(k - 2))
+                else:
+                    t = ilcm(t, (p - 1) * p**(k - 1))
             return t
 
     def _eval_is_integer(self):
