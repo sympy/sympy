@@ -184,7 +184,7 @@ def test_C18():
 
 @XFAIL
 def test_C19():
-    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 34*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
 def test_C20():
@@ -493,8 +493,8 @@ def test_H17():
 @XFAIL
 def test_H18():
     # Factor over complex rationals.
-    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 53)
-    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)(x + 1 + 4*I)
+    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 153)
+    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)*(x + 1 + 4*I)
     assert test == good
 
 
