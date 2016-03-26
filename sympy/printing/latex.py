@@ -147,8 +147,8 @@ class LatexPrinter(Printer):
     def parenthesize(self, item, level, strict=False):
         # Integral has the precedence of Mul in LaTeX, the precedence of Atom
         # for other printers:
-        from sympy import Integral
-        if isinstance(item, Integral):
+        from sympy import Integral, Sum, Product, Derivative
+        if isinstance(item, (Integral, Sum, Product, Derivative)):
             prec_val = PRECEDENCE["Mul"]
         else:
             prec_val = precedence(item)

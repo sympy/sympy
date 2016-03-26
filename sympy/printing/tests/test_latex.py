@@ -465,6 +465,10 @@ def test_latex_derivatives():
     assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
 
+    # Derivative wrapped in power:
+    assert latex(diff(x, x, evaluate=False)**2) == \
+        r"\left(\frac{d}{d x} x\right)^{2}"
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
@@ -669,6 +673,9 @@ def test_latex_sum():
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
 
+    assert latex(Sum(x**2 + y, (x, -2, 2))**2) == \
+        r"\left(\sum_{x=-2}^{2} \left(x^{2} + y\right)\right)^{2}"
+
 
 def test_latex_product():
     assert latex(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
@@ -677,6 +684,9 @@ def test_latex_product():
         r"\prod_{x=-2}^{2} x^{2}"
     assert latex(Product(x**2 + y, (x, -2, 2))) == \
         r"\prod_{x=-2}^{2} \left(x^{2} + y\right)"
+
+    assert latex(Product(x, (x, -2, 2))**2) == \
+        r"\left(\prod_{x=-2}^{2} x\right)^{2}"
 
 
 def test_latex_limits():
