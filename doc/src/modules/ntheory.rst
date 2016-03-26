@@ -61,6 +61,8 @@ Ntheory Functions Reference
 
 .. autofunction:: totient
 
+.. autofunction:: reduced_totient
+
 .. autofunction:: divisor_sigma
 
 .. autofunction:: udivisor_sigma

@@ -3586,6 +3586,13 @@ def test_sympy__ntheory__factor___totient():
     assert _test_args(t)
 
 
+def test_sympy__ntheory__factor___reduced_totient():
+    from sympy.ntheory.factor_ import reduced_totient
+    k = symbols('k', integer=True)
+    t = reduced_totient(k)
+    assert _test_args(t)
+
+
 def test_sympy__ntheory__factor___divisor_sigma():
     from sympy.ntheory.factor_ import divisor_sigma
     k = symbols('k', integer=True)

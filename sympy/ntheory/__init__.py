@@ -7,7 +7,7 @@ from .generate import nextprime, prevprime, prime, primepi, primerange, \
 from .primetest import isprime
 from .factor_ import divisors, factorint, multiplicity, perfect_power, \
     pollard_pm1, pollard_rho, primefactors, totient, trailing, divisor_count, \
-    divisor_sigma, factorrat
+    divisor_sigma, factorrat, reduced_totient
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, n_order, sqrt_mod, quadratic_residues, \
