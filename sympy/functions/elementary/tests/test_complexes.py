@@ -137,8 +137,8 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
-    assert im(x).rewrite(re) == -S.ImaginaryUnit*(x - re(x))
-    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * ( y - re(y))
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
+    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
