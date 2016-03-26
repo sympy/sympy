@@ -696,14 +696,14 @@ class KanesMethod(object):
         Parameters
         ==========
 
-        loads : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+        loads : iterable
+            Takes in an iterable of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
             Must be either a non-empty list of tuples or None which corresponds
             to a system with no constraints.
-        bodies : list
-            A list of all RigidBody's and Particle's in the system.
-
+        bodies : iterable
+            An iterable of all RigidBody's and Particle's in the system.
+            A system must have at least one body.
         """
 
         if not self._k_kqdot:
