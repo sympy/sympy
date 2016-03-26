@@ -3311,9 +3311,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
         import sage.all as sage
         return sage.golden_ratio
 
-    def _eval_rewrite_as_sqrt(self):
-        from sympy import sqrt
-        return S.Half + S.Half*sqrt(5)
+    _eval_rewrite_as_sqrt = _eval_expand_func
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
