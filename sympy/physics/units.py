@@ -80,7 +80,6 @@ from __future__ import print_function, division
 
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
-from sympy.core.numbers import Float
 
 
 class Unit(AtomicExpr):
@@ -274,7 +273,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = Float('1.6021766208','') * 10**-19 * J
+eV = Rational('1.6021766208','') * ten**-19 * J
 
 # Other convenient units and magnitudes
 
