@@ -292,13 +292,13 @@ def test_input_format():
     P.set_vel(N, u * N.x)
 
     kd = [qd - u]
-    FL = [(P, (-k * q - c * u) * N.x)]
+    FL = ((P, (-k * q - c * u) * N.x))
     pa = Particle('pa', P, m)
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    # test for input format kane.kanes_equations(None, (body1, body2, particle1))
-    assert KM.kanes_equations(None, BL)[0] == Matrix([0])
+    # test for input format kane.kanes_equations((body1, body2, particle1))
+    assert KM.kanes_equations(BL)[0] == Matrix([0])
     # test for input format kane.kanes_equations(bodies=(body1, body 2), loads=None)
     assert KM.kanes_equations(bodies=BL, loads=None)[0] == Matrix([0])
 
@@ -313,11 +313,11 @@ def test_input_format():
     P2.set_vel(N, (u1 + u2) * N.x)
     kd = [q1d - u1, q2d - u2]
 
-    FL = [(P1, (-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2) * N.x), (P2, (-k2 *
-        q2 - c2 * u2) * N.x)]
+    FL = ((P1, (-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2) * N.x), (P2, (-k2 *
+        q2 - c2 * u2) * N.x))
     pa1 = Particle('pa1', P1, m)
     pa2 = Particle('pa2', P2, m)
-    BL = [pa1, pa2]
+    BL = (pa1, pa2)
 
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
     # test for input format

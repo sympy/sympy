@@ -5,7 +5,7 @@ __all__ = ['KanesMethod']
 from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
-from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
+from sympy.physics.vector import (Vector, ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
@@ -683,7 +683,7 @@ class KanesMethod(object):
             f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
-    def kanes_equations(self, loads=None, bodies=None):
+    def kanes_equations(self, bodies, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -696,15 +696,19 @@ class KanesMethod(object):
         Parameters
         ==========
 
-        loads : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+        loads : iterable
+            Takes in an iterable of (Point, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
-            Must be either a non-empty list of tuples or None which corresponds
+            Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
-        bodies : list
-            A list of all RigidBody's and Particle's in the system.
+        bodies : iterable
+            An iterable of all RigidBody's and Particle's in the system.
 
         """
+        if isinstance(bodies[0], (ReferenceFrame, Vector)) or isinstance(bodies[0], (Particle, Vector)) or bodies is None:
+        # This switches the order if they use the old way.
+            bodies, loads = loads, bodies
+            raise DeprecationWarning("The API has changed and will be deprecated, loads is now the second argument and optional.")
 
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
