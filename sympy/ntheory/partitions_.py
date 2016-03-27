@@ -9,26 +9,30 @@ from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
 
-maxn = 10**5 + 5
-factor = [0]*maxn  #For storing the smallest prime factor
-lim = int(maxn**0.5) + 5
-for i in range(2, lim):
-    if factor[i] == 0:
-        for j in range(i*i, maxn, i):
-            if factor[j] == 0:
-                factor[j] = i
+_factor = [] # For storing the smallest prime factor
+_totient = []
 
-_totient = [1]*maxn
-for i in range(2, maxn):
-    if factor[i] == 0:
-        factor[i] = i
-        _totient[i] = i-1
-    x = factor[i]
-    y = i//x
-    if y%x == 0:
-        _totient[i] = _totient[y]*x
-    else:
-        _totient[i] = _totient[y]*(x - 1)
+def pre():
+    maxn = 10**5
+    for i in range(0, maxn):
+        _factor.append(0)
+        _totient.append(1)
+    lim = int(maxn**0.5) + 5
+    for i in range(2, lim):
+        if _factor[i] == 0:
+            for j in range(i*i, maxn, i):
+                if _factor[j] == 0:
+                    _factor[j] = i
+    for i in range(2, maxn):
+        if _factor[i] == 0:
+            _factor[i] = i
+            _totient[i] = i-1
+        x = _factor[i]
+        y = i//x
+        if y%x == 0:
+            _totient[i] = _totient[y]*x
+        else:
+            _totient[i] = _totient[y]*(x - 1)
 
 def _a(n, k, prec):
     """ Compute the inner sum in HRR formula
@@ -43,7 +47,7 @@ def _a(n, k, prec):
 
     k1 = k
     e = 0
-    p = factor[k]
+    p = _factor[k]
     while k1%p == 0:
         k1 //= p
         e += 1
@@ -119,7 +123,7 @@ def npartitions(n, verbose=False):
     described e.g. at http://mathworld.wolfram.com/PartitionFunctionP.html
 
     The correctness of this implementation has been tested for 10**n
-    up to n = 8.
+    up to n = 10.
 
     Examples
     ========
@@ -133,6 +137,8 @@ def npartitions(n, verbose=False):
         return 0
     if n <= 5:
         return [1, 1, 2, 3, 5, 7][n]
+    if len(_factor) == 0:
+        pre()
     # Estimate number of bits in p(n). This formula could be tidied
     pbits = int((math.pi*(2*n/3.)**0.5 - math.log(4*n))/math.log(10) + 1) * \
         math.log(10, 2)
