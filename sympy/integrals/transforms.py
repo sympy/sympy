@@ -958,9 +958,23 @@ def _simplifyconds(expr, s, a):
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
     from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
-                       cos, Wild, symbols, polar_lift)
+                       cos, Wild, symbols, polar_lift, Heaviside)
     s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
+
+    # It is standard convention that a laplace transform
+    # of something including a Dirac Delta at 0 contains
+    # the whole impulse, not just half the impulse.  The best
+    # way to handle this may be to take the limit as
+    # the left bound approaches 0 from below, but
+    # as a heuristic, we look for the appearance of Heaviside(0)
+    # as only a linear coefficient, and then assume
+    # Heaviside(0) = 0.
+    a = Wild('a')
+    b = Wild('b',exclude=[Heaviside(0)])
+    r = F.match(a+b*Heaviside(0))
+    if r:
+        F = r[a]
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, True
