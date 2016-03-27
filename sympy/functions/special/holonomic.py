@@ -35,9 +35,9 @@ class DifferentialOperator(Expr):
     >>> from sympy.functions.special.holonomic import DifferentialOperator, HoloFunc
     >>> Dx, x = symbols('Dx, x', commutative=False)
     >>> DifferentialOperator(Dx*x)*DifferentialOperator(Dx+1)
-    (1) + (1 + x)Dx + (x)Dx**2
+    DifferentialOperator(1 + Dx + x*Dx + x*Dx**2)
     >>> DifferentialOperator(Dx-1)*DifferentialOperator(Dx*x**2+1)
-    (1 - 2*x) + (1 + 4*x - x**2)Dx + (x**2)Dx**2
+    DifferentialOperator(1 + Dx - 2*x + 4*x*Dx - x**2*Dx + x**2*Dx**2)
 
     """
 
