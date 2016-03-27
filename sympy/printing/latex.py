@@ -148,7 +148,9 @@ class LatexPrinter(Printer):
         # Integral has the precedence of Mul in LaTeX, the precedence of Atom
         # for other printers:
         from sympy import Integral, Sum, Product, Derivative
-        if isinstance(item, (Integral, Sum, Product, Derivative)):
+        if isinstance(item, (Integral, Sum, Product)):
+            prec_val = PRECEDENCE["Mul"]
+        elif isinstance(item, Derivative) and not isinstance(item.doit(), Derivative):
             prec_val = PRECEDENCE["Mul"]
         else:
             prec_val = precedence(item)
