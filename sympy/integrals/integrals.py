@@ -323,7 +323,7 @@ class Integral(AddWithLimits):
             replace d with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F]))
+            avals = list({_calc_limit_1(Fi, a, b) for Fi in F})
             if len(avals) > 1:
                 raise ValueError(filldedent('''
                 The mapping between F(x) and f(u) did not

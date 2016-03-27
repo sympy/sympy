@@ -83,3 +83,9 @@ fd.write(header)
 fd.write("\n")
 fd.write("\n".join(git_people).encode("utf8"))
 fd.write("\n")
+
+print(blue("""
+Please make sure that there are no duplicates in the new AUTHORS, then commit
+the changes. You may also want to run ./bin/mailmap_update.py to update
+.mailmap as well
+"""))

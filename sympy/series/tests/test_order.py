@@ -15,10 +15,10 @@ def test_caching_bug():
 
 def test_free_symbols():
     assert Order(1).free_symbols == set()
-    assert Order(x).free_symbols == set([x])
-    assert Order(1, x).free_symbols == set([x])
-    assert Order(x*y).free_symbols == set([x, y])
-    assert Order(x, x, y).free_symbols == set([x, y])
+    assert Order(x).free_symbols == {x}
+    assert Order(1, x).free_symbols == {x}
+    assert Order(x*y).free_symbols == {x, y}
+    assert Order(x, x, y).free_symbols == {x, y}
 
 
 def test_simple_1():

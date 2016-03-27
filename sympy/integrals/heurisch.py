@@ -69,7 +69,7 @@ def components(f, x):
                 if f.exp.is_Rational:
                     result.add(f.base**Rational(1, f.exp.q))
                 else:
-                    result |= components(f.exp, x) | set([f])
+                    result |= components(f.exp, x) | {f}
         else:
             for g in f.args:
                 result |= components(g, x)
@@ -435,7 +435,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     # sort mapping expressions from largest to smallest (last is always x).
     mapping = list(reversed(list(zip(*ordered(                          #
         [(a[0].as_independent(x)[1], a) for a in zip(terms, V)])))[1])) #
-    rev_mapping = dict([(v, k) for k, v in mapping])                    #
+    rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
         assert mapping[-1][0] == x  # if not, find it and correct this comment
@@ -642,9 +642,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         coeff_ring = PolyRing(poly_coeffs, ground)
         ring = PolyRing(V, coeff_ring)
-
-        numer = ring.from_expr(raw_numer)
-
+        try:
+            numer = ring.from_expr(raw_numer)
+        except ValueError:
+            raise PolynomialError
         solution = solve_lin_sys(numer.coeffs(), coeff_ring, _raw=False)
 
         if solution is None:
