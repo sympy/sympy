@@ -1,40 +1,98 @@
 from __future__ import print_function, division
-
 from mpmath.libmp import (fzero,
     from_man_exp, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
-    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos)
+    mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos, mpf_sin)
 from sympy.core.numbers import igcd
 import math
 from sympy.core.compatibility import range
+from .residue_ntheory import (_sqrt_mod_prime_power,
+    legendre_symbol, jacobi_symbol, is_quad_residue)
 
+maxn = 10**5 + 5
+factor = [0]*maxn  #For storing the smallest prime factor
+lim = int(maxn**0.5) + 5
+for i in range(2, lim):
+    if factor[i] == 0:
+        for j in range(i*i, maxn, i):
+            if factor[j] == 0:
+                factor[j] = i
 
-def _a(n, j, prec):
-    """Compute the inner sum in the HRR formula."""
-    if j == 1:
+_totient = [1]*maxn
+for i in range(2, maxn):
+    if factor[i] == 0:
+        factor[i] = i
+        _totient[i] = i-1
+    x = factor[i]
+    y = i//x
+    if y%x == 0:
+        _totient[i] = _totient[y]*x
+    else:
+        _totient[i] = _totient[y]*(x - 1)
+
+def _a(n, k, prec):
+    """ Compute the inner sum in HRR formula
+    References
+    ==========
+
+    - http://msp.org/pjm/1956/6-1/pjm-v6-n1-p18-p.pdf
+
+    """
+    if k == 1:
         return fone
-    s = fzero
-    pi = pi_fixed(prec)
-    for h in range(1, j):
-        if igcd(h, j) != 1:
-            continue
-        # & with mask to compute fractional part of fixed-point number
-        one = 1 << prec
-        onemask = one - 1
-        half = one >> 1
-        g = 0
-        if j >= 3:
-            for k in range(1, j):
-                t = h*k*one//j
-                if t > 0:
-                    frac = t & onemask
-                else:
-                    frac = -((-t) & onemask)
-                g += k*(frac - half)
-        g = ((g - 2*h*n*one)*pi//j) >> prec
-        s = mpf_add(s, mpf_cos(from_man_exp(g, -prec), prec), prec)
-    return s
 
+    k1 = k
+    e = 0
+    p = factor[k]
+    while k1%p == 0:
+        k1 //= p
+        e += 1
+    k2 = k//k1 # k2 = p^e
+    v = 1 - 24*n
+    pi = mpf_pi(prec)
+
+    if k1 == 1:
+        # k  = p^e
+        if p == 2:
+            mod = 8*k
+            v = (mod + v%mod)%mod
+            v = (v*pow(9, 4*k - 1, mod))%mod
+            m = _sqrt_mod_prime_power(v, 2, e + 3)[0]
+            arg = mpf_div(mpf_mul(from_int(4*m), pi, prec), from_int(mod), prec)
+            return mpf_mul(mpf_mul(from_int((-1)**e*jacobi_symbol(m - 1, m)), mpf_sqrt(from_int(k), prec), prec), mpf_sin(arg, prec), prec)
+        if p == 3:
+            mod = 3*k
+            v = (mod + v%mod)%mod
+            v = (v*pow(64, 2*k - 1, mod))%mod
+            m = _sqrt_mod_prime_power(v, 3, e + 1)[0]
+            arg = mpf_div(mpf_mul(from_int(4*m), pi, prec), from_int(mod), prec)
+            return mpf_mul(mpf_mul(from_int(2*(-1)**(e + 1)*legendre_symbol(m, 3)), mpf_sqrt(from_int(k//3), prec), prec), mpf_sin(arg, prec), prec)
+        v = (k + v%k)%k
+        if v%p == 0:
+            if e == 1:
+                return mpf_mul(from_int(jacobi_symbol(3, k)), mpf_sqrt(from_int(k), prec), prec)
+            return fzero
+        if not is_quad_residue(v, p):
+            return fzero
+        _phi = p**(e - 1)*(p - 1)
+        v = (v*pow(576, _phi - 1, k))
+        m = _sqrt_mod_prime_power(v, p, e)[0]
+        arg = mpf_div(mpf_mul(from_int(4*m), pi, prec), from_int(k), prec)
+        return mpf_mul(mpf_mul(from_int(2*jacobi_symbol(3, k)), mpf_sqrt(from_int(k), prec), prec), mpf_cos(arg,prec),prec)
+
+    if p != 2 or e >= 3:
+        d1, d2 = igcd(k1, 24), igcd(k2, 24)
+        e = 24//(d1*d2)
+        n1 = ((d2*e*n + (k2**2 - 1)//d1)*pow(e*k2*k2*d2, _totient[k1] - 1, k1))%k1
+        n2 = ((d1*e*n + (k1**2 - 1)//d2)*pow(e*k1*k1*d1, _totient[k2] - 1, k2))%k2
+        return mpf_mul(_a(n1, k1, prec), _a(n2, k2, prec), prec)
+    if e == 2:
+        n1 = ((8*n + 5)*pow(128, _totient[k1] - 1, k1))%k1
+        n2 = (4 + ((n - 2 - (k1**2 - 1)//8)*(k1**2))%4)%4
+        return mpf_mul(mpf_mul(from_int(-1), _a(n1, k1, prec), prec), _a(n2, k2, prec))
+    n1 = ((8*n + 1)*pow(32, _totient[k1] - 1, k1))%k1
+    n2 = (2 + (n - (k1**2 - 1)//8)%2)%2
+    return mpf_mul(_a(n1, k1, prec), _a(n2, k2, prec), prec)
 
 def _d(n, j, prec, sq23pi, sqrt8):
     """
@@ -81,6 +139,8 @@ def npartitions(n, verbose=False):
     prec = p = int(pbits*1.1 + 100)
     s = fzero
     M = max(6, int(0.24*n**0.5 + 4))
+    if M > 10**5:
+        raise ValueError("Input too big") # Corresponds to n > 1.7e11
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2, 3, p), p), mpf_pi(p), p)
     sqrt8 = mpf_sqrt(from_int(8), p)
     for q in range(1, M):
