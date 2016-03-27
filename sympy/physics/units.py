@@ -273,7 +273,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = Rational('1.6021766208','') * ten**-19 * J
+eV = Rational('1.6021766208') * ten**-19 * J
 
 # Other convenient units and magnitudes
 
