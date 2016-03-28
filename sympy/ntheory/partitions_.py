@@ -9,11 +9,12 @@ from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
 
-_factor = [] # For storing the smallest prime factor
-_totient = []
-
-def pre():
+def _pre():
     maxn = 10**5
+    global _factor
+    global _totient
+    _factor = [0]*maxn
+    _totient = [1]*maxn
     for i in range(0, maxn):
         _factor.append(0)
         _totient.append(1)
@@ -27,6 +28,7 @@ def pre():
         if _factor[i] == 0:
             _factor[i] = i
             _totient[i] = i-1
+            continue
         x = _factor[i]
         y = i//x
         if y%x == 0:
@@ -137,8 +139,8 @@ def npartitions(n, verbose=False):
         return 0
     if n <= 5:
         return [1, 1, 2, 3, 5, 7][n]
-    if len(_factor) == 0:
-        pre()
+    if '_factor' not in globals():
+        _pre()
     # Estimate number of bits in p(n). This formula could be tidied
     pbits = int((math.pi*(2*n/3.)**0.5 - math.log(4*n))/math.log(10) + 1) * \
         math.log(10, 2)
