@@ -15,9 +15,6 @@ def _pre():
     global _totient
     _factor = [0]*maxn
     _totient = [1]*maxn
-    for i in range(0, maxn):
-        _factor.append(0)
-        _totient.append(1)
     lim = int(maxn**0.5) + 5
     for i in range(2, lim):
         if _factor[i] == 0:
