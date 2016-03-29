@@ -454,7 +454,7 @@ def test_DiagramGrid():
 
     # Test the five lemma with object grouping, but mixing containers
     # to represent groups.
-    grid = DiagramGrid(d, [(A, B, C, D, E), set([A_, B_, C_, D_, E_])])
+    grid = DiagramGrid(d, [(A, B, C, D, E), {A_, B_, C_, D_, E_}])
 
     assert grid.width == 6
     assert grid.height == 3

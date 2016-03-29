@@ -949,7 +949,7 @@ def solve(f, *symbols, **flags):
         swap_sym = list(zip(symbols, symbols_new))
         f = [fi.subs(swap_sym) for fi in f]
         symbols = symbols_new
-        swap_sym = dict([(v, k) for k, v in swap_sym])
+        swap_sym = {v: k for k, v in swap_sym}
     else:
         swap_sym = {}
 
@@ -1234,7 +1234,7 @@ def solve(f, *symbols, **flags):
     if not solution:
         return [], set()
     k = list(ordered(solution[0].keys()))
-    return k, set([tuple([s[ki] for ki in k]) for s in solution])
+    return k, {tuple([s[ki] for ki in k]) for s in solution}
 
 
 def _solve(f, *symbols, **flags):
@@ -1280,7 +1280,7 @@ def _solve(f, *symbols, **flags):
                         raise TypeError('unrecognized args in list')
                 elif type(soln) is tuple:
                     sym, sols = soln
-                    soln = sym, set([tuple(simplify(i) for i in j) for j in sols])
+                    soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                 else:
                     raise TypeError('unrecognized solution type')
             return soln
@@ -1558,7 +1558,7 @@ def _solve(f, *symbols, **flags):
                         try:
                             t = Dummy('t')
                             iv = _solve(u - t, symbol, **flags)
-                            soln = list(ordered(set([i.subs(t, s) for i in iv for s in soln])))
+                            soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
                             soln = None
@@ -1590,7 +1590,7 @@ def _solve(f, *symbols, **flags):
                 if cov:
                     isym, ieq = cov
                     inv = _solve(ieq, symbol, **flags)[0]
-                    rv = set([inv.subs(isym, xi) for xi in _solve(eq, isym, **flags)])
+                    rv = {inv.subs(isym, xi) for xi in _solve(eq, isym, **flags)}
                 else:
                     try:
                         rv = set(_solve(eq, symbol, **flags))
@@ -1993,7 +1993,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     for xi in sorted(symbols, key=default_sort_key):  # canonical order
         # if there are derivatives in this var, calculate them now
         if type(derivs[xi]) is list:
-            derivs[xi] = dict([(der, der.doit()) for der in derivs[xi]])
+            derivs[xi] = {der: der.doit() for der in derivs[xi]}
         newn = n.subs(derivs[xi])
         dnewn_dxi = newn.diff(xi)
         # dnewn_dxi can be nonzero if it survives differentation by any
@@ -3158,7 +3158,7 @@ def unrad(eq, *syms, **flags):
             b = bases.pop()
             if len(syms) > 1:
                 free = b.free_symbols
-                x = set([g for g in gens if g.is_Symbol]) & free
+                x = {g for g in gens if g.is_Symbol} & free
                 if not x:
                     x = free
                 x = ordered(x)

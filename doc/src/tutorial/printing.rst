@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the
@@ -169,7 +169,7 @@ Unicode Pretty Printer
 ----------------------
 
 The Unicode pretty printer is also accessed from ``pprint()`` and
-``pretty()``.  It the terminal supports Unicode, it is used automatically.  If
+``pretty()``.  If the terminal supports Unicode, it is used automatically.  If
 ``pprint()`` is not able to detect that the terminal supports unicode, you can
 pass ``use_unicode=True`` to force it to use Unicode.
 

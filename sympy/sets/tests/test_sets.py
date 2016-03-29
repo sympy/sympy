@@ -7,10 +7,26 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
 from mpmath import mpi
 
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z, m, n
+
+
+def test_imageset():
+    ints = S.Integers
+    raises(TypeError, lambda: imageset(x, ints))
+    raises(ValueError, lambda: imageset(x, y, z, ints))
+    raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
+    def f(x):
+        return cos(x)
+    raises(TypeError, lambda: imageset(f, ints))
+    f = lambda x: cos(x)
+    assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
+    assert imageset(x, 1, ints) == FiniteSet(1)
+    assert imageset(x, y, ints) == FiniteSet(y)
+    assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
+        in ('_x + x', 'x + _x'))
 
 
 def test_interval_arguments():
@@ -266,7 +282,7 @@ def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
     assert i.is_iterable
-    assert set(i) == set([S(2), S(3)])
+    assert set(i) == {S(2), S(3)}
 
     # challenging intervals
     x = Symbol('x', real=True)
@@ -429,6 +445,8 @@ def test_contains():
     assert Interval(0, 2, False, True).contains(2) is S.false
     assert Interval(0, 2, True, True).contains(0) is S.false
     assert Interval(0, 2, True, True).contains(2) is S.false
+
+    assert (Interval(0, 2) in Interval(0, 2)) is False
 
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
@@ -716,7 +734,7 @@ def test_Interval_free_symbols():
     # issue 6211
     assert Interval(0, 1).free_symbols == set()
     x = Symbol('x', real=True)
-    assert Interval(0, x).free_symbols == set([x])
+    assert Interval(0, x).free_symbols == {x}
 
 
 def test_image_interval():
@@ -989,6 +1007,12 @@ def test_issue_10326():
     assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))
     assert Interval(-oo, oo).contains(oo) is S.false
     assert Interval(-oo, oo).contains(-oo) is S.false
+
+
+def test_issue_9706():
+    assert Interval(-oo, 0).closure == Interval(-oo, 0, True, False)
+    assert Interval(0, oo).closure == Interval(0, oo, False, True)
+    assert Interval(-oo, oo).closure == Interval(-oo, oo)
 
 
 def test_issue_10285():

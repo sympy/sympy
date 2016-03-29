@@ -241,11 +241,11 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u('-1')) is S.NegativeOne
+    assert cls(u'-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u('10')))
+    assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(long(10)))
     assert _strictly_equal(i, cls(i))
 
@@ -1544,3 +1544,7 @@ def test_mod_inverse():
     raises(TypeError, lambda: mod_inverse(2, x))
     raises(ValueError, lambda: mod_inverse(2, S.Half))
     raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
+
+
+def test_golden_ratio_rewrite_as_sqrt():
+    assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half

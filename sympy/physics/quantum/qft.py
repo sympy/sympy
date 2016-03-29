@@ -40,8 +40,8 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-    gate_name = u('Rk')
-    gate_name_latex = u('R')
+    gate_name = u'Rk'
+    gate_name_latex = u'R'
 
     def __new__(cls, *args):
         if len(args) != 2:
@@ -158,8 +158,8 @@ class Fourier(Gate):
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
 
-    gate_name = u('QFT')
-    gate_name_latex = u('QFT')
+    gate_name = u'QFT'
+    gate_name_latex = u'QFT'
 
     def decompose(self):
         """Decomposes QFT into elementary gates."""
@@ -188,8 +188,8 @@ class QFT(Fourier):
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
 
-    gate_name = u('IQFT')
-    gate_name_latex = u('{QFT^{-1}}')
+    gate_name = u'IQFT'
+    gate_name_latex = u'{QFT^{-1}}'
 
     def decompose(self):
         """Decomposes IQFT into elementary gates."""

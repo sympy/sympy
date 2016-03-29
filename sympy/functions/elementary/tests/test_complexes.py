@@ -68,8 +68,8 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
-    assert re(x).rewrite(im) == x - im(x)
-    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+    assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -137,8 +137,8 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
-    assert im(x).rewrite(re) == x - re(x)
-    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
+    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
