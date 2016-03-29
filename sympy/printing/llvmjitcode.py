@@ -165,6 +165,8 @@ class LLVMJitCode(object):
             return ll.PointerType(self.fp_type)
         if ctype == ctypes.c_void_p:
             return ll.PointerType(ll.IntType(32))
+        if ctype == ctypes.py_object:
+            return ll.PointerType(ll.IntType(32))
 
         print("Unhandled ctype = %s" % str(ctype))
 
@@ -200,28 +202,63 @@ class LLVMJitCode(object):
                             func_arg_map=self.param_dict)
 
         ret = self._convert_expr(lj, expr)
-        lj.builder.ret(ret)
+        lj.builder.ret(self._wrap_return(lj, ret))
 
         strmod = str(self.module)
         return strmod
 
+    def _wrap_return(self, lj, vals):
+        # Return a single double if there is one return value,
+        #  else return a tuple of doubles.
+
+        # Don't wrap return value in this case
+        if self.signature.ret_type == ctypes.c_double:
+            return vals[0]
+
+        # Use this instead of a real PyObject*
+        void_ptr = ll.PointerType(ll.IntType(32))
+
+        # Create a wrapped double: PyObject* PyFloat_FromDouble(double v)
+        wrap_type = ll.FunctionType(void_ptr, [self.fp_type])
+        wrap_fn = ll.Function(lj.module, wrap_type, "PyFloat_FromDouble")
+
+        wrapped_vals = [lj.builder.call(wrap_fn, [v]) for v in vals]
+        if len(vals) == 1:
+            final_val = wrapped_vals[0]
+        else:
+            # Create a tuple: PyObject* PyTuple_Pack(Py_ssize_t n, ...)
+
+            # This should be Py_ssize_t
+            tuple_arg_types = [ll.IntType(32)]
+
+            tuple_arg_types.extend([void_ptr]*len(vals))
+            tuple_type = ll.FunctionType(void_ptr, tuple_arg_types)
+            tuple_fn = ll.Function(lj.module, tuple_type, "PyTuple_Pack")
+
+            tuple_args = [ll.Constant(ll.IntType(32), len(wrapped_vals))]
+            tuple_args.extend(wrapped_vals)
+
+            final_val = lj.builder.call(tuple_fn, tuple_args)
+
+        return final_val
+
     def _convert_expr(self, lj, expr):
         try:
             # Match CSE return data structure.
-            # Only supports a single expression in the final value.
             if len(expr) == 2:
                 tmp_exprs = expr[0]
                 final_exprs = expr[1]
-                if len(final_exprs) != 1:
-                    raise NotImplementedError("Returning multiple expressions not implemented")
-                final_expr = final_exprs[0]
+                if len(final_exprs) != 1 and self.signature.ret_type == ctypes.c_double:
+                    raise NotImplementedError("Return of multiple expressions not supported for this callback")
                 for name, e in tmp_exprs:
                     val = lj._print(e)
                     lj._add_tmp_var(name, val)
         except TypeError:
-            final_expr = expr
+            final_exprs = [expr]
 
-        return lj._print(final_expr)
+        vals = [lj._print(e) for e in final_exprs]
+
+        return vals
 
     def _compile_function(self, strmod):
         global exe_engines
@@ -274,10 +311,15 @@ class LLVMJitCodeCallback(LLVMJitCode):
         ret = self._convert_expr(lj, expr)
 
         if self.signature.ret_arg:
-            builder.store(ret, self.fn.args[self.signature.ret_arg])
+            output_fp_ptr = builder.bitcast(self.fn.args[self.signature.ret_arg],
+                                            ll.PointerType(self.fp_type))
+            for i, val in enumerate(ret):
+                index = ll.Constant(ll.IntType(32), i)
+                output_array_ptr = builder.gep(output_fp_ptr, [index])
+                builder.store(val, output_array_ptr)
             builder.ret(ll.Constant(ll.IntType(32), 0))  # return success
         else:
-            lj.builder.ret(ret)
+            lj.builder.ret(self._wrap_return(lj, ret))
 
         strmod = str(self.module)
         return strmod
@@ -375,12 +417,29 @@ def llvm_callable(args, expr, callback_type=None):
     The second ('scipy.integrate.test') is only useful for directly calling
     the function using ctypes variables. It will not pass the signature checks
     for scipy.integrate.
+
+    The return value from the cse module can also be compiled.  This
+    can improve the performance of the compiled function.  If multiple
+    expressions are given to cse, the compiled function returns a tuple.
+    The 'cubature' callback handles multiple expressions (set `fdim`
+    to match in the integration call.)
+    >>> import sympy.printing.llvmjitcode as jit
+    >>> from sympy import cse, exp
+    >>> from sympy.abc import x,y
+    >>> e1 = x*x + y*y
+    >>> e2 = 4*(x*x + y*y) + 8.0
+    >>> after_cse = cse([e1,e2])
+    >>> after_cse
+    ([(x0, x**2), (x1, y**2)], [x0 + x1, 4*x0 + 4*x1 + 8.0])
+    >>> j1 = jit.llvm_callable([x,y], after_cse)
+    >>> j1(1.0, 2.0)
+    (5.0, 28.0)
     '''
 
     if not llvmlite:
         raise ImportError("llvmlite is required for llvmjitcode")
 
-    signature = CodeSignature(ctypes.c_double)
+    signature = CodeSignature(ctypes.py_object)
 
     arg_ctypes = []
     if callback_type is None:
@@ -388,6 +447,7 @@ def llvm_callable(args, expr, callback_type=None):
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
     elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':
+        signature.ret_type = ctypes.c_double
         arg_ctypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double)]
         arg_ctypes_formal = [ctypes.c_int, ctypes.c_double]
         signature.input_arg = 1
