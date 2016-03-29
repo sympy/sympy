@@ -36,6 +36,8 @@ class MatMul(MatrixExpr):
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
+        if not matrices:
+            return factor
         return obj
 
     @property
@@ -62,6 +64,9 @@ class MatMul(MatrixExpr):
         if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
             return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
         result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        if not X.cols.is_number:
+            # Don't waste time in result.doit() if the sum bounds are symbolic
+            expand = False
         return result.doit() if expand else result
 
     def as_coeff_matrices(self):
@@ -111,6 +116,15 @@ class MatMul(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatMul(*args))
+
+    # Needed for partial compatibility with Mul
+    def args_cnc(self, **kwargs):
+        coeff, matrices = self.as_coeff_matrices()
+        # I don't know how coeff could have noncommutative factors, but this
+        # handles it.
+        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+
+        return coeff_c, coeff_nc + matrices
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

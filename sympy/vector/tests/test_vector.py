@@ -16,9 +16,6 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0, C, ' ', ' ')
-    assert i1 == i
-    assert i1.__hash__() == i.__hash__()
     v1 = 3*j
     assert v1 == j*3
     assert v1.components == {j: 3}
@@ -187,6 +184,17 @@ def test_vector_cross():
     assert k ^ i == j
     assert k ^ j == -i
     assert k ^ k == Vector.zero
+
+
+def test_projection():
+    v1 = i + j + k
+    v2 = 3*i + 4*j
+    v3 = 0*i + 0*j
+    assert v1.projection(v1) == i + j + k
+    assert v1.projection(v2) == 7/3*C.i + 7/3*C.j + 7/3*C.k
+    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v2, scalar=True) == 7/3
+    assert v3.projection(v1) == Vector.zero
 
 
 def test_vector_diff_integrate():

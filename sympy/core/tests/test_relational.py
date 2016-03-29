@@ -14,6 +14,10 @@ x, y, z, t = symbols('x,y,z,t')
 def test_rel_ne():
     assert Relational(x, y, '!=') == Ne(x, y)
 
+    # issue 6116
+    p = Symbol('p', positive=True)
+    assert Ne(p, 0) is S.true
+
 
 def test_rel_subs():
     e = Relational(x, y, '==')
@@ -650,3 +654,16 @@ def test_issue_8444():
     i = symbols('i', integer=True)
     assert (i > floor(i)) == False
     assert (i < ceiling(i)) == False
+
+
+def test_issue_10304():
+    d = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    assert d.is_comparable is False  # if this fails, find a new d
+    e = 1 + d*I
+    assert simplify(Eq(e, 0)) is S.false
+
+def test_issue_10633():
+    assert Eq(True, False) == False
+    assert Eq(False, True) == False
+    assert Eq(True, True) == True
+    assert Eq(False, False) == True

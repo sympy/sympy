@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from __future__ import print_function, division
 
 __all__ = ['RigidBody']
@@ -79,7 +80,7 @@ class RigidBody(object):
                     "RigidBody.get_frame(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.frame",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.frame
 
     def set_frame(self, F):
@@ -88,7 +89,7 @@ class RigidBody(object):
                     "RigidBody.set_frame(self, F)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.frame",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.frame = F
 
     @property
@@ -107,7 +108,7 @@ class RigidBody(object):
                     "RigidBody.get_masscenter(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.masscenter",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.masscenter
 
     def set_masscenter(self, p):
@@ -116,7 +117,7 @@ class RigidBody(object):
                     "RigidBody.set_masscenter(self, p)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.masscenter",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.masscenter = p
 
     @property
@@ -132,7 +133,7 @@ class RigidBody(object):
                 feature="Method sympy.physics.mechanics." +
                     "RigidBody.get_mass(self)",
                 useinstead="property sympy.physics.mechanics.RigidBody.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.mass
 
     def set_mass(self, m):
@@ -140,7 +141,7 @@ class RigidBody(object):
                 feature="Method sympy.physics.mechanics." +
                     "RigidBody.set_mass(self, m)",
                 useinstead="property sympy.physics.mechanics.RigidBody.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.mass = m
 
     @property
@@ -170,7 +171,7 @@ class RigidBody(object):
                     "RigidBody.get_inertia(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.inertia",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.inertia
 
     def set_inertia(self, I):
@@ -179,7 +180,7 @@ class RigidBody(object):
                     "RigidBody.set_inertia(self, I)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.inertia",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.inertia = I
 
     @property
@@ -224,24 +225,23 @@ class RigidBody(object):
         return self.mass * self.masscenter.vel(frame)
 
     def angular_momentum(self, point, frame):
-        """ Angular momentum of the rigid body.
+        """Returns the angular momentum of the rigid body about a point in the
+        given frame.
 
-        The angular momentum H, about some point O, of a rigid body B, in a
-        frame N is given by
+        The angular momentum H of a rigid body B about some point O in a frame
+        N is given by:
 
-        H = I* . omega + r* x (M * v)
+            H = I·w + r×Mv
 
-        where I* is the central inertia dyadic of B, omega is the angular
-        velocity of body B in the frame, N, r* is the position vector from
-        point O to the mass center of B, and v is the velocity of point O in
-        the frame, N.
+        where I is the central inertia dyadic of B, w is the angular velocity
+        of body B in the frame, N, r is the position vector from point O to the
+        mass center of B, and v is the velocity of the mass center in the
+        frame, N.
 
         Parameters
         ==========
-
         point : Point
             The point about which angular momentum is desired.
-
         frame : ReferenceFrame
             The frame in which angular momentum is desired.
 
@@ -256,17 +256,19 @@ class RigidBody(object):
         >>> b.set_ang_vel(N, omega * b.x)
         >>> P = Point('P')
         >>> P.set_vel(N, 1 * N.x)
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> I = outer(b.x, b.x)
+        >>> B = RigidBody('B', P, b, M, (I, P))
         >>> B.angular_momentum(P, N)
         omega*b.x
 
         """
+        I = self.central_inertia
+        w = self.frame.ang_vel_in(frame)
+        m = self.mass
+        r = self.masscenter.pos_from(point)
+        v = self.masscenter.vel(frame)
 
-        return ((self.central_inertia & self.frame.ang_vel_in(frame)) +
-                (point.vel(frame) ^ -self.masscenter.pos_from(point)) *
-                self.mass)
+        return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the rigid body
@@ -372,5 +374,5 @@ class RigidBody(object):
                     "RigidBody.set_potential_energy(self, scalar)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.potential_energy",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.potential_energy = scalar

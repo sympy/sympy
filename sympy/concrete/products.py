@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.tensor.indexed import Idx
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
@@ -74,7 +75,7 @@ class Product(ExprWithIntLimits):
     >>> Product(k**2,(k, 1, m))
     Product(k**2, (k, 1, m))
     >>> Product(k**2,(k, 1, m)).doit()
-    (factorial(m))**2
+    factorial(m)**2
 
     Wallis' product for pi:
 
@@ -95,7 +96,7 @@ class Product(ExprWithIntLimits):
     Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
-    2**(-2*n)*4**n*(factorial(n))**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
+    2**(-2*n)*4**n*factorial(n)**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
     >>> limit(W2e, n, oo)
     pi/2
 
@@ -108,7 +109,7 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*(factorial(n))**2)
+    pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*factorial(n)**2)
     >>> Pe = Pe.rewrite(gamma)
     >>> Pe
     pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(-pi/2 + 1)*gamma(n + 1)**2)
@@ -330,6 +331,65 @@ class Product(ExprWithIntLimits):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)
         return None
+
+    def is_convergent(self):
+        r"""
+        See docs of Sum.is_convergent() for explanation of convergence
+        in SymPy.
+
+        The infinite product:
+
+        .. math::
+
+            \prod_{1 \leq i < \infty} f(i)
+
+        is defined by the sequence of partial products:
+
+        .. math::
+
+            \prod_{i=1}^{n} f(i) = f(1) f(2) \cdots f(n)
+
+        as n increases without bound. The product converges to a non-zero
+        value if and only if the sum:
+
+        .. math::
+
+            \sum_{1 \leq i < \infty} \log{f(n)}
+
+        converges.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Infinite_product
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, S, Product, Symbol, cos, pi, exp, oo
+        >>> n = Symbol('n', integer=True)
+        >>> Product(n/(n + 1), (n, 1, oo)).is_convergent()
+        False
+        >>> Product(1/n**2, (n, 1, oo)).is_convergent()
+        False
+        >>> Product(cos(pi/n), (n, 1, oo)).is_convergent()
+        True
+        >>> Product(exp(-n**2), (n, 1, oo)).is_convergent()
+        False
+        """
+        from sympy.concrete.summations import Sum
+
+        sequence_term = self.function
+        log_sum = log(sequence_term)
+        lim = self.limits
+        try:
+            is_conv = Sum(log_sum, *lim).is_convergent()
+        except NotImplementedError:
+            if Sum(sequence_term - 1, *lim).is_absolutely_convergent() is S.true:
+                return S.true
+            raise NotImplementedError("The algorithm to find the product convergence of %s "
+                                        "is not yet implemented" % (sequence_term))
+        return is_conv
 
     def reverse_order(expr, *indices):
         """

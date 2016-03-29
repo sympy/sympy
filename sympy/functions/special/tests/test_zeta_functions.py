@@ -6,6 +6,7 @@ from sympy.utilities.randtest import (test_derivative_numerically as td,
 
 x = Symbol('x')
 a = Symbol('a')
+b = Symbol('b', negative=True)
 z = Symbol('z')
 s = Symbol('s')
 
@@ -17,6 +18,7 @@ def test_zeta_eval():
 
     assert zeta(0) == Rational(-1, 2)
     assert zeta(0, x) == Rational(1, 2) - x
+    assert zeta(0, b) == Rational(1, 2) - b
 
     assert zeta(1) == zoo
     assert zeta(1, 2) == zoo
@@ -52,10 +54,10 @@ def test_zeta_eval():
     assert zeta(-4, -8) == 8772
 
     assert zeta(0, 1) == -Rational(1, 2)
-    assert zeta(0, -1) == Rational(1, 2)
+    assert zeta(0, -1) == Rational(3, 2)
 
     assert zeta(0, 2) == -Rational(3, 2)
-    assert zeta(0, -2) == Rational(3, 2)
+    assert zeta(0, -2) == Rational(5, 2)
 
     assert zeta(
         3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
@@ -124,7 +126,7 @@ def test_polylog_expansion():
     from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
-    assert polylog(s, -1) == dirichlet_eta(s)
+    assert polylog(s, -1) == -dirichlet_eta(s)
 
     assert myexpand(polylog(1, z), -log(1 + exp_polar(-I*pi)*z))
     assert myexpand(polylog(0, z), z/(1 - z))
@@ -178,3 +180,21 @@ def test_stieltjes_evalf():
     assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
     assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
     assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+
+
+def test_issue_10475():
+    a = Symbol('a', real=True)
+    b = Symbol('b', positive=True)
+    s = Symbol('s', zero=False)
+
+    assert zeta(2 + I).is_finite
+    assert zeta(1).is_finite is False
+    assert zeta(x).is_finite is None
+    assert zeta(x + I).is_finite is None
+    assert zeta(a).is_finite is None
+    assert zeta(b).is_finite is None
+    assert zeta(-b).is_finite is True
+    assert zeta(b**2 - 2*b + 1).is_finite is None
+    assert zeta(a + I).is_finite is True
+    assert zeta(b + 1).is_finite is True
+    assert zeta(s + 1).is_finite is True

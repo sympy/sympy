@@ -5,7 +5,7 @@ from sympy import (
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
+    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
@@ -15,7 +15,8 @@ from sympy import (
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps)
+    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
+    AccumBounds)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -26,8 +27,10 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
+from sympy.combinatorics.permutations import Cycle, Permutation
 
 x, y, z, t, a, b = symbols('x y z t a b')
 k, m, n = symbols('k m n', integer=True)
@@ -126,6 +129,21 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_cycle():
+    assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Cycle(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Cycle()) == r"\left( \right)"
+
+
+def test_latex_permutation():
+    assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
+    assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
+    assert latex(Permutation()) == r"\left( \right)"
+    assert latex(Permutation(2, 4)*Permutation(5)) == r"\left( 2\; 4\right)\left( 5\right)"
+    assert latex(Permutation(5)) == r"\left( 5\right)"
+
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
@@ -246,10 +264,11 @@ def test_latex_functions():
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow\infty\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -352,6 +371,7 @@ def test_latex_functions():
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
+
 def test_hyper_printing():
     from sympy import pi
     from sympy.abc import x, z
@@ -371,7 +391,7 @@ def test_hyper_printing():
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,
-            besselk, hankel1, hankel2, jn, yn)
+            besselk, hankel1, hankel2, jn, yn, hn1, hn2)
     from sympy.abc import z
     assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
     assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
@@ -382,6 +402,8 @@ def test_latex_bessel():
     assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
     assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
     assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
+    assert latex(hn1(n, z)) == r'h^{(1)}_{n}\left(z\right)'
+    assert latex(hn2(n, z)) == r'h^{(2)}_{n}\left(z\right)'
 
 
 def test_latex_fresnel():
@@ -491,6 +513,18 @@ def test_latex_Range():
         r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
 
+    assert latex(Range(0, 3, 1)) == r'\left\{0, 1, 2\right\}'
+
+    assert latex(Range(0, 30, 1)) == r'\left\{0, 1, \ldots, 29\right\}'
+
+    assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
+
+    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots, \infty\right\}'
+
+    assert latex(Range(oo, -2, -2)) == r'\left\{\infty, \ldots, 2, 0\right\}'
+
+    assert latex(Range(-2, -oo, -1)) == r'\left\{-2, -3, \ldots, -\infty\right\}'
+
 
 def test_latex_sequences():
     s1 = SeqFormula(a**2, (0, oo))
@@ -559,8 +593,21 @@ def test_latex_intervals():
     assert latex(Interval(0, a, True, True)) == r"\left(0, a\right)"
 
 
+def test_latex_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
+    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
+
+
 def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
+
+def test_latex_commutator():
+    A = Operator('A')
+    B = Operator('B')
+    comm = Commutator(B, A)
+    assert latex(comm.doit()) == r"- (A B - B A)"
 
 
 def test_latex_union():
@@ -924,9 +971,9 @@ def test_latex_Poly():
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 
-def test_latex_RootOf():
-    assert latex(RootOf(x**5 + x + 3, 0)) == \
-        r"\operatorname{RootOf} {\left(x^{5} + x + 3, 0\right)}"
+def test_latex_ComplexRootOf():
+    assert latex(rootof(x**5 + x + 3, 0)) == \
+        r"\operatorname{CRootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 
 def test_latex_RootSum():
@@ -1434,3 +1481,10 @@ def test_issue_7117():
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
+
+
+def test_issue_10489():
+    latexSymbolWithBrace = 'C_{x_{0}}'
+    s = Symbol(latexSymbolWithBrace)
+    assert latex(s) == latexSymbolWithBrace
+    assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'

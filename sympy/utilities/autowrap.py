@@ -73,11 +73,11 @@ import sys
 import os
 import shutil
 import tempfile
-from subprocess import STDOUT, CalledProcessError
+from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output, range
+from sympy.core.compatibility import range, iterable
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
@@ -215,8 +215,12 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = (
-        "from distutils.core import setup\n"
-        "from distutils.extension import Extension\n"
+        "try:\n"
+        "    from setuptools import setup\n"
+        "    from setuptools import Extension\n"
+        "except ImportError:\n"
+        "    from distutils.core import setup\n"
+        "    from distutils.extension import Extension\n"
         "from Cython.Distutils import build_ext\n"
         "{np_import}"
         "\n"
@@ -472,7 +476,8 @@ def autowrap(
         the generated code and the wrapper input files are left intact in the
         specified path.
     args : iterable, optional
-        An iterable of symbols. Specifies the argument sequence for the function.
+        An ordered iterable of symbols. Specifies the argument sequence for the
+        function.
     flags : iterable, optional
         Additional option flags that will be passed to the backend.
     verbose : bool, optional
@@ -493,18 +498,27 @@ def autowrap(
     >>> binary_func(1, 4, 2)
     -1.0
     """
-
     if language:
         _validate_backend_language(backend, language)
     else:
         language = _infer_language(backend)
 
-    helpers = helpers if helpers else ()
+    helpers = [helpers] if helpers else ()
     flags = flags if flags else ()
+    args = list(args) if iterable(args, exclude=set) else args
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
+
+    helps = []
+    for name_h, expr_h, args_h in helpers:
+        helps.append(make_routine(name_h, expr_h, args_h))
+
+    for name_h, expr_h, args_h in helpers:
+        if expr.has(expr_h):
+            name_h = binary_function(name_h, expr_h, backend = 'dummy')
+            expr = expr.subs(expr_h, name_h(*args_h))
     try:
         routine = make_routine('autofunc', expr, args)
     except CodeGenArgumentListError as e:
@@ -517,10 +531,6 @@ def autowrap(
                 raise
             new_args.append(missing.name)
         routine = make_routine('autofunc', expr, args + new_args)
-
-    helps = []
-    for name, expr, args in helpers:
-        helps.append(make_routine(name, expr, args))
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 

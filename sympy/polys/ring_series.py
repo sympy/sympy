@@ -168,10 +168,10 @@ def rs_puiseux(f, p, x, prec):
         power = k[index]
         if isinstance(power, Rational):
             num, den = power.as_numer_denom()
-            n = n*den // igcd(n, den)
+            n = int(n*den // igcd(n, den))
         elif power != int(power):
             num, den = power.numerator, power.denominator
-            n = n*den // igcd(n, den)
+            n = int(n*den // igcd(n, den))
     if n != 1:
         p1 = pow_xin(p, index, n)
         r = f(p1, x, prec*n)
@@ -1873,7 +1873,7 @@ def _rs_series(expr, series_rs, a, prec):
         arg = args[0]
         if len(args) > 1:
             raise NotImplementedError
-        R1, series = sring(arg, domain=QQ, expand=False)
+        R1, series = sring(arg, domain=QQ, expand=False, series=True)
         series_inner = _rs_series(arg, series, a, prec)
 
         # Why do we need to compose these three rings?
@@ -1898,8 +1898,9 @@ def _rs_series(expr, series_rs, a, prec):
     elif expr.is_Mul:
         n = len(args)
         for arg in args:    # XXX Looks redundant
-            R1, _ = sring(arg, expand=False)
-            R = R.compose(R1)
+            if not arg.is_Number:
+                R1, _ = sring(arg, expand=False, series=True)
+                R = R.compose(R1)
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
             [a]*len(args)))
         sum_pows = sum(min_pows)
@@ -1927,7 +1928,7 @@ def _rs_series(expr, series_rs, a, prec):
         return series
 
     elif expr.is_Pow:
-        R1, _ = sring(expr.base, domain=QQ, expand=False)
+        R1, _ = sring(expr.base, domain=QQ, expand=False, series=True)
         R = R.compose(R1)
         series_inner = _rs_series(expr.base, R(expr.base), a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
@@ -1935,7 +1936,7 @@ def _rs_series(expr, series_rs, a, prec):
     # The `is_constant` method is buggy hence we check it at the end.
     # See issue #9786 for details.
     elif isinstance(expr, Expr) and expr.is_constant():
-        return sring(expr, domain=QQ, expand=False)[1]
+        return sring(expr, domain=QQ, expand=False, series=True)[1]
 
     else:
         raise NotImplementedError
@@ -1961,15 +1962,19 @@ def rs_series(expr, a, prec):
     >>> from sympy.polys.ring_series import rs_series
     >>> from sympy.functions import sin, cos, exp, tan
     >>> from sympy.core import symbols
+    >>> from sympy.polys.domains import QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1
     >>> series = rs_series(tan(a + b)*cos(a + c), a, 2)
     >>> series.as_expr()
     -a*sin(c)*tan(b) + a*cos(c)*tan(b)**2 + a*cos(c) + cos(c)*tan(b)
+    >>> series = rs_series(exp(a**QQ(1,3) + a**QQ(2, 5)), a, 1)
+    >>> series.as_expr()
+    a**(11/15) + a**(4/5)/2 + a**(2/5) + a**(2/3)/2 + a**(1/3) + 1
 
     """
-    R, series = sring(expr, domain=QQ, expand=False)
+    R, series = sring(expr, domain=QQ, expand=False, series=True)
     if a not in R.symbols:
         R = R.add_gens([a, ])
     series = series.set_ring(R)

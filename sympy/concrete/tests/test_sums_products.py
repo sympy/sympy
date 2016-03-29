@@ -547,6 +547,20 @@ def test_Sum_doit():
     pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
     assert Sum(pw, (n, 1, nmax)).doit() == Sum(pw, (n, 1, nmax))
 
+    q, s = symbols('q, s')
+    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*s > 1),
+        (Sum(n**(-2*s), (n, 1, oo)), True))
+    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), s > 1),
+        (Sum((n + 1)**(-s), (n, 0, oo)), True))
+    assert summation(1/(n+q)**s, (n, 0, oo)) == Piecewise(
+        (zeta(s, q), And(q > 0, s > 1)),
+        (Sum((n + q)**(-s), (n, 0, oo)), True))
+    assert summation(1/(n+q)**s, (n, q, oo)) == Piecewise(
+        (zeta(s, 2*q), And(2*q > 0, s > 1)),
+        (Sum((n + q)**(-s), (n, q, oo)), True))
+    assert summation(1/n**2, (n, 1, oo)) == zeta(2)
+    assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
@@ -640,22 +654,22 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set([y])
-        assert func(2, (x, 1, y)).free_symbols == set([y])
+        assert func(0, (x, 1, y)).free_symbols == {y}
+        assert func(2, (x, 1, y)).free_symbols == {y}
         assert func(x, (x, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y)).free_symbols == set([x, y])
-        assert func(x, (y, 1, 2)).free_symbols == set([x])
-        assert func(x, (y, 1, 1)).free_symbols == set([x])
-        assert func(x, (y, 1, z)).free_symbols == set([x, z])
+        assert func(x, (x, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y)).free_symbols == {x, y}
+        assert func(x, (y, 1, 2)).free_symbols == {x}
+        assert func(x, (y, 1, 1)).free_symbols == {x}
+        assert func(x, (y, 1, z)).free_symbols == {x, z}
         assert func(x, (x, 1, y), (y, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == set([z])
-        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
-    assert Sum(1, (x, 1, y)).free_symbols == set([y])
+        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == {z}
+        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == {x, z}
+    assert Sum(1, (x, 1, y)).free_symbols == {y}
     # free_symbols answers whether the object *as written* has free symbols,
     # not whether the evaluated expression has free symbols
-    assert Product(1, (x, 1, y)).free_symbols == set([y])
+    assert Product(1, (x, 1, y)).free_symbols == {y}
 
 
 def test_conjugate_transpose():
@@ -867,6 +881,7 @@ def test_is_convergent():
     assert Sum(3**(-2*n - 1)*n**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
@@ -907,9 +922,9 @@ def test_is_convergent():
     assert Sum(f, (n, -oo, 1)).is_convergent() is S.true
 
 
-def test_is_absolute_convergent():
-    assert Sum((-1)**n, (n, 1, oo)).is_absolute_convergent() is S.false
-    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolute_convergent() is S.true
+def test_is_absolutely_convergent():
+    assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
+    assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent() is S.true
 
 
 @XFAIL
@@ -921,3 +936,10 @@ def test_convergent_failing():
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_10156():
+    cx = Sum(2*y**2*x, (x, 1,3))
+    e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
+    assert e.factor() == \
+        8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))

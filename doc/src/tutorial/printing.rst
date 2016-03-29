@@ -14,7 +14,7 @@ Printers
 There are several printers available in SymPy.  The most common ones are
 
 - str
-- repr
+- srepr
 - ASCII pretty printer
 - Unicode pretty printer
 - LaTeX
@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the
@@ -119,17 +119,17 @@ exactly the same as the expression as you would enter it.
     >>> print(Integral(sqrt(1/x), x))
     Integral(sqrt(1/x), x)
 
-repr
-----
+srepr
+-----
 
-The repr form of an expression is designed to show the exact form of an
+The srepr form of an expression is designed to show the exact form of an
 expression.  It will be discussed more in the :ref:`tutorial-manipulation`
 section.  To get it, use ``srepr()`` [#srepr-fn]_.
 
     >>> srepr(Integral(sqrt(1/x), x))
     "Integral(Pow(Pow(Symbol('x'), Integer(-1)), Rational(1, 2)), Tuple(Symbol('x')))"
 
-The repr form is mostly useful for understanding how an expression is built
+The srepr form is mostly useful for understanding how an expression is built
 internally.
 
 
@@ -169,7 +169,7 @@ Unicode Pretty Printer
 ----------------------
 
 The Unicode pretty printer is also accessed from ``pprint()`` and
-``pretty()``.  It the terminal supports Unicode, it is used automatically.  If
+``pretty()``.  If the terminal supports Unicode, it is used automatically.  If
 ``pprint()`` is not able to detect that the terminal supports unicode, you can
 pass ``use_unicode=True`` to force it to use Unicode.
 

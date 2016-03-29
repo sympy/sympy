@@ -1,15 +1,18 @@
+from itertools import product
+import math
+
+import mpmath
+
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff)
 from sympy.printing.lambdarepr import LambdaPrinter
-import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
-import math
 import sympy
 
 
@@ -328,6 +331,49 @@ def test_numpy_old_matrix():
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+
+def test_issue9474():
+    mods = [None, 'math']
+    if numpy:
+        mods.append('numpy')
+    if mpmath:
+        mods.append('mpmath')
+    for mod in mods:
+        f = lambdify(x, sympy.S(1)/x, modules=mod)
+        assert f(2) == 0.5
+        f = lambdify(x, floor(sympy.S(1)/x), modules=mod)
+        assert f(2) == 0
+
+    if mpmath:
+        f = lambdify(x, sympy.S(1)/sympy.Abs(x), modules=['mpmath'])
+        assert isinstance(f(2), mpmath.mpf)
+
+    for absfunc, modules in product([Abs, abs], mods):
+        f = lambdify(x, absfunc(x), modules=modules)
+        assert f(-1) == 1
+        assert f(1) == 1
+        assert f(3+4j) == 5
+
+
+def test_issue_9871():
+    if not numexpr:
+        skip("numexpr not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    r = sqrt(x**2 + y**2)
+    expr = diff(1/r, x)
+
+    xn = yn = numpy.linspace(1, 10, 16)
+    # expr(xn, xn) = -xn/(sqrt(2)*xn)^3
+    fv_exact = -numpy.sqrt(2.)**-3 * xn**-2
+
+    fv_numpy = lambdify((x, y), expr, modules='numpy')(xn, yn)
+    fv_numexpr = lambdify((x, y), expr, modules='numexpr')(xn, yn)
+    numpy.testing.assert_allclose(fv_numpy, fv_exact, rtol=1e-10)
+    numpy.testing.assert_allclose(fv_numexpr, fv_exact, rtol=1e-10)
+
+
 def test_numpy_piecewise():
     if not numpy:
         skip("numpy not installed.")
@@ -456,6 +502,23 @@ def test_imps():
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
 
 
+def test_imps_errors():
+    # Test errors that implemented functions can return, and still be able to
+    # form expressions.
+    # See: https://github.com/sympy/sympy/issues/10810
+    for val, error_class in product((0, 0., 2, 2.0),
+                                    (AttributeError, TypeError, ValueError)):
+
+        def myfunc(a):
+            if a == 0:
+                raise error_class
+            return 1
+
+        f = implemented_function('f', myfunc)
+        expr = f(val)
+        assert expr == f(val)
+
+
 def test_imps_wrong_args():
     raises(ValueError, lambda: implemented_function(sin, lambda x: x))
 
@@ -578,6 +641,13 @@ def test_issue_2790():
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
+
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
+
+
+def test_Min_Max():
+    # see gh-10375
+    assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
+    assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3

@@ -16,7 +16,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered, cartes)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -237,6 +237,30 @@ def decompose_power(expr):
 
             exp = exp.p
         else:
+            base, exp = expr, 1
+    else:
+        exp, tail = exp.as_coeff_Mul(rational=True)
+
+        if exp is S.NegativeOne:
+            base, exp = Pow(base, tail), -1
+        elif exp is not S.One:
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, exp = Pow(base, tail), exp.p
+        else:
+            base, exp = expr, 1
+
+    return base, exp
+
+
+def decompose_power_rat(expr):
+    """
+    Decompose power into symbolic base and rational exponent.
+
+    """
+    base, exp = expr.as_base_exp()
+
+    if exp.is_Number:
+        if not exp.is_Rational:
             base, exp = expr, 1
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
@@ -988,8 +1012,10 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     >>> gcd_terms(x/2/y + 1/x/y)
     (x**2 + 2)/(2*x*y)
-    >>> gcd_terms(x/2/y + 1/x/y, fraction=False, clear=False)
-    (x + 2/x)/(2*y)
+    >>> gcd_terms(x/2/y + 1/x/y, clear=False)
+    (x**2/2 + 1)/(x*y)
+    >>> gcd_terms(x/2/y + 1/x/y, clear=False, fraction=False)
+    (x/2 + 1/x)/y
 
     The ``clear`` flag was ignored in this case because the returned
     expression was a rational expression, not a simple sum.
@@ -1029,6 +1055,15 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         cont, numer, denom = _gcd_terms(terms, isprimitive, fraction)
         numer = numer.xreplace(reps)
         coeff, factors = cont.as_coeff_Mul()
+        if not clear:
+            c, _coeff = coeff.as_coeff_Mul()
+            if not c.is_Integer and not clear and numer.is_Add:
+                n, d = c.as_numer_denom()
+                _numer = numer/d
+                if any(a.as_coeff_Mul()[0].is_Integer
+                        for a in _numer.args):
+                    numer = _numer
+                    coeff = n*_coeff
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
     if not isinstance(terms, Basic):
@@ -1093,14 +1128,6 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> factor_terms(x/2 + 1, clear=True)
     (x + 2)/2
 
-    This only applies when there is a single Add that the coefficient
-    multiplies:
-
-    >>> factor_terms(x*y/2 + y, clear=True)
-    y*(x + 2)/2
-    >>> factor_terms(x*y/2 + y, clear=False) == _
-    True
-
     If a -1 is all that can be factored out, to *not* factor it out, the
     flag ``sign`` must be False:
 
@@ -1132,7 +1159,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 return expr
             return expr.func(*newargs)
 
-        cont, p = expr.as_content_primitive(radical=radical)
+        cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
@@ -1295,7 +1322,7 @@ def _mask_nc(eq, name=None):
 
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    return expr, dict([(v, k) for k, v in rep]) or None, nc_syms
+    return expr, {v: k for k, v in rep} or None, nc_syms
 
 
 def factor_nc(expr):

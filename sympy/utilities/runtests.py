@@ -262,13 +262,17 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or PY3):
+        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
+            # Only run Sage tests if 'bin/test' is present (it is missing from
+            # our release because everything in the 'bin' directory gets
+            # installed).
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -614,8 +618,8 @@ def _doctest(*paths, **kwargs):
     split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
     ])
 
     if import_module('numpy') is None:
@@ -636,9 +640,14 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot3d.py"
             ])
         else:
+            # Use a non-windowed backend, so that the tests work on Travis
+            import matplotlib
+            matplotlib.use('Agg')
+
             # don't display matplotlib windows
             from sympy.plotting.plot import unset_show
             unset_show()
+
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
@@ -1060,6 +1069,9 @@ class SymPyTests(object):
             except ImportError:
                 reporter.import_error(filename, sys.exc_info())
                 return
+            except Exception:
+                reporter.test_exception(sys.exc_info())
+
             clear_cache()
             self._count += 1
             random.seed(self._seed)
@@ -1258,9 +1270,14 @@ class SymPyDocTests(object):
 
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                if not self._process_dependencies(test.globs['_doctest_depends_on']):
-                    self._reporter.test_skip()
+                has_dependencies = self._process_dependencies(test.globs['_doctest_depends_on'])
+                if has_dependencies is not True:
+                    # has_dependencies is either True or a message
+                    self._reporter.test_skip(v="\n" + has_dependencies)
                     continue
+
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
@@ -1343,7 +1360,7 @@ class SymPyDocTests(object):
             for ex in executables:
                 found = find_executable(ex)
                 if found is None:
-                    return False
+                    return "Could not find %s" % ex
         if moduledeps is not None:
             for extmod in moduledeps:
                 if extmod == 'matplotlib':
@@ -1355,7 +1372,7 @@ class SymPyDocTests(object):
                     if matplotlib is not None:
                         pass
                     else:
-                        return False
+                        return "Could not import matplotlib"
                 else:
                     # TODO min version support
                     mod = import_module(extmod)
@@ -1364,7 +1381,7 @@ class SymPyDocTests(object):
                         if hasattr(mod, '__version__'):
                             version = mod.__version__
                     else:
-                        return False
+                        return "Could not import %s" % mod
         if viewers is not None:
             import tempfile
             tempdir = tempfile.mkdtemp()
@@ -2176,11 +2193,12 @@ class PyTestReporter(Reporter):
                 char = "T"
             elif message == "Slow":
                 char = "w"
-        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Blue")
             if v is not None:
-                self.write(message, "Blue")
+                self.write(message + ' ', "Blue")
+            else:
+                self.write(" - ", "Blue")
+        self.write(char, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

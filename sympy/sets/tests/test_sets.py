@@ -2,14 +2,31 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Eq, Pow, Contains, Sum, RootOf, SymmetricDifference, Piecewise)
+    Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
+    Matrix, signsimp)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import x, y, z
+from sympy.abc import x, y, z, m, n
+
+
+def test_imageset():
+    ints = S.Integers
+    raises(TypeError, lambda: imageset(x, ints))
+    raises(ValueError, lambda: imageset(x, y, z, ints))
+    raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
+    def f(x):
+        return cos(x)
+    raises(TypeError, lambda: imageset(f, ints))
+    f = lambda x: cos(x)
+    assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
+    assert imageset(x, 1, ints) == FiniteSet(1)
+    assert imageset(x, y, ints) == FiniteSet(y)
+    assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
+        in ('_x + x', 'x + _x'))
 
 
 def test_interval_arguments():
@@ -160,7 +177,6 @@ def test_Complement():
     assert S.Reals - Union(S.Naturals, FiniteSet(pi)) == \
             Intersection(S.Reals - S.Naturals, S.Reals - FiniteSet(pi))
 
-
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
@@ -221,6 +237,7 @@ def test_intersect():
     assert Interval(0, 2).intersect(Union(Interval(0, 1), Interval(2, 3))) == \
         Union(Interval(0, 1), Interval(2, 2))
 
+    assert FiniteSet(1, 2)._intersect((1, 2, 3)) == FiniteSet(1, 2)
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
     assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
         FiniteSet('ham')
@@ -258,7 +275,7 @@ def test_intersection():
     # iterable
     i = Intersection(FiniteSet(1, 2, 3), Interval(2, 5), evaluate=False)
     assert i.is_iterable
-    assert set(i) == set([S(2), S(3)])
+    assert set(i) == {S(2), S(3)}
 
     # challenging intervals
     x = Symbol('x', real=True)
@@ -411,6 +428,7 @@ def test_is_proper_superset():
 
     raises(ValueError, lambda: Interval(0, 1).is_proper_superset(0))
 
+
 def test_contains():
     assert Interval(0, 2).contains(1) is S.true
     assert Interval(0, 2).contains(3) is S.false
@@ -420,6 +438,8 @@ def test_contains():
     assert Interval(0, 2, False, True).contains(2) is S.false
     assert Interval(0, 2, True, True).contains(0) is S.false
     assert Interval(0, 2, True, True).contains(2) is S.false
+
+    assert (Interval(0, 2) in Interval(0, 2)) is False
 
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
@@ -448,10 +468,16 @@ def test_contains():
     assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
     assert S.EmptySet.contains(1) is S.false
-    assert FiniteSet(RootOf(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
+    assert FiniteSet(rootof(x**3 + x - 1, 0)).contains(S.Infinity) is S.false
 
-    assert RootOf(x**5 + x**3 + 1, 0) in S.Reals
-    assert not RootOf(x**5 + x**3 + 1, 1) in S.Reals
+    assert rootof(x**5 + x**3 + 1, 0) in S.Reals
+    assert not rootof(x**5 + x**3 + 1, 1) in S.Reals
+
+    # non-bool results
+    assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
+        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+    assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
+        And(y <= 3, y <= x, y >= 1, y >= 2)
 
 
 def test_interval_symbolic():
@@ -548,7 +574,7 @@ def test_Intersection_as_relational():
 
 
 def test_EmptySet():
-    assert S.EmptySet.as_relational(Symbol('x')) is False
+    assert S.EmptySet.as_relational(Symbol('x')) is S.false
     assert S.EmptySet.intersect(S.UniversalSet) == S.EmptySet
     assert S.EmptySet.boundary == S.EmptySet
 
@@ -682,7 +708,7 @@ def test_supinf():
 def test_universalset():
     U = S.UniversalSet
     x = Symbol('x')
-    assert U.as_relational(x) is True
+    assert U.as_relational(x) is S.true
     assert U.union(Interval(2, 4)) == U
 
     assert U.intersect(Interval(2, 4)) == Interval(2, 4)
@@ -701,7 +727,7 @@ def test_Interval_free_symbols():
     # issue 6211
     assert Interval(0, 1).free_symbols == set()
     x = Symbol('x', real=True)
-    assert Interval(0, x).free_symbols == set([x])
+    assert Interval(0, x).free_symbols == {x}
 
 
 def test_image_interval():
@@ -894,3 +920,104 @@ def test_issue_9808():
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
+
+
+def test_issue_9956():
+    assert Union(Interval(-oo, oo), FiniteSet(1)) == Interval(-oo, oo)
+    assert Interval(-oo, oo).contains(1) is S.true
+
+
+def test_issue_Symbol_inter():
+    i = Interval(0, oo)
+    r = S.Reals
+    mat = Matrix([0, 0, 0])
+    assert Intersection(r, i, FiniteSet(m), FiniteSet(m, n)) == \
+        Intersection(i, FiniteSet(m))
+    assert Intersection(FiniteSet(1, m, n), FiniteSet(m, n, 2), i) == \
+        Intersection(i, FiniteSet(m, n))
+    assert Intersection(FiniteSet(m, n, x), FiniteSet(m, z), r) == \
+        Intersection(r, FiniteSet(m, z), FiniteSet(n, x))
+    assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, x), r) == \
+        Intersection(r, FiniteSet(3, m, n), evaluate=False)
+    assert Intersection(FiniteSet(m, n, 3), FiniteSet(m, n, 2, 3), r) == \
+        Union(FiniteSet(3), Intersection(r, FiniteSet(m, n)))
+    assert Intersection(r, FiniteSet(mat, 2, n), FiniteSet(0, mat, n)) == \
+        Intersection(r, FiniteSet(n))
+    assert Intersection(FiniteSet(sin(x), cos(x)), FiniteSet(sin(x), cos(x), 1), r) == \
+        Intersection(r, FiniteSet(sin(x), cos(x)))
+    assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
+        Intersection(r, FiniteSet(x**2, sin(x)))
+
+
+def test_issue_10113():
+    f = x**2/(x**2 - 4)
+    assert imageset(x, f, S.Reals) == Union(Interval(-oo, 0), Interval(1, oo, True, True))
+    assert imageset(x, f, Interval(-2, 2)) == Interval(-oo, 0)
+    assert imageset(x, f, Interval(-2, 3)) == Union(Interval(-oo, 0), Interval(S(9)/5, oo))
+
+
+def test_issue_10248():
+    assert list(Intersection(S.Reals, FiniteSet(x))) == [
+        And(x < oo, x > -oo)]
+
+
+def test_issue_9447():
+    a = Interval(0, 1) + Interval(2, 3)
+    assert Complement(S.UniversalSet, a) == Complement(
+            S.UniversalSet, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
+    assert Complement(S.Naturals, a) == Complement(
+            S.Naturals, Union(Interval(0, 1), Interval(2, 3)), evaluate=False)
+
+
+def test_issue_10337():
+    assert (FiniteSet(2) == 3) is False
+    assert (FiniteSet(2) != 3) is True
+    raises(TypeError, lambda: FiniteSet(2) < 3)
+    raises(TypeError, lambda: FiniteSet(2) <= 3)
+    raises(TypeError, lambda: FiniteSet(2) > 3)
+    raises(TypeError, lambda: FiniteSet(2) >= 3)
+
+
+def test_issue_10326():
+    bad = [
+        EmptySet(),
+        FiniteSet(1),
+        Interval(1, 2),
+        S.ComplexInfinity,
+        S.ImaginaryUnit,
+        S.Infinity,
+        S.NaN,
+        S.NegativeInfinity,
+        ]
+    interval = Interval(0, 5)
+    for i in bad:
+        assert i not in interval
+
+    x = Symbol('x', real=True)
+    nr = Symbol('nr', real=False)
+    assert x + 1 in Interval(x, x + 4)
+    assert nr not in Interval(x, x + 4)
+    assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))
+    assert Interval(-oo, oo).contains(oo) is S.false
+    assert Interval(-oo, oo).contains(-oo) is S.false
+
+
+def test_issue_9706():
+    assert Interval(-oo, 0).closure == Interval(-oo, 0, True, False)
+    assert Interval(0, oo).closure == Interval(0, oo, False, True)
+    assert Interval(-oo, oo).closure == Interval(-oo, oo)
+
+
+def test_issue_10285():
+    assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
+        FiniteSet(x).intersect(Interval.Lopen(-3, -2))
+    eq = -x - 2*(-x - y)
+    s = signsimp(eq)
+    ivl = Interval.open(0, 1)
+    assert FiniteSet(eq).intersect(ivl) == FiniteSet(s).intersect(ivl)
+    assert FiniteSet(-eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.open(-1, 0))
+    eq -= 1
+    ivl = Interval.Lopen(1, oo)
+    assert FiniteSet(eq).intersect(ivl) == \
+        FiniteSet(s).intersect(Interval.Lopen(2, oo))

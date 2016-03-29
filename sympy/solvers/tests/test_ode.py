@@ -3,7 +3,7 @@ from __future__ import division
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
+    Rational, rootof, S, simplify, sin, sqrt, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
@@ -156,21 +156,21 @@ def test_linear_2eq_order2():
     x0, y0 = symbols('x0, y0')
 
     eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
-    sol1 = [Eq(x(t), 43*C1*exp(t*RootOf(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*RootOf(l**4 - 14*l**2 + 2, 1)) + \
-    43*C3*exp(t*RootOf(l**4 - 14*l**2 + 2, 2)) + 43*C4*exp(t*RootOf(l**4 - 14*l**2 + 2, 3))), \
-    Eq(y(t), C1*(RootOf(l**4 - 14*l**2 + 2, 0)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 0)) + \
-    C2*(RootOf(l**4 - 14*l**2 + 2, 1)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 1)) + \
-    C3*(RootOf(l**4 - 14*l**2 + 2, 2)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 2)) + \
-    C4*(RootOf(l**4 - 14*l**2 + 2, 3)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 3)))]
+    sol1 = [Eq(x(t), 43*C1*exp(t*rootof(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*rootof(l**4 - 14*l**2 + 2, 1)) + \
+    43*C3*exp(t*rootof(l**4 - 14*l**2 + 2, 2)) + 43*C4*exp(t*rootof(l**4 - 14*l**2 + 2, 3))), \
+    Eq(y(t), C1*(rootof(l**4 - 14*l**2 + 2, 0)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 0)) + \
+    C2*(rootof(l**4 - 14*l**2 + 2, 1)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 1)) + \
+    C3*(rootof(l**4 - 14*l**2 + 2, 2)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 2)) + \
+    C4*(rootof(l**4 - 14*l**2 + 2, 3)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 3)))]
     assert dsolve(eq1) == sol1
 
     eq2 = (Eq(diff(x(t),t,t), 8*x(t)+3*y(t)+31), Eq(diff(y(t),t,t), 9*x(t)+7*y(t)+12))
-    sol2 = [Eq(x(t), 3*C1*exp(t*RootOf(l**4 - 15*l**2 + 29, 0)) + 3*C2*exp(t*RootOf(l**4 - 15*l**2 + 29, 1)) + \
-    3*C3*exp(t*RootOf(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*RootOf(l**4 - 15*l**2 + 29, 3)) - 181/29), \
-    Eq(y(t), C1*(RootOf(l**4 - 15*l**2 + 29, 0)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 0)) + \
-    C2*(RootOf(l**4 - 15*l**2 + 29, 1)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 1)) + \
-    C3*(RootOf(l**4 - 15*l**2 + 29, 2)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 2)) + \
-    C4*(RootOf(l**4 - 15*l**2 + 29, 3)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 3)) + 183/29)]
+    sol2 = [Eq(x(t), 3*C1*exp(t*rootof(l**4 - 15*l**2 + 29, 0)) + 3*C2*exp(t*rootof(l**4 - 15*l**2 + 29, 1)) + \
+    3*C3*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) - 181/29), \
+    Eq(y(t), C1*(rootof(l**4 - 15*l**2 + 29, 0)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 0)) + \
+    C2*(rootof(l**4 - 15*l**2 + 29, 1)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 1)) + \
+    C3*(rootof(l**4 - 15*l**2 + 29, 2)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + \
+    C4*(rootof(l**4 - 15*l**2 + 29, 3)**2 - 8)*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) + 183/29)]
     assert dsolve(eq2) == sol2
 
     eq3 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
@@ -1507,27 +1507,29 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checkodesol(eq30, sol30, order=5, solve_for_func=False)[0]
 
 
-def test_nth_linear_constant_coeff_homogeneous_RootOf():
+def test_nth_linear_constant_coeff_homogeneous_rootof():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) +
-        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) +
-        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) +
-        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) +
-        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
+        C1*exp(x*rootof(x**5 + 11*x - 2, 0)) +
+        C2*exp(x*rootof(x**5 + 11*x - 2, 1)) +
+        C3*exp(x*rootof(x**5 + 11*x - 2, 2)) +
+        C4*exp(x*rootof(x**5 + 11*x - 2, 3)) +
+        C5*exp(x*rootof(x**5 + 11*x - 2, 4)))
     assert dsolve(eq) == sol
 
 
 @XFAIL
 @slow
-def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
+def test_nth_linear_constant_coeff_homogeneous_rootof_sol():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) +
-        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) +
-        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) +
-        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) +
-        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
+        C1*exp(x*rootof(x**5 + 11*x - 2, 0)) +
+        C2*exp(x*rootof(x**5 + 11*x - 2, 1)) +
+        C3*exp(x*rootof(x**5 + 11*x - 2, 2)) +
+        C4*exp(x*rootof(x**5 + 11*x - 2, 3)) +
+        C5*exp(x*rootof(x**5 + 11*x - 2, 4)))
     assert checkodesol(eq, sol, order=5, solve_for_func=False)[0]
 
 
@@ -2389,7 +2391,7 @@ def test_heuristic1():
     i4 = infinitesimals(eq4, hint='abaco1_simple')
     assert i4 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
         {eta(x, f(x)): 0,
-        xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 + 2*a4*x**4)}]
+        xi(x, f(x)): sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4)}]
     i5 = infinitesimals(eq5, hint='abaco1_simple')
     assert i5 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
 
@@ -2657,3 +2659,21 @@ def test_dsolve_linsystem_symbol():
     sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
             Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
     assert dsolve(eq1) == sol1
+
+def test_C1_function_9239():
+    t = Symbol('t')
+    eq = (Eq(diff(C1(t),t), 9*C2(t)), Eq(diff(C2(t),t), 12*C1(t)))
+    sol = [Eq(C1(t), 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t)), \
+    Eq(C2(t), -6*sqrt(3)*C1*exp(-6*sqrt(3)*t) + 6*sqrt(3)*C2*exp(6*sqrt(3)*t))]
+    assert dsolve(eq) == sol
+
+def test_issue_10379():
+    t,y = symbols('t,y')
+    sol =  dsolve(f(t).diff(t)-(1-51.05*y*f(t)), rational=False)
+    ans =  Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)
+    assert str(sol) == str(ans)
+def test_issue_10867():
+    x, g = symbols('x g')
+    v = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
+    ans = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
+    assert dsolve(v, g(x)) == ans
