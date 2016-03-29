@@ -335,6 +335,19 @@ def test_Integers_eval_imageset():
         ImageSet(Lambda(x, (x, 1/x)), S.Integers)
 
 
+def test_Range_eval_imageset():
+    a, b, c = symbols('a b c')
+    assert imageset(x, a*(x + b) + c, Range(3)) == \
+        imageset(x, a*x + a*b + c, Range(3))
+    eq = (x + 1)**2
+    assert imageset(x, eq, Range(3)).lamda.expr == eq
+    eq = a*(x + b) + c
+    r = Range(3, -3, -2)
+    imset = imageset(x, eq, r)
+    assert imset.lamda.expr != eq
+    assert list(imset) == [eq.subs(x, i).expand() for i in list(r)]
+
+
 def test_fun():
     assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))

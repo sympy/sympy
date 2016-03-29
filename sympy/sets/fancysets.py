@@ -832,6 +832,30 @@ class Range(Set):
                 raise IndexError("Range index out of range")
             return rv
 
+    def _eval_imageset(self, f):
+        from sympy.core.function import expand_mul
+        if not self:
+            return S.EmptySet
+        if not isinstance(f.expr, Expr):
+            return
+        if self.size == 1:
+            return FiniteSet(f(self[0]))
+        if f is S.IdentityFunction:
+            return self
+
+        x = f.variables[0]
+        expr = f.expr
+        # handle f that is linear in f's variable
+        if x not in expr.free_symbols or x in expr.diff(x).free_symbols:
+            return
+        if self.start.is_finite:
+            F = f(self.step*x + self.start)  # for i in range(len(self))
+        else:
+            F = f(-self.step*x + self[-1])
+        F = expand_mul(F)
+        if F != expr:
+            return imageset(x, F, Range(self.size))
+
     @property
     def _inf(self):
         if not self:
