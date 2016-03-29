@@ -58,19 +58,20 @@ def _a(n, k, prec):
         # k  = p^e
         if p == 2:
             mod = 8*k
-            v = (mod + v%mod)%mod
-            v = (v*pow(9, 4*k - 1, mod))%mod
+            v = mod + v%mod
+            v = (v*pow(9,k - 1, mod))%mod
             m = _sqrt_mod_prime_power(v, 2, e + 3)[0]
             arg = mpf_div(mpf_mul(from_int(4*m), pi, prec), from_int(mod), prec)
             return mpf_mul(mpf_mul(from_int((-1)**e*jacobi_symbol(m - 1, m)), mpf_sqrt(from_int(k), prec), prec), mpf_sin(arg, prec), prec)
         if p == 3:
             mod = 3*k
-            v = (mod + v%mod)%mod
-            v = (v*pow(64, 2*k - 1, mod))%mod
+            v = mod + v%mod
+            if e > 1:
+                v = (v*pow(64, k//3 - 1, mod))%mod
             m = _sqrt_mod_prime_power(v, 3, e + 1)[0]
             arg = mpf_div(mpf_mul(from_int(4*m), pi, prec), from_int(mod), prec)
             return mpf_mul(mpf_mul(from_int(2*(-1)**(e + 1)*legendre_symbol(m, 3)), mpf_sqrt(from_int(k//3), prec), prec), mpf_sin(arg, prec), prec)
-        v = (k + v%k)%k
+        v = k + v%k
         if v%p == 0:
             if e == 1:
                 return mpf_mul(from_int(jacobi_symbol(3, k)), mpf_sqrt(from_int(k), prec), prec)
