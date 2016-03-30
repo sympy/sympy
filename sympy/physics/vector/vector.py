@@ -531,7 +531,7 @@ class Vector(object):
 
         partial = Vector(0)
 
-        for i, vector_component in enumerate(self.args):
+        for vector_component in self.args:
             measure_number = vector_component[0]
             component_frame = vector_component[1]
             if component_frame == frame:
@@ -544,9 +544,9 @@ class Vector(object):
                     partial += Vector([(measure_number.diff(var),
                                         component_frame)])
                 else:  # else express in the frame
-                    a = Vector([vector_component]).express(frame)
-                    d = a.args[0][0].diff(var)
-                    partial += Vector([(d, frame)]).express(component_frame)
+                    reexp_vec_comp = Vector([vector_component]).express(frame)
+                    deriv = reexp_vec_comp.args[0][0].diff(var)
+                    partial += Vector([(deriv, frame)]).express(component_frame)
 
         return partial
 
