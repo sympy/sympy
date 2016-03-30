@@ -705,7 +705,7 @@ class KanesMethod(object):
             An iterable of all RigidBody's and Particle's in the system.
             A system must have at least one body.
         """
-        if (bodies is None and loads != None) or ( isinstance(bodies[0], tuple) ):
+        if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
             # This switches the order if they use the old way.
             bodies, loads = loads, bodies
             SymPyDeprecationWarning('The API has changed and will be deprecated, '
