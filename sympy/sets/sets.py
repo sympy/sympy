@@ -10,7 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range)
+    ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
@@ -1318,7 +1318,10 @@ class Union(Set, EvalfMixin):
             "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
             # Recipe credited to George Sakkis
             pending = len(iterables)
-            nexts = itertools.cycle(iter(it).next for it in iterables)
+            if PY3:
+                nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+            else:
+                nexts = itertools.cycle(iter(it).next for it in iterables)
             while pending:
                 try:
                     for next in nexts:
