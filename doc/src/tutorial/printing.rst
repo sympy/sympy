@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the

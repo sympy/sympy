@@ -322,9 +322,13 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
+        include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
             tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
         else:
             tex = ""
 
@@ -405,6 +409,8 @@ class LatexPrinter(Printer):
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
+        if include_parens:
+            tex += ")"
         return tex
 
     def _print_Pow(self, expr):
@@ -1225,7 +1231,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
-            s += r'\rightarrow'
+            s += r'\rightarrow '
             if len(expr.point) > 1:
                 s += self._print(expr.point)
             else:
