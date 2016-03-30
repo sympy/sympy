@@ -35,6 +35,9 @@ def test_primepi():
     assert primepi(4096) == 564
     assert primepi(9096) == 1128
     assert primepi(25023) == 2763
+    assert primepi(10**8) == 5761455
+    assert primepi(253425253) == 13856396
+    assert primepi(8769575643) == 401464322
 
 
 def test_generate():

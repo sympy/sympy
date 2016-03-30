@@ -71,7 +71,7 @@ From this directory, start python and::
     >>> x = Symbol('x')
     >>> e = 1/cos(x)
     >>> print e.series(x, 0, 10)
-    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the

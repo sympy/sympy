@@ -166,6 +166,8 @@ def test_residue():
         r = nthroot_mod(a, q, p)
         assert pow(r, q, p) == a
     assert nthroot_mod(11, 3, 109) is None
+    raises(NotImplementedError, lambda: nthroot_mod(16, 5, 36))
+    raises(NotImplementedError, lambda: nthroot_mod(9, 16, 36))
 
     for p in primerange(5, 100):
         qv = range(3, p, 4)
