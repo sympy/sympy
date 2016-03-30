@@ -145,10 +145,10 @@ class LatexPrinter(Printer):
         self._delim_dict = {'(': ')', '[': ']'}
 
     def parenthesize(self, item, level, strict=False):
-        # Integral has the precedence of Mul in LaTeX, the precedence of Atom
-        # for other printers:
-        from sympy import Integral, Sum, Product, Derivative
-        if isinstance(item, (Integral, Sum, Product)):
+        # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
+        # the precedence of Atom for other printers:
+        from sympy import Integral, Sum, Product, Limit, Derivative
+        if isinstance(item, (Integral, Sum, Product, Limit)):
             prec_val = PRECEDENCE["Mul"]
         elif isinstance(item, Derivative) and not isinstance(item.doit(), Derivative):
             prec_val = PRECEDENCE["Mul"]

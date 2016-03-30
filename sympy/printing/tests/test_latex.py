@@ -697,6 +697,9 @@ def test_latex_limits():
     assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left (x \right )}"
     assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left (x \right )}"
 
+    # issue #10806
+    assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
+
 
 def test_issue_3568():
     beta = Symbol(r'\beta')
