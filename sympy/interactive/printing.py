@@ -400,16 +400,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
     else:
-        _stringify_func = stringify_func
-
         if pretty_print:
-            stringify_func = lambda expr: \
-                             _stringify_func(expr, order=order,
-                                             use_unicode=use_unicode,
-                                             wrap_line=wrap_line,
-                                             num_columns=num_columns)
+            args = ('order', 'use_unicode', 'wrap_line', 'num_columns')
         else:
-            stringify_func = lambda expr: _stringify_func(expr, order=order)
+            args = ('order')
+
+        for i in args:
+            settings[i] = locals()[i]
 
     if in_ipython:
         mode_in_settings = settings.pop("mode", None)
