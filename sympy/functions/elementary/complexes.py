@@ -100,7 +100,7 @@ class re(Function):
                 * im(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_rewrite_as_im(self, arg):
-        return self.args[0] - im(self.args[0])
+        return self.args[0] - S.ImaginaryUnit*im(self.args[0])
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
@@ -203,7 +203,7 @@ class im(Function):
         return sage.imag_part(self.args[0]._sage_())
 
     def _eval_rewrite_as_re(self, arg):
-        return self.args[0] - re(self.args[0])
+        return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic

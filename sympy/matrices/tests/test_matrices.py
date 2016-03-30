@@ -16,6 +16,7 @@ from sympy.core.compatibility import long, iterable, u, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
+from sympy.assumptions import Q
 
 from sympy.abc import a, b, c, d, x, y, z
 
@@ -516,6 +517,18 @@ def test_expand():
         [0, 1, -1],
         [0, 0, 1]]
     )
+
+def test_refine():
+    m0 = Matrix([[Abs(x)**2, sqrt(x**2)],
+                [sqrt(x**2)*Abs(y)**2, sqrt(y**2)*Abs(x)**2]])
+    m1 = m0.refine(Q.real(x) & Q.real(y))
+    assert m1 == Matrix([[x**2, Abs(x)], [y**2*Abs(x), x**2*Abs(y)]])
+
+    m1 = m0.refine(Q.positive(x) & Q.positive(y))
+    assert m1 == Matrix([[x**2, x], [x*y**2, x**2*y]])
+
+    m1 = m0.refine(Q.negative(x) & Q.negative(y))
+    assert m1 == Matrix([[x**2, -x], [-x*y**2, -x**2*y]])
 
 def test_random():
     M = randMatrix(3, 3)
@@ -1189,6 +1202,8 @@ def test_is_nilpotent():
     assert a.is_nilpotent()
     a = Matrix([[1, 0], [0, 1]])
     assert not a.is_nilpotent()
+    a = Matrix([])
+    assert a.is_nilpotent()
 
 
 def test_zeros_ones_fill():
@@ -2702,12 +2717,28 @@ def test_issue_9422():
     assert a*M1 == M1*a
     assert y*x*M == Matrix([[y*x, 0], [0, y*x]])
 
+
+def test_issue_10770():
+    M = Matrix([])
+    a = ['col_insert', 'row_join'], Matrix([9, 6, 3])
+    b = ['row_insert', 'col_join'], a[1].T
+    c = ['row_insert', 'col_insert'], Matrix([[1, 2], [3, 4]])
+    for ops, m in (a, b, c):
+        for op in ops:
+            f = getattr(M, op)
+            new = f(m) if 'join' in op else f(42, m)
+            assert new == m and id(new) != id(m)
+
+
 def test_issue_10658():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert A.extract([0, 1, 2], [True, True, False]) == Matrix([[1, 2], [4, 5], [7, 8]])
+    assert A.extract([0, 1, 2], [True, True, False]) == \
+        Matrix([[1, 2], [4, 5], [7, 8]])
     assert A.extract([0, 1, 2], [True, False, False]) == Matrix([[1], [4], [7]])
     assert A.extract([True, False, False], [0, 1, 2]) == Matrix([[1, 2, 3]])
-    assert A.extract([True, False, True], [0, 1, 2]) == Matrix([[1, 2, 3], [7, 8, 9]])
+    assert A.extract([True, False, True], [0, 1, 2]) == \
+        Matrix([[1, 2, 3], [7, 8, 9]])
     assert A.extract([0, 1, 2], [False, False, False]) == Matrix(3, 0, [])
     assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
-    assert A.extract([True, False, True], [False, True, False]) == Matrix([[2], [8]])
+    assert A.extract([True, False, True], [False, True, False]) == \
+        Matrix([[2], [8]])

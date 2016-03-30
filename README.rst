@@ -71,7 +71,7 @@ From this directory, start python and::
     >>> x = Symbol('x')
     >>> e = 1/cos(x)
     >>> print e.series(x, 0, 10)
-    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the
@@ -225,7 +225,7 @@ Citation
 
 To cite SymPy in publications use::
 
-    SymPy Development Team (2014). SymPy: Python library for symbolic mathematics
+    SymPy Development Team (2016). SymPy: Python library for symbolic mathematics
     URL http://www.sympy.org.
 
 A BibTeX entry for LaTeX users is::
@@ -233,7 +233,7 @@ A BibTeX entry for LaTeX users is::
     @Manual{,
     title = {SymPy: Python library for symbolic mathematics},
     author = {{SymPy Development Team}},
-    year = {2014},
+    year = {2016},
     url = {http://www.sympy.org},
     }
 

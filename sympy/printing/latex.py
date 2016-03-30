@@ -332,9 +332,13 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
+        include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
             tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
         else:
             tex = ""
 
@@ -415,6 +419,8 @@ class LatexPrinter(Printer):
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
+        if include_parens:
+            tex += ")"
         return tex
 
     def _print_Pow(self, expr):
@@ -1235,7 +1241,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
-            s += r'\rightarrow'
+            s += r'\rightarrow '
             if len(expr.point) > 1:
                 s += self._print(expr.point)
             else:
@@ -1494,9 +1500,13 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        if len(s) > 4:
+        dots = r'\ldots'
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = next(it), next(it), '\ldots', s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 
