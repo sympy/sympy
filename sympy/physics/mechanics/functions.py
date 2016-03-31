@@ -560,11 +560,6 @@ def _f_list_parser(fl, ref_frame):
     """
     def flist_iter():
         for pair in fl:
-            if not pair:
-                # TODO: Handle the case where there is an empty tuple in an
-                # otherwise non-empty forcing list (which is a very rare case)
-                yield None
-                continue
             obj, force = pair
             if isinstance(obj, ReferenceFrame):
                 yield obj.ang_vel_in(ref_frame), force

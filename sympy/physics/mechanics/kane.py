@@ -97,7 +97,7 @@ class KanesMethod(object):
     generalized speeds, and forcing is a vector representing "forcing" terms.
 
         >>> KM = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=kd)
-        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> (fr, frstar) = KM.kanes_equations(BL, FL)
         >>> MM = KM.mass_matrix
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
@@ -696,20 +696,26 @@ class KanesMethod(object):
         Parameters
         ==========
 
+        bodies : iterable
+            An iterable of all RigidBody's and Particle's in the system.
+            A system must have at least one body.
         loads : iterable
             Takes in an iterable of (Particle, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
-        bodies : iterable
-            An iterable of all RigidBody's and Particle's in the system.
-            A system must have at least one body.
         """
         if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
             # This switches the order if they use the old way.
             bodies, loads = loads, bodies
-            SymPyDeprecationWarning('The API has changed and will be deprecated, '
-                    'loads is now the second argument and optional.').warn()
+            SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '
+                    'that the loads (forces and torques) are now the second argument '
+                    'and is optional with None being the default.',
+                    feature='The kanes_equation() argument order',
+                    last_supported_version="1.0",
+                    useinstead='switched argument order to update your code, For example: '
+                    'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
+                    issue=10945, deprecated_since_version="1.0").warn()
 
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
