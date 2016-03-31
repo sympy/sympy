@@ -8,6 +8,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
+from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
@@ -564,7 +565,7 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
-        if isinstance(e, Add):
+        if precedence(e) <= PRECEDENCE["Mul"]:
             E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
@@ -584,7 +585,7 @@ class PrettyPrinter(Printer):
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
-        Lim = prettyForm(*Lim.right(E))
+        Lim = prettyForm(*Lim.right(E), binding=prettyForm.MUL)
 
         return Lim
 
