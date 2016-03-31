@@ -192,16 +192,36 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-
 def prime(nth):
     """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
-        can never be larger than 2**n.
+        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+
+        Logarithmic integral of x is a pretty nice approximation for number of
+        primes <= x, i.e.
+        li(x) ~ pi(x)
+        In fact, for the numbers we are concerned about( x<1e11 ),
+        li(x) - pi(x) < 50000
+
+        Also,
+        li(x) > pi(x) can be safely assumed for the numbers which
+        can be evaluated by this function.
+
+        Here, we find the least integer m such that li(m) > n using binary search.
+        Now pi(m-1) < li(m-1) <= n,
+
+        We find pi(m - 1) using primepi function.
+
+        Starting from m, we have to find n - pi(m-1) more primes.
+
+        For the inputs this implementation can handle, we will have to test
+        primality for at max about 10**5 numbers, to get our answer.
 
         References
         ==========
 
-        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+        - https://en.wikipedia.org/wiki/Skewes%27_number
 
         Examples
         ========
@@ -211,6 +231,8 @@ def prime(nth):
         29
         >>> prime(1)
         2
+        >>> prime(100000)
+        1299709
 
         See Also
         ========
@@ -222,8 +244,28 @@ def prime(nth):
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    return sieve[n]
+    prime_arr = [2, 3, 5, 7, 11, 13, 17]
+    if n <= 7:
+        return prime_arr[n - 1]
 
+    from sympy.functions.special.error_functions import li
+    from sympy.functions.elementary.exponential import log
+
+    a = 2 # Lower bound for binary search
+    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+    while a < b:
+        mid = (a + b) >> 1
+        if li(mid) > n:
+            b = mid
+        else:
+            a = mid + 1
+    n_primes = primepi(a - 1)
+    while n_primes < n:
+        if isprime(a):
+            n_primes += 1
+        a += 1
+    return a - 1
 
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number

@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp)
+    Matrix, signsimp, Range)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -133,6 +133,13 @@ def test_union():
     assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
         FiniteSet(-sqrt(-I), sqrt(-I))
 
+
+def test_union_iter():
+    # Use Range because it is ordered
+    u = Union(Range(3), Range(5), Range(3), evaluate=False)
+
+    # Round robin
+    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 4]
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
