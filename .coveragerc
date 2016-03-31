@@ -1,0 +1,13 @@
+[run]
+branch = True
+source = sympy
+
+[report]
+exclude_lines =
+  if __name__ == .__main__.:
+  if SYMPY_DEBUG:
+  if self.debug:
+  # Code with the below comment is excluded
+  pragma: NO COVER
+ignore_errors = True
+omit = tests/*

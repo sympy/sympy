@@ -1,7 +1,7 @@
 SymPy
 =====
 
-|pypi version| |pypi download| |Build status| |Gitter Badge| |Zenodo Badge|
+|pypi version| |pypi download| |Build status| |Gitter Badge| |Zenodo Badge| |codecov.io|
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
@@ -14,6 +14,8 @@ SymPy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Zenodo Badge| image:: https://zenodo.org/badge/18918/sympy/sympy.svg
    :target: https://zenodo.org/badge/latestdoi/18918/sympy/sympy
+.. |codecov.io| image:: https://codecov.io/github/sympy/sympy/coverage.svg?branch=master
+   :target: https://codecov.io/github/sympy/sympy?branch=master
 
 A Python library for symbolic mathematics.
 
