@@ -34,7 +34,7 @@ def test_one_dof():
 
     # Ensure that the old linearizer still works and that the new linearizer
     # gives the same results. The old linearizer is deprecated and should be
-    # removed in >= 0.7.7.
+    # removed in >= 1.0.
     M_old = KM.mass_matrix_full
     # The old linearizer raises a deprecation warning, so catch it here so
     # it doesn't cause py.test to fail.

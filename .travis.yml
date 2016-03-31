@@ -11,9 +11,7 @@ env:
     secure: "SyoeHaDi9vRPJ5X0JFY5/nQif66u+fehtqUg7F8ILoNrwugJcs+u4VZm1sJ7Cv2h6uGoNRAfkkrahxxj2mKCgpqbY2MdDAZ+ru5wn5R0NjYjTpEz7ET4Xq5o+gca+mhFMkiutYihM73+AaIKCX0vfC9yb8WBPXzbbrv8vVvQr6Y="
 
 python:
-  - 2.6
   - 2.7
-  - 3.2
   - 3.3
   - 3.4
   - 3.5

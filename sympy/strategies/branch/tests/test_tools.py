@@ -22,7 +22,7 @@ def branch5(x):
 
 def test_zero_ints():
     expr = Basic(2, Basic(5, 3), 8)
-    expected = set([Basic(0, Basic(0, 0), 0)])
+    expected = {Basic(0, Basic(0, 0), 0)}
 
     brl = canon(posdec)
     assert set(brl(expr)) == expected
