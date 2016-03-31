@@ -1619,7 +1619,8 @@ class Complement(Set, EvalfMixin):
         Simplify a :class:`Complement`.
 
         """
-        if B == S.UniversalSet:
+        # Fixed Issue 10931
+        if B == S.UniversalSet or B == A or (A == S.Integers and B == S.Reals):
             return EmptySet()
 
         if isinstance(B, Union):

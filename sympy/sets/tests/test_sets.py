@@ -1028,3 +1028,7 @@ def test_issue_10285():
     ivl = Interval.Lopen(1, oo)
     assert FiniteSet(eq).intersect(ivl) == \
         FiniteSet(s).intersect(Interval.Lopen(2, oo))
+
+def test_issue_10931():
+    assert S.Integers - S.Integers == EmptySet()
+    assert S.Integers - S.Reals == EmptySet()
