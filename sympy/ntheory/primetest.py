@@ -480,6 +480,15 @@ def isprime(n):
         return False
     if n < 2809:
         return True
+    if n <= 23001:
+        return pow(2, n, n) == 2 and n not in [341, 561, 645, 1105, 1387, 1729,
+                                               1905, 2047, 2465, 2701, 2821,
+                                               3277, 4033, 4369, 4371, 4681,
+                                               5461, 6601, 7957, 8321, 8481,
+                                               8911, 10261, 10585, 11305,
+                                               12801, 13741, 13747, 13981,
+                                               14491, 15709, 15841, 16705,
+                                               18705, 18721, 19951, 23001]
 
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
