@@ -3311,6 +3311,8 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
         import sage.all as sage
         return sage.golden_ratio
 
+    _eval_rewrite_as_sqrt = _eval_expand_func
+
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.

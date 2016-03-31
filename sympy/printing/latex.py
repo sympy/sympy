@@ -144,8 +144,18 @@ class LatexPrinter(Printer):
 
         self._delim_dict = {'(': ')', '[': ']'}
 
-    def parenthesize(self, item, level):
-        if precedence(item) <= level:
+    def parenthesize(self, item, level, strict=False):
+        # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
+        # the precedence of Atom for other printers:
+        from sympy import Integral, Sum, Product, Limit, Derivative
+        if isinstance(item, (Integral, Sum, Product, Limit)):
+            prec_val = PRECEDENCE["Mul"]
+        elif isinstance(item, Derivative) and not isinstance(item.doit(), Derivative):
+            prec_val = PRECEDENCE["Mul"]
+        else:
+            prec_val = precedence(item)
+
+        if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left(%s\right)" % self._print(item)
         else:
             return self._print(item)
@@ -611,7 +621,7 @@ class LatexPrinter(Printer):
                 symbols.insert(0, r"\, d%s" % self._print(symbol))
 
         return r"%s %s%s" % (tex,
-            str(self._print(expr.function)), "".join(symbols))
+            self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True), "".join(symbols))
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
