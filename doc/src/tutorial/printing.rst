@@ -233,23 +233,18 @@ printer.
     >>> from sympy.abc import x
     >>> print(dotprint(x+2)) 
     digraph{
-
     # Graph style
     "ordering"="out"
     "rankdir"="TD"
-
     #########
     # Nodes #
     #########
-
     "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
     "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
-
     #########
     # Edges #
     #########
-
     "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
     "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
     }
