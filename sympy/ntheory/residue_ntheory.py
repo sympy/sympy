@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core.singleton import S
-from sympy.core.numbers import igcd, igcdex
+from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
@@ -777,8 +777,16 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) == None:
-        raise NotImplementedError("Not Implemented for m without primitive root")
+    if not isprime(p) or primitive_root(p) == None:
+        res = []
+        moduli = []
+        for prime, power in factorint(p).items():
+            moduli.append(pow(prime, power))
+            tmp = []
+            _nthroot_mod_list(tmp, a, n, prime, power, all_roots)
+            print (tmp)
+            res.append(tmp)
+        return sorted(_crt_cartesian(res, moduli))
 
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
@@ -810,6 +818,109 @@ def nthroot_mod(a, n, p, all_roots=False):
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
 
+def _nthroot_mod_list(roots, a, n, p, k, all_roots=False):
+    """
+    function return solution of x**n == a mod( p**k )
+
+    """
+    _roots = []
+    if a % p:
+        if p == 2:
+            if k == 1:
+                roots.append(1)
+                return
+            c = trailing(n)
+            if k == 2:
+                roots.append( a % 4 )
+                if all_roots and c:
+                    roots.append(3)
+                return
+            c = min(c, k - 2 )
+            t = pow(2, k - 2)
+            s = mod_inverse(r, t)
+            if not c:
+                roots.append(pow(a, s, pow(2, k) ))
+                return
+            t = a % pow(2, c + 2)
+            root = 1
+            pc = pow(2, c)
+            pj = pc * 4
+            for j in range(c+2, k):
+                pj *= 2
+                t = pow(root, pc, pj) - a
+                if t % pj:
+                    root += pow(2, j - c)
+            pk = pow(2, k)
+            root = pow(root, s, pk)
+            if all_roots:
+                t = pk / pc * root
+                for i in range(2):
+                    for j in range(pc):
+                        roots.append(root)
+                        root += t
+                    root = t - root
+            else:
+                roots.append(root)
+        else:
+            #TODO implement _nthroot_mod_prime for general p**k
+            #roots.extend(_nthroot_mod_prime(a, n, pow(p, k)) )
+            return
+    else:
+        pk = pow(p, k)
+        a %= pk
+        m = 0
+        pm = 0
+        if not a:
+            if not all_roots:
+                roots.append(0)
+                return
+            _roots.append(0)
+            if n >= k:
+                m = k - 1
+            else:
+                m = k - 1 - ( k - 1 ) / n
+            pm = pow(p, m)
+        else:
+            r = multiplicity(p, a)
+            a /= pow(p, r)
+            _nthroot_mod_list(_roots, a, n, p, k - r, all_roots)
+            m = r / n
+            pm = pow(p, m)
+            if not all_roots:
+                roots.append( _roots.back() * pow(p, m) )
+                return
+            _roots = [ pm*x for x in _roots]
+            m = r - r / n
+            pm = pow(p, m)
+
+    pkm = pow(p, k - m )
+    for x in _roots:
+        root = x
+        for i in range(pm):
+            roots.append(root)
+            root += pkm
+
+def _crt_cartesian(rem, mod ):
+    if len(mod) > len(rem):
+        raiseerror
+    if len(mod) == 0:
+        raiseerror
+    m = mod[0]
+    R = rem[0]
+
+    for i in range(1,len(mod)):
+        rem2 = []
+        s = mod_inverse(m, mod[i])
+        _m = m
+        m *= mod[i]
+        for elem in R:
+            for k in rem[i]:
+                r = elem
+                r += _m*s*(k - r)
+                r %= m
+                rem2.append(r)
+        R = rem2
+    return R
 
 def quadratic_residues(p):
     """
