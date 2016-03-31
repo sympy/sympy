@@ -271,10 +271,10 @@ class Vector(object):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            ol.append(u(" + ") + ar[i][1].pretty_vecs[j])
+                            ol.append(u" + " + ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            ol.append(u(" - ") + ar[i][1].pretty_vecs[j])
+                            ol.append(u" - " + ar[i][1].pretty_vecs[j])
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
@@ -285,15 +285,15 @@ class Vector(object):
                                 arg_str = (vp.doprint(
                                     ar[i][0][j]))
 
-                            if arg_str[0] == u("-"):
+                            if arg_str[0] == u"-":
                                 arg_str = arg_str[1:]
-                                str_start = u(" - ")
+                                str_start = u" - "
                             else:
-                                str_start = u(" + ")
+                                str_start = u" + "
                             ol.append(str_start + arg_str + ' ' +
                                       ar[i][1].pretty_vecs[j])
-                outstr = u("").join(ol)
-                if outstr.startswith(u(" + ")):
+                outstr = u"".join(ol)
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -485,24 +485,30 @@ class Vector(object):
         return self | other
     outer.__doc__ = __or__.__doc__
 
-    def diff(self, wrt, otherframe):
-        """Takes the partial derivative, with respect to a value, in a frame.
-
-        Returns a Vector.
+    def diff(self, var, frame, var_in_dcm=True):
+        """Returns the partial derivative of the vector with respect to a
+        variable in the provided reference frame.
 
         Parameters
         ==========
-
-        wrt : Symbol
+        var : Symbol
             What the partial derivative is taken with respect to.
-        otherframe : ReferenceFrame
-            The ReferenceFrame that the partial derivative is taken in.
+        frame : ReferenceFrame
+            The reference frame that the partial derivative is taken in.
+        var_in_dcm : boolean
+            If true, the differentiation algorithm assumes that the variable
+            may be present in any of the direction cosine matrices that relate
+            the frame to the frames of any component of the vector. But if it
+            is known that the variable is not present in the direction cosine
+            matrices, false can be set to skip full reexpression in the desired
+            frame.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
+        >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.vector import Vector
         >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
@@ -510,24 +516,39 @@ class Vector(object):
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
         - q1'*A.z
+        >>> B = ReferenceFrame('B')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> v = u1 * A.x + u2 * B.y
+        >>> v.diff(u2, N, var_in_dcm=False)
+        B.y
 
         """
 
         from sympy.physics.vector.frame import _check_frame
-        wrt = sympify(wrt)
-        _check_frame(otherframe)
-        outvec = Vector(0)
-        for i, v in enumerate(self.args):
-            if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(wrt), otherframe)])
+
+        var = sympify(var)
+        _check_frame(frame)
+
+        partial = Vector(0)
+
+        for vector_component in self.args:
+            measure_number = vector_component[0]
+            component_frame = vector_component[1]
+            if component_frame == frame:
+                partial += Vector([(measure_number.diff(var), frame)])
             else:
-                if otherframe.dcm(v[1]).diff(wrt) == zeros(3, 3):
-                    d = v[0].diff(wrt)
-                    outvec += Vector([(d, v[1])])
-                else:
-                    d = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
-                    outvec += Vector([(d, otherframe)]).express(v[1])
-        return outvec
+                # If the direction cosine matrix relating the component frame
+                # with the derivative frame does not contain the variable.
+                if not var_in_dcm or (frame.dcm(component_frame).diff(var) ==
+                                      zeros(3, 3)):
+                    partial += Vector([(measure_number.diff(var),
+                                        component_frame)])
+                else:  # else express in the frame
+                    reexp_vec_comp = Vector([vector_component]).express(frame)
+                    deriv = reexp_vec_comp.args[0][0].diff(var)
+                    partial += Vector([(deriv, frame)]).express(component_frame)
+
+        return partial
 
     def express(self, otherframe, variables=False):
         """

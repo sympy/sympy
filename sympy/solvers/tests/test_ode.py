@@ -2672,3 +2672,8 @@ def test_issue_10379():
     sol =  dsolve(f(t).diff(t)-(1-51.05*y*f(t)), rational=False)
     ans =  Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)
     assert str(sol) == str(ans)
+def test_issue_10867():
+    x, g = symbols('x g')
+    v = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
+    ans = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
+    assert dsolve(v, g(x)) == ans

@@ -17,21 +17,21 @@ from sympy.utilities.pytest import raises
 
 
 def test_monomials():
-    assert itermonomials([], 0) == set([S(1)])
-    assert itermonomials([], 1) == set([S(1)])
-    assert itermonomials([], 2) == set([S(1)])
-    assert itermonomials([], 3) == set([S(1)])
+    assert itermonomials([], 0) == {S(1)}
+    assert itermonomials([], 1) == {S(1)}
+    assert itermonomials([], 2) == {S(1)}
+    assert itermonomials([], 3) == {S(1)}
 
-    assert itermonomials([x], 0) == set([S(1)])
-    assert itermonomials([x], 1) == set([S(1), x])
-    assert itermonomials([x], 2) == set([S(1), x, x**2])
-    assert itermonomials([x], 3) == set([S(1), x, x**2, x**3])
+    assert itermonomials([x], 0) == {S(1)}
+    assert itermonomials([x], 1) == {S(1), x}
+    assert itermonomials([x], 2) == {S(1), x, x**2}
+    assert itermonomials([x], 3) == {S(1), x, x**2, x**3}
 
-    assert itermonomials([x, y], 0) == set([S(1)])
-    assert itermonomials([x, y], 1) == set([S(1), x, y])
-    assert itermonomials([x, y], 2) == set([S(1), x, y, x**2, y**2, x*y])
+    assert itermonomials([x, y], 0) == {S(1)}
+    assert itermonomials([x, y], 1) == {S(1), x, y}
+    assert itermonomials([x, y], 2) == {S(1), x, y, x**2, y**2, x*y}
     assert itermonomials([x, y], 3) == \
-        set([S(1), x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2])
+        {S(1), x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2}
 
 
 def test_monomial_count():

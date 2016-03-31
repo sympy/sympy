@@ -662,6 +662,37 @@ def test_issue_10304():
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
 
+
+def test_issue_10401():
+    x = symbols('x')
+    fin = symbols('inf', finite=True)
+    inf = symbols('inf', infinite=True)
+    inf2 = symbols('inf2', infinite=True)
+    zero = symbols('z', zero=True)
+    nonzero = symbols('nz', zero=False, finite=True)
+
+    assert Eq(1/(1/x + 1), 1).func is Eq
+    assert Eq(1/(1/x + 1), 1).subs(x, S.ComplexInfinity) is S.true
+    assert Eq(1/(1/fin + 1), 1) is S.false
+
+    T, F = S.true, S.false
+    assert Eq(fin, inf) is F
+    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf/inf2, 0) is F
+    assert Eq(inf/fin, 0) is F
+    assert Eq(fin/inf, 0) is T
+    assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+
+
+    assert Eq(fin/(fin + 1), 1) is S.false
+
+    o = symbols('o', odd=True)
+    assert Eq(o, 2*o) is S.false
+
+    p = symbols('p', positive=True)
+    assert Eq(p/(p - 1), 1) is F
+
+
 def test_issue_10633():
     assert Eq(True, False) == False
     assert Eq(False, True) == False

@@ -58,8 +58,8 @@ except ImportError:
 PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 6):
-    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
+if sys.version_info[:2] < (2, 7):
+    print("SymPy requires Python 2.7 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
