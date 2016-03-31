@@ -3015,6 +3015,8 @@ class MatrixBase(object):
 
         berkowitz
         """
+        if not self:
+            return tuple([])
         sign, minors = S.One, []
 
         for poly in self.berkowitz():
@@ -3071,6 +3073,8 @@ class MatrixBase(object):
 
         berkowitz
         """
+        if not self:
+            return {}
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
     def eigenvals(self, **flags):
