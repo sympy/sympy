@@ -2951,9 +2951,9 @@ class MatrixBase(object):
         berkowitz_eigenvals
         """
         from sympy.matrices import zeros
-        berk = [(1,)]
+        berk = ((1,),)
         if not self:
-            return tuple(berk)
+            return berk
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -2987,10 +2987,7 @@ class MatrixBase(object):
         for i, T in enumerate(transforms):
             polys.append(T*polys[i])
 
-        tup = tuple(map(tuple, polys))
-        for i in tup:
-            berk.append(i)
-        return tuple(berk)
+        return berk + tuple(map(tuple, polys))
 
 
     def berkowitz_det(self):
