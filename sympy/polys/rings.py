@@ -758,6 +758,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not self:
             return printer._print(self.ring.domain.zero)
         prec_add = precedence["Add"]
+        prec_mul = precedence["Mul"]
         prec_atom = precedence["Atom"]
         ring = self.ring
         symbols = ring.symbols
@@ -776,7 +777,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 if not positive:
                     coeff = -coeff
                 if coeff != 1:
-                    scoeff = printer.parenthesize(coeff, prec_add)
+                    scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
             sexpv = []
@@ -784,10 +785,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 exp = expv[i]
                 if not exp:
                     continue
-                symbol = printer.parenthesize(symbols[i], prec_atom-1)
+                symbol = printer.parenthesize(symbols[i], prec_atom, strict=True)
                 if exp != 1:
                     if exp != int(exp) or exp < 0:
-                        sexp = printer.parenthesize(exp, prec_atom)
+                        sexp = printer.parenthesize(exp, prec_atom, strict=False)
                     else:
                         sexp = exp
                     sexpv.append(exp_pattern % (symbol, sexp))
