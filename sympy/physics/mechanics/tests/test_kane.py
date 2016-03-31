@@ -1,6 +1,11 @@
-from sympy import cos, expand, Matrix, sin, symbols, tan
+import warnings
+
+from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
+                   simplify, zeros)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     RigidBody, KanesMethod, inertia, Particle)
+                                     RigidBody, KanesMethod, inertia, Particle,
+                                     dot)
 
 
 def test_one_dof():
@@ -24,8 +29,20 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize() == \
-        (Matrix([[0, 1], [-k, -c]]), Matrix([]), Matrix([]))
+    assert (KM.linearize(A_and_B=True, new_method=True)[0] ==
+            Matrix([[0, 1], [-k/m, -c/m]]))
+
+    # Ensure that the old linearizer still works and that the new linearizer
+    # gives the same results. The old linearizer is deprecated and should be
+    # removed in >= 1.0.
+    M_old = KM.mass_matrix_full
+    # The old linearizer raises a deprecation warning, so catch it here so
+    # it doesn't cause py.test to fail.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        F_A_old, F_B_old, r_old = KM.linearize()
+    M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
+    assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
 
 
 def test_two_dof():
@@ -105,9 +122,8 @@ def test_rolling_disc():
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
+    w_R_N_qd = R.ang_vel_in(N)
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(
-        N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form
@@ -117,14 +133,13 @@ def test_rolling_disc():
     C.set_vel(N, 0)
     Dmc = C.locatenew('Dmc', r * L.z)
     Dmc.v2pt_theory(C, N, R)
-    Dmc.a2pt_theory(C, N, R)
 
     # This is a simple way to form the inertia dyadic.
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
     # Kinematic differential equations; how the generalized coordinate time
     # derivatives relate to generalized speeds.
-    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
@@ -147,8 +162,16 @@ def test_rolling_disc():
     rhs = MM.inv() * forcing
     kdd = KM.kindiffdict()
     rhs = rhs.subs(kdd)
-    assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
+    rhs.simplify()
+    assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
+
+    # This code tests our output vs. benchmark values. When r=g=m=1, the
+    # critical speed (where all eigenvalues of the linearized equations are 0)
+    # is 1 / sqrt(3) for the upright case.
+    A = KM.linearize(A_and_B=True, new_method=True)[0]
+    A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
+    assert A_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
 
 
 def test_aux():
@@ -167,9 +190,8 @@ def test_aux():
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
+    w_R_N_qd = R.ang_vel_in(N)
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^
-        R.ang_vel_in(N)))
 
     C = Point('C')
     C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x))
@@ -179,7 +201,7 @@ def test_aux():
 
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
-    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
@@ -197,8 +219,11 @@ def test_aux():
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-    assert fr.expand() == fr2.expand()
-    assert frstar.expand() == frstar2.expand()
+    frstar.simplify()
+    frstar2.simplify()
+
+    assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
+    assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])
 
 
 def test_parallel_axis():

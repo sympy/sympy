@@ -2,8 +2,10 @@
 
 This file assumes knowledge of Basic and little else.
 """
+from __future__ import print_function, division
+
 from sympy.utilities.iterables import sift
-from util import new
+from .util import new
 
 # Functions that create rules
 
@@ -25,7 +27,7 @@ def rm_id(isid, new=new):
     """
     def ident_remove(expr):
         """ Remove identities """
-        ids = map(isid, expr.args)
+        ids = list(map(isid, expr.args))
         if sum(ids) == 0:           # No identities. Common case
             return expr
         elif sum(ids) != len(ids):  # there is at least one non-identity
@@ -52,6 +54,7 @@ def glom(key, count, combine):
     3*x + 5
 
     Wait, how are key, count and combine supposed to work?
+
     >>> key(2*x)
     x
     >>> count(2*x)
@@ -152,6 +155,6 @@ def rebuild(expr):
     Basic.__new__
     """
     try:
-        return type(expr)(*map(rebuild, expr.args))
-    except:
+        return type(expr)(*list(map(rebuild, expr.args)))
+    except Exception:
         return expr

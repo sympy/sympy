@@ -2,14 +2,15 @@
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
-                   root, exp)
-from sympy.abc import a, b, t, x, y, z
+                   root, exp, cos, sin, oo, Dummy, log)
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc)
+                                  gcd_terms, factor_terms, factor_nc,
+                                  _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
-
 from sympy.utilities.pytest import raises
+
+from sympy.abc import a, b, t, x, y, z
 
 
 def test_decompose_power():
@@ -93,14 +94,18 @@ def test_Factors():
     n, d = x**(2 + y), x**2
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
+    assert f.gcd(d) == Factors()
     d = x**y
     assert f.div(d) == f.normal(d) == (Factors(x**2), Factors())
+    assert f.gcd(d) == Factors(d)
     n = d = 2**x
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(), Factors())
+    assert f.gcd(d) == Factors(d)
     n, d = 2**x, 2**y
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
+    assert f.gcd(d) == Factors()
 
     # extraction of constant only
     n = x**(x + 3)
@@ -197,19 +202,28 @@ def test_gcd_terms():
     assert gcd_terms(arg) == garg
     assert gcd_terms(sin(arg)) == sin(garg)
 
-    # issue 3040-like
+    # issue 6139-like
     alpha, alpha1, alpha2, alpha3 = symbols('alpha:4')
     a = alpha**2 - alpha*x**2 + alpha + x**3 - x*(alpha + 1)
     rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
     assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
 
-    # issue 2818
+    # issue 5917
     assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
     assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
 
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
+    eq = x/2/y + 1/x/y
+    assert gcd_terms(eq, fraction=True, clear=True) == \
+        (x**2 + 2)/(2*x*y)
+    assert gcd_terms(eq, fraction=True, clear=False) == \
+        (x**2/2 + 1)/(x*y)
+    assert gcd_terms(eq, fraction=False, clear=True) == \
+        (x + 2/x)/(2*y)
+    assert gcd_terms(eq, fraction=False, clear=False) == \
+        (x/2 + 1/x)/y
 
 
 def test_factor_terms():
@@ -232,6 +246,12 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    assert factor_terms(x/2 + y) == x/2 + y
+    # fraction doesn't apply to integer denominators
+    assert factor_terms(x/2 + y, fraction=True) == x/2 + y
+    # clear *does* apply to the integer denominators
+    assert factor_terms(x/2 + y, clear=True) == Mul(S.Half, x + 2*y, evaluate=False)
 
     # check radical extraction
     eq = sqrt(2) + sqrt(10)
@@ -281,7 +301,7 @@ def test_factor_nc():
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
-    from sympy.simplify.simplify import _mexpand
+    from sympy.core.function import _mexpand
     e = x*(1 + y)**2
     assert _mexpand(e) == x + x*2*y + x*y**2
 
@@ -328,19 +348,77 @@ def test_factor_nc():
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
-    # issue 3435
+    # issue 6534
     assert (2*n + 2*m).factor() == 2*(n + m)
 
-    # issue 3602
+    # issue 6701
     assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
-    # issue 3819
+    # issue 6918
     assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
 
 
-def test_issue_3261():
+def test_issue_6360():
     a, b = symbols("a b")
     apb = a + b
     eq = apb + apb**2*(-2*a - 2*b)
     assert factor_terms(sub_pre(eq)) == a + b - 2*(a + b)**3
+
+
+def test_issue_7903():
+    a = symbols(r'a', real=True)
+    t = exp(I*cos(a)) + exp(-I*sin(a))
+    assert t.simplify()
+
+
+def test_monotonic_sign():
+    F = _monotonic_sign
+    x = symbols('x')
+    assert F(x) is None
+    assert F(-x) is None
+    assert F(Dummy(prime=True)) == 2
+    assert F(Dummy(prime=True, odd=True)) == 3
+    assert F(Dummy(positive=True, integer=True)) == 1
+    assert F(Dummy(positive=True, even=True)) == 2
+    assert F(Dummy(negative=True, integer=True)) == -1
+    assert F(Dummy(negative=True, even=True)) == -2
+    assert F(Dummy(zero=True)) == 0
+    assert F(Dummy(nonnegative=True)) == 0
+    assert F(Dummy(nonpositive=True)) == 0
+
+    assert F(Dummy(positive=True) + 1).is_positive
+    assert F(Dummy(positive=True, integer=True) - 1).is_nonnegative
+    assert F(Dummy(positive=True) - 1) is None
+    assert F(Dummy(negative=True) + 1) is None
+    assert F(Dummy(negative=True, integer=True) - 1).is_nonpositive
+    assert F(Dummy(negative=True) - 1).is_negative
+    assert F(-Dummy(positive=True) + 1) is None
+    assert F(-Dummy(positive=True, integer=True) - 1).is_negative
+    assert F(-Dummy(positive=True) - 1).is_negative
+    assert F(-Dummy(negative=True) + 1).is_positive
+    assert F(-Dummy(negative=True, integer=True) - 1).is_nonnegative
+    assert F(-Dummy(negative=True) - 1) is None
+    x = Dummy(negative=True)
+    assert F(x**3).is_nonpositive
+    assert F(x**3 + log(2)*x - 1).is_negative
+    x = Dummy(positive=True)
+    assert F(-x**3).is_nonpositive
+
+    p = Dummy(positive=True)
+    assert F(1/p).is_positive
+    assert F(p/(p + 1)).is_positive
+    p = Dummy(nonnegative=True)
+    assert F(p/(p + 1)).is_nonnegative
+    p = Dummy(positive=True)
+    assert F(-1/p).is_negative
+    p = Dummy(nonpositive=True)
+    assert F(p/(-p + 1)).is_nonpositive
+
+    p = Dummy(positive=True, integer=True)
+    q = Dummy(positive=True, integer=True)
+    assert F(-2/p/q).is_negative
+    assert F(-2/(p - 1)/q) is None
+
+    assert F((p - 1)*q + 1).is_positive
+    assert F(-(p - 1)*q - 1).is_negative

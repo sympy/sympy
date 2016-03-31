@@ -19,6 +19,7 @@ FisherZ
 Frechet
 Gamma
 GammaInverse
+Gompertz
 Kumaraswamy
 Laplace
 Logistic
@@ -30,6 +31,7 @@ Pareto
 QuadraticU
 RaisedCosine
 Rayleigh
+ShiftedGompertz
 StudentT
 Triangular
 Uniform
@@ -39,15 +41,16 @@ Weibull
 WignerSemicircle
 """
 
-from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+from __future__ import print_function, division
+
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log, besseli, Lambda, Basic)
+                   Lambda, Basic)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
-from sympy.core.decorators import _sympifyit
 import random
 
 oo = S.Infinity
@@ -69,6 +72,7 @@ __all__ = ['ContinuousRV',
 'Frechet',
 'Gamma',
 'GammaInverse',
+'Gompertz',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
@@ -81,6 +85,7 @@ __all__ = ['ContinuousRV',
 'RaisedCosine',
 'Rayleigh',
 'StudentT',
+'ShiftedGompertz',
 'Triangular',
 'Uniform',
 'UniformSum',
@@ -125,7 +130,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     return SingleContinuousPSpace(symbol, dist).value
 
 def rv(symbol, cls, args):
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
     return SingleContinuousPSpace(symbol, dist).value
@@ -184,7 +189,7 @@ def Arcsin(name, a=0, b=1):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
     return rv(name, ArcsinDistribution, (a, b))
@@ -214,15 +219,18 @@ def Benini(name, alpha, beta, sigma):
 
     .. math::
         f(x) := e^{-\alpha\log{\frac{x}{\sigma}}
-                -\beta\log\left[{\frac{x}{\sigma}}\right]^2}
+                -\beta\log^2\left[{\frac{x}{\sigma}}\right]}
                 \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
+
+    This is a heavy-tailed distrubtion and is also known as the log-Rayleigh
+    distribution.
 
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
-    sigma : Real number, `sigma` > 0 a scale
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    sigma : Real number, `\sigma > 0`, a scale
 
     Returns
     =======
@@ -244,17 +252,17 @@ def Benini(name, alpha, beta, sigma):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                                              2
-    /                  /  z  \\             /  z  \            /  z  \
-    |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----|
-    |alpha             \sigma/|             \sigma/            \sigma/
+    /                  /  z  \\             /  z  \            2/  z  \
+    |        2*beta*log|-----||  - alpha*log|-----| - beta*log  |-----|
+    |alpha             \sigma/|             \sigma/             \sigma/
     |----- + -----------------|*e
     \  z             z        /
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Benini_distribution
+    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
     """
 
     return rv(name, BeniniDistribution, (alpha, beta, sigma))
@@ -295,8 +303,8 @@ def Beta(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -307,7 +315,7 @@ def Beta(name, alpha, beta):
     ========
 
     >>> from sympy.stats import Beta, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, simplify, pprint, expand_func
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -318,11 +326,11 @@ def Beta(name, alpha, beta):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1         beta - 1
-    z         *(-z + 1)        *gamma(alpha + beta)
-    -----------------------------------------------
-                gamma(alpha)*gamma(beta)
+    z         *(-z + 1)
+    ---------------------------
+         beta(alpha, beta)
 
-    >>> simplify(E(X, meijerg=True))
+    >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
 
     >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
@@ -331,8 +339,8 @@ def Beta(name, alpha, beta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Beta_distribution
-    [2] http://mathworld.wolfram.com/BetaDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
+    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
     return rv(name, BetaDistribution, (alpha, beta))
@@ -365,8 +373,8 @@ def BetaPrime(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -388,15 +396,15 @@ def BetaPrime(name, alpha, beta):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1        -alpha - beta
-    z         *(z + 1)             *gamma(alpha + beta)
-    ---------------------------------------------------
-                  gamma(alpha)*gamma(beta)
+    z         *(z + 1)
+    -------------------------------
+           beta(alpha, beta)
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
-    [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
     return rv(name, BetaPrimeDistribution, (alpha, beta))
@@ -426,7 +434,7 @@ def Cauchy(name, x0, gamma):
     ==========
 
     x0 : Real number, the location
-    gamma : Real number, `gamma` > 0 the scale
+    gamma : Real number, `\gamma > 0`, the scale
 
     Returns
     =======
@@ -451,8 +459,8 @@ def Cauchy(name, x0, gamma):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Cauchy_distribution
-    [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
     return rv(name, CauchyDistribution, (x0, gamma))
@@ -484,7 +492,7 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : Integer, `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
 
     Returns
     =======
@@ -508,8 +516,8 @@ def Chi(name, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Chi_distribution
-    [2] http://mathworld.wolfram.com/ChiDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
+    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
     return rv(name, ChiDistribution, (k,))
@@ -538,12 +546,13 @@ def ChiNoncentral(name, k, l):
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
                 {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)
 
-    with :math:`x \geq 0`.
+    with `x \geq 0`. Here, `I_\nu (x)` is the
+    :ref:`modified Bessel function of the first kind <besseli>`.
 
     Parameters
     ==========
 
-    k : `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
     l : Shift parameter
 
     Returns
@@ -569,7 +578,7 @@ def ChiNoncentral(name, k, l):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    .. [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
     """
 
     return rv(name, ChiNoncentralDistribution, (k, l))
@@ -603,7 +612,7 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : Integer, `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
 
     Returns
     =======
@@ -633,8 +642,8 @@ def ChiSquared(name, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
-    [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    .. [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
     """
 
     return rv(name, ChiSquaredDistribution, (k, ))
@@ -658,17 +667,17 @@ def Dagum(name, p, a, b):
     The density of the Dagum distribution is given by
 
     .. math::
-        f(x) := \frac{a p}{x} \left( \frac{(\tfrac{x}{b})^{a p}}
-                {\left((\tfrac{x}{b})^a + 1 \right)^{p+1}} \right)
+        f(x) := \frac{a p}{x} \left( \frac{\left(\tfrac{x}{b}\right)^{a p}}
+                {\left(\left(\tfrac{x}{b}\right)^a + 1 \right)^{p+1}} \right)
 
     with :math:`x > 0`.
 
     Parameters
     ==========
 
-    p : Real number, `p` > 0 a shape
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a scale
+    p : Real number, `p > 0`, a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -694,7 +703,7 @@ def Dagum(name, p, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
     return rv(name, DagumDistribution, (p, a, b))
@@ -717,7 +726,7 @@ def Erlang(name, k, l):
     ==========
 
     k : Integer
-    l : Real number, :math:`\lambda` > 0 the rate
+    l : Real number, `\lambda > 0`, the rate
 
     Returns
     =======
@@ -745,11 +754,13 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)
-    |- ------------------ + --------------------  for z >= 0
-    <     gamma(k + 1)          gamma(k + 1)
+    /     -2*I*pi*k                       -2*I*pi*k
+    |  k*e         *lowergamma(k, 0)   k*e         *lowergamma(k, l*z)
+    |- ----------------------------- + -------------------------------  for z >= 0
+    <           gamma(k + 1)                     gamma(k + 1)
     |
-    \                     0                       otherwise
+    |                                0                                  otherwise
+    \
 
     >>> simplify(E(X))
     k/l
@@ -760,8 +771,8 @@ def Erlang(name, k, l):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Erlang_distribution
-    [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
     """
 
     return rv(name, GammaDistribution, (k, 1/l))
@@ -795,12 +806,12 @@ def Exponential(name, rate):
     .. math::
         f(x) := \lambda \exp(-\lambda x)
 
-    with :math:`x > 0`.
+    with `x > 0`. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
 
-    rate : Real number, `rate` > 0 the rate or inverse scale
+    rate : A positive Real number, `\lambda > 0`, the rate (or inverse scale/inverse mean)
 
     Returns
     =======
@@ -848,8 +859,8 @@ def Exponential(name, rate):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Exponential_distribution
-    [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
     return rv(name, ExponentialDistribution, (rate, ))
@@ -880,11 +891,13 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
+    .. TODO - What do these parameters mean?
+
     Parameters
     ==========
 
-    d1 : `d1` > 0 a parameter
-    d2 : `d2` > 0 a parameter
+    d1 : `d_1 > 0` a parameter
+    d2 : `d_2 > 0` a parameter
 
     Returns
     =======
@@ -907,19 +920,18 @@ def FDistribution(name, d1, d2):
     >>> pprint(D, use_unicode=False)
       d2
       --    ______________________________
-      2    /       d1            -d1 - d2       /d1   d2\
-    d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|
-                                                \2    2 /
-    -----------------------------------------------------
-                           /d1\      /d2\
-                    z*gamma|--|*gamma|--|
-                           \2 /      \2 /
+      2    /       d1            -d1 - d2
+    d2  *\/  (d1*z)  *(d1*z + d2)
+    --------------------------------------
+                      /d1  d2\
+                z*beta|--, --|
+                      \2   2 /
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/F-distribution
-    [2] http://mathworld.wolfram.com/F-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/F-distribution
+    .. [2] http://mathworld.wolfram.com/F-Distribution.html
     """
 
     return rv(name, FDistributionDistribution, (d1, d2))
@@ -945,11 +957,14 @@ def FisherZ(name, d1, d2):
         f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}
                 \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
 
+
+    .. TODO - What is the difference between these degrees of freedom?
+
     Parameters
     ==========
 
-    d1 : `d1` > 0, degree of freedom
-    d2 : `d2` > 0, degree of freedom
+    d1 : `d_1 > 0`, degree of freedom
+    d2 : `d_2 > 0`, degree of freedom
 
     Returns
     =======
@@ -973,19 +988,18 @@ def FisherZ(name, d1, d2):
                                 d1   d2
         d1   d2               - -- - --
         --   --                 2    2
-        2    2  /    2*z     \           d1*z      /d1   d2\
-    2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|
-                                                   \2    2 /
-    --------------------------------------------------------
-                           /d1\      /d2\
-                      gamma|--|*gamma|--|
-                           \2 /      \2 /
+        2    2  /    2*z     \           d1*z
+    2*d1  *d2  *\d1*e    + d2/         *e
+    -----------------------------------------
+                       /d1  d2\
+                   beta|--, --|
+                       \2   2 /
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
-    [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
     """
 
     return rv(name, FisherZDistribution, (d1, d2))
@@ -999,7 +1013,7 @@ class FrechetDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def __new__(cls, a, s=1, m=0):
-        a, s, m = map(sympify, (a, s, m))
+        a, s, m = list(map(sympify, (a, s, m)))
         return Basic.__new__(cls, a, s, m)
 
     def pdf(self, x):
@@ -1049,7 +1063,7 @@ def Frechet(name, a, s=1, m=0):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    .. [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
     """
 
     return rv(name, FrechetDistribution, (a, s, m))
@@ -1090,8 +1104,8 @@ def Gamma(name, k, theta):
     Parameters
     ==========
 
-    k : Real number, `k` > 0 a shape
-    theta : Real number, `theta` > 0 a scale
+    k : Real number, `k > 0`, a shape
+    theta : Real number, `\theta > 0`, a scale
 
     Returns
     =======
@@ -1141,8 +1155,8 @@ def Gamma(name, k, theta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Gamma_distribution
-    [2] http://mathworld.wolfram.com/GammaDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
     return rv(name, GammaDistribution, (k, theta))
@@ -1179,8 +1193,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a scale
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a scale
 
     Returns
     =======
@@ -1202,19 +1216,81 @@ def GammaInverse(name, a, b):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
                 -b
-                --
-     a  -a - 1  z
+                ---
+     a  -a - 1   z
     b *z      *e
-    --------------
+    ---------------
        gamma(a)
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    .. [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
+
+#-------------------------------------------------------------------------------
+# Gompertz distribution --------------------------------------------------------
+
+class GompertzDistribution(SingleContinuousDistribution):
+    _argnames = ('b', 'eta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(b, eta):
+        _value_check(b > 0, "b must be positive")
+        _value_check(eta > 0, "eta must be positive")
+
+    def pdf(self, x):
+        eta, b = self.eta, self.b
+        return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
+
+def Gompertz(name, b, eta):
+    r"""
+    Create a Continuous Random Variable with Gompertz distribution.
+
+    The density of the Gompertz distribution is given by
+
+    .. math::
+        f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
+
+    with :math: 'x \in [0, \inf)'.
+
+    Parameters
+    ==========
+
+    b: Real number, 'b > 0' a scale
+    eta: Real number, 'eta > 0' a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Gompertz, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> b = Symbol("b", positive=True)
+    >>> eta = Symbol("eta", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Gompertz("x", b, eta)
+
+    >>> density(X)(z)
+    b*eta*exp(eta)*exp(b*z)*exp(-eta*exp(b*z))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Gompertz_distribution
+
+    """
+    return rv(name, GompertzDistribution, (b, eta))
 
 #-------------------------------------------------------------------------------
 # Kumaraswamy distribution -----------------------------------------------------
@@ -1233,7 +1309,6 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return a * b * x**(a-1) * (1-x**a)**(b-1)
 
-
 def Kumaraswamy(name, a, b):
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
@@ -1248,8 +1323,8 @@ def Kumaraswamy(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a shape
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a shape
 
     Returns
     =======
@@ -1278,7 +1353,7 @@ def Kumaraswamy(name, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    .. [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
     """
 
     return rv(name, KumaraswamyDistribution, (a, b))
@@ -1307,8 +1382,8 @@ def Laplace(name, mu, b):
     Parameters
     ==========
 
-    mu : Real number, the location
-    b : Real number, `b` > 0 a scale
+    mu : Real number, the location (mean)
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -1328,13 +1403,13 @@ def Laplace(name, mu, b):
     >>> X = Laplace("x", mu, b)
 
     >>> density(X)(z)
-    exp(-Abs(-mu + z)/b)/(2*b)
+    exp(-Abs(mu - z)/b)/(2*b)
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Laplace_distribution
-    [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
     return rv(name, LaplaceDistribution, (mu, b))
@@ -1363,8 +1438,8 @@ def Logistic(name, mu, s):
     Parameters
     ==========
 
-    mu : Real number, the location
-    s : Real number, `s` > 0 a scale
+    mu : Real number, the location (mean)
+    s : Real number, `s > 0` a scale
 
     Returns
     =======
@@ -1389,8 +1464,8 @@ def Logistic(name, mu, s):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Logistic_distribution
-    [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
     return rv(name, LogisticDistribution, (mu, s))
@@ -1451,11 +1526,11 @@ def LogNormal(name, mean, std):
     >>> pprint(D, use_unicode=False)
                           2
            -(-mu + log(z))
-           ----------------
+           -----------------
                       2
       ___      2*sigma
     \/ 2 *e
-    -----------------------
+    ------------------------
             ____
         2*\/ pi *sigma*z
 
@@ -1468,8 +1543,8 @@ def LogNormal(name, mean, std):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Lognormal
-    [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Lognormal
+    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
@@ -1499,10 +1574,12 @@ def Maxwell(name, a):
 
     with :math:`x \geq 0`.
 
+    .. TODO - what does the parameter mean?
+
     Parameters
     ==========
 
-    a : Real number, `a` > 0
+    a : Real number, `a > 0`
 
     Returns
     =======
@@ -1532,8 +1609,8 @@ def Maxwell(name, a):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Maxwell_distribution
-    [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
     return rv(name, MaxwellDistribution, (a, ))
@@ -1567,8 +1644,8 @@ def Nakagami(name, mu, omega):
     Parameters
     ==========
 
-    mu : Real number, :math:`mu \geq \frac{1}{2}` a shape
-    omega : Real number, `omega` > 0 the spread
+    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    omega : Real number, `\omega > 0`, the spread
 
     Returns
     =======
@@ -1591,10 +1668,10 @@ def Nakagami(name, mu, omega):
     >>> pprint(D, use_unicode=False)
                                     2
                                -mu*z
-                               ------
+                               -------
         mu      -mu  2*mu - 1  omega
     2*mu  *omega   *z        *e
-    ---------------------------------
+    ----------------------------------
                 gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
@@ -1610,7 +1687,7 @@ def Nakagami(name, mu, omega):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
     return rv(name, NakagamiDistribution, (mu, omega))
@@ -1693,8 +1770,8 @@ def Normal(name, mean, std):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Normal_distribution
-    [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
+    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
     return rv(name, NormalDistribution, (mean, std))
@@ -1730,15 +1807,15 @@ def Pareto(name, xm, alpha):
     The density of the Pareto distribution is given by
 
     .. math::
-        f(x) := \frac{\alpha\,x_\mathrm{m}^\alpha}{x^{\alpha+1}}
+        f(x) := \frac{\alpha\,x_m^\alpha}{x^{\alpha+1}}
 
     with :math:`x \in [x_m,\infty]`.
 
     Parameters
     ==========
 
-    xm : Real number, `xm` > 0 a scale
-    alpha : Real number, `alpha` > 0 a shape
+    xm : Real number, `x_m > 0`, a scale
+    alpha : Real number, `\alpha > 0`, a shape
 
     Returns
     =======
@@ -1763,8 +1840,8 @@ def Pareto(name, xm, alpha):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Pareto_distribution
-    [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
@@ -1836,7 +1913,7 @@ def QuadraticU(name, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    .. [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
     """
 
     return rv(name, QuadraticUDistribution, (a, b))
@@ -1876,7 +1953,7 @@ def RaisedCosine(name, mu, s):
     ==========
 
     mu : Real number
-    s : Real number, `s` > 0
+    s : Real number, `s > 0`
 
     Returns
     =======
@@ -1908,7 +1985,7 @@ def RaisedCosine(name, mu, s):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    .. [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
     """
 
     return rv(name, RaisedCosineDistribution, (mu, s))
@@ -1941,7 +2018,7 @@ def Rayleigh(name, sigma):
     Parameters
     ==========
 
-    sigma : Real number, `sigma` > 0
+    sigma : Real number, `\sigma > 0`
 
     Returns
     =======
@@ -1971,11 +2048,72 @@ def Rayleigh(name, sigma):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
-    [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
+
+#-------------------------------------------------------------------------------
+# Shifted Gompertz distribution ------------------------------------------------
+
+class ShiftedGompertzDistribution(SingleContinuousDistribution):
+    _argnames = ('b', 'eta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(b, eta):
+        _value_check(b > 0, "b must be positive")
+        _value_check(eta > 0, "eta must be positive")
+
+    def pdf(self, x):
+        b, eta = self.b, self.eta
+        return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
+
+def ShiftedGompertz(name, b, eta):
+    r"""
+    Create a continuous random variable with a Shifted Gompertz distribution.
+
+    The density of the Shifted Gompertz distribution is given by
+
+    .. math::
+        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
+
+    with :math: 'x \in [0, \inf)'.
+
+    Parameters
+    ==========
+
+    b: Real number, 'b > 0' a scale
+    eta: Real number, 'eta > 0' a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+    >>> from sympy.stats import ShiftedGompertz, density, E, variance
+    >>> from sympy import Symbol
+
+    >>> b = Symbol("b", positive=True)
+    >>> eta = Symbol("eta", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = ShiftedGompertz("x", b, eta)
+
+    >>> density(X)(x)
+    b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Shifted_Gompertz_distribution
+
+    """
+    return rv(name, ShiftedGompertzDistribution, (b, eta))
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
@@ -2003,7 +2141,7 @@ def StudentT(name, nu):
     Parameters
     ==========
 
-    nu : Real number, `nu` > 0, the degrees of freedom
+    nu : Real number, `\nu > 0`, the degrees of freedom
 
     Returns
     =======
@@ -2023,23 +2161,23 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-              nu   1
-            - -- - -
-              2    2
-    /     2\
-    |    z |              /nu   1\
-    |1 + --|        *gamma|-- + -|
-    \    nu/              \2    2/
-    ------------------------------
-         ____   ____      /nu\
-       \/ pi *\/ nu *gamma|--|
-                          \2 /
+                nu   1
+              - -- - -
+                2    2
+      /     2\
+      |    z |
+      |1 + --|
+      \    nu/
+    --------------------
+      ____     /     nu\
+    \/ nu *beta|1/2, --|
+               \     2 /
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Student_t-distribution
-    [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
     return rv(name, StudentTDistribution, (nu, ))
@@ -2118,8 +2256,8 @@ def Triangular(name, a, b, c):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Triangular_distribution
-    [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
     return rv(name, TriangularDistribution, (a, b, c))
@@ -2139,14 +2277,18 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def compute_cdf(self, **kwargs):
         from sympy import Lambda, Min
-        z = Dummy('z', real=True, bounded=True)
-        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
-        result = result(z).subs({Min(z, self.right): z,
-                                 Min(z, self.left, self.right): self.left})
+        z = Dummy('z', real=True, finite=True)
+        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)(z)
+        reps = {
+            Min(z, self.right): z,
+            Min(z, self.left, self.right): self.left,
+            Min(z, self.left): self.left}
+        result = result.subs(reps)
         return Lambda(z, result)
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
+        kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
                               Min(self.left, self.right): self.left})
@@ -2196,7 +2338,7 @@ def Uniform(name, left, right):
     >>> density(X)(z)
     Piecewise((1/(-a + b), And(a <= z, z <= b)), (0, True))
 
-    >>> cdf(X)(z)
+    >>> cdf(X)(z)  # doctest: +SKIP
     -a/(-a + b) + z/(-a + b)
 
     >>> simplify(E(X))
@@ -2205,14 +2347,11 @@ def Uniform(name, left, right):
     >>> simplify(variance(X))
     a**2/12 - a*b/6 + b**2/12
 
-    >>> simplify(skewness(X))
-    0
-
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    [2] http://mathworld.wolfram.com/UniformDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
     return rv(name, UniformDistribution, (left, right))
@@ -2252,7 +2391,7 @@ def UniformSum(name, n):
     Parameters
     ==========
 
-    n : Integral number, `n` > 0
+    n : A positive Integer, `n > 0`
 
     Returns
     =======
@@ -2286,8 +2425,8 @@ def UniformSum(name, n):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
-    [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
     return rv(name, UniformSumDistribution, (n, ))
@@ -2354,8 +2493,8 @@ def VonMises(name, mu, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
-    [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html
     """
 
     return rv(name, VonMisesDistribution, (mu, k))
@@ -2399,7 +2538,7 @@ def Weibull(name, alpha, beta):
     ==========
 
     lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, `k` > 0 a shape
+    k : Real number, `k > 0` a shape
 
     Returns
     =======
@@ -2430,8 +2569,8 @@ def Weibull(name, alpha, beta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Weibull_distribution
-    [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
 
@@ -2467,7 +2606,7 @@ def WignerSemicircle(name, R):
     Parameters
     ==========
 
-    R : Real number, `R` > 0 the radius
+    R : Real number, `R > 0`, the radius
 
     Returns
     =======
@@ -2494,8 +2633,8 @@ def WignerSemicircle(name, R):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))

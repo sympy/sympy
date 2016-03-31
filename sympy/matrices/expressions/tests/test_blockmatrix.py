@@ -1,11 +1,11 @@
-from __future__ import with_statement
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
         bc_transpose, blockcut, reblock_2x2, deblock)
-from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
+from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.core import Tuple, symbols, Expr
+from sympy.core.compatibility import range
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
@@ -97,12 +97,12 @@ def test_BlockMatrix():
 
 
 def test_BlockMatrix_trace():
-    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     assert trace(X) == trace(A) + trace(D)
 
 def test_BlockMatrix_Determinant():
-    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
     from sympy import assuming, Q
     with assuming(Q.invertible(A)):

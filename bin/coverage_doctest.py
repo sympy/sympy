@@ -17,15 +17,18 @@ or
 If no arguments are given, all files in sympy/ are checked.
 """
 
-from __future__ import with_statement
+from __future__ import print_function
 
 import os
 import sys
-import re
-import string
 import inspect
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from HTMLParser import HTMLParser
+
+try:
+    from HTMLParser import HTMLParser
+except ImportError:
+    # It's html.parser in Python 3
+    from html.parser import HTMLParser
 
 # Load color templates, used from sympy/utilities/runtests.py
 color_templates = (
@@ -57,13 +60,13 @@ c_color = '\033[%sm'
 
 def print_header(name, underline=None, color=None):
 
-    print
+    print()
     if color:
-        print "%s%s%s" % (c_color % colors[color], name, c_normal)
+        print("%s%s%s" % (c_color % colors[color], name, c_normal))
     else:
-        print name
+        print(name)
     if underline and not color:
-        print underline*len(name)
+        print(underline*len(name))
 
 
 def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
@@ -116,14 +119,14 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                  colors[equal_100_color], sphinx_score, total_members -
                  total_sphinx, total_members, c_normal)
     if verbose:
-        print '\n' + '-'*70
-        print module_path
-        print '-'*70
+        print('\n' + '-'*70)
+        print(module_path)
+        print('-'*70)
     else:
         if sphinx:
-            print "%s: %s %s" % (module_path, score_string, sphinx_score_string)
+            print("%s: %s %s" % (module_path, score_string, sphinx_score_string))
         else:
-            print "%s: %s" % (module_path, score_string)
+            print("%s: %s" % (module_path, score_string))
 
     if verbose:
         print_header('CLASSES', '*', not no_color and big_header_color)
@@ -134,22 +137,22 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             if c_md:
                 print_header('Missing docstrings', '-', not no_color and small_header_color)
                 for md in c_md:
-                    print '  * ' + md
+                    print('  * ' + md)
             if c_mdt:
                 print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in c_mdt:
-                    print '  * ' + md
+                    print('  * ' + md)
             if c_idt:
                 # Use "# indirect doctest" in the docstring to
                 # supress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in c_idt:
-                    print '  * ' + md
-                print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
+                    print('  * ' + md)
+                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
             if c_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in c_sph:
-                    print '  * ' + md
+                    print('  * ' + md)
 
         print_header('FUNCTIONS', '*', not no_color and big_header_color)
         if not f:
@@ -158,27 +161,27 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             if f_md:
                 print_header('Missing docstrings', '-', not no_color and small_header_color)
                 for md in f_md:
-                    print '  * ' + md
+                    print('  * ' + md)
             if f_mdt:
                 print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in f_mdt:
-                    print '  * ' + md
+                    print('  * ' + md)
             if f_idt:
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in f_idt:
-                    print '  * ' + md
-                print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
+                    print('  * ' + md)
+                print('\n    Use \"# indirect doctest\" in the docstring to supress this warning')
             if f_sph:
                 print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in f_sph:
-                    print '  * ' + md
+                    print('  * ' + md)
 
     if verbose:
-        print '\n' + '-'*70
-        print score_string
+        print('\n' + '-'*70)
+        print(score_string)
         if sphinx:
-            print sphinx_score_string
-        print '-'*70
+            print(sphinx_score_string)
+        print('-'*70)
 
 
 def _is_indirect(member, doc):
@@ -213,7 +216,6 @@ def _get_arg_list(name, fobj):
 
     # Now add the defaults
     if argspec.defaults:
-        rev_defaults = list(argspec.defaults).reverse()
         for i in range(len(argspec.defaults)):
             arg_list[i] = str(arg_list[i]) + '=' + str(argspec.defaults[-i])
 
@@ -227,7 +229,7 @@ def _get_arg_list(name, fobj):
         arg_list.append(argspec.keywords)
 
     # Truncate long arguments
-    arg_list = map(lambda x: x[:trunc], arg_list)
+    arg_list = [x[:trunc] for x in arg_list]
 
     # Construct the parameter string (enclosed in brackets)
     str_param = "%s(%s)" % (name, ', '.join(arg_list))
@@ -394,14 +396,14 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     contained. It then goes through each of the classes/functions to get
     the docstring and doctest coverage of the module. """
 
-    # Import the package and find membmers
+    # Import the package and find members
     m = None
     try:
         __import__(module_path)
         m = sys.modules[module_path]
-    except Exception, a:
+    except Exception as a:
         # Most likely cause, absence of __init__
-        print "%s could not be loaded due to %s." % (module_path, repr(a))
+        print("%s could not be loaded due to %s." % (module_path, repr(a)))
         return 0, 0, 0
 
     c_skipped = []
@@ -548,7 +550,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
 
         return 0, 0, 0
     if not os.path.exists(file):
-        print "File %s does not exist." % file
+        print("File(%s does not exist." % file)
         sys.exit(1)
 
     # Relpath for constructing the module name
@@ -562,8 +564,6 @@ if __name__ == "__main__":
     sympy_dir = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
-
-    skip_paths = ['mpmath']
 
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 
@@ -584,19 +584,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.sphinx and not os.path.exists(os.path.join(sympy_top, 'doc', '_build', 'html')):
-        print """
+        print("""
 Cannot check Sphinx coverage without a documentation build. To build the
 docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphinx.
-"""
+""")
         sys.exit(1)
 
     full_coverage = True
 
     for file in args.path:
         file = os.path.normpath(file)
-        print 'DOCTEST COVERAGE for %s' % (file)
-        print '='*70
-        print
+        print('DOCTEST COVERAGE for %s' % (file))
+        print('='*70)
+        print()
         doctests, total_sphinx, num_functions = go(sympy_top, file, verbose=args.verbose,
             no_color=args.no_color, sphinx=args.sphinx)
         if num_functions == 0:
@@ -613,38 +613,38 @@ docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphi
                 sphinx_score = int(sphinx_score)
                 if total_sphinx > 0:
                     full_coverage = False
-        print
-        print '='*70
+        print()
+        print('='*70)
 
         if args.no_color:
-            print "TOTAL DOCTEST SCORE for %s: %s%% (%s of %s)" % \
-                (get_mod_name(file, sympy_top), score, doctests, num_functions)
+            print("TOTAL DOCTEST SCORE for %s: %s%% (%s of %s)" % \
+                (get_mod_name(file, sympy_top), score, doctests, num_functions))
 
         elif score < 100:
-            print "TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
+            print("TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Red"]),
-                score, doctests, num_functions, c_normal)
+                score, doctests, num_functions, c_normal))
 
         else:
-            print "TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
+            print("TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
-                score, doctests, num_functions, c_normal)
+                score, doctests, num_functions, c_normal))
 
         if args.sphinx:
             if args.no_color:
-                print "TOTAL SPHINX SCORE for %s: %s%% (%s of %s)" % \
+                print("TOTAL SPHINX SCORE for %s: %s%% (%s of %s)" % \
                     (get_mod_name(file, sympy_top), sphinx_score,
-                     num_functions - total_sphinx, num_functions)
+                     num_functions - total_sphinx, num_functions))
 
             elif sphinx_score < 100:
-                print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
+                print("TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
                     (get_mod_name(file, sympy_top), c_color % (colors["Red"]),
-                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal)
+                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal))
 
             else:
-                print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
+                print("TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
                     (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
-                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal)
+                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal))
 
-        print
+        print()
         sys.exit(not full_coverage)

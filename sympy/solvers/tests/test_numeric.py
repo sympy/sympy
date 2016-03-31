@@ -1,5 +1,5 @@
 from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
-from sympy.mpmath import mnorm, mpf
+from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
@@ -13,7 +13,7 @@ def test_nsolve():
     # Testing checks on number of inputs
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
-    # Issue 1730
+    # issue 4829
     assert nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
@@ -40,7 +40,7 @@ def test_nsolve():
         root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root), 1) <= 1.e-8
         return root
-    assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
+    assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
     assert nsolve([Eq(
         f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
@@ -48,12 +48,12 @@ def test_nsolve():
         mpf('0.31883011387318591'))
 
 
-def test_issue_3309():
+def test_issue_6408():
     x = Symbol('x')
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
 @XFAIL
-def test_issue_3309_fail():
+def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0

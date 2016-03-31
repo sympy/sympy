@@ -1,36 +1,61 @@
 """Implementation of :class:`FractionField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
+from sympy.utilities import public
+
+@public
 class FractionField(Field, CompositeDomain):
     """A class for representing multivariate rational function fields. """
 
-    is_Frac      = True
+    is_FractionField = is_Frac = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
-    def __init__(self, field):
-        self.dtype = field.dtype
+    def __init__(self, domain_or_field, symbols=None, order=None):
+        from sympy.polys.fields import FracField
+
+        if isinstance(domain_or_field, FracField) and symbols is None and order is None:
+            field = domain_or_field
+        else:
+            field = FracField(symbols, domain_or_field, order)
+
         self.field = field
+        self.dtype = field.dtype
 
-        self.dom  = field.domain
-        self.gens = field.symbols
+        self.gens = field.gens
+        self.ngens = field.ngens
+        self.symbols = field.symbols
+        self.domain = field.domain
 
-        self.zero = field.zero
-        self.one  = field.one
-
+        # TODO: remove this
+        self.dom = self.domain
 
     def new(self, element):
         return self.field.field_new(element)
 
+    @property
+    def zero(self):
+        return self.field.zero
+
+    @property
+    def one(self):
+        return self.field.one
+
+    @property
+    def order(self):
+        return self.field.order
+
     def __str__(self):
-        return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
+        return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
+        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -47,33 +72,33 @@ class FractionField(Field, CompositeDomain):
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python `Fraction` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.dom == K0:
+        if K1.domain == K0:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         try:
-            return K1.new(a.set_ring(K1.field.ring))
+            return K1.new(a)
         except (CoercionFailed, GeneratorsError):
             return None
 
@@ -88,31 +113,21 @@ class FractionField(Field, CompositeDomain):
         """Returns a field associated with `self`. """
         return self.field.to_ring().to_domain()
 
-    def poly_ring(self, *symbols): # TODO:, order=lex):
-        """Returns a polynomial ring, i.e. `K[X]`. """
-        from sympy.polys.rings import PolyRing
-        return PolyRing(symbols, self.field, order).to_domain()
-
-    def frac_field(self, *symbols): # TODO:, order=lex):
-        """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.polys.fields import FracField
-        return FracField(symbols, self.field, order).to_domain()
-
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
-        return self.dom.is_positive(a.numer.LC)
+        return self.domain.is_positive(a.numer.LC)
 
     def is_negative(self, a):
         """Returns True if `LC(a)` is negative. """
-        return self.dom.is_negative(a.numer.LC)
+        return self.domain.is_negative(a.numer.LC)
 
     def is_nonpositive(self, a):
         """Returns True if `LC(a)` is non-positive. """
-        return self.dom.is_nonpositive(a.numer.LC)
+        return self.domain.is_nonpositive(a.numer.LC)
 
     def is_nonnegative(self, a):
         """Returns True if `LC(a)` is non-negative. """
-        return self.dom.is_nonnegative(a.numer.LC)
+        return self.domain.is_nonnegative(a.numer.LC)
 
     def numer(self, a):
         """Returns numerator of ``a``. """
@@ -124,4 +139,4 @@ class FractionField(Field, CompositeDomain):
 
     def factorial(self, a):
         """Returns factorial of `a`. """
-        return self.dtype(self.dom.factorial(a))
+        return self.dtype(self.domain.factorial(a))

@@ -3,22 +3,45 @@ all derived geometrical entities.
 
 Contains
 ========
+
 GeometryEntity
+GeometricSet
+
+Notes
+=====
+
+A GeometryEntity is any object that has special geometric properties.
+A GeometrySet is a superclass of any GeometryEntity that can also
+be viewed as a sympy.sets.Set.  In particular, points are the only
+GeometryEntity not considered a Set.
+
+Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
+R3 are currently the only ambient spaces implemented.
 
 """
 
-from sympy.core.compatibility import cmp, is_sequence
+from __future__ import division, print_function
+
+from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
+from sympy.sets import Set
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
+    "Point2D",
+    "Point3D",
     "Point",
     "Segment",
     "Ray",
     "Line",
+    "Line3D",
+    "Ray3D",
+    "Segment3D",
+    "Plane",
     "Triangle",
     "RegularPolygon",
     "Polygon",
@@ -37,7 +60,15 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        # Points are sequences, but they should not
+        # be converted to Tuples, so use this detection function instead.
+        def is_seq_and_not_point(a):
+            # we cannot use isinstance(a, Point) since we cannot import Point
+            if hasattr(a, 'is_Point') and a.is_Point:
+                return False
+            return is_sequence(a)
+
+        args = [Tuple(*a) if is_seq_and_not_point(a) else sympify(a) for a in args]
         return Basic.__new__(cls, *args)
 
     def _sympy_(self):
@@ -83,9 +114,9 @@ class GeometryEntity(Basic):
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.rotate(pi/2) # vertex on y axis now
-        Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))
+        Triangle(Point2D(0, 1), Point2D(-sqrt(3)/2, -1/2), Point2D(sqrt(3)/2, -1/2))
 
         """
         newargs = []
@@ -113,11 +144,11 @@ class GeometryEntity(Basic):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
-        Triangle(Point(2, 0), Point(-1, sqrt(3)/2), Point(-1, -sqrt(3)/2))
+        Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)/2), Point2D(-1, -sqrt(3)/2))
         >>> t.scale(2,2)
-        Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
+        Triangle(Point2D(2, 0), Point2D(-1, sqrt(3)), Point2D(-1, -sqrt(3)))
 
         """
         from sympy.geometry.point import Point
@@ -140,12 +171,12 @@ class GeometryEntity(Basic):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
+        Triangle(Point2D(1, 0), Point2D(-1/2, sqrt(3)/2), Point2D(-1/2, -sqrt(3)/2))
         >>> t.translate(2)
-        Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
+        Triangle(Point2D(3, 0), Point2D(3/2, sqrt(3)/2), Point2D(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2),
-            Point(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point2D(3, 2), Point2D(3/2, sqrt(3)/2 + 2),
+            Point2D(3/2, -sqrt(3)/2 + 2))
 
         """
         newargs = []
@@ -157,7 +188,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Point, Dummy, oo
 
         g = self
         l = line
@@ -212,7 +243,9 @@ class GeometryEntity(Basic):
         True
         >>> t.encloses(t2)
         False
+
         """
+
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
         from sympy.geometry.ellipse import Ellipse
@@ -225,12 +258,25 @@ class GeometryEntity(Basic):
         elif isinstance(o, Ray) or isinstance(o, Line):
             return False
         elif isinstance(o, Ellipse):
-            return self.encloses_point(o.center) and not self.intersection(o)
+            return self.encloses_point(o.center) and not self.intersection(o) and self.encloses_point(Point(o.center.x+o.hradius,o.center.y))
         elif isinstance(o, Polygon):
             if isinstance(o, RegularPolygon):
                 if not self.encloses_point(o.center):
                     return False
             return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
+    @property
+    def ambient_dimension(self):
+        """What is the dimension of the space that the object is contained in?"""
+        raise NotImplementedError()
+
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
         raise NotImplementedError()
 
     def is_similar(self, other):
@@ -255,6 +301,88 @@ class GeometryEntity(Basic):
 
         """
         raise NotImplementedError()
+
+    def equals(self, o):
+        return self == o
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the GeometryEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+        raise NotImplementedError()
+
+    def _repr_svg_(self):
+        """SVG representation of a GeometryEntity suitable for IPython"""
+
+        from sympy.core.evalf import N
+
+        try:
+            bounds = self.bounds
+        except (NotImplementedError, TypeError):
+            # if we have no SVG representation, return None so IPython
+            # will fall back to the next representation
+            return None
+
+        svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            width="{1}" height="{2}" viewBox="{0}"
+            preserveAspectRatio="xMinYMin meet">
+            <defs>
+                <marker id="markerCircle" markerWidth="8" markerHeight="8"
+                    refx="5" refy="5" markerUnits="strokeWidth">
+                    <circle cx="5" cy="5" r="1.5" style="stroke: none; fill:#000000;"/>
+                </marker>
+                <marker id="markerArrow" markerWidth="13" markerHeight="13" refx="2" refy="4"
+                       orient="auto" markerUnits="strokeWidth">
+                    <path d="M2,2 L2,6 L6,4" style="fill: #000000;" />
+                </marker>
+                <marker id="markerReverseArrow" markerWidth="13" markerHeight="13" refx="6" refy="4"
+                       orient="auto" markerUnits="strokeWidth">
+                    <path d="M6,2 L6,6 L2,4" style="fill: #000000;" />
+                </marker>
+            </defs>'''
+
+        # Establish SVG canvas that will fit all the data + small space
+        xmin, ymin, xmax, ymax = map(N, bounds)
+        if xmin == xmax and ymin == ymax:
+            # This is a point; buffer using an arbitrary size
+            xmin, ymin, xmax, ymax = xmin - .5, ymin -.5, xmax + .5, ymax + .5
+        else:
+            # Expand bounds by a fraction of the data ranges
+            expand = 0.1  # or 10%; this keeps arrowheads in view (R plots use 4%)
+            widest_part = max([xmax - xmin, ymax - ymin])
+            expand_amount = widest_part * expand
+            xmin -= expand_amount
+            ymin -= expand_amount
+            xmax += expand_amount
+            ymax += expand_amount
+        dx = xmax - xmin
+        dy = ymax - ymin
+        width = min([max([100., dx]), 300])
+        height = min([max([100., dy]), 300])
+
+        scale_factor = 1. if max(width, height) == 0 else max(dx, dy) / max(width, height)
+        try:
+            svg = self._svg(scale_factor)
+        except (NotImplementedError, TypeError):
+            # if we have no SVG representation, return None so IPython
+            # will fall back to the next representation
+            return None
+
+        view_box = "{0} {1} {2} {3}".format(xmin, ymin, dx, dy)
+        transform = "matrix(1,0,0,-1,0,{0})".format(ymax + ymin)
+        svg_top = svg_top.format(view_box, width, height)
+
+        return svg_top + (
+            '<g transform="{0}">{1}</g></svg>'
+            ).format(transform, svg)
 
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
@@ -286,7 +414,7 @@ class GeometryEntity(Basic):
         """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
-        c = cmp(n1, n2)
+        c = (n1 > n2) - (n1 < n2)
         if not c:
             return 0
 
@@ -310,7 +438,7 @@ class GeometryEntity(Basic):
         if i2 == -1:
             return c
 
-        return cmp(i1, i2)
+        return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
@@ -319,12 +447,64 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def _eval_subs(self, old, new):
-        from sympy.geometry.point import Point
+        from sympy.geometry.point import Point, Point3D
         if is_sequence(old) or is_sequence(new):
-            old = Point(old)
-            new = Point(new)
-            return self._subs(old, new)
+            if isinstance(self, Point3D):
+                old = Point3D(old)
+                new = Point3D(new)
+            else:
+                old = Point(old)
+                new = Point(new)
+            return  self._subs(old, new)
 
+class GeometrySet(GeometryEntity, Set):
+    """Parent class of all GeometryEntity that are also Sets
+    (compatible with sympy.sets)
+    """
+    def _contains(self, other):
+        """sympy.sets uses the _contains method, so include it for compatibility."""
+
+        if isinstance(other, Set) and other.is_FiniteSet:
+            return all(self.__contains__(i) for i in other)
+
+        return self.__contains__(other)
+
+    def _union(self, o):
+        """ Returns the union of self and o
+        for use with sympy.sets.Set, if possible. """
+
+        from sympy.sets import Union, FiniteSet
+
+        # if its a FiniteSet, merge any points
+        # we contain and return a union with the rest
+        if o.is_FiniteSet:
+            other_points = [p for p in o if not self._contains(p)]
+            if len(other_points) == len(o):
+                return None
+            return Union(self, FiniteSet(*other_points))
+        if self._contains(o):
+            return self
+        return None
+
+    def _intersect(self, o):
+        """ Returns a sympy.sets.Set of intersection objects,
+        if possible. """
+
+        from sympy.sets import Set, FiniteSet, Union
+        from sympy.geometry import Point
+
+        try:
+            inter = self.intersection(o)
+        except NotImplementedError:
+            # sympy.sets.Set.reduce expects None if an object
+            # doesn't know how to simplify
+            return None
+
+        # put the points in a FiniteSet
+        points = FiniteSet(*[p for p in inter if isinstance(p, Point)])
+        non_points = [p for p in inter if not isinstance(p, Point)]
+
+        return Union(*(non_points + [points]))
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
@@ -361,9 +541,9 @@ def rotate(th):
     >>> from sympy import Point, pi
     >>> rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)
     >>> Point(1, 1).transform(rot_about_11)
-    Point(1, 1)
+    Point2D(1, 1)
     >>> Point(0, 0).transform(rot_about_11)
-    Point(2, 0)
+    Point2D(2, 0)
     """
     s = sin(th)
     rv = eye(3)*cos(th)

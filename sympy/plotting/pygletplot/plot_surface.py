@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
+from sympy.core.compatibility import range
 
 
 class PlotSurface(PlotModeBase):
@@ -31,14 +34,14 @@ class PlotSurface(PlotModeBase):
                 except ZeroDivisionError:
                     _e = None
                 if _e is not None:  # update bounding box
-                    for axis in xrange(3):
+                    for axis in range(3):
                         b[axis][0] = min([b[axis][0], _e[axis]])
                         b[axis][1] = max([b[axis][1], _e[axis]])
                 column.append(_e)
                 self._calculating_verts_pos += 1.0
 
             verts.append(column)
-        for axis in xrange(3):
+        for axis in range(3):
             b[axis][2] = b[axis][1] - b[axis][0]
             if b[axis][2] == 0.0:
                 b[axis][2] = 1.0
@@ -72,9 +75,9 @@ class PlotSurface(PlotModeBase):
 
     def draw_verts(self, use_cverts, use_solid_color):
         def f():
-            for u in xrange(1, len(self.u_set)):
+            for u in range(1, len(self.u_set)):
                 glBegin(GL_QUAD_STRIP)
-                for v in xrange(len(self.v_set)):
+                for v in range(len(self.v_set)):
                     pa = self.verts[u - 1][v]
                     pb = self.verts[u][v]
                     if pa is None or pb is None:

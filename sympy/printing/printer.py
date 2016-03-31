@@ -67,11 +67,13 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr).
 """
 
+from __future__ import print_function, division
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 
-from sympy.core.compatibility import cmp_to_key
+from functools import cmp_to_key
 
 
 class Printer(object):
@@ -196,7 +198,7 @@ class Printer(object):
 
         self._settings = self._default_settings.copy()
 
-        for key, val in self._global_settings.iteritems():
+        for key, val in self._global_settings.items():
             if key in self._default_settings:
                 self._settings[key] = val
 
@@ -215,7 +217,7 @@ class Printer(object):
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """
-        for key, val in settings.iteritems():
+        for key, val in settings.items():
             if val is not None:
                 cls._global_settings[key] = val
 

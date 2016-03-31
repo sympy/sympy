@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
@@ -8,12 +9,12 @@ from sympy.utilities.iterables import default_sort_key, partitions
 def test_partition():
     from sympy.abc import x
 
-    raises(ValueError, lambda: Partition(range(3)))
-    raises(ValueError, lambda: Partition([[1, 1, 2]]))
+    raises(ValueError, lambda: Partition(*list(range(3))))
+    raises(ValueError, lambda: Partition([1, 1, 2]))
 
-    a = Partition([[1, 2, 3], [4]])
-    b = Partition([[1, 2], [3, 4]])
-    c = Partition([[x]])
+    a = Partition([1, 2, 3], [4])
+    b = Partition([1, 2], [3, 4])
+    c = Partition([x])
     l = [a, b, c]
     l.sort(key=default_sort_key)
     assert l == [c, a, b]
@@ -41,9 +42,9 @@ def test_partition():
 
 def test_integer_partition():
     # no zeros in partition
-    raises(ValueError, lambda: IntegerPartition(range(3)))
+    raises(ValueError, lambda: IntegerPartition(list(range(3))))
     # check fails since 1 + 2 != 100
-    raises(ValueError, lambda: IntegerPartition(100, range(1, 3)))
+    raises(ValueError, lambda: IntegerPartition(100, list(range(1, 3))))
     a = IntegerPartition(8, [1, 3, 4])
     b = a.next_lex()
     c = IntegerPartition([1, 3, 4])
@@ -60,7 +61,7 @@ def test_integer_partition():
         next = set()
         prev = set()
         a = IntegerPartition([i])
-        ans = set([IntegerPartition(p) for p in partitions(i)])
+        ans = {IntegerPartition(p) for p in partitions(i)}
         n = len(ans)
         for j in range(n):
             next.add(a)
@@ -89,8 +90,8 @@ def test_rgs():
     raises(ValueError, lambda: RGS_unrank(3, 0))
     raises(ValueError, lambda: RGS_unrank(10, 1))
 
-    raises(ValueError, lambda: Partition.from_rgs(range(3), range(2)))
-    raises(ValueError, lambda: Partition.from_rgs(range(1, 3), range(2)))
+    raises(ValueError, lambda: Partition.from_rgs(list(range(3)), list(range(2))))
+    raises(ValueError, lambda: Partition.from_rgs(list(range(1, 3)), list(range(2))))
     assert RGS_enum(-1) == 0
     assert RGS_enum(1) == 1
     assert RGS_unrank(7, 5) == [0, 0, 1, 0, 2]

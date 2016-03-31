@@ -1,7 +1,10 @@
 """Primitive circuit operations on quantum circuits."""
 
-from sympy import Symbol, Integer, Tuple, Mul, sympify, default_sort_key
+from __future__ import print_function, division
+
+from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols
+from sympy.core.compatibility import reduce
 from sympy.physics.quantum.gate import Gate
 
 __all__ = [
@@ -248,7 +251,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
 
     # A numbered symbol generator
     index_gen = numbered_symbols(prefix='i', start=-1)
-    cur_ndx = index_gen.next()
+    cur_ndx = next(index_gen)
 
     # keys are symbolic indices; values are real indices
     ndx_map = {}
@@ -305,7 +308,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
             sym_item = inv_map[item]
 
         else:
-            cur_ndx = gen.next()
+            cur_ndx = next(gen)
             ndx_map[cur_ndx] = item
             inv_map[item] = cur_ndx
             sym_item = cur_ndx

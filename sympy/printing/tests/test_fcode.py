@@ -1,12 +1,16 @@
 from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
+from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -32,10 +36,7 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
     assert fcode(x**-1.0) == '      1.0/x'
-    assert fcode(x**-2.0,
-                 assign_to='y',
-                 source_format='free',
-                 human=True) == 'y = x**(-2.0d0)'  # 2823
+    assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
 
@@ -64,15 +65,16 @@ def test_fcode_functions():
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
 
 
-#issue 3715
+#issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
-    assert fcode(x * log(10)) == "      x*log(10.0d0)"
-    assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
-    assert fcode(log(S(10))) == "      log(10.0d0)"
-    assert fcode(exp(10)) == "      exp(10.0d0)"
-    assert fcode(x * log(log(10))) == "      x*log(2.30258509299405d0)"
-    assert fcode(x * log(log(S(10)))) == "      x*log(2.30258509299405d0)"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(S(10))) == "      x*2.30258509299405d0"
+    assert fcode(log(S(10))) == "      2.30258509299405d0"
+    assert fcode(exp(10)) == "      22026.4657948067d0"
+    assert fcode(x * log(log(10))) == "      x*0.834032445247956d0"
+    assert fcode(x * log(log(S(10)))) == "      x*0.834032445247956d0"
 
 
 def test_fcode_NumberSymbol():
@@ -123,22 +125,22 @@ def test_not_fortran():
     x = symbols('x')
     g = Function('g')
     assert fcode(
-        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
 
 def test_user_functions():
     x = symbols('x')
-    assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
+    assert fcode(sin(x), user_functions={"sin": "zsin"}) == "      zsin(x)"
     x = symbols('x')
     assert fcode(
-        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+        gamma(x), user_functions={"gamma": "mygamma"}) == "      mygamma(x)"
     g = Function('g')
-    assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
+    assert fcode(g(x), user_functions={"g": "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(
-        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+        factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
 
 
 def test_inline_function():
@@ -155,7 +157,7 @@ def test_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
         "      do i = 1, n\n"
-        "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
+        "         A(i) = (A(i) + 1)*(A(i) + 2)*A(i)\n"
         "      end do"
     )
 
@@ -179,16 +181,183 @@ def test_line_wrapping():
     )
 
 
+def test_fcode_precedence():
+    x, y = symbols("x y")
+    assert fcode(And(x < y, y < x + 1), source_format="free") == \
+        "x < y .and. y < x + 1"
+    assert fcode(Or(x < y, y < x + 1), source_format="free") == \
+        "x < y .or. y < x + 1"
+    assert fcode(Xor(x < y, y < x + 1, evaluate=False),
+        source_format="free") == "x < y .neqv. y < x + 1"
+    assert fcode(Equivalent(x < y, y < x + 1), source_format="free") == \
+        "x < y .eqv. y < x + 1"
+
+
+def test_fcode_Logical():
+    x, y, z = symbols("x y z")
+    # unary Not
+    assert fcode(Not(x), source_format="free") == ".not. x"
+    # binary And
+    assert fcode(And(x, y), source_format="free") == "x .and. y"
+    assert fcode(And(x, Not(y)), source_format="free") == "x .and. .not. y"
+    assert fcode(And(Not(x), y), source_format="free") == "y .and. .not. x"
+    assert fcode(And(Not(x), Not(y)), source_format="free") == \
+        ".not. x .and. .not. y"
+    assert fcode(Not(And(x, y), evaluate=False), source_format="free") == \
+        ".not. (x .and. y)"
+    # binary Or
+    assert fcode(Or(x, y), source_format="free") == "x .or. y"
+    assert fcode(Or(x, Not(y)), source_format="free") == "x .or. .not. y"
+    assert fcode(Or(Not(x), y), source_format="free") == "y .or. .not. x"
+    assert fcode(Or(Not(x), Not(y)), source_format="free") == \
+        ".not. x .or. .not. y"
+    assert fcode(Not(Or(x, y), evaluate=False), source_format="free") == \
+        ".not. (x .or. y)"
+    # mixed And/Or
+    assert fcode(And(Or(y, z), x), source_format="free") == "x .and. (y .or. z)"
+    assert fcode(And(Or(z, x), y), source_format="free") == "y .and. (x .or. z)"
+    assert fcode(And(Or(x, y), z), source_format="free") == "z .and. (x .or. y)"
+    assert fcode(Or(And(y, z), x), source_format="free") == "x .or. y .and. z"
+    assert fcode(Or(And(z, x), y), source_format="free") == "y .or. x .and. z"
+    assert fcode(Or(And(x, y), z), source_format="free") == "z .or. x .and. y"
+    # trinary And
+    assert fcode(And(x, y, z), source_format="free") == "x .and. y .and. z"
+    assert fcode(And(x, y, Not(z)), source_format="free") == \
+        "x .and. y .and. .not. z"
+    assert fcode(And(x, Not(y), z), source_format="free") == \
+        "x .and. z .and. .not. y"
+    assert fcode(And(Not(x), y, z), source_format="free") == \
+        "y .and. z .and. .not. x"
+    assert fcode(Not(And(x, y, z), evaluate=False), source_format="free") == \
+        ".not. (x .and. y .and. z)"
+    # trinary Or
+    assert fcode(Or(x, y, z), source_format="free") == "x .or. y .or. z"
+    assert fcode(Or(x, y, Not(z)), source_format="free") == \
+        "x .or. y .or. .not. z"
+    assert fcode(Or(x, Not(y), z), source_format="free") == \
+        "x .or. z .or. .not. y"
+    assert fcode(Or(Not(x), y, z), source_format="free") == \
+        "y .or. z .or. .not. x"
+    assert fcode(Not(Or(x, y, z), evaluate=False), source_format="free") == \
+        ".not. (x .or. y .or. z)"
+
+
+def test_fcode_Xlogical():
+    x, y, z = symbols("x y z")
+    # binary Xor
+    assert fcode(Xor(x, y, evaluate=False), source_format="free") == \
+        "x .neqv. y"
+    assert fcode(Xor(x, Not(y), evaluate=False), source_format="free") == \
+        "x .neqv. .not. y"
+    assert fcode(Xor(Not(x), y, evaluate=False), source_format="free") == \
+        "y .neqv. .not. x"
+    assert fcode(Xor(Not(x), Not(y), evaluate=False),
+        source_format="free") == ".not. x .neqv. .not. y"
+    assert fcode(Not(Xor(x, y, evaluate=False), evaluate=False),
+        source_format="free") == ".not. (x .neqv. y)"
+    # binary Equivalent
+    assert fcode(Equivalent(x, y), source_format="free") == "x .eqv. y"
+    assert fcode(Equivalent(x, Not(y)), source_format="free") == \
+        "x .eqv. .not. y"
+    assert fcode(Equivalent(Not(x), y), source_format="free") == \
+        "y .eqv. .not. x"
+    assert fcode(Equivalent(Not(x), Not(y)), source_format="free") == \
+        ".not. x .eqv. .not. y"
+    assert fcode(Not(Equivalent(x, y), evaluate=False),
+        source_format="free") == ".not. (x .eqv. y)"
+    # mixed And/Equivalent
+    assert fcode(Equivalent(And(y, z), x), source_format="free") == \
+        "x .eqv. y .and. z"
+    assert fcode(Equivalent(And(z, x), y), source_format="free") == \
+        "y .eqv. x .and. z"
+    assert fcode(Equivalent(And(x, y), z), source_format="free") == \
+        "z .eqv. x .and. y"
+    assert fcode(And(Equivalent(y, z), x), source_format="free") == \
+        "x .and. (y .eqv. z)"
+    assert fcode(And(Equivalent(z, x), y), source_format="free") == \
+        "y .and. (x .eqv. z)"
+    assert fcode(And(Equivalent(x, y), z), source_format="free") == \
+        "z .and. (x .eqv. y)"
+    # mixed Or/Equivalent
+    assert fcode(Equivalent(Or(y, z), x), source_format="free") == \
+        "x .eqv. y .or. z"
+    assert fcode(Equivalent(Or(z, x), y), source_format="free") == \
+        "y .eqv. x .or. z"
+    assert fcode(Equivalent(Or(x, y), z), source_format="free") == \
+        "z .eqv. x .or. y"
+    assert fcode(Or(Equivalent(y, z), x), source_format="free") == \
+        "x .or. (y .eqv. z)"
+    assert fcode(Or(Equivalent(z, x), y), source_format="free") == \
+        "y .or. (x .eqv. z)"
+    assert fcode(Or(Equivalent(x, y), z), source_format="free") == \
+        "z .or. (x .eqv. y)"
+    # mixed Xor/Equivalent
+    assert fcode(Equivalent(Xor(y, z, evaluate=False), x),
+        source_format="free") == "x .eqv. (y .neqv. z)"
+    assert fcode(Equivalent(Xor(z, x, evaluate=False), y),
+        source_format="free") == "y .eqv. (x .neqv. z)"
+    assert fcode(Equivalent(Xor(x, y, evaluate=False), z),
+        source_format="free") == "z .eqv. (x .neqv. y)"
+    assert fcode(Xor(Equivalent(y, z), x, evaluate=False),
+        source_format="free") == "x .neqv. (y .eqv. z)"
+    assert fcode(Xor(Equivalent(z, x), y, evaluate=False),
+        source_format="free") == "y .neqv. (x .eqv. z)"
+    assert fcode(Xor(Equivalent(x, y), z, evaluate=False),
+        source_format="free") == "z .neqv. (x .eqv. y)"
+    # mixed And/Xor
+    assert fcode(Xor(And(y, z), x, evaluate=False), source_format="free") == \
+        "x .neqv. y .and. z"
+    assert fcode(Xor(And(z, x), y, evaluate=False), source_format="free") == \
+        "y .neqv. x .and. z"
+    assert fcode(Xor(And(x, y), z, evaluate=False), source_format="free") == \
+        "z .neqv. x .and. y"
+    assert fcode(And(Xor(y, z, evaluate=False), x), source_format="free") == \
+        "x .and. (y .neqv. z)"
+    assert fcode(And(Xor(z, x, evaluate=False), y), source_format="free") == \
+        "y .and. (x .neqv. z)"
+    assert fcode(And(Xor(x, y, evaluate=False), z), source_format="free") == \
+        "z .and. (x .neqv. y)"
+    # mixed Or/Xor
+    assert fcode(Xor(Or(y, z), x, evaluate=False), source_format="free") == \
+        "x .neqv. y .or. z"
+    assert fcode(Xor(Or(z, x), y, evaluate=False), source_format="free") == \
+        "y .neqv. x .or. z"
+    assert fcode(Xor(Or(x, y), z, evaluate=False), source_format="free") == \
+        "z .neqv. x .or. y"
+    assert fcode(Or(Xor(y, z, evaluate=False), x), source_format="free") == \
+        "x .or. (y .neqv. z)"
+    assert fcode(Or(Xor(z, x, evaluate=False), y), source_format="free") == \
+        "y .or. (x .neqv. z)"
+    assert fcode(Or(Xor(x, y, evaluate=False), z), source_format="free") == \
+        "z .or. (x .neqv. y)"
+    # trinary Xor
+    assert fcode(Xor(x, y, z, evaluate=False), source_format="free") == \
+        "x .neqv. y .neqv. z"
+    assert fcode(Xor(x, y, Not(z), evaluate=False), source_format="free") == \
+        "x .neqv. y .neqv. .not. z"
+    assert fcode(Xor(x, Not(y), z, evaluate=False), source_format="free") == \
+        "x .neqv. z .neqv. .not. y"
+    assert fcode(Xor(Not(x), y, z, evaluate=False), source_format="free") == \
+        "y .neqv. z .neqv. .not. x"
+
+
+def test_fcode_Relational():
+    x, y = symbols("x y")
+    assert fcode(Relational(x, y, "=="), source_format="free") == "Eq(x, y)"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "Ne(x, y)"
+    assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
+    assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
+    assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"
+    assert fcode(Relational(x, y, "<"), source_format="free") == "x < y"
+
+
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x, x < 1), (x**2, True)))
-    expected = (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else\n"
-        "         x**2\n"
-        "      end if"
-    )
+    expr = Piecewise((x, x < 1), (x**2, True))
+    # Check that inline conditional (merge) fails if standard isn't 95+
+    raises(NotImplementedError, lambda: fcode(expr))
+    code = fcode(expr, standard=95)
+    expected = "      merge(x, x**2, x < 1)"
     assert code == expected
     assert fcode(Piecewise((x, x < 1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
@@ -199,7 +368,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in xrange(10):
+    for i in range(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (
@@ -217,24 +386,12 @@ def test_fcode_Piecewise():
     )
     code = fcode(Piecewise((a, x < 0), (b, True)), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else\n"
-        "         sin(x)\n"
-        "      end if"
-    )
-    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))) == (
-        "      if (x < 1) then\n"
-        "         x\n"
-        "      else if (x > 1) then\n"
-        "         x**2\n"
-        "      else if (x > 0) then\n"
-        "         sin(x)\n"
-        "      end if"
-    )
+    code = fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True)), standard=95)
+    expected = "      merge(x, merge(x**2, sin(x), x > 1), x < 1)"
+    assert code == expected
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: fcode(expr))
 
 
 def test_wrap_fortran():
@@ -344,7 +501,7 @@ def test_free_form_continuation_line():
 
 
 def test_free_form_comment_line():
-    printer = FCodePrinter({ 'source_format': 'free'})
+    printer = FCodePrinter({'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
     expected = [
         '! This is a long comment on a single line that must be wrapped properly',
@@ -373,13 +530,12 @@ def test_loops():
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
-            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
+            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'} or
+            code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'})
 
 
 def test_dummy_loops():
-    # the following line could also be
-    # [Dummy(s, integer=True) for s in 'im']
-    # or [Dummy(integer=True) for s in 'im']
     i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
@@ -393,15 +549,24 @@ def test_dummy_loops():
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
 
+def test_fcode_Indexed_without_looking_for_contraction():
+    len_y = 5
+    y = IndexedBase('y', shape=(len_y,))
+    x = IndexedBase('x', shape=(len_y,))
+    Dy = IndexedBase('Dy', shape=(len_y-1,))
+    i = Idx('i', len_y-1)
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
+
 
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
         _default_settings = FCodePrinter._default_settings.copy()
-        _default_settings['assign_to'] = "bork"
 
     printer = MyFancyFCodePrinter()
     x = symbols('x')
-    assert printer.doprint(sin(x)) == "      bork = sin(x)"
+    assert printer.doprint(sin(x), "bork") == "      bork = sin(x)"
 
 
 def test_indent():
@@ -466,3 +631,37 @@ def test_indent():
     p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
+
+def test_Matrix_printing():
+    x, y, z = symbols('x,y,z')
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert fcode(mat, A) == (
+        "      A(1, 1) = x*y\n"
+        "      if (y > 0) then\n"
+        "         A(2, 1) = x + 2\n"
+        "      else\n"
+        "         A(2, 1) = y\n"
+        "      end if\n"
+        "      A(3, 1) = sin(z)")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert fcode(expr, standard=95) == (
+        "      merge(2*A(3, 1), A(3, 1), x > 0) + sin(A(2, 1)) + A(1, 1)")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert fcode(m, M) == (
+        "      M(1, 1) = sin(q(2, 1))\n"
+        "      M(2, 1) = q(2, 1) + q(3, 1)\n"
+        "      M(3, 1) = 2*q(5, 1)*1.0/q(2, 1)\n"
+        "      M(1, 2) = 0\n"
+        "      M(2, 2) = q(4, 1)\n"
+        "      M(3, 2) = 4 + sqrt(q(1, 1))\n"
+        "      M(1, 3) = cos(q(3, 1))\n"
+        "      M(2, 3) = 5\n"
+        "      M(3, 3) = 0")

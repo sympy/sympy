@@ -1,15 +1,16 @@
+from __future__ import print_function, division
+
 from sympy.core.assumptions import StdFactKB
-from basic import Basic
-from core import C
-from sympify import sympify
-from singleton import S
-from expr import Expr, AtomicExpr
-from cache import cacheit
-from function import FunctionClass
+from sympy.core.compatibility import string_types, range
+from .basic import Basic
+from .sympify import sympify
+from .singleton import S
+from .expr import Expr, AtomicExpr
+from .cache import cacheit
+from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import string
 import re as _re
@@ -51,6 +52,40 @@ class Symbol(AtomicExpr, Boolean):
         """
         return True
 
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, covert values to bool, check commutativity *in place*.
+        """
+
+        # be strict about commutativity: cannot be None
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        if is_commutative is None:
+            whose = '%s ' % obj.__name__ if obj else ''
+            raise ValueError(
+                '%scommutativity must be True or False.' % whose)
+
+        # sanitize other assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            from collections import defaultdict
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            keymap = defaultdict(lambda: None)
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
+            if keymap[key]:
+                SymPyDeprecationWarning(
+                    feature="%s assumption" % key,
+                    useinstead="%s" % keymap[key],
+                    issue=8071,
+                    deprecated_since_version="0.7.6").warn()
+                assumptions[keymap[key]] = assumptions[key]
+                assumptions.pop(key)
+                key = keymap[key]
+
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -61,22 +96,31 @@ class Symbol(AtomicExpr, Boolean):
         False
 
         """
-
-        if assumptions.get('zero', False):
-            return S.Zero
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Symbol commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        if not isinstance(name, basestring):
+        if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+
         obj = Expr.__new__(cls)
         obj.name = name
+
+        # TODO: Issue #8873: Forcing the commutative assumption here means
+        # later code such as ``srepr()`` cannot tell whether the user
+        # specified ``commutative=True`` or omitted it.  To workaround this,
+        # we keep a copy of the assumptions dict, then create the StdFactKB,
+        # and finally overwrite its ``._generator`` with the dict copy.  This
+        # is a bit of a hack because we assume StdFactKB merely copies the
+        # given dict as ``._generator``, but future modification might, e.g.,
+        # compute a minimal equivalent assumption set.
+        tmp_asm_copy = assumptions.copy()
+
+        # be strict about commutativity
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     __xnew__ = staticmethod(
@@ -91,29 +135,32 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
-        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+        # Note: user-specified assumptions not hashed, just derived ones
+        return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
         return dict((key, value) for key, value
-                in self._assumptions.iteritems() if value is not None)
+                in self._assumptions.items() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name, **self.assumptions0)
+        """Return a Dummy having the same name and same assumptions as self."""
+        return Dummy(self.name, **self._assumptions.generator)
 
     def __call__(self, *args):
-        from function import Function
+        from .function import Function
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
-            return (C.re(self), C.im(self))
+            return (re(self), im(self))
 
     def _sage_(self):
         import sage.all as sage
@@ -125,12 +172,8 @@ class Symbol(AtomicExpr, Boolean):
         return not self in wrt
 
     @property
-    def is_number(self):
-        return False
-
-    @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class Dummy(Symbol):
@@ -159,11 +202,7 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Dummy's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
@@ -173,47 +212,91 @@ class Dummy(Symbol):
     def __getstate__(self):
         return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
 
 
 class Wild(Symbol):
     """
-    A Wild symbol matches anything.
+    A Wild symbol matches anything, or anything
+    without whatever is explicitly excluded.
 
     Examples
     ========
 
     >>> from sympy import Wild, WildFunction, cos, pi
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
     >>> a = Wild('a')
-    >>> b = Wild('b')
-    >>> b.match(a)
-    {a_: b_}
     >>> x.match(a)
     {a_: x}
     >>> pi.match(a)
     {a_: pi}
-    >>> (x**2).match(a)
-    {a_: x**2}
+    >>> (3*x**2).match(a*x)
+    {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
+    >>> b = Wild('b', exclude=[x])
+    >>> (3*x**2).match(b*x)
+    >>> b.match(a)
+    {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    Tips
+    ====
+
+    When using Wild, be sure to use the exclude
+    keyword to make the pattern more precise.
+    Without the exclude pattern, you may get matches
+    that are technically correct, but not what you
+    wanted. For example, using the above without
+    exclude:
+
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> (2 + 3*y).match(a*x + b*y)
+    {a_: 2/x, b_: 3}
+
+    This is technically correct, because
+    (2/x)*x + 3*y == 2 + 3*y, but you probably
+    wanted it to not match at all. The issue is that
+    you really didn't want a and b to include x and y,
+    and the exclude parameter lets you specify exactly
+    this.  With the exclude parameter, the pattern will
+    not match.
+
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x, y])
+    >>> (2 + 3*y).match(a*x + b*y)
+
+    Exclude also helps remove ambiguity from matches.
+
+    >>> E = 2*x**3*y*z
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> E.match(a*b)
+    {a_: 2*y*z, b_: x**3}
+    >>> a = Wild('a', exclude=[x, y])
+    >>> E.match(a*b)
+    {a_: z, b_: 2*x**3*y}
+    >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        if is_commutative is None:
-            raise ValueError(
-                '''Wild's commutativity must be True or False.''')
-        assumptions['commutative'] = is_commutative
+        cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -283,8 +366,8 @@ def symbols(names, **args):
     To reduce typing, range syntax is supported to create indexed symbols.
     Ranges are indicated by a colon and the type of range is determined by
     the character to the right of the colon. If the character is a digit
-    then all continguous digits to the left are taken as the nonnegative
-    starting value (or 0 if there are no digit of the colon) and all
+    then all contiguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there is no digit left of the colon) and all
     contiguous digits to the right are taken as 1 greater than the ending
     value::
 
@@ -363,18 +446,8 @@ def symbols(names, **args):
 
     """
     result = []
-    if 'each_char' in args:
-        if args['each_char']:
-            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
-        else:
-            value = ""
-        SymPyDeprecationWarning(
-            feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names",
-            issue=1919, deprecated_since_version="0.7.0", value=value
-        ).warn()
 
-    if isinstance(names, basestring):
+    if isinstance(names, string_types):
         marker = 0
         literals = ['\,', '\:', '\ ']
         for i in range(len(literals)):
@@ -406,9 +479,6 @@ def symbols(names, **args):
         # split on spaces
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
-
-        if args.pop('each_char', False) and not as_seq and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
@@ -480,22 +550,25 @@ def var(names, **args):
     into the *global* namespace. It's recommended not to use :func:`var` in
     library code, where :func:`symbols` has to be used::
 
-        >>> from sympy import var
+    Examples
+    ========
 
-        >>> var('x')
-        x
-        >>> x
-        x
+    >>> from sympy import var
 
-        >>> var('a,ab,abc')
-        (a, ab, abc)
-        >>> abc
-        abc
+    >>> var('x')
+    x
+    >>> x
+    x
 
-        >>> var('x,y', real=True)
-        (x, y)
-        >>> x.is_real and y.is_real
-        True
+    >>> var('a,ab,abc')
+    (a, ab, abc)
+    >>> abc
+    abc
+
+    >>> var('x,y', real=True)
+    (x, y)
+    >>> x.is_real and y.is_real
+    True
 
     See :func:`symbol` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.

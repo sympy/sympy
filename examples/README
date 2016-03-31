@@ -25,7 +25,7 @@ All the working examples can be run by executing the "all.py" script, use
 ./all.py -h for usage, if an example is known to be broken it will be commented
 out in this script.
 
-To run the individual examples one needs to have Python version >= 2.4
+To run the individual examples one needs to have Python version >= 2.6
 installed and SymPy must be in your PYTHONPATH environment variable.  Most
 examples can be run from the command line python and the name of the example:
 

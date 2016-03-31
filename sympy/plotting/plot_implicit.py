@@ -3,9 +3,8 @@
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
 by default, implements plotting using interval arithmetic. It switches to a
-fall back algorithm if the expression cannot be plotted used interval
-interval arithmetic. It is also possible to specify to use the fall back
-algorithm for all plots.
+fall back algorithm if the expression cannot be plotted using interval arithmetic.
+It is also possible to specify to use the fall back algorithm for all plots.
 
 Boolean combinations of expressions cannot be plotted by the fall back
 algorithm.
@@ -24,16 +23,19 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from plot import BaseSeries, Plot
-from experimental_lambdify import experimental_lambdify, vectorized_lambdify
-from intervalmath import interval
+from __future__ import print_function, division
+
+from .plot import BaseSeries, Plot
+from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
+from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Dummy
+from sympy import Eq, Tuple, sympify, Symbol, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
+from sympy.polys.polyutils import _sort_gens
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import flatten
 import warnings
 
 
@@ -42,7 +44,8 @@ class ImplicitSeries(BaseSeries):
     is_implicit = True
 
     def __init__(self, expr, var_start_end_x, var_start_end_y,
-            has_equality, use_interval_math, depth, nb_of_points):
+            has_equality, use_interval_math, depth, nb_of_points,
+            line_color):
         super(ImplicitSeries, self).__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
@@ -57,6 +60,7 @@ class ImplicitSeries(BaseSeries):
         self.nb_of_points = nb_of_points
         self.use_interval_math = use_interval_math
         self.depth = 4 + depth
+        self.line_color = line_color
 
     def __str__(self):
         return ('Implicit equation: %s for '
@@ -196,19 +200,22 @@ class ImplicitSeries(BaseSeries):
 
 
 @doctest_depends_on(modules=('matplotlib',))
-def plot_implicit(expr, *args, **kwargs):
+def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
     Arguments
     =========
 
     - ``expr`` : The equation / inequality that is to be plotted.
-    - ``(x, xmin, xmax)`` optional, 3-tuple denoting the range of symbol
-      ``x``
-    - ``(y, ymin, ymax)`` optional, 3-tuple denoting the range of symbol
-      ``y``
+    - ``x_var`` (optional) : symbol to plot on x-axis or tuple giving symbol
+      and range as ``(symbol, xmin, xmax)``
+    - ``y_var`` (optional) : symbol to plot on y-axis or tuple giving symbol
+      and range as ``(symbol, ymin, ymax)``
 
-    The following arguments can be passed as named parameters.
+    If neither ``x_var`` nor ``y_var`` are given then the free symbols in the
+    expression will be assigned in the order they are sorted.
+
+    The following keyword arguments can also be used:
 
     - ``adaptive``. Boolean. The default value is set to True. It has to be
         set to False if you want to use a mesh grid.
@@ -221,9 +228,14 @@ def plot_implicit(expr, *args, **kwargs):
 
     - ``title`` string .The title for the plot.
 
-    - ``xlabel`` string. The label for the x - axis
+    - ``xlabel`` string. The label for the x-axis
 
-    - ``ylabel`` string. The label for the y - axis
+    - ``ylabel`` string. The label for the y-axis
+
+    Aesthetics options:
+
+    - ``line_color``: float or string. Specifies the color for the plot.
+        See ``Plot`` to see how to set color for the plots.
 
     plot_implicit, by default, uses interval arithmetic to plot functions. If
     the expression cannot be plotted using interval arithmetic, it defaults to
@@ -232,8 +244,8 @@ def plot_implicit(expr, *args, **kwargs):
     grid. The mesh grid method can be effective when adaptive plotting using
     interval arithmetic, fails to plot with small line width.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Plot expressions:
 
@@ -272,6 +284,13 @@ def plot_implicit(expr, *args, **kwargs):
     Plotting Using boolean conjunctions.
 
     >>> p7 = plot_implicit(And(y > x, y > -x))
+
+    When plotting an expression with a single variable (y - 1, for example),
+    specify the x or the y variable explicitly:
+
+    >>> p8 = plot_implicit(y - 1, y_var=y)
+    >>> p9 = plot_implicit(x - 1, x_var=x)
+
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -301,40 +320,38 @@ def plot_implicit(expr, *args, **kwargs):
     elif isinstance(expr, (Equality, GreaterThan, LessThan)):
         has_equality = True
 
-    free_symbols = set(expr.free_symbols)
-    range_symbols = set([t[0] for t in args])
-    symbols = set_union(free_symbols, range_symbols)
-    if len(symbols) > 2:
+    xyvar = [i for i in (x_var, y_var) if i is not None]
+    free_symbols = expr.free_symbols
+    range_symbols = Tuple(*flatten(xyvar)).free_symbols
+    undeclared = free_symbols - range_symbols
+    if len(free_symbols & range_symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")
 
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)
-    if len(args) == 2:
-        var_start_end_x = args[0]
-        var_start_end_y = args[1]
-    elif len(args) == 1:
-        if len(free_symbols) == 2:
-            var_start_end_x = args[0]
-            var_start_end_y, = (Tuple(e) + default_range
-                                for e in (free_symbols - range_symbols))
-        else:
-            var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
-            #Create a random symbol
-            var_start_end_y = Tuple(Dummy()) + default_range
+    def _range_tuple(s):
+        if isinstance(s, Symbol):
+            return Tuple(s) + default_range
+        if len(s) == 3:
+            return Tuple(*s)
+        raise ValueError('symbol or `(symbol, min, max)` expected but got %s' % s)
 
-    elif len(args) == 0:
-        if len(free_symbols) == 1:
-            var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
-            #create a random symbol
-            var_start_end_y = Tuple(Dummy()) + default_range
+    if len(xyvar) == 0:
+        xyvar = list(_sort_gens(free_symbols))
+    var_start_end_x = _range_tuple(xyvar[0])
+    x = var_start_end_x[0]
+    if len(xyvar) != 2:
+        if x in undeclared or not undeclared:
+            xyvar.append(Dummy('f(%s)' % x.name))
         else:
-            var_start_end_x, var_start_end_y = (Tuple(e) + default_range
-                                                for e in free_symbols)
+            xyvar.append(undeclared.pop())
+    var_start_end_y = _range_tuple(xyvar[1])
 
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
     depth = kwargs.pop('depth', 0)
+    line_color = kwargs.pop('line_color', "blue")
     #Check whether the depth is greater than 4 or less than 0.
     if depth > 4:
         depth = 4
@@ -343,12 +360,15 @@ def plot_implicit(expr, *args, **kwargs):
 
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     has_equality, use_interval, depth,
-                                    nb_of_points)
+                                    nb_of_points, line_color)
     show = kwargs.pop('show', True)
 
     #set the x and y limits
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
+    # set the x and y labels
+    kwargs.setdefault('xlabel', var_start_end_x[0].name)
+    kwargs.setdefault('ylabel', var_start_end_y[0].name)
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()

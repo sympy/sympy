@@ -1,5 +1,7 @@
 """Square-free decomposition algorithms and related tools. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
@@ -34,9 +36,6 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
 
-from sympy.utilities import cythonized
-
-
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
@@ -59,7 +58,6 @@ def dup_sqf_p(f, K):
         return not dup_degree(dup_gcd(f, dup_diff(f, 1, K), K))
 
 
-@cythonized("u")
 def dmp_sqf_p(f, u, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[X]``.
@@ -82,7 +80,6 @@ def dmp_sqf_p(f, u, K):
         return not dmp_degree(dmp_gcd(f, dmp_diff(f, 1, u, K), u, K), u)
 
 
-@cythonized("s")
 def dup_sqf_norm(f, K):
     """
     Square-free norm of ``f`` in ``K[x]``, useful over algebraic domains.
@@ -127,7 +124,6 @@ def dup_sqf_norm(f, K):
     return s, f, r
 
 
-@cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
     """
     Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
@@ -178,7 +174,6 @@ def dmp_sqf_norm(f, u, K):
     return s, f, r
 
 
-@cythonized("i")
 def dup_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
@@ -217,13 +212,12 @@ def dup_sqf_part(f, K):
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
     sqf = dup_quo(f, gcd, K)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
 
 
-@cythonized("u")
 def dmp_sqf_part(f, u, K):
     """
     Returns square-free part of a polynomial in ``K[X]``.
@@ -253,13 +247,12 @@ def dmp_sqf_part(f, u, K):
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dmp_ground_monic(sqf, u, K)
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
 
 
-@cythonized("i")
 def dup_gf_sqf_list(f, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
@@ -277,7 +270,6 @@ def dmp_gf_sqf_list(f, u, K, all=False):
     raise NotImplementedError('multivariate polynomials over finite fields')
 
 
-@cythonized("i")
 def dup_sqf_list(f, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
@@ -299,7 +291,7 @@ def dup_sqf_list(f, K, all=False):
     if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
     else:
@@ -363,7 +355,6 @@ def dup_sqf_list_include(f, K, all=False):
         return [(g, 1)] + factors
 
 
-@cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[X]``.
@@ -388,7 +379,7 @@ def dmp_sqf_list(f, u, K, all=False):
     if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
     else:
@@ -424,7 +415,6 @@ def dmp_sqf_list(f, u, K, all=False):
     return coeff, result
 
 
-@cythonized("u")
 def dmp_sqf_list_include(f, u, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.

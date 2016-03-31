@@ -20,11 +20,12 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
-from __future__ import with_statement
+from __future__ import print_function, division
 
 from operator import mul
 
 from sympy.core import oo
+from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
@@ -50,17 +51,28 @@ def order_at(a, p, t):
     if p == Poly(t, t):
         return a.as_poly(t).ET()[0][0]
 
-    # TODO: Can this be done more efficiently?
-    # Perhaps using sqf factorization, binary search with an upper bound of
-    # a.degree(t)//p.degree(t), or some other clever method.
-    n = -1
-    p1 = Poly(1, t)
-    r = Poly(0, t)
+    # Uses binary search for calculating the power. power_list collects the tuples
+    # (p^k,k) where each k is some power of 2. After deciding the largest k
+    # such that k is power of 2 and p^k|a the loop iteratively calculates
+    # the actual power.
+    power_list = []
+    p1 = p
+    r = a.rem(p1)
+    tracks_power = 1
     while r.is_zero:
-        n += 1
-        p1 = p1*p
+        power_list.append((p1,tracks_power))
+        p1 = p1*p1
+        tracks_power *= 2
         r = a.rem(p1)
-
+    n = 0
+    product = Poly(1, t)
+    while len(power_list) != 0:
+        final = power_list.pop()
+        productf = product*final[0]
+        r = a.rem(productf)
+        if r.is_zero:
+            n += final[1]
+            product = productf
     return n
 
 
@@ -193,7 +205,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
-    # assert a.div(p)[1]
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
@@ -213,19 +224,21 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                     a, m, z = A
                     if a == 1:
                         n = min(n, m)
-        else:
-            raise NotImplementedError("Tangent case not implemented yet for "
-                "RDE special_denom().")
-        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        # elif case == 'tan':
-        #     alpha*sqrt(-1) + beta = (-b/a).rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
-        #     if 2*beta == Dv/v for some v in k* (see pg. 176) and \
-        #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
-        #     # parametric logarithmic derivative problem
-        #         n = min(n, m)
 
+        elif case == 'tan':
+            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+
+                if recognize_log_derivative(2*betaa, betad, DE):
+                    A = parametric_log_deriv(alphaa*sqrt(-1)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
+                    if A is not None:
+                       a, m, z = A
+                       if a == 1:
+                           n = min(n, m)
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
@@ -297,7 +310,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 except NonElementaryIntegralException:
                     pass
                 else:
-                    assert len(m) == 1
+                    if len(m) != 1:
+                        raise ValueError("Length of m should be 1")
                     n = max(n, m[0])
 
             elif db == da:
@@ -318,7 +332,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         except NonElementaryIntegralException:
                             pass
                         else:
-                            assert len(m) == 1
+                            if len(m) != 1:
+                                raise ValueError("Length of m should be 1")
                             n = max(n, m[0])
 
     elif case == 'exp':
@@ -368,12 +383,11 @@ def spde(a, b, c, n, DE):
 
     alpha = Poly(1, DE.t)
     beta = Poly(0, DE.t)
-    pow_a = 0
 
     while True:
-        if n < 0:
-            if c.is_zero:
-                return (zero, zero, 0, zero, beta)
+        if c.is_zero:
+            return (zero, zero, 0, zero, beta)  # -1 is more to the point
+        if (n < 0) is True:
             raise NonElementaryIntegralException
 
         g = a.gcd(b)
@@ -391,9 +405,9 @@ def spde(a, b, c, n, DE):
         b += derivation(a, DE)
         c = z - derivation(r, DE)
         n -= a.degree(DE.t)
+
+        beta += alpha * r
         alpha *= a
-        beta += (a**pow_a)*r
-        pow_a += 1
 
 def no_cancel_b_large(b, c, n, DE):
     """
@@ -650,8 +664,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             h, b0, c0 = R
             with DecrementLevel(DE):
                 b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-                assert b0 is not None  # See above comment
-                assert c0 is not None
+                if b0 is None:  # See above comment
+                    raise ValueError("b0 should be a non-Null value")
+                if c0 is  None:
+                    raise ValueError("c0 should be a non-Null value")
                 y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
             return h + y
 
@@ -660,7 +676,8 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
         # TODO: Is this check necessary, and if so, what should it do if it fails?
         # b comes from the first element returned from spde()
-        assert b.as_poly(DE.t).LC().is_number
+        if not b.as_poly(DE.t).LC().is_number:
+            raise TypeError("Result should be a number")
 
         if parametric:
             raise NotImplementedError("prde_no_cancel_b_equal() is not yet "
@@ -736,6 +753,9 @@ def rischDE(fa, fd, ga, gd, DE):
         n = oo
 
     B, C, m, alpha, beta = spde(A, B, C, n, DE)
-    y = solve_poly_rde(B, C, m, DE)
+    if C.is_zero:
+        y = C
+    else:
+        y = solve_poly_rde(B, C, m, DE)
 
     return (alpha*y + beta, hn*hs)

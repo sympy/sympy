@@ -8,7 +8,6 @@ def test_function_series1():
     """Create our new "sin" function."""
 
     class my_function(Function):
-        nargs = 1
 
         def fdiff(self, argindex=1):
             return cos(self.args[0])
@@ -28,7 +27,6 @@ def test_function_series2():
     """Create our new "cos" function."""
 
     class my_function2(Function):
-        nargs = 1
 
         def fdiff(self, argindex=1):
             return -sin(self.args[0])
@@ -55,7 +53,6 @@ def test_function_series3():
     """
 
     class mytanh(Function):
-        nargs = 1
 
         def fdiff(self, argindex=1):
             return 1 - mytanh(self.args[0])**2

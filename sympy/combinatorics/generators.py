@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
+from sympy.core.compatibility import range
 
 
 def symmetric(n):
@@ -15,10 +18,9 @@ def symmetric(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
-    [Permutation(2), Permutation(1, 2), Permutation(2)(0, 1),
-     Permutation(0, 1, 2), Permutation(0, 2, 1), Permutation(0, 2)]
+    [(2), (1 2), (2)(0 1), (0 1 2), (0 2 1), (0 2)]
     """
-    for perm in variations(range(n), n):
+    for perm in variations(list(range(n)), n):
         yield Permutation(perm)
 
 
@@ -33,15 +35,15 @@ def cyclic(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
-    [Permutation(4), Permutation(0, 1, 2, 3, 4), Permutation(0, 2, 4, 1, 3),
-     Permutation(0, 3, 1, 4, 2), Permutation(0, 4, 3, 2, 1)]
+    [(4), (0 1 2 3 4), (0 2 4 1 3),
+     (0 3 1 4 2), (0 4 3 2 1)]
 
     See Also
     ========
     dihedral
     """
-    gen = range(n)
-    for i in xrange(n):
+    gen = list(range(n))
+    for i in range(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
 
@@ -57,9 +59,9 @@ def alternating(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
-    [Permutation(2), Permutation(0, 1, 2), Permutation(0, 2, 1)]
+    [(2), (0 1 2), (0 2 1)]
     """
-    for perm in variations(range(n), n):
+    for perm in variations(list(range(n)), n):
         p = Permutation(perm)
         if p.is_even:
             yield p
@@ -80,8 +82,7 @@ def dihedral(n):
     >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
-    [Permutation(2), Permutation(0, 2), Permutation(0, 1, 2),
-     Permutation(1, 2), Permutation(0, 2, 1), Permutation(2)(0, 1)]
+    [(2), (0 2), (0 1 2), (1 2), (0 2 1), (2)(0 1)]
 
     See Also
     ========
@@ -96,8 +97,8 @@ def dihedral(n):
         yield Permutation([2, 3, 0, 1])
         yield Permutation([3, 2, 1, 0])
     else:
-        gen = range(n)
-        for i in xrange(n):
+        gen = list(range(n))
+        for i in range(n):
             yield Permutation(gen)
             yield Permutation(gen[::-1])
             gen = rotate_left(gen, 1)
@@ -250,9 +251,9 @@ def rubik(n):
         g.append(Permutation(p))
 
     g = []  # container for the group's permutations
-    I = range(6*n**2)  # the identity permutation used for checking
+    I = list(range(6*n**2))  # the identity permutation used for checking
 
-    # define permutations corresonding to cw rotations of the planes
+    # define permutations corresponding to cw rotations of the planes
     # up TO the last plane from that direction; by not including the
     # last plane, the orientation of the cube is maintained.
 
@@ -273,7 +274,7 @@ def rubik(n):
         # record
         perm()
         # restore
-        # bring face to fron
+        # bring face to front
         UCW()
         fccw(i)
     # restore

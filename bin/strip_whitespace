@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import with_statement
+from __future__ import print_function
 
 import os
 
@@ -20,13 +20,13 @@ def strip_file(filename, write, report):
     for index, line in enumerate(lines):
         if line.endswith(" \n"):
             if report:
-                print "%s, line %s" % (filename, index + 1)
+                print("%s, line %s" % (filename, index + 1))
             if write:
                 lines[index] = line.rstrip() + "\n"
                 hit = True
         if line.endswith("\r\n"):
             if report and not cr:
-                print "%s, line %s (crlf now silent)" % (filename, index + 1)
+                print("%s, line %s (crlf now silent)" % (filename, index + 1))
                 cr = True
             if write:
                 lines[index] = line.rstrip() + "\n"
@@ -36,7 +36,7 @@ def strip_file(filename, write, report):
     if lines and not lines[-1].endswith("\n"):
         lines[-1] += "\n"
         if report:
-            print "%s, no newline at eof" % filename
+            print("%s, no newline at eof" % filename)
         if write:
             hit = True
 
@@ -48,7 +48,7 @@ def strip_file(filename, write, report):
         extra += 1
 
     if extra > 0 and report:
-        print "%s, %d extra newlines at eof" % (filename, extra)
+        print("%s, %d extra newlines at eof" % (filename, extra))
 
     if write and hit:
         # without "b" the lines may be written in sys-dep format
@@ -62,10 +62,12 @@ def go(path, write, report):
         ".cc",
         ".h",
         ".py",
+        ".rst",
     ]
     for root, dirs, files in os.walk(path):
-        if ".git" in dirs:
-            dirs.remove(".git")
+        for b in [".git"]:
+            if b in dirs:
+                dirs.remove(b)
         for file in files:
             if os.path.splitext(file)[1] not in allowed_ext:
                 continue

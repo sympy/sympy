@@ -139,6 +139,6 @@ try:
         import plot
         return plot.PygletPlot(*args, **kwargs)
 
-except Exception, e:
+except Exception as e:
     def PygletPlot(*args, **kwargs):
         raise e

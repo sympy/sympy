@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
 __all__ = ['Particle']
 
 from sympy import sympify
-from sympy.physics.mechanics.point import Point
+from sympy.physics.vector import Point
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class Particle(object):
@@ -40,34 +43,66 @@ class Particle(object):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
-        self.set_mass(mass)
-        self.set_point(point)
-        self._pe = sympify(0)
+        self.mass = mass
+        self.point = point
+        self.potential_energy = 0
 
     def __str__(self):
         return self._name
 
     __repr__ = __str__
 
-    def get_mass(self):
+    @property
+    def mass(self):
         """Mass of the particle."""
         return self._mass
 
-    def set_mass(self, mass):
-        self._mass = sympify(mass)
+    @mass.setter
+    def mass(self, value):
+        self._mass = sympify(value)
 
-    mass = property(get_mass, set_mass)
+    def get_mass(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "Particle.get_mass(self)",
+                useinstead="property sympy.physics.mechanics.Particle.mass",
+                deprecated_since_version="1.0", issue=9800).warn()
+        return self.mass
 
-    def get_point(self):
+    def set_mass(self, value):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "Particle.set_mass(self, value)",
+                useinstead="property sympy.physics.mechanics.Particle.mass",
+                deprecated_since_version="1.0", issue=9800).warn()
+        self.mass = value
+
+    @property
+    def point(self):
         """Point of the particle."""
         return self._point
 
-    def set_point(self, p):
+    @point.setter
+    def point(self, p):
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
 
-    point = property(get_point, set_point)
+    def get_point(self):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "Particle.get_point(self)",
+                useinstead="property sympy.physics.mechanics.Particle.point",
+                deprecated_since_version="1.0", issue=9800).warn()
+        return self.point
+
+    def set_point(self, p):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics.Particle." +
+                    "set_point(self, p)",
+                useinstead="property sympy.physics.mechanics.Particle.point",
+                deprecated_since_version="1.0", issue=9800).warn()
+        self.point = p
 
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
@@ -178,7 +213,28 @@ class Particle(object):
         return (self.mass / sympify(2) * self.point.vel(frame) &
                 self.point.vel(frame))
 
-    def set_potential_energy(self, scalar):
+    @property
+    def potential_energy(self):
+        """The potential energy of the Particle.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point
+        >>> from sympy import symbols
+        >>> m, g, h = symbols('m g h')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.potential_energy = m * g * h
+        >>> P.potential_energy
+        g*h*m
+
+        """
+
+        return self._pe
+
+    @potential_energy.setter
+    def potential_energy(self, scalar):
         """Used to set the potential energy of the Particle.
 
         Parameters
@@ -195,28 +251,17 @@ class Particle(object):
         >>> m, g, h = symbols('m g h')
         >>> O = Point('O')
         >>> P = Particle('P', O, m)
-        >>> P.set_potential_energy(m * g * h)
+        >>> P.potential_energy = m * g * h
 
         """
 
         self._pe = sympify(scalar)
 
-    @property
-    def potential_energy(self):
-        """The potential energy of the Particle.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import Particle, Point
-        >>> from sympy import symbols
-        >>> m, g, h = symbols('m g h')
-        >>> O = Point('O')
-        >>> P = Particle('P', O, m)
-        >>> P.set_potential_energy(m * g * h)
-        >>> P.potential_energy
-        g*h*m
-
-        """
-
-        return self._pe
+    def set_potential_energy(self, scalar):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "Particle.set_potential_energy(self, scalar)",
+                useinstead="property sympy.physics.mechanics." +
+                    "Particle.potential_energy",
+                deprecated_since_version="1.0", issue=9800).warn()
+        self.potential_energy = scalar

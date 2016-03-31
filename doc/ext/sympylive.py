@@ -5,7 +5,7 @@
     Allow `SymPy Live <http://live.sympy.org/>`_ to be used for interactive
     evaluation of SymPy's code examples.
 
-    :copyright: Copyright 2011 by the SymPy Development Team, see AUTHORS.
+    :copyright: Copyright 2014 by the SymPy Development Team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 """
 

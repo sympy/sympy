@@ -1,13 +1,16 @@
-from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from __future__ import print_function, division
+
+from sympy.core import Basic, Dict, sympify
+from sympy.core.compatibility import as_int, default_sort_key, range
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
+from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
 
 
-class Partition(C.FiniteSet):
+class Partition(FiniteSet):
     """
     This class represents an abstract partition.
 
@@ -23,7 +26,7 @@ class Partition(C.FiniteSet):
     _rank = None
     _partition = None
 
-    def __new__(cls, partition):
+    def __new__(cls, *partition):
         """
         Generates a new partition object.
 
@@ -34,9 +37,9 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
+        >>> a = Partition([1, 2], [3])
         >>> a
-        {{1, 2}, {3}}
+        {{3}, {1, 2}}
         >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
@@ -46,15 +49,16 @@ class Partition(C.FiniteSet):
 
         """
         args = partition
-        if not all(isinstance(part, list) for part in args):
-            raise ValueError("Partition should be a list of lists.")
+        if not all(isinstance(part, (list, FiniteSet)) for part in args):
+            raise ValueError(
+                "Each argument to Partition should be a list or a FiniteSet")
 
         # sort so we have a canonical reference for RGS
         partition = sorted(sum(partition, []), key=default_sort_key)
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, map(C.FiniteSet, args))
+        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -71,10 +75,10 @@ class Partition(C.FiniteSet):
         >>> from sympy.utilities.iterables import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
-        >>> a = Partition([[1, 2]])
-        >>> b = Partition([[3, 4]])
-        >>> c = Partition([[1, x]])
-        >>> d = Partition([range(4)])
+        >>> a = Partition([1, 2])
+        >>> b = Partition([3, 4])
+        >>> c = Partition([1, x])
+        >>> d = Partition(list(range(4)))
         >>> l = [d, b, a + 1, a, c]
         >>> l.sort(key=default_sort_key); l
         [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
@@ -84,7 +88,7 @@ class Partition(C.FiniteSet):
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return self.size, members, self.rank
+        return list(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
@@ -94,11 +98,12 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> Partition([[1], [2, 3]]).partition
+        >>> Partition([1], [2, 3]).partition
         [[1], [2, 3]]
         """
         if self._partition is None:
-            self._partition = sorted(sorted(p) for p in self.args)
+            self._partition = sorted([sorted(p, key=default_sort_key)
+                                      for p in self.args])
         return self._partition
 
     def __add__(self, other):
@@ -110,7 +115,7 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
+        >>> a = Partition([1, 2], [3])
         >>> a.rank
         1
         >>> (a + 1).rank
@@ -134,7 +139,7 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3]])
+        >>> a = Partition([1, 2], [3])
         >>> a.rank
         1
         >>> (a - 1).rank
@@ -153,8 +158,8 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
+        >>> a = Partition([1, 2], [3, 4, 5])
+        >>> b = Partition([1], [2, 3], [4], [5])
         >>> a.rank, b.rank
         (9, 34)
         >>> a <= a
@@ -172,8 +177,8 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3, 4, 5]])
-        >>> b = Partition([[1], [2, 3], [4], [5]])
+        >>> a = Partition([1, 2], [3, 4, 5])
+        >>> b = Partition([1], [2, 3], [4], [5])
         >>> a.rank, b.rank
         (9, 34)
         >>> a < b
@@ -190,7 +195,7 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3], [4, 5]])
+        >>> a = Partition([1, 2], [3], [4, 5])
         >>> a.rank
         13
         """
@@ -213,13 +218,13 @@ class Partition(C.FiniteSet):
         ========
 
         >>> from sympy.combinatorics.partitions import Partition
-        >>> a = Partition([[1, 2], [3], [4, 5]])
+        >>> a = Partition([1, 2], [3], [4, 5])
         >>> a.members
         (1, 2, 3, 4, 5)
         >>> a.RGS
         (0, 0, 1, 2, 2)
         >>> a + 1
-        {{1, 2}, {3}, {4}, {5}}
+        {{3}, {4}, {5}, {1, 2}}
         >>> _.RGS
         (0, 0, 1, 2, 3)
         """
@@ -228,7 +233,8 @@ class Partition(C.FiniteSet):
         for i, part in enumerate(partition):
             for j in part:
                 rgs[j] = i
-        return tuple([rgs[i] for i in sorted(i for p in partition for i in p)])
+        return tuple([rgs[i] for i in sorted(
+            [i for p in partition for i in p], key=default_sort_key)])
 
     @classmethod
     def from_rgs(self, rgs, elements):
@@ -249,21 +255,21 @@ class Partition(C.FiniteSet):
         {{c}, {a, d}, {b, e}}
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
         {{e}, {a, c}, {b, d}}
-        >>> a = Partition([[1, 4], [2], [3, 5]])
+        >>> a = Partition([1, 4], [2], [3, 5])
         >>> Partition.from_rgs(a.RGS, a.members)
-        {{1, 4}, {2}, {3, 5}}
+        {{2}, {1, 4}, {3, 5}}
         """
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
-        partition = [[] for i in xrange(max_elem)]
+        partition = [[] for i in range(max_elem)]
         j = 0
         for i in rgs:
             partition[i].append(elements[j])
             j += 1
         if not all(p for p in partition):
             raise ValueError('some blocks of the partition were empty.')
-        return Partition(partition)
+        return Partition(*partition)
 
 
 class IntegerPartition(Basic):
@@ -307,13 +313,14 @@ class IntegerPartition(Basic):
         >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
         IntegerPartition(14, (5, 4, 3, 1, 1))
-        >>> print a
+        >>> print(a)
         [5, 4, 3, 1, 1]
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
 
         If the value that the partion should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...
@@ -324,7 +331,7 @@ class IntegerPartition(Basic):
             integer, partition = partition, integer
         if isinstance(partition, (dict, Dict)):
             _ = []
-            for k, v in sorted(partition.items(), reverse=True):
+            for k, v in sorted(list(partition.items()), reverse=True):
                 if not v:
                     continue
                 k, v = as_int(k), as_int(v)
@@ -358,7 +365,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([4])
-        >>> print p.prev_lex()
+        >>> print(p.prev_lex())
         [3, 1]
         >>> p.partition > p.prev_lex().partition
         True
@@ -395,7 +402,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([3, 1])
-        >>> print p.next_lex()
+        >>> print(p.next_lex())
         [4]
         >>> p.partition < p.next_lex().partition
         True
@@ -519,7 +526,7 @@ class IntegerPartition(Basic):
         ========
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> print IntegerPartition([1, 1, 5]).as_ferrers()
+        >>> print(IntegerPartition([1, 1, 5]).as_ferrers())
         #####
         #
         #
@@ -589,11 +596,11 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in xrange(0, m + 1):
+    for i in range(0, m + 1):
         d[0, i] = 1
 
-    for i in xrange(1, m + 1):
-        for j in xrange(m):
+    for i in range(1, m + 1):
+        for j in range(m):
             if j <= m - i:
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
@@ -621,7 +628,7 @@ def RGS_enum(m):
     We can check that the enumeration is correct by actually generating
     the partitions. Here, the 15 partitions of 4 items are generated:
 
-    >>> a = Partition([range(4)])
+    >>> a = Partition(list(range(4)))
     >>> s = set()
     >>> for i in range(20):
     ...     s.add(a)
@@ -660,7 +667,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m + 1):
+    for i in range(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -670,7 +677,7 @@ def RGS_unrank(rank, m):
         else:
             L[i] = int(rank / v + 1)
             rank %= v
-    return map(lambda x: x - 1, L[1:])
+    return [x - 1 for x in L[1:]]
 
 
 def RGS_rank(rgs):
@@ -689,7 +696,7 @@ def RGS_rank(rgs):
     rgs_size = len(rgs)
     rank = 0
     D = RGS_generalized(rgs_size)
-    for i in xrange(1, rgs_size):
+    for i in range(1, rgs_size):
         n = len(rgs[(i + 1):])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]

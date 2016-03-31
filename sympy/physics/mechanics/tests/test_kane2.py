@@ -1,7 +1,10 @@
-from sympy import cos, expand, Matrix, sin, symbols, tan, Poly, zeros, solve
-from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     RigidBody, KanesMethod, inertia, Particle,
-                                     dot, cross)
+from sympy.core.compatibility import range
+from sympy import cos, Matrix, simplify, sin, solve, tan, pi
+from sympy import symbols, trigsimp, zeros
+from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
+                                     inertia, inertia_of_point_mass,
+                                     Point, ReferenceFrame, RigidBody)
+
 
 def test_aux_dep():
     # This test is about rolling disc dynamics, comparing the results found
@@ -44,10 +47,8 @@ def test_aux_dep():
     qd = [qi.diff(t) for qi in q]
     u = dynamicsymbols('u:6')
     ud = [ui.diff(t) for ui in u]
-    #ud_zero = {udi : 0 for udi in ud}
     ud_zero = dict(zip(ud, [0.]*len(ud)))
     ua = dynamicsymbols('ua:3')
-    #ua_zero = {uai : 0 for uai in ua}
     ua_zero = dict(zip(ua, [0.]*len(ua)))
 
     # Reference frames:
@@ -127,7 +128,6 @@ def test_aux_dep():
 
     u_dep = A_rs[:, :3] * Matrix(u[:3])
     u_dep_dict = dict(zip(u[3:], u_dep))
-    #u_dep_dict = {udi : u_depi[0] for udi, u_depi in zip(u[3:], u_dep.tolist())}
 
     # Active forces: F_O acting on point O; F_P acting on point P.
     # Generalized active forces (unconstrained): Fr_u = F_point * pv_point.
@@ -182,42 +182,274 @@ def test_aux_dep():
                     .subs({q[3]: -r*cos(q[1])}).expand()
     kdd = kane.kindiffdict()
 
-
-    # Test
-    # First try Fr_c == fr;
-    # Second try Fr_star_c == frstar;
-    # Third try Fr_star_steady == frstar_steady.
-    # Both signs are checked in case the equations were found with an inverse
-    # sign.
-    assert ((Matrix(Fr_c).expand() == fr.expand()) or
-             (Matrix(Fr_c).expand() == (-fr).expand()))
-
-    assert ((Matrix(Fr_star_c).expand() == frstar.expand()) or
-             (Matrix(Fr_star_c).expand() == (-frstar).expand()))
-
-    assert ((Matrix(Fr_star_steady).expand() == frstar_steady.expand()) or
-             (Matrix(Fr_star_steady).expand() == (-frstar_steady).expand()))
+    assert Matrix(Fr_c).expand() == fr.expand()
+    assert Matrix(Fr_star_c.subs(kdd)).expand() == frstar.expand()
+    assert (simplify(Matrix(Fr_star_steady).expand()) ==
+            simplify(frstar_steady.expand()))
 
 
-def test_mat_inv_mul():
-    # Just a quick test to check that KanesMethod._mat_inv_mul works as
-    # intended. Uses SymPy generated primes as matrix entries, so each entry in
-    # each matrix should be symbolic and unique, allowing proper comparison.
-    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
-    from sympy.physics.mechanics import ReferenceFrame, KanesMethod
+def test_non_central_inertia():
+    # This tests that the calculation of Fr* does not depend the point
+    # about which the inertia of a rigid body is defined. This test solves
+    # exercises 8.12, 8.17 from Kane 1985.
 
-    # Just need to create an instance of KanesMethod to get to _mat_inv_mul
-    mat_inv_mul = KanesMethod(ReferenceFrame('N'), [1], [1])._mat_inv_mul
+    # Declare symbols
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    q1d, q2d, q3d = dynamicsymbols('q1:4', level=1)
+    u1, u2, u3, u4, u5 = dynamicsymbols('u1:6')
+    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta')
+    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t')
+    Q1, Q2, Q3 = symbols('Q1, Q2 Q3')
+    IA22, IA23, IA33 = symbols('IA22 IA23 IA33')
 
-    # going to form 3 matrices
-    # 1 n x n
-    # different n x n
-    # 1 n x 2n
-    n = 3
-    m1 = Matrix(n, n, lambda i, j: prime(i * n + j + 2))
-    m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
-    m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
+    # Reference Frames
+    F = ReferenceFrame('F')
+    P = F.orientnew('P', 'axis', [-theta, F.y])
+    A = P.orientnew('A', 'axis', [q1, P.x])
+    A.set_ang_vel(F, u1*A.x + u3*A.z)
+    # define frames for wheels
+    B = A.orientnew('B', 'axis', [q2, A.z])
+    C = A.orientnew('C', 'axis', [q3, A.z])
+    B.set_ang_vel(A, u4 * A.z)
+    C.set_ang_vel(A, u5 * A.z)
 
-    assert mat_inv_mul(m1, m2) == m1.inv() * m2
-    assert mat_inv_mul(m1, m3) == m1.inv() * m3
+    # define points D, S*, Q on frame A and their velocities
+    pD = Point('D')
+    pD.set_vel(A, 0)
+    # u3 will not change v_D_F since wheels are still assumed to roll without slip.
+    pD.set_vel(F, u2 * A.y)
+
+    pS_star = pD.locatenew('S*', e*A.y)
+    pQ = pD.locatenew('Q', f*A.y - R*A.x)
+    for p in [pS_star, pQ]:
+        p.v2pt_theory(pD, F, A)
+
+    # masscenters of bodies A, B, C
+    pA_star = pD.locatenew('A*', a*A.y)
+    pB_star = pD.locatenew('B*', b*A.z)
+    pC_star = pD.locatenew('C*', -b*A.z)
+    for p in [pA_star, pB_star, pC_star]:
+        p.v2pt_theory(pD, F, A)
+
+    # points of B, C touching the plane P
+    pB_hat = pB_star.locatenew('B^', -R*A.x)
+    pC_hat = pC_star.locatenew('C^', -R*A.x)
+    pB_hat.v2pt_theory(pB_star, F, B)
+    pC_hat.v2pt_theory(pC_star, F, C)
+
+    # the velocities of B^, C^ are zero since B, C are assumed to roll without slip
+    kde = [q1d - u1, q2d - u4, q3d - u5]
+    vc = [dot(p.vel(F), A.y) for p in [pB_hat, pC_hat]]
+
+    # inertias of bodies A, B, C
+    # IA22, IA23, IA33 are not specified in the problem statement, but are
+    # necessary to define an inertia object. Although the values of
+    # IA22, IA23, IA33 are not known in terms of the variables given in the
+    # problem statement, they do not appear in the general inertia terms.
+    inertia_A = inertia(A, IA, IA22, IA33, 0, IA23, 0)
+    inertia_B = inertia(B, K, K, J)
+    inertia_C = inertia(C, K, K, J)
+
+    # define the rigid bodies A, B, C
+    rbA = RigidBody('rbA', pA_star, A, mA, (inertia_A, pA_star))
+    rbB = RigidBody('rbB', pB_star, B, mB, (inertia_B, pB_star))
+    rbC = RigidBody('rbC', pC_star, C, mB, (inertia_C, pC_star))
+
+    km = KanesMethod(F, q_ind=[q1, q2, q3], u_ind=[u1, u2], kd_eqs=kde,
+                     u_dependent=[u4, u5], velocity_constraints=vc,
+                     u_auxiliary=[u3])
+
+    forces = [(pS_star, -M*g*F.x), (pQ, Q1*A.x + Q2*A.y + Q3*A.z)]
+    bodies = [rbA, rbB, rbC]
+    fr, fr_star = km.kanes_equations(forces, bodies)
+    vc_map = solve(vc, [u4, u5])
+
+    # KanesMethod returns the negative of Fr, Fr* as defined in Kane1985.
+    fr_star_expected = Matrix([
+            -(IA + 2*J*b**2/R**2 + 2*K +
+              mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
+            -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
+            0])
+    assert (trigsimp(fr_star.subs(vc_map).subs(u3, 0)).doit().expand() ==
+            fr_star_expected.expand())
+
+    # define inertias of rigid bodies A, B, C about point D
+    # I_S/O = I_S/S* + I_S*/O
+    bodies2 = []
+    for rb, I_star in zip([rbA, rbB, rbC], [inertia_A, inertia_B, inertia_C]):
+        I = I_star + inertia_of_point_mass(rb.mass,
+                                           rb.masscenter.pos_from(pD),
+                                           rb.frame)
+        bodies2.append(RigidBody('', rb.masscenter, rb.frame, rb.mass,
+                                 (I, pD)))
+    fr2, fr_star2 = km.kanes_equations(forces, bodies2)
+    assert (trigsimp(fr_star2.subs(vc_map).subs(u3, 0)).doit().expand() ==
+            fr_star_expected.expand())
+
+def test_sub_qdot():
+    # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
+    # some velocities in terms of q, qdot.
+
+    ## --- Declare symbols ---
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    q1d, q2d, q3d = dynamicsymbols('q1:4', level=1)
+    u1, u2, u3 = dynamicsymbols('u1:4')
+    u_prime, R, M, g, e, f, theta = symbols('u\' R, M, g, e, f, theta')
+    a, b, mA, mB, IA, J, K, t = symbols('a b mA mB IA J K t')
+    IA22, IA23, IA33 = symbols('IA22 IA23 IA33')
+    Q1, Q2, Q3 = symbols('Q1 Q2 Q3')
+
+    # --- Reference Frames ---
+    F = ReferenceFrame('F')
+    P = F.orientnew('P', 'axis', [-theta, F.y])
+    A = P.orientnew('A', 'axis', [q1, P.x])
+    A.set_ang_vel(F, u1*A.x + u3*A.z)
+    # define frames for wheels
+    B = A.orientnew('B', 'axis', [q2, A.z])
+    C = A.orientnew('C', 'axis', [q3, A.z])
+
+    ## --- define points D, S*, Q on frame A and their velocities ---
+    pD = Point('D')
+    pD.set_vel(A, 0)
+    # u3 will not change v_D_F since wheels are still assumed to roll w/o slip
+    pD.set_vel(F, u2 * A.y)
+
+    pS_star = pD.locatenew('S*', e*A.y)
+    pQ = pD.locatenew('Q', f*A.y - R*A.x)
+    # masscenters of bodies A, B, C
+    pA_star = pD.locatenew('A*', a*A.y)
+    pB_star = pD.locatenew('B*', b*A.z)
+    pC_star = pD.locatenew('C*', -b*A.z)
+    for p in [pS_star, pQ, pA_star, pB_star, pC_star]:
+        p.v2pt_theory(pD, F, A)
+
+    # points of B, C touching the plane P
+    pB_hat = pB_star.locatenew('B^', -R*A.x)
+    pC_hat = pC_star.locatenew('C^', -R*A.x)
+    pB_hat.v2pt_theory(pB_star, F, B)
+    pC_hat.v2pt_theory(pC_star, F, C)
+
+    # --- relate qdot, u ---
+    # the velocities of B^, C^ are zero since B, C are assumed to roll w/o slip
+    kde = [dot(p.vel(F), A.y) for p in [pB_hat, pC_hat]]
+    kde += [u1 - q1d]
+    kde_map = solve(kde, [q1d, q2d, q3d])
+    for k, v in list(kde_map.items()):
+        kde_map[k.diff(t)] = v.diff(t)
+
+    # inertias of bodies A, B, C
+    # IA22, IA23, IA33 are not specified in the problem statement, but are
+    # necessary to define an inertia object. Although the values of
+    # IA22, IA23, IA33 are not known in terms of the variables given in the
+    # problem statement, they do not appear in the general inertia terms.
+    inertia_A = inertia(A, IA, IA22, IA33, 0, IA23, 0)
+    inertia_B = inertia(B, K, K, J)
+    inertia_C = inertia(C, K, K, J)
+
+    # define the rigid bodies A, B, C
+    rbA = RigidBody('rbA', pA_star, A, mA, (inertia_A, pA_star))
+    rbB = RigidBody('rbB', pB_star, B, mB, (inertia_B, pB_star))
+    rbC = RigidBody('rbC', pC_star, C, mB, (inertia_C, pC_star))
+
+    ## --- use kanes method ---
+    km = KanesMethod(F, [q1, q2, q3], [u1, u2], kd_eqs=kde, u_auxiliary=[u3])
+
+    forces = [(pS_star, -M*g*F.x), (pQ, Q1*A.x + Q2*A.y + Q3*A.z)]
+    bodies = [rbA, rbB, rbC]
+
+    # Q2 = -u_prime * u2 * Q1 / sqrt(u2**2 + f**2 * u1**2)
+    # -u_prime * R * u2 / sqrt(u2**2 + f**2 * u1**2) = R / Q1 * Q2
+    fr_expected = Matrix([
+            f*Q3 + M*g*e*sin(theta)*cos(q1),
+            Q2 + M*g*sin(theta)*sin(q1),
+            e*M*g*cos(theta) - Q1*f - Q2*R])
+             #Q1 * (f - u_prime * R * u2 / sqrt(u2**2 + f**2 * u1**2)))])
+    fr_star_expected = Matrix([
+            -(IA + 2*J*b**2/R**2 + 2*K +
+              mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
+            -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
+            0])
+
+    fr, fr_star = km.kanes_equations(forces, bodies)
+    assert (fr.expand() == fr_expected.expand())
+    assert (trigsimp(fr_star).expand() == fr_star_expected.expand())
+
+def test_sub_qdot2():
+    # This test solves exercises 8.3 from Kane 1985 and defines
+    # all velocities in terms of q, qdot. We check that the generalized active
+    # forces are correctly computed if u terms are only defined in the
+    # kinematic differential equations.
+    #
+    # This functionality was added in PR 8948. Without qdot/u substitution, the
+    # KanesMethod constructor will fail during the constraint initialization as
+    # the B matrix will be poorly formed and inversion of the dependent part
+    # will fail.
+
+    g, m, Px, Py, Pz, R, t = symbols('g m Px Py Pz R t')
+    q = dynamicsymbols('q:5')
+    qd = dynamicsymbols('q:5', level=1)
+    u = dynamicsymbols('u:5')
+
+    ## Define inertial, intermediate, and rigid body reference frames
+    A = ReferenceFrame('A')
+    B_prime = A.orientnew('B_prime', 'Axis', [q[0], A.z])
+    B = B_prime.orientnew('B', 'Axis', [pi/2 - q[1], B_prime.x])
+    C = B.orientnew('C', 'Axis', [q[2], B.z])
+
+    ## Define points of interest and their velocities
+    pO = Point('O')
+    pO.set_vel(A, 0)
+
+    # R is the point in plane H that comes into contact with disk C.
+    pR = pO.locatenew('R', q[3]*A.x + q[4]*A.y)
+    pR.set_vel(A, pR.pos_from(pO).diff(t, A))
+    pR.set_vel(B, 0)
+
+    # C^ is the point in disk C that comes into contact with plane H.
+    pC_hat = pR.locatenew('C^', 0)
+    pC_hat.set_vel(C, 0)
+
+    # C* is the point at the center of disk C.
+    pCs = pC_hat.locatenew('C*', R*B.y)
+    pCs.set_vel(C, 0)
+    pCs.set_vel(B, 0)
+
+    # calculate velocites of points C* and C^ in frame A
+    pCs.v2pt_theory(pR, A, B) # points C* and R are fixed in frame B
+    pC_hat.v2pt_theory(pCs, A, C) # points C* and C^ are fixed in frame C
+
+    ## Define forces on each point of the system
+    R_C_hat = Px*A.x + Py*A.y + Pz*A.z
+    R_Cs = -m*g*A.z
+    forces = [(pC_hat, R_C_hat), (pCs, R_Cs)]
+
+    ## Define kinematic differential equations
+    # let ui = omega_C_A & bi (i = 1, 2, 3)
+    # u4 = qd4, u5 = qd5
+    u_expr = [C.ang_vel_in(A) & uv for uv in B]
+    u_expr += qd[3:]
+    kde = [ui - e for ui, e in zip(u, u_expr)]
+    km1 = KanesMethod(A, q, u, kde)
+    fr1, _ = km1.kanes_equations(forces, [])
+
+    ## Calculate generalized active forces if we impose the condition that the
+    # disk C is rolling without slipping
+    u_indep = u[:3]
+    u_dep = list(set(u) - set(u_indep))
+    vc = [pC_hat.vel(A) & uv for uv in [A.x, A.y]]
+    km2 = KanesMethod(A, q, u_indep, kde,
+                      u_dependent=u_dep, velocity_constraints=vc)
+    fr2, _ = km2.kanes_equations(forces, [])
+
+    fr1_expected = Matrix([
+        -R*g*m*sin(q[1]),
+        -R*(Px*cos(q[0]) + Py*sin(q[0]))*tan(q[1]),
+        R*(Px*cos(q[0]) + Py*sin(q[0])),
+        Px,
+        Py])
+    fr2_expected = Matrix([
+        -R*g*m*sin(q[1]),
+        0,
+        0])
+    assert (trigsimp(fr1.expand()) == trigsimp(fr1_expected.expand()))
+    assert (trigsimp(fr2.expand()) == trigsimp(fr2_expected.expand()))

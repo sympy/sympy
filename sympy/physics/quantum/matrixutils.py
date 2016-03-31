@@ -1,6 +1,9 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
+from __future__ import print_function, division
+
 from sympy import Matrix, I, Expr, Integer
+from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
@@ -23,7 +26,7 @@ __all__ = [
 # Conditionally define the base classes for numpy and scipy.sparse arrays
 # for use in isinstance tests.
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 if not np:
     class numpy_ndarray(object):
         pass

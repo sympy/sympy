@@ -1,5 +1,9 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
+from __future__ import print_function, division
+from sympy.core.compatibility import range
+from .polyerrors import HeuristicGCDFailed
+
 HEU_GCD_MAX = 6
 
 def heugcd(f, g):
@@ -67,7 +71,7 @@ def heugcd(f, g):
             2*min(f_norm // abs(f.LC),
                   g_norm // abs(g.LC)) + 2)
 
-    for i in xrange(0, HEU_GCD_MAX):
+    for i in range(0, HEU_GCD_MAX):
         ff = f.evaluate(x0, x)
         gg = g.evaluate(x0, x)
 
@@ -137,7 +141,7 @@ def _gcd_interpolate(h, x, ring):
 
             # f += X**i*g
             if g:
-                for monom, coeff in g.terms():
+                for monom, coeff in g.iterterms():
                     f[(i,) + monom] = coeff
             i += 1
 

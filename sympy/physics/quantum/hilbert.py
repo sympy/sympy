@@ -5,7 +5,10 @@ Authors:
 * Matt Curry
 """
 
+from __future__ import print_function, division
+
 from sympy import Basic, Interval, oo, sympify
+from sympy.core.compatibility import u, range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -96,9 +99,8 @@ class HilbertSpace(Basic):
         return u'H'
 
     def _pretty(self, printer, *args):
-        # u = u'\u2108' # script
-        u = u'\u0048'
-        return prettyForm(u)
+        ustr = u'\N{LATIN CAPITAL LETTER H}'
+        return prettyForm(ustr)
 
     def _latex(self, printer, *args):
         return r'\mathcal{H}'
@@ -171,10 +173,9 @@ class ComplexSpace(HilbertSpace):
         return "C(%s)" % printer._print(self.dimension, *args)
 
     def _pretty(self, printer, *args):
-        # u = u'\u2102' # script
-        u = u'\u0043'
+        ustr = u'\N{LATIN CAPITAL LETTER C}'
         pform_exp = printer._print(self.dimension, *args)
-        pform_base = prettyForm(u)
+        pform_base = prettyForm(ustr)
         return pform_base**pform_exp
 
     def _latex(self, printer, *args):
@@ -224,8 +225,8 @@ class L2(HilbertSpace):
         return "L2(%s)" % printer._print(self.interval, *args)
 
     def _pretty(self, printer, *args):
-        pform_exp = prettyForm(u"2")
-        pform_base = prettyForm(u"L")
+        pform_exp = prettyForm(u'2')
+        pform_base = prettyForm(u'L')
         return pform_base**pform_exp
 
     def _latex(self, printer, *args):
@@ -271,9 +272,8 @@ class FockSpace(HilbertSpace):
         return "F"
 
     def _pretty(self, printer, *args):
-        # u = u'\u2131' # script
-        u = u'\u0046'
-        return prettyForm(u)
+        ustr = u'\N{LATIN CAPITAL LETTER F}'
+        return prettyForm(ustr)
 
     def _latex(self, printer, *args):
         return r'\mathcal{F}'
@@ -417,7 +417,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+                    pform = prettyForm(*pform.right(u(' ') + u('\N{N-ARY CIRCLED TIMES OPERATOR}') + u(' ')))
                 else:
                     pform = prettyForm(*pform.right(' x '))
         return pform
@@ -528,7 +528,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+                    pform = prettyForm(*pform.right(u(' ') + u('\N{CIRCLED PLUS}') + u(' ')))
                 else:
                     pform = prettyForm(*pform.right(' + '))
         return pform
@@ -639,7 +639,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
         if printer._use_unicode:
-            pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
+            pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\N{N-ARY CIRCLED TIMES OPERATOR}')))
         else:
             pform_exp = prettyForm(*pform_exp.left(prettyForm('x')))
         pform_base = printer._print(self.base, *args)

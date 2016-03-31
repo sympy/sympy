@@ -1,5 +1,7 @@
 """Implementation of :class:`PolynomialRing` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -10,15 +12,16 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
-from sympy.polys.monomialtools import monomial_key, build_product_order
+from sympy.polys.orderings import monomial_key, build_product_order
 
 from sympy.polys.agca.modules import FreeModulePolyRing
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, range
+from sympy.utilities import public
 
 # XXX why does this derive from CharacteristicZero???
 
-
+@public
 class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     """
     Base class for generalized polynomial rings.
@@ -39,12 +42,13 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             raise GeneratorsNeeded("generators not specified")
 
         lev = len(gens) - 1
+        self.ngens = len(gens)
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
         self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom = dom
-        self.gens = gens
+        self.domain = self.dom = dom
+        self.symbols = self.gens = gens
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))
 
@@ -83,7 +87,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Convert a GMPY `mpq` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
@@ -155,7 +159,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         from sympy.polys.distributedmodules import sdm_to_dict
         dic = sdm_to_dict(s)
         res = [{} for _ in range(n)]
-        for k, v in dic.iteritems():
+        for k, v in dic.items():
             res[k[0]][k[1:]] = v
         return res
 
@@ -167,7 +171,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         >>> from sympy import QQ, ilex
         >>> from sympy.abc import x, y
-        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
         >>> R._sdm_to_vector(L, 2)
         [x + 2*y, x*y]
@@ -182,7 +186,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].free_module(2)
+        >>> QQ.old_poly_ring(x).free_module(2)
         QQ[x]**2
         """
         return FreeModulePolyRing(self, rank)
@@ -193,15 +197,16 @@ def _vector_to_sdm_helper(v, order):
     from sympy.polys.distributedmodules import sdm_from_dict
     d = {}
     for i, e in enumerate(v):
-        for key, value in e.to_dict().iteritems():
+        for key, value in e.to_dict().items():
             d[(i,) + key] = value
     return sdm_from_dict(d, order)
 
 
+@public
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
 
-    is_Poly = True
+    is_PolynomialRing = is_Poly = True
     dtype = DMP
 
     def from_FractionField(K1, a, K0):
@@ -216,9 +221,9 @@ class GlobalPolynomialRing(PolynomialRingBase):
         >>> from sympy.abc import x
 
         >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
-        >>> K = ZZ.frac_field(x)
+        >>> K = ZZ.old_frac_field(x)
 
-        >>> F = ZZ[x].from_FractionField(f, K)
+        >>> F = ZZ.old_poly_ring(x).from_FractionField(f, K)
 
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True
@@ -240,7 +245,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         except PolynomialError:
             raise CoercionFailed("can't convert %s to type %s" % (a, self))
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)
 
         return self(rep)
@@ -265,7 +270,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         """
         >>> from sympy import lex, QQ
         >>> from sympy.abc import x, y
-        >>> R = QQ[x, y]
+        >>> R = QQ.old_poly_ring(x, y)
         >>> f = R.convert(x + 2*y)
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], lex)
@@ -313,10 +318,10 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         num, _ = dict_from_basic(p, gens=self.gens)
         den, _ = dict_from_basic(q, gens=self.gens)
 
-        for k, v in num.iteritems():
+        for k, v in num.items():
             num[k] = self.dom.from_sympy(v)
 
-        for k, v in den.iteritems():
+        for k, v in den.items():
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
@@ -330,7 +335,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
         >>> from sympy import ilex, QQ
         >>> from sympy.abc import x, y
-        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> f = R.convert((x + 2*y) / (1 + x))
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], ilex)
@@ -344,6 +349,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         return _vector_to_sdm_helper([x.numer()*u/x.denom() for x in v], order)
 
 
+@public
 def PolynomialRing(dom, *gens, **opts):
     r"""
     Create a generalized multivariate polynomial ring.
@@ -371,20 +377,20 @@ def PolynomialRing(dom, *gens, **opts):
 
     Our first ring uses global lexicographic order.
 
-    >>> R1 = QQ.poly_ring(x, y, order=(("lex", x, y),))
+    >>> R1 = QQ.old_poly_ring(x, y, order=(("lex", x, y),))
 
     The second ring uses local lexicographic order. Note that when using a
     single (non-product) order, you can just specify the name and omit the
     variables:
 
-    >>> R2 = QQ.poly_ring(x, y, order="ilex")
+    >>> R2 = QQ.old_poly_ring(x, y, order="ilex")
 
     The third and fourth rings use a mixed orders:
 
     >>> o1 = (("ilex", x), ("lex", y))
     >>> o2 = (("lex", x), ("ilex", y))
-    >>> R3 = QQ.poly_ring(x, y, order=o1)
-    >>> R4 = QQ.poly_ring(x, y, order=o2)
+    >>> R3 = QQ.old_poly_ring(x, y, order=o1)
+    >>> R4 = QQ.old_poly_ring(x, y, order=o2)
 
     We will investigate what elements of `K(x, y)` are contained in the various
     rings.

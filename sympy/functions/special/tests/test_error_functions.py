@@ -1,10 +1,10 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, Abs, O, factorial, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, S,
-    sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
+    re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
+    Symbol, I, integrate, Integral, S,
+    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma, loggamma,
+    gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
     fresnels, fresnelc,
     hyper, meijerg)
@@ -48,7 +48,7 @@ def test_erf():
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
-    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
     assert erf(z).rewrite('erfi') == -I*erfi(I*z)
     assert erf(z).rewrite('fresnels') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
@@ -125,7 +125,7 @@ def test_erfc():
         I*fresnels(z*(1 - I)/sqrt(pi)))
     assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
     assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
-    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     assert erfc(x).as_real_imag() == \
@@ -225,7 +225,7 @@ def test_erf2():
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True
 
-    #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
+    assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
 
     assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
     assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
@@ -277,12 +277,12 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.utilities.randtest import test_numerically, random_complex_number
+    from sympy.utilities.randtest import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
             subs[a] = random_complex_number()
-    return expr2 == expr3 and test_numerically(expr1.subs(subs),
+    return expr2 == expr3 and verify_numerically(expr1.subs(subs),
                                                expr2.subs(subs), x, d=d)
 
 
@@ -335,6 +335,9 @@ def test_ei():
 
     assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
 
+    assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
+        x**3/18 + x**4/96 + x**5/600 + O(x**6)
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
@@ -348,8 +351,7 @@ def test_expint():
     assert expint(-4, x) == exp(-x)/x + 4*exp(-x)/x**2 + 12*exp(-x)/x**3 \
         + 24*exp(-x)/x**4 + 24*exp(-x)/x**5
     assert expint(-S(3)/2, x) == \
-        exp(-x)/x + 3*exp(-x)/(2*x**2) - 3*sqrt(pi)*erf(sqrt(x))/(4*x**S('5/2')) \
-        + 3*sqrt(pi)/(4*x**S('5/2'))
+        exp(-x)/x + 3*exp(-x)/(2*x**2) + 3*sqrt(pi)*erfc(sqrt(x))/(4*x**S('5/2'))
 
     assert tn_branch(expint, 1)
     assert tn_branch(expint, 2)
@@ -374,6 +376,17 @@ def test_expint():
     assert mytn(expint(3, x), expint(3, x).rewrite(Ei).rewrite(expint),
                 x**2*E1(x)/2 + (1 - x)*exp(-x)/2, x)
 
+    assert expint(S(3)/2, z).nseries(z) == \
+        2 + 2*z - z**2/3 + z**3/15 - z**4/84 + z**5/540 - \
+        2*sqrt(pi)*sqrt(z) + O(z**6)
+
+    assert E1(z).series(z) == -EulerGamma - log(z) + z - \
+        z**2/4 + z**3/18 - z**4/96 + z**5/600 + O(z**6)
+
+    assert expint(4, z).series(z) == S(1)/3 - z/2 + z**2/2 + \
+        z**3*(log(z)/6 - S(11)/36 + EulerGamma/6) - z**4/24 + \
+        z**5/240 + O(z**6)
+
 
 def test__eis():
     assert _eis(z).diff(z) == -_eis(z) + 1/z
@@ -391,6 +404,9 @@ def test__eis():
 
     assert expand(Ei(z).rewrite('tractable').diff(z).rewrite('intractable')) \
         == Ei(z).diff(z)
+
+    assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
+        EulerGamma + 1) + z**2*(log(z)/2 - S(3)/4 + EulerGamma/2) + O(z**3*log(z))
 
 
 def tn_arg(func):
@@ -497,7 +513,10 @@ def test_si():
         x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
     assert Si(x).nseries(x, 1, n=3) == \
-        Si(1) + x*sin(1) + x**2*(-sin(1)/2 + cos(1)/2) + O(x**3)
+        Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
+
+    t = Symbol('t', Dummy=True)
+    assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
 
 def test_ci():
@@ -609,6 +628,20 @@ def test_fresnel():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
+    # issue 6510
+    assert fresnels(z).series(z, S.Infinity) == \
+        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + \
+        (3/(pi**3*z**5) - 1/(pi*z) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + S.Half
+    assert fresnelc(z).series(z, S.Infinity) == \
+        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + \
+        (-3/(pi**3*z**5) + 1/(pi*z) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + S.Half
+    assert fresnels(1/z).series(z) == \
+        (-z**3/pi**2 + O(z**6))*sin(pi/(2*z**2)) + (-z/pi + 3*z**5/pi**3 + \
+        O(z**6))*cos(pi/(2*z**2)) + S.Half
+    assert fresnelc(1/z).series(z) == \
+        (-z**3/pi**2 + O(z**6))*cos(pi/(2*z**2)) + (z/pi - 3*z**5/pi**3 + \
+        O(z**6))*sin(pi/(2*z**2)) + S.Half
+
     assert fresnelc(w).is_real is True
 
     assert fresnelc(z).as_real_imag() == \
@@ -630,14 +663,14 @@ def test_fresnel():
         meijerg(((), (1,)), ((S(1)/4,),
         (S(3)/4, 0)), -pi**2*z**4/16)/(2*(-z)**(S(1)/4)*(z**2)**(S(1)/4))
 
-    from sympy.utilities.randtest import test_numerically
+    from sympy.utilities.randtest import verify_numerically
 
-    test_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
-    test_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
-    test_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
-    test_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
+    verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
+    verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
+    verify_numerically(fresnels(z), fresnels(z).rewrite(hyper), z)
+    verify_numerically(fresnels(z), fresnels(z).rewrite(meijerg), z)
 
-    test_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
-    test_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
-    test_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
-    test_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
+    verify_numerically(re(fresnelc(z)), fresnelc(z).as_real_imag()[0], z)
+    verify_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
+    verify_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
+    verify_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)

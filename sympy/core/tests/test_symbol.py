@@ -1,9 +1,9 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )
 
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.core.compatibility import u
+from sympy.utilities.pytest import raises
 
 
 def test_Symbol():
@@ -199,56 +199,6 @@ def test_Wild_properties():
                 assert d is None
 
 
-@XFAIL
-def test_symbols_each_char():
-    # XXX: Because of the way the warnings filters work, this will fail if it's
-    # run more than once in the same session.  See issue 2492.
-    import warnings
-    # each_char is deprecated and emits a warning.
-
-    w = Symbol('w')
-    x = Symbol('x')
-    y = Symbol('y')
-    z = Symbol('z')
-
-    # First, test the warning
-    warnings.filterwarnings("error")
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
-    # now test the actual output
-    warnings.filterwarnings("ignore")
-    assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
-    assert all(w.is_Function for w in flatten(
-        symbols(['wx', 'yz'], each_char=True, cls=Function)))
-    assert symbols('xyz', each_char=True) == (x, y, z)
-    assert symbols('x,', each_char=True) == (x,)
-    assert symbols('x y z', each_char=True) == symbols(
-        'x,y,z', each_char=True) == (x, y, z)
-    assert symbols('xyz', each_char=False) == Symbol('xyz')
-    a, b = symbols('x y', each_char=False, real=True)
-    assert a.is_real and b.is_real
-    assert 'each_char' not in a.assumptions0
-
-    assert symbols('x0:0', each_char=False) == ()
-    assert symbols('x0:1', each_char=False) == (Symbol('x0'),)
-    assert symbols(
-        'x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
-    assert symbols('x:0', each_char=False) == ()
-    assert symbols('x:1', each_char=False) == (Symbol('x0'),)
-    assert symbols(
-        'x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
-    assert symbols('x1:1', each_char=False) == ()
-    assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
-    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
-
-    # Keep testing reasonably thread safe, so reset the warning
-    warnings.filterwarnings("default", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    # Note, in Python 2.6+, this can be done more nicely using the
-    # warnings.catch_warnings context manager.
-    # See http://docs.python.org/library/warnings#testing-warnings.
-
-
 def test_symbols():
     x = Symbol('x')
     y = Symbol('y')
@@ -340,7 +290,7 @@ def test_symbols():
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
 
-    # issue 3576
+    # issue 6675
     def sym(s):
         return str(symbols(s))
     assert sym('a0:4') == '(a0, a1, a2, a3)'

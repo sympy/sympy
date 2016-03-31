@@ -8,10 +8,7 @@ def test_int_to_Integer():
         'Integer (1 )+2.2 +Integer (0x3 )+Integer (40 )'
     if sys.version_info[0] == 2:
         assert int_to_Integer("1l") == 'Integer (1l )'
-    if sys.version_info[1] > 5 or sys.version_info[0] == 3:
-        # Binary literals were added in Python 2.6
-        assert int_to_Integer("0b101") == 'Integer (0b101 )'
+    assert int_to_Integer("0b101") == 'Integer (0b101 )'
     assert int_to_Integer("ab1 + 1 + '1 + 2'") == "ab1 +Integer (1 )+'1 + 2'"
     assert int_to_Integer("(2 + \n3)") == '(Integer (2 )+\nInteger (3 ))'
-    assert int_to_Integer(
-        "2 + 2.0 + 2j + 2e-10") == 'Integer (2 )+2.0 +2j +2e-10 '
+    assert int_to_Integer("2 + 2.0 + 2j + 2e-10") == 'Integer (2 )+2.0 +2j +2e-10 '

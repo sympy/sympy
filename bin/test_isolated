@@ -10,7 +10,7 @@ Usage and help:
 and read the instructions.
 """
 
-from __future__ import with_statement
+from __future__ import print_function
 
 from os import chmod, getcwd
 from glob import glob
@@ -107,15 +107,15 @@ def main():
         parser.error("too many arguments")
     if options.nosetests:
         if options.verbose:
-            print "Generating nosetests isolated testsuite..."
+            print("Generating nosetests isolated testsuite...")
         generate_test_script2("nosetests")
     else:
         if options.verbose:
-            print "Generating py.test isolated testsuite..."
+            print("Generating py.test isolated testsuite...")
         generate_test_script1("py.test")
     if options.verbose:
-        print "Done. Run (search for 'COMMIT' in the less environment):"
-        print "/tmp/test_sympy.sh | less"
+        print("Done. Run (search for 'COMMIT' in the less environment):")
+        print("/tmp/test_sympy.sh | less")
 
 if __name__ == "__main__":
     main()

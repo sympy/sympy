@@ -2,16 +2,18 @@ from __future__ import division
 
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial)
+    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
+    AccumBounds)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
@@ -97,18 +99,18 @@ def test_Exp():
 
 def test_factorial():
     n = Symbol('n', integer=True)
-    assert str(factorial(-2)) == "0"
+    assert str(factorial(-2)) == "zoo"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"
-    assert str(factorial(factorial(n))) == '(n!)!'
-    assert str(factorial(factorial2(n))) == '(n!!)!'
-    assert str(factorial2(factorial(n))) == '(n!)!!'
-    assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(factorial(n)) == "factorial(n)"
+    assert str(factorial(2*n)) == "factorial(2*n)"
+    assert str(factorial(factorial(n))) == 'factorial(factorial(n))'
+    assert str(factorial(factorial2(n))) == 'factorial(factorial2(n))'
+    assert str(factorial2(factorial(n))) == 'factorial2(factorial(n))'
+    assert str(factorial2(factorial2(n))) == 'factorial2(factorial2(n))'
     assert str(subfactorial(3)) == "2"
-    assert str(subfactorial(n)) == "!n"
-    assert str(subfactorial(2*n)) == "!(2*n)"
+    assert str(subfactorial(n)) == "subfactorial(n)"
+    assert str(subfactorial(2*n)) == "subfactorial(2*n)"
 
 
 def test_Function():
@@ -121,8 +123,8 @@ def test_Function():
 
 
 def test_Geometry():
-    assert sstr(Point(0, 0)) == 'Point(0, 0)'
-    assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point(0, 0), 3)'
+    assert sstr(Point(0, 0)) == 'Point2D(0, 0)'
+    assert sstr(Circle(Point(0, 0), 3)) == 'Circle(Point2D(0, 0), 3)'
     # TODO test other Geometry entities
 
 
@@ -161,8 +163,17 @@ def test_Interval():
     assert str(Interval(0, a, True, True)) == "(0, a)"
 
 
+def test_AccumBounds():
+    a = Symbol('a', real=True)
+    assert str(AccumBounds(0, a)) == "<0, a>"
+    assert str(AccumBounds(0, 1)) == "<0, 1>"
+
+
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
+    # issue 2908
+    assert str(Lambda((), 1)) == "Lambda((), 1)"
+    assert str(Lambda((), x)) == "Lambda((), x)"
 
 
 def test_Limit():
@@ -199,6 +210,8 @@ def test_Mul():
     assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
+    assert str(-1.0*x) == '-1.0*x'
+    assert str(1.0*x) == '1.0*x'
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -226,6 +239,12 @@ def test_Order():
     assert str(O(x)) == "O(x)"
     assert str(O(x**2)) == "O(x**2)"
     assert str(O(x*y)) == "O(x*y, x, y)"
+    assert str(O(x, x)) == "O(x)"
+    assert str(O(x, (x, 0))) == "O(x)"
+    assert str(O(x, (x, oo))) == "O(x, (x, oo))"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, (x, oo), (y, oo))) == "O(x, (x, oo), (y, oo))"
 
 
 def test_Permutation_Cycle():
@@ -236,15 +255,15 @@ def test_Permutation_Cycle():
 
     for p, s in [
         (Cycle(),
-        'Cycle()'),
+        '()'),
         (Cycle(2),
-        'Cycle(2)'),
+        '(2)'),
         (Cycle(2, 1),
-        'Cycle(1, 2)'),
+        '(1 2)'),
         (Cycle(1, 2)(5)(6, 7)(10),
-        'Cycle(1, 2)(6, 7)(10)'),
+        '(1 2)(6 7)(10)'),
         (Cycle(3, 4)(1, 2)(3, 4),
-        'Cycle(1, 2)(4)'),
+        '(1 2)(4)'),
     ]:
         assert str(p) == s
 
@@ -270,21 +289,21 @@ def test_Permutation_Cycle():
     Permutation.print_cyclic = True
     for p, s in [
         (Permutation([]),
-        'Permutation()'),
+        '()'),
         (Permutation([], size=1),
-        'Permutation(0)'),
+        '(0)'),
         (Permutation([], size=2),
-        'Permutation(1)'),
+        '(1)'),
         (Permutation([], size=10),
-        'Permutation(9)'),
+        '(9)'),
         (Permutation([1, 0, 2]),
-        'Permutation(2)(0, 1)'),
+        '(2)(0 1)'),
         (Permutation([1, 0, 2, 3, 4, 5]),
-        'Permutation(5)(0, 1)'),
+        '(5)(0 1)'),
         (Permutation([1, 0, 2, 3, 4, 5], size=10),
-        'Permutation(9)(0, 1)'),
+        '(9)(0 1)'),
         (Permutation([0, 1, 3, 2, 4, 5], size=10),
-        'Permutation(9)(2, 3)'),
+        '(9)(2 3)'),
     ]:
         assert str(p) == s
 
@@ -308,6 +327,15 @@ def test_Poly():
     assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+    assert str(Poly(2*x + x**5, x)) == "Poly(x**5 + 2*x, x, domain='ZZ')"
+
+    assert str(Poly(3**(2*x), 3**x)) == "Poly((3**x)**2, 3**x, domain='ZZ')"
+    assert str(Poly((x**2)**x)) == "Poly(((x**2)**x), (x**2)**x, domain='ZZ')"
+
+    assert str(Poly((x + y)**3, (x + y), expand=False)
+                ) == "Poly((x + y)**3, x + y, domain='ZZ')"
+    assert str(Poly((x - 1)**2, (x - 1), expand=False)
+                ) == "Poly((x - 1)**2, x - 1, domain='ZZ')"
 
     assert str(
         Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
@@ -339,27 +367,34 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
+    assert str(x**2) == "x**2"
+    assert str(x**(-2)) == "x**(-2)"
+    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1"
     assert str((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == "-(u**2 - 3*u*v + 1)*x**2*y - (u + 1)*x - 1"
 
+    assert str(-(v**2 + v + 1)*x + 3*u*v + 1) == "-(v**2 + v + 1)*x + 3*u*v + 1"
+    assert str(-(v**2 + v + 1)*x - 3*u*v + 1) == "-(v**2 + v + 1)*x - 3*u*v + 1"
+
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
 
+    assert str(x/3) == "x/3"
     assert str(x/z) == "x/z"
     assert str(x*y/z) == "x*y/z"
     assert str(x/(z*t)) == "x/(z*t)"
@@ -387,7 +422,10 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
-    assert str(x**-1.0) == '1/x'
+    # not the same as x**-1
+    assert str(x**-1.0) == 'x**(-1.0)'
+    # see issue #2860
+    assert str(Pow(S(2), -1.0, evaluate=False)) == '2**(-1.0)'
 
 
 def test_sqrt():
@@ -466,11 +504,12 @@ def test_Float():
 
 def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
-    assert str(Rel(x + y, y, "==")) == "x + y == y"
+    assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
+    assert str(Rel(x, y, "!=")) == "Ne(x, y)"
+    assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
 
-
-def test_RootOf():
-    assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+def test_CRootOf():
+    assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
 
 def test_RootSum():
@@ -529,7 +568,7 @@ def test_tuple():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 5560
 
 
 def test_wild_str():
@@ -547,21 +586,21 @@ def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
 
 
-def test_bug2():
+def test_issue_3101():
     e = x - y
     a = str(e)
     b = str(e)
     assert a == b
 
 
-def test_bug4():
+def test_issue_3103():
     e = -2*sqrt(x) - y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y", "-2*x**1/2-1/2*x**-1/2*w"]
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 
-def test_issue922():
+def test_issue_4021():
     e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
@@ -621,19 +660,19 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: x1 > 0"
+    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
+    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
 def test_PrettyPoly():
@@ -669,7 +708,7 @@ def test_Tr():
     assert str(t) == 'Tr(A*B)'
 
 
-def test_issue3288():
+def test_issue_6387():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 
@@ -682,3 +721,20 @@ def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+
+def test_true_false():
+    assert str(true) == repr(true) == sstr(true) == "True"
+    assert str(false) == repr(false) == sstr(false) == "False"
+
+def test_Equivalent():
+    assert str(Equivalent(y, x)) == "Equivalent(x, y)"
+
+def test_Xor():
+    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+
+def test_Complement():
+    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+
+def test_SymmetricDifference():
+    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
+           'SymmetricDifference([2, 3], [3, 4])'

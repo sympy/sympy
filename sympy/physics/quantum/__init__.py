@@ -11,46 +11,46 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.quantum import *" is done.
 
-import anticommutator
-from anticommutator import *
+from . import anticommutator
+from .anticommutator import *
 __all__.extend(anticommutator.__all__)
 
-from qapply import __all__ as qap_all
-from qapply import *
+from .qapply import __all__ as qap_all
+from .qapply import *
 __all__.extend(qap_all)
 
-import commutator
-from commutator import *
+from . import commutator
+from .commutator import *
 __all__.extend(commutator.__all__)
 
-import dagger
-from dagger import *
+from . import dagger
+from .dagger import *
 __all__.extend(dagger.__all__)
 
-import hilbert
-from hilbert import *
+from . import hilbert
+from .hilbert import *
 __all__.extend(hilbert.__all__)
 
-import innerproduct
-from innerproduct import *
+from . import innerproduct
+from .innerproduct import *
 __all__.extend(innerproduct.__all__)
 
-import operator
-from operator import *
+from . import operator
+from .operator import *
 __all__.extend(operator.__all__)
 
-from represent import __all__ as rep_all
-from represent import *
+from .represent import __all__ as rep_all
+from .represent import *
 __all__.extend(rep_all)
 
-import state
-from state import *
+from . import state
+from .state import *
 __all__.extend(state.__all__)
 
-import tensorproduct
-from tensorproduct import *
+from . import tensorproduct
+from .tensorproduct import *
 __all__.extend(tensorproduct.__all__)
 
-import constants
-from constants import *
+from . import constants
+from .constants import *
 __all__.extend(constants.__all__)

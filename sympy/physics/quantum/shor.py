@@ -7,12 +7,16 @@ Todo:
 * Update docstrings and reformat.
 * Remove print statements. We may want to think about a better API for this.
 """
+from __future__ import print_function, division
+
 import math
 import random
 
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import range
+from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations
 
 from sympy.physics.quantum.gate import Gate
@@ -94,14 +98,14 @@ def shor(N):
     """
     a = random.randrange(N - 2) + 2
     if igcd(N, a) != 1:
-        print "got lucky with rand"
+        print("got lucky with rand")
         return igcd(N, a)
-    print "a= ", a
-    print "N= ", N
+    print("a= ", a)
+    print("N= ", N)
     r = period_find(a, N)
-    print "r= ", r
+    print("r= ", r)
     if r % 2 == 1:
-        print "r is not even, begin again"
+        print("r is not even, begin again")
         shor(N)
     answer = (igcd(a**(r/2) - 1, N), igcd(a**(r/2) + 1, N))
     return answer
@@ -120,26 +124,6 @@ def ratioize(list, N):
     if len(list) == 1:
         return list[0]
     return list[0] + ratioize(list[1:], N)
-
-
-def continued_fraction(x, y):
-    """This applies the continued fraction expansion to two numbers x/y
-
-    x is the numerator and y is the denominator
-
-    >>> from sympy.physics.quantum.shor import continued_fraction
-    >>> continued_fraction(3, 8)
-    [0, 2, 1, 2]
-    """
-    x = int(x)
-    y = int(y)
-    temp = x//y
-    if temp*y == x:
-        return [temp, ]
-
-    list = continued_fraction(y, x - temp*y)
-    list.insert(0, temp)
-    return list
 
 
 def period_find(a, N):
@@ -167,20 +151,16 @@ def period_find(a, N):
     circuit = CMod(t, a, N)*circuit
     #will measure first half of register giving one of the a**k%N's
     circuit = qapply(circuit)
-    print "controlled Mod'd"
+    print("controlled Mod'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i)
-        # circuit = measure(i)*circuit
-    # circuit = qapply(circuit)
-    print "measured 1"
+    print("measured 1")
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
     circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
-    print "QFT'd"
+    print("QFT'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i + t)
-        # circuit = measure(i+t)*circuit
-    # circuit = qapply(circuit)
-    print circuit
+    print(circuit)
     if isinstance(circuit, Qubit):
         register = circuit
     elif isinstance(circuit, Mul):
@@ -188,7 +168,7 @@ def period_find(a, N):
     else:
         register = circuit.args[-1].args[-1]
 
-    print register
+    print(register)
     n = 1
     answer = 0
     for i in range(len(register)/2):
@@ -199,5 +179,5 @@ def period_find(a, N):
             "Order finder returned 0. Happens with chance %f" % epsilon)
     #turn answer into r using continued fractions
     g = getr(answer, 2**t, N)
-    print g
+    print(g)
     return g

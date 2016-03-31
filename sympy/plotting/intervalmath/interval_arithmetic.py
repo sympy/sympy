@@ -31,8 +31,8 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
-from __future__ import division
-from sympy.external import import_module
+from __future__ import print_function, division
+
 from sympy.simplify.simplify import nsimplify
 
 
@@ -336,16 +336,17 @@ class interval(object):
                     return interval(-float('inf'), float('inf'), is_valid=None)
 
                 # denominator negative
+                this = self
                 if other.end < 0:
-                    self = -self
+                    this = -this
                     other = -other
 
                 # denominator positive
                 inters = []
-                inters.append(self.start / other.start)
-                inters.append(self.end / other.start)
-                inters.append(self.start / other.end)
-                inters.append(self.end / other.end)
+                inters.append(this.start / other.start)
+                inters.append(this.end / other.start)
+                inters.append(this.start / other.end)
+                inters.append(this.end / other.end)
                 start = max(inters)
                 end = min(inters)
                 return interval(start, end)

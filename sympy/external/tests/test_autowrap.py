@@ -1,11 +1,14 @@
+import sympy
+import tempfile
+import os
 from sympy import symbols, Eq
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import skip
 
-numpy = import_module('numpy')
-Cython = import_module('Cython')
+numpy = import_module('numpy', min_module_version='1.6.1')
+Cython = import_module('Cython', min_module_version='0.15.1')
 f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
@@ -45,7 +48,6 @@ def has_module(module):
 #
 # test runners used by several language-backend combinations
 #
-
 
 def runtest_autowrap_twice(language, backend):
     f = autowrap((((a + b)/c)**5).expand(), language, backend)
@@ -90,12 +92,53 @@ def runtest_autowrap_matrix_matrix(language, backend):
 def runtest_ufuncify(language, backend):
     has_module('numpy')
     a, b, c = symbols('a b c')
-    f = ufuncify([a, b, c], a*b + c, language=language, backend=backend)
+    fabc = ufuncify([a, b, c], a*b + c, backend=backend)
+    facb = ufuncify([a, c, b], a*b + c, backend=backend)
     grid = numpy.linspace(-2, 2, 50)
-    for b in numpy.linspace(-5, 4, 3):
-        for c in numpy.linspace(-1, 1, 3):
-            expected = grid*b + c
-            assert numpy.sum(numpy.abs(expected - f(grid, b, c))) < 1e-13
+    b = numpy.linspace(-5, 4, 50)
+    c = numpy.linspace(-1, 1, 50)
+    expected = grid*b + c
+    numpy.testing.assert_allclose(fabc(grid, b, c), expected)
+    numpy.testing.assert_allclose(facb(grid, c, b), expected)
+
+
+def runtest_issue_10274(language, backend):
+    expr = (a - b + c)**(13)
+    tmp = tempfile.mkdtemp()
+    f = autowrap(expr, language, backend, tempdir=tmp, helpers=('helper', a - b + c, (a, b, c)))
+    assert f(1, 1, 1) == 1
+
+    for file in os.listdir(tmp):
+        if file.startswith("wrapped_code_") and file.endswith(".c"):
+            fil = open(tmp + '/' + file)
+            lines = fil.readlines()
+            assert lines[0] == "/******************************************************************************\n"
+            assert "Code generated with sympy " + sympy.__version__ in lines[1]
+            assert lines[2:] == [
+                " *                                                                            *\n",
+                " *              See http://www.sympy.org/ for more information.               *\n",
+                " *                                                                            *\n",
+                " *                      This file is part of 'autowrap'                       *\n",
+                " ******************************************************************************/\n",
+                "#include " + '"' + file[:-1]+ 'h"' + "\n",
+                "#include <math.h>\n",
+                "\n",
+                "double helper(double a, double b, double c) {\n",
+                "\n",
+                "   double helper_result;\n",
+                "   helper_result = a - b + c;\n",
+                "   return helper_result;\n",
+                "\n",
+                "}\n",
+                "\n",
+                "double autofunc(double a, double b, double c) {\n",
+                "\n",
+                "   double autofunc_result;\n",
+                "   autofunc_result = pow(helper(a, b, c), 13);\n",
+                "   return autofunc_result;\n",
+                "\n",
+                "}\n",
+                ]
 
 #
 # tests of language-backend combinations
@@ -131,33 +174,38 @@ def test_ufuncify_f95_f2py():
 
 # Cython
 
-# See issue 3008.  This XFAIL can be removed if we can accurately determine the
-# correct minimum Cython version required.
-@XFAIL
 def test_wrap_twice_c_cython():
     has_module('Cython')
     runtest_autowrap_twice('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
     runtest_autowrap_trace('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_vector('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C', 'cython')
 
 
-@XFAIL
 def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C', 'cython')
+
+def test_issue_10274_C_cython():
+    has_module('Cython')
+    runtest_issue_10274('C', 'cython')
+
+# Numpy
+
+def test_ufuncify_numpy():
+    # This test doesn't use Cython, but if Cython works, then there is a valid
+    # C compiler, which is needed.
+    has_module('Cython')
+    runtest_ufuncify('C', 'numpy')

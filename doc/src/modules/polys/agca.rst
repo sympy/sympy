@@ -76,12 +76,12 @@ various methods to create new objects from old. For example, in order to
 create the local ring of the nodal cubic `y^2 = x^3` at the origin, over
 `\mathbb{Q}`, you do::
 
-    >>> lr = QQ.poly_ring(x, y, order="ilex") / [y**2 - x**3]
+    >>> lr = QQ.old_poly_ring(x, y, order="ilex") / [y**2 - x**3]
     >>> lr
     ℚ[x, y, order=ilex]
     ───────────────────
-        ╱   3    2╲    
-        ╲- x  + y ╱   
+        ╱   3    2╲
+        ╲- x  + y ╱
 
 Note how the python list notation can be used as a short cut to express ideals.
 You can use the ``convert`` method to return ordinary sympy objects into
@@ -104,7 +104,7 @@ When no localisation is needed, a more mathematical notation can be
 used. For example, let us create the coordinate ring of three-dimensional
 affine space `\mathbb{A}^3`::
 
-    >>> ar = QQ[x, y, z] ; ar
+    >>> ar = QQ.old_poly_ring(x, y, z); ar
     ℚ[x, y, z]
 
 For more details, refer to the following class documentation. Note that
@@ -113,15 +113,14 @@ AGCA module and the rest of the polys module. All domains are documented
 in detail in the polys reference, so we show here only an abridged version,
 with the methods most pertinent to the AGCA module.
 
-.. currentmodule:: sympy.polys.domains
-.. autoclass:: Ring
+.. autoclass:: sympy.polys.domains.ring.Ring
    :members: free_module, ideal, quotient_ring
    :noindex:
 
-.. autofunction:: PolynomialRing
+.. autofunction:: sympy.polys.domains.polynomialring.PolynomialRing
    :noindex:
 
-.. autoclass:: QuotientRing
+.. autoclass:: sympy.polys.domains.quotientring.QuotientRing
    :noindex:
 
 Modules, Ideals and their Elementary Properties
@@ -166,8 +165,8 @@ we created above, together with a submodule::
 
     >>> F = ar.free_module(4) ; F
               4
-    ℚ[x, y, z] 
-    
+    ℚ[x, y, z]
+
     >>> S = F.submodule([1, x, x**2, x**3], [0, 1, 0, y]) ; S
     ╱⎡       2   3⎤              ╲
     ╲⎣1, x, x , x ⎦, [0, 1, 0, y]╱

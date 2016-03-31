@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+
+from sympy.core.compatibility import range
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation
@@ -10,9 +13,8 @@ def AbelianGroup(*cyclic_orders):
     Returns the direct product of cyclic groups with the given orders.
 
     According to the structure theorem for finite abelian groups ([1]),
-    every finite abelian group can be written as the direct product of finitely
-    many cyclic groups.
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+    every finite abelian group can be written as the direct product of
+    finitely many cyclic groups.
 
     Examples
     ========
@@ -22,14 +24,21 @@ def AbelianGroup(*cyclic_orders):
     >>> from sympy.combinatorics.named_groups import AbelianGroup
     >>> AbelianGroup(3, 4)
     PermutationGroup([
-            Permutation(6)(0, 1, 2),
-            Permutation(3, 4, 5, 6)])
-    >>> _.is_group()
-    False
+            (6)(0 1 2),
+            (3 4 5 6)])
+    >>> _.is_group
+    True
 
     See Also
     ========
+
     DirectProduct
+
+    References
+    ==========
+
+    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+
     """
     groups = []
     degree = 0
@@ -61,8 +70,8 @@ def AlternatingGroup(n):
 
     >>> from sympy.combinatorics.named_groups import AlternatingGroup
     >>> G = AlternatingGroup(4)
-    >>> G.is_group()
-    False
+    >>> G.is_group
+    True
     >>> a = list(G.generate_dimino())
     >>> len(a)
     12
@@ -84,15 +93,15 @@ def AlternatingGroup(n):
     if n in (1, 2):
         return PermutationGroup([Permutation([0])])
 
-    a = range(n)
+    a = list(range(n))
     a[0], a[1], a[2] = a[1], a[2], a[0]
     gen1 = a
     if n % 2:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen2 = a
     else:
-        a = range(2, n)
+        a = list(range(2, n))
         a.append(1)
         a.insert(0, 0)
         gen2 = a
@@ -130,8 +139,8 @@ def CyclicGroup(n):
 
     >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> G = CyclicGroup(6)
-    >>> G.is_group()
-    False
+    >>> G.is_group
+    True
     >>> G.order()
     6
     >>> list(G.generate_schreier_sims(af=True))
@@ -144,7 +153,7 @@ def CyclicGroup(n):
     SymmetricGroup, DihedralGroup, AlternatingGroup
 
     """
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen = _af_new(a)
     G = PermutationGroup([gen])
@@ -175,8 +184,8 @@ def DihedralGroup(n):
 
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(5)
-    >>> G.is_group()
-    False
+    >>> G.is_group
+    True
     >>> a = list(G.generate_dimino())
     >>> [perm.cyclic_form for perm in a]
     [[], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],
@@ -202,10 +211,10 @@ def DihedralGroup(n):
         return PermutationGroup([Permutation([1, 0, 3, 2]),
                Permutation([2, 3, 0, 1]), Permutation([3, 2, 1, 0])])
 
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen1 = _af_new(a)
-    a = range(n)
+    a = list(range(n))
     a.reverse()
     gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
@@ -236,8 +245,8 @@ def SymmetricGroup(n):
 
     >>> from sympy.combinatorics.named_groups import SymmetricGroup
     >>> G = SymmetricGroup(4)
-    >>> G.is_group()
-    False
+    >>> G.is_group
+    True
     >>> G.order()
     24
     >>> list(G.generate_schreier_sims(af=True))
@@ -263,10 +272,10 @@ def SymmetricGroup(n):
     elif n == 2:
         G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen1 = _af_new(a)
-        a = range(n)
+        a = list(range(n))
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
@@ -287,11 +296,13 @@ def SymmetricGroup(n):
 
 
 def RubikGroup(n):
-    """Return a group of Rubik's cube generators.
+    """Return a group of Rubik's cube generators
+
     >>> from sympy.combinatorics.named_groups import RubikGroup
-    >>> RubikGroup(2).is_group()
-    False
+    >>> RubikGroup(2).is_group
+    True
     """
     from sympy.combinatorics.generators import rubik
-    assert n > 1
+    if n <= 1:
+        raise ValueError("Invalid cube . n has to be greater than 1")
     return PermutationGroup(rubik(n))

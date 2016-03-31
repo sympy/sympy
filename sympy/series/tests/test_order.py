@@ -1,6 +1,7 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi, I,
-    S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
+    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
+    Function, Add)
+from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
 
@@ -10,6 +11,14 @@ def test_caching_bug():
     e = O(w)
     #and test that this won't raise an exception
     O(w**(-1/x/log(3)*log(5)), w)
+
+
+def test_free_symbols():
+    assert Order(1).free_symbols == set()
+    assert Order(x).free_symbols == {x}
+    assert Order(1, x).free_symbols == {x}
+    assert Order(x*y).free_symbols == {x, y}
+    assert Order(x, x, y).free_symbols == {x, y}
 
 
 def test_simple_1():
@@ -27,8 +36,8 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
-    assert Order(exp(x), x, x) == Order(1, x)
-    raises(NotImplementedError, lambda: Order(x, 2 - x))
+    raises(ValueError, lambda: Order(exp(x), x, x))
+    raises(TypeError, lambda: Order(x, 2 - x))
 
 
 def test_simple_2():
@@ -49,7 +58,6 @@ def test_simple_3():
 
 def test_simple_4():
     assert Order(x)**2 == Order(x**2)
-    assert Order(x**3)**-2 == Order(x**-6)
 
 
 def test_simple_5():
@@ -84,16 +92,16 @@ def test_simple_8():
 
 
 def test_as_expr_variables():
-    assert Order(x).as_expr_variables(None) == (x, (x,))
-    assert Order(x).as_expr_variables((x,)) == (x, (x,))
-    assert Order(y).as_expr_variables((x,)) == (y, (x, y))
-    assert Order(y).as_expr_variables((x, y)) == (y, (x, y))
+    assert Order(x).as_expr_variables(None) == (x, ((x, 0),))
+    assert Order(x).as_expr_variables((((x, 0),))) == (x, ((x, 0),))
+    assert Order(y).as_expr_variables(((x, 0),)) == (y, ((x, 0), (y, 0)))
+    assert Order(y).as_expr_variables(((x, 0), (y, 0))) == (y, ((x, 0), (y, 0)))
 
 
 def test_contains_0():
     assert Order(1, x).contains(Order(1, x))
     assert Order(1, x).contains(Order(1))
-    assert Order(1).contains(Order(1, x))
+    assert Order(1).contains(Order(1, x)) is False
 
 
 def test_contains_1():
@@ -122,6 +130,17 @@ def test_contains_2():
 def test_contains_3():
     assert Order(x*y**2).contains(Order(x**2*y)) is None
     assert Order(x**2*y).contains(Order(x*y**2)) is None
+
+
+def test_contains_4():
+    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is None
+    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is None
+
+
+def test_contains():
+    assert Order(1, x) not in Order(1)
+    assert Order(1) in Order(1, x)
+    raises(TypeError, lambda: Order(x*y**2) in Order(x**2*y))
 
 
 def test_add_1():
@@ -183,8 +202,7 @@ def test_multivar_3():
     assert (Order(x**2*y) + Order(y*x)) == Order(x*y)
 
 
-def test_issue369():
-    x = Symbol('x')
+def test_issue_3468():
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 
@@ -196,10 +214,6 @@ def test_issue369():
     assert x.is_positive is None
     assert y.is_positive is False
     assert z.is_positive is None
-
-    assert x.is_infinitesimal is None
-    assert y.is_infinitesimal is None
-    assert z.is_infinitesimal is None
 
 
 def test_leading_order():
@@ -267,30 +281,29 @@ def test_leading_term():
 
 
 def test_eval():
-    y = Symbol('y')
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
     assert Order(x).subs(y, x) == Order(x)
-    assert Order(x).subs(x, x + y) == Order(x + y)
+    assert Order(x).subs(x, x + y) == Order(x + y, (x, -y))
     assert (O(1)**x).is_Pow
 
 
-def test_oseries():
-    assert Order(x).oseries(x) == Order(x)
-
-
-@XFAIL
-def test_issue_1180():
+def test_issue_4279():
     a, b = symbols('a b')
+    assert O(a, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(b, a, b) + O(1, a, b) == O(1, a, b)
     assert O(a + b, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(b, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
-@XFAIL
-def test_issue_1756():
-    x = Symbol('x')
-    f = Function('f')
+def test_issue_4855():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
+    assert 1/O(x, (x, oo)) != O(1/x, (x, oo))
+
+    f = Function('f')
     assert 1/O(f(x)) != O(1/x)
 
 
@@ -309,7 +322,6 @@ def test_order_conjugate_transpose():
 
 def test_order_noncommutative():
     A = Symbol('A', commutative=False)
-    x = Symbol('x')
     assert Order(A + A*x, x) == Order(1, x)
     assert (A + A*x)*Order(x) == Order(x)
     assert (A*x)*Order(x) == Order(x**2, x)
@@ -317,5 +329,89 @@ def test_order_noncommutative():
     assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
 
-def test_issue_3654():
+
+def test_issue_6753():
     assert (1 + x**2)**10000*O(x) == O(x)
+
+
+def test_order_at_infinity():
+    assert Order(1 + x, (x, oo)) == Order(x, (x, oo))
+    assert Order(3*x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo))*3 == Order(x, (x, oo))
+    assert -28*Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(Order(x, (x, oo)), (x, oo)) == Order(x, (x, oo))
+    assert Order(Order(x, (x, oo)), (y, oo)) == Order(x, (x, oo), (y, oo))
+    assert Order(3, (x, oo)) == Order(1, (x, oo))
+    assert Order(x**2 + x + y, (x, oo)) == O(x**2, (x, oo))
+    assert Order(x**2 + x + y, (y, oo)) == O(y, (y, oo))
+
+    assert Order(2*x, (x, oo))*x == Order(x**2, (x, oo))
+    assert Order(2*x, (x, oo))/x == Order(1, (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x) == Order(x**2*exp(1/x), (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, (x, oo))
+
+    assert Order(x, (x, oo)) + 1/x == 1/x + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + 1 == 1 + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + x == x + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + x**2 == x**2 + Order(x, (x, oo))
+    assert Order(1/x, (x, oo)) + 1/x**2 == 1/x**2 + Order(1/x, (x, oo)) == Order(1/x, (x, oo))
+    assert Order(x, (x, oo)) + exp(1/x) == exp(1/x) + Order(x, (x, oo))
+
+    assert Order(x, (x, oo))**2 == Order(x**2, (x, oo))
+
+    assert Order(x, (x, oo)) + Order(x**2, (x, oo)) == Order(x**2, (x, oo))
+    assert Order(x, (x, oo)) + Order(x**-2, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(1/x, (x, oo)) == Order(x, (x, oo))
+
+    assert Order(x, (x, oo)) - Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(1, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(x**2, (x, oo)) == Order(x**2, (x, oo))
+    assert Order(1/x, (x, oo)) + Order(1, (x, oo)) == Order(1, (x, oo))
+    assert Order(x, (x, oo)) + Order(exp(1/x), (x, oo)) == Order(x, (x, oo))
+    assert Order(x**3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(x**3, (x, oo))
+    assert Order(x**-3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(exp(2/x), (x, oo))
+
+    # issue 7207
+    assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
+    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
+
+
+def test_mixing_order_at_zero_and_infinity():
+    assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add
+    assert Order(x, (x, 0)) + Order(x, (x, oo)) == Order(x, (x, oo)) + Order(x, (x, 0))
+    assert Order(Order(x, (x, oo))) == Order(x, (x, oo))
+
+    # not supported (yet)
+    raises(NotImplementedError, lambda: Order(x, (x, 0))*Order(x, (x, oo)))
+    raises(NotImplementedError, lambda: Order(x, (x, oo))*Order(x, (x, 0)))
+    raises(NotImplementedError, lambda: Order(Order(x, (x, oo)), y))
+    raises(NotImplementedError, lambda: Order(Order(x), (x, oo)))
+
+
+def test_order_at_some_point():
+    assert Order(x, (x, 1)) == Order(1, (x, 1))
+    assert Order(2*x - 2, (x, 1)) == Order(x - 1, (x, 1))
+    assert Order(-x + 1, (x, 1)) == Order(x - 1, (x, 1))
+    assert Order(x - 1, (x, 1))**2 == Order((x - 1)**2, (x, 1))
+    assert Order(x - 2, (x, 2)) - O(x - 2, (x, 2)) == Order(x - 2, (x, 2))
+
+
+def test_order_subs_limits():
+    # issue 3333
+    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, (x, oo))
+    assert (1 + Order(x)).limit(x, 0) == 1
+    # issue 5769
+    assert ((x + Order(x**2))/x).limit(x, 0) == 1
+
+    assert Order(x**2).subs(x, y - 1) == Order((y - 1)**2, (y, 1))
+    assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
+
+
+def test_issue_9192():
+    assert O(1)*O(1) == O(1)
+    assert O(1)**O(1) == O(1)
+
+def test_performance_of_adding_order():
+    l = list(x**i for i in range(1000))
+    l.append(O(x**1001))
+    assert Add(*l).subs(x,1) == O(1)

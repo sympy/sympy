@@ -12,6 +12,7 @@
 # serve to show the default value.
 
 import sys
+import sympy
 
 # If your extensions are in another directory, add it here.
 #sys.path.append('some/directory')
@@ -34,15 +35,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2013, SymPy Development Team'
+copyright = '2015, SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.2'
+version = sympy.__version__
 # The full version, including alpha/beta/rc tags.
-release = '0.7.2-git'
+release = version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

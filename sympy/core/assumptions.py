@@ -4,10 +4,22 @@ This module contains the machinery handling assumptions.
 All symbolic objects have assumption attributes that can be accessed via
 .is_<assumption name> attribute.
 
-Assumptions determine certain properties of symbolic objects. Assumptions
-can have 3 possible values: True, False, None.  None is returned when it is
-impossible to say something about the property. For example, a generic Symbol
-is not known beforehand to be positive.
+Assumptions determine certain properties of symbolic objects and can
+have 3 possible values: True, False, None.  True is returned if the
+object has the property and False is returned if it doesn't or can't
+(i.e. doesn't make sense):
+
+    >>> from sympy import I
+    >>> I.is_algebraic
+    True
+    >>> I.is_real
+    False
+    >>> I.is_prime
+    False
+
+When the property cannot be determined (or when a method is not
+implemented) None will be returned, e.g. a generic symbol, x, may or
+may not be positive so a value of None is returned for x.is_positive.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -15,58 +27,143 @@ being integer, is also real, complex, etc.
 
 Here follows a list of possible assumption names:
 
-    - commutative   - object commutes with any other object with
-                        respect to multiplication operation.
-    - real          - object can have only values from the set
-                        of real numbers
-    - integer       - object can have only values from the set
-                        of integers
-    - bounded       - object absolute value is bounded
-    - positive      - object can have only positive values
-    - negative      - object can have only negative values
-    - nonpositive      - object can have only nonpositive values
-    - nonnegative      - object can have only nonnegative values
-    - irrational    - object value cannot be represented exactly by Rational
-    - unbounded     - object value is arbitrarily large
-    - infinitesimal - object value is infinitesimal
+.. glossary::
 
+    commutative
+        object commutes with any other object with
+        respect to multiplication operation.
 
-Implementation note: assumption values are stored in
-._assumptions dictionary or are returned by getter methods (with
-property decorators) or are attributes of objects/classes.
+    complex
+        object can have only values from the set
+        of complex numbers.
+
+    imaginary
+        object value is a number that can be written as a real
+        number multiplied by the imaginary unit ``I``.  See
+        [3]_.  Please note, that ``0`` is not considered to be an
+        imaginary number, see
+        `issue #7649 <https://github.com/sympy/sympy/issues/7649>`_.
+
+    real
+        object can have only values from the set
+        of real numbers.
+
+    integer
+        object can have only values from the set
+        of integers.
+
+    odd
+    even
+        object can have only values from the set of
+        odd (even) integers [2]_.
+
+    prime
+        object is a natural number greater than ``1`` that has
+        no positive divisors other than ``1`` and itself.  See [6]_.
+
+    composite
+        object is a positive integer that has at least one positive
+        divisor other than ``1`` or the number itself.  See [4]_.
+
+    zero
+    nonzero
+        object is zero (not zero).
+
+    rational
+        object can have only values from the set
+        of rationals.
+
+    algebraic
+        object can have only values from the set
+        of algebraic numbers [11]_.
+
+    transcendental
+        object can have only values from the set
+        of transcendental numbers [10]_.
+
+    irrational
+        object value cannot be represented exactly by Rational, see [5]_.
+
+    finite
+    infinite
+        object absolute value is bounded (is value is
+        arbitrarily large).  See [7]_, [8]_, [9]_.
+
+    negative
+    nonnegative
+        object can have only negative (only
+        nonnegative) values [1]_.
+
+    positive
+    nonpositive
+        object can have only positive (only
+        nonpositive) values.
+
+    hermitian
+    antihermitian
+        object belongs to the field of hermitian
+        (antihermitian) operators.
 
 Examples
 ========
 
     >>> from sympy import Symbol
-    >>> Symbol('x', real = True)
+    >>> x = Symbol('x', real=True); x
     x
+    >>> x.is_real
+    True
+    >>> x.is_complex
+    True
+
+See Also
+========
+
+.. seealso::
+
+    :py:class:`sympy.core.numbers.ImaginaryUnit`
+    :py:class:`sympy.core.numbers.Zero`
+    :py:class:`sympy.core.numbers.One`
+
+Notes
+=====
+
+Assumption values are stored in obj._assumptions dictionary or
+are returned by getter methods (with property decorators) or are
+attributes of objects/classes.
+
+
+References
+==========
+
+.. [1] http://en.wikipedia.org/wiki/Negative_number
+.. [2] http://en.wikipedia.org/wiki/Parity_%28mathematics%29
+.. [3] http://en.wikipedia.org/wiki/Imaginary_number
+.. [4] http://en.wikipedia.org/wiki/Composite_number
+.. [5] http://en.wikipedia.org/wiki/Irrational_number
+.. [6] http://en.wikipedia.org/wiki/Prime_number
+.. [7] http://en.wikipedia.org/wiki/Finite
+.. [8] https://docs.python.org/3/library/math.html#math.isfinite
+.. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+.. [10] http://en.wikipedia.org/wiki/Transcendental_number
+.. [11] http://en.wikipedia.org/wiki/Algebraic_number
 
 """
+from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
+from sympy.core.compatibility import integer_types
 
-# This are the rules under which our assumptions function
-#
-# References
-# ----------
-#
-# negative,     -- http://en.wikipedia.org/wiki/Negative_number
-# nonnegative
-#
-# even, odd     -- http://en.wikipedia.org/wiki/Parity_(mathematics)
-# imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
-# composite     -- http://en.wikipedia.org/wiki/Composite_number
-# finite        -- http://en.wikipedia.org/wiki/Finite
-# infinitesimal -- http://en.wikipedia.org/wiki/Infinitesimal
-# irrational    -- http://en.wikipedia.org/wiki/Irrational_number
-# ...
+
+from random import shuffle
+
 
 _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
+    'rational       ->  algebraic',
+    'algebraic      ->  complex',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -77,6 +174,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
+    'transcendental ==  complex & !algebraic',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
@@ -85,24 +183,18 @@ _assume_rules = FactRules([
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
-    'zero           ->  infinitesimal & even',
+    'zero           ->  even & finite',
 
     'prime          ->  integer & positive',
-    'composite      ==  integer & positive & !prime',
+    'composite      ->  integer & positive & !prime',
 
     'irrational     ==  real & !rational',
 
     'imaginary      ->  !real',
 
-
-    '!bounded     ==  unbounded',
+    'infinite       ->  !finite',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
-
-    # XXX do we need this ?
-    'finite     ->  bounded',       # XXX do we need this?
-    'finite     ->  !zero',         # XXX wrong?
-    'infinitesimal ->  !finite',    # XXX is this ok?
+    'nonzero        ==  real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
@@ -118,11 +210,22 @@ class StdFactKB(FactKB):
     rules = _assume_rules
 
     def __init__(self, facts=None):
+        # save a copy of the facts dict
+        if not facts:
+            self._generator = {};
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
         if facts:
             self.deduce_all_facts(facts)
 
     def copy(self):
         return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
 
 
 def as_property(fact):
@@ -188,7 +291,9 @@ def _ask(fact, obj):
             return a
 
     # Try assumption's prerequisites
-    for pk in _assume_rules.prereq[fact]:
+    prereq = list(_assume_rules.prereq[fact])
+    shuffle(prereq)
+    for pk in prereq:
         if pk in assumptions:
             continue
         if pk in handler_map:
@@ -205,8 +310,6 @@ def _ask(fact, obj):
 
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
-    __metaclass__ = BasicMeta
-
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
@@ -214,7 +317,7 @@ class ManagedProperties(BasicMeta):
         for k in _assume_defined:
             attrname = as_property(k)
             v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, long, type(None))):
+            if isinstance(v, (bool, integer_types, type(None))):
                 if v is not None:
                     v = bool(v)
                 local_defs[k] = v
@@ -238,7 +341,7 @@ class ManagedProperties(BasicMeta):
                 pass
 
         # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.iteritems():
+        for k, v in cls.default_assumptions.items():
             setattr(cls, as_property(k), v)
 
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)

@@ -1,7 +1,9 @@
-from sympy.core import S, sympify, expand
+from __future__ import print_function, division
+
+from sympy.core import S, sympify
+from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 
 
 def _add_splines(c, b1, d, b2):
@@ -13,7 +15,8 @@ def _add_splines(c, b1, d, b2):
     else:
         new_args = []
         n_intervals = len(b1.args)
-        assert(n_intervals == len(b2.args))
+        if n_intervals != len(b2.args):
+            raise ValueError("Args of b1 and b2 are not equal")
         new_args.append((c*b1.args[0].expr, b1.args[0].cond))
         for i in range(1, n_intervals - 1):
             new_args.append((
@@ -28,9 +31,9 @@ def _add_splines(c, b1, d, b2):
 
 
 def bspline_basis(d, knots, n, x, close=True):
-    """The n-th B-spline at x of degree d with knots.
+    """The `n`-th B-spline at `x` of degree `d` with knots.
 
-    B-Splines are piecewise polynomials of degree d [1].  They are defined on
+    B-Splines are piecewise polynomials of degree `d` [1]_.  They are defined on
     a set of knots, which is a sequence of integers or floats.
 
     The 0th degree splines have a value of one on a single interval:
@@ -42,8 +45,8 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((1, And(x <= 1, x >= 0)), (0, True))
 
-    For a given (d, knots) there are len(knots)-d-1 B-splines defined, that
-    are indexed by n (starting at 0).
+    For a given ``(d, knots)`` there are ``len(knots)-d-1`` B-splines defined, that
+    are indexed by ``n`` (starting at 0).
 
     Here is an example of a cubic B-spline:
 
@@ -81,7 +84,7 @@ def bspline_basis(d, knots, n, x, close=True):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/B-spline
+    .. [1] http://en.wikipedia.org/wiki/B-spline
 
     """
     knots = [sympify(k) for k in knots]
@@ -120,11 +123,11 @@ def bspline_basis(d, knots, n, x, close=True):
 
 
 def bspline_basis_set(d, knots, x):
-    """Return the len(knots)-d-1 B-splines at x of degree d with knots.
+    """Return the ``len(knots)-d-1`` B-splines at ``x`` of degree ``d`` with ``knots``.
 
     This function returns a list of Piecewise polynomials that are the
-    len(knots)-d-1 B-splines of degree d for the given knots. This function
-    calls bspline_basis(d, knots, n, x) for different values of n.
+    ``len(knots)-d-1`` B-splines of degree ``d`` for the given knots. This function
+    calls ``bspline_basis(d, knots, n, x)`` for different values of ``n``.
 
     Examples
     ========

@@ -21,14 +21,11 @@
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
 
-
-from __future__ import with_statement
+from __future__ import print_function
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
-from sympy.utilities.codegen import(
-    codegen, Routine, InputArgument, Result, get_code_generator
-)
+from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
 import tempfile
@@ -181,7 +178,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     elif language == "C":
         f_name = "main.c"
     else:
-        raise NotImplemented(
+        raise NotImplementedError(
             "FIXME: filename extension unknown for language: %s" % language)
 
     with open(f_name, "w") as f:
@@ -213,7 +210,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
         os.rmdir(work)
     else:
-        print >> sys.stderr, "TEST NOT REMOVED: %s" % work
+        print("TEST NOT REMOVED: %s" % work, file=sys.stderr)
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end
@@ -245,7 +242,7 @@ def fortranize_double_constants(code_string):
 
 def is_feasible(language, commands):
     # This test should always work, otherwise the compiler is not present.
-    routine = Routine("test", x)
+    routine = make_routine("test", x)
     numerical_tests = [
         ("test", ( 1.0,), 1.0, 1e-15),
         ("test", (-1.0,), -1.0, 1e-15),

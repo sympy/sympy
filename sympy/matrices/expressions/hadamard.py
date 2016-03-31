@@ -1,5 +1,7 @@
-from sympy.core import Mul, Basic, sympify
-from sympy.strategies import unpack, flatten, sort, condition, exhaust, do_one
+from __future__ import print_function, division
+
+from sympy.core import Mul, sympify
+from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 
@@ -8,7 +10,8 @@ def hadamard_product(*matrices):
     Return the elementwise (aka Hadamard) product of matrices.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.matrices import hadamard_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 3)
     >>> B = MatrixSymbol('B', 2, 3)
@@ -45,7 +48,7 @@ class HadamardProduct(MatrixExpr):
     is_HadamardProduct = True
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         check = kwargs.get('check'   , True)
         if check:
             validate(*args)
@@ -60,7 +63,7 @@ class HadamardProduct(MatrixExpr):
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
-        return HadamardProduct(*map(transpose, self.args))
+        return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
         return canonicalize(self)

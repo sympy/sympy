@@ -10,9 +10,12 @@
     refactoring.
 """
 
+from __future__ import print_function, division
+
+from sympy.core.function import Function
+from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
-from sympy.functions import exp
-from sympy.core import C
+
 
 from sympy.core.compatibility import reduce
 
@@ -39,7 +42,7 @@ def _remove_repeated(inds):
             sum_index[i] += 1
         else:
             sum_index[i] = 0
-    inds = filter(lambda x: not sum_index[x], inds)
+    inds = [x for x in inds if not sum_index[x]]
     return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
 
 
@@ -58,11 +61,11 @@ def _get_indices_Mul(expr, return_dummies=False):
 
     """
 
-    inds = map(get_indices, expr.args)
-    inds, syms = zip(*inds)
+    inds = list(map(get_indices, expr.args))
+    inds, syms = list(zip(*inds))
 
-    inds = map(list, inds)
-    inds = reduce(lambda x, y: x + y, inds)
+    inds = list(map(list, inds))
+    inds = list(reduce(lambda x, y: x + y, inds))
     inds, dummies = _remove_repeated(inds)
 
     symmetry = {}
@@ -152,15 +155,15 @@ def _get_indices_Add(expr):
 
     """
 
-    inds = map(get_indices, expr.args)
-    inds, syms = zip(*inds)
+    inds = list(map(get_indices, expr.args))
+    inds, syms = list(zip(*inds))
 
     # allow broadcast of scalars
-    non_scalars = filter(lambda x: x != set(), inds)
+    non_scalars = [x for x in inds if x != set()]
     if not non_scalars:
         return set(), {}
 
-    if not all(map(lambda x: x == non_scalars[0], non_scalars[1:])):
+    if not all([x == non_scalars[0] for x in non_scalars[1:]]):
         raise IndexConformanceException("Indices are not consistent: %s" % expr)
     if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]
@@ -235,7 +238,7 @@ def get_indices(expr):
     elif expr.is_Atom:
         return set(), {}
     elif isinstance(expr, Idx):
-        return set([expr]), {}
+        return {expr}, {}
 
     # recurse via specialized functions
     else:
@@ -246,10 +249,10 @@ def get_indices(expr):
         elif expr.is_Pow or isinstance(expr, exp):
             return _get_indices_Pow(expr)
 
-        elif isinstance(expr, C.Piecewise):
+        elif isinstance(expr, Piecewise):
             # FIXME:  No support for Piecewise yet
             return set(), {}
-        elif isinstance(expr, C.Function):
+        elif isinstance(expr, Function):
             # Support ufunc like behaviour by returning indices from arguments.
             # Functions do not interpret repeated indices across argumnts
             # as summation
@@ -332,11 +335,11 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys(), key=default_sort_key)
-    [x[i]*(y[i] + A[i, j]*x[j]), (i,)]
+    [(x[j]*A[i, j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([x[i]*(y[i] + A[i, j]*x[j])])
+    set([(x[j]*A[i, j] + y[i])*x[i]])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
+    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:
@@ -370,12 +373,12 @@ def get_contraction_structure(expr):
 
     if isinstance(expr, Indexed):
         junk, key = _remove_repeated(expr.indices)
-        return {key or None: set([expr])}
+        return {key or None: {expr}}
     elif expr.is_Atom:
-        return {None: set([expr])}
+        return {None: {expr}}
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
-        result = {key or None: set([expr])}
+        result = {key or None: {expr}}
         # recurse on every factor
         nested = []
         for fac in expr.args:
@@ -396,7 +399,7 @@ def get_contraction_structure(expr):
         for d in dbase, dexp:
             if not (None in d and len(d) == 1):
                 dicts.append(d)
-        result = {None: set([expr])}
+        result = {None: {expr}}
         if dicts:
             result[expr] = dicts
         return result
@@ -416,10 +419,10 @@ def get_contraction_structure(expr):
                     result[key] = d[key]
         return result
 
-    elif isinstance(expr, C.Piecewise):
+    elif isinstance(expr, Piecewise):
         # FIXME:  No support for Piecewise yet
         return {None: expr}
-    elif isinstance(expr, C.Function):
+    elif isinstance(expr, Function):
         # Collect non-trivial contraction structures in each argument
         # We do not report repeated indices in separate arguments as a
         # contraction
@@ -428,13 +431,13 @@ def get_contraction_structure(expr):
             deep = get_contraction_structure(arg)
             if not (None in deep and len(deep) == 1):
                 deeplist.append(deep)
-        d = {None: set([expr])}
+        d = {None: {expr}}
         if deeplist:
             d[expr] = deeplist
         return d
 
     # this test is expensive, so it should be at the end
     elif not expr.has(Indexed):
-        return {None: set([expr])}
+        return {None: {expr}}
     raise NotImplementedError(
         "FIXME: No specialized handling of type %s" % type(expr))

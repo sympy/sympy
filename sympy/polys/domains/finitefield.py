@@ -1,13 +1,16 @@
 """Implementation of :class:`FiniteField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
 
@@ -22,14 +25,17 @@ class FiniteField(Field, SimpleDomain):
     dom = None
     mod = None
 
-    def __init__(self, mod, symmetric=True):
+    def __init__(self, mod, dom=None, symmetric=True):
         if mod <= 0:
-            raise ValueError(
-                'modulus must be a positive integer, got %s' % mod)
+            raise ValueError('modulus must be a positive integer, got %s' % mod)
+        if dom is None:
+            from sympy.polys.domains import ZZ
+            dom = ZZ
 
-        self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
+        self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
+        self.dom = dom
         self.mod = mod
 
     def __str__(self):
@@ -90,9 +96,9 @@ class FiniteField(Field, SimpleDomain):
         if a.denominator == 1:
             return K1.from_ZZ_gmpy(a.numerator)
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to ``dtype``. """
-        p, q = K0.as_integer_ratio(a)
+        p, q = K0.to_rational(a)
 
         if q == 1:
             return K1.dtype(self.dom.dtype(p))

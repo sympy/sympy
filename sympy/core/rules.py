@@ -2,6 +2,8 @@
 Replacement rules.
 """
 
+from __future__ import print_function, division
+
 
 class Transform(object):
     """
@@ -15,7 +17,7 @@ class Transform(object):
         If supplied, specifies which objects are in the mapping.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.core.rules import Transform
     >>> from sympy.abc import x

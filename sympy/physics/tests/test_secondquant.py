@@ -12,7 +12,8 @@ from sympy.physics.secondquant import (
 from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
                    Symbol, symbols)
 
-from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import range
+from sympy.utilities.pytest import XFAIL, slow
 
 
 def test_PermutationOperator():
@@ -91,7 +92,7 @@ def test_create():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -103,7 +104,7 @@ def test_annihilate():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
     assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n - 1])
     o = B(n)
@@ -201,6 +202,7 @@ def test_matrix_elements():
         assert m[i + 1, i] == sqrt(i + 1)
 
 
+@slow
 def test_sho():
     n, m = symbols('n,m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))
@@ -256,7 +258,7 @@ def test_create_f():
     o = Fd(i)
     assert isinstance(o, CreateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Fd(1)
     assert o.apply_operator(FKet([n])) == FKet([1, n])
     assert o.apply_operator(FKet([n])) == -FKet([n, 1])
@@ -279,7 +281,7 @@ def test_annihilate_f():
     o = F(i)
     assert isinstance(o, AnnihilateFermion)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = F(1)
     assert o.apply_operator(FKet([1, n])) == FKet([n])
     assert o.apply_operator(FKet([n, 1])) == -FKet([n])
@@ -300,7 +302,7 @@ def test_create_b():
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = Bd(0)
     assert o.apply_operator(BKet([n])) == sqrt(n + 1)*BKet([n + 1])
     o = Bd(n)
@@ -312,7 +314,7 @@ def test_annihilate_b():
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
-    assert o.atoms(Symbol) == set([j])
+    assert o.atoms(Symbol) == {j}
     o = B(0)
 
 
@@ -675,7 +677,7 @@ def test_equivalent_internal_lines_VT2conjT2():
     # v(abcd)t(abij)t(ijcd)
     template = v(p1, p2, p3, p4)*t(p1, p2, i, j)*t(i, j, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -683,7 +685,7 @@ def test_equivalent_internal_lines_VT2conjT2():
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = v(p1, p2, p3, p4)*t(p1, p2, j, i)*t(j, i, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -693,7 +695,7 @@ def test_equivalent_internal_lines_VT2conjT2():
     # v(abcd)t(abij)t(jicd)
     template = v(p1, p2, p3, p4)*t(p1, p2, i, j)*t(j, i, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -701,7 +703,7 @@ def test_equivalent_internal_lines_VT2conjT2():
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = v(p1, p2, p3, p4)*t(p1, p2, j, i)*t(i, j, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -726,7 +728,7 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
     # v(abcd)t(abij)t(cdij)
     template = v(p1, p2, p3, p4)*t(p1, p2, i, j)*t(p3, p4, i, j)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -734,7 +736,7 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order():
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = v(p1, p2, p3, p4)*t(p1, p2, j, i)*t(p3, p4, i, j)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -925,7 +927,7 @@ def test_dummy_order_ambiguous():
     # A*A*A*A*B  --  ordering of p5 and p4 is used to figure out the rest
     template = A(p1, p2)*A(p4, p1)*A(p2, p3)*A(p3, p5)*B(p5, p4)
     permutator = variations([a, b, c, d, e], 5)
-    base = template.subs(zip([p1, p2, p3, p4, p5], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4, p5], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4, p5], permut)
         expr = template.subs(subslist)
@@ -934,7 +936,7 @@ def test_dummy_order_ambiguous():
     # A*A*A*A*A  --  an arbitrary index is assigned and the rest are figured out
     template = A(p1, p2)*A(p4, p1)*A(p2, p3)*A(p3, p5)*A(p5, p4)
     permutator = variations([a, b, c, d, e], 5)
-    base = template.subs(zip([p1, p2, p3, p4, p5], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4, p5], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4, p5], permut)
         expr = template.subs(subslist)
@@ -943,7 +945,7 @@ def test_dummy_order_ambiguous():
     # A*A*A  --  ordering of p5 and p4 is used to figure out the rest
     template = A(p1, p2, p4, p1)*A(p2, p3, p3, p5)*A(p5, p4)
     permutator = variations([a, b, c, d, e], 5)
-    base = template.subs(zip([p1, p2, p3, p4, p5], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4, p5], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4, p5], permut)
         expr = template.subs(subslist)
@@ -1056,14 +1058,14 @@ def test_equivalent_internal_lines_VT2conjT2_AT():
     # atv(abcd)att(abij)att(ijcd)
     template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(i, j, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(j, i, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -1072,14 +1074,14 @@ def test_equivalent_internal_lines_VT2conjT2_AT():
     # atv(abcd)att(abij)att(jicd)
     template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(j, i, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(i, j, p3, p4)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
@@ -1099,14 +1101,14 @@ def test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT():
     # atv(abcd)att(abij)att(cdij)
     template = atv(p1, p2, p3, p4)*att(p1, p2, i, j)*att(p3, p4, i, j)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)
         assert substitute_dummies(expr) == substitute_dummies(base)
     template = atv(p1, p2, p3, p4)*att(p1, p2, j, i)*att(p3, p4, i, j)
     permutator = variations([a, b, c, d], 4)
-    base = template.subs(zip([p1, p2, p3, p4], permutator.next()))
+    base = template.subs(zip([p1, p2, p3, p4], next(permutator)))
     for permut in permutator:
         subslist = zip([p1, p2, p3, p4], permut)
         expr = template.subs(subslist)

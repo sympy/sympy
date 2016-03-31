@@ -8,29 +8,23 @@ given about SymPy at conferences can be seen at `SymPy Papers
 Planet SymPy
 ------------
 
-We have a blog agregator at http://planet.sympy.org
+We have a blog aggregator at http://planet.sympy.org.
 
 SymPy logos
 -----------
 
-SymPy has a collection of official logos, which can be accessed here:
+SymPy has a collection of official logos, which can
+be generated from
+`sympy.svg <https://github.com/sympy/sympy/blob/master/doc/src/logo/sympy.svg>`_
+in your local copy of SymPy by::
 
-https://github.com/sympy/sympy/tree/master/doc/logo
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
 
 The license of all the logos is the same as SymPy: BSD. See the LICENSE file in
 the trunk for more information.
 
-Projects using SymPy
---------------------
-
-This is an (incomplete) list of projects that use SymPy. If you use SymPy in
-your project, please let us know on our mailinglist_, so that we can add your
-project here as well.
-
-* `SfePy <http://sfepy.org/>`_ (simple finite elements in Python)
-* `Quameon <http://quameon.sourceforge.net/>`_ (Quantum Monte Carlo in Python)
-
-.. _mailinglist:        http://groups.google.com/group/sympy
+.. _mailinglist:        https://groups.google.com/forum/#!forum/sympy
 
 Blogs, News, Magazines
 ----------------------

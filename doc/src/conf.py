@@ -12,6 +12,7 @@
 # serve to show the default value.
 
 import sys
+import sympy
 
 # If your extensions are in another directory, add it here.
 sys.path = ['../sympy', 'ext'] + sys.path
@@ -22,13 +23,13 @@ sys.path = ['../sympy', 'ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', ]
+              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
 # MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
-mathjax_path = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -41,24 +42,21 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2013 SymPy Development Team'
+copyright = '2015 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.2'
+version = sympy.__version__
 # The full version, including alpha/beta/rc tags.
-release = '0.7.2-git'
+release = version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 #today = ''
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = '%B %d, %Y'
-
-# Translations:
-locale_dirs = ["../_build/i18n/"]
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
@@ -96,24 +94,9 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
-html_favicon = '../logo/SymPy-Favicon.ico'
+html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 # See http://sphinx-doc.org/theming.html#builtin-themes.
-html_theme_options = {
-    'collapsiblesidebar': True,
-    'relbarbgcolor': '#2f441e',
-    'sidebarbgcolor': '#3b5526',
-    'sidebarbtncolor': '#4F663C',
-    'sidebarlinkcolor': '#81B953',
-    'linkcolor': '#4F663C',
-    'visitedlinkcolor': '#293b1b',
-    'headtextcolor': '#2f441e',
-    'footerbgcolor': '#293b1b',
-    'headlinkcolor': '#AAAAAA',
-    'sidebartextcolor': '#DDDDDD',
-    'footertextcolor': '#DDDDDD',
-    'relbartextcolor': '#DDDDDD',
-    'relbarlinkcolor': '#81B953',
-}
+
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -131,6 +114,7 @@ html_theme_options = {
 
 # If false, no module index is generated.
 #html_use_modindex = True
+html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True
@@ -161,8 +145,10 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+\usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
+\usepackage[english]{babel}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
@@ -171,11 +157,15 @@ latex_elements = {
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble':  ''
+    'preamble':  r'''
+% redefine \LaTeX to be usable in math mode
+\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
+'''
 }
 
 # SymPy logo on title page
-latex_logo = '_static/sympylogo.png'
+html_logo = '_static/sympylogo.png'
+latex_logo = '_static/sympylogo_big.png'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
@@ -200,3 +190,7 @@ texinfo_documents = [
     (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
    'SymPy', 'Computer algebra system (CAS) in Python', 'Programming', 1),
 ]
+
+# Use svg for graphviz
+
+graphviz_output_format = 'svg'

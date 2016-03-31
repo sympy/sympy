@@ -1,7 +1,11 @@
-from sympy.core.function import Function, C
+from __future__ import print_function, division
+
+from sympy.core.function import Function
 from sympy.core import S, Integer
 from sympy.core.mul import prod
+from sympy.core.logic import fuzzy_not
 from sympy.utilities.iterables import (has_dups, default_sort_key)
+from sympy.core.compatibility import range
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -12,7 +16,7 @@ def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
 
-    This is just compatibility wrapper to LeviCivita().
+    This is just compatibility wrapper to ``LeviCivita()``.
 
     See Also
     ========
@@ -28,8 +32,8 @@ def eval_levicivita(*args):
     from sympy import factorial
     n = len(args)
     return prod(
-        prod(args[j] - args[i] for j in xrange(i + 1, n))
-        / factorial(i) for i in xrange(n))
+        prod(args[j] - args[i] for j in range(i + 1, n))
+        / factorial(i) for i in range(n))
     # converting factorial(i) to int is slightly faster
 
 
@@ -80,8 +84,8 @@ class LeviCivita(Function):
 class KroneckerDelta(Function):
     """The discrete, or Kronecker, delta function.
 
-    A function that takes in two integers i and j. It returns 0 if i and j are
-    not equal or it returns 1 if i and j are equal.
+    A function that takes in two integers `i` and `j`. It returns `0` if `i` and `j` are
+    not equal or it returns `1` if `i` and `j` are equal.
 
     Parameters
     ==========
@@ -123,10 +127,8 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
     """
-
-    nargs = 2
 
     is_integer = True
 
@@ -153,16 +155,11 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
-        if (i > j) is True:
-            return cls(j, i)
-
-        diff = C.Abs(i - j)
-        if diff == 0:
+        diff = i - j
+        if diff.is_zero:
             return S.One
-        elif diff.is_number:
+        elif fuzzy_not(diff.is_zero):
             return S.Zero
-        elif i != 0 and diff.is_nonzero:
-            return KroneckerDelta(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
                 j.assumptions0.get("above_fermi"):
@@ -439,3 +436,11 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())

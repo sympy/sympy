@@ -15,4 +15,4 @@ import_module() for more information.
 
 """
 
-from importtools import import_module
+from sympy.external.importtools import import_module

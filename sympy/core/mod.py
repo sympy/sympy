@@ -1,4 +1,7 @@
-from function import Function
+from __future__ import print_function, division
+
+from sympy.core.numbers import nan
+from .function import Function
 
 
 class Mod(Function):
@@ -19,7 +22,6 @@ class Mod(Function):
     1
 
     """
-    nargs = 2
 
     @classmethod
     def eval(cls, p, q):
@@ -31,14 +33,24 @@ class Mod(Function):
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
-            to be less than q.
+            to be less than or equal q.
             """
 
-            if p == q or p == -q or p.is_Pow and p.exp.is_Integer and p.base == q:
+            if p.is_infinite or q.is_infinite or p is nan or q is nan:
+                return nan
+            if (p == q or p == -q or
+                    p.is_Pow and p.exp.is_Integer and p.base == q or
+                    p.is_integer and q == 1):
                 return S.Zero
 
-            if p.is_Number and q.is_Number:
-                return (p % q)
+            if q.is_Number:
+                if p.is_Number:
+                    return (p % q)
+                if q == 2:
+                    if p.is_even:
+                        return S.Zero
+                    elif p.is_odd:
+                        return S.One
 
             # by ratio
             r = p/q
@@ -49,16 +61,16 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if rv*q < 0:
+                    if (rv*q < 0) == True:
                         rv += q
                     return rv
 
-            # by differencec
+            # by difference
             d = p - q
-            if (d < 0) is True:
-                if (q < 0) is True:
+            if d.is_negative:
+                if q.is_negative:
                     return d
-                elif (q > 0) is True:
+                elif q.is_positive:
                     return p
 
         rv = doit(p, q)
@@ -75,7 +87,7 @@ class Mod(Function):
 
         # extract gcd; any further simplification should be done by the user
         G = gcd(p, q)
-        if G is not S.One:
+        if G != 1:
             p, q = [
                 gcd_terms(i/G, clear=False, fraction=False) for i in (p, q)]
         pwas, qwas = p, q
@@ -127,3 +139,17 @@ class Mod(Function):
             p = G.args[0]*p
             G = Mul._from_args(G.args[1:])
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
+
+    def _eval_is_integer(self):
+        from sympy.core.logic import fuzzy_and, fuzzy_not
+        p, q = self.args
+        if fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)]):
+            return True
+
+    def _eval_is_nonnegative(self):
+        if self.args[1].is_positive:
+            return True
+
+    def _eval_is_nonpositive(self):
+        if self.args[1].is_negative:
+            return True

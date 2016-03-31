@@ -1,258 +1,31 @@
+from __future__ import print_function, division
+
+from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence
+from sympy.core.basic import Basic
+from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
+from sympy.core.mul import Mul
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.integrals.rationaltools import ratint
-from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.utilities import xthreaded, flatten
+from sympy.matrices import MatrixBase
 from sympy.utilities.misc import filldedent
 from sympy.polys import Poly, PolynomialError
-from sympy.solvers.solvers import solve, posify
 from sympy.functions import Piecewise, sqrt, sign
-from sympy.geometry import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.exponential import log
 from sympy.series import limit
+from sympy.series.order import Order
 
 
-# TODO get these helper functions into a super class for sum-like
-# objects: Sum, Product, Integral (issue 3662)
-
-def _free_symbols(expr_with_limits):
-    """
-    This method returns the symbols that will exist when the object is
-    evaluated. This is useful if one is trying to determine whether the
-    objet contains a certain symbol or not.
-
-    Examples
-    ========
-
-    >>> from sympy import Sum
-    >>> from sympy.abc import x, y
-    >>> Sum(x, (x, y, 1)).free_symbols
-    set([y])
-    """
-    self = expr_with_limits
-    function = self.function
-    if function.is_zero:
-        return set()
-    limits = self.limits
-    isyms = function.free_symbols
-    for xab in limits:
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
-
-
-def _process_limits(*symbols):
-    """Process the list of symbols and convert them to canonical limits,
-    storing them as Tuple(symbol, lower, upper). The sign of
-    the function is also returned when the upper limit is missing
-    so (x, 1, None) becomes (x, None, 1) and the sign is changed.
-    """
-    limits = []
-    sign = 1
-    for V in symbols:
-        if isinstance(V, Symbol):
-            limits.append(Tuple(V))
-            continue
-        elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
-            if V[0].is_Symbol:
-                newsymbol = V[0]
-                if len(V) == 2 and isinstance(V[1], Interval):
-                    V[1:] = [V[1].start, V[1].end]
-
-                if len(V) == 3:
-                    if V[1] is None and V[2] is not None:
-                        nlim = [V[2]]
-                    elif V[1] is not None and V[2] is None:
-                        sign *= -1
-                        nlim = [V[1]]
-                    elif V[1] is None and V[2] is None:
-                        nlim = []
-                    else:
-                        nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim ))
-                    continue
-                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                    limits.append(Tuple(newsymbol))
-                    continue
-                elif len(V) == 2:
-                    limits.append(Tuple(newsymbol, V[1]))
-                    continue
-
-        raise ValueError('Invalid limits given: %s' % str(symbols))
-
-    return limits, sign
-
-
-def _as_dummy(expr_with_limits):
-    """
-    Replace instances of the limit variables with their dummy
-    counterparts to make clear what are dummy variables and what
-    are real-world symbols in an object.
-
-    Examples
-    ========
-
-    >>> from sympy import Integral
-    >>> from sympy.abc import x, y
-    >>> Integral(x, (x, x, y), (y, x, y)).as_dummy()
-    Integral(_x, (_x, x, _y), (_y, x, y))
-
-    If the object supperts the "integral at" limit ``(x,)`` it
-    is not treated as a dummy, but the explicit form, ``(x, x)``
-    of length 2 does treat the variable as a dummy.
-
-    >>> Integral(x, x).as_dummy()
-    Integral(x, x)
-    >>> Integral(x, (x, x)).as_dummy()
-    Integral(_x, (_x, x))
-
-    If there were no dummies in the original expression, then the
-    the symbols which cannot be changed by subs() are clearly seen as
-    those with an underscore prefix.
-
-    See Also
-    ========
-
-    variables : Lists the integration variables
-    transform : Perform mapping on the integration variable
-    """
-    self = expr_with_limits
-    reps = {}
-    f = self.function
-    limits = list(self.limits)
-    for i in xrange(-1, -len(limits) - 1, -1):
-        xab = list(limits[i])
-        if len(xab) == 1:
-            continue
-        x = xab[0]
-        xab[0] = x.as_dummy()
-        for j in range(1, len(xab)):
-            xab[j] = xab[j].subs(reps)
-        reps[x] = xab[0]
-        limits[i] = xab
-    f = f.subs(reps)
-    return self.func(f, *limits)
-
-
-def _eval_subs(expr_with_limits, old, new):
-        """
-        Substitute old with new in the function and the limits, but don't
-        change anything that is (or corresponds to) a bound symbol,
-
-        The normal substitution semantics -- traversing all arguments looking
-        for matching patterns -- should not be applied to the sum-like objects
-        since changing the limit variables should also entail a change in the
-        limits (which should be done with the transform method). So
-        this method just makes changes in the function and the limits.
-
-        Not all instances of a given variable are conceptually the same: the
-        first argument of the limit tuple with length greater than 1 and any
-        corresponding variable in the function are dummy variables while
-        every other symbol is a symbol that will be unchanged when the integral
-        is evaluated. For example, the dummy variables for ``i`` can be seen
-        as symbols with a preppended underscore. (The discussion below applies
-        ti Integral and any other "function with limits" sort of objects.)
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import a, b, c, x, y
-        >>> i = Integral(a + x, (a, a, b))
-        >>> i.as_dummy()
-        Integral(_a + x, (_a, a, b))
-
-        If you want to change the lower limit to 1 there is no reason to
-        prohibit this since it is not conceptually related to the integration
-        variable, ``_a``. Nor is there reason to disallow changing the ``b``
-        to 1.
-
-        If a second limit were added, however, as in:
-
-        >>> i = Integral(x + a, (a, a, b), (b, 1, 2))
-
-        the dummy variables become:
-
-        >>> i.as_dummy()
-        Integral(_a + x, (_a, a, _b), (_b, 1, 2))
-
-        Note that the ``b`` of the first limit is now a dummy variable since
-        ``b`` is a dummy variable in the second limit.
-
-        The "evaluate at" form of an integral allows some flexibility in how
-        the integral will be treated by subs: if there is no second argument,
-        none of the symbols matching the integration symbol are considered to
-        be dummy variables, but if an explicit expression is given for a limit
-        then the usual interpretation of the integration symbol as a dummy
-        symbol applies:
-
-        >>> Integral(x).as_dummy() # implicit integration wrt x
-        Integral(x, x)
-        >>> Integral(x, x).as_dummy()
-        Integral(x, x)
-        >>> _.subs(x, 1)
-        Integral(1, x)
-        >>> i = Integral(x, (x, x))
-        >>> i.as_dummy()
-        Integral(_x, (_x, x))
-        >>> i.subs(x, 1)
-        Integral(x, (x, 1))
-
-        Summary
-        =======
-
-        No variable of the integrand or limit can be the target of
-        substitution if it appears as a variable of integration in a limit
-        positioned to the right of it. The only exception is for a variable
-        that defines an indefinite integral limit (a single symbol): that
-        symbol *can* be replaced in the integrand.
-
-        >>> i = Integral(a + x, (a, a, 3), (b, x, c))
-        >>> i.free_symbols # only these can be changed
-        set([a, c, x])
-        >>> i.subs(a, c) # note that the variable of integration is unchanged
-        Integral(a + x, (a, c, 3), (b, x, c))
-        >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
-        True
-        >>> i.subs(x, y - c)
-        Integral(a - c + y, (a, a, 3), (b, -c + y, c))
-        """
-        self = expr_with_limits
-        func, limits = self.function, self.limits
-        old_atoms = old.free_symbols
-        limits = list(limits)
-
-        dummies = set()
-        for i in xrange(-1, -len(limits) - 1, -1):
-            xab = limits[i]
-            if len(xab) == 1:
-                continue
-            if not dummies.intersection(old_atoms):
-                limits[i] = Tuple(
-                    xab[0], *[l._subs(old, new) for l in xab[1:]])
-            dummies.add(xab[0])
-        if not dummies.intersection(old_atoms):
-            func = func.subs(old, new)
-        return self.func(func, *limits)
-
-
-class Integral(Expr):
+class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
     __slots__ = ['is_commutative']
@@ -277,27 +50,16 @@ class Integral(Expr):
         ``x`` as though it were the variable of integration):
 
             (x,) or x - indefinite integral
-            (x, a) - "evaluate at" integral
+            (x, a) - "evaluate at" integral is an abstract antiderivative
             (x, a, b) - definite integral
-
-        Although the same integral will be obtained from an indefinite
-        integral and an "evaluate at" integral when ``a == x``, they
-        respond differently to substitution:
-
-        >>> i = Integral(x, x)
-        >>> at = Integral(x, (x, x))
-        >>> i.doit() == at.doit()
-        True
-        >>> i.subs(x, 1)
-        Integral(1, x)
-        >>> at.subs(x, 1)
-        Integral(x, (x, 1))
 
         The ``as_dummy`` method can be used to see which symbols cannot be
         targeted by subs: those with a preppended underscore cannot be
         changed with ``subs``. (Also, the integration variables themselves --
         the first element of a limit -- can never be changed by subs.)
 
+        >>> i = Integral(x, x)
+        >>> at = Integral(x, (x, x))
         >>> i.as_dummy()
         Integral(x, x)
         >>> at.as_dummy()
@@ -305,98 +67,16 @@ class Integral(Expr):
 
         """
 
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        function = piecewise_fold(sympify(function))
+        #This will help other classes define their own definitions
+        #of behaviour with Integral.
+        if hasattr(function, '_eval_Integral'):
+            return function._eval_Integral(*symbols, **assumptions)
 
-        if function is S.NaN:
-            return S.NaN
-
-        if symbols:
-            limits, sign = _process_limits(*symbols)
-        else:
-            # no symbols provided -- let's compute full anti-derivative
-            free = function.free_symbols
-            if len(free) != 1:
-                raise ValueError(
-                    "specify variables of integration for %s" % function)
-            limits, sign = [Tuple(s) for s in free], 1
-
-        while isinstance(function, Integral):
-            # denest the integrand
-            limits = list(function.limits) + limits
-            function = function.function
-
-        obj = Expr.__new__(cls, **assumptions)
-        arglist = [sign*function]
-        arglist.extend(limits)
-        obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative  # limits already checked
-
+        obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
     def __getnewargs__(self):
         return (self.function,) + tuple([tuple(xab) for xab in self.limits])
-
-    @property
-    def function(self):
-        """Return the function to be integrated.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x
-        >>> Integral(x**2, (x,)).function
-        x**2
-
-        See Also
-        ========
-
-        limits, variables, free_symbols
-        """
-        return self._args[0]
-
-    @property
-    def limits(self):
-        """Return the limits of integration.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, i
-        >>> Integral(x**i, (i, 1, 3)).limits
-        ((i, 1, 3),)
-
-        See Also
-        ========
-
-        function, variables, free_symbols
-        """
-        return self._args[1:]
-
-    @property
-    def variables(self):
-        """Return a list of the integration variables.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, i
-        >>> Integral(x**i, (i, 1, 3)).variables
-        [i]
-
-        See Also
-        ========
-
-        function, limits, free_symbols
-        as_dummy : Replace integration variables with dummy ones
-        transform : Perform mapping on the integration variable
-        """
-        return [l[0] for l in self.limits]
 
     @property
     def free_symbols(self):
@@ -419,119 +99,44 @@ class Integral(Expr):
 
         function, limits, variables
         """
-        function, limits = self.function, self.limits
-        if function.is_zero:
-            return set()
-        isyms = function.free_symbols
-        for xab in limits:
+        return AddWithLimits.free_symbols.fget(self)
+
+    def _eval_is_zero(self):
+        # This is a very naive and quick test, not intended to do the integral to
+        # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
+        # is zero but this routine should return None for that case. But, like
+        # Mul, there are trivial situations for which the integral will be
+        # zero so we check for those.
+        if self.function.is_zero:
+            return True
+        got_none = False
+        for l in self.limits:
+            if len(l) == 3:
+                z = (l[1] == l[2]) or (l[1] - l[2]).is_zero
+                if z:
+                    return True
+                elif z is None:
+                    got_none = True
+        free = self.function.free_symbols
+        for xab in self.limits:
             if len(xab) == 1:
-                isyms.add(xab[0])
+                free.add(xab[0])
                 continue
-            # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
-            if len(xab) == 3 and xab[1] == xab[2]:
-                # if two limits are the same the integral is 0
-                # and there are no symbols
-                return set()
+            if len(xab) == 2 and xab[0] not in free:
+                if xab[1].is_zero:
+                    return True
+                elif xab[1].is_zero is None:
+                    got_none = True
+            # take integration symbol out of free since it will be replaced
+            # with the free symbols in the limits
+            free.discard(xab[0])
             # add in the new symbols
             for i in xab[1:]:
-                isyms.update(i.free_symbols)
-        return isyms
-
-    @property
-    def is_zero(self):
-        """Since Integral doesn't autosimplify it it useful to see if
-        it would simplify to zero or not in a trivial manner, i.e. when
-        the function is 0 or two limits of a definite integral are the same.
-
-        This is a very naive and quick test, not intended to check for special
-        patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y, z
-        >>> Integral(1, (x, 1, 1)).is_zero
-        True
-        >>> Integral(0, (x, y, z)).is_zero
-        True
-        >>> Integral(1, (x, 1, 2)).is_zero
-        False
-
-        See Also
-        ========
-
-        is_number
-        """
-        if (self.function.is_zero or
-                any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
-            return True
-        if not self.free_symbols and self.function.is_number:
-            # the integrand is a number and the limits are numerical
+                free.update(i.free_symbols)
+        if self.function.is_zero is False and got_none is False:
             return False
 
-    @property
-    def is_number(self):
-        """
-        Return True if the Integral will result in a number, else False.
-
-        Integrals are a special case since they contain symbols that can
-        be replaced with numbers. Whether the integral can be done or not is
-        another issue. But answering whether the final result is a number is
-        not difficult.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y
-        >>> Integral(x).is_number
-        False
-        >>> Integral(x, y).is_number
-        False
-        >>> Integral(x, (y, 1, x)).is_number
-        False
-        >>> Integral(x, (y, 1, 2)).is_number
-        False
-        >>> Integral(x, (y, 1, 1)).is_number
-        True
-        >>> Integral(x, (x, 1, 2)).is_number
-        True
-        >>> Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number
-        True
-        >>> Integral(1, x, (x, 1, 2)).is_number
-        True
-
-        See Also
-        ========
-
-        is_zero
-        """
-
-        integrand, limits = self.function, self.limits
-        isyms = integrand.atoms(Symbol)
-        for xab in limits:
-            if len(xab) == 1:
-                isyms.add(xab[0])
-                continue  # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
-                return True  # integral collapsed
-            if xab[0] in isyms:
-                # take it out of the symbols since it will be replace
-                # with whatever the limits of the integral are
-                isyms.remove(xab[0])
-            # add in the new symbols
-            for i in xab[1:]:
-                isyms.update(i.free_symbols)
-        # if there are no surviving symbols then the result is a number
-        return len(isyms) == 0
-
-    def as_dummy(self):
-        return _as_dummy(self)
-
-    def transform(self, x, u, inverse=False):
+    def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
@@ -544,9 +149,6 @@ class Integral(Expr):
         2) If `u` is a Symbol then `x` will be interpreted as some function,
            F(x), with inverse f(u). This is commonly referred to as
            u-substitution.
-
-        The `inverse` option will reverse `x` and `u`. It is a deprecated option
-        since `x` and `u` can just be passed in reverse order.
 
         Once f and F have been identified, the transformation is made as
         follows:
@@ -637,21 +239,7 @@ class Integral(Expr):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-
-        if inverse:
-            # when this is removed, update the docstring
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            SymPyDeprecationWarning(
-                feature="transform(x, f(x), inverse=True)",
-                useinstead="transform(f(x), x)",
-                issue=3380, deprecated_since_version="0.7.2",
-            ).warn()
-            # in the old style x and u contained the same variable so
-            # don't worry about using the old-style feature with the
-            # new style input...but it will still work:
-            # i.transform(x, u).transform(x, u, inverse=True) -> i
-            x, u = u, x
-
+        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -690,7 +278,7 @@ class Integral(Expr):
             raise ValueError('either x or u must be a symbol')
 
         if uvar == xvar:
-            return self.transform(x, u.subs(uvar, d)).xreplace({d: uvar})
+            return self.transform(x, (u.subs(uvar, d), d)).xreplace({d: uvar})
 
         if uvar in self.limits:
             raise ValueError(filldedent('''
@@ -706,7 +294,7 @@ class Integral(Expr):
         else:
             f = [u.subs(uvar, d)]
             pdiff, reps = posify(u - x)
-            puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
+            puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
             if not soln:
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
@@ -726,7 +314,7 @@ class Integral(Expr):
             where sign of b is considered
             """
             wok = F.subs(d, a)
-            if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
+            if wok is S.NaN or wok.is_finite is False and a.is_finite:
                 return limit(sign(b)*F, d, a)
             return wok
 
@@ -735,7 +323,7 @@ class Integral(Expr):
             replace d with a, using subs if possible, otherwise limit
             where sign of b is considered
             """
-            avals = list(set([_calc_limit_1(Fi, a, b) for Fi in F]))
+            avals = list({_calc_limit_1(Fi, a, b) for Fi in F})
             if len(avals) > 1:
                 raise ValueError(filldedent('''
                 The mapping between F(x) and f(u) did not
@@ -749,7 +337,7 @@ class Integral(Expr):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a > b:
+                    if a - b > 0:
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))
@@ -773,7 +361,7 @@ class Integral(Expr):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((2, log(x) == 0), (x**3/log(x) - x/log(x), True))
+        Piecewise((2, Eq(log(x), 0)), (x**3/log(x) - x/log(x), True))
 
         See Also
         ========
@@ -790,6 +378,7 @@ class Integral(Expr):
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
         risch = hints.get('risch', None)
+        manual = hints.get('manual', None)
 
         if conds not in ['separate', 'piecewise', 'none']:
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -798,7 +387,7 @@ class Integral(Expr):
         if risch and any(len(xab) > 1 for xab in self.limits):
             raise ValueError('risch=True is only allowed for indefinite integrals.')
 
-        # check for the trivial case of equal upper and lower limits
+        # check for the trivial zero
         if self.is_zero:
             return S.Zero
 
@@ -806,9 +395,11 @@ class Integral(Expr):
         function = self.function
         if deep:
             function = function.doit(**hints)
-
         if function.is_zero:
             return S.Zero
+
+        if isinstance(function, MatrixBase):
+            return function.applyfunc(lambda f: self.func(f, self.limits).doit(**hints))
 
         # There is no trivial answer, so continue
 
@@ -831,9 +422,13 @@ class Integral(Expr):
             if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
                 undone_limits.append(xab)
                 ulj.update(uli)
+                function = self.func(*([function] + [xab]))
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
                 continue
 
-            # There are a number of tradeoffs in using the meijer g method.
+            # There are a number of tradeoffs in using the Meijer G method.
             # It can sometimes be a lot faster than other methods, and
             # sometimes slower. And there are certain types of integrals for
             # which it is more likely to work than others.
@@ -854,7 +449,7 @@ class Integral(Expr):
                         f, cond = res
                         if conds == 'piecewise':
                             ret = Piecewise((f, cond),
-                                          (Integral(function, (x, a, b)), True))
+                                          (self.func(function, (x, a, b)), True))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
                                 raise ValueError('conds=separate not supported in '
@@ -875,17 +470,20 @@ class Integral(Expr):
                 else:
                     meijerg1 = False
 
-            # If the special meijerg code did not succeed finding a definite
+            # If the special meijerg code did not succeed in finding a definite
             # integral, then the code using meijerint_indefinite will not either
             # (it might find an antiderivative, but the answer is likely to be
             #  nonsensical).
-            # Thus if we are requested to only use meijer g-function methods,
-            # we give up at this stage. Otherwise we just disable g-function
+            # Thus if we are requested to only use Meijer G-function methods,
+            # we give up at this stage. Otherwise we just disable G-function
             # methods.
             if meijerg1 is False and meijerg is True:
                 antideriv = None
             else:
-                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch, conds=conds)
+                antideriv = self._eval_integral(
+                    function, xab[0],
+                    meijerg=meijerg1, risch=risch, manual=manual,
+                    conds=conds)
                 if antideriv is None and meijerg1 is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
@@ -894,15 +492,22 @@ class Integral(Expr):
 
             if antideriv is None:
                 undone_limits.append(xab)
+                function = self.func(*([function] + [xab])).factor()
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
+                continue
             else:
                 if len(xab) == 1:
                     function = antideriv
                 else:
                     if len(xab) == 3:
                         x, a, b = xab
-                    if len(xab) == 2:
+                    elif len(xab) == 2:
                         x, b = xab
                         a = None
+                    else:
+                        raise NotImplementedError
 
                     if deep:
                         if isinstance(a, Basic):
@@ -919,26 +524,43 @@ class Integral(Expr):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     else:
+                        def is_indef_int(g, x):
+                            return (isinstance(g, Integral) and
+                                    any(i == (x,) for i in g.limits))
+
+                        def eval_factored(f, x, a, b):
+                            # _eval_interval for integrals with
+                            # (constant) factors
+                            # a single indefinite integral is assumed
+                            args = []
+                            for g in Mul.make_args(f):
+                                if is_indef_int(g, x):
+                                    args.append(g._eval_interval(x, a, b))
+                                else:
+                                    args.append(g)
+                            return Mul(*args)
+
+                        integrals, others = [], []
+                        for f in Add.make_args(antideriv):
+                            if any(is_indef_int(g, x)
+                                   for g in Mul.make_args(f)):
+                                integrals.append(f)
+                            else:
+                                others.append(f)
+                        uneval = Add(*[eval_factored(f, x, a, b)
+                                       for f in integrals])
                         try:
-                            function = antideriv._eval_interval(x, a, b)
+                            evalued = Add(*others)._eval_interval(x, a, b)
+                            function = uneval + evalued
                         except NotImplementedError:
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
                             undone_limits.append(xab)
-
-        if undone_limits:
-            return self.func(*([function] + undone_limits))
+                            function = self.func(*([function] + [xab]))
+                            factored_function = function.factor()
+                            if not isinstance(factored_function, Integral):
+                                function = factored_function
         return function
-
-    def _eval_adjoint(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return self.func(self.function.adjoint(), *self.limits)
-        return None
-
-    def _eval_conjugate(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return self.func(self.function.conjugate(), *self.limits)
-        return None
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
@@ -968,6 +590,7 @@ class Integral(Expr):
         0
 
         The previous must be true since there is no y in the evaluated integral:
+
         >>> i.free_symbols
         set([x])
         >>> i.doit()
@@ -976,7 +599,7 @@ class Integral(Expr):
         """
 
         # differentiate under the integral sign; we do not
-        # check for regularity conditions (TODO), see issue 1116
+        # check for regularity conditions (TODO), see issue 4215
 
         # get limits and the function
         f, limits = self.function, list(self.limits)
@@ -1025,7 +648,8 @@ class Integral(Expr):
             rv += self.func(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, conds='piecewise'):
+    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
+                       conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1082,17 +706,35 @@ class Integral(Expr):
            - Setting meijerg=True will cause integrate() to use only this
              method.
 
-        5. The Heuristic Risch algorithm:
+        5. The "manual integration" algorithm:
+
+           - This algorithm tries to mimic how a person would find an
+             antiderivative by hand, for example by looking for a
+             substitution or applying integration by parts. This algorithm
+             does not handle as many integrands but can return results in a
+             more familiar form.
+
+           - Sometimes this algorithm can evaluate parts of an integral; in
+             this case integrate() will try to evaluate the rest of the
+             integrand using the other methods here.
+
+           - Setting manual=True will cause integrate() to use only this
+             method.
+
+        6. The Heuristic Risch algorithm:
 
            - This is a heuristic version of the Risch algorithm, meaning that
              it is not deterministic.  This is tried as a last resort because
              it can be very slow.  It is still used because not enough of the
              full Risch algorithm is implemented, so that there are still some
              integrals that can only be computed using this method.  The goal
-             is to implement enough of the Risch and Meijer G methods so that
-             this can be deleted.
+             is to implement enough of the Risch and Meijer G-function methods
+             so that this can be deleted.
 
         """
+        from sympy.integrals.deltafunctions import deltaintegrate
+        from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+        from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
 
         if risch:
@@ -1100,6 +742,15 @@ class Integral(Expr):
                 return risch_integrate(f, x, conds=conds)
             except NotImplementedError:
                 return None
+
+        if manual:
+            try:
+                result = manualintegrate(f, x)
+                if result is not None and result.func != Integral:
+                    return result
+            except (ValueError, PolynomialError):
+                pass
+
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1120,7 +771,6 @@ class Integral(Expr):
 
         # try to convert to poly(x) and then integrate if successful (fast)
         poly = f.as_poly(x)
-
         if poly is not None and not meijerg:
             return poly.integrate().as_expr()
 
@@ -1187,11 +837,11 @@ class Integral(Expr):
 
                 if M is not None:
                     if g.exp == -1:
-                        h = C.log(g.base)
+                        h = log(g.base)
                     elif conds != 'piecewise':
                         h = g.base**(g.exp + 1) / (g.exp + 1)
                     else:
-                        h1 = C.log(g.base)
+                        h1 = log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
                         h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
@@ -1257,7 +907,7 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
-            if h is None:
+            if h is None and manual is not False:
                 try:
                     result = manualintegrate(g, x)
                     if result is not None and not isinstance(result, Integral):
@@ -1265,7 +915,7 @@ class Integral(Expr):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
                             result = result.func(*[
-                                arg.doit() if arg.has(Integral) else arg
+                                arg.doit(manual=False) if arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,
                                       log=False,
@@ -1282,7 +932,7 @@ class Integral(Expr):
             # a product that could have been expanded,
             # so let's try an expansion of the whole
             # thing before giving up; we don't try this
-            # out the outset because there are things
+            # at the outset because there are things
             # that cannot be solved unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
             # should probably be a checker somewhere in this
@@ -1304,22 +954,26 @@ class Integral(Expr):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x):
-        for term in self.function.lseries(x):
-            yield integrate(term, *self.limits)
+    def _eval_lseries(self, x, logx):
+        expr = self.as_dummy()
+        symb = x
+        for l in expr.limits:
+            if x in l[1:]:
+                symb = l[0]
+                break
+        for term in expr.function.lseries(symb, logx):
+            yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx):
-        terms, order = self.function.nseries(
-            x, n=n, logx=logx).as_coeff_add(C.Order)
-        return integrate(terms, *self.limits) + Add(*order)*x
-
-    def _eval_subs(self, old, new):
-        return _eval_subs(self, old, new)
-
-    def _eval_transpose(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return self.func(self.function.transpose(), *self.limits)
-        return None
+        expr = self.as_dummy()
+        symb = x
+        for l in expr.limits:
+            if x in l[1:]:
+                symb = l[0]
+                break
+        terms, order = expr.function.nseries(
+            x=symb, n=n, logx=logx).as_coeff_add(Order)
+        return integrate(terms, *expr.limits) + Add(*order)*x
 
     def as_sum(self, n, method="midpoint"):
         """
@@ -1414,8 +1068,8 @@ class Integral(Expr):
         dx = (upper_limit - lower_limit)/n
 
         if method == 'trapezoid':
-            l = self.function.subs(sym, lower_limit)
-            r = self.function.subs(sym, upper_limit)
+            l = self.function.limit(sym, lower_limit)
+            r = self.function.limit(sym, upper_limit, "-")
             result = (l + r)/2
             for i in range(1, n):
                 x = lower_limit + i*dx
@@ -1430,13 +1084,42 @@ class Integral(Expr):
                 xi = lower_limit + i*dx + dx/2
             elif method == "left":
                 xi = lower_limit + i*dx
+                if i == 0:
+                    result = self.function.limit(sym, lower_limit)
+                    continue
             elif method == "right":
                 xi = lower_limit + i*dx + dx
+                if i == n:
+                    result += self.function.limit(sym, upper_limit, "-")
+                    continue
             result += self.function.subs(sym, xi)
         return result*dx
 
+    def _sage_(self):
+        import sage.all as sage
+        f, limits = self.function._sage_(), list(self.limits)
+        for limit in limits:
+            if len(limit) == 1:
+                x = limit[0]
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    hold=True)
+            elif len(limit) == 2:
+                x, b = limit
+                f = sage.integral(f,
+                                    x._sage_(),
+                                    b._sage_(),
+                                    hold=True)
+            else:
+                x, a, b = limit
+                f = sage.integral(f,
+                                  (x._sage_(),
+                                    a._sage_(),
+                                    b._sage_()),
+                                    hold=True)
+        return f
 
-@xthreaded
+
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
@@ -1504,6 +1187,12 @@ def integrate(*args, **kwargs):
     as G-functions, and use this information to compute integrals (see
     the ``meijerint`` module).
 
+    The option manual=True can be used to use only an algorithm that tries
+    to mimic integration by hand. This algorithm does not handle as many
+    integrands as the other algorithms implemented but may return results in
+    a more familiar form. The ``manualintegrate`` module has functions that
+    return the steps used (see the module docstring for more information).
+
     In general, the algebraic methods work best for computing
     antiderivatives of (possibly complicated) combinations of elementary
     functions. The G-function methods work best for computing definite
@@ -1519,8 +1208,8 @@ def integrate(*args, **kwargs):
 
     - Try to find an antiderivative, using all available methods, ordered
       by performance (that is try fastest method first, slowest last; in
-      particular polynomial integration is tried first, meijer
-      g-functions second to last, and heuristic risch last).
+      particular polynomial integration is tried first, Meijer
+      G-functions second to last, and heuristic Risch last).
 
     - If still not successful, try G-functions irrespective of the
       limits.
@@ -1583,15 +1272,16 @@ def integrate(*args, **kwargs):
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
     risch = kwargs.pop('risch', None)
+    manual = kwargs.pop('manual', None)
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep=False, meijerg=meijerg, conds=conds, risch=risch)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds,
+                             risch=risch, manual=manual)
     else:
         return integral
 
 
-@xthreaded
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
 
@@ -1611,6 +1301,7 @@ def line_integrate(field, curve, vars):
 
     integrate, Integral
     """
+    from sympy.geometry import Curve
     F = sympify(field)
     if not F:
         raise ValueError(

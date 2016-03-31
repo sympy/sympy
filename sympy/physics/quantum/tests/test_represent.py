@@ -107,12 +107,12 @@ def test_scalar_sympy():
     assert represent(1.0 + I) == 1.0 + I
 
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 
 
 def test_format_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     for test in _tests:
         lhs = represent(test[0], basis=A, format='numpy')
@@ -125,7 +125,7 @@ def test_format_numpy():
 
 def test_scalar_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     assert represent(Integer(1), format='numpy') == 1
     assert represent(Float(1.0), format='numpy') == 1.0
@@ -137,7 +137,7 @@ scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def test_format_scipy_sparse():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
 
@@ -152,7 +152,7 @@ def test_format_scipy_sparse():
 
 def test_scalar_scipy_sparse():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
 

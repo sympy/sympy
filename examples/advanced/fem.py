@@ -83,7 +83,7 @@ def bernstein_space(order, nsd):
                     for o4 in range(0, order + 1):
                         if o1 + o2 + o3 + o4 == order:
                             aij = Symbol("a_%d_%d_%d_%d" % (o1, o2, o3, o4))
-                            fac = factorial(order)/ (factorial(o1)*factorial(o2)*factorial(o3)*factorial(o4))
+                            fac = factorial(order)/(factorial(o1)*factorial(o2)*factorial(o3)*factorial(o4))
                             sum += aij*fac*pow(b1, o1)*pow(b2, o2)*pow(b3, o3)*pow(b4, o4)
                             basis.append(fac*pow(b1, o1)*pow(b2, o2)*pow(b3, o3)*pow(b4, o4))
                             coeff.append(aij)
@@ -158,7 +158,7 @@ class Lagrange:
                 ex = ex.subs(y, p[1])
             if nsd > 2:
                 ex = ex.subs(z, p[2])
-            equations.append(ex )
+            equations.append(ex)
 
         A = create_matrix(equations, coeffs)
         Ainv = A.inv()
@@ -181,7 +181,7 @@ def main():
     fe = Lagrange(2, 2)
 
     u = 0
-    #compute u = sum_i u_i N_i
+    # compute u = sum_i u_i N_i
     us = []
     for i in range(0, fe.nbf()):
         ui = Symbol("u_%d" % i)
@@ -191,11 +191,11 @@ def main():
     J = zeros(fe.nbf())
     for i in range(0, fe.nbf()):
         Fi = u*fe.N[i]
-        print Fi
+        print(Fi)
         for j in range(0, fe.nbf()):
             uj = us[j]
             integrands = diff(Fi, uj)
-            print integrands
+            print(integrands)
             J[j, i] = t.integrate(integrands)
 
     pprint(J)

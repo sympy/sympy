@@ -49,7 +49,7 @@ def test_tensor_product_simp():
     assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
 
 
-def test_issue_2824():
+def test_issue_5923():
     # most of the issue regarding sympification of args has been handled
     # and is tested internally by the use of args_cnc through the quantum
     # module, but the following is a test from the issue that used to raise.

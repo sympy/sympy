@@ -26,31 +26,40 @@ more information on each (run help(pde)):
 
   - 1st order linear homogeneous partial differential equations
     with constant coefficients.
+  - 1st order linear general partial differential equations
+    with constant coefficients.
+  - 1st order linear partial differential equations with
+    variable coefficients.
 
 """
-from copy import deepcopy
+from __future__ import print_function, division
 
+from itertools import combinations_with_replacement
 from sympy.simplify import simplify
-from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence)
-from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef, Subs)
-from sympy.core.numbers import Rational
+from sympy.core import Add, S
+from sympy.core.compatibility import (reduce, is_sequence, range)
+from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, Dummy, symbols
+from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
+from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
+from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
+from sympy.simplify.radsimp import collect
+
 import operator
+
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
-    "1st_linear_constant_coeff_Integral"
+    "1st_linear_constant_coeff_Integral",
+    "1st_linear_variable_coeff"
     )
+
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     """
@@ -120,6 +129,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
 
     **Tips**
         - You can declare the derivative of an unknown function this way:
+
             >>> from sympy import Function, Derivative
             >>> from sympy.abc import x, y # x and y are the independent variables
             >>> f = Function("f")(x, y) # f is a function of x and y
@@ -149,7 +159,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> uy = u.diff(y)
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> pdsolve(eq)
-    f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+    Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
 
@@ -176,7 +186,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             try:
                 rv = _helper_simplify(eq, hint, hints[hint]['func'],
                     hints[hint]['order'], hints[hint][hint], solvefun)
-            except NotImplementedError, detail:
+            except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
                 pdedict[hint] = rv
@@ -187,10 +197,11 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return _helper_simplify(eq, hints['hint'],
             hints['func'], hints['order'], hints[hints['hint']], solvefun)
 
+
 def _helper_simplify(eq, hint, func, order, match, solvefun):
     """Helper function of pdsolve that calls the respective
     pde functions to solve for the partial differential
-    equations. This minimises the computation in
+    equations. This minimizes the computation in
     calling _desolve multiple times.
     """
 
@@ -201,6 +212,7 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
         solvefunc = globals()["pde_" + hint]
     return _handle_Integral(solvefunc(eq, func, order,
         match, solvefun), func, order, hint)
+
 
 def _handle_Integral(expr, func, order, hint):
     r"""
@@ -224,8 +236,8 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     The tuple is ordered so that first item is the classification that
     pdsolve() uses to solve the PDE by default.  In general,
-    classifications at the near the beginning of the list will produce
-    better solutions faster than those near the end, thought there are
+    classifications near the beginning of the list will produce
+    better solutions faster than those near the end, though there are
     always exceptions.  To make pdsolve use a different classification,
     use pdsolve(PDE, func, hint=<classification>).  See also the pdsolve()
     docstring for different meta-hints you can use.
@@ -244,6 +256,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.solvers.pde import classify_pde
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
@@ -259,8 +272,8 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 2:
-        raise NotImplementedError("Right now only partial"
-        "differential equations of two variables are supported")
+        raise NotImplementedError("Right now only partial "
+            "differential equations of two variables are supported")
 
     if prep or func is None:
         prep, func_ = _preprocess(eq, func)
@@ -308,7 +321,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         var = set(combinations_with_replacement((x,y), order))
-        dummyvar = deepcopy(var)
+        dummyvar = var.copy()
         power = None
         for i in var:
             coeff = eq.coeff(f(x,y).diff(*i))
@@ -328,10 +341,11 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         if power:
             den = f(x,y)**power
             reduced_eq = Add(*[arg/den for arg in eq.args])
-        if not reduced_eq:
-            reduced_eq = eq
+    if not reduced_eq:
+        reduced_eq = eq
 
     if order == 1:
+        reduced_eq = collect(reduced_eq, f(x, y))
         r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
         if r:
             if not r[e]:
@@ -347,6 +361,15 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
                     matching_hints["1st_linear_constant_coeff"] = r
                     matching_hints[
                         "1st_linear_constant_coeff_Integral"] = r
+
+        else:
+            b = Wild('b', exclude=[f(x, y), fx, fy])
+            c = Wild('c', exclude=[f(x, y), fx, fy])
+            d = Wild('d', exclude=[f(x, y), fx, fy])
+            r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
+            if r:
+                r.update({'b': b, 'c': c, 'd': d, 'e': e})
+                matching_hints["1st_linear_variable_coeff"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -366,6 +389,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
 
 def checkpdesol(pde, sol, func=None, solve_for_func=True):
     """
@@ -395,6 +419,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
     Examples
     ========
+
     >>> from sympy import Function, symbols, diff
     >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')
@@ -418,7 +443,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(set.union, funcs, set())
+            funcs = set().union(funcs)
             if len(funcs) != 1:
                 raise ValueError(
                     'must pass func arg to checkpdesol for this case.')
@@ -427,45 +452,38 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If the given solution is in the form of a list or a set
     # then return a list or set of tuples.
     if is_sequence(sol, set):
-        return type(sol)(map(lambda i: checkpdesol(pde, i,
-            solve_for_func=solve_for_func), sol))
+        return type(sol)([checkpdesol(
+            pde, i, func=func,
+            solve_for_func=solve_for_func) for i in sol])
 
     # Convert solution into an equation
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
+    elif sol.rhs == func:
+        sol = sol.reversed
 
     # Try solving for the function
-    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
-            (sol.rhs == func and not sol.lhs.has(func)):
-        try:
-            solved = solve(sol, func)
-            if not solved:
-                raise NotImplementedError
-        except NotImplementedError:
-            pass
-        else:
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solve(sol, func)
+        if solved:
             if len(solved) == 1:
-                result = checkpdesol(pde, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
+                return checkpdesol(pde, Eq(func, solved[0]),
+                    func=func, solve_for_func=False)
             else:
-                result = checkpdesol(pde, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
+                return checkpdesol(pde, [Eq(func, t) for t in solved],
+                    func=func, solve_for_func=False)
 
-    # The first method includes direct substitution of the solution in
-    # the PDE and simplifying.
-    pde = pde.lhs - pde.rhs
+    # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
-        s = pde.subs(func, sol.rhs).doit()
-    elif sol.rhs == func:
-        s = pde.subs(func, sol.lhs).doit()
-    if s:
-        ss = simplify(s)
-        if ss:
-            return False, ss
-        else:
-            return True, 0
-    else:
-        return True, 0
+        pde = pde.lhs - pde.rhs
+        s = simplify(pde.subs(func, sol.rhs).doit())
+        return s is S.Zero, s
+
+    raise NotImplementedError(filldedent('''
+        Unable to test if %s is a solution to %s.''' % (sol, pde)))
+
+
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     r"""
@@ -473,32 +491,32 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     partial differential equation with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0
-    where a, b and c are constants.
 
-    The general solution of the differential equation, can be found
-    by the method of characteristics. It is given by
-    f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = 0
 
-    >>> from sympy.solvers import pdsolve
-    >>> from sympy.abc import x, y, a, b, c
-    >>> from sympy import Function, pprint
-    >>> f = Function('f')
-    >>> u = f(x,y)
-    >>> ux = u.diff(x)
-    >>> uy = u.diff(y)
-    >>> genform = a*ux + b*uy + c*u
-    >>> pprint(genform)
-      d               d
-    a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
-      dx              dy
+    where `a`, `b` and `c` are constants.
 
-    >>> pprint(pdsolve(genform))
-                              -c*(a*x + b*y)
-                             --------------
-                                 2    2
-                                a  + b
-    f(x, y) = F(-a*y + b*x)*e
+    The general solution is of the form::
+
+        >>> from sympy.solvers import pdsolve
+        >>> from sympy.abc import x, y, a, b, c
+        >>> from sympy import Function, pprint
+        >>> f = Function('f')
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a*ux + b*uy + c*u
+        >>> pprint(genform)
+          d               d
+        a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
+          dx              dy
+
+        >>> pprint(pdsolve(genform))
+                                 -c*(a*x + b*y)
+                                 ---------------
+                                      2    2
+                                     a  + b
+        f(x, y) = F(-a*y + b*x)*e
 
     Examples
     ========
@@ -510,7 +528,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))
-    f(x, y) == F(x - y)*exp(-x/2 - y/2)
+    Eq(f(x, y), F(x - y)*exp(-x/2 - y/2))
     >>> pprint(pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)))
                           x   y
                         - - - -
@@ -536,65 +554,68 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     d = match[match['d']]
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
 
+
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
     Solves a first order linear partial differential equation
     with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)
-    where a, b and c are constants and G can be an arbitrary
-    function in x and y.
 
-    The general solution of the PDE is
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = G(x,y)
 
-    >>> from sympy.solvers import pdsolve
-    >>> from sympy.abc import x, y, a, b, c
-    >>> from sympy import Function, pprint
-    >>> f = Function('f')
-    >>> G = Function('G')
-    >>> u = f(x,y)
-    >>> ux = u.diff(x)
-    >>> uy = u.diff(y)
-    >>> genform = a*u + b*ux + c*uy - G(x,y)
-    >>> pprint(genform)
+    where `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
+    function in `x` and `y`.
+
+    The general solution of the PDE is::
+
+        >>> from sympy.solvers import pdsolve
+        >>> from sympy.abc import x, y, a, b, c
+        >>> from sympy import Function, pprint
+        >>> f = Function('f')
+        >>> G = Function('G')
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a*u + b*ux + c*uy - G(x,y)
+        >>> pprint(genform)
                   d               d
-    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
+        a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
                   dx              dy
-    >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-              //          b*x + c*y                                             \
-              ||              /                                                 |
-              ||             |                                                  |
-              ||             |                                       a*xi       |
-              ||             |                                     -------      |
-              ||             |                                      2    2      |
-              ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
-              ||             |     G|------------, -------------|*e        d(xi)|
-              ||             |      |   2    2         2    2   |               |
-              ||             |      \  b  + c         b  + c    /               |
-              ||             |                                                  |
-              ||            /                                                   |
-              ||                                                                |
-    f(x, y) = ||F(eta) + -------------------------------------------------------|*
-              ||                                  2    2                        |
-              \\                                 b  + c                         /
-    <BLANKLINE>
-            \|
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-      -a*xi ||
-     -------||
-      2    2||
-     b  + c ||
-    e       ||
-            ||
-            /|eta=-b*y + c*x, xi=b*x + c*y
+        >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
+                  //          b*x + c*y                                             \
+                  ||              /                                                 |
+                  ||             |                                                  |
+                  ||             |                                       a*xi       |
+                  ||             |                                     -------      |
+                  ||             |                                      2    2      |
+                  ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
+                  ||             |     G|------------, -------------|*e        d(xi)|
+                  ||             |      |   2    2         2    2   |               |
+                  ||             |      \  b  + c         b  + c    /               |
+                  ||             |                                                  |
+                  ||            /                                                   |
+                  ||                                                                |
+        f(x, y) = ||F(eta) + -------------------------------------------------------|*
+                  ||                                  2    2                        |
+                  \\                                 b  + c                         /
+        <BLANKLINE>
+                \|
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+          -a*xi ||
+         -------||
+          2    2||
+         b  + c ||
+        e       ||
+                ||
+                /|eta=-b*y + c*x, xi=b*x + c*y
 
 
     Examples
@@ -606,7 +627,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)
+    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
 
     References
     ==========
@@ -619,7 +640,6 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     # TODO : For now homogeneous first order linear PDE's having
     # two variables are implemented. Once there is support for
     # solving systems of ODE's, this can be extended to n variables.
-
     xi, eta = symbols("xi eta")
     f = func.func
     x = func.args[0]
@@ -633,10 +653,157 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
     # Integral should remain as it is in terms of xi,
     # doit() should be done in _handle_Integral.
-    genterm = (1/S(b**2 + c**2))*C.Integral(
+    genterm = (1/S(b**2 + c**2))*Integral(
         (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
     return Eq(f(x,y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
+
+
+def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
+    r"""
+    Solves a first order linear partial differential equation
+    with variable coefficients. The general form of this partial differential equation is
+
+    .. math:: a(x, y) \frac{df(x, y)}{dx} + a(x, y) \frac{df(x, y)}{dy}
+                + c(x, y) f(x, y) - G(x, y)
+
+    where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary functions
+    in `x` and `y`. This PDE is converted into an ODE by making the following transformation.
+
+    1] `\xi` as `x`
+
+    2] `\eta` as the constant in the solution to the differential equation
+    `\frac{dy}{dx} = -\frac{b}{a}`
+
+    Making the following substitutions reduces it to the linear ODE
+
+    .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - d(\xi, \eta) = 0
+
+    which can be solved using dsolve.
+
+    The general form of this PDE is::
+
+        >>> from sympy.solvers.pde import pdsolve
+        >>> from sympy.abc import x, y
+        >>> from sympy import Function, pprint
+        >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
+        >>> pprint(genform)
+                                             d                     d
+        -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
+                                             dx                    dy
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.pde import pdsolve
+    >>> from sympy import Function, diff, pprint, exp
+    >>> from sympy.abc import x,y
+    >>> f = Function('f')
+    >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
+    >>> pdsolve(eq)
+    Eq(f(x, y), F(x*y)*exp(y**2/2) + 1)
+
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, pp.7
+
+    """
+    from sympy.integrals.integrals import integrate
+    from sympy.solvers.ode import dsolve
+
+    xi, eta = symbols("xi eta")
+    f = func.func
+    x = func.args[0]
+    y = func.args[1]
+    b = match[match['b']]
+    c = match[match['c']]
+    d = match[match['d']]
+    e = -match[match['e']]
+
+
+    if not d:
+         # To deal with cases like b*ux = e or c*uy = e
+         if not (b and c):
+            if c:
+                try:
+                    tsol = integrate(e/c, y)
+                except NotImplementedError:
+                    raise NotImplementedError("Unable to find a solution"
+                        " due to inability of integrate")
+                else:
+                    return Eq(f(x,y), solvefun(x) + tsol)
+            if b:
+                try:
+                    tsol = integrate(e/b, x)
+                except NotImplementedError:
+                    raise NotImplementedError("Unable to find a solution"
+                        " due to inability of integrate")
+                else:
+                    return Eq(f(x,y), solvefun(y) + tsol)
+
+    if not c:
+        # To deal with cases when c is 0, a simpler method is used.
+        # The PDE reduces to b*(u.diff(x)) + d*u = e, which is a linear ODE in x
+        plode = f(x).diff(x)*b + d*f(x) - e
+        sol = dsolve(plode, f(x))
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
+        return Eq(f(x, y), rhs)
+
+    if not b:
+        # To deal with cases when b is 0, a simpler method is used.
+        # The PDE reduces to c*(u.diff(y)) + d*u = e, which is a linear ODE in y
+        plode = f(y).diff(y)*c + d*f(y) - e
+        sol = dsolve(plode, f(y))
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
+        return Eq(f(x, y), rhs)
+
+    dummy = Function('d')
+    h = (c/b).subs(y, dummy(x))
+    sol = dsolve(dummy(x).diff(x) - h, dummy(x))
+    if isinstance(sol, list):
+        sol = sol[0]
+    solsym = sol.free_symbols - h.free_symbols - {x, y}
+    if len(solsym) == 1:
+        solsym = solsym.pop()
+        etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
+        ysub = solve(eta - etat, y)[0]
+        deq = (b*(f(x).diff(x)) + d*f(x) - e).subs(y, ysub)
+        final = (dsolve(deq, f(x), hint='1st_linear')).rhs
+        if isinstance(final, list):
+            final = final[0]
+        finsyms = final.free_symbols - deq.free_symbols - {x, y}
+        rhs = _simplify_variable_coeff(final, finsyms, solvefun, etat)
+        return Eq(f(x, y), rhs)
+
+    else:
+        raise NotImplementedError("Cannot solve the partial differential equation due"
+            " to inability of constantsimp")
+
+
+def _simplify_variable_coeff(sol, syms, func, funcarg):
+    r"""
+    Helper function to replace constants by functions in 1st_linear_variable_coeff
+    """
+    eta = Symbol("eta")
+    if len(syms) == 1:
+        sym = syms.pop()
+        final = sol.subs(sym, func(funcarg))
+
+    else:
+        fname = func.__name__
+        for key, sym in enumerate(syms):
+            tempfun = Function(fname + str(key))
+            final = sol.subs(sym, func(funcarg))
+
+    return simplify(final.subs(eta, funcarg))
 
 
 def pde_separate(eq, fun, sep, strategy='mul'):
@@ -686,7 +853,8 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return pde_separate(Eq(eq.lhs - eq.rhs), fun, sep, strategy)
-    assert eq.rhs == 0
+    if eq.rhs != 0:
+        raise ValueError("Value should be 0")
 
     # Handle arguments
     orig_args = list(fun.args)
@@ -799,7 +967,7 @@ def _separate(eq, dep, others):
         div.add(ext)
     # FIXME: Find lcm() of all the divisors and divide with it, instead of
     # current hack :(
-    # http://code.google.com/p/sympy/issues/detail?id=1498
+    # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
         final = 0
         for term in eq.args:

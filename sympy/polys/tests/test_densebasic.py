@@ -32,16 +32,18 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_apply_pairs,
-    dup_slice, dmp_slice, dmp_slice_in,
+    dup_slice,
     dup_random,
 )
 
 from sympy.polys.specialpolys import f_polys
-from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import ZZ, QQ
+from sympy.polys.rings import ring
 
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
+
+from sympy import oo
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
@@ -93,24 +95,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert dup_degree([]) == -1
+    assert dup_degree([]) == -oo
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) == -1
-    assert dmp_degree([[[]]], 2) == -1
+    assert dmp_degree([[]], 1) == -oo
+    assert dmp_degree([[[]]], 2) == -oo
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) == -1
-    assert dmp_degree_in([[[]]], 1, 2) == -1
-    assert dmp_degree_in([[[]]], 2, 2) == -1
+    assert dmp_degree_in([[[]]], 0, 2) == -oo
+    assert dmp_degree_in([[[]]], 1, 2) == -oo
+    assert dmp_degree_in([[[]]], 2, 2) == -oo
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -129,7 +131,7 @@ def test_dmp_degree_in():
 
 
 def test_dmp_degree_list():
-    assert dmp_degree_list([[[[ ]]]], 3) == (-1, -1, -1, -1)
+    assert dmp_degree_list([[[[ ]]]], 3) == (-oo, -oo, -oo, -oo)
     assert dmp_degree_list([[[[1]]]], 3) == ( 0, 0, 0, 0)
 
     assert dmp_degree_list(f_0, 2) == (2, 2, 2)
@@ -217,7 +219,7 @@ def test_dmp_normal():
 def test_dup_convert():
     K0, K1 = ZZ['x'], ZZ
 
-    f = [DMP([1], ZZ), DMP([2], ZZ), DMP([], ZZ), DMP([3], ZZ)]
+    f = [K0(1), K0(2), K0(0), K0(3)]
 
     assert dup_convert(f, K0, K1) == \
         [ZZ(1), ZZ(2), ZZ(0), ZZ(3)]
@@ -226,7 +228,7 @@ def test_dup_convert():
 def test_dmp_convert():
     K0, K1 = ZZ['x'], ZZ
 
-    f = [[DMP([1], ZZ)], [DMP([2], ZZ)], [], [DMP([3], ZZ)]]
+    f = [[K0(1)], [K0(2)], [], [K0(3)]]
 
     assert dmp_convert(f, 1, K0, K1) == \
         [[ZZ(1)], [ZZ(2)], [], [ZZ(3)]]
@@ -267,6 +269,7 @@ def test_dmp_nth():
 
 
 def test_dmp_ground_nth():
+    assert dmp_ground_nth([[]], (0, 0), 1, ZZ) == 0
     assert dmp_ground_nth([[1], [2], [3]], (0, 0), 1, ZZ) == 3
     assert dmp_ground_nth([[1], [2], [3]], (1, 0), 1, ZZ) == 2
     assert dmp_ground_nth([[1], [2], [3]], (2, 0), 1, ZZ) == 1
@@ -383,11 +386,12 @@ def test_dup_from_to_dict():
     assert dup_to_raw_dict(f) == g
     assert dup_to_dict(f) == h
 
-    K = ZZ['x', 'y']
+    R, x,y = ring("x,y", ZZ)
+    K = R.to_domain()
 
-    f = [K([[3]]), K([[]]), K([[2]]), K([[]]), K([[]]), K([[8]])]
-    g = {5: K([[3]]), 3: K([[2]]), 0: K([[8]])}
-    h = {(5,): K([[3]]), (3,): K([[2]]), (0,): K([[8]])}
+    f = [R(3), R(0), R(2), R(0), R(0), R(8)]
+    g = {5: R(3), 3: R(2), 0: R(8)}
+    h = {(5,): R(3), (3,): R(2), (0,): R(8)}
 
     assert dup_from_raw_dict(g, K) == f
     assert dup_from_dict(h, K) == f
@@ -584,38 +588,36 @@ def test_dmp_include():
 
 
 def test_dmp_inject():
-    K = ZZ['x', 'y']
+    R, x,y = ring("x,y", ZZ)
+    K = R.to_domain()
 
     assert dmp_inject([], 0, K) == ([[[]]], 2)
     assert dmp_inject([[]], 1, K) == ([[[[]]]], 3)
 
-    assert dmp_inject([K([[1]])], 0, K) == ([[[1]]], 2)
-    assert dmp_inject([[K([[1]])]], 1, K) == ([[[[1]]]], 3)
+    assert dmp_inject([R(1)], 0, K) == ([[[1]]], 2)
+    assert dmp_inject([[R(1)]], 1, K) == ([[[[1]]]], 3)
 
-    assert dmp_inject(
-        [K([[1]]), K([[2], [3, 4]])], 0, K) == ([[[1]], [[2], [3, 4]]], 2)
+    assert dmp_inject([R(1), 2*x + 3*y + 4], 0, K) == ([[[1]], [[2], [3, 4]]], 2)
 
-    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0,
-           0], [11]])]
+    f = [3*x**2 + 7*x*y + 5*y**2, 2*x, R(0), x*y**2 + 11]
     g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_inject(f, 0, K) == (g, 2)
 
 
 def test_dmp_eject():
-    K = ZZ['x', 'y']
+    R, x,y = ring("x,y", ZZ)
+    K = R.to_domain()
 
     assert dmp_eject([[[]]], 2, K) == []
     assert dmp_eject([[[[]]]], 3, K) == [[]]
 
-    assert dmp_eject([[[1]]], 2, K) == [K([[1]])]
-    assert dmp_eject([[[[1]]]], 3, K) == [[K([[1]])]]
+    assert dmp_eject([[[1]]], 2, K) == [R(1)]
+    assert dmp_eject([[[[1]]]], 3, K) == [[R(1)]]
 
-    assert dmp_eject(
-        [[[1]], [[2], [3, 4]]], 2, K) == [K([[1]]), K([[2], [3, 4]])]
+    assert dmp_eject([[[1]], [[2], [3, 4]]], 2, K) == [R(1), 2*x + 3*y + 4]
 
-    f = [K([[3], [7, 0], [5, 0, 0]]), K([[2], []]), K([[]]), K([[1, 0,
-           0], [11]])]
+    f = [3*x**2 + 7*x*y + 5*y**2, 2*x, R(0), x*y**2 + 11]
     g = [[[3], [7, 0], [5, 0, 0]], [[2], []], [[]], [[1, 0, 0], [11]]]
 
     assert dmp_eject(g, 2, K) == f

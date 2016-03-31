@@ -5,7 +5,6 @@ from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
-from sympy.utilities.pytest import slow
 
 def test_solve_lin_sys_2x2_one():
     domain, x1,x2 = ring("x1,x2", QQ)
@@ -72,7 +71,7 @@ def test_solve_lin_sys_5x5_inf():
 
 def test_solve_lin_sys_6x6_1():
     ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
-    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
+    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground)
 
     eqs = [b + q/d - c/d, c*(1/d + 1/e + 1/g) - f/g - q/d, f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m, k*(1/m + 1/o + 1/p) - h/m - n/p, n/p - k/p]
     sol = {
@@ -88,7 +87,7 @@ def test_solve_lin_sys_6x6_1():
 
 def test_solve_lin_sys_6x6_2():
     ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
-    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
+    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground)
 
     eqs = [b + r/d - c/d, c*(1/d + 1/e + 1/g) - f/g - r/d, f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m, k*(1/m + 1/o + 1/p) - h/m - n/p, n*(1/p + 1/q) - k/p]
     sol = {

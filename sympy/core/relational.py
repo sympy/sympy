@@ -1,10 +1,14 @@
-from basic import S
-from expr import Expr
-from evalf import EvalfMixin
-from symbol import Symbol
-from sympify import _sympify
+from __future__ import print_function, division
 
-from sympy.logic.boolalg import Boolean
+from .basic import S
+from .compatibility import ordered
+from .expr import Expr
+from .evalf import EvalfMixin
+from .function import _coeff_isneg
+from .sympify import _sympify
+from .evaluate import global_evaluate
+
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -13,10 +17,21 @@ __all__ = (
 )
 
 
-def Rel(a, b, op):
-    """
-    A handy wrapper around the Relational class.
-    Rel(a,b, op)
+# Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
+# and Expr.
+
+class Relational(Boolean, Expr, EvalfMixin):
+    """Base class for all relation types.
+
+    Subclasses of Relational should generally be instantiated directly, but
+    Relational can be instantiated with a valid `rop` value to dispatch to
+    the appropriate subclass.
+
+    Parameters
+    ==========
+    rop : str or None
+        Indicates what subclass to instantiate.  Valid values can be found
+        in the keys of Relational.ValidRelationalOperator.
 
     Examples
     ========
@@ -24,119 +39,9 @@ def Rel(a, b, op):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
-    y == x**2 + x
+    Eq(y, x**2 + x)
 
     """
-    return Relational(a, b, op)
-
-
-def Eq(a, b=0):
-    """
-    A handy wrapper around the Relational class.
-    Eq(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Eq
-    >>> from sympy.abc import x, y
-    >>> Eq(y, x+x**2)
-    y == x**2 + x
-
-    """
-    return Relational(a, b, '==')
-
-
-def Ne(a, b):
-    """
-    A handy wrapper around the Relational class.
-    Ne(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Ne
-    >>> from sympy.abc import x, y
-    >>> Ne(y, x+x**2)
-    y != x**2 + x
-
-    """
-    return Relational(a, b, '!=')
-
-
-def Lt(a, b):
-    """
-    A handy wrapper around the Relational class.
-    Lt(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Lt
-    >>> from sympy.abc import x, y
-    >>> Lt(y, x+x**2)
-    y < x**2 + x
-
-    """
-    return Relational(a, b, '<')
-
-
-def Le(a, b):
-    """
-    A handy wrapper around the Relational class.
-    Le(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Le
-    >>> from sympy.abc import x, y
-    >>> Le(y, x+x**2)
-    y <= x**2 + x
-
-    """
-    return Relational(a, b, '<=')
-
-
-def Gt(a, b):
-    """
-    A handy wrapper around the Relational class.
-    Gt(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Gt
-    >>> from sympy.abc import x, y
-    >>> Gt(y, x + x**2)
-    y > x**2 + x
-
-    """
-    return Relational(a, b, '>')
-
-
-def Ge(a, b):
-    """
-    A handy wrapper around the Relational class.
-    Ge(a,b)
-
-    Examples
-    ========
-
-    >>> from sympy import Ge
-    >>> from sympy.abc import x, y
-    >>> Ge(y, x + x**2)
-    y >= x**2 + x
-
-    """
-    return Relational(a, b, '>=')
-
-# Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
-# and Expr.
-
-
-class Relational(Boolean, Expr, EvalfMixin):
-
     __slots__ = []
 
     is_Relational = True
@@ -145,127 +50,375 @@ class Relational(Boolean, Expr, EvalfMixin):
     #   have not yet been defined
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
+        # If called by a subclass, do nothing special and pass on to Expr.
         if cls is not Relational:
-            rop_cls = cls
-        else:
-            try:
-                rop_cls = Relational.ValidRelationOperator[ rop ]
-            except KeyError:
-                msg = "Invalid relational operator symbol: '%r'"
-                raise ValueError(msg % repr(rop))
-
-        diff = S.NaN
-        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
-            diff = lhs - rhs
-        if not (diff is S.NaN or diff.has(Symbol)):
-            know = diff.equals(0, failing_expression=True)
-            if know is True:  # exclude failing expression case
-                diff = S.Zero
-            elif know is False:
-                diff = diff.n()
-        if rop_cls is Equality:
-            if (lhs == rhs) is True or (diff == S.Zero) is True:
-                return True
-            elif diff is S.NaN:
-                pass
-            elif diff.is_Number or diff.is_Float:
-                return False
-            elif lhs.is_real is not rhs.is_real and \
-                lhs.is_real is not None and \
-                   rhs.is_real is not None:
-                return False
-        elif rop_cls is Unequality:
-            if (lhs == rhs) is True or (diff == S.Zero) is True:
-                return False
-            elif diff is S.NaN:
-                pass
-            elif diff.is_Number or diff.is_Float:
-                return True
-            elif lhs.is_real is not rhs.is_real and \
-                lhs.is_real is not None and \
-                   rhs.is_real is not None:
-                return True
-        elif diff.is_Number and diff.is_real:
-            return rop_cls._eval_relation(diff, S.Zero)
-
-        obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
-        return obj
+            return Expr.__new__(cls, lhs, rhs, **assumptions)
+        # If called directly with an operator, look up the subclass
+        # corresponding to that operator and delegate to it
+        try:
+            cls = cls.ValidRelationOperator[rop]
+            return cls(lhs, rhs, **assumptions)
+        except KeyError:
+            raise ValueError("Invalid relational operator symbol: %r" % rop)
 
     @property
     def lhs(self):
+        """The left-hand side of the relation."""
         return self._args[0]
 
     @property
     def rhs(self):
+        """The right-hand side of the relation."""
         return self._args[1]
+
+    @property
+    def reversed(self):
+        """Return the relationship with sides (and sign) reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.reversed
+        Eq(1, x)
+        >>> x < 1
+        x < 1
+        >>> _.reversed
+        1 > x
+        """
+        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        a, b = self.args
+        return ops.get(self.func, self.func)(b, a, evaluate=False)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
-    def doit(self, **hints):
-        lhs = self.lhs
-        rhs = self.rhs
-        if hints.get('deep', True):
-            lhs = lhs.doit(**hints)
-            rhs = rhs.doit(**hints)
-        return self._eval_relation_doit(lhs, rhs)
+    @property
+    def canonical(self):
+        """Return a canonical form of the relational.
 
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return cls._eval_relation(lhs, rhs)
+        The rules for the canonical form, in order of decreasing priority are:
+            1) Number on right if left is not a Number;
+            2) Symbol on the left;
+            3) Gt/Ge changed to Lt/Le;
+            4) Lt/Le are unchanged;
+            5) Eq and Ne get ordered args.
+        """
+        r = self
+        if r.func in (Ge, Gt):
+            r = r.reversed
+        elif r.func in (Lt, Le):
+            pass
+        elif r.func in (Eq, Ne):
+            r = r.func(*ordered(r.args), evaluate=False)
+        else:
+            raise NotImplemented
+        if r.lhs.is_Number and not r.rhs.is_Number:
+            r = r.reversed
+        elif r.rhs.is_Symbol and not r.lhs.is_Symbol:
+            r = r.reversed
+        if _coeff_isneg(r.lhs):
+            r = r.reversed.func(-r.lhs, -r.rhs, evaluate=False)
+        return r
+
+    def equals(self, other, failing_expression=False):
+        """Return True if the sides of the relationship are mathematically
+        identical and the type of relationship is the same.
+        If failing_expression is True, return the expression whose truth value
+        was unknown."""
+        if isinstance(other, Relational):
+            if self == other or self.reversed == other:
+                return True
+            a, b = self, other
+            if a.func in (Eq, Ne) or b.func in (Eq, Ne):
+                if a.func != b.func:
+                    return False
+                l, r = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.args)]
+                if l is True:
+                    return r
+                if r is True:
+                    return l
+                lr, rl = [i.equals(j, failing_expression=failing_expression)
+                    for i, j in zip(a.args, b.reversed.args)]
+                if lr is True:
+                    return rl
+                if rl is True:
+                    return lr
+                e = (l, r, lr, rl)
+                if all(i is False for i in e):
+                    return False
+                for i in e:
+                    if i not in (True, False):
+                        return i
+            else:
+                if b.func != a.func:
+                    b = b.reversed
+                if a.func != b.func:
+                    return False
+                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
+                if l is False:
+                    return False
+                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
+                if r is False:
+                    return False
+                if l is True:
+                    return r
+                return l
 
     def _eval_simplify(self, ratio, measure):
-        return self.__class__(self.lhs.simplify(ratio=ratio),
-                              self.rhs.simplify(ratio=ratio))
+        r = self
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure)
+            for i in r.args])
+        if r.is_Relational:
+            dif = r.lhs - r.rhs
+            # replace dif with a valid Number that will
+            # allow a definitive comparison with 0
+            v = None
+            if dif.is_comparable:
+                v = dif.n(2)
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
+            if v is not None:
+                r = r.func._eval_relation(v, S.Zero)
+
+        r = r.canonical
+        if measure(r) < ratio*measure(self):
+            return r
+        else:
+            return self
+
+    def __nonzero__(self):
+        raise TypeError("cannot determine truth value of Relational")
+
+    __bool__ = __nonzero__
+
+    def as_set(self):
+        """
+        Rewrites univariate inequality in terms of real sets
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Eq
+        >>> x = Symbol('x', real=True)
+        >>> (x>0).as_set()
+        (0, oo)
+        >>> Eq(x, 0).as_set()
+        {0}
+
+        """
+        from sympy.solvers.inequalities import solve_univariate_inequality
+        syms = self.free_symbols
+
+        if len(syms) == 1:
+            sym = syms.pop()
+        else:
+            raise NotImplementedError("Sorry, Relational.as_set procedure"
+                                      " is not yet implemented for"
+                                      " multivariate expressions")
+
+        return solve_univariate_inequality(self, sym, relational=False)
+
+
+Rel = Relational
 
 
 class Equality(Relational):
+    """An equal relation between two objects.
 
+    Represents that two objects are equal.  If they can be easily shown
+    to be definitively equal (or unequal), this will reduce to True (or
+    False).  Otherwise, the relation is maintained as an unevaluated
+    Equality object.  Use the ``simplify`` function on this object for
+    more nontrivial evaluation of the equality relation.
+
+    As usual, the keyword argument ``evaluate=False`` can be used to
+    prevent any evaluation.
+
+    Examples
+    ========
+
+    >>> from sympy import Eq, simplify, exp, cos
+    >>> from sympy.abc import x, y
+    >>> Eq(y, x + x**2)
+    Eq(y, x**2 + x)
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    Eq(2, 5)
+    >>> _.doit()
+    False
+    >>> Eq(exp(x), exp(x).rewrite(cos))
+    Eq(exp(x), sinh(x) + cosh(x))
+    >>> simplify(_)
+    True
+
+    See Also
+    ========
+
+    sympy.logic.boolalg.Equivalent : for representing equality between two
+        boolean expressions
+
+    Notes
+    =====
+
+    This class is not the same as the == operator.  The == operator tests
+    for exact structural equality between two expressions; this class
+    compares expressions mathematically.
+
+    If either object defines an `_eval_Eq` method, it can be used in place of
+    the default algorithm.  If `lhs._eval_Eq(rhs)` or `rhs._eval_Eq(lhs)`
+    returns anything other than None, that return value will be substituted for
+    the Equality.  If None is returned by `_eval_Eq`, an Equality object will
+    be created as usual.
+
+    """
     rel_op = '=='
 
     __slots__ = []
 
     is_Equality = True
 
+    def __new__(cls, lhs, rhs=0, **options):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            # If one expression has an _eval_Eq, return its results.
+            if hasattr(lhs, '_eval_Eq'):
+                r = lhs._eval_Eq(rhs)
+                if r is not None:
+                    return r
+            if hasattr(rhs, '_eval_Eq'):
+                r = rhs._eval_Eq(lhs)
+                if r is not None:
+                    return r
+            # If expressions have the same structure, they must be equal.
+            if lhs == rhs:
+                return S.true
+
+            # If appropriate, check if the difference evaluates.  Detect
+            # incompatibility such as lhs real and rhs not real.
+            if lhs.is_complex and rhs.is_complex:
+                r = (lhs - rhs).is_zero
+                if r is not None:
+                    return _sympify(r)
+
+            # If expression have both Boolean terms
+            if all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false  # equal args already evaluated
+
+        return Relational.__new__(cls, lhs, rhs, **options)
+
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs == rhs
+        return _sympify(lhs == rhs)
 
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return Eq(lhs, rhs)
-
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) == 0
+Eq = Equality
 
 
 class Unequality(Relational):
+    """An unequal relation between two objects.
 
+    Represents that two objects are not equal.  If they can be shown to be
+    definitively equal, this will reduce to False; if definitively unequal,
+    this will reduce to True.  Otherwise, the relation is maintained as an
+    Unequality object.
+
+    Examples
+    ========
+
+    >>> from sympy import Ne
+    >>> from sympy.abc import x, y
+    >>> Ne(y, x+x**2)
+    Ne(y, x**2 + x)
+
+    See Also
+    ========
+    Equality
+
+    Notes
+    =====
+    This class is not the same as the != operator.  The != operator tests
+    for exact structural equality between two expressions; this class
+    compares expressions mathematically.
+
+    This class is effectively the inverse of Equality.  As such, it uses the
+    same algorithms, including any available `_eval_Eq` methods.
+
+    """
     rel_op = '!='
 
     __slots__ = []
 
+    def __new__(cls, lhs, rhs, **options):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            is_equal = Equality(lhs, rhs)
+            if is_equal == True or is_equal == False:
+                return ~is_equal
+
+        return Relational.__new__(cls, lhs, rhs, **options)
+
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs != rhs
+        return _sympify(lhs != rhs)
 
-    @classmethod
-    def _eval_relation_doit(cls, lhs, rhs):
-        return Ne(lhs, rhs)
-
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) != 0
+Ne = Unequality
 
 
-class _Greater(Relational):
+class _Inequality(Relational):
+    """Internal base class for all *Than types.
+
+    Each subclass must implement _eval_relation to provide the method for
+    comparing two real numbers.
+
+    """
+    __slots__ = []
+
+    def __new__(cls, lhs, rhs, **options):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            # First we invoke the appropriate inequality method of `lhs`
+            # (e.g., `lhs.__lt__`).  That method will try to reduce to
+            # boolean or raise an exception.  It may keep calling
+            # superclasses until it reaches `Expr` (e.g., `Expr.__lt__`).
+            # In some cases, `Expr` will just invoke us again (if neither it
+            # nor a subclass was able to reduce to boolean or raise an
+            # exception).  In that case, it must call us with
+            # `evaluate=False` to prevent infinite recursion.
+            r = cls._eval_relation(lhs, rhs)
+            if r is not None:
+                return r
+            # Note: not sure r could be None, perhaps we never take this
+            # path?  In principle, could use this to shortcut out if a
+            # class realizes the inequality cannot be evaluated further.
+
+        # make a "non-evaluated" Expr for the inequality
+        return Relational.__new__(cls, lhs, rhs, **options)
+
+
+class _Greater(_Inequality):
     """Not intended for general use
 
     _Greater is only used so that GreaterThan and StrictGreaterThan may subclass
     it for the .gts and .lts properties.
-    """
 
+    """
     __slots__ = ()
 
     @property
@@ -277,13 +430,13 @@ class _Greater(Relational):
         return self._args[1]
 
 
-class _Less(Relational):
+class _Less(_Inequality):
     """Not intended for general use.
 
     _Less is only used so that LessThan and StrictLessThan may subclass it for
     the .gts and .lts properties.
-    """
 
+    """
     __slots__ = ()
 
     @property
@@ -364,11 +517,11 @@ class GreaterThan(_Greater):
     convenience methods:
 
     >>> e1 = Ge( x, 2 )      # Ge is a convenience wrapper
-    >>> print e1
+    >>> print(e1)
     x >= 2
 
     >>> rels = Ge( x, 2 ), Gt( x, 2 ), Le( x, 2 ), Lt( x, 2 )
-    >>> print '%s\\n%s\\n%s\\n%s' % rels
+    >>> print('%s\\n%s\\n%s\\n%s' % rels)
     x >= 2
     x > 2
     x <= 2
@@ -381,9 +534,9 @@ class GreaterThan(_Greater):
     (minor) caveats of which to be aware (search for 'gotcha', below).
 
     >>> e2 = x >= 2
-    >>> print e2
+    >>> print(e2)
     x >= 2
-    >>> print "e1: %s,    e2: %s" % (e1, e2)
+    >>> print("e1: %s,    e2: %s" % (e1, e2))
     e1: x >= 2,    e2: x >= 2
     >>> e1 == e2
     True
@@ -392,25 +545,25 @@ class GreaterThan(_Greater):
     succinctly and less conveniently:
 
     >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
-    >>> print '%s\\n%s\\n%s' % rels
+    >>> print('%s\\n%s\\n%s' % rels)
     x >= 1
     x >= 1
     x >= 1
 
     >>> rels = Rel(x, 1, '>'), Relational(x, 1, '>'), StrictGreaterThan(x, 1)
-    >>> print '%s\\n%s\\n%s' % rels
+    >>> print('%s\\n%s\\n%s' % rels)
     x > 1
     x > 1
     x > 1
 
     >>> rels = Rel(x, 1, '<='), Relational(x, 1, '<='), LessThan(x, 1)
-    >>> print "%s\\n%s\\n%s" % rels
+    >>> print("%s\\n%s\\n%s" % rels)
     x <= 1
     x <= 1
     x <= 1
 
     >>> rels = Rel(x, 1, '<'), Relational(x, 1, '<'), StrictLessThan(x, 1)
-    >>> print '%s\\n%s\\n%s' % rels
+    >>> print('%s\\n%s\\n%s' % rels)
     x < 1
     x < 1
     x < 1
@@ -438,7 +591,7 @@ class GreaterThan(_Greater):
     >>> e6 = 1 >= x
     >>> e7 = 1 <  x
     >>> e8 = 1 <= x
-    >>> print "%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8)
+    >>> print("%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8))
     x > 1     x >= 1
     x < 1     x <= 1
     x < 1     x <= 1
@@ -457,7 +610,7 @@ class GreaterThan(_Greater):
     >>> e6 = Ge(1, x)
     >>> e7 = Lt(1, x)
     >>> e8 = Le(1, x)
-    >>> print "%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8)
+    >>> print("%s     %s\\n"*4 % (e1, e2, e3, e4, e5, e6, e7, e8))
     1 > x     1 >= x
     1 < x     1 <= x
     1 > x     1 >= x
@@ -466,9 +619,10 @@ class GreaterThan(_Greater):
     The other gotcha is with chained inequalities.  Occasionally, one may be
     tempted to write statements like:
 
-    >>> e = x < y < z  # silent error!  Where did ``x`` go?
-    >>> e #doctest: +SKIP
-    y < z
+    >>> e = x < y < z
+    Traceback (most recent call last):
+    ...
+    TypeError: symbolic boolean expression has no truth value.
 
     Due to an implementation detail or decision of Python [1]_, there is no way
     for SymPy to reliably create that as a chained inequality.  To create a
@@ -498,13 +652,14 @@ class GreaterThan(_Greater):
     .. [1] This implementation detail is that Python provides no reliable
        method to determine that a chained inequality is being built.  Chained
        comparison operators are evaluated pairwise, using "and" logic (see
-       http://docs.python.org/reference/expressions.html#notin).  This is done
+       http://docs.python.org/2/reference/expressions.html#notin).  This is done
        in an efficient way, so that each object being compared is only
        evaluated once and the comparison can short-circuit.  For example, ``1
        > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2 > 3)``.  The
        ``and`` operator coerces each side into a bool, returning the object
-       itself when it short-circuits.  Currently, the bool of the --Than
-       operators will give True or False arbitrarily.  Thus, if we were to
+       itself when it short-circuits.  The bool of the --Than operators
+       will raise TypeError on purpose, because SymPy cannot determine the
+       mathematical ordering of symbolic expressions.  Thus, if we were to
        compute ``x > y > z``, with ``x``, ``y``, and ``z`` being Symbols,
        Python converts the statement (roughly) into these steps:
 
@@ -512,40 +667,36 @@ class GreaterThan(_Greater):
         (2) (x > y) and (y > z)
         (3) (GreaterThanObject) and (y > z)
         (4) (GreaterThanObject.__nonzero__()) and (y > z)
-        (5) (True) and (y > z)
-        (6) (y > z)
-        (7) LessThanObject
+        (5) TypeError
 
        Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement.  If the first object evalutes __nonzero__ as
-       True, then the second object, (y > z) is returned.  If the first object
-       evaluates __nonzero__ as False (step 5), then (x > y) is returned.
+       weak ternary statement, and the first object's __nonzero__ method will
+       raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to
            control how it short circuits, so it is impossible to make something
-           like ``x > y > z`` work.  There is an open PEP to change this,
-           :pep:`335`, but until that is implemented, this cannot be made to work.
+           like ``x > y > z`` work.  There was a PEP to change this,
+           :pep:`335`, but it was officially closed in March, 2012.
 
     .. [2] For more information, see these two bug reports:
 
        "Separate boolean and symbolic relationals"
-       `Issue 1887 <http://code.google.com/p/sympy/issues/detail?id=1887>`_
+       `Issue 4986 <https://github.com/sympy/sympy/issues/4986>`_
 
        "It right 0 < x < 1 ?"
-       `Issue 2960 <http://code.google.com/p/sympy/issues/detail?id=2960>`_
+       `Issue 6059 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
+    __slots__ = ()
 
     rel_op = '>='
 
-    __slots__ = ()
-
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs >= rhs
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__ge__(rhs))
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) >= 0
+Ge = GreaterThan
 
 
 class LessThan(_Less):
@@ -556,10 +707,10 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs <= rhs
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__le__(rhs))
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) <= 0
+Le = LessThan
 
 
 class StrictGreaterThan(_Greater):
@@ -570,10 +721,10 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs > rhs
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__gt__(rhs))
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) > 0
+Gt = StrictGreaterThan
 
 
 class StrictLessThan(_Less):
@@ -584,10 +735,11 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs < rhs
+        # We don't use the op symbol here: workaround issue #7951
+        return _sympify(lhs.__lt__(rhs))
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) < 0
+Lt = StrictLessThan
+
 
 # A class-specific (not object-specific) data item used for a minor speedup.  It
 # is defined here, rather than directly in the class, because the classes that

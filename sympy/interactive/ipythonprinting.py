@@ -26,7 +26,12 @@ notebook.
 # Imports
 #-----------------------------------------------------------------------------
 
+from __future__ import print_function, division
+
+import warnings
+
 from sympy.interactive.printing import init_printing
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 #-----------------------------------------------------------------------------
 # Definitions of special display functions for use with IPython
@@ -34,4 +39,13 @@ from sympy.interactive.printing import init_printing
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
+    # Since Python filters deprecation warnings by default,
+    # we add a filter to make sure this message will be shown.
+    warnings.simplefilter("once", SymPyDeprecationWarning)
+    SymPyDeprecationWarning(
+        feature="using %load_ext sympy.interactive.ipythonprinting",
+        useinstead="from sympy import init_printing ; init_printing()",
+        deprecated_since_version="0.7.3",
+        issue=7013
+    ).warn()
     init_printing(ip=ip)

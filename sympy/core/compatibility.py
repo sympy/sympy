@@ -3,11 +3,183 @@ Reimplementations of constructs introduced in later versions of Python than
 we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
+from __future__ import print_function, division
 
-from __future__ import with_statement
-
+import operator
 from collections import defaultdict
 from sympy.external import import_module
+
+"""
+Python 2 and Python 3 compatible imports
+
+String and Unicode compatible changes:
+    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
+      compatible function
+    * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
+      function
+    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
+    * Use `u_decode()` to decode utf-8 formatted unicode strings
+    * `string_types` gives str in Python 3, unicode and str in Python 2,
+      equivalent to basestring
+
+Integer related changes:
+    * `long()` removed in Python 3, import `long` for Python 2/3 compatible
+      function
+    * `integer_types` gives int in Python 3, int and long in Python 2
+
+Types related changes:
+    * `class_types` gives type in Python 3, type and ClassType in Python 2
+
+Renamed function attributes:
+    * Python 2 `.func_code`, Python 3 `.__func__`, access with
+      `get_function_code()`
+    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
+      `get_function_globals()`
+    * Python 2 `.func_name`, Python 3 `.__name__`, access with
+      `get_function_name()`
+
+Moved modules:
+    * `reduce()`
+    * `StringIO()`
+    * `cStringIO()` (same as `StingIO()` in Python 3)
+    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+
+Iterator/list changes:
+    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
+      iterator version of range
+
+exec:
+    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
+
+Metaclasses:
+    * Use `with_metaclass()`, examples below
+        * Define class `Foo` with metaclass `Meta`, and no parent:
+            class Foo(with_metaclass(Meta)):
+                pass
+        * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+            class Foo(with_metaclass(Meta, Bar)):
+                pass
+"""
+
+import sys
+PY3 = sys.version_info[0] > 2
+
+if PY3:
+    class_types = type,
+    integer_types = (int,)
+    string_types = (str,)
+    long = int
+
+    # String / unicode compatibility
+    unicode = str
+    unichr = chr
+    def u(x):
+        return x
+    def u_decode(x):
+        return x
+
+    Iterator = object
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("__code__")
+    get_function_globals = operator.attrgetter("__globals__")
+    get_function_name = operator.attrgetter("__name__")
+
+    import builtins
+    from functools import reduce
+    from io import StringIO
+    cStringIO = StringIO
+
+    exec_=getattr(builtins, "exec")
+
+    range=range
+else:
+    import codecs
+    import types
+
+    class_types = (type, types.ClassType)
+    integer_types = (int, long)
+    string_types = (str, unicode)
+    long = long
+
+    # String / unicode compatibility
+    unicode = unicode
+    unichr = unichr
+    def u(x):
+        return codecs.unicode_escape_decode(x)[0]
+    def u_decode(x):
+        return x.decode('utf-8')
+
+    class Iterator(object):
+        def next(self):
+            return type(self).__next__(self)
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("func_code")
+    get_function_globals = operator.attrgetter("func_globals")
+    get_function_name = operator.attrgetter("func_name")
+
+    import __builtin__ as builtins
+    reduce = reduce
+    from StringIO import StringIO
+    from cStringIO import StringIO as cStringIO
+
+    def exec_(_code_, _globs_=None, _locs_=None):
+        """Execute code in a namespace."""
+        if _globs_ is None:
+            frame = sys._getframe(1)
+            _globs_ = frame.f_globals
+            if _locs_ is None:
+                _locs_ = frame.f_locals
+            del frame
+        elif _locs_ is None:
+            _locs_ = _globs_
+        exec("exec _code_ in _globs_, _locs_")
+    range=xrange
+
+def with_metaclass(meta, *bases):
+    """
+    Create a base class with a metaclass.
+
+    For example, if you have the metaclass
+
+    >>> class Meta(type):
+    ...     pass
+
+    Use this as the metaclass by doing
+
+    >>> from sympy.core.compatibility import with_metaclass
+    >>> class MyClass(with_metaclass(Meta, object)):
+    ...     pass
+
+    This is equivalent to the Python 2::
+
+        class MyClass(object):
+            __metaclass__ = Meta
+
+    or Python 3::
+
+        class MyClass(object, metaclass=Meta):
+            pass
+
+    That is, the first argument is the metaclass, and the remaining arguments
+    are the base classes. Note that if the base class is just ``object``, you
+    may omit it.
+
+    >>> MyClass.__mro__
+    (<class 'MyClass'>, <... 'object'>)
+    >>> type(MyClass)
+    <class 'Meta'>
+
+    """
+    # This requires a bit of explanation: the basic idea is to make a dummy
+    # metaclass for one level of class instantiation that replaces itself with
+    # the actual metaclass.
+    # Code copied from the 'six' library.
+    class metaclass(meta):
+        def __new__(cls, name, this_bases, d):
+            return meta(name, bases, d)
+    return type.__new__(metaclass, "NewBase", (), {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -15,15 +187,33 @@ from sympy.external import import_module
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to return
+    true when iterable() is called on its instances. I.e. avoid infinite loop
+    when calling e.g. list() on the instance
+    """
+    pass
 
-def iterable(i, exclude=(basestring, dict)):
+def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, i.e. you e.g.
+    call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
 
     See also: is_sequence
 
@@ -34,7 +224,7 @@ def iterable(i, exclude=(basestring, dict)):
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print('%s %s' % (iterable(i), type(i)))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>
@@ -52,6 +242,8 @@ def iterable(i, exclude=(basestring, dict)):
     False
 
     """
+    if hasattr(i, '_iterable'):
+        return i._iterable
     try:
         iter(i)
     except TypeError:
@@ -100,444 +292,16 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-"""
-Wrapping some imports in try/except statements to allow the same code to
-be used in Python 3+ as well.
-"""
+try:
+    from itertools import zip_longest
+except ImportError: # <= Python 2.7
+    from itertools import izip_longest as zip_longest
+
 
 try:
-    callable = callable
-except NameError:
-    import collections
-
-    def callable(obj):
-        return isinstance(obj, collections.Callable)
-
-try:
-    from functools import reduce
+    from string import maketrans
 except ImportError:
-    reduce = reduce
-
-
-def cmp_to_key(mycmp):
-    """
-    Convert a cmp= function into a key= function
-
-    This code is included in Python 2.7 and 3.2 in functools.
-    """
-    class K(object):
-        def __init__(self, obj, *args):
-            self.obj = obj
-
-        def __lt__(self, other):
-            return mycmp(self.obj, other.obj) < 0
-
-        def __gt__(self, other):
-            return mycmp(self.obj, other.obj) > 0
-
-        def __eq__(self, other):
-            return mycmp(self.obj, other.obj) == 0
-
-        def __le__(self, other):
-            return mycmp(self.obj, other.obj) <= 0
-
-        def __ge__(self, other):
-            return mycmp(self.obj, other.obj) >= 0
-
-        def __ne__(self, other):
-            return mycmp(self.obj, other.obj) != 0
-    return K
-
-try:
-    import __builtin__
-    cmp = __builtin__.cmp
-except AttributeError:
-    def cmp(a, b):
-        return (a > b) - (a < b)
-
-try:
-    from itertools import product
-except ImportError:  # Python 2.5
-    def product(*args, **kwargs):
-        """
-        Cartesian product of input iterables.
-
-        Equivalent to nested for-loops in a generator expression. For example,
-        cartes(A, B) returns the same as ((x,y) for x in A for y in B).
-
-        The nested loops cycle like an odometer with the rightmost element
-        advancing on every iteration. This pattern creates a lexicographic
-        ordering so that if the input's iterables are sorted, the product
-        tuples are emitted in sorted order.
-
-        To compute the product of an iterable with itself, specify the number
-        of repetitions with the optional repeat keyword argument. For example,
-        product(A, repeat=4) means the same as product(A, A, A, A).
-
-        Examples
-        ========
-
-        >>> from sympy.utilities.iterables import cartes
-        >>> [''.join(p) for p in list(cartes('ABC', 'xy'))]
-        ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
-        >>> list(cartes(range(2), repeat=2))
-        [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-        See Also
-        ========
-        variations
-        """
-        pools = map(tuple, args) * kwargs.get('repeat', 1)
-        result = [[]]
-        for pool in pools:
-            result = [x + [y] for x in result for y in pool]
-        for prod in result:
-            yield tuple(prod)
-
-try:
-    from itertools import permutations
-except ImportError:  # Python 2.5
-    def permutations(iterable, r=None):
-        """
-        Return successive r length permutations of elements in the iterable.
-
-        If r is not specified or is None, then r defaults to the length of
-        the iterable and all possible full-length permutations are generated.
-
-        Permutations are emitted in lexicographic sort order. So, if the input
-        iterable is sorted, the permutation tuples will be produced in sorted
-        order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each permutation.
-
-        Examples;
-        >>> from sympy.core.compatibility import permutations
-        >>> [''.join(p) for p in list(permutations('ABC', 2))]
-        ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
-        >>> list(permutations(range(3)))
-        [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
-        """
-
-        pool = tuple(iterable)
-        n = len(pool)
-        r = n if r is None else r
-        if r > n:
-            return
-        indices = range(n)
-        cycles = range(n, n - r, -1)
-        yield tuple(pool[i] for i in indices[:r])
-        while n:
-            for i in reversed(range(r)):
-                cycles[i] -= 1
-                if cycles[i] == 0:
-                    indices[i:] = indices[i + 1:] + indices[i:i + 1]
-                    cycles[i] = n - i
-                else:
-                    j = cycles[i]
-                    indices[i], indices[-j] = indices[-j], indices[i]
-                    yield tuple(pool[i] for i in indices[:r])
-                    break
-            else:
-                return
-
-try:
-    from itertools import combinations, combinations_with_replacement
-except ImportError:  # < python 2.6
-    def combinations(iterable, r):
-        """
-        Return r length subsequences of elements from the input iterable.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each combination.
-
-        See also: combinations_with_replacement
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations
-        >>> list(combinations('ABC', 2))
-        [('A', 'B'), ('A', 'C'), ('B', 'C')]
-        >>> list(combinations(range(4), 3))
-        [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if r > n:
-            return
-        indices = range(r)
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != i + n - r:
-                    break
-            else:
-                return
-            indices[i] += 1
-            for j in range(i + 1, r):
-                indices[j] = indices[j - 1] + 1
-            yield tuple(pool[i] for i in indices)
-
-    def combinations_with_replacement(iterable, r):
-        """Return r length subsequences of elements from the input iterable
-        allowing individual elements to be repeated more than once.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, the generated combinations
-        will also be unique.
-
-        See also: combinations
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations_with_replacement
-        >>> list(combinations_with_replacement('AB', 2))
-        [('A', 'A'), ('A', 'B'), ('B', 'B')]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if not n and r:
-            return
-        indices = [0] * r
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != n - 1:
-                    break
-            else:
-                return
-            indices[i:] = [indices[i] + 1] * (r - i)
-            yield tuple(pool[i] for i in indices)
-
-
-def set_intersection(*sets):
-    """Return the intersection of all the given sets.
-
-    As of Python 2.6 you can write ``set.intersection(*sets)``.
-
-    Examples
-    ========
-
-    >>> from sympy.core.compatibility import set_intersection
-    >>> set_intersection(set([1, 2]), set([2, 3]))
-    set([2])
-    >>> set_intersection()
-    set()
-    """
-    if not sets:
-        return set()
-    rv = sets[0]
-    for s in sets:
-        rv &= s
-    return rv
-
-
-def set_union(*sets):
-    """Return the union of all the given sets.
-
-    As of Python 2.6 you can write ``set.union(*sets)``.
-
-    >>> from sympy.core.compatibility import set_union
-    >>> set_union(set([1, 2]), set([2, 3]))
-    set([1, 2, 3])
-    >>> set_union()
-    set()
-    """
-    rv = set()
-    for s in sets:
-        rv |= s
-    return rv
-
-
-
-try:
-    from collections import namedtuple
-except ImportError:
-    # code from http://code.activestate.com/recipes/500261-named-tuples/
-    # PSF license
-    # code is Copyright 2007-2013 Raymond Hettinger
-    from operator import itemgetter as _itemgetter
-    from keyword import iskeyword as _iskeyword
-    import sys as _sys
-
-    # For some reason, doctest will test namedtuple's docstring if we simply
-    # have a def namedtuple() here
-    def _namedtuple(typename, field_names, verbose=False, rename=False):
-        if isinstance(field_names, basestring):
-            field_names = field_names.replace(',', ' ').split()
-        field_names = tuple(map(str, field_names))
-        if rename:
-            names = list(field_names)
-            seen = set()
-            for i, name in enumerate(names):
-                if (not min(c.isalnum() or c=='_' for c in name) or _iskeyword(name)
-                    or not name or name[0].isdigit() or name.startswith('_')
-                    or name in seen):
-                        names[i] = '_%d' % i
-                seen.add(name)
-            field_names = tuple(names)
-        for name in (typename,) + field_names:
-            if not min(c.isalnum() or c=='_' for c in name):
-                raise ValueError('Type names and field names can only contain'
-                                 ' alphanumeric characters and underscores: %r' % name)
-            if _iskeyword(name):
-                raise ValueError('Type names and field names cannot be a'
-                                 ' keyword: %r' % name)
-            if name[0].isdigit():
-                raise ValueError('Type names and field names cannot start'
-                                 ' with a number: %r' % name)
-        seen_names = set()
-        for name in field_names:
-            if name.startswith('_') and not rename:
-                raise ValueError('Field names cannot start with an'
-                                 ' underscore: %r' % name)
-            if name in seen_names:
-                raise ValueError('Encountered duplicate field name: %r' % name)
-            seen_names.add(name)
-
-        # Create and fill-in the class template
-        numfields = len(field_names)
-        argtxt = repr(field_names).replace("'", "")[1:-1]
-        reprtxt = ', '.join('%s=%%r' % name for name in field_names)
-        template = '''class %(typename)s(tuple):
-    '%(typename)s(%(argtxt)s)' \n
-    __slots__ = () \n
-    _fields = %(field_names)r \n
-    def __new__(_cls, %(argtxt)s):
-        return _tuple.__new__(_cls, (%(argtxt)s)) \n
-    @classmethod
-    def _make(cls, iterable, new=tuple.__new__, len=len):
-        'Make a new %(typename)s object from a sequence or iterable'
-        result = new(cls, iterable)
-        if len(result) != %(numfields)d:
-            raise TypeError('Expected %(numfields)d arguments, got %%d' %% len(result))
-        return result \n
-    def __repr__(self):
-        return '%(typename)s(%(reprtxt)s)' %% self \n
-    def _asdict(self):
-        'Return a new dict which maps field names to their values'
-        return dict(zip(self._fields, self)) \n
-    def _replace(_self, **kwds):
-        'Return a new %(typename)s object replacing specified fields with new values'
-        result = _self._make(map(kwds.pop, %(field_names)r, _self))
-        if kwds:
-            raise ValueError('Got unexpected field names: %%r' %% kwds.keys())
-        return result \n
-    def __getnewargs__(self):
-        return tuple(self) \n\n''' % locals()
-        for i, name in enumerate(field_names):
-            template += '    %s = _property(_itemgetter(%d))\n' % (name, i)
-        if verbose:
-            print template
-
-        # Execute the template string in a temporary namespace
-        namespace = dict(_itemgetter=_itemgetter, __name__='namedtuple_%s' % typename,
-                         _property=property, _tuple=tuple)
-        try:
-            exec template in namespace
-        except SyntaxError, e:
-            raise SyntaxError(e.message + ':\n' + template)
-        result = namespace[typename]
-
-        # For pickling to work, the __module__ variable needs to be set to the frame
-        # where the named tuple is created.  Bypass this step in enviroments where
-        # sys._getframe is not defined (Jython for example) or sys._getframe is not
-        # defined for arguments greater than 0 (IronPython).
-        try:
-            result.__module__ = _sys._getframe(1).f_globals.get('__name__', '__main__')
-        except (AttributeError, ValueError):
-            pass
-
-        return result
-
-    namedtuple = _namedtuple
-
-try:
-    bin = bin
-except NameError:  # Python 2.5
-    def bin(x):
-        """
-        bin(number) -> string
-
-        Stringifies an int or long in base 2.
-        """
-        if x < 0:
-            return '-' + bin(-x)
-        out = []
-        if x == 0:
-            out.append('0')
-        while x > 0:
-            out.append('01'[x & 1])
-            x >>= 1
-            pass
-        return '0b' + ''.join(reversed(out))
-
-try:
-    next = next
-except NameError:  # Python 2.5
-    def next(*args):
-        """
-        next(iterator[, default])
-
-        Return the next item from the iterator. If default is given and the
-        iterator is exhausted, it is returned instead of raising StopIteration.
-        """
-        if len(args) == 1:
-            return args[0].next()
-        elif len(args) == 2:
-            try:
-                return args[0].next()
-            except StopIteration:
-                return args[1]
-        else:
-            raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
-
-try:
-    from __builtin__ import bin
-except ImportError:  # Python 2.5
-    _hexDict = {
-        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
-        '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
-        'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
-
-    def bin(n):
-        """Return the equivalent to Python 2.6's bin function.
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import bin
-        >>> bin(-123)
-        '-0b1111011'
-        >>> bin(0) # this is the only time a 0 will be to the right of 'b'
-        '0b0'
-
-        See Also
-        ========
-        sympy.physics.quantum.shor.arr
-
-        Modified from http://code.activestate.com/recipes/576847/
-        """
-        # =========================================================
-        # create hex of int, remove '0x'. now for each hex char,
-        # look up binary string, append in list and join at the end.
-        # =========================================================
-        if n < 0:
-            return '-%s' % bin(-n)
-        return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
-                                  ]).lstrip('0') or '0')
+    maketrans = str.maketrans
 
 
 def as_int(n):
@@ -594,11 +358,11 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key, sin, cos, sqrt
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
-    The following are eqivalent ways of getting the key for an object:
+    The following are equivalent ways of getting the key for an object:
 
     >>> x.sort_key() == default_sort_key(x)
     True
@@ -672,21 +436,31 @@ def default_sort_key(item, order=None):
     The order of terms obtained when using these keys is the order that would
     be obtained if those terms were *factors* in a product.
 
+    Although it is useful for quickly putting expressions in canonical order,
+    it does not sort expressions based on their complexity defined by the
+    number of operations, power of variables and others:
+
+    >>> sorted([sin(x)*cos(x), sin(x)], key=default_sort_key)
+    [sin(x)*cos(x), sin(x)]
+    >>> sorted([x, x**2, sqrt(x), x**3], key=default_sort_key)
+    [sqrt(x), x, x**2, x**3]
+
     See Also
     ========
 
-    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
 
-    if iterable(item, exclude=basestring):
+    if iterable(item, exclude=string_types):
         if isinstance(item, dict):
             args = item.items()
             unordered = True
@@ -706,7 +480,7 @@ def default_sort_key(item, order=None):
 
         cls_index, args = 10, (len(args), tuple(args))
     else:
-        if not isinstance(item, basestring):
+        if not isinstance(item, string_types):
             try:
                 item = sympify(item)
             except SympifyError:
@@ -728,32 +502,36 @@ def default_sort_key(item, order=None):
 def _nodes(e):
     """
     A helper for ordered() which returns the node count of ``e`` which
-    for Basic object is the number of Basic nodes in the expression tree
-    but for other object is 1 (unless the object is an iterable or dict
+    for Basic objects is the number of Basic nodes in the expression tree
+    but for other objects is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
-    from basic import Basic
+    from .basic import Basic
 
     if isinstance(e, Basic):
         return e.count(Basic)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
-        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.items())
     else:
         return 1
 
 
 def ordered(seq, keys=None, default=True, warn=False):
-    """Return an iterator of the seq where keys are used to break ties.
-    Two default keys will be applied after and provided unless ``default``
-    is False. The two keys are _nodes and default_sort_key which will
-    place smaller expressions before larger ones (in terms of Basic nodes)
-    and where there are ties, they will be broken by the default_sort_key.
+    """Return an iterator of the seq where keys are used to break ties in
+    a conservative fashion: if, after applying a key, there are no ties
+    then no other keys will be computed.
+
+    Two default keys will be applied if 1) keys are not provided or 2) the
+    given keys don't resolve all ties (but only if `default` is True). The
+    two keys are `_nodes` (which places smaller expressions before large) and
+    `default_sort_key` which (if the `sort_key` for an object is defined
+    properly) should resolve any ties.
 
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that
-    there should be no ties.
+    there should be no ties between items that are not identical.
 
     Examples
     ========
@@ -825,7 +603,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         keys = list(keys)
-
         f = keys.pop(0)
         for a in seq:
             d[f(a)].append(a)
@@ -842,16 +619,14 @@ def ordered(seq, keys=None, default=True, warn=False):
                 d[k] = ordered(d[k], (_nodes, default_sort_key,),
                                default=False, warn=warn)
             elif warn:
-                raise ValueError('not enough keys to break ties')
+                from sympy.utilities.iterables import uniq
+                u = list(uniq(d[k]))
+                if len(u) > 1:
+                    raise ValueError(
+                        'not enough keys to break ties: %s' % u)
         for v in d[k]:
             yield v
         d.pop(k)
-
-try:
-    next = next
-except NameError:
-    def next(x):
-        return x.next()
 
 # If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
 # HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and
@@ -859,7 +634,7 @@ except NameError:
 
 # Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
 # For example, int(gmpy.mpz(2**256)) would raise OverflowError.
-# See issue 1881.
+# See issue 4980.
 
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.
@@ -903,30 +678,185 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-
-import sys
-
-if sys.version_info[0] == 2:
-    SYMPY_INTS = (int, long)
-else:
-    SYMPY_INTS = (int,)
+SYMPY_INTS = integer_types
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
-# check_output() is new in python 2.7
-import os
-from subprocess import CalledProcessError
-try:
-    from subprocess import check_output
-except ImportError:
-    from subprocess import check_call
-    def check_output(*args, **kwargs):
-        with open(os.devnull, 'w') as fh:
-            kwargs['stdout'] = fh
-            try:
-                return check_call(*args, **kwargs)
-            except CalledProcessError, e:
-                e.output = ("program output is not available for "
-                            "python 2.5.x and 2.6.x")
-                raise e
+
+# lru_cache compatible with py2.6->py3.2 copied directly from
+#   http://code.activestate.com/
+#   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
+from collections import namedtuple
+from functools import update_wrapper
+from threading import RLock
+
+_CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
+
+class _HashedSeq(list):
+    __slots__ = 'hashvalue'
+
+    def __init__(self, tup, hash=hash):
+        self[:] = tup
+        self.hashvalue = hash(tup)
+
+    def __hash__(self):
+        return self.hashvalue
+
+def _make_key(args, kwds, typed,
+             kwd_mark = (object(),),
+             fasttypes = set((int, str, frozenset, type(None))),
+             sorted=sorted, tuple=tuple, type=type, len=len):
+    'Make a cache key from optionally typed positional and keyword arguments'
+    key = args
+    if kwds:
+        sorted_items = sorted(kwds.items())
+        key += kwd_mark
+        for item in sorted_items:
+            key += item
+    if typed:
+        key += tuple(type(v) for v in args)
+        if kwds:
+            key += tuple(type(v) for k, v in sorted_items)
+    elif len(key) == 1 and type(key[0]) in fasttypes:
+        return key[0]
+    return _HashedSeq(key)
+
+def lru_cache(maxsize=100, typed=False):
+    """Least-recently-used cache decorator.
+
+    If *maxsize* is set to None, the LRU features are disabled and the cache
+    can grow without bound.
+
+    If *typed* is True, arguments of different types will be cached separately.
+    For example, f(3.0) and f(3) will be treated as distinct calls with
+    distinct results.
+
+    Arguments to the cached function must be hashable.
+
+    View the cache statistics named tuple (hits, misses, maxsize, currsize) with
+    f.cache_info().  Clear the cache and statistics with f.cache_clear().
+    Access the underlying function with f.__wrapped__.
+
+    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+
+    """
+
+    # Users should only access the lru_cache through its public API:
+    #       cache_info, cache_clear, and f.__wrapped__
+    # The internals of the lru_cache are encapsulated for thread safety and
+    # to allow the implementation to change (including a possible C version).
+
+    def decorating_function(user_function):
+
+        cache = dict()
+        stats = [0, 0]                  # make statistics updateable non-locally
+        HITS, MISSES = 0, 1             # names for the stats fields
+        make_key = _make_key
+        cache_get = cache.get           # bound method to lookup key or return None
+        _len = len                      # localize the global len() function
+        lock = RLock()                  # because linkedlist updates aren't threadsafe
+        root = []                       # root of the circular doubly linked list
+        root[:] = [root, root, None, None]      # initialize by pointing to self
+        nonlocal_root = [root]                  # make updateable non-locally
+        PREV, NEXT, KEY, RESULT = 0, 1, 2, 3    # names for the link fields
+
+        if maxsize == 0:
+
+            def wrapper(*args, **kwds):
+                # no caching, just do a statistics update after a successful call
+                result = user_function(*args, **kwds)
+                stats[MISSES] += 1
+                return result
+
+        elif maxsize is None:
+
+            def wrapper(*args, **kwds):
+                # simple caching without ordering or size limit
+                key = make_key(args, kwds, typed)
+                result = cache_get(key, root)   # root used here as a unique not-found sentinel
+                if result is not root:
+                    stats[HITS] += 1
+                    return result
+                result = user_function(*args, **kwds)
+                cache[key] = result
+                stats[MISSES] += 1
+                return result
+
+        else:
+
+            def wrapper(*args, **kwds):
+                # size limited caching that tracks accesses by recency
+                try:
+                    key = make_key(args, kwds, typed) if kwds or typed else args
+                except TypeError:
+                    stats[MISSES] += 1
+                    return user_function(*args, **kwds)
+                with lock:
+                    link = cache_get(key)
+                    if link is not None:
+                        # record recent use of the key by moving it to the front of the list
+                        root, = nonlocal_root
+                        link_prev, link_next, key, result = link
+                        link_prev[NEXT] = link_next
+                        link_next[PREV] = link_prev
+                        last = root[PREV]
+                        last[NEXT] = root[PREV] = link
+                        link[PREV] = last
+                        link[NEXT] = root
+                        stats[HITS] += 1
+                        return result
+                result = user_function(*args, **kwds)
+                with lock:
+                    root, = nonlocal_root
+                    if key in cache:
+                        # getting here means that this same key was added to the
+                        # cache while the lock was released.  since the link
+                        # update is already done, we need only return the
+                        # computed result and update the count of misses.
+                        pass
+                    elif _len(cache) >= maxsize:
+                        # use the old root to store the new key and result
+                        oldroot = root
+                        oldroot[KEY] = key
+                        oldroot[RESULT] = result
+                        # empty the oldest link and make it the new root
+                        root = nonlocal_root[0] = oldroot[NEXT]
+                        oldkey = root[KEY]
+                        oldvalue = root[RESULT]
+                        root[KEY] = root[RESULT] = None
+                        # now update the cache dictionary for the new links
+                        del cache[oldkey]
+                        cache[key] = oldroot
+                    else:
+                        # put result in a new link at the front of the list
+                        last = root[PREV]
+                        link = [last, root, key, result]
+                        last[NEXT] = root[PREV] = cache[key] = link
+                    stats[MISSES] += 1
+                return result
+
+        def cache_info():
+            """Report cache statistics"""
+            with lock:
+                return _CacheInfo(stats[HITS], stats[MISSES], maxsize, len(cache))
+
+        def cache_clear():
+            """Clear the cache and cache statistics"""
+            with lock:
+                cache.clear()
+                root = nonlocal_root[0]
+                root[:] = [root, root, None, None]
+                stats[:] = [0, 0]
+
+        wrapper.__wrapped__ = user_function
+        wrapper.cache_info = cache_info
+        wrapper.cache_clear = cache_clear
+        return update_wrapper(wrapper, user_function)
+
+    return decorating_function
+### End of backported lru_cache
+
+if sys.version_info[:2] >= (3, 3):
+    # 3.2 has an lru_cache with an incompatible API
+    from functools import lru_cache

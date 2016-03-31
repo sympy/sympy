@@ -4,7 +4,7 @@
 Utilities
 =========
 
-.. TODO: add compilef.rst and benchmarking.rst when they're fixed
+.. TODO: add  benchmarking.rst
 
 .. automodule:: sympy.utilities
 
@@ -15,8 +15,8 @@ Contents:
 
    autowrap.rst
    codegen.rst
-   cythonutils.rst
    decorator.rst
+   enumerative.rst
    iterables.rst
    lambdify.rst
    memoization.rst

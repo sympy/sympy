@@ -1,5 +1,7 @@
 """benchmarking through py.test"""
 
+from __future__ import print_function, division
+
 import py
 from py.__.test.item import Item
 from py.__.test.terminal.terminal import TerminalSession
@@ -9,9 +11,10 @@ import timeit
 
 from inspect import getsource
 
+from sympy.core.compatibility import exec_, range
+
 
 # from IPython.Magic.magic_timeit
-#units = ["s", "ms", "\xc2\xb5s", "ns"]
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
@@ -50,7 +53,7 @@ class Timer(timeit.Timer):
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
         #exec code in globals(), ns      -- original timeit code
-        exec code in globals, ns  # -- we use caller-provided globals instead
+        exec_(code, globals, ns)  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 
@@ -108,12 +111,10 @@ class Function(py.__.test.item.Function):
 class BenchSession(TerminalSession):
 
     def header(self, colitems):
-        #self.out.sep("-", "benchmarking starts")
         super(BenchSession, self).header(colitems)
 
     def footer(self, colitems):
         super(BenchSession, self).footer(colitems)
-        #self.out.sep("-", "benchmarking ends")
 
         self.out.write('\n')
         self.print_bench_results()

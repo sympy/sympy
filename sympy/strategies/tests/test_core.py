@@ -1,6 +1,6 @@
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
-from functools import partial
+from sympy.core.compatibility import get_function_name
 
 def test_null_safe():
     def rl(expr):
@@ -48,15 +48,22 @@ def test_do_one():
     rl = do_one(posdec, posdec)
     assert rl(5) == 4
 
+    rl1 = lambda x: 2 if x == 1 else x
+    rl2 = lambda x: 3 if x == 2 else x
+
+    rule = do_one(rl1, rl2)
+    assert rule(1) == 2
+    assert rule(rule(1)) == 3
+
 def test_debug():
-    import StringIO
-    file = StringIO.StringIO()
+    from sympy.core.compatibility import StringIO
+    file = StringIO()
     rl = debug(posdec, file)
     rl(5)
     log = file.getvalue()
     file.close()
 
-    assert posdec.func_name in log
+    assert get_function_name(posdec) in log
     assert '5' in log
     assert '4' in log
 
@@ -78,11 +85,3 @@ def test_minimize():
 
     rl = minimize(inc, dec, objective=lambda x: -x)
     assert rl(4) == 5
-
-def test_do_one():
-    rl1 = lambda x: 2 if x == 1 else x
-    rl2 = lambda x: 3 if x == 2 else x
-
-    rule = do_one(rl1, rl2)
-    assert rule(1) == 2
-    assert rule(rule(1)) == 3

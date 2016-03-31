@@ -1,4 +1,8 @@
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
+from __future__ import print_function, division
+
+from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
+from sympy.core.compatibility import range
+from sympy.utilities import default_sort_key
 
 
 def _is_scalar(e):
@@ -29,7 +33,7 @@ def _cycle_permute(l):
     if len(l) == 1:
         return l
 
-    min_item = min(l)
+    min_item = min(l, key=default_sort_key)
     indices = [i for i, x in enumerate(l) if x == min_item]
 
     le = list(l)
@@ -42,7 +46,7 @@ def _cycle_permute(l):
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
-               xrange(len(indices) - 1)]
+               range(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist
@@ -169,8 +173,7 @@ class Tr(Expr):
 
     @property
     def is_number(self):
-        #TODO : This function to be reviewed
-        # and implementation improved.
+        # TODO : improve this implementation
         return True
 
     #TODO: Review if the permute method is needed
@@ -183,7 +186,7 @@ class Tr(Expr):
         pos : integer, if positive, shift-right, else shift-left
 
         Examples
-        =========
+        ========
 
         >>> from sympy.core.trace import Tr
         >>> from sympy import symbols

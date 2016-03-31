@@ -1,6 +1,12 @@
 """ Riemann zeta and related function. """
-from sympy.core import Function, S, C, sympify, pi
+from __future__ import print_function, division
+
+from sympy.core import Function, S, sympify, pi
 from sympy.core.function import ArgumentIndexError
+from sympy.core.compatibility import range
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.elementary.exponential import log
+
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -11,7 +17,7 @@ class lerchphi(Function):
     r"""
     Lerch transcendent (Lerch phi function).
 
-    For :math:`Re(a) > 0`, :math:`|z| < 1` and :math:`s \in \mathbb{C}`, the
+    For :math:`\operatorname{Re}(a) > 0`, `|z| < 1` and `s \in \mathbb{C}`, the
     Lerch transcendent is defined as
 
     .. math :: \Phi(z, s, a) = \sum_{n=0}^\infty \frac{z^n}{(n + a)^s},
@@ -29,9 +35,9 @@ class lerchphi(Function):
 
     .. math:: \Phi(z, s, a) = z\Phi(z, s, a+1) + a^{-s}.
 
-    This provides the analytic continuation to :math:`Re(a) \le 0`.
+    This provides the analytic continuation to `\operatorname{Re}(a) \le 0`.
 
-    Assume now :math:`Re(a) > 0`. The integral representation
+    Assume now `\operatorname{Re}(a) > 0`. The integral representation
 
     .. math:: \Phi_0(z, s, a) = \int_0^\infty \frac{t^{s-1} e^{-at}}{1 - ze^{-t}}
                                 \frac{\mathrm{d}t}{\Gamma(s)}
@@ -59,10 +65,10 @@ class lerchphi(Function):
     References
     ==========
 
-    - Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
-      Vol. I, New York: McGraw-Hill. Section 1.11.
-    - http://dlmf.nist.gov/25.14
-    - http://en.wikipedia.org/wiki/Lerch_transcendent
+    .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
+           Vol. I, New York: McGraw-Hill. Section 1.11.
+    .. [2] http://dlmf.nist.gov/25.14
+    .. [3] http://en.wikipedia.org/wiki/Lerch_transcendent
 
     Examples
     ========
@@ -109,8 +115,6 @@ class lerchphi(Function):
     -s*lerchphi(z, s + 1, a)
     """
 
-    nargs = 3
-
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
         z, s, a = self.args
@@ -141,21 +145,21 @@ class lerchphi(Function):
                     n -= 1
                 a -= n
                 mul = z**(-n)
-                add = Add(*[-z**(k - n)/(a + k)**s for k in xrange(n)])
+                add = Add(*[-z**(k - n)/(a + k)**s for k in range(n)])
             elif a <= 0:
                 n = floor(-a) + 1
                 a += n
                 mul = z**n
-                add = Add(*[z**(n - 1 - k)/(a - k - 1)**s for k in xrange(n)])
+                add = Add(*[z**(n - 1 - k)/(a - k - 1)**s for k in range(n)])
 
             m, n = S([a.p, a.q])
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
             return add + mul*n**(s - 1)*Add(
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
-                  / (unpolarify(zet)**k*root)**m for k in xrange(n)])
+                  / (unpolarify(zet)**k*root)**m for k in range(n)])
 
-        # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
+        # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
@@ -168,7 +172,7 @@ class lerchphi(Function):
                 arg = z.args[0]/(2*pi*I)
                 p, q = S([arg.p, arg.q])
             return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q)
-                         for k in xrange(q)])
+                         for k in range(q)])
 
         return lerchphi(z, s, a)
 
@@ -240,7 +244,7 @@ class polylog(Function):
     >>> polylog(s, 1)
     zeta(s)
     >>> polylog(s, -1)
-    dirichlet_eta(s)
+    -dirichlet_eta(s)
 
     If :math:`s` is a negative integer, :math:`0` or :math:`1`, the
     polylogarithm can be expressed using elementary functions. This can be
@@ -265,14 +269,12 @@ class polylog(Function):
     z*lerchphi(z, s, 1)
     """
 
-    nargs = 2
-
     @classmethod
     def eval(cls, s, z):
         if z == 1:
             return zeta(s)
         elif z == -1:
-            return dirichlet_eta(s)
+            return -dirichlet_eta(s)
         elif z == 0:
             return 0
 
@@ -307,12 +309,12 @@ class zeta(Function):
     r"""
     Hurwitz zeta function (or Riemann zeta function).
 
-    For :math:`Re(a) > 0` and :math:`Re(s) > 1`, this function is defined as
+    For `\operatorname{Re}(a) > 0` and `\operatorname{Re}(s) > 1`, this function is defined as
 
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
     where the standard choice of argument for :math:`n + a` is used. For fixed
-    :math:`a` with :math:`Re(a) > 0` the Hurwitz zeta function admits a
+    :math:`a` with `\operatorname{Re}(a) > 0` the Hurwitz zeta function admits a
     meromorphic continuation to all of :math:`\mathbb{C}`, it is an unbranched
     function with a simple pole at :math:`s = 1`.
 
@@ -324,7 +326,7 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \Phi(1, s, a).
 
     This formula defines an analytic continuation for all possible values of
-    :math:`s` and :math:`a` (also :math:`Re(a) < 0`), see the documentation of
+    :math:`s` and :math:`a` (also `\operatorname{Re}(a) < 0`), see the documentation of
     :class:`lerchphi` for a description of the branching behavior.
 
     If no value is passed for :math:`a`, by this function assumes a default value
@@ -338,8 +340,8 @@ class zeta(Function):
     References
     ==========
 
-    - http://dlmf.nist.gov/25.11
-    - http://en.wikipedia.org/wiki/Hurwitz_zeta_function
+    .. [1] http://dlmf.nist.gov/25.11
+    .. [2] http://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     Examples
     ========
@@ -352,6 +354,8 @@ class zeta(Function):
     >>> from sympy import zeta
     >>> from sympy.abc import s
     >>> zeta(s, 1)
+    zeta(s)
+    >>> zeta(s)
     zeta(s)
 
     The Riemann zeta function can also be expressed using the Dirichlet eta
@@ -409,14 +413,12 @@ class zeta(Function):
 
     """
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, z, a_=None):
         if a_ is None:
-            z, a = map(sympify, (z, 1))
+            z, a = list(map(sympify, (z, 1)))
         else:
-            z, a = map(sympify, (z, a_))
+            z, a = list(map(sympify, (z, a_)))
 
         if a.is_Number:
             if a is S.NaN:
@@ -431,26 +433,23 @@ class zeta(Function):
             elif z is S.Infinity:
                 return S.One
             elif z is S.Zero:
-                if a.is_negative:
-                    return S.Half - a - 1
-                else:
-                    return S.Half - a
+                return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
             elif z.is_Integer:
                 if a.is_Integer:
                     if z.is_negative:
-                        zeta = (-1)**z * C.bernoulli(-z + 1)/(-z + 1)
+                        zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
-                        B, F = C.bernoulli(z), C.factorial(z)
+                        B, F = bernoulli(z), factorial(z)
                         zeta = 2**(z - 1) * abs(B) * pi**z / F
                     else:
                         return
 
                     if a.is_negative:
-                        return zeta + C.harmonic(abs(a), z)
+                        return zeta + harmonic(abs(a), z)
                     else:
-                        return zeta - C.harmonic(a - 1, z)
+                        return zeta - harmonic(a - 1, z)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -460,6 +459,11 @@ class zeta(Function):
 
     def _eval_rewrite_as_lerchphi(self, s, a=1):
         return lerchphi(1, s, a)
+
+    def _eval_is_finite(self):
+        arg_is_one = (self.args[0] - 1).is_zero
+        if arg_is_one is not None:
+            return not arg_is_one
 
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
@@ -476,7 +480,7 @@ class dirichlet_eta(Function):
     r"""
     Dirichlet eta function.
 
-    For :math:`Re(s) > 0`, this function is defined as
+    For `\operatorname{Re}(s) > 0`, this function is defined as
 
     .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.
 
@@ -491,7 +495,7 @@ class dirichlet_eta(Function):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [1] http://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     Examples
     ========
@@ -504,15 +508,71 @@ class dirichlet_eta(Function):
     (-2**(-s + 1) + 1)*zeta(s)
 
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, s):
         if s == 1:
-            return C.log(2)
+            return log(2)
         z = zeta(s)
         if not z.has(zeta):
             return (1 - 2**(1 - s))*z
 
     def _eval_rewrite_as_zeta(self, s):
         return (1 - 2**(1 - s)) * zeta(s)
+
+
+class stieltjes(Function):
+    r"""Represents Stieltjes constants, :math:`\gamma_{k}` that occur in
+    Laurent Series expansion of the Riemann zeta function.
+
+    Examples
+    ========
+
+    >>> from sympy import stieltjes
+    >>> from sympy.abc import n, m
+    >>> stieltjes(n)
+    stieltjes(n)
+
+    zero'th stieltjes constant
+
+    >>> stieltjes(0)
+    EulerGamma
+    >>> stieltjes(0, 1)
+    EulerGamma
+
+    For generalized stieltjes constants
+
+    >>> stieltjes(n, m)
+    stieltjes(n, m)
+
+    Constants are only defined for integers >= 0
+
+    >>> stieltjes(-1)
+    zoo
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Stieltjes_constants
+    """
+
+    @classmethod
+    def eval(cls, n, a=None):
+        n = sympify(n)
+
+        if a != None:
+            a = sympify(a)
+            if a is S.NaN:
+                return S.NaN
+            if a.is_Integer and a.is_nonpositive:
+                return S.ComplexInfinity
+
+        if n.is_Number:
+            if n is S.NaN:
+                return S.NaN
+            elif n < 0:
+                return S.ComplexInfinity
+            elif not n.is_Integer:
+                return S.ComplexInfinity
+            elif n == 0 and a in [None, 1]:
+                return S.EulerGamma

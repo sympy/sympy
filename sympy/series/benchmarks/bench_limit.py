@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, limit, oo
 
 x = Symbol('x')

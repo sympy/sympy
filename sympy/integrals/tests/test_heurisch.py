@@ -1,31 +1,33 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol
+    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
+    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
+    besselj, besselk, bessely, jn
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow
-
-x, y, z = symbols('x,y,z')
+from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
+from sympy.integrals.integrals import integrate
+x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
 
-
 def test_components():
-    assert components(x*y, x) == set([x])
-    assert components(1/(x + y), x) == set([x])
-    assert components(sin(x), x) == set([sin(x), x])
+    assert components(x*y, x) == {x}
+    assert components(1/(x + y), x) == {x}
+    assert components(sin(x), x) == {sin(x), x}
     assert components(sin(x)*sqrt(log(x)), x) == \
-        set([log(x), sin(x), sqrt(log(x)), x])
+        {log(x), sin(x), sqrt(log(x)), x}
     assert components(x*sin(exp(x)*y), x) == \
-        set([sin(y*exp(x)), x, exp(x)])
+        {sin(y*exp(x)), x, exp(x)}
     assert components(x**Rational(17, 54)/sqrt(sin(x)), x) == \
-        set([sin(x), x**Rational(1, 54), sqrt(sin(x)), x])
+        {sin(x), x**Rational(1, 54), sqrt(sin(x)), x}
 
     assert components(f(x), x) == \
-        set([x, f(x)])
+        {x, f(x)}
     assert components(Derivative(f(x), x), x) == \
-        set([x, f(x), Derivative(f(x), x)])
+        {x, f(x), Derivative(f(x), x)}
     assert components(f(x)*diff(f(x), x), x) == \
-        set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
+        {x, f(x), Derivative(f(x), x), Derivative(f(x), x)}
 
+def test_issue_10680():
+    assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
@@ -68,6 +70,8 @@ def test_heurisch_exp():
     assert heurisch(2**x, x) == 2**x/log(2)
     assert heurisch(x*2**x, x) == x*2**x/log(2) - 2**x*log(2)**(-2)
 
+    assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
+    assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
@@ -169,15 +173,20 @@ def test_heurisch_hacking():
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
         asinh(2*x/3)/2
 
-
 def test_heurisch_function():
+    assert heurisch(f(x), x) is None
+
+@XFAIL
+def test_heurisch_function_derivative():
+    # TODO: it looks like this used to work just by coincindence and
+    # thanks to sloppy implementation. Investigate why this used to
+    # work at all and if support for this can be restored.
+
     df = diff(f(x), x)
 
-    assert heurisch(f(x), x) is None
     assert heurisch(f(x)*df, x) == f(x)**2/2
-    assert heurisch(f(x)**2 * df, x) == f(x)**3/3
-    assert heurisch(df / f(x), x) == log(f(x))
-
+    assert heurisch(f(x)**2*df, x) == f(x)**3/3
+    assert heurisch(df/f(x), x) == log(f(x))
 
 def test_heurisch_wrapper():
     f = 1/(y + x)
@@ -187,62 +196,110 @@ def test_heurisch_wrapper():
     f = 1/((y - x)*(y + x))
     assert heurisch_wrapper(f, x) == \
         Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
-    # issue 3827
+    # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
     assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
         - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
 
-
-def test_issue510():
+def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
         I*log(log(x) - I)/2
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
-#
-# NB: correctness assured as ratsimp(diff(g,x) - f) == 0 in maxima
-# SymPy is unable to do it :(
 
-# Besides, they are skipped(), because they take too much time to execute.
-
-
-@XFAIL
 def test_pmint_rat():
-    f = (x**7 - 24*x**4 - 4*x**2 + 8*x - 8) / (x**8 + 6*x**6 + 12*x**4 + 8*x**2)
-    g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4)) + log(x)
+    # TODO: heurisch() is off by a constant: -3/4. Possibly different permutation
+    # would give the optimal result?
 
-    assert heurisch(f, x) == g
+    def drop_const(expr, x):
+        if expr.is_Add:
+            return Add(*[ arg for arg in expr.args if arg.has(x) ])
+        else:
+            return expr
 
+    f = (x**7 - 24*x**4 - 4*x**2 + 8*x - 8)/(x**8 + 6*x**6 + 12*x**4 + 8*x**2)
+    g = (4 + 8*x**2 + 6*x + 3*x**3)/(x**5 + 4*x**3 + 4*x) + log(x)
 
-@XFAIL
+    assert drop_const(ratsimp(heurisch(f, x)), x) == g
+
 def test_pmint_trig():
     f = (x - tan(x)) / tan(x)**2 + tan(x)
-    g = (-x - tan(x)*x**2 / 2) / tan(x) + log(1 + tan(x)**2) / 2
+    g = -x**2/2 - x/tan(x) + log(tan(x)**2 + 1)/2
 
     assert heurisch(f, x) == g
 
-
-@slow
-@XFAIL
+@slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
-    g = 1/(x + log(x) + exp(x)) + log(x + log(x) + exp(x))
+    g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
 
-    assert heurisch(f, x) == g
+    assert ratsimp(heurisch(f, x)) == g
 
-
-@slow
-@XFAIL
+@slow # 8 seconds on 3.4 GHz
+@XFAIL  # there's a hash dependent failure lurking here
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)
-    g = sqrt(pi)/4 * (-1/(erf(x) - 1) - log(erf(x) + 1)/2 + log(erf(x) - 1)/2)
+    g = sqrt(pi)*log(erf(x) - 1)/8 - sqrt(pi)*log(erf(x) + 1)/8 - sqrt(pi)/(4*erf(x) - 4)
+
+    assert ratsimp(heurisch(f, x)) == g
+
+def test_pmint_LambertW():
+    f = LambertW(x)
+    g = x*LambertW(x) - x + x/LambertW(x)
 
     assert heurisch(f, x) == g
 
+def test_pmint_besselj():
+    f = besselj(nu + 1, x)/besselj(nu, x)
+    g = nu*log(x) - log(besselj(nu, x))
 
-def test_pmint_lambertw():
-    g = (x**2 + (LambertW(x)*x)**2 - LambertW(x)*x**2)/(x*LambertW(x))
-    assert simplify(heurisch(LambertW(x), x) - g) == 0
+    assert heurisch(f, x) == g
+
+    f = (nu*besselj(nu, x) - x*besselj(nu + 1, x))/x
+    g = besselj(nu, x)
+
+    assert heurisch(f, x) == g
+
+    f = jn(nu + 1, x)/jn(nu, x)
+    g = nu*log(x) - log(jn(nu, x))
+
+    assert heurisch(f, x) == g
+
+@slow
+def test_pmint_bessel_products():
+    # Note: Derivatives of Bessel functions have many forms.
+    # Recurrence relations are needed for comparisons.
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    f = x*besselj(nu, x)*bessely(nu, 2*x)
+    g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
+
+    assert heurisch(f, x) == g
+
+    f = x*besselj(nu, x)*besselk(nu, 2*x)
+    g = -2*x*besselj(nu, x)*besselk(nu - 1, 2*x)/5 - x*besselj(nu - 1, x)*besselk(nu, 2*x)/5
+
+    assert heurisch(f, x) == g
+
+@slow # 110 seconds on 3.4 GHz
+def test_pmint_WrightOmega():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+    def omega(x):
+        return LambertW(exp(x))
+
+    f = (1 + omega(x) * (2 + cos(omega(x)) * (x + omega(x))))/(1 + omega(x))/(x + omega(x))
+    g = log(x + LambertW(exp(x))) + sin(LambertW(exp(x)))
+
+    assert heurisch(f, x) == g
+
+def test_RR():
+    # Make sure the algorithm does the right thing if the ring is RR. See
+    # issue 8685.
+    assert heurisch(sqrt(1 + 0.25*x**2), x, hints=[]) == \
+        0.5*x*sqrt(0.25*x**2 + 1) + 1.0*asinh(0.5*x)
 
 # TODO: convert the rest of PMINT tests:
 # Airy functions
@@ -250,15 +307,6 @@ def test_pmint_lambertw():
 # g = Rational(1,2)*ln(x + AiryAi(x)) + Rational(1,2)*ln(x - AiryAi(x))
 # f = x**2 * AiryAi(x)
 # g = -AiryAi(x) + AiryAi(1, x)*x
-
-# Bessel functions
-# f = BesselJ(nu + 1, x) / BesselJ(nu, x)
-# g = nu*ln(x) - ln(BesselJ(nu, x))
-# f = (nu * BesselJ(nu, x) / x) - BesselJ(nu + 1, x)
-# g = BesselJ(nu, x)
-
 # Whittaker functions
 # f = WhittakerW(mu + 1, nu, x) / (WhittakerW(mu, nu, x) * x)
 # g = x/2 - mu*ln(x) - ln(WhittakerW(mu, nu, x))
-
-# - Wright omega

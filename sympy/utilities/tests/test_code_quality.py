@@ -1,11 +1,11 @@
-from __future__ import with_statement
-
 from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
-import sys
+import ast
+
+from sympy.core.compatibility import PY3
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -22,8 +22,6 @@ TOP_PATH = abspath(join(SYMPY_PATH, pardir))
 BIN_PATH = join(TOP_PATH, "bin")
 EXAMPLES_PATH = join(TOP_PATH, "examples")
 
-IS_PYTHON_3 = (sys.version_info[0] == 3)
-
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
 message_implicit = "File contains an implicit import: %s, line %s."
@@ -35,14 +33,18 @@ message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\
 message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
+message_duplicate_test = "This is a duplicate test function: %s, line %s"
+message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 
-implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
+implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
 gen_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
-test_suite_def_re = re.compile('^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
+test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
+test_ok_def_re = re.compile(r'^def\s+test_.*:$')
+test_file_re = re.compile(r'.*test_.*\.py$')
 
 
 def tab_in_leading(s):
@@ -55,6 +57,42 @@ def tab_in_leading(s):
         smore = s[n + 3:]
         check = s[:n] + smore[:len(smore) - len(smore.lstrip())]
     return not (check.expandtabs() == check)
+
+
+def find_self_assignments(s):
+    """Returns a list of "bad" assignments: if there are instances
+    of assigning to the first argument of the class method (except
+    for staticmethod's).
+    """
+    t = [n for n in ast.parse(s).body if isinstance(n, ast.ClassDef)]
+
+    bad = []
+    for c in t:
+        for n in c.body:
+            if not isinstance(n, ast.FunctionDef):
+                continue
+            if any(d.id == 'staticmethod'
+                   for d in n.decorator_list if isinstance(d, ast.Name)):
+                continue
+            if n.name == '__new__':
+                continue
+            if not n.args.args:
+                continue
+            if PY3:
+                first_arg = n.args.args[0].arg
+            else:
+                first_arg = n.args.args[0].id
+            for m in ast.walk(n):
+                if isinstance(m, ast.Assign):
+                    for a in m.targets:
+                        if isinstance(a, ast.Name) and a.id == first_arg:
+                            bad.append(m)
+                        elif (isinstance(a, ast.Tuple) and
+                              any(q.id == first_arg for q in a.elts
+                                  if isinstance(q, ast.Name))):
+                            bad.append(m)
+
+    return bad
 
 
 def check_directory_tree(base_path, file_check, exclusions=set(), pattern="*.py"):
@@ -79,7 +117,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
     for fname in files:
         if not exists(fname) or not isfile(fname):
             continue
-        if filter(lambda ex: ex in fname, exclusions):
+        if any(ex in fname for ex in exclusions):
             continue
         if pattern is None or re.match(pattern, fname):
             file_check(fname)
@@ -95,21 +133,38 @@ def test_files():
       o there are no general or string exceptions
       o there are no old style raise statements
       o name of arg-less test suite functions start with _ or test_
+      o no duplicate function names that start with test_
+      o no assignments to self variable in class methods
     """
 
     def test(fname):
-        if IS_PYTHON_3:
+        if PY3:
             with open(fname, "rt", encoding="utf8") as test_file:
                 test_this_file(fname, test_file)
         else:
             with open(fname, "rt") as test_file:
                 test_this_file(fname, test_file)
 
+            with open(fname, "rt") as test_file:
+                source = test_file.read()
+            result = find_self_assignments(source)
+            if result:
+                assert False, message_self_assignments % (fname,
+                                                          result[0].lineno)
+
     def test_this_file(fname, test_file):
         line = None  # to flag the case where there were no lines in file
+        tests = 0
+        test_set = set()
         for idx, line in enumerate(test_file):
-            if re.match(r'.*test_.*\.py$', fname) and test_suite_def_re.match(line):
-                assert False, message_test_suite_def % (fname, idx + 1)
+            if test_file_re.match(fname):
+                if test_suite_def_re.match(line):
+                    assert False, message_test_suite_def % (fname, idx + 1)
+                if test_ok_def_re.match(line):
+                    tests += 1
+                    test_set.add(line[3:].split('(')[0].strip())
+                    if len(test_set) != tests:
+                        assert False, message_duplicate_test % (fname, idx + 1)
             if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
@@ -144,16 +199,18 @@ def test_files():
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set([
-        "%(sep)smpmath%(sep)s" % sepd,
-    ])
+    exclude = set()
     # Files to exclude from the implicit import test
     import_exclude = set([
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
+        # XXX: not really, they use useful import pattern (DRY)
+        "%(sep)svector%(sep)s__init__.py" % sepd,
         "%(sep)smechanics%(sep)s__init__.py" % sepd,
         "%(sep)squantum%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy executes ``from sympy import *``:
@@ -163,9 +220,8 @@ def test_files():
         "%(sep)sbin%(sep)ssympy_time_cache.py" % sepd,
         # Taken from Python stdlib:
         "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
-        # these two should be fixed:
+        # this one should be fixed:
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
-        "%(sep)splotting%(sep)stextplot.py" % sepd,
     ])
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
@@ -293,3 +349,52 @@ def test_test_suite_defs():
         assert test_suite_def_re.search(c) is None, c
     for c in candidates_fail:
         assert test_suite_def_re.search(c) is not None, c
+
+
+def test_test_duplicate_defs():
+    candidates_ok = [
+        "def foo():\ndef foo():\n",
+        "def test():\ndef test_():\n",
+        "def test_():\ndef test__():\n",
+    ]
+    candidates_fail = [
+        "def test_():\ndef test_ ():\n",
+        "def test_1():\ndef  test_1():\n",
+    ]
+    ok = (None, 'check')
+    def check(file):
+        tests = 0
+        test_set = set()
+        for idx, line in enumerate(file.splitlines()):
+            if test_ok_def_re.match(line):
+                tests += 1
+                test_set.add(line[3:].split('(')[0].strip())
+                if len(test_set) != tests:
+                    return False, message_duplicate_test % ('check', idx + 1)
+        return None, 'check'
+    for c in candidates_ok:
+        assert check(c) == ok
+    for c in candidates_fail:
+        assert check(c) != ok
+
+
+def test_find_self_assignments():
+    candidates_ok = [
+        "class A(object):\n    def foo(self, arg): arg = self\n",
+        "class A(object):\n    def foo(self, arg): self.prop = arg\n",
+        "class A(object):\n    def foo(self, arg): obj, obj2 = arg, self\n",
+        "class A(object):\n    @classmethod\n    def bar(cls, arg): arg = cls\n",
+        "class A(object):\n    def foo(var, arg): arg = var\n",
+    ]
+    candidates_fail = [
+        "class A(object):\n    def foo(self, arg): self = arg\n",
+        "class A(object):\n    def foo(self, arg): obj, self = arg, arg\n",
+        "class A(object):\n    def foo(self, arg):\n        if arg: self = arg",
+        "class A(object):\n    @classmethod\n    def foo(cls, arg): cls = arg\n",
+        "class A(object):\n    def foo(var, arg): var = arg\n",
+    ]
+
+    for c in candidates_ok:
+        assert find_self_assignments(c) == []
+    for c in candidates_fail:
+        assert find_self_assignments(c) != []

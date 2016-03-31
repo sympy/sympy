@@ -1,15 +1,12 @@
 """Tests for dense recursive polynomials' tools. """
 
 from sympy.polys.densebasic import (
-    dup_LC, dmp_LC, dup_normal, dmp_normal,
-    dup_from_raw_dict, dmp_from_dict,
-    dmp_convert, dmp_swap, dmp_one_p,
+    dup_normal, dmp_normal,
+    dup_from_raw_dict,
+    dmp_convert, dmp_swap,
 )
 
-from sympy.polys.densearith import (
-    dup_add, dup_mul, dup_exquo,
-    dmp_neg, dmp_sub, dmp_mul_ground, dmp_mul, dmp_sqr,
-)
+from sympy.polys.densearith import dmp_mul_ground
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -32,7 +29,7 @@ from sympy.polys.densetools import (
     dup_revert, dmp_revert,
 )
 
-from sympy.polys.polyclasses import DMP, ANP
+from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -41,16 +38,13 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
-from sympy.polys.specialpolys import (
-    f_polys,
-    dmp_fateman_poly_F_1,
-    dmp_fateman_poly_F_2,
-    dmp_fateman_poly_F_3,
-)
+from sympy.polys.specialpolys import f_polys
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
+from sympy.polys.rings import ring
 
 from sympy import S, I, sin
+from sympy.core.compatibility import long
 
 from sympy.abc import x
 
@@ -217,7 +211,7 @@ def test_dmp_eval_in():
     assert dmp_eval_in(f_6, 7, 2, 3, ZZ) == dmp_swap(
         dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), 7, 3, ZZ), 0, 1, 2, ZZ)
 
-    f = [[[45L]], [[]], [[]], [[-9L], [-1L], [], [3L, 0L, 10L, 0L]]]
+    f = [[[long(45)]], [[]], [[]], [[long(-9)], [-1], [], [long(3), long(0), long(10), long(0)]]]
 
     assert dmp_eval_in(f, -2, 2, 2, ZZ) == \
         [[45], [], [], [-9, -1, 0, -44]]
@@ -562,10 +556,14 @@ def test_dup_decompose():
 
     assert dup_decompose(f, ZZ) == [[1, -8, 24, -34, 29], [1, 0, 5, 0]]
 
-    f = [DMP([6, 0, -42], ZZ), DMP([48, 0, 96], ZZ), DMP([144, 648, 288], ZZ),
-         DMP([624, 864, 384], ZZ), DMP([108, 312, 432, 192], ZZ)]
+    R, t = ring("t", ZZ)
+    f = [6*t**2 - 42,
+         48*t**2 + 96,
+         144*t**2 + 648*t + 288,
+         624*t**2 + 864*t + 384,
+         108*t**3 + 312*t**2 + 432*t + 192]
 
-    assert dup_decompose(f, ZZ['a']) == [f]
+    assert dup_decompose(f, R.to_domain()) == [f]
 
 
 def test_dmp_lift():

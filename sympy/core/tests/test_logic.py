@@ -1,11 +1,34 @@
-from sympy.core.logic import fuzzy_not, Logic, And, Or, Not, fuzzy_and
+from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
+    fuzzy_or, _fuzzy_group, _torf)
 from sympy.utilities.pytest import raises
-
-from sympy.core.compatibility import cmp
 
 T = True
 F = False
 U = None
+
+
+def test_torf():
+    from sympy.utilities.iterables import cartes
+    v = [T, F, U]
+    for i in cartes(*[v]*3):
+        assert _torf(i) is (
+            True if all(j for j in i) else (False if all(j is False for j in i) else None))
+
+
+def test_fuzzy_group():
+    from sympy.utilities.iterables import cartes
+    v = [T, F, U]
+    for i in cartes(*[v]*3):
+        assert _fuzzy_group(i) is (
+            None if None in i else (
+            True if all(j for j in i) else False))
+        assert _fuzzy_group(i, quick_exit=True) is (
+            None if (i.count(False) > 1) else (None if None in i else (
+            True if all(j for j in i) else False)))
+    it = (True if (i == 0) else None for i in range(2))
+    assert _torf(it) is None
+    it = (True if (i == 1) else None for i in range(2))
+    assert _torf(it) is None
 
 
 def test_fuzzy_not():
@@ -15,21 +38,29 @@ def test_fuzzy_not():
 
 
 def test_fuzzy_and():
-    assert fuzzy_and(*[T, T]) == T
-    assert fuzzy_and(*[T, F]) == F
-    assert fuzzy_and(*[T, U]) == U
-    assert fuzzy_and(*[F, F]) == F
-    assert fuzzy_and(*[F, U]) == F
-    assert fuzzy_and(*[U, U]) == U
     assert fuzzy_and([T, T]) == T
     assert fuzzy_and([T, F]) == F
     assert fuzzy_and([T, U]) == U
     assert fuzzy_and([F, F]) == F
     assert fuzzy_and([F, U]) == F
     assert fuzzy_and([U, U]) == U
-    assert [fuzzy_and(w) for w in [U, T, F]] == [U, T, F]
-    raises(ValueError, lambda: fuzzy_and([]))
-    raises(ValueError, lambda: fuzzy_and())
+    assert [fuzzy_and([w]) for w in [U, T, F]] == [U, T, F]
+    assert fuzzy_and([T, F, U]) == F
+    assert fuzzy_and([]) == T
+    raises(TypeError, lambda: fuzzy_and())
+
+
+def test_fuzzy_or():
+    assert fuzzy_or([T, T]) == T
+    assert fuzzy_or([T, F]) == T
+    assert fuzzy_or([T, U]) == T
+    assert fuzzy_or([F, F]) == F
+    assert fuzzy_or([F, U]) == U
+    assert fuzzy_or([U, U]) == U
+    assert [fuzzy_or([w]) for w in [U, T, F]] == [U, T, F]
+    assert fuzzy_or([T, F, U]) == T
+    assert fuzzy_or([]) == F
+    raises(TypeError, lambda: fuzzy_or())
 
 
 def test_logic_cmp():
@@ -39,7 +70,6 @@ def test_logic_cmp():
     assert hash(l1) == hash(l2)
     assert (l1 == l2) == T
     assert (l1 != l2) == F
-    assert cmp(l1, l2) == 0
 
     assert And('a', 'b', 'c') == And('b', 'a', 'c')
     assert And('a', 'b', 'c') == And('c', 'b', 'a')
@@ -122,6 +152,9 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a | & b'))
     raises(ValueError, lambda: S('a & & b'))
     raises(ValueError, lambda: S('a |'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('!'))
+    raises(ValueError, lambda: S('! a'))
 
 
 def test_logic_not():
@@ -132,3 +165,10 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+
+def test_formatting():
+    S = Logic.fromstring
+    raises(ValueError, lambda: S('a&b'))
+    raises(ValueError, lambda: S('a|b'))
+    raises(ValueError, lambda: S('! a'))

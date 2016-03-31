@@ -1,25 +1,33 @@
 """Implementaton of :class:`GMPYRationalField` class. """
 
-from sympy.polys.domains.rationalfield import RationalField
+from __future__ import print_function, division
 
+from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.domains.groundtypes import (
     GMPYRational, SymPyRational,
     gmpy_numer, gmpy_denom, gmpy_factorial, gmpy_qdiv,
 )
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class GMPYRationalField(RationalField):
     """Rational field based on GMPY mpq class. """
 
     dtype = GMPYRational
     zero = dtype(0)
     one = dtype(1)
+    tp = type(one)
     alias = 'QQ_gmpy'
 
     def __init__(self):
         pass
+
+    def get_ring(self):
+        """Returns ring associated with ``self``. """
+        from sympy.polys.domains import GMPYIntegerRing
+        return GMPYIntegerRing()
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
@@ -32,7 +40,7 @@ class GMPYRationalField(RationalField):
             return GMPYRational(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
-            return GMPYRational(*RR.as_integer_ratio(a))
+            return GMPYRational(*RR.to_rational(a))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -52,9 +60,9 @@ class GMPYRationalField(RationalField):
         """Convert a GMPY `mpq` object to `dtype`. """
         return a
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return GMPYRational(*K0.as_integer_ratio(a))
+        return GMPYRational(*K0.to_rational(a))
 
     def exquo(self, a, b):
         """Exact quotient of `a` and `b`, implies `__div__`.  """
@@ -62,7 +70,7 @@ class GMPYRationalField(RationalField):
 
     def quo(self, a, b):
         """Quotient of `a` and `b`, implies `__div__`. """
-        return GMPYRational(gmpy_qdiv(a, b))
+        return GMPYRational(gmpy_qdiv(GMPYRational(a), GMPYRational(b)))
 
     def rem(self, a, b):
         """Remainder of `a` and `b`, implies nothing.  """

@@ -3,24 +3,30 @@ Primality testing
 
 """
 
-# First, some helper functions
-def _bitlength(i):
-    """Returns the length in bits of n"""
-    length = 0
-    while i:
-        length += 1
-        i >>= 1
-    return length
+from __future__ import print_function, division
 
-def _is_perfect_square(n):
-    """Quickly answer whether n = a * a for some integer a."""
-    # We're only looking for a perfect square rather than a generic perfect
-    # power, so there are a number of quick tests that can be done that give
-    # us a ~5x speedup.  A common simple test that works pretty well:
-    #     m = n & 31
-    #     if m in [0,1,4,9,16,17,25]:
-    # Better, from the beautiful post at:
-    #      http://mersenneforum.org/showpost.php?p=110896
+from sympy.core.compatibility import range, as_int
+from sympy.core.numbers import Float
+
+from mpmath.libmp import bitcount as _bitlength
+
+
+
+def is_square(n, prep=True):
+    """Quickly answer whether n = a * a for some integer a.
+
+    References
+    ==========
+
+    [1]  http://mersenneforum.org/showpost.php?p=110896
+
+    """
+    if prep:
+        n = as_int(n)
+        if n < 0:
+            return False
+        if n in [0, 1]:
+            return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63;
@@ -35,16 +41,20 @@ def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
+
     """
     # do the Fermat test
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
     else:
-        for j in xrange(1, s):
+        for j in range(1, s):
             b = pow(b, 2, n)
             if b == n - 1:
                 return True
+            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+            if b == 1:
+                return False
     return False
 
 
@@ -59,8 +69,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/
-    Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -70,11 +79,12 @@ def mr(n, bases):
     False
     >>> mr(479001599, [31, 73])
     True
+
     """
     from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
-    n = int(n)
+    n = as_int(n)
     if n < 2:
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
@@ -90,6 +100,7 @@ def mr(n, bases):
                 return False
     return True
 
+
 def _lucas_sequence(n, P, Q, k):
     """Return the modular Lucas sequence (U_k, V_k, Q_k).
 
@@ -104,7 +115,8 @@ def _lucas_sequence(n, P, Q, k):
     Examples
     ========
     >>> from sympy.ntheory.primetest import _lucas_sequence
-    >>> U, V, Qk = _lucas_sequence(10**2000+4561, 3, 1, (10**2000+4561) // 2)
+    >>> N = 10**2000 + 4561
+    >>> U, V, Qk = _lucas_sequence(N, 3, 1, N//2)
     >>> print U, V, Qk
     0 2 1
 
@@ -197,16 +209,17 @@ def _lucas_selfridge_params(n):
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
-        g = igcd(abs(D),n)
+        g = igcd(abs(D), n)
         if g > 1 and g != n:
-            return (0,0,0)
+            return (0, 0, 0)
         if jacobi_symbol(D, n) == -1:
             break
         if D > 0:
-          D = -(D+2)
+          D = -D - 2
         else:
-          D = -D+2
-    return (D, 1, int( (1-D)/4 ))
+          D = -D + 2
+    return (D, 1, int((1 - D)/4))
+
 
 def _lucas_extrastrong_params(n):
     """Calculates the "extra strong" parameters (D, P, Q) for n.
@@ -221,9 +234,9 @@ def _lucas_extrastrong_params(n):
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
-        g = igcd(D,n)
+        g = igcd(D, n)
         if g > 1 and g != n:
-            return (0,0,0)
+            return (0, 0, 0)
         if jacobi_symbol(D, n) == -1:
             break
         P += 1
@@ -262,12 +275,12 @@ def is_lucas_prp(n):
     9071
     9179
     """
-    n = int(n)
+    n = as_int(n)
     if n == 2:
         return True
     if n < 2 or (n % 2) == 0:
         return False
-    if _is_perfect_square(n):
+    if is_square(n, False):
         return False
 
     D, P, Q = _lucas_selfridge_params(n)
@@ -275,6 +288,7 @@ def is_lucas_prp(n):
         return False
     U, V, Qk = _lucas_sequence(n, P, Q, n+1)
     return U == 0
+
 
 def is_strong_lucas_prp(n):
     """Strong Lucas compositeness test with Selfridge parameters.  Returns
@@ -306,12 +320,12 @@ def is_strong_lucas_prp(n):
     18971
     """
     from sympy.ntheory.factor_ import trailing
-    n = int(n)
+    n = as_int(n)
     if n == 2:
         return True
     if n < 2 or (n % 2) == 0:
         return False
-    if _is_perfect_square(n):
+    if is_square(n, False):
         return False
 
     D, P, Q = _lucas_selfridge_params(n)
@@ -332,6 +346,7 @@ def is_strong_lucas_prp(n):
             return True
         Qk = pow(Qk, 2, n)
     return False
+
 
 def is_extra_strong_lucas_prp(n):
     """Extra Strong Lucas compositeness test.  Returns False if n is
@@ -378,12 +393,12 @@ def is_extra_strong_lucas_prp(n):
     #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
     #      references on the MathWorld page, or run it and see Q=-1 is wrong.
     from sympy.ntheory.factor_ import trailing
-    n = int(n)
+    n = as_int(n)
     if n == 2:
         return True
     if n < 2 or (n % 2) == 0:
         return False
-    if _is_perfect_square(n):
+    if is_square(n, False):
         return False
 
     D, P, Q = _lucas_extrastrong_params(n)
@@ -445,13 +460,15 @@ def isprime(n):
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    n = int(n)
+    if isinstance(n, (Float, float)):
+        return False
+    n = as_int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.
     # The point here is just to speedily handle small numbers and many
     # composites.  Step 2 only requires that n <= 2 get handled here.
-    if n in [2,3,5]:
+    if n in [2, 3, 5]:
         return True
     if n < 2 or (n % 2) == 0 or (n % 3) == 0 or (n % 5) == 0:
         return False
@@ -464,14 +481,13 @@ def isprime(n):
     if n < 2809:
         return True
 
-
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
     from sympy.core.compatibility import HAS_GMPY
     if HAS_GMPY == 2:
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
-        return is_strong_prp(n,2) and is_strong_selfridge_prp(n)
+        return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
 
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:
@@ -481,15 +497,15 @@ def isprime(n):
     if n < 341531:
         return mr(n, [9345883071009581737])
     if n < 885594169:
-        return mr(n, [725270293939359937,3569819667048198375])
+        return mr(n, [725270293939359937, 3569819667048198375])
     if n < 350269456337:
-        return mr(n, [4230279247111683200,14694767155120705706,16641139526367750375])
+        return mr(n, [4230279247111683200, 14694767155120705706, 16641139526367750375])
     if n < 55245642489451:
-        return mr(n, [2,141889084524735,1199124725622454117,11096072698276303650])
+        return mr(n, [2, 141889084524735, 1199124725622454117, 11096072698276303650])
     if n < 7999252175582851:
-        return mr(n, [2,4130806001517,149795463772692060,186635894390467037,3967304179347715805])
+        return mr(n, [2, 4130806001517, 149795463772692060, 186635894390467037, 3967304179347715805])
     if n < 585226005592931977:
-        return mr(n, [2,123635709730000,9233062284813009,43835965440333360,761179012939631437,1263739024124850375])
+        return mr(n, [2, 123635709730000, 9233062284813009, 43835965440333360, 761179012939631437, 1263739024124850375])
     if n < 18446744073709551616:
         return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
 

@@ -1,9 +1,13 @@
 """OO layer for several polynomial representations. """
 
+from __future__ import print_function, division
+
 from sympy.core.sympify import CantSympify
 
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
+
+from sympy import oo
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -236,7 +240,7 @@ class DMP(PicklableWithSlots, CantSympify):
         """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = f.dom.to_sympy(v)
 
         return rep
@@ -256,7 +260,7 @@ class DMP(PicklableWithSlots, CantSympify):
 
     @classmethod
     def from_monoms_coeffs(cls, monoms, coeffs, lev, dom, ring=None):
-        return DMP(dict(zip(monoms, coeffs)), dom, lev, ring)
+        return DMP(dict(list(zip(monoms, coeffs))), dom, lev, ring)
 
     def to_ring(f):
         """Make the ground domain a ring. """
@@ -344,7 +348,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def eject(f, dom, front=False):
         """Eject selected generators into the ground domain. """
         F = dmp_eject(f.rep, f.lev, dom, front=front)
-        return f.__class__(F, dom, f.lev - len(dom.gens))
+        return f.__class__(F, dom, f.lev - len(dom.symbols))
 
     def exclude(f):
         r"""
@@ -414,7 +418,7 @@ class DMP(PicklableWithSlots, CantSympify):
         return f.per(dmp_abs(f.rep, f.lev, f.dom))
 
     def neg(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.per(dmp_neg(f.rep, f.lev, f.dom))
 
     def add(f, g):
@@ -502,12 +506,31 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def total_degree(f):
         """Returns the total degree of ``f``. """
-        return max([sum(m) for m in f.monoms()])
+        return max(sum(m) for m in f.monoms())
+
+    def homogenize(f, s):
+        """Return homogeneous polynomial of ``f``"""
+        td = f.total_degree()
+        result = {}
+        new_symbol = (s == len(f.terms()[0][0]))
+        for term in f.terms():
+            d = sum(term[0])
+            if d < td:
+                i = td - d
+            else:
+                i = 0
+            if new_symbol:
+                result[term[0] + (i,)] = term[1]
+            else:
+                l = list(term[0])
+                l[s] += i
+                result[tuple(l)] = term[1]
+        return DMP(result, f.dom, f.lev + int(new_symbol), f.ring)
 
     def homogeneous_order(f):
         """Returns the homogeneous order of ``f``. """
         if f.is_zero:
-            return -1
+            return -oo
 
         monoms = f.monoms()
         tdeg = sum(monoms[0])
@@ -616,14 +639,14 @@ class DMP(PicklableWithSlots, CantSympify):
         """Computes subresultant PRS sequence of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         R = dmp_subresultants(F, G, lev, dom)
-        return map(per, R)
+        return list(map(per, R))
 
     def resultant(f, g, includePRS=False):
         """Computes resultant of ``f`` and ``g`` via PRS. """
         lev, dom, per, F, G = f.unify(g)
         if includePRS:
             res, R = dmp_resultant(F, G, lev, dom, includePRS=includePRS)
-            return per(res, kill=True), map(per, R)
+            return per(res, kill=True), list(map(per, R))
         return per(dmp_resultant(F, G, lev, dom), kill=True)
 
     def discriminant(f):
@@ -687,7 +710,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def decompose(f):
         """Computes functional decomposition of ``f``. """
         if not f.lev:
-            return map(f.per, dup_decompose(f.rep, f.dom))
+            return list(map(f.per, dup_decompose(f.rep, f.dom)))
         else:
             raise ValueError('univariate polynomial expected')
 
@@ -701,7 +724,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def sturm(f):
         """Computes the Sturm sequence of ``f``. """
         if not f.lev:
-            return map(f.per, dup_sturm(f.rep, f.dom))
+            return list(map(f.per, dup_sturm(f.rep, f.dom)))
         else:
             raise ValueError('univariate polynomial expected')
 
@@ -997,6 +1020,8 @@ class DMP(PicklableWithSlots, CantSympify):
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
 
+    __bool__ = __nonzero__
+
 
 def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
@@ -1207,7 +1232,7 @@ class DMF(PicklableWithSlots, CantSympify):
         return f.per(f.num, f.den)
 
     def neg(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
     def add(f, g):
@@ -1442,6 +1467,8 @@ class DMF(PicklableWithSlots, CantSympify):
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
+    __bool__ = __nonzero__
+
 
 def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
@@ -1522,7 +1549,7 @@ class ANP(PicklableWithSlots, CantSympify):
         """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, 0, f.dom)
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = f.dom.to_sympy(v)
 
         return rep
@@ -1545,7 +1572,7 @@ class ANP(PicklableWithSlots, CantSympify):
 
     @classmethod
     def from_list(cls, rep, mod, dom):
-        return ANP(dup_strip(map(dom.convert, rep)), mod, dom)
+        return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))
@@ -1704,3 +1731,5 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __nonzero__(f):
         return bool(f.rep)
+
+    __bool__ = __nonzero__

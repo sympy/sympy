@@ -1,7 +1,8 @@
 """Gosper's algorithm for hypergeometric summation. """
+from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
@@ -66,7 +67,7 @@ def gosper_normal(f, g, n, polys=True):
         A = A.quo(d)
         B = B.quo(d.shift(-i))
 
-        for j in xrange(1, i + 1):
+        for j in range(1, i + 1):
             C *= d.shift(-j)
 
     A = A.mul_ground(Z)
@@ -117,11 +118,11 @@ def gosper_term(f, n):
     K = S(C.degree())
 
     if (N != M) or (A.LC() != B.LC()):
-        D = set([K - max(N, M)])
+        D = {K - max(N, M)}
     elif not N:
-        D = set([K - N + 1, S(0)])
+        D = {K - N + 1, S(0)}
     else:
-        D = set([K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()])
+        D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
 
     for d in set(D):
         if not d.is_Integer or d < 0:
@@ -177,11 +178,11 @@ def gosper_sum(f, k):
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
     >>> gosper_sum(f, (k, 0, n))
-    (-n! + 2*(2*n + 1)!)/(2*n + 1)!
+    (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)
     >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
     True
     >>> gosper_sum(f, (k, 3, n))
-    (-60*n! + (2*n + 1)!)/(60*(2*n + 1)!)
+    (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))
     >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 

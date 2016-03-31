@@ -9,6 +9,8 @@ Usage:
 $ bin/test_import
 """
 
+from __future__ import print_function
+
 n_tests = 50
 
 from pexpect import run
@@ -22,10 +24,10 @@ def test():
 
 
 tests = [test() for x in range(n_tests + 1)]
-print "Note: the first run (warm up) was not included in the average + std dev"
-print "All runs (including warm up):"
-print tests
+print("Note: the first run (warm up) was not included in the average + std dev")
+print("All runs (including warm up):")
+print(tests)
 # skip the first run (warm up):
 tests = tests[1:]
-print "Number of tests: %d" % (n_tests)
-print 'The speed of "import sympy" is: %f +- %f' % (mean(tests), std(tests))
+print("Number of tests: %d" % (n_tests))
+print('The speed of "import sympy" is: %f +- %f' % (mean(tests), std(tests)))

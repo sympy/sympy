@@ -1,4 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import range
 
 
 def recurrence_memo(initial):
@@ -15,7 +18,7 @@ def recurrence_memo(initial):
             L = len(cache)
             if n <= L - 1:
                 return cache[n]
-            for i in xrange(L, n + 1):
+            for i in range(L, n + 1):
                 cache.append(f(i, cache))
             return cache[-1]
         return g
@@ -41,7 +44,7 @@ def assoc_recurrence_memo(base_seq):
             if n < L:
                 return cache[n][m]
 
-            for i in xrange(L, n + 1):
+            for i in range(L, n + 1):
                 # get base sequence
                 F_i0 = base_seq(i)
                 F_i_cache = [F_i0]
@@ -49,7 +52,7 @@ def assoc_recurrence_memo(base_seq):
 
                 # XXX only works for m <= n cases
                 # generate assoc sequence
-                for j in xrange(1, i + 1):
+                for j in range(1, i + 1):
                     F_ij = f(i, j, cache)
                     F_i_cache.append(F_ij)
 

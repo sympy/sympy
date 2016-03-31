@@ -1,5 +1,7 @@
-from itertools import ifilter
+from __future__ import print_function, division
+
 from collections import defaultdict
+from sympy.core.compatibility import range
 
 
 def binomial_coefficients(n):
@@ -20,7 +22,7 @@ def binomial_coefficients(n):
     """
     d = {(0, n): 1, (n, 0): 1}
     a = 1
-    for k in xrange(1, n//2 + 1):
+    for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
         d[k, n - k] = d[n - k, k] = a
     return d
@@ -44,7 +46,7 @@ def binomial_coefficients_list(n):
     """
     d = [1] * (n + 1)
     a = 1
-    for k in xrange(1, n//2 + 1):
+    for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
         d[k] = d[n - k] = a
     return d
@@ -81,8 +83,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     if not m:
         if n:
             return {}
-        else:
-            return {(): 1}
+        return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
     symbols = [(0,)*i + (1,) + (0,)*(m - i - 1) for i in range(m)]
@@ -91,9 +92,9 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     r = {_tuple(aa*n for aa in s0): 1}
     l = [0] * (n*(m - 1) + 1)
     l[0] = r.items()
-    for k in xrange(1, n*(m - 1) + 1):
+    for k in range(1, n*(m - 1) + 1):
         d = defaultdict(int)
-        for i in xrange(1, min(m, k + 1)):
+        for i in range(1, min(m, k + 1)):
             nn = (n + 1)*i - k
             if not nn:
                 continue
@@ -103,7 +104,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
                 d[tt] += nn*c2
                 if not d[tt]:
                     del d[tt]
-        r1 = [(t, c//k) for (t, c) in d.iteritems()]
+        r1 = [(t, c//k) for (t, c) in d.items()]
         l[k] = r1
         r.update(r1)
     return r
@@ -137,8 +138,7 @@ def multinomial_coefficients(m, n):
     if not m:
         if n:
             return {}
-        else:
-            return {(): 1}
+        return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
     if m >= 2*n and n > 1:
@@ -168,7 +168,7 @@ def multinomial_coefficients(m, n):
             t[j] += 1
         # compute the value
         # NB: the initialization of v was done above
-        for k in xrange(start, m):
+        for k in range(start, m):
             if t[k]:
                 t[k] -= 1
                 v += r[tuple(t)]
@@ -197,23 +197,23 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
 
     >>> from sympy.ntheory.multinomial import multinomial_coefficients_iterator
     >>> it = multinomial_coefficients_iterator(20,3)
-    >>> it.next()
+    >>> next(it)
     ((3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 1)
     """
     if m < 2*n or n == 1:
         mc = multinomial_coefficients(m, n)
-        for k, v in mc.iteritems():
+        for k, v in mc.items():
             yield(k, v)
     else:
         mc = multinomial_coefficients(n, n)
         mc1 = {}
-        for k, v in mc.iteritems():
-            mc1[_tuple(ifilter(None, k))] = v
+        for k, v in mc.items():
+            mc1[_tuple(filter(None, k))] = v
         mc = mc1
 
         t = [n] + [0] * (m - 1)
         t1 = _tuple(t)
-        b = _tuple(ifilter(None, t1))
+        b = _tuple(filter(None, t1))
         yield (t1, mc[b])
         if n:
             j = 0  # j will be the leftmost nonzero position
@@ -235,5 +235,5 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
 
             t[0] -= 1
             t1 = _tuple(t)
-            b = _tuple(ifilter(None, t1))
+            b = _tuple(filter(None, t1))
             yield (t1, mc[b])

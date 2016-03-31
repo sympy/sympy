@@ -1,6 +1,6 @@
 """Tests for the PolynomialRing classes. """
 
-from sympy.polys.domains import QQ, ZZ, PolynomialRing
+from sympy.polys.domains import QQ, ZZ
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed, NotReversible
 
 from sympy.abc import x, y
@@ -9,13 +9,13 @@ from sympy.utilities.pytest import raises
 
 
 def test_build_order():
-    R = QQ.poly_ring(x, y, order=(("lex", x), ("ilex", y)))
+    R = QQ.old_poly_ring(x, y, order=(("lex", x), ("ilex", y)))
     assert R.order((1, 5)) == ((1,), (-5,))
 
 
 def test_globalring():
-    Qxy = QQ.frac_field(x, y)
-    R = QQ[x, y]
+    Qxy = QQ.old_frac_field(x, y)
+    R = QQ.old_poly_ring(x, y)
     X = R.convert(x)
     Y = R.convert(y)
 
@@ -34,7 +34,7 @@ def test_globalring():
     raises(ExactQuotientFailed, lambda: X/y)
     assert X**2 / X == X
 
-    assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
+    assert R.from_GlobalPolynomialRing(ZZ.old_poly_ring(x, y).convert(x), ZZ.old_poly_ring(x, y)) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
     assert R.from_FractionField(Qxy.convert(x)/y, Qxy) is None
 
@@ -42,8 +42,8 @@ def test_globalring():
 
 
 def test_localring():
-    Qxy = QQ.frac_field(x, y)
-    R = QQ.poly_ring(x, y, order="ilex")
+    Qxy = QQ.old_frac_field(x, y)
+    R = QQ.old_poly_ring(x, y, order="ilex")
     X = R.convert(x)
     Y = R.convert(y)
 
@@ -62,7 +62,7 @@ def test_localring():
     assert X + 1 == R.convert(x + 1)
     assert X**2 / X == X
 
-    assert R.from_GlobalPolynomialRing(ZZ[x, y].convert(x), ZZ[x, y]) == X
+    assert R.from_GlobalPolynomialRing(ZZ.old_poly_ring(x, y).convert(x), ZZ.old_poly_ring(x, y)) == X
     assert R.from_FractionField(Qxy.convert(x), Qxy) == X
     raises(CoercionFailed, lambda: R.from_FractionField(Qxy.convert(x)/y, Qxy))
     raises(ExactQuotientFailed, lambda: X/Y)
@@ -74,8 +74,8 @@ def test_localring():
 
 
 def test_conversion():
-    L = QQ.poly_ring(x, y, order="ilex")
-    G = QQ[x, y]
+    L = QQ.old_poly_ring(x, y, order="ilex")
+    G = QQ.old_poly_ring(x, y)
 
     assert L.convert(x) == L.convert(G.convert(x), G)
     assert G.convert(x) == G.convert(L.convert(x), L)
@@ -83,19 +83,19 @@ def test_conversion():
 
 
 def test_units():
-    R = QQ[x]
+    R = QQ.old_poly_ring(x)
     assert R.is_unit(R.convert(1))
     assert R.is_unit(R.convert(2))
     assert not R.is_unit(R.convert(x))
     assert not R.is_unit(R.convert(1 + x))
 
-    R = QQ.poly_ring(x, order='ilex')
+    R = QQ.old_poly_ring(x, order='ilex')
     assert R.is_unit(R.convert(1))
     assert R.is_unit(R.convert(2))
     assert not R.is_unit(R.convert(x))
     assert R.is_unit(R.convert(1 + x))
 
-    R = ZZ[x]
+    R = ZZ.old_poly_ring(x)
     assert R.is_unit(R.convert(1))
     assert not R.is_unit(R.convert(2))
     assert not R.is_unit(R.convert(x))

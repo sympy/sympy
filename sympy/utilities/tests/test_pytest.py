@@ -1,5 +1,9 @@
-from __future__ import with_statement
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, USE_PYTEST
+
+if USE_PYTEST:
+    import py.test
+    pytestmark = py.test.mark.skipif(USE_PYTEST,
+                                     reason=("using py.test"))
 
 # Test callables
 
@@ -14,7 +18,7 @@ def test_lack_of_exception_triggers_AssertionError_callable():
     try:
         raises(Exception, lambda: 1 + 1)
         assert False
-    except AssertionError, e:
+    except AssertionError as e:
         assert str(e) == "DID NOT RAISE"
 
 
@@ -24,7 +28,7 @@ def test_unexpected_exception_is_passed_through_callable():
     try:
         raises(TypeError, f)
         assert False
-    except ValueError, e:
+    except ValueError as e:
         assert str(e) == "some error message"
 
 # Test with statement
@@ -39,7 +43,7 @@ def test_lack_of_exception_triggers_AssertionError_with():
         with raises(Exception):
             1 + 1
         assert False
-    except AssertionError, e:
+    except AssertionError as e:
         assert str(e) == "DID NOT RAISE"
 
 
@@ -48,7 +52,7 @@ def test_unexpected_exception_is_passed_through_with():
         with raises(TypeError):
             raise ValueError("some error message")
         assert False
-    except ValueError, e:
+    except ValueError as e:
         assert str(e) == "some error message"
 
 # Now we can use raises() instead of try/catch

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from plot_curve import PlotCurve
 from plot_surface import PlotSurface
 

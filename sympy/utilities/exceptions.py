@@ -2,8 +2,11 @@
 General SymPy exceptions and warnings.
 """
 
+from __future__ import print_function, division
+
+import warnings
+
 from sympy.utilities.misc import filldedent
-from warnings import warn as warning
 
 
 class SymPyDeprecationWarning(DeprecationWarning):
@@ -77,12 +80,12 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(
     ...    feature="Old feature",
     ...    useinstead="new feature",
-    ...    issue=2142)
+    ...    issue=5241)
     Old feature has been deprecated. Use new feature instead. See
-    http://code.google.com/p/sympy/issues/detail?id=2142 for more info.
+    https://github.com/sympy/sympy/issues/5241 for more info.
 
-    Every formal deprecation should have an associated issue in the Google
-    Code issue tracker.  All such issues should have the DeprecationRemoval
+    Every formal deprecation should have an associated issue in the GitHub
+    issue tracker.  All such issues should have the DeprecationRemoval
     tag.
 
     Additionally, each formal deprecation should mark the first release for
@@ -128,7 +131,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
             self.fullMessage += "Use %s instead. " % useinstead
         if issue:
             self.fullMessage += ("See "
-                "http://code.google.com/p/sympy/issues/detail?id=%d for more "
+                "https://github.com/sympy/sympy/issues/%d for more "
                 "info. ") % issue
 
         if value:
@@ -143,7 +146,12 @@ class SymPyDeprecationWarning(DeprecationWarning):
     def __str__(self):
         return '\n%s\n' % filldedent(self.fullMessage)
 
-    def warn(self):
-        see_above = self
-        # the next line is what the user will see after the error is printed
-        warning(see_above, SymPyDeprecationWarning)
+    def warn(self, stacklevel=2):
+        see_above = self.fullMessage
+        # the next line is what the user would see after the error is printed
+        # if stacklevel was set to 1. If you are writting a wrapper around this,
+        # increase the stacklevel accordingly.
+        warnings.warn(see_above, SymPyDeprecationWarning, stacklevel=stacklevel)
+
+# Python by default hides DeprecationWarnings, which we do not want.
+warnings.simplefilter("once", SymPyDeprecationWarning)

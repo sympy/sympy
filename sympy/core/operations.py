@@ -1,9 +1,11 @@
-from sympy.core.core import C
+from __future__ import print_function, division
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp, ordered
+from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
+from sympy.core.evaluate import global_evaluate
 
 
 class AssocOp(Basic):
@@ -24,10 +26,11 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        args = map(_sympify, args)
+        from sympy import Order
+        args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', True):
+        if not options.pop('evaluate', global_evaluate[0]):
             return cls._from_args(args)
 
         if len(args) == 0:
@@ -40,7 +43,7 @@ class AssocOp(Basic):
         obj = cls._from_args(c_part + nc_part, is_commutative)
 
         if order_symbols is not None:
-            return C.Order(obj, *order_symbols)
+            return Order(obj, *order_symbols)
         return obj
 
     @classmethod
@@ -159,6 +162,12 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        # make sure expr is Expr if pattern is Expr
+        from .expr import Add, Expr
+        from sympy import Mul
+        if isinstance(self, Expr) and not isinstance(expr, Expr):
+            return None
+
         # handle simple patterns
         if self == expr:
             return repl_dict
@@ -168,8 +177,8 @@ class AssocOp(Basic):
             return d
 
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        from function import WildFunction
-        from symbol import Wild
+        from .function import WildFunction
+        from .symbol import Wild
         wild_part = []
         exact_part = []
         for p in ordered(self.args):
@@ -214,13 +223,9 @@ class AssocOp(Basic):
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
                         if expr.exp > 0:
-                            expr = C.Mul(*
-                                [expr.base, expr.base**(expr.exp - 1)],
-                                **{'evaluate': False})
+                            expr = Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
-                            expr = C.Mul(*
-                                [1/expr.base, expr.base**(expr.exp + 1)],
-                                **{'evaluate': False})
+                            expr = Mul(*[1/expr.base, expr.base**(expr.exp + 1)], evaluate=False)
                         i += 1
                         continue
 
@@ -229,16 +234,14 @@ class AssocOp(Basic):
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
                         if c > 0:
-                            expr = C.Add(*[e, (c - 1)*e],
-                                **{'evaluate': False})
+                            expr = Add(*[e, (c - 1)*e], evaluate=False)
                         else:
-                            expr = C.Add(*[-e, (c + 1)*e],
-                                **{'evaluate': False})
+                            expr = Add(*[-e, (c + 1)*e], evaluate=False)
                         i += 1
                         continue
 
                     # try collection on non-Wild symbols
-                    from sympy.simplify.simplify import collect
+                    from sympy.simplify.radsimp import collect
                     was = expr
                     did = set()
                     for w in reversed(wild_part):
@@ -283,30 +286,11 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in xrange(len(_nc) - len(nc)):
+                        for i in range(len(_nc) - len(nc)):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
         return is_in
-
-    def _eval_template_is_attr(self, is_attr, when_multiple=False):
-        # return True if all elements have the property;
-        # False if one doesn't have the property; and
-        # if more than one doesn't have property, return
-        #    False if when_multiple = False
-        #    None if when_multiple is not False
-        quick = when_multiple is None
-        multi = False
-        for t in self.args:
-            a = getattr(t, is_attr)
-            if a is True:
-                continue
-            if a is None:
-                return
-            if quick and multi:
-                return None
-            multi = True
-        return not multi
 
     def _eval_evalf(self, prec):
         """
@@ -320,27 +304,36 @@ class AssocOp(Basic):
         walks the args of the non-number part recursively (doing the same
         thing).
         """
-        x, tail = self.as_independent(C.Symbol)
-
-        if tail is not self.identity:
-            # here, we have a number so we just call to _evalf with prec;
-            # prec is not the same as n, it is the binary precision so
-            # that's why we don't call to evalf.
-            x = x._evalf(prec) if x is not self.identity else self.identity
-            args = []
-            for a in self.func.make_args(tail):
-                # here we call to _eval_evalf since we don't know what we
-                # are dealing with and all other _eval_evalf routines should
-                # be doing the same thing (i.e. taking binary prec and
-                # finding the evalf-able args)
-                newa = a._eval_evalf(prec)
-                if newa is None:
-                    args.append(a)
-                else:
-                    args.append(newa)
-            if not _aresame(tuple(args), self.func.make_args(tail)):
-                tail = self.func(*args)
-            return self.func(x, tail)
+        from .add import Add
+        from .mul import Mul
+        from .symbol import Symbol
+        from .function import AppliedUndef
+        if isinstance(self, (Mul, Add)):
+            x, tail = self.as_independent(Symbol, AppliedUndef)
+            # if x is an AssocOp Function then the _evalf below will
+            # call _eval_evalf (here) so we must break the recursion
+            if not (tail is self.identity or
+                    isinstance(x, AssocOp) and x.is_Function or
+                    x is self.identity and isinstance(tail, AssocOp)):
+                # here, we have a number so we just call to _evalf with prec;
+                # prec is not the same as n, it is the binary precision so
+                # that's why we don't call to evalf.
+                x = x._evalf(prec) if x is not self.identity else self.identity
+                args = []
+                tail_args = tuple(self.func.make_args(tail))
+                for a in tail_args:
+                    # here we call to _eval_evalf since we don't know what we
+                    # are dealing with and all other _eval_evalf routines should
+                    # be doing the same thing (i.e. taking binary prec and
+                    # finding the evalf-able args)
+                    newa = a._eval_evalf(prec)
+                    if newa is None:
+                        args.append(a)
+                    else:
+                        args.append(newa)
+                if not _aresame(tuple(args), tail_args):
+                    tail = self.func(*args)
+                return self.func(x, tail)
 
         # this is the same as above, but there were no pure-number args to
         # deal with
@@ -416,13 +409,13 @@ class LatticeOp(AssocOp):
     is_commutative = True
 
     def __new__(cls, *args, **options):
-        args = (sympify(arg) for arg in args)
+        args = (_sympify(arg) for arg in args)
         try:
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
-            return cls.zero
+            return sympify(cls.zero)
         if not _args:
-            return cls.identity
+            return sympify(cls.identity)
         elif len(_args) == 1:
             return set(_args).pop()
         else:
@@ -435,14 +428,14 @@ class LatticeOp(AssocOp):
     @classmethod
     def _new_args_filter(cls, arg_sequence, call_cls=None):
         """Generator filtering args"""
-        cls = call_cls or cls
+        ncls = call_cls or cls
         for arg in arg_sequence:
-            if arg == cls.zero:
+            if arg == ncls.zero:
                 raise ShortCircuit(arg)
-            elif arg == cls.identity:
+            elif arg == ncls.identity:
                 continue
-            elif arg.func == cls:
-                for x in arg.iter_basic_args():
+            elif arg.func == ncls:
+                for x in arg.args:
                     yield x
             else:
                 yield arg
@@ -475,4 +468,4 @@ class LatticeOp(AssocOp):
 
     @staticmethod
     def _compare_pretty(a, b):
-        return cmp(str(a), str(b))
+        return (str(a) > str(b)) - (str(a) < str(b))

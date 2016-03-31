@@ -1,19 +1,24 @@
+from __future__ import print_function
 from textwrap import dedent
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial)
+    factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
+from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, flatten,
-    generate_bell, generate_derangements, generate_involutions,
+    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
+    flatten, generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions, multiset_permutations,
-    necklaces, numbered_symbols, ordered, partitions, permutations,
-    postfixes, postorder_traversal, prefixes, reshape, rotate_left,
-    rotate_right, runs, sift, subsets, take, topological_sort, unflatten,
-    uniq, variations)
+    multiset_combinations, multiset_partitions,
+    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
+    permutations, postfixes, postorder_traversal, prefixes, reshape,
+    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
+    unflatten, uniq, variations)
+from sympy.utilities.enumerative import (
+    factoring_visitor, multiset_partitions_taocp )
+
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -30,7 +35,7 @@ def test_postorder_traversal():
     expr = Piecewise((x, x < 1), (x**2, True))
     expected = [
         x, 1, x, x < 1, ExprCondPair(x, x < 1),
-        ExprCondPair.true_sentinel, 2, x, x**2,
+        2, x, x**2, true,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
@@ -65,7 +70,7 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
-    assert flatten(set([1, 11, 2])) == list(set([1, 11, 2]))
+    assert flatten({1, 11, 2}) == list({1, 11, 2})
 
 
 def test_group():
@@ -95,7 +100,7 @@ def test_subsets():
     assert list(subsets([1, 2, 3], 1)) == [(1,), (2,), (3,)]
     assert list(subsets([1, 2, 3], 2)) == [(1, 2), (1, 3), (2, 3)]
     assert list(subsets([1, 2, 3], 3)) == [(1, 2, 3)]
-    l = range(4)
+    l = list(range(4))
     assert list(subsets(l, 0, repetition=True)) == [()]
     assert list(subsets(l, 1, repetition=True)) == [(0,), (1,), (2,), (3,)]
     assert list(subsets(l, 2, repetition=True)) == [(0, 0), (0, 1), (0, 2),
@@ -131,7 +136,7 @@ def test_subsets():
 
 def test_variations():
     # permutations
-    l = range(4)
+    l = list(range(4))
     assert list(variations(l, 0, repetition=False)) == [()]
     assert list(variations(l, 1, repetition=False)) == [(0,), (1,), (2,), (3,)]
     assert list(variations(l, 2, repetition=False)) == [(0, 1), (0, 2), (0, 3), (1, 0), (1, 2), (1, 3), (2, 0), (2, 1), (2, 3), (3, 0), (3, 1), (3, 2)]
@@ -159,16 +164,22 @@ def test_cartes():
     assert list(cartes()) == [()]
     assert list(cartes('a')) == [('a',)]
     assert list(cartes('a', repeat=2)) == [('a', 'a')]
-    assert list(cartes(range(2))) == [(0,), (1,)]
+    assert list(cartes(list(range(2)))) == [(0,), (1,)]
 
+def test_filter_symbols():
+    s = numbered_symbols()
+    filtered = filter_symbols(s, symbols("x0 x2 x3"))
+    assert take(filtered, 3) == list(symbols("x1 x4 x5"))
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
-    assert isinstance(s.next(), Dummy)
+    assert isinstance(next(s), Dummy)
+    assert next(numbered_symbols('C', start=1, exclude=[symbols('C1')])) == \
+        symbols('C2')
 
 
 def test_sift():
-    assert sift(range(5), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift(list(range(5)), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
     assert sift([x, y], lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift([S.One], lambda _: _.has(x)) == {False: [1]}
 
@@ -286,7 +297,24 @@ def test_multiset_partitions():
     assert list(multiset_partitions('ab', 1)) == [[['a', 'b']]]
     assert list(multiset_partitions('aaa', 1)) == [['aaa']]
     assert list(multiset_partitions([1, 1], 1)) == [[[1, 1]]]
-
+    ans = [('mpsyy',), ('mpsy', 'y'), ('mps', 'yy'), ('mps', 'y', 'y'),
+           ('mpyy', 's'), ('mpy', 'sy'), ('mpy', 's', 'y'), ('mp', 'syy'),
+           ('mp', 'sy', 'y'), ('mp', 's', 'yy'), ('mp', 's', 'y', 'y'),
+           ('msyy', 'p'), ('msy', 'py'), ('msy', 'p', 'y'), ('ms', 'pyy'),
+           ('ms', 'py', 'y'), ('ms', 'p', 'yy'), ('ms', 'p', 'y', 'y'),
+           ('myy', 'ps'), ('myy', 'p', 's'), ('my', 'psy'), ('my', 'ps', 'y'),
+           ('my', 'py', 's'), ('my', 'p', 'sy'), ('my', 'p', 's', 'y'),
+           ('m', 'psyy'), ('m', 'psy', 'y'), ('m', 'ps', 'yy'),
+           ('m', 'ps', 'y', 'y'), ('m', 'pyy', 's'), ('m', 'py', 'sy'),
+           ('m', 'py', 's', 'y'), ('m', 'p', 'syy'),
+           ('m', 'p', 'sy', 'y'), ('m', 'p', 's', 'yy'),
+           ('m', 'p', 's', 'y', 'y')]
+    assert list(tuple("".join(part) for part in p)
+                for p in multiset_partitions('sympy')) == ans
+    factorings = [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3],
+                  [6, 2, 2], [2, 2, 2, 3]]
+    assert list(factoring_visitor(p, [2,3]) for
+                p in multiset_partitions_taocp([3, 1])) == factorings
 
 def test_multiset_combinations():
     ans = ['iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
@@ -296,7 +324,7 @@ def test_multiset_combinations():
     M = multiset('mississippi')
     assert [''.join(i) for i in
             list(multiset_combinations(M, 3))] == ans
-    assert [''.join(i) for i in list(multiset_combinations(M, 30))] == []
+    assert [''.join(i) for i in multiset_combinations(M, 30)] == []
     assert list(multiset_combinations([[1], [2, 3]], 2)) == [[[1], [2, 3]]]
     assert len(list(multiset_combinations('a', 3))) == 0
     assert len(list(multiset_combinations('a', 0))) == 1
@@ -316,9 +344,9 @@ def test_multiset_permutations():
 
     def test():
         for i in range(1, 7):
-            print i
+            print(i)
             for p in multiset_permutations([0, 0, 1, 0, 1], i):
-                print p
+                print(p)
     assert capture(lambda: test()) == dedent('''\
         1
         [0]
@@ -408,10 +436,20 @@ def test_binary_partitions():
 
 
 def test_bell_perm():
-    assert [len(list(generate_bell(i))) for i in xrange(1, 7)] == [
-        factorial(i) for i in xrange(1, 7)]
+    assert [len(set(generate_bell(i))) for i in range(1, 7)] == [
+        factorial(i) for i in range(1, 7)]
     assert list(generate_bell(3)) == [
-        (0, 1, 2), (1, 0, 2), (1, 2, 0), (2, 1, 0), (2, 0, 1), (0, 2, 1)]
+        (0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
+    # generate_bell and trotterjohnson are advertised to return the same
+    # permutations; this is not technically necessary so this test could
+    # be removed
+    for n in range(1, 5):
+        p = Permutation(range(n))
+        b = generate_bell(n)
+        for bi in b:
+            assert bi == tuple(p.array_form)
+            p = p.next_trotterjohnson()
+    raises(ValueError, lambda: list(generate_bell(0)))  # XXX is this consistent with other permutation algorithms?
 
 
 def test_involutions():
@@ -419,11 +457,11 @@ def test_involutions():
     for n, N in enumerate(lengths):
         i = list(generate_involutions(n + 1))
         assert len(i) == N
-        assert len(set([Permutation(j)**2 for j in i])) == 1
+        assert len({Permutation(j)**2 for j in i}) == 1
 
 
 def test_derangements():
-    assert len(list(generate_derangements(range(6)))) == 265
+    assert len(list(generate_derangements(list(range(6))))) == 265
     assert ''.join(''.join(i) for i in generate_derangements('abcde')) == (
     'badecbaecdbcaedbcdeabceadbdaecbdeacbdecabeacdbedacbedcacabedcadebcaebd'
     'cdaebcdbeacdeabcdebaceabdcebadcedabcedbadabecdaebcdaecbdcaebdcbeadceab'
@@ -452,6 +490,30 @@ def test_necklaces():
         [6,  14,  13,  92],
         [7,  20,  18, 198]])
 
+def test_bracelets():
+    bc = [i for i in bracelets(2, 4)]
+    assert Matrix(bc) == Matrix([
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [1, 1],
+        [1, 2],
+        [1, 3],
+        [2, 2],
+        [2, 3],
+        [3, 3]
+        ])
+    bc = [i for i in bracelets(4, 2)]
+    assert Matrix(bc) == Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 1],
+        [0, 1, 0, 1],
+        [0, 1, 1, 1],
+        [1, 1, 1, 1]
+    ])
+
 
 def test_generate_oriented_forest():
     assert list(generate_oriented_forest(5)) == [[0, 1, 2, 3, 4],
@@ -464,24 +526,24 @@ def test_generate_oriented_forest():
 
 
 def test_unflatten():
-    r = range(10)
-    assert unflatten(r) == zip(r[::2], r[1::2])
+    r = list(range(10))
+    assert unflatten(r) == list(zip(r[::2], r[1::2]))
     assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
-    raises(ValueError, lambda: unflatten(range(10), 3))
-    raises(ValueError, lambda: unflatten(range(10), -2))
+    raises(ValueError, lambda: unflatten(list(range(10)), 3))
+    raises(ValueError, lambda: unflatten(list(range(10)), -2))
 
 
 def test_common_prefix_suffix():
     assert common_prefix([], [1]) == []
-    assert common_prefix(range(3)) == [0, 1, 2]
-    assert common_prefix(range(3), range(4)) == [0, 1, 2]
+    assert common_prefix(list(range(3))) == [0, 1, 2]
+    assert common_prefix(list(range(3)), list(range(4))) == [0, 1, 2]
     assert common_prefix([1, 2, 3], [1, 2, 5]) == [1, 2]
     assert common_prefix([1, 2, 3], [1, 3, 5]) == [1]
 
     assert common_suffix([], [1]) == []
-    assert common_suffix(range(3)) == [0, 1, 2]
-    assert common_suffix(range(3), range(3)) == [0, 1, 2]
-    assert common_suffix(range(3), range(4)) == []
+    assert common_suffix(list(range(3))) == [0, 1, 2]
+    assert common_suffix(list(range(3)), list(range(3))) == [0, 1, 2]
+    assert common_suffix(list(range(3)), list(range(4))) == []
     assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
     assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]
 
@@ -520,7 +582,7 @@ def test_runs():
 
 
 def test_reshape():
-    seq = range(1, 9)
+    seq = list(range(1, 9))
     assert reshape(seq, [4]) == \
         [[1, 2, 3, 4], [5, 6, 7, 8]]
     assert reshape(seq, (4,)) == \
@@ -537,8 +599,8 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
-    assert reshape(range(12), [2, [3], set([2]), (1, (3,), 1)]) == \
-        [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+    assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
+        [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
 
 def test_uniq():
@@ -555,7 +617,7 @@ def test_uniq():
 
 
 def test_kbins():
-    assert len(list(kbins('1123', 2, ordered=01))) == 24
+    assert len(list(kbins('1123', 2, ordered=1))) == 24
     assert len(list(kbins('1123', 2, ordered=11))) == 36
     assert len(list(kbins('1123', 2, ordered=10))) == 10
     assert len(list(kbins('1123', 2, ordered=0))) == 5
@@ -563,9 +625,9 @@ def test_kbins():
 
     def test():
         for ordered in [None, 0, 1, 10, 11]:
-            print 'ordered =', ordered
+            print('ordered =', ordered)
             for p in kbins([0, 0, 1], 2, ordered=ordered):
-                print '   ', p
+                print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
             [[0], [0, 1]]
@@ -592,9 +654,9 @@ def test_kbins():
 
     def test():
         for ordered in [None, 0, 1, 10, 11]:
-            print 'ordered =', ordered
-            for p in kbins(range(3), 2, ordered=ordered):
-                print '   ', p
+            print('ordered =', ordered)
+            for p in kbins(list(range(3)), 2, ordered=ordered):
+                print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
             [[0], [1, 2]]
@@ -634,7 +696,7 @@ def test_kbins():
 
 def test_has_dups():
     assert has_dups(set()) is False
-    assert has_dups(range(3)) is False
+    assert has_dups(list(range(3))) is False
     assert has_dups([1, 2, 1]) is True
 
 

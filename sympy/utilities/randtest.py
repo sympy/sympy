@@ -1,9 +1,15 @@
 """ Helpers for randomized testing """
 
+from __future__ import print_function, division
+
 from random import uniform
 import random
 
-from sympy import I, nsimplify, Tuple, Symbol
+from sympy.core.numbers import I
+from sympy.simplify.simplify import nsimplify
+from sympy.core.containers import Tuple
+from sympy.core.numbers import comp
+from sympy.core.symbol import Symbol
 from sympy.core.compatibility import is_sequence, as_int
 
 
@@ -20,25 +26,7 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
     return nsimplify(A, rational=True) + I*nsimplify(B, rational=True)
 
 
-def comp(z1, z2, tol):
-    """Return a bool indicating whether the error between z1 and z2 is <= tol.
-
-    If z2 is non-zero and ``|z1| > 1`` the error is normalized by ``|z1|``, so
-    if you want the absolute error, call this as ``comp(z1 - z2, 0, tol)``.
-    """
-    if not z1:
-        z1, z2 = z2, z1
-    if not z1:
-        return True
-    diff = abs(z1 - z2)
-    az1 = abs(z1)
-    if z2 and az1 > 1:
-        return diff/az1 <= tol
-    else:
-        return diff <= tol
-
-
-def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
+def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     Test numerically that f and g agree when evaluated in the argument z.
 
@@ -52,13 +40,13 @@ def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
 
     >>> from sympy import sin, cos
     >>> from sympy.abc import x
-    >>> from sympy.utilities.randtest import test_numerically as tn
+    >>> from sympy.utilities.randtest import verify_numerically as tn
     >>> tn(sin(x)**2 + cos(x)**2, 1, x)
     True
     """
     f, g, z = Tuple(f, g, z)
     z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
-    reps = zip(z, [random_complex_number(a, b, c, d) for zi in z])
+    reps = list(zip(z, [random_complex_number(a, b, c, d) for zi in z]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
@@ -87,6 +75,7 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     f1 = f.diff(z).subs(z, z0)
     f2 = Derivative(f, z).doit_numerically(z0)
     return comp(f1.n(), f2.n(), tol)
+
 
 def _randrange(seed=None):
     """Return a randrange generator. ``seed`` can be

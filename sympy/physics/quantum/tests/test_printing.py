@@ -20,6 +20,7 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
+from sympy.core.compatibility import exec_
 from sympy.utilities.pytest import XFAIL
 
 # Imports used in srepr strings
@@ -32,10 +33,12 @@ from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.latex import latex
 
+from sympy.core.compatibility import u_decode as u
+
 MutableDenseMatrix = Matrix
 
 ENV = {}
-exec "from sympy import *" in ENV
+exec_("from sympy import *", ENV)
 
 
 def sT(expr, string):
@@ -75,14 +78,14 @@ def test_anticommutator():
 \\    /\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧ 2  ⎫\n\
 ⎨A ,B⎬\n\
 ⎩    ⎭\
-"""
+""")
     assert pretty(ac_tall) == ascii_str
     assert upretty(ac_tall) == ucode_str
-    assert latex(ac_tall) == r'\left\{\left(A\right)^{2},B\right\}'
+    assert latex(ac_tall) == r'\left\{A^{2},B\right\}'
     sT(ac_tall, "AntiCommutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 
@@ -99,11 +102,11 @@ C       \n\
  1,2,3,4\
 """
     ucode_str = \
-u"""\
+u("""\
  5,6    \n\
 C       \n\
  1,2,3,4\
-"""
+""")
     assert pretty(cg) == ascii_str
     assert upretty(cg) == ucode_str
     assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
@@ -116,11 +119,11 @@ C       \n\
 \\2  4  6/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛1  3  5⎞\n\
 ⎜       ⎟\n\
 ⎝2  4  6⎠\
-"""
+""")
     assert pretty(wigner3j) == ascii_str
     assert upretty(wigner3j) == ucode_str
     assert latex(wigner3j) == \
@@ -134,11 +137,11 @@ u"""\
 \\4  5  6/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧1  2  3⎫\n\
 ⎨       ⎬\n\
 ⎩4  5  6⎭\
-"""
+""")
     assert pretty(wigner6j) == ascii_str
     assert upretty(wigner6j) == ucode_str
     assert latex(wigner6j) == \
@@ -154,13 +157,13 @@ u"""\
 \\7  8  9/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧1  2  3⎫\n\
 ⎪       ⎪\n\
 ⎨4  5  6⎬\n\
 ⎪       ⎪\n\
 ⎩7  8  9⎭\
-"""
+""")
     assert pretty(wigner9j) == ascii_str
     assert upretty(wigner9j) == ucode_str
     assert latex(wigner9j) == \
@@ -185,13 +188,13 @@ def test_commutator():
 [A ,B]\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡ 2  ⎤\n\
 ⎣A ,B⎦\
-"""
+""")
     assert pretty(c_tall) == ascii_str
     assert upretty(c_tall) == ucode_str
-    assert latex(c_tall) == r'\left[\left(A\right)^{2},B\right]'
+    assert latex(c_tall) == r'\left[A^{2},B\right]'
     sT(c_tall, "Commutator(Pow(Operator(Symbol('A')), Integer(2)),Operator(Symbol('B')))")
 
 
@@ -213,10 +216,10 @@ def test_dagger():
 x \
 """
     ucode_str = \
-u"""\
+u("""\
  †\n\
 x \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     assert latex(expr) == r'x^{\dag}'
@@ -251,10 +254,10 @@ def test_gate():
  2        \
 """
     ucode_str = \
-u"""\
+u("""\
 1 ⋅❘10101⟩\n\
  2        \
-"""
+""")
     assert pretty(g1*q) == ascii_str
     assert upretty(g1*q) == ucode_str
     assert latex(g1*q) == r'1_{2} {\left|10101\right\rangle }'
@@ -266,10 +269,10 @@ C   /X \\\n\
  3,0\\ 1/\
 """
     ucode_str = \
-u"""\
+u("""\
 C   ⎛X ⎞\n\
  3,0⎝ 1⎠\
-"""
+""")
     assert pretty(g2) == ascii_str
     assert upretty(g2) == ucode_str
     assert latex(g2) == r'C_{3,0}{\left(X_{1}\right)}'
@@ -281,25 +284,29 @@ CNOT   \n\
     1,0\
 """
     ucode_str = \
-u"""\
+u("""\
 CNOT   \n\
     1,0\
-"""
+""")
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
     assert latex(g3) == r'CNOT_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
-    # str(g4) Fails
-    #assert str(g4) == ''
     ascii_str = \
 """\
 U \n\
  0\
 """
     ucode_str = \
-u"""\
+u("""\
 U \n\
  0\
+""")
+    assert str(g4) == \
+"""\
+U((0,),Matrix([\n\
+[a, b],\n\
+[c, d]]))\
 """
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
@@ -324,10 +331,10 @@ def test_hilbert():
 C \
 """
     ucode_str = \
-u"""\
+u("""\
  2\n\
 C \
-"""
+""")
     assert pretty(h2) == ascii_str
     assert upretty(h2) == ucode_str
     assert latex(h2) == r'\mathcal{C}^{2}'
@@ -344,14 +351,14 @@ C \
 L \
 """
     ucode_str = \
-u"""\
+u("""\
  2\n\
 L \
-"""
+""")
     assert pretty(h4) == ascii_str
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
-    sT(h4, "L2(Interval(Integer(0), oo, False, True))")
+    sT(h4, "L2(Interval(Integer(0), oo, S.false, S.true))")
     assert str(h1 + h2) == 'H+C(2)'
     ascii_str = \
 """\
@@ -359,10 +366,10 @@ L \
 H + C \
 """
     ucode_str = \
-u"""\
+u("""\
      2\n\
 H ⊕ C \
-"""
+""")
     assert pretty(h1 + h2) == ascii_str
     assert upretty(h1 + h2) == ucode_str
     assert latex(h1 + h2)
@@ -374,10 +381,10 @@ H ⊕ C \
 H x C \
 """
     ucode_str = \
-u"""\
+u("""\
      2\n\
 H ⨂ C \
-"""
+""")
     assert pretty(h1*h2) == ascii_str
     assert upretty(h1*h2) == ucode_str
     assert latex(h1*h2)
@@ -390,10 +397,10 @@ H ⨂ C \
 H  \
 """
     ucode_str = \
-u"""\
+u("""\
  ⨂2\n\
 H  \
-"""
+""")
     assert pretty(h1**2) == ascii_str
     assert upretty(h1**2) == ucode_str
     assert latex(h1**2) == r'{\mathcal{H}}^{\otimes 2}'
@@ -441,12 +448,12 @@ def test_innerproduct():
  \\2|2/ \
 """
     ucode_str = \
-u"""\
+u("""\
  ╱ │ ╲ \n\
 ╱ x│x ╲\n\
 ╲ ─│─ ╱\n\
  ╲2│2╱ \
-"""
+""")
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
     assert latex(ip_tall1) == \
@@ -461,12 +468,12 @@ u"""\
  \\ |2/ \
 """
     ucode_str = \
-u"""\
+u("""\
  ╱ │ ╲ \n\
 ╱  │x ╲\n\
 ╲ x│─ ╱\n\
  ╲ │2╱ \
-"""
+""")
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
@@ -482,12 +489,12 @@ u"""\
  \\2| / \
 """
     ucode_str = \
-u"""\
+u("""\
  ╱ │ ╲ \n\
 ╱ x│  ╲\n\
 ╲ ─│x ╱\n\
  ╲2│ ╱ \
-"""
+""")
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
@@ -516,13 +523,13 @@ def test_operator():
 A  \
 """
     ucode_str = \
-u"""\
+u("""\
  -1\n\
 A  \
-"""
+""")
     assert pretty(inv) == ascii_str
     assert upretty(inv) == ucode_str
-    assert latex(inv) == r'\left(A\right)^{-1}'
+    assert latex(inv) == r'A^{-1}'
     sT(inv, "Pow(Operator(Symbol('A')), Integer(-1))")
     assert str(d) == 'DifferentialOperator(Derivative(f(x), x),f(x))'
     ascii_str = \
@@ -532,11 +539,11 @@ DifferentialOperator|--(f(x)),f(x)|\n\
                     \dx           /\
 """
     ucode_str = \
-u"""\
+u("""\
                     ⎛d            ⎞\n\
 DifferentialOperator⎜──(f(x)),f(x)⎟\n\
                     ⎝dx           ⎠\
-"""
+""")
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
     assert latex(d) == \
@@ -596,10 +603,10 @@ L \n\
  z\
 """
     ucode_str = \
-u"""\
+u("""\
 L \n\
  z\
-"""
+""")
     assert pretty(lz) == ascii_str
     assert upretty(lz) == ucode_str
     assert latex(lz) == 'L_z'
@@ -611,10 +618,10 @@ L \n\
 J \
 """
     ucode_str = \
-u"""\
+u("""\
  2\n\
 J \
-"""
+""")
     assert pretty(J2) == ascii_str
     assert upretty(J2) == ucode_str
     assert latex(J2) == r'J^2'
@@ -626,10 +633,10 @@ J \n\
  z\
 """
     ucode_str = \
-u"""\
+u("""\
 J \n\
  z\
-"""
+""")
     assert pretty(Jz) == ascii_str
     assert upretty(Jz) == ucode_str
     assert latex(Jz) == 'J_z'
@@ -681,11 +688,11 @@ D   (4,5,6)\n\
  2,3       \
 """
     ucode_str = \
-u"""\
+u("""\
  1         \n\
 D   (4,5,6)\n\
  2,3       \
-"""
+""")
     assert pretty(bigd) == ascii_str
     assert upretty(bigd) == ucode_str
     assert latex(bigd) == r'D^{1}_{2,3}\left(4,5,6\right)'
@@ -698,11 +705,11 @@ d   (4)\n\
  2,3   \
 """
     ucode_str = \
-u"""\
+u("""\
  1     \n\
 d   (4)\n\
  2,3   \
-"""
+""")
     assert pretty(smalld) == ascii_str
     assert upretty(smalld) == ucode_str
     assert latex(smalld) == r'd^{1}_{2,3}\left(4\right)'
@@ -736,12 +743,12 @@ def test_state():
  \\2|\
 """
     ucode_str = \
-u"""\
+u("""\
  ╱ │\n\
 ╱ x│\n\
 ╲ ─│\n\
  ╲2│\
-"""
+""")
     assert pretty(bra_tall) == ascii_str
     assert upretty(bra_tall) == ucode_str
     assert latex(bra_tall) == r'{\left\langle \frac{x}{2}\right|}'
@@ -755,12 +762,12 @@ u"""\
 |2/ \
 """
     ucode_str = \
-u"""\
+u("""\
 │ ╲ \n\
 │x ╲\n\
 │─ ╱\n\
 │2╱ \
-"""
+""")
     assert pretty(ket_tall) == ascii_str
     assert upretty(ket_tall) == ucode_str
     assert latex(ket_tall) == r'{\left|\frac{x}{2}\right\rangle }'
@@ -805,17 +812,17 @@ def test_big_expr():
 \\ z/             \\\\                    \dx           / /         /                                 \
 """
     ucode_str = \
-u"""\
+u("""\
                  ⎧                                      3        ⎫                                 \n\
                  ⎪⎛                                   †⎞         ⎪                                 \n\
     2  ⎛ †    †⎞ ⎨⎜                    ⎛d            ⎞ ⎟   †    †⎬                                 \n\
 ⎛J ⎞ ⨂ ⎝A  + B ⎠⋅⎪⎜DifferentialOperator⎜──(f(x)),f(x)⎟ ⎟ ,A  + B ⎪⋅(⟨1,0❘ + ⟨1,1❘)⋅(❘0,0⟩ + ❘1,-1⟩)\n\
 ⎝ z⎠             ⎩⎝                    ⎝dx           ⎠ ⎠         ⎭                                 \
-"""
+""")
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == \
-        r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+        r'{J_z^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \
@@ -825,15 +832,15 @@ u"""\
 [\\ z/       ] \\         / [    z]\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡    2      ⎤ ⎧ -2  †  †⎫ ⎡ 2   ⎤\n\
 ⎢⎛J ⎞ ,A + B⎥⋅⎨E  ,D ⋅C ⎬⋅⎢J ,J ⎥\n\
 ⎣⎝ z⎠       ⎦ ⎩         ⎭ ⎣    z⎦\
-"""
+""")
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == \
-        r'\left[\left(J_z\right)^{2},A + B\right] \left\{\left(E\right)^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
+        r'\left[J_z^{2},A + B\right] \left\{E^{-2},D^{\dag} C^{\dag}\right\} \left[J^2,J_z\right]'
     sT(e2, "Mul(Commutator(Pow(JzOp(Symbol('J')), Integer(2)),Add(Operator(Symbol('A')), Operator(Symbol('B')))), AntiCommutator(Pow(Operator(Symbol('E')), Integer(-2)),Mul(Dagger(Operator(Symbol('D'))), Dagger(Operator(Symbol('C'))))), Commutator(J2Op(Symbol('J')),JzOp(Symbol('J'))))")
     assert str(e3) == \
         "Wigner3j(1, 2, 3, 4, 5, 6)*[Dagger(B) + A,C + D]x(-J2 + Jz)*|1,0><1,1|*(|1,0,j1=1,j2=1> + |1,1,j1=1,j2=1>)x|1,-1,j1=1,j2=1>"
@@ -845,12 +852,12 @@ u"""\
 \\2  4  6/                                                                                             \
 """
     ucode_str = \
-u"""\
+u("""\
           ⎡ †          ⎤  ⎛   2     ⎞                                                                 \n\
 ⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜- J  + J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,j₁=1,j₂=1⟩ + ❘1,1,j₁=1,j₂=1⟩)⨂ ❘1,-1,j₁=1,j₂=1⟩\n\
 ⎜       ⎟                 ⎝        z⎠                                                                 \n\
 ⎝2  4  6⎠                                                                                             \
-"""
+""")
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
     assert latex(e3) == \
@@ -863,18 +870,18 @@ u"""\
 \\\\C  x C / + F  / x \L  + H/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛⎛ 1    2⎞    ⨂2⎞   ⎛ 2    ⎞\n\
 ⎝⎝C  ⨂ C ⎠ ⊕ F  ⎠ ⨂ ⎝L  ⊕ H⎠\
-"""
+""")
     assert pretty(e4) == ascii_str
     assert upretty(e4) == ucode_str
     assert latex(e4) == \
         r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
-    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, False, True)),HilbertSpace())))")
+    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, S.false, S.true)),HilbertSpace())))")
 
 
 def _test_sho1d():
     ad = RaisingOp('a')
-    assert pretty(ad) == u' \u2020\na '
+    assert pretty(ad) == u' \N{DAGGER}\na '
     assert latex(ad) == 'a^{\\dag}'

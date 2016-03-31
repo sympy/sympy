@@ -73,6 +73,8 @@ quantity.)
     602214179000000000000000/mol
 """
 
+from __future__ import print_function, division
+
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
 
@@ -95,7 +97,6 @@ class Unit(AtomicExpr):
     """
     is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
-    is_number = False
 
     __slots__ = ["name", "abbrev"]
 
@@ -152,7 +153,8 @@ yocto = ten**-24
 
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
-
+sr = steradian = steradians = 1
+mil = angular_mil = angular_mils = 2*pi/6400
 
 # Base units
 
@@ -183,6 +185,8 @@ inductance = H = henry = henrys = V*s/A
 speed = m/s
 acceleration = m/s**2
 density = kg/m**3
+optical_power = dioptre = D = 1/m
+illuminance = lux = lx = sr*cd/m**2
 
 # Common length units
 
@@ -198,7 +202,7 @@ ft = foot = feet = Rational('0.3048')*m
 inch = inches = Rational('25.4')*mm
 yd = yard = yards = 3*ft
 mi = mile = miles = 5280*ft
-
+nmi = nautical_mile = nautical_miles = 6076*ft
 
 # Common volume and area units
 
@@ -219,10 +223,14 @@ minute = minutes = 60*s
 h = hour = hours = 60*minute
 day = days = 24*hour
 
+anomalistic_year = anomalistic_years = Rational('365.259636')*day
 sidereal_year = sidereal_years = Rational('31558149.540')*s
 tropical_year = tropical_years = Rational('365.24219')*day
 common_year = common_years = Rational('365')*day
 julian_year = julian_years = Rational('365.25')*day
+draconic_year = draconic_years = Rational('346.62')*day
+gaussian_year = gaussian_years = Rational('365.2568983')*day
+full_moon_cycle = full_moon_cycles = Rational('411.78443029')*day
 
 year = years = tropical_year
 
@@ -299,7 +307,7 @@ def find_unit(quantity):
             try:
                 if units == eval('u.' + i).as_coeff_Mul()[1]:
                     rv.append(str(i))
-            except:
+            except Exception:
                 pass
     return sorted(rv, key=len)
 

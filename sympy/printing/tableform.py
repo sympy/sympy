@@ -1,4 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import range
 
 from types import FunctionType
 
@@ -7,11 +10,12 @@ class TableForm(object):
     """
     Create a nice table representation of data.
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy import TableForm
     >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
-    >>> print t
+    >>> print(t)
     5  7
     4  2
     10 3
@@ -19,7 +23,7 @@ class TableForm(object):
     You can use the SymPy's printing system to produce tables in any
     format (ascii, latex, html, ...).
 
-    >>> print t.as_latex()
+    >>> print(t.as_latex())
     \\begin{tabular}{l l}
     $5$ & $7$ \\\\
     $4$ & $2$ \\\\
@@ -199,11 +203,11 @@ class TableForm(object):
         self._wipe_zeros = _wipe_zeros
 
     def __repr__(self):
-        from str import sstr
+        from .str import sstr
         return sstr(self, order=None)
 
     def __str__(self):
-        from str import sstr
+        from .str import sstr
         return sstr(self, order=None)
 
     def as_matrix(self):
@@ -211,6 +215,7 @@ class TableForm(object):
 
         Examples
         ========
+
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]], headings='automatic')
         >>> t
@@ -233,14 +238,15 @@ class TableForm(object):
         return str(self)
 
     def as_latex(self):
-        from latex import latex
+        from .latex import latex
         return latex(self)
 
     def _sympystr(self, p):
         """
         Returns the string representation of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import TableForm
         >>> t = TableForm([[5, 7], [4, 2], [10, 3]])

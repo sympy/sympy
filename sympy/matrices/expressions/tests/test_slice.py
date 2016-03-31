@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
@@ -40,6 +38,7 @@ def test_slicing():
 
     assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
     assert X[2, :] == MatrixSlice(X, 2, (0, m))
+    assert X[k, :] == MatrixSlice(X, k, (0, m))
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)

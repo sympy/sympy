@@ -1,6 +1,9 @@
 """The commutator: [A,B] = A*B - B*A."""
 
+from __future__ import print_function, division
+
 from sympy import S, Expr, Mul, Add
+from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
@@ -104,7 +107,6 @@ class Commutator(Expr):
             return S.Zero
 
         # [xA,yB]  ->  xy*[A,B]
-        # from sympy.physics.qmul import QMul
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
         c_part = ca + cb

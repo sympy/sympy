@@ -5,7 +5,6 @@ from sympy.interactive.session import (init_ipython_session,
 
 from sympy.core import Symbol, Rational, Integer
 from sympy.external import import_module
-from sympy.utilities.pytest import raises
 
 # TODO: The code below could be made more granular with something like:
 #
@@ -14,6 +13,7 @@ from sympy.utilities.pytest import raises
 
 # run_cell was added in IPython 0.11
 ipython = import_module("IPython", min_module_version="0.11")
+readline = import_module("readline")
 
 if not ipython:
     #bin/test will not execute any tests now
@@ -21,6 +21,9 @@ if not ipython:
 
 
 def test_automatic_symbols():
+    # this implicitly requires readline
+    if not readline:
+        return None
     # NOTE: Because of the way the hook works, you have to use run_cell(code,
     # True).  This means that the code must have no Out, or it will be printed
     # during the tests.
@@ -52,6 +55,7 @@ def test_automatic_symbols():
 def test_int_to_Integer():
     # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!
     app = init_ipython_session()
+    app.run_cell("from sympy import Integer")
     app.run_cell("a = 1")
     assert isinstance(app.user_ns['a'], int)
 

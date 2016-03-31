@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -5,6 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.orthopolys import legendre_poly, laguerre_poly, hermite_poly, jacobi_poly
 from sympy.polys.rootoftools import RootOf
+from sympy.core.compatibility import range
 
 def gauss_legendre(n, n_digits):
     r"""
@@ -343,7 +346,7 @@ def gauss_chebyshev_t(n, n_digits):
     x = Dummy("x")
     xi = []
     w  = []
-    for i in xrange(1,n+1):
+    for i in range(1,n+1):
         xi.append((cos((2*i-S.One)/(2*n)*S.Pi)).n(n_digits))
         w.append((S.Pi/n).n(n_digits))
     return xi, w
@@ -409,7 +412,7 @@ def gauss_chebyshev_u(n, n_digits):
     x = Dummy("x")
     xi = []
     w  = []
-    for i in xrange(1,n+1):
+    for i in range(1,n+1):
         xi.append((cos(i/(n+S.One)*S.Pi)).n(n_digits))
         w.append((S.Pi/(n+S.One)*sin(i*S.Pi/(n+S.One))**2).n(n_digits))
     return xi, w

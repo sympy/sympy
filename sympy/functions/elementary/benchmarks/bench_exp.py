@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import exp, symbols
 
 x, y = symbols('x,y')

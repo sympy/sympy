@@ -3,10 +3,11 @@
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
 
+from __future__ import print_function, division
 
-from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
+from sympy.core import Basic, Add, Mul, Pow
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
-from sympy.core.sets import Union, Intersection, FiniteSet
+from sympy.sets.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
@@ -58,7 +59,7 @@ def construct(t):
     if not isinstance(t, Compound):
         return t
     if any(issubclass(t.op, cls) for cls in eval_false_legal):
-        return t.op(*map(construct, t.args), **{'evaluate': False})
+        return t.op(*map(construct, t.args), evaluate=False)
     elif any(issubclass(t.op, cls) for cls in basic_new_legal):
         return Basic.__new__(t.op, *map(construct, t.args))
     else:
@@ -80,7 +81,6 @@ def unify(x, y, s=None, variables=(), **kwargs):
     >>> from sympy.unify.usympy import unify
     >>> from sympy import Basic, cos
     >>> from sympy.abc import x, y, z, p, q
-    >>> from sympy.core.compatibility import next
 
     >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
     {x: 2}

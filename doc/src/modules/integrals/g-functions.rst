@@ -41,24 +41,24 @@ Decreeing this to be a local biholomorphism gives `\mathcal{S}` both a topology
 and a complex structure. This Riemann Surface is usually referred to as the
 Riemann Surface of the logarithm, for the following reason:
 We can define maps
-`Exp: \mathbb{C} \rightarrow \mathcal{S}, Exp(x + i y) = (exp(x), y)` and
-`Log: \mathcal{S} \rightarrow \mathbb{C}, (e^x, y) \mapsto x + iy`.
-These can be shown to be both holomorphic, and are indeed mutual inverses.
+`\operatorname{Exp}: \mathbb{C} \rightarrow \mathcal{S}, (x + i y) \mapsto (\exp(x), y)` and
+`\operatorname{Log}: \mathcal{S} \rightarrow \mathbb{C}, (e^x, y) \mapsto x + iy`.
+These can both be shown to be holomorphic, and are indeed mutual inverses.
 
-We also sometimes formally attach a point "zero" to `\mathcal{S}` and denote the
+We also sometimes formally attach a point "zero" (`0`) to `\mathcal{S}` and denote the
 resulting object `\mathcal{S}_0`. Notably there is no complex structure
 defined near `0`. A fundamental system of neighbourhoods is given by
-`\{Exp(z) : Re(z) < k\}`, this at least defines a topology. Elements of
+`\{\operatorname{Exp}(z) : \Re(z) < k\}`, which at least defines a topology. Elements of
 `\mathcal{S}_0` shall be called polar numbers.
 We further define functions
-`Arg: \mathcal{S} \rightarrow \mathbb{R}, (r, \theta) \mapsto \theta` and
+`\operatorname{Arg}: \mathcal{S} \rightarrow \mathbb{R}, (r, \theta) \mapsto \theta` and
 `|.|: \mathcal{S}_0 \rightarrow \mathbb{R}_{>0}, (r, \theta) \mapsto r`.
 These have evident meaning and are both continuous everywhere.
 
 Using these maps many operations can be extended from `\mathbb{C}` to
-`\mathcal{S}`. We define `Exp(a) Exp(b) = Exp(a + b)` for `a, b \in \mathbb{C}`,
+`\mathcal{S}`. We define `\operatorname{Exp}(a) \operatorname{Exp}(b) = \operatorname{Exp}(a + b)` for `a, b \in \mathbb{C}`,
 also for `a \in \mathcal{S}` and `b \in \mathbb{C}` we define
-`a^b = Exp(b Log(a))`.
+`a^b = \operatorname{Exp}(b \operatorname{Log}(a))`.
 It can be checked easily that using these definitions, many algebraic properties
 holding for positive reals (e.g. `(ab)^c = a^c b^c`) which hold in `\mathbb{C}`
 only for some numbers (because of branch cuts) hold indeed for all polar numbers.
@@ -74,7 +74,7 @@ the square root function on `\mathbb{C}`, we are forced to define
 
 .. math:: F(z) = \begin{cases}
     S(p(z)) &: |z| < 1 \\
-    S(p(z)) &: -\pi < Arg(z) + 4\pi n \le \pi \text{ for some } n \in \mathbb{Z} \\
+    S(p(z)) &: -\pi < \operatorname{Arg}(z) + 4\pi n \le \pi \text{ for some } n \in \mathbb{Z} \\
     -S(p(z)) &: \text{else}
    \end{cases}.
 
@@ -91,7 +91,7 @@ branch cuts". In our situation, there is actually a canonical way of doing this
 (which is adhered to in all of SymPy), as follows: Introduce the "cut complex
 plane"
 `C = \mathbb{C} \setminus \mathbb{R}_{\le 0}`. Define a function
-`l: C \to \mathcal{S}` via `re^{i\theta} \mapsto r Exp(i\theta)`. Here `r > 0`
+`l: C \to \mathcal{S}` via `re^{i\theta} \mapsto r \operatorname{Exp}(i\theta)`. Here `r > 0`
 and `-\pi < \theta \le \pi`. Then `l` is holomorphic, and we define
 `G = f \circ l`. This called "lifting to the principal branch" throughout the
 SymPy documentation.
@@ -113,7 +113,7 @@ have to try something else.
 
 Suppose now we want to rewrite as a product of two G-functions. To do this,
 we (try to) find all inequivalent ways of splitting `f(x)` into a product
-`f_1(x) f_2(x)`. 
+`f_1(x) f_2(x)`.
 We could try these splittings in any order, but it is often a good idea to
 minimise (a) the number of powers occuring in `f_i(x)` and (b) the number of
 different functions occuring in `f_i(x)`. Thus given e.g.
@@ -155,7 +155,7 @@ in deriving the theorem may not be allowed (for more details, see this [BlogPost
 
 Sometimes this can be remedied by reducing the argument of the G-functions
 involved. For example it is clear that the G-function representing `e^z`
-is satisfies `G(Exp(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}`. The function
+is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}`. The function
 ``meijerg.get_period()`` can be used to discover this, and the function
 ``principal_branch(z, period)`` in ``functions/elementary/complexes.py`` can
 be used to exploit the information. This is done transparently by the
@@ -240,7 +240,7 @@ These are the conditions "at infinity":
 
    .. math::
       A = 1 \le n \wedge p < q \wedge 1 \le m
-   
+
    .. math::
       B = 1 \le p \wedge 1 \le m \wedge q = p+1 \wedge
                   \neg (n = 0 \wedge m = p + 1 )
@@ -305,7 +305,7 @@ The following conditions will be helpful:
     (u - v)\Re(a_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, n
 .. math:: C_7:
     (u - v)\Re(1 + b_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, m
-.. math:: C_8: 
+.. math:: C_8:
     0 < \lvert{\phi}\rvert + 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)
 .. math:: C_9:
     0 < \lvert{\phi}\rvert - 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)
@@ -317,7 +317,7 @@ The following conditions will be helpful:
     |\arg(\omega)| < c^*\pi
 .. math:: C_{13}:
     |\arg(\omega)| = c^*\pi
-.. math:: C_{14}^1: 
+.. math:: C_{14}^1:
     \left(z_0 \ne 1 \wedge |\arg(1 - z_0)| < \pi \right) \vee
     \left(z_0 = 1 \wedge \Re(\mu + \rho - u + v) < 1 \right)
 .. math:: C_{14}^2:
@@ -362,9 +362,9 @@ as follows:
 21. .. math:: m = 0 \wedge 0 < n \wedge 0 < c^{*} \wedge 0 < \phi \wedge C_{1} \wedge C_{3} \wedge C_{12}
 22. .. math:: s t = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
 23. .. math:: m n = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
-24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15} 
+24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 25. .. math:: q < m + n \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-26. .. math:: p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15} 
+26. .. math:: p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 27. .. math:: p = q + 1 \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 28. .. math:: p < q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 29. .. math:: q + 1 < p \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
@@ -452,7 +452,7 @@ the final integral as a Fox H / Meijer G-function to be correct, the poles of
 the newly obtained gamma function must be separated properly.
 
 It is easy to check that the inner integal converges absolutely for
-`Re(as) < -1`. Thus the contour `L` has to run left of the line `Re(as) = -1`.
+`\Re(as) < -1`. Thus the contour `L` has to run left of the line `\Re(as) = -1`.
 Under this condition, the poles of the newly-introduced gamma function are
 separated properly.
 
@@ -483,14 +483,14 @@ shall always mean "asymptotically equivalent up to a positive real
 multiplicative constant"). Also
 `z^{x + iy} \sim |\tau|^x e^{i y \log{|\tau|}} e^{\pm x i \frac{\pi}{2}}.`
 
-Set `\omega_{\pm} = b e^{\pm i Re(c) \frac{\pi}{2}}`. We have three cases:
+Set `\omega_{\pm} = b e^{\pm i \Re(c) \frac{\pi}{2}}`. We have three cases:
 
-1. `b=0` or `Re(c) \le 0`.
-   In this case the integral converges if `Re(a) \le -1`.
-2. `b \ne 0`, `Im(c) = 0`, `Re(c) > 0`.
-   In this case the integral converges if `Re(\omega_{\pm}) < 0`.
-3. `b \ne 0`, `Im(c) = 0`, `Re(c) > 0`, `Re(\omega_{\pm}) \le 0`, and at least
-   one of `Re(\omega_{\pm}) = 0`.
+1. `b=0` or `\Re(c) \le 0`.
+   In this case the integral converges if `\Re(a) \le -1`.
+2. `b \ne 0`, `\Im(c) = 0`, `\Re(c) > 0`.
+   In this case the integral converges if `\Re(\omega_{\pm}) < 0`.
+3. `b \ne 0`, `\Im(c) = 0`, `\Re(c) > 0`, `\Re(\omega_{\pm}) \le 0`, and at least
+   one of `\Re(\omega_{\pm}) = 0`.
    Here the same condition as in (1) applies.
 
 Implemented G-Function Formulae

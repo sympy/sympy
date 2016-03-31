@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 

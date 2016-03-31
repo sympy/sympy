@@ -1,6 +1,9 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
 
+from __future__ import print_function, division
+
 from sympy import S, Expr, Mul, Integer
+from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.operator import Operator
@@ -91,7 +94,6 @@ class AntiCommutator(Expr):
             return Integer(2)*a*b
 
         # [xA,yB]  ->  xy*[A,B]
-        # from sympy.physics.qmul import QMul
         ca, nca = a.args_cnc()
         cb, ncb = b.args_cnc()
         c_part = ca + cb

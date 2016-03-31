@@ -1,6 +1,7 @@
 """Tests for sho1d.py"""
 
 from sympy import Integer, Symbol, sqrt, I, S
+from sympy.core.compatibility import range
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator
@@ -31,7 +32,7 @@ omega = Symbol('omega')
 m = Symbol('m')
 ndim = Integer(4)
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 ad_rep_sympy = represent(ad, basis=N, ndim=4, format='sympy')
@@ -55,14 +56,14 @@ def test_RaisingOp():
         assert ad_rep_sympy[i + 1,i] == sqrt(i + 1)
 
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
     for i in range(ndim - 1):
         assert ad_rep_numpy[i + 1,i] == float(sqrt(i + 1))
 
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
     else:

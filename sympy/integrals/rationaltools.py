@@ -1,10 +1,12 @@
 """This module implements tools for integrating rational functions. """
 
+from __future__ import print_function, division
+
 from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, collect, solve, RootSum, Lambda, cancel, Dummy
+    roots, RootSum, Lambda, cancel, Dummy
 
-from sympy.polys import Poly, subresultants, resultant, ZZ
-
+from sympy.polys import Poly, resultant, ZZ
+from sympy.core.compatibility import range
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
@@ -77,7 +79,7 @@ def ratint(f, x, **flags):
 
                 atoms = p.atoms() | q.atoms()
 
-            for elt in atoms - set([x]):
+            for elt in atoms - {x}:
                 if not elt.is_real:
                     real = False
                     break
@@ -88,10 +90,12 @@ def ratint(f, x, **flags):
 
         if not real:
             for h, q in L:
+                _, h = h.primitive()
                 eps += RootSum(
                     q, Lambda(t, t*log(h.as_expr())), quadratic=True)
         else:
             for h, q in L:
+                _, h = h.primitive()
                 R = log_to_real(h, q, x, t)
 
                 if R is not None:
@@ -134,6 +138,8 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
+    from sympy import solve
+
     f = Poly(f, x)
     g = Poly(g, x)
 
@@ -142,8 +148,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in range(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in range(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
@@ -203,8 +209,9 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-
     res = Poly(res, t, composite=False)
+
+    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
 
     R_map, H = {}, []
 
@@ -212,7 +219,7 @@ def ratint_logpart(f, g, x, t=None):
         R_map[r.degree()] = r
 
     def _include_sign(c, sqf):
-        if c < 0:
+        if (c < 0) == True:
             h, k = sqf[0]
             sqf[0] = h*c, k
 
@@ -240,7 +247,7 @@ def ratint_logpart(f, g, x, t=None):
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 
-            h = Poly(dict(zip(h.monoms(), coeffs)), x)
+            h = Poly(dict(list(zip(h.monoms(), coeffs))), x)
 
             H.append((h, q))
 
@@ -323,6 +330,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
+    from sympy import collect
     u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t: u + I*v}).expand()
@@ -343,7 +351,7 @@ def log_to_real(h, q, x, t):
 
     result = S(0)
 
-    for r_u in R_u.iterkeys():
+    for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)
         R_v = roots(C, filter='R')
 
@@ -371,7 +379,7 @@ def log_to_real(h, q, x, t):
     if len(R_q) != q.count_roots():
         return None
 
-    for r in R_q.iterkeys():
+    for r in R_q.keys():
         result += r*log(h.as_expr().subs(t, r))
 
     return result

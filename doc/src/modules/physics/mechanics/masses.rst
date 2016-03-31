@@ -1,6 +1,6 @@
-=======================================================
-Mechanics: Masses, Inertias, Particles and Rigid Bodies
-=======================================================
+=================================================================
+Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
+=================================================================
 
 This document will describe how to represent masses and inertias in
 :mod:`mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
@@ -37,29 +37,8 @@ separate from their association with masses.
 Inertia
 =======
 
-Dyadics are used to define the inertia of bodies within :mod:`mechanics`.
-Inertia dyadics can be defined explicitly but the ``inertia`` function is
-typically much more convenient for the user::
-
-  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
-  >>> N = ReferenceFrame('N')
-
-  Supply a reference frame and the moments of inertia if the object
-  is symmetrical:
-
-  >>> inertia(N, 1, 2, 3)
-  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
-
-  Supply a reference frame along with the products and moments of inertia
-  for a general object:
-
-  >>> inertia(N, 1, 2, 3, 4, 5, 6)
-  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) +
-              5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
-
-Notice that the ``inertia`` function returns a dyadic with each component
-represented as two unit vectors separated by a ``|``. Refer to the
-:ref:`Dyadic` section for more information about dyadics.
+See the Inertia (Dyadics) section in 'Advanced Topics' part of
+:mod:`physics/vector` docs.
 
 Rigid Body
 ==========
@@ -378,12 +357,12 @@ reference frame when calling the function. In other words the user is not
 limited to determining just inertial kinetic energy.
 
 For potential energies, the user must first specify the potential energy of
-every entity of the system using the :mod:`set_potential_energy` method. The
+every entity of the system using the :mod:`potential_energy` property. The
 potential energy of any number of entities comprising the system can then be
 determined: ::
 
-  >> Pa.set_potential_energy(m * g * h)
-  >> A.set_potential_energy(M * g * H)
+  >> Pa.potential_energy = m * g * h
+  >> A.potential_energy = M * g * H
   >> potential_energy(A, Pa)
   H*M*g + g*h*m
 

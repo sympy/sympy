@@ -6,7 +6,7 @@ Welcome to SymPy's documentation!
 =================================
 
 `SymPy <http://sympy.org>`_ is a Python library for symbolic mathematics.
-If you are new to SymPy, start with the Tutorial.
+If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
 This is the central page for all of SymPy's documentation.
 
@@ -17,7 +17,7 @@ Contents:
    :maxdepth: 2
 
    install.rst
-   tutorial/tutorial.en.rst
+   tutorial/index.rst
    gotchas.rst
    guide.rst
    modules/index.rst
@@ -25,10 +25,4 @@ Contents:
    wiki.rst
    outreach.rst
    aboutus.rst
-
-If something cannot be easily accessed from this page, it's a bug (`please
-report it`_).
-
-This documentation is maintained with docutils, so you might see some comments in the form #doctest:... . You can safely ignore them.
-
-.. _please report it: http://code.google.com/p/sympy/issues/list
+   special_topics/index.rst

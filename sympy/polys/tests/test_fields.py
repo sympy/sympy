@@ -1,16 +1,64 @@
 """Test sparse rational functions. """
 
-from sympy.polys.fields import field
-from sympy.polys.domains import ZZ, QQ, RR
-from sympy.polys.monomialtools import lex, grlex
+from sympy.polys.fields import field, sfield, FracField
+from sympy.polys.rings import ring
+from sympy.polys.domains import ZZ, QQ
+from sympy.polys.orderings import lex
 
-from sympy.utilities.pytest import raises
-from sympy.core import Symbol, symbols
-from sympy import sqrt, Rational
+from sympy.utilities.pytest import raises, XFAIL
+from sympy.core import symbols, E
+from sympy import sqrt, Rational, exp, log
+
+def test_FracField___init__():
+    F1 = FracField("x,y", ZZ, lex)
+    F2 = FracField("x,y", ZZ, lex)
+    F3 = FracField("x,y,z", ZZ, lex)
+
+    assert F1.x == F1.gens[0]
+    assert F1.y == F1.gens[1]
+    assert F1.x == F2.x
+    assert F1.y == F2.y
+    assert F1.x != F3.x
+    assert F1.y != F3.y
 
 def test_FracField___hash__():
     F, x, y, z = field("x,y,z", QQ)
     assert hash(F)
+
+def test_FracField___eq__():
+    assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]
+    assert field("x,y,z", QQ)[0] is field("x,y,z", QQ)[0]
+
+    assert field("x,y,z", QQ)[0] != field("x,y,z", ZZ)[0]
+    assert field("x,y,z", QQ)[0] is not field("x,y,z", ZZ)[0]
+
+    assert field("x,y,z", ZZ)[0] != field("x,y,z", QQ)[0]
+    assert field("x,y,z", ZZ)[0] is not field("x,y,z", QQ)[0]
+
+    assert field("x,y,z", QQ)[0] != field("x,y", QQ)[0]
+    assert field("x,y,z", QQ)[0] is not field("x,y", QQ)[0]
+
+    assert field("x,y", QQ)[0] != field("x,y,z", QQ)[0]
+    assert field("x,y", QQ)[0] is not field("x,y,z", QQ)[0]
+
+def test_sfield():
+    x = symbols("x")
+
+    F = FracField((E, exp(exp(x)), exp(x)), ZZ, lex)
+    e, exex, ex = F.gens
+    assert sfield(exp(x)*exp(exp(x) + 1 + log(exp(x) + 3)/2)**2/(exp(x) + 3)) \
+        == (F, e**2*exex**2*ex)
+
+    F = FracField((x, exp(1/x), log(x), x**QQ(1, 3)), ZZ, lex)
+    _, ex, lg, x3 = F.gens
+    assert sfield(((x-3)*log(x)+4*x**2)*exp(1/x+log(x)/3)/x**2) == \
+        (F, (4*F.x**2*ex + F.x*ex*lg - 3*ex*lg)/x3**5)
+
+    F = FracField((x, log(x), sqrt(x + log(x))), ZZ, lex)
+    _, lg, srt = F.gens
+    assert sfield((x + 1) / (x * (x + log(x))**QQ(3, 2)) - 1/(x * log(x)**2)) \
+        == (F, (F.x*lg**2 - F.x*srt + lg**2 - lg*srt)/
+            (F.x**2*lg**2*srt + F.x*lg**3*srt))
 
 def test_FracElement___hash__():
     F, x, y, z = field("x,y,z", QQ)
@@ -81,6 +129,21 @@ def test_FracElement_from_expr():
     raises(ValueError, lambda: F.from_expr(2**x))
     raises(ValueError, lambda: F.from_expr(7*x + sqrt(2)))
 
+def test_FracElement__lt_le_gt_ge__():
+    F, x, y = field("x,y", ZZ)
+
+    assert F(1) < 1/x < 1/x**2 < 1/x**3
+    assert F(1) <= 1/x <= 1/x**2 <= 1/x**3
+
+    assert -7/x < 1/x < 3/x < y/x < 1/x**2
+    assert -7/x <= 1/x <= 3/x <= y/x <= 1/x**2
+
+    assert 1/x**3 > 1/x**2 > 1/x > F(1)
+    assert 1/x**3 >= 1/x**2 >= 1/x >= F(1)
+
+    assert 1/x**2 > y/x > 3/x > 1/x > -7/x
+    assert 1/x**2 >= y/x >= 3/x >= 1/x >= -7/x
+
 def test_FracElement___neg__():
     F, x,y = field("x,y", QQ)
 
@@ -102,6 +165,20 @@ def test_FracElement___add__():
     assert x + 3 == 3 + x
     assert x + QQ(3,7) == QQ(3,7) + x == (7*x + 3)/7
 
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+
+    f = (u*v + x)/(y + u*v)
+    assert dict(f.numer) == {(1, 0, 0, 0): 1, (0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(0, 1, 0, 0): 1, (0, 0, 0, 0): u*v}
+
+    Ruv, u,v = ring("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Ruv)
+
+    f = (u*v + x)/(y + u*v)
+    assert dict(f.numer) == {(1, 0, 0, 0): 1, (0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(0, 1, 0, 0): 1, (0, 0, 0, 0): u*v}
+
 def test_FracElement___sub__():
     F, x,y = field("x,y", QQ)
 
@@ -113,6 +190,20 @@ def test_FracElement___sub__():
     F, x,y = field("x,y", ZZ)
     assert x - 3 == -(3 - x)
     assert x - QQ(3,7) == -(QQ(3,7) - x) == (7*x - 3)/7
+
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+
+    f = (u*v - x)/(y - u*v)
+    assert dict(f.numer) == {(1, 0, 0, 0):-1, (0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(0, 1, 0, 0): 1, (0, 0, 0, 0):-u*v}
+
+    Ruv, u,v = ring("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Ruv)
+
+    f = (u*v - x)/(y - u*v)
+    assert dict(f.numer) == {(1, 0, 0, 0):-1, (0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(0, 1, 0, 0): 1, (0, 0, 0, 0):-u*v}
 
 def test_FracElement___mul__():
     F, x,y = field("x,y", QQ)
@@ -126,8 +217,15 @@ def test_FracElement___mul__():
     assert x*3 == 3*x
     assert x*QQ(3,7) == QQ(3,7)*x == 3*x/7
 
-    Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+
+    f = ((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)
+    assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
+    assert dict(f.denom) == {(0, 0, 1, 0): v - 1, (0, 0, 0, 1): -u*v, (0, 0, 0, 0): -1}
+
+    Ruv, u,v = ring("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Ruv)
 
     f = ((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)
     assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
@@ -145,6 +243,32 @@ def test_FracElement___div__():
     assert x*3 == 3*x
     assert x/QQ(3,7) == (QQ(3,7)/x)**-1 == 7*x/3
 
+    raises(ZeroDivisionError, lambda: x/0)
+    raises(ZeroDivisionError, lambda: 1/(x - x))
+    raises(ZeroDivisionError, lambda: x/(x - x))
+
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+
+    f = (u*v)/(x*y)
+    assert dict(f.numer) == {(0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(1, 1, 0, 0): 1}
+
+    g = (x*y)/(u*v)
+    assert dict(g.numer) == {(1, 1, 0, 0): 1}
+    assert dict(g.denom) == {(0, 0, 0, 0): u*v}
+
+    Ruv, u,v = ring("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Ruv)
+
+    f = (u*v)/(x*y)
+    assert dict(f.numer) == {(0, 0, 0, 0): u*v}
+    assert dict(f.denom) == {(1, 1, 0, 0): 1}
+
+    g = (x*y)/(u*v)
+    assert dict(g.numer) == {(1, 1, 0, 0): 1}
+    assert dict(g.denom) == {(0, 0, 0, 0): u*v}
+
 def test_FracElement___pow__():
     F, x,y = field("x,y", QQ)
 
@@ -155,3 +279,37 @@ def test_FracElement___pow__():
 
     assert (f*g)**3 == 1/(x**3*y**3)
     assert (f*g)**-3 == (x*y)**3
+
+    raises(ZeroDivisionError, lambda: (x - x)**-3)
+
+def test_FracElement_diff():
+    F, x,y,z = field("x,y,z", ZZ)
+
+    assert ((x**2 + y)/(z + 1)).diff(x) == 2*x/(z + 1)
+
+@XFAIL
+def test_FracElement___call__():
+    F, x,y,z = field("x,y,z", ZZ)
+    f = (x**2 + 3*y)/z
+
+    r = f(1, 1, 1)
+    assert r == 4 and not isinstance(r, FracElement)
+    raises(ZeroDivisionError, lambda: f(1, 1, 0))
+
+def test_FracElement_evaluate():
+    F, x,y,z = field("x,y,z", ZZ)
+    Fyz = field("y,z", ZZ)[0]
+    f = (x**2 + 3*y)/z
+
+    assert f.evaluate(x, 0) == 3*Fyz.y/Fyz.z
+    raises(ZeroDivisionError, lambda: f.evaluate(z, 0))
+
+def test_FracElement_subs():
+    F, x,y,z = field("x,y,z", ZZ)
+    f = (x**2 + 3*y)/z
+
+    assert f.subs(x, 0) == 3*y/z
+    raises(ZeroDivisionError, lambda: f.subs(z, 0))
+
+def test_FracElement_compose():
+    pass

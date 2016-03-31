@@ -1,49 +1,333 @@
 language: python
+sudo: false
 env:
-  - TEST_DOCTESTS="true"
-  - TEST_DOCTESTS="false"
+  matrix:
+  - TEST_DOCTESTS="true" FASTCACHE="false"
+  - SPLIT="1/4" TEST_SYMPY="true"
+  - SPLIT="2/4" TEST_SYMPY="true"
+  - SPLIT="3/4" TEST_SYMPY="true"
+  - SPLIT="4/4" TEST_SYMPY="true"
+  global:
+    secure: "SyoeHaDi9vRPJ5X0JFY5/nQif66u+fehtqUg7F8ILoNrwugJcs+u4VZm1sJ7Cv2h6uGoNRAfkkrahxxj2mKCgpqbY2MdDAZ+ru5wn5R0NjYjTpEz7ET4Xq5o+gca+mhFMkiutYihM73+AaIKCX0vfC9yb8WBPXzbbrv8vVvQr6Y="
+
 python:
-  - 2.5
-  - 2.6
   - 2.7
-  - 3.2
   - 3.3
-  - "pypy"
+  - 3.4
+  - 3.5
+
 matrix:
   include:
     - python: 2.7
       env:
         - TEST_GMPY="true"
-        - TEST_DOCTESTS="true"
+        - TEST_MATPLOTLIB="true"
+        - TEST_THEANO="true"
+        - TEST_ASCII="true"
+      addons:
+        apt:
+          packages:
+            # for gmpy
+            - libgmp-dev
+
+            # for theano
+            - libatlas-dev
+            - libatlas-base-dev
+            - liblapack-dev
+            - gfortran
+    - python: 3.5
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - TEST_THEANO="true"
+        - TEST_ASCII="true"
+      addons:
+        apt:
+          packages:
+            # for gmpy
+            - libgmp-dev
+
+            # for theano
+            - libatlas-dev
+            - libatlas-base-dev
+            - liblapack-dev
+            - gfortran
+            - python-scipy
+
+    - python: 3.5
+      env:
+        - TEST_SPHINX="true"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          packages:
+            - graphviz
+            - inkscape
+            - texlive
+            - texlive-xetex
+            - texlive-fonts-recommended
+            - texlive-latex-extra
+            - lmodern
+            - librsvg2-bin
+            - imagemagick
+            - docbook2x
+
     - python: 2.7
       env:
-        - TEST_GMPY="true"
-        - TEST_DOCTESTS="false"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_DOCTESTS="true"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_DOCTESTS="false"
+        - TEST_SLOW="true"
+        - SPLIT="1/3"
     - python: 2.7
-      env: TEST_SPHINX="true"
-  allow_failures:
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/3"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+    - python: 3.5
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="1/3"
+    - python: 3.5
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/3"
+    - python: 3.5
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="3/3"
+
+    - python: 2.7
+      env:
+        - TEST_AUTOWRAP="true"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
+      virtualenv:
+        system_site_packages: true
+
+    # Everything here and below is in the allow_failures. The need to be
+    # duplicated here and in that section below.
+    - python: 3.5
+      env:
+        - TEST_AUTOWRAP="true"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
+      virtualenv:
+        system_site_packages: true
+
+    - python: 3.5 # Dummy value
+      env:
+        - TEST_SAGE="true"
+        - FASTCACHE="false"
+      sudo: true
+      dist: trusty
+
     - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="1/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="2/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="3/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+
+  allow_failures:
+    # Fails because of some issues with Travis
+    - python: 3.5
+      env:
+        - TEST_AUTOWRAP="true"
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - gcc
+            - python-numpy
+            - cython
+      virtualenv:
+        system_site_packages: true
+
+    # The apt installation of sage fails sometimes
+    - python: 3.5 # Dummy value
+      env:
+        - TEST_SAGE="true"
+        - FASTCACHE="false"
+      sudo: true
+      dist: trusty
+
+
+    # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
+    - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="1/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="2/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="3/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
+        - FASTCACHE="false"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy
+
 before_install:
+  - if [[ "${FASTCACHE}" != "false" ]]; then
+      pip install fastcache;
+    fi
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y numpy;
+    fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
-      sudo apt-get update -qq;
-      sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx==1.1.3";
+      pip install "sphinx==1.3.1";
+    fi
+  - |
+    if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+    # We do this conditionally because it saves us some downloading if the
+    # version is the same.
+        if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+          wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+        else
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        fi
+        bash miniconda.sh -b -p $HOME/miniconda;
+        export PATH="$HOME/miniconda/bin:$PATH";
+        hash -r;
+        conda config --set always_yes yes --set changeps1 no;
+        conda update -q conda;
+        conda info -a;
+        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy scipy pip llvmlite;
+        source activate test-environment;
+    fi
+
+  - |
+    if [[ "${TEST_THEANO}" == "true" ]]; then
+        # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
+        conda install theano;
+    fi
+  - if [[ "${TEST_SAGE}" == "true" ]]; then
+      sudo apt-add-repository -y ppa:aims/sagemath;
+      sudo apt-get update;
+      sudo apt-get install -y sagemath-upstream-binary;
     fi
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
-  - python setup.py install
+#The install cycle below is to test installation on systems without setuptools.
+  - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
+      then virtualenv -p /usr/bin/pypy ~/.venv;
+           . ~/.venv/bin/activate;
+    fi
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y setuptools;
+      python setup.py install;
+      pip uninstall -y sympy;
+      pip install setuptools;
+      python setup.py install;
+    elif [[ "${TEST_SAGE}" != "true" ]]; then
+      python setup.py install;
+    fi
 script:
   - bin/test_travis.sh
+#  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+#      bin/deploy_doc.sh;
+#    fi
 notifications:
   email: false

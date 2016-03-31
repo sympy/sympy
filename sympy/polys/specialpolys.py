@@ -1,5 +1,7 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
@@ -10,7 +12,7 @@ from sympy.polys.polyutils import _analyze_gens
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dmp_ground, dmp_normal,
+    dmp_zero, dmp_one, dmp_ground,
     dup_from_raw_dict, dmp_raise, dup_random
 )
 
@@ -26,47 +28,44 @@ from sympy.polys.domains import ZZ
 
 from sympy.ntheory import nextprime
 
-from sympy.utilities import cythonized, subsets
+from sympy.utilities import subsets, public
+
+from sympy.core.compatibility import range
 
 
-@cythonized("n,i")
+@public
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
+    from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
             "can't generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        x, cls = sympify(x), Poly
+        sympify(x)
     else:
-        x, cls = Dummy('x'), PurePoly
+        x = Dummy('x')
 
-    p, elts = 2, [[x, -sqrt(2)],
-                  [x, sqrt(2)]]
+    if n > 3:
+        p = 2
+        a = [sqrt(2)]
+        for i in range(2, n + 1):
+            p = nextprime(p)
+            a.append(sqrt(p))
+        return minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
 
-    for i in xrange(2, n + 1):
-        p, _elts = nextprime(p), []
-
-        neg_sqrt = -sqrt(p)
-        pos_sqrt = +sqrt(p)
-
-        for elt in elts:
-            _elts.append(elt + [neg_sqrt])
-            _elts.append(elt + [pos_sqrt])
-
-        elts = _elts
-
-    poly = []
-
-    for elt in elts:
-        poly.append(Add(*elt))
-
+    if n == 1:
+        ex = x**2 - 2
+    elif n == 2:
+        ex = x**4 - 10*x**2 + 1
+    elif n == 3:
+        ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
     if not args.get('polys', False):
-        return Mul(*poly).expand()
+        return ex
     else:
-        return PurePoly(Mul(*poly), x)
+        return PurePoly(ex, x)
 
-
+@public
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
@@ -86,6 +85,7 @@ def cyclotomic_poly(n, x=None, **args):
         return poly
 
 
+@public
 def symmetric_poly(n, *gens, **args):
     """Generates symmetric polynomial of order `n`. """
     gens = _analyze_gens(gens)
@@ -103,6 +103,7 @@ def symmetric_poly(n, *gens, **args):
         return Poly(poly, *gens)
 
 
+@public
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
@@ -113,7 +114,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
         return poly
 
 
-@cythonized("n,i,j")
+@public
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
     if isinstance(X, str):
@@ -124,11 +125,11 @@ def interpolating_poly(n, x, X='x', Y='y'):
 
     coeffs = []
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         numer = []
         denom = []
 
-        for j in xrange(0, n):
+        for j in range(0, n):
             if i == j:
                 continue
 
@@ -143,10 +144,9 @@ def interpolating_poly(n, x, X='x', Y='y'):
     return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
 
-@cythonized("n,i")
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
 
     y_0, y_1 = Y[0], Y[1]
 
@@ -161,17 +161,16 @@ def fateman_poly_F_1(n):
     return F, G, H
 
 
-@cythonized("n,m,i")
 def dmp_fateman_poly_F_1(n, K):
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         u = [dmp_one(i, K), u]
 
     v = [K(1), K(0), K(0)]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         v = [dmp_one(i, K), dmp_zero(i), v]
 
     m = n - 1
@@ -192,10 +191,9 @@ def dmp_fateman_poly_F_1(n, K):
     return F, G, H
 
 
-@cythonized("n,i")
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
 
     y_0 = Y[0]
 
@@ -209,12 +207,11 @@ def fateman_poly_F_2(n):
     return H*F, H*G, H
 
 
-@cythonized("n,m,i")
 def dmp_fateman_poly_F_2(n, K):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
-    for i in xrange(0, n - 1):
+    for i in range(0, n - 1):
         u = [dmp_one(i, K), u]
 
     m = n - 1
@@ -231,10 +228,9 @@ def dmp_fateman_poly_F_2(n, K):
     return dmp_mul(f, h, n, K), dmp_mul(g, h, n, K), h
 
 
-@cythonized("n,i")
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n + 1) ]
 
     y_0 = Y[0]
 
@@ -248,12 +244,11 @@ def fateman_poly_F_3(n):
     return H*F, H*G, H
 
 
-@cythonized("n,i")
 def dmp_fateman_poly_F_3(n, K):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     u = dup_from_raw_dict({n + 1: K.one}, K)
 
-    for i in xrange(0, n - 1):
+    for i in range(0, n - 1):
         u = dmp_add_term([u], dmp_one(i, K), n + 1, i + 1, K)
 
     v = dmp_add_term(u, dmp_ground(K(2), n - 2), 0, n, K)

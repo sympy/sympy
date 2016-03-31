@@ -1,19 +1,16 @@
 """Ground types for various mathematical domains in SymPy. """
 
-from sympy.external import import_module
+from __future__ import print_function, division
 
-# The logic for detecting if a compatible version of gmpy/gmpy2 is present is
-# done in sympy.core.compatibility.
+__all__ = []
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.core.compatibility import builtins, HAS_GMPY
 
-from __builtin__ import (
-    int as PythonInteger,
-    float as PythonReal,
-    complex as PythonComplex,
-)
+PythonInteger = builtins.int
+PythonReal = builtins.float
+PythonComplex = builtins.complex
 
-from pythonrational import PythonRational
+from .pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,
@@ -71,13 +68,8 @@ else:
     gmpy_sqrt = None
     gmpy_qdiv = None
 
-from sympy.mpmath import (
-    mpf as MPmathReal,
-    mpc as MPmathComplex,
-    mpi as MPmathInterval,
-)
 
-import sympy.mpmath.libmp as mlib
+import mpmath.libmp as mlib
 
 
 def python_sqrt(n):

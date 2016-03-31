@@ -1,5 +1,7 @@
 """Implementation of :class:`FractionField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -8,12 +10,14 @@ from sympy.polys.polyclasses import DMF
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
+from sympy.utilities import public
 
+@public
 class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """
 
     dtype = DMF
-    is_Frac = True
+    is_FractionField = is_Frac = True
 
     has_assoc_Ring = True
     has_assoc_Field = True
@@ -23,12 +27,13 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             raise GeneratorsNeeded("generators not specified")
 
         lev = len(gens) - 1
+        self.ngens = len(gens)
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
         self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom = dom
-        self.gens = gens
+        self.domain = self.dom = dom
+        self.symbols = self.gens = gens
 
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
@@ -56,10 +61,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         num, _ = dict_from_basic(p, gens=self.gens)
         den, _ = dict_from_basic(q, gens=self.gens)
 
-        for k, v in num.iteritems():
+        for k, v in num.items():
             num[k] = self.dom.from_sympy(v)
 
-        for k, v in den.iteritems():
+        for k, v in den.items():
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
@@ -80,7 +85,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
@@ -112,8 +117,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         >>> f = DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
 
-        >>> QQx = QQ.frac_field(x)
-        >>> ZZx = ZZ.frac_field(x)
+        >>> QQx = QQ.old_frac_field(x)
+        >>> ZZx = ZZ.old_frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
         (x + 2)/(x + 1)

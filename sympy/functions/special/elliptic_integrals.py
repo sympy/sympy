@@ -1,5 +1,7 @@
 """ Elliptic integrals. """
 
+from __future__ import print_function, division
+
 from sympy.core import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.hyperbolic import atanh
@@ -30,6 +32,8 @@ class elliptic_k(Function):
     pi/2
     >>> elliptic_k(1.0 + I)
     1.50923695405127 + 0.625146415202697*I
+    >>> elliptic_k(z).series(z, n=3)
+    pi/2 + pi*z/8 + 9*pi*z**2/128 + O(z**3)
 
     References
     ==========
@@ -42,8 +46,6 @@ class elliptic_k(Function):
 
     elliptic_f
     """
-
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -68,11 +70,19 @@ class elliptic_k(Function):
         if (z.is_real and (z - 1).is_positive) is False:
             return self.func(z.conjugate())
 
+    def _eval_nseries(self, x, n, logx):
+        from sympy.simplify import hyperexpand
+        return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
+
     def _eval_rewrite_as_hyper(self, z):
         return (pi/2)*hyper((S.Half, S.Half), (S.One,), z)
 
     def _eval_rewrite_as_meijerg(self, z):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.elliptic_kc(self.args[0]._sage_())
 
 
 class elliptic_f(Function):
@@ -107,8 +117,6 @@ class elliptic_f(Function):
 
     elliptic_k
     """
-
-    nargs = 2
 
     @classmethod
     def eval(cls, z, m):
@@ -162,6 +170,8 @@ class elliptic_e(Function):
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
     z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
+    >>> elliptic_e(z).series(z, n=4)
+    pi/2 - pi*z/8 - 3*pi*z**2/128 - 5*pi*z**3/512 + O(z**4)
     >>> elliptic_e(1 + I, 2 - I/2).n()
     1.55203744279187 + 0.290764986058437*I
     >>> elliptic_e(0)
@@ -177,12 +187,9 @@ class elliptic_e(Function):
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
     """
 
-    nargs = (1, 2)
-
     @classmethod
-    def eval(cls, *args):
-        if len(args) == 2:
-            z, m = args
+    def eval(cls, z, m=None):
+        if m is not None:
             k = 2*z/pi
             if m.is_zero:
                 return z
@@ -195,7 +202,6 @@ class elliptic_e(Function):
             elif z.could_extract_minus_sign():
                 return -elliptic_e(-z, m)
         else:
-            z = args[0]
             if z.is_zero:
                 return pi/2
             elif z is S.One:
@@ -221,9 +227,20 @@ class elliptic_e(Function):
         raise ArgumentIndexError(self, argindex)
 
     def _eval_conjugate(self):
-        z, m = self.args
-        if (m.is_real and (m - 1).is_positive) is False:
-            return self.func(z.conjugate(), m.conjugate())
+        if len(self.args) == 2:
+            z, m = self.args
+            if (m.is_real and (m - 1).is_positive) is False:
+                return self.func(z.conjugate(), m.conjugate())
+        else:
+            z = self.args[0]
+            if (z.is_real and (z - 1).is_positive) is False:
+                return self.func(z.conjugate())
+
+    def _eval_nseries(self, x, n, logx):
+        from sympy.simplify import hyperexpand
+        if len(self.args) == 1:
+            return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
+        return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_hyper(self, *args):
         if len(args) == 1:
@@ -256,8 +273,8 @@ class elliptic_pi(Function):
 
     >>> from sympy import elliptic_pi, I, pi, O, S
     >>> from sympy.abc import z, n, m
-    >>> elliptic_pi(n, z, m).series(z)
-    z + z**3*(m/6 + n/3) + z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
+    >>> elliptic_pi(n, z, m).series(z, n=4)
+    z + z**3*(m/6 + n/3) + O(z**4)
     >>> elliptic_pi(0.5 + I, 1.0 - I, 1.2)
     2.50232379629182 - 0.760939574180767*I
     >>> elliptic_pi(0, 0)
@@ -273,12 +290,10 @@ class elliptic_pi(Function):
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
     """
 
-    nargs = (2, 3)
-
     @classmethod
-    def eval(cls, *args):
-        if len(args) == 3:
-            n, z, m = args
+    def eval(cls, n, m, z=None):
+        if z is not None:
+            n, z, m = n, m, z
             k = 2*z/pi
             if n == S.Zero:
                 return elliptic_f(z, m)
@@ -300,7 +315,6 @@ class elliptic_pi(Function):
             elif z.could_extract_minus_sign():
                 return -elliptic_pi(n, -z, m)
         else:
-            n, m = args
             if n == S.Zero:
                 return elliptic_k(m)
             elif n == S.One:

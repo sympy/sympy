@@ -16,7 +16,10 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
+from __future__ import print_function, division
+
 from sympy.utilities.iterables import kbins
+from sympy.core.compatibility import range
 
 class Compound(object):
     """ A little class to represent an interior node in the tree
@@ -81,11 +84,10 @@ def unify(x, y, s=None, **fns):
     outputs:
         lazy sequence of mappings {Variable: subtree}
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.unify.core import unify, Compound, Variable
-    >>> from sympy.core.compatibility import next
     >>> expr    = Compound("Add", ("x", "y"))
     >>> pattern = Compound("Add", ("x", Variable("a")))
     >>> next(unify(expr, pattern, {}))
@@ -175,11 +177,11 @@ def allcombinations(A, B, ordered):
     reorganized into smaller sublists.
 
     >>> from sympy.unify.core import allcombinations
-    >>> for x in allcombinations((1, 2, 3), (5, 6), 'associative'): print x
+    >>> for x in allcombinations((1, 2, 3), (5, 6), 'associative'): print(x)
     (((1,), (2, 3)), ((5,), (6,)))
     (((1, 2), (3,)), ((5,), (6,)))
 
-    >>> for x in allcombinations((1, 2, 3), (5, 6), 'commutative'): print x
+    >>> for x in allcombinations((1, 2, 3), (5, 6), 'commutative'): print(x)
         (((1,), (2, 3)), ((5,), (6,)))
         (((1, 2), (3,)), ((5,), (6,)))
         (((1,), (3, 2)), ((5,), (6,)))
@@ -199,7 +201,7 @@ def allcombinations(A, B, ordered):
     if ordered == "associative":
         ordered = None
     sm, bg = (A, B) if len(A) < len(B) else (B, A)
-    for part in kbins(range(len(bg)), len(sm), ordered=ordered):
+    for part in kbins(list(range(len(bg))), len(sm), ordered=ordered):
         if bg == B:
             yield tuple((a,) for a in A), partition(B, part)
         else:

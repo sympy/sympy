@@ -9,7 +9,7 @@ SPHINXVER    = 0.5
 SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
 PAPER        =
 
-SVGFILES = $(wildcard src/modules/physics/mechanics/*.svg)
+SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
@@ -17,14 +17,9 @@ ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) src
 
-LANGUAGES = bg cs de fr pl ru sr zh
-
-MOFILES = $(foreach l,$(LANGUAGES),$(addprefix _build/i18n/,$(addsuffix /LC_MESSAGES/tutorial.mo,${l})))
-POFILES = $(foreach l,$(LANGUAGES),$(addprefix src/tutorial/tutorial.,$(addsuffix .po,${l})))
-
-.PHONY: changes cheatsheet clean gettext help html html-errors \
-        htmlapi htmlhelp htmli18n info latex linkcheck texinfo \
-        update-po web
+.PHONY: changes cheatsheet clean help html html-errors \
+        htmlapi htmlhelp info latex linkcheck livehtml \
+        texinfo web logo man
 
 .SUFFIXES: .pdf .svg
 
@@ -33,32 +28,31 @@ help:
 	@echo "  changes     to make an overview over all changed/added/deprecated items"
 	@echo "  cheatsheet  to make the Cheatsheet"
 	@echo "  clean       to remove generated files"
-	@echo "  gettext     to make pot files for translation"
 	@echo "  html        to make standalone HTML files"
 	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
 	@echo "  htmlapi     to make HTML API docs"
 	@echo "  htmlhelp    to make HTML files and a HTML help project"
-	@echo "  htmli18n    to make the i18n versions"
 	@echo "  info        to make Texinfo files and run them through makeinfo"
 	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  livehtml    to use livereload to view the built html"
 	@echo "  texinfo     to make Texinfo files"
-	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
+	@echo "  logo        generate logos from src/logo/sympy.svg"
+	@echo "  man         build manpage"
 
 clean:
 	-rm -rf _build
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html: htmli18n
+html: _build/logo/sympy-notailtext-favicon.ico
 	mkdir -p src/.static
 	mkdir -p _build/html
 	mkdir -p _build/doctrees
 	mkdir -p src/modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/
-	cp -r src/figures _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
@@ -73,31 +67,6 @@ htmlapi:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) _build/api
 	@echo
 	@echo "Build finished. The API docs pages are in _build/api."
-
-gettext:
-	$(SPHINXBUILD) -b gettext -t gettext -D master_doc=tutorial/tutorial \
-		-D source_suffix=.en.rst -d _build/doctrees-en src src/tutorial
-	sed -i "/^\# [0-9a-zA-Z]*$$/d" src/tutorial/tutorial.pot
-
-update-po: $(POFILES)
-
-htmli18n: $(MOFILES)
-	mkdir -p _build/i18n/
-	mkdir -p _build/html/tutorial
-	$(foreach l,$(LANGUAGES), \
-		$(SPHINXBUILD) $(SPHINXOPTS) -b html -D language=$l -D master_doc=tutorial/tutorial \
-			-D source_suffix=.en.rst -d _build/doctrees-$l src _build/i18n/$l && \
-		cp _build/i18n/$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$l.html && \
-	) true
-
-$(POFILES): src/tutorial/tutorial.pot
-	msgmerge -U $@ $<
-	touch $@
-
-$(MOFILES): _build/i18n/%/LC_MESSAGES/tutorial.mo: src/tutorial/tutorial.%.po
-	mkdir -p $(dir $@)
-	msgfmt $< -o $@
-	rm -rf _build/doctrees-$*
 
 web:
 	mkdir -p _build/web _build/doctrees
@@ -138,12 +107,20 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in _build/linkcheck/output.txt."
 
-cheatsheet: _build/cheatsheet/cheatsheet.pdf
+livehtml:
+	livereload _build/html
+
+cheatsheet: _build/cheatsheet/cheatsheet.pdf _build/cheatsheet/combinatoric_cheatsheet.pdf
 
 _build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+
+_build/cheatsheet/cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+	mkdir -p _build/cheatsheet
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 
 texinfo:
 	mkdir -p _build/texinfo
@@ -159,3 +136,15 @@ info:
 	@echo "Running Texinfo files through makeinfo..."
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
+
+man: man/isympy.xml
+	docbook2x-man --to-stdout $< > man/isympy.1
+
+_build/logo/sympy-notailtext-favicon.ico: logo
+
+logo: src/logo/sympy.svg
+	rm -rf _build/logo
+	mkdir -p _build/logo
+	$(PYTHON) ./generate_logos.py -d
+	@echo
+	@echo "Logo generated."

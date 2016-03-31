@@ -57,7 +57,7 @@ gridsize = 200              # number of points in the grid
 
 def main():
 
-    print __doc__
+    print(__doc__)
 
     # arrays are represented with IndexedBase, indices with Idx
     m = Symbol('m', integer=True)
@@ -66,7 +66,7 @@ def main():
     B = IndexedBase('B')
     x = Symbol('x')
 
-    print "Compiling ufuncs for radial harmonic oscillator solutions"
+    print("Compiling ufuncs for radial harmonic oscillator solutions")
 
     # setup a basis of ho-solutions  (for l=0)
     basis_ho = {}
@@ -78,8 +78,8 @@ def main():
         # Reduce the number of operations in the expression by eval to float
         expr = expr.evalf(15)
 
-        print "The h.o. wave function with l = %i and n = %i is" % (
-            orbital_momentum_l, n)
+        print("The h.o. wave function with l = %i and n = %i is" % (
+            orbital_momentum_l, n))
         pprint(expr)
 
         # implement, compile and wrap it as a ufunc
@@ -147,12 +147,8 @@ def main():
         expr = A[i]**2*psi_ho(A[i])*psi[i]*step
 
         if n == 0:
-            print "Setting up binary integrators for the integral:"
+            print("Setting up binary integrators for the integral:")
             pprint(Integral(x**2*psi_ho(x)*Function('psi')(x), (x, 0, oo)))
-
-        # But it needs to be an operation on indexed objects, so that the code
-        # generators will recognize it correctly as an array.
-        # expr = expr.subs(x, A[i])
 
         # Autowrap it.  For functions that take more than one argument, it is
         # a good idea to use the 'args' keyword so that you know the signature
@@ -161,27 +157,27 @@ def main():
         binary_integrator[n] = autowrap(expr, args=[A.label, psi.label, step, m])
 
         # Lets see how it converges with the grid dimension
-        print "Checking convergence of integrator for n = %i" % n
+        print("Checking convergence of integrator for n = %i" % n)
         for g in range(3, 8):
             grid, step = np.linspace(0, rmax, 2**g, retstep=True)
-            print "grid dimension %5i, integral = %e" % (2**g,
-                    binary_integrator[n](grid, H_ufunc(grid), step))
+            print("grid dimension %5i, integral = %e" % (2**g,
+                    binary_integrator[n](grid, H_ufunc(grid), step)))
 
-    print "A binary integrator has been set up for each basis state"
-    print "We will now use them to reconstruct a hydrogen solution."
+    print("A binary integrator has been set up for each basis state")
+    print("We will now use them to reconstruct a hydrogen solution.")
 
     # Note: We didn't need to specify grid or use gridsize before now
     grid, stepsize = np.linspace(0, rmax, gridsize, retstep=True)
 
-    print "Calculating coefficients with gridsize = %i and stepsize %f" % (
-        len(grid), stepsize)
+    print("Calculating coefficients with gridsize = %i and stepsize %f" % (
+        len(grid), stepsize))
 
     coeffs = {}
     for n in range(basis_dimension):
         coeffs[n] = binary_integrator[n](grid, H_ufunc(grid), stepsize)
-        print "c(%i) = %e" % (n, coeffs[n])
+        print("c(%i) = %e" % (n, coeffs[n]))
 
-    print "Constructing the approximate hydrogen wave"
+    print("Constructing the approximate hydrogen wave")
     hydro_approx = 0
     all_steps = {}
     for n in range(basis_dimension):
@@ -192,21 +188,21 @@ def main():
 
     # check error numerically
     diff = np.max(np.abs(hydro_approx - H_ufunc(grid)))
-    print "Error estimate: the element with largest deviation misses by %f" % diff
+    print("Error estimate: the element with largest deviation misses by %f" % diff)
     if diff > 0.01:
-        print "This is much, try to increase the basis size or adjust omega"
+        print("This is much, try to increase the basis size or adjust omega")
     else:
-        print "Ah, that's a pretty good approximation!"
+        print("Ah, that's a pretty good approximation!")
 
     # Check visually
     if pylab:
-        print "Here's a plot showing the contribution for each n"
+        print("Here's a plot showing the contribution for each n")
         line[0].set_linestyle('-')
         pylab.plot(grid, H_ufunc(grid), 'r-', label='exact')
         pylab.legend()
         pylab.show()
 
-    print """Note:
+    print("""Note:
     These binary integrators were specialized to find coefficients for a
     harmonic oscillator basis, but they can process any wave function as long
     as it is available as a vector and defined on a grid with equidistant
@@ -218,7 +214,7 @@ def main():
     so that the integrators can find coefficients for *any* isotropic harmonic
     oscillator basis.
 
-    """
+    """)
 
 
 if __name__ == '__main__':

@@ -1,9 +1,11 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 
 class PlotMode(PlotObject):
@@ -64,11 +66,11 @@ class PlotMode(PlotObject):
         instance of the appropriate child class.
         """
 
-        nargs, nkwargs = PlotMode._extract_options(args, kwargs)
-        mode_arg = nkwargs.get('mode', '')
+        newargs, newkwargs = PlotMode._extract_options(args, kwargs)
+        mode_arg = newkwargs.get('mode', '')
 
         # Interpret the arguments
-        d_vars, intervals = PlotMode._interpret_args(nargs)
+        d_vars, intervals = PlotMode._interpret_args(newargs)
         i_vars = PlotMode._find_i_vars(d_vars, intervals)
         i, d = max([len(i_vars), len(intervals)]), len(d_vars)
 
@@ -82,7 +84,7 @@ class PlotMode(PlotObject):
         o.d_vars = d_vars
         o._fill_i_vars(i_vars)
         o._fill_intervals(intervals)
-        o.options = nkwargs
+        o.options = newkwargs
 
         return o
 
@@ -207,13 +209,7 @@ class PlotMode(PlotObject):
         class definition: Cartesian2D._register()
         """
         name = cls.__name__
-        #try:
         cls._init_mode()
-
-        #except Exception, e:
-        #    raise RuntimeError( ("Failed to initialize "
-        #                      "plot mode %s. Reason: %s")
-        #                       % (name, (str(e))) )
 
         try:
             i, d = cls.i_var_count, cls.d_var_count
@@ -232,7 +228,7 @@ class PlotMode(PlotObject):
                 # also set that.
                 PlotMode._mode_default_map[d][i] = cls
 
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(("Failed to register "
                               "plot mode %s. Reason: %s")
                                % (name, (str(e))))
@@ -278,7 +274,8 @@ class PlotMode(PlotObject):
         for i in range(cls.i_var_count):
             # default intervals must be given [min,max,steps]
             # (no var, but they must be in the same order as i_vars)
-            assert len(di[i]) == 3
+            if len(di[i]) != 3:
+                raise ValueError("length should be equal to 3")
 
             # Initialize an incomplete interval,
             # to later be filled with a var when
@@ -341,7 +338,8 @@ class PlotMode(PlotObject):
         for i in range(len(self.intervals)):
             if self.intervals[i].v is None:
                 u = [v for v in self.i_vars if v not in v_used]
-                assert len(u) != 0
+                if len(u) == 0:
+                    raise ValueError("length should not be equal to 0")
                 self.intervals[i].v = u[0]
                 v_used.append(u[0])
 
@@ -376,14 +374,14 @@ class PlotMode(PlotObject):
 
     @staticmethod
     def _extract_options(args, kwargs):
-        nkwargs, nargs = {}, []
+        newkwargs, newargs = {}, []
         for a in args:
             if isinstance(a, str):
-                nkwargs = dict(nkwargs, **parse_option_string(a))
+                newkwargs = dict(newkwargs, **parse_option_string(a))
             else:
-                nargs.append(a)
-        nkwargs = dict(nkwargs, **kwargs)
-        return nargs, nkwargs
+                newargs.append(a)
+        newkwargs = dict(newkwargs, **kwargs)
+        return newargs, newkwargs
 
 
 def var_count_error(is_independent, is_plotting):

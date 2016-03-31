@@ -22,12 +22,13 @@ tests = [
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.specfun.tests',
-    'sympy.statistics.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]
 
 """
+
+from __future__ import print_function
 
 from glob import glob
 
@@ -36,7 +37,9 @@ def get_paths(level=15):
     """
     Generates a set of paths for testfiles searching.
 
-    Example:
+    Examples
+    ========
+
     >>> get_paths(2)
     ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
     >>> get_paths(6)
@@ -57,7 +60,7 @@ for x in get_paths():
 g = [".".join(x.split("/")[:-1]) for x in g]
 g = list(set(g))
 g.sort()
-print "tests = ["
+print("tests = [")
 for x in g:
-    print "    '%s'," % x
-print "    ]"
+    print("    '%s'," % x)
+print("    ]")

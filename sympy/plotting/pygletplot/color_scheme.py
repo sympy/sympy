@@ -1,7 +1,8 @@
+from __future__ import print_function, division
+
 from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
-
-from sympy.core.compatibility import callable
+from sympy.core.compatibility import range
 
 
 class ColorGradient(object):
@@ -13,9 +14,10 @@ class ColorGradient(object):
             self.colors = list(args)
             self.intervals = [0.0, 1.0]
         elif len(args) > 0:
-            assert len(args) % 2 == 0
-            self.colors = [args[i] for i in xrange(1, len(args), 2)]
-            self.intervals = [args[i] for i in xrange(0, len(args), 2)]
+            if len(args) % 2 != 0:
+                raise ValueError("len(args) should be even")
+            self.colors = [args[i] for i in range(1, len(args), 2)]
+            self.intervals = [args[i] for i in range(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
 
     def copy(self):
@@ -115,7 +117,7 @@ class ColorScheme(object):
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except:
+            except Exception:
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "
@@ -131,7 +133,7 @@ class ColorScheme(object):
         if gargs:
             try:
                 gradient = ColorGradient(*gargs)
-            except Exception, ex:
+            except Exception as ex:
                 raise ValueError(("Could not initialize a gradient "
                                   "with arguments %s. Inner "
                                   "exception: %s") % (gargs, str(ex)))
@@ -171,7 +173,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i' % (i)) for i in xrange(1, 6)]
+        vars = [Symbol('unbound%i' % (i)) for i in range(1, 6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]
@@ -213,20 +215,20 @@ class ColorScheme(object):
             raise ValueError("Color function is not callable.")
         try:
             result = self.f(0, 0, 0, 0, 0)
-            assert len(result) == 3
-        except TypeError, te:
+            if len(result) != 3:
+                raise ValueError("length should be equal to 3")
+        except TypeError as te:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
-        except AssertionError, ae:
+        except AssertionError as ae:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception, ie:
+        except Exception as ie:
             pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
             return self.f(x, y, z, u, v)
-        except Exception, e:
-            #print e
+        except Exception as e:
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):
@@ -241,7 +243,7 @@ class ColorScheme(object):
             set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if verts[_u] is None:
                 cverts.append(None)
             else:
@@ -255,9 +257,9 @@ class ColorScheme(object):
             if callable(inc_pos):
                 inc_pos()
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if cverts[_u] is not None:
-                for _c in xrange(3):
+                for _c in range(3):
                     # scale from [f_min, f_max] to [0,1]
                     cverts[_u][_c] = rinterpolate(bounds[_c][0], bounds[_c][1],
                                                   cverts[_u][_c])
@@ -279,9 +281,9 @@ class ColorScheme(object):
             set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             column = list()
-            for _v in xrange(len(v_set)):
+            for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)
                 else:
@@ -296,11 +298,11 @@ class ColorScheme(object):
                     inc_pos()
             cverts.append(column)
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
-            for _v in xrange(len(v_set)):
+        for _u in range(len(u_set)):
+            for _v in range(len(v_set)):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
-                    for _c in xrange(3):
+                    for _c in range(3):
                         cverts[_u][_v][_c] = rinterpolate(bounds[_c][0],
                                              bounds[_c][1], cverts[_u][_v][_c])
                     # apply gradient

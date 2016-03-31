@@ -6,13 +6,15 @@ Todo:
 * Update tests.
 """
 
+from __future__ import print_function, division
+
 import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate
 from sympy.core.basic import sympify
+from sympy.core.compatibility import string_types, range
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
-
 
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.state import Ket, Bra, State
@@ -22,7 +24,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from sympy.mpmath.libmp.libintmath import bitcount
+from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -58,7 +60,7 @@ class QubitState(State):
             return args[0].qubit_values
 
         # Turn strings into tuple of strings
-        if len(args) == 1 and isinstance(args[0], basestring):
+        if len(args) == 1 and isinstance(args[0], string_types):
             args = tuple(args[0])
 
         args = sympify(args)
@@ -213,12 +215,12 @@ class Qubit(QubitState, Ket):
         #qubit
         sorted_idx = list(indices)
         if len(sorted_idx) == 0:
-            sorted_idx = range(0, self.nqubits)
+            sorted_idx = list(range(0, self.nqubits))
         sorted_idx.sort()
 
         #trace out for each of index
         new_mat = self*bra
-        for i in xrange(len(sorted_idx) - 1, -1, -1):
+        for i in range(len(sorted_idx) - 1, -1, -1):
             # start from tracing out from leftmost qubit
             new_mat = self._reduced_density(new_mat, int(sorted_idx[i]))
 
@@ -243,9 +245,9 @@ class Qubit(QubitState, Ket):
         new_size = old_size//2
         new_matrix = Matrix().zeros(new_size)
 
-        for i in xrange(new_size):
-            for j in xrange(new_size):
-                for k in xrange(2):
+        for i in range(new_size):
+            for j in range(new_size):
+                for k in range(2):
                     col = find_index_that_is_projected(j, k, qubit)
                     row = find_index_that_is_projected(i, k, qubit)
                     new_matrix[i, j] += old_matrix[row, col]
@@ -288,7 +290,7 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(xrange(bitcount(abs(args[0]))))
+            rvalues = reversed(range(bitcount(abs(args[0]))))
             qubit_values = [(args[0] >> i) & 1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
@@ -401,7 +403,7 @@ def matrix_to_qubit(matrix):
         sympy matrices, numpy matrices and scipy.sparse sparse matrices.
 
     Examples
-    --------
+    ========
 
     Represent a state and then go back to its qubit form:
 
@@ -479,7 +481,7 @@ def matrix_to_density(mat):
 
 
 def qubit_to_matrix(qubit, format='sympy'):
-    """Coverts an Add/Mul of Qubit objects into it's matrix representation
+    """Converts an Add/Mul of Qubit objects into it's matrix representation
 
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
     for ``represent(qubit)``.

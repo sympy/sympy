@@ -56,25 +56,45 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
+from __future__ import print_function, division
+
 from collections import defaultdict
+from itertools import product
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan, Expr)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key, permutations, product
+from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
-        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
+        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.simplify import powdenest, simplify, polarify, unpolarify
+from sympy.simplify import simplify
+from sympy.functions.elementary.complexes import polarify, unpolarify
+from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
 from sympy.series import residue
+
+# function to define "buckets"
+def _mod1(x):
+    # TODO see if this can work as Mod(x, 1); this will require
+    # different handling of the "buckets" since these need to
+    # be sorted and that fails when there is a mixture of
+    # integers and expressions with parameters. With the current
+    # Mod behavior, Mod(k, 1) == Mod(1, 1) == 0 if k is an integer.
+    # Although the sorting can be done with Basic.compare, this may
+    # still require different handling of the sorted buckets.
+    if x.is_Number:
+        return Mod(x, 1)
+    c, x = x.as_coeff_Add()
+    return Mod(c, 1) + x
+
 
 # leave add formulae at the top for easy reference
 def add_formulae(formulae):
@@ -98,7 +118,7 @@ def add_formulae(formulae):
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), HyperRep_power1(a, z))
+    add((a, ), (), HyperRep_power1(-a, z))
 
     # 2F1
     addb((a, a - S.Half), (2*a, ),
@@ -118,11 +138,11 @@ def add_formulae(formulae):
          Matrix([HyperRep_asin1(z), HyperRep_power1(-S(1)/2, z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
-    addb((-a, S.Half - a), (S.Half, ),
-         Matrix([HyperRep_sqrts1(a, z), -HyperRep_sqrts2(a - S(1)/2, z)]),
+    addb((a, S.Half + a), (S.Half, ),
+         Matrix([HyperRep_sqrts1(-a, z), -HyperRep_sqrts2(-a - S(1)/2, z)]),
          Matrix([[1, 0]]),
-         Matrix([[0, a],
-                 [z*(2*a - 1)/2/(1 - z), S.Half - z*(2*a - 1)/(1 - z)]]))
+         Matrix([[0, -a],
+                 [z*(-2*a - 1)/2/(1 - z), S.Half - z*(-2*a - 1)/(1 - z)]]))
 
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -136,8 +156,6 @@ def add_formulae(formulae):
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # Complete elliptic integrals K(z) and E(z), both a 2F1 function
-    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
-    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
     addb([S.Half, S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[2/pi, 0]]),
@@ -372,7 +390,7 @@ def add_formulae(formulae):
 def add_meijerg_formulae(formulae):
     from sympy.matrices import Matrix
 
-    a, b, c, z = map(Dummy, 'abcz')
+    a, b, c, z = list(map(Dummy, 'abcz'))
     rho = Dummy('rho')
 
     def add(an, ap, bm, bq, B, C, M, matcher):
@@ -383,10 +401,10 @@ def add_meijerg_formulae(formulae):
         x = func.an[0]
         y, z = func.bm
         swapped = False
-        if not Mod((x - y).simplify(), 1):
+        if not _mod1((x - y).simplify()):
             swapped = True
             (y, z) = (z, y)
-        if Mod((x - z).simplify(), 1) or x > z:
+        if _mod1((x - z).simplify()) or x - z > 0:
             return None
         l = [y, x]
         if swapped:
@@ -404,23 +422,23 @@ def add_meijerg_formulae(formulae):
         """http://functions.wolfram.com/07.34.03.0984.01"""
         x = func.an[0]
         u, v, w = func.bm
-        if Mod((u - v).simplify(), 1) == 0:
-            if Mod((v - w).simplify(), 1) == 0:
+        if _mod1((u - v).simplify()) == 0:
+            if _mod1((v - w).simplify()) == 0:
                 return
             sig = (S(1)/2, S(1)/2, S(0))
             x1, x2, y = u, v, w
         else:
-            if Mod((x - u).simplify(), 1) == 0:
+            if _mod1((x - u).simplify()) == 0:
                 sig = (S(1)/2, S(0), S(1)/2)
                 x1, y, x2 = u, v, w
             else:
                 sig = (S(0), S(1)/2, S(1)/2)
                 y, x1, x2 = u, v, w
 
-        if (Mod((x - x1).simplify(), 1) != 0 or
-            Mod((x - x2).simplify(), 1) != 0 or
-            Mod((x - y).simplify(), 1) != S(1)/2 or
-                x > x1 or x > x2):
+        if (_mod1((x - x1).simplify()) != 0 or
+            _mod1((x - x2).simplify()) != 0 or
+            _mod1((x - y).simplify()) != S(1)/2 or
+                x - x1 > 0 or x - x2 > 0):
             return
 
         return {a: x}, G_Function([x], [], [x - S(1)/2 + t for t in sig], [])
@@ -453,18 +471,17 @@ def make_simp(z):
 def debug(*args):
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end="")
+        print()
 
-_mod1 = lambda x: Mod(x, 1)
 
 class Hyper_Function(Expr):
     """ A generalized hypergeometric function. """
 
     def __new__(cls, ap, bq):
         obj = super(Hyper_Function, cls).__new__(cls)
-        obj.ap = Tuple(*map(expand, ap))
-        obj.bq = Tuple(*map(expand, bq))
+        obj.ap = Tuple(*list(map(expand, ap)))
+        obj.bq = Tuple(*list(map(expand, bq)))
         return obj
 
     @property
@@ -516,15 +533,16 @@ class Hyper_Function(Expr):
                     n1 = 1, n2 = 1,   n2 = 2
              r = 1, t1 = 0
                     m1 = 2:
+
         >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """
         abuckets, bbuckets = sift(self.ap, _mod1), sift(self.bq, _mod1)
 
         def tr(bucket):
-            bucket = bucket.items()
+            bucket = list(bucket.items())
             if not any(isinstance(x[0], Mod) for x in bucket):
-                bucket.sort(key=lambda x: x[0])
+                bucket.sort(key=lambda x: default_sort_key(x[0]))
             bucket = tuple([(mod, len(values)) for mod, values in bucket if
                     values])
             return bucket
@@ -541,7 +559,7 @@ class Hyper_Function(Expr):
 
         diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
-            for mod in set(bucket.keys() + obucket.keys()):
+            for mod in set(list(bucket.keys()) + list(obucket.keys())):
                 if (not mod in bucket) or (not mod in obucket) \
                         or len(bucket[mod]) != len(obucket[mod]):
                     return -1
@@ -569,7 +587,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and not a < b:
+                if (a - b).is_integer and (a - b).is_negative is False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -585,10 +603,10 @@ class G_Function(Expr):
 
     def __new__(cls, an, ap, bm, bq):
         obj = super(G_Function, cls).__new__(cls)
-        obj.an = Tuple(*map(expand, an))
-        obj.ap = Tuple(*map(expand, ap))
-        obj.bm = Tuple(*map(expand, bm))
-        obj.bq = Tuple(*map(expand, bq))
+        obj.an = Tuple(*list(map(expand, an)))
+        obj.ap = Tuple(*list(map(expand, ap)))
+        obj.bm = Tuple(*list(map(expand, bm)))
+        obj.bq = Tuple(*list(map(expand, bq)))
         return obj
 
     @property
@@ -609,23 +627,26 @@ class G_Function(Expr):
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
 
+        Examples
+        ========
+
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
-        >>> from sympy import S
+        >>> from sympy import S, symbols
+
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
         >>> G_Function(a, b, [2], [y]).compute_buckets()
         ({0: [3, 2, 1], 1/2: [3/2]},
-        {0: [2], Mod(y, 1): [y, y + 1, y + 3]}, {0: [2]}, {Mod(y, 1): [y]})
+        {0: [2], y: [y, y + 1, y + 3]}, {0: [2]}, {y: [y]})
 
         """
-        dicts = pan, pap, pbm, pbq = defaultdict(list), defaultdict(list), \
-            defaultdict(list), defaultdict(list)
+        dicts = pan, pap, pbm, pbq = [defaultdict(list) for i in range(4)]
         for dic, lis in zip(dicts, (self.an, self.ap, self.bm, self.bq)):
             for x in lis:
-                dic[Mod(x, 1)].append(x)
+                dic[_mod1(x)].append(x)
 
         for dic, flip in zip(dicts, (True, False, False, True)):
-            for m, items in dic.iteritems():
+            for m, items in dic.items():
                 x0 = items[0]
                 items.sort(key=lambda x: x - x0, reverse=flip)
                 dic[m] = items
@@ -650,29 +671,12 @@ class Formula(object):
     - symbols, the free symbols (parameters) in the formula
     - func, the function
     - B, C, M (see _compute_basis)
-    - lcms, a dictionary which maps symbol -> lcm of denominators
-    - isolation, a dictonary which maps symbol -> (num, coeff) pairs
 
     >>> from sympy.abc import a, b, z
     >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
     >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
     >>> f = Formula(func, z, None, [a, b])
 
-    The lcm of all denominators of coefficients of a is 2*3*7
-    >>> f.lcms[a]
-    42
-
-    for b it is just 7:
-    >>> f.lcms[b]
-    7
-
-    We can isolate a in the (1+a)/2 term, with denominator 2:
-    >>> f.isolation[a]
-    (2, 2, 1)
-
-    b is isolated in the b term, with coefficient one:
-    >>> f.isolation[b]
-    (4, 1, 1)
     """
 
     def _compute_basis(self, closed_form):
@@ -684,14 +688,14 @@ class Formula(object):
         """
         from sympy.matrices import Matrix, eye, zeros
 
-        afactors = map(lambda a: _x + a, self.func.ap)
-        bfactors = map(lambda b: _x + b - 1, self.func.bq)
+        afactors = [_x + a for a in self.func.ap]
+        bfactors = [_x + b - 1 for b in self.func.bq]
         expr = _x*Mul(*bfactors) - self.z*Mul(*afactors)
         poly = Poly(expr, _x)
 
         n = poly.degree() - 1
         b = [closed_form]
-        for _ in xrange(n):
+        for _ in range(n):
             b.append(self.z*b[-1].diff(self.z))
 
         self.B = Matrix(b)
@@ -706,7 +710,7 @@ class Formula(object):
     def __init__(self, func, z, res, symbols, B=None, C=None, M=None):
         z = sympify(z)
         res = sympify(res)
-        symbols = filter(lambda x: func.has(x), sympify(symbols))
+        symbols = [x for x in sympify(symbols) if func.has(x)]
 
         self.z = z
         self.symbols = symbols
@@ -714,39 +718,6 @@ class Formula(object):
         self.C = C
         self.M = M
         self.func = func
-
-        params = list(func.ap) + list(func.bq)
-        lcms = {}
-        isolation = {}
-        for a in symbols:
-            l = 1
-            isolating = []
-            others = list(symbols)
-            others.remove(a)
-            i = 0
-            for p in params:
-                if p.has(a):
-                    c, m = None, None
-                    if p.is_Add:
-                        c, m = p.as_independent(a)[1].as_coeff_mul(a)
-                    else:
-                        c, m = p.as_coeff_mul(a)
-                    if m != (a, ) or not c.is_Rational:
-                        raise NotImplementedError('?')
-                    l = ilcm(l, c.q)
-
-                    if not p.has(*others):
-                        isolating.append((i, c.q, c.p))
-                lcms[a] = l
-                i += 1
-            if len(isolating) == 0:
-                raise NotImplementedError('parameter is not isolated')
-            isolating.sort(key=lambda x: x[1])
-            isolating.sort(key=lambda x: -x[2])
-            isolation[a] = isolating[-1]
-
-        self.lcms = lcms
-        self.isolation = isolation
 
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
@@ -771,22 +742,54 @@ class Formula(object):
         bq = func.bq
         if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):
             raise TypeError('Cannot instantiate other number of parameters')
+        symbol_values = []
+        for a in self.symbols:
+            if a in self.func.ap.args:
+                symbol_values.append(ap)
+            elif a in self.func.bq.args:
+                symbol_values.append(bq)
+            else:
+                raise ValueError("At least one of the parameters of the "
+                        "formula must be equal to %s" % (a,))
+        base_repl = [dict(list(zip(self.symbols, values)))
+                for values in product(*symbol_values)]
+        abuckets, bbuckets = [sift(params, _mod1) for params in [ap, bq]]
+        a_inv, b_inv = [dict((a, len(vals)) for a, vals in bucket.items())
+                for bucket in [abuckets, bbuckets]]
+        critical_values = [[0] for _ in self.symbols]
+        result = []
+        _n = Dummy()
+        for repl in base_repl:
+            symb_a, symb_b = [sift(params, lambda x: _mod1(x.xreplace(repl)))
+                for params in [self.func.ap, self.func.bq]]
+            for bucket, obucket in [(abuckets, symb_a), (bbuckets, symb_b)]:
+                for mod in set(list(bucket.keys()) + list(obucket.keys())):
+                    if (not mod in bucket) or (not mod in obucket) \
+                            or len(bucket[mod]) != len(obucket[mod]):
+                        break
+                    for a, vals in zip(self.symbols, critical_values):
+                        if repl[a].free_symbols:
+                            continue
+                        exprs = [expr for expr in obucket[mod] if expr.has(a)]
+                        repl0 = repl.copy()
+                        repl0[a] += _n
+                        for expr in exprs:
+                            for target in bucket[mod]:
+                                n0, = solve(expr.xreplace(repl0) - target, _n)
+                                if n0.free_symbols:
+                                    raise ValueError("Value should not be true")
+                                vals.append(n0)
+            else:
+                values = []
+                for a, vals in zip(self.symbols, critical_values):
+                    a0 = repl[a]
+                    min_ = floor(min(vals))
+                    max_ = ceiling(max(vals))
+                    values.append([a0 + n for n in range(min_, max_ + 1)])
+                result.extend(dict(list(zip(self.symbols, l))) for l in product(*values))
+        return result
 
-        res = []
-        our_params = list(self.func.ap) + list(self.func.bq)
-        for na in permutations(ap):
-            for nb in permutations(bq):
-                all_params = list(na) + list(nb)
-                repl = {}
-                for a in self.symbols:
-                    i, d, _ = self.isolation[a]
-                    repl[a] = (solve(our_params[i] - all_params[i], a)[0], d)
-                for change in product(*[(-1, 0, 1)]*len(self.symbols)):
-                    rep = {}
-                    for i, a in zip(change, repl.keys()):
-                        rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(rep)
-        return res
+
 
 
 class FormulaCollection(object):
@@ -827,7 +830,7 @@ class FormulaCollection(object):
         >>> from sympy import S
         >>> i = Hyper_Function([S('1/4'), S('3/4 + 4')], [S.Half])
         >>> f.lookup_origin(i).closed_form
-        HyperRep_sqrts1(-17/4, _z)
+        HyperRep_sqrts1(-1/4, _z)
         """
         inv = func.build_invariants()
         sizes = func.sizes
@@ -849,19 +852,17 @@ class FormulaCollection(object):
                 diff = func2.difficulty(func)
                 if diff == -1:
                     continue
-                f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
-                        f.C.subs(repl), f.M.subs(repl))
-                if any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
-                    continue
-                possible.append((diff, f2))
-
-        if not possible:
-            # Give up.
-            return None
+                possible.append((diff, repl, f, func2))
 
         # find the nearest origin
         possible.sort(key=lambda x: x[0])
-        return possible[0][1]
+        for _, repl, f, func2 in possible:
+            f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
+                    f.C.subs(repl), f.M.subs(repl))
+            if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
+                return f2
+        else:
+            return None
 
 
 class MeijerFormula(object):
@@ -876,7 +877,7 @@ class MeijerFormula(object):
     """
 
     def __init__(self, an, ap, bm, bq, z, symbols, B, C, M, matcher):
-        an, ap, bm, bq = [Tuple(*map(expand, w)) for w in [an, ap, bm, bq]]
+        an, ap, bm, bq = [Tuple(*list(map(expand, w))) for w in [an, ap, bm, bq]]
         self.func = G_Function(an, ap, bm, bq)
         self.z = z
         self.symbols = symbols
@@ -1013,7 +1014,7 @@ class UnShiftA(Operator):
 
     def __init__(self, ap, bq, i, z):
         """ Note: i counts from zero! """
-        ap, bq, i = map(sympify, [ap, bq, i])
+        ap, bq, i = list(map(sympify, [ap, bq, i]))
 
         self._ap = ap
         self._bq = bq
@@ -1029,19 +1030,16 @@ class UnShiftA(Operator):
         m = Poly(z*ai, _x)
         for a in ap:
             m *= Poly(_x + a, _x)
-        #print m
 
         A = Dummy('A')
         n = D = Poly(ai*A - ai, A)
         for b in bq:
             n *= (D + b - 1)
-        #print n
 
         b0 = -n.nth(0)
         if b0 == 0:
             raise ValueError('Cannot decrement upper index: '
                              'cancels with lower')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, _x/ai + 1), _x)
 
@@ -1057,7 +1055,7 @@ class UnShiftB(Operator):
 
     def __init__(self, ap, bq, i, z):
         """ Note: i counts from zero! """
-        ap, bq, i = map(sympify, [ap, bq, i])
+        ap, bq, i = list(map(sympify, [ap, bq, i]))
 
         self._ap = ap
         self._bq = bq
@@ -1073,24 +1071,19 @@ class UnShiftB(Operator):
         m = Poly(_x*(bi - 1), _x)
         for b in bq:
             m *= Poly(_x + b - 1, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
             n *= (D + a)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment index: cancels with upper')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, _x/(bi - 1) + 1), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1148,7 +1141,7 @@ class MeijerUnShiftA(Operator):
 
     def __init__(self, an, ap, bm, bq, i, z):
         """ Note: i counts from zero! """
-        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+        an, ap, bm, bq, i = list(map(sympify, [an, ap, bm, bq, i]))
 
         self._an = an
         self._ap = ap
@@ -1167,7 +1160,6 @@ class MeijerUnShiftA(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         A = Dummy('A')
         D = Poly(bi - A, A)
@@ -1176,16 +1168,12 @@ class MeijerUnShiftA(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement upper b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1199,7 +1187,7 @@ class MeijerUnShiftB(Operator):
 
     def __init__(self, an, ap, bm, bq, i, z):
         """ Note: i counts from zero! """
-        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+        an, ap, bm, bq, i = list(map(sympify, [an, ap, bm, bq, i]))
 
         self._an = an
         self._ap = ap
@@ -1218,7 +1206,6 @@ class MeijerUnShiftB(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly(B + ai - 1, B)
@@ -1227,17 +1214,13 @@ class MeijerUnShiftB(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment upper a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, 1 - ai + _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1256,7 +1239,7 @@ class MeijerUnShiftC(Operator):
 
     def __init__(self, an, ap, bm, bq, i, z):
         """ Note: i counts from zero! """
-        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+        an, ap, bm, bq, i = list(map(sympify, [an, ap, bm, bq, i]))
 
         self._an = an
         self._ap = ap
@@ -1275,7 +1258,6 @@ class MeijerUnShiftC(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         C = Dummy('C')
         D = Poly(bi + C, C)
@@ -1284,16 +1266,12 @@ class MeijerUnShiftC(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement lower b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1309,7 +1287,7 @@ class MeijerUnShiftD(Operator):
 
     def __init__(self, an, ap, bm, bq, i, z):
         """ Note: i counts from zero! """
-        an, ap, bm, bq, i = map(sympify, [an, ap, bm, bq, i])
+        an, ap, bm, bq, i = list(map(sympify, [an, ap, bm, bq, i]))
 
         self._an = an
         self._ap = ap
@@ -1328,7 +1306,6 @@ class MeijerUnShiftD(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')  # - this is the shift operator `D_I`
         D = Poly(ai - 1 - B, B)
@@ -1337,17 +1314,13 @@ class MeijerUnShiftD(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment lower a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, ai - 1 - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1369,17 +1342,17 @@ class ReduceOrder(Operator):
         if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (_x + bj + k)/(bj + k)
 
-        self._poly = Poly(p, _x)
-        self._a = ai
-        self._b = bj
+        expr._poly = Poly(p, _x)
+        expr._a = ai
+        expr._b = bj
 
-        return self
+        return expr
 
     @classmethod
     def _meijer(cls, b, a, sign):
@@ -1388,24 +1361,24 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if n < 0 or not n.is_Integer:
+        if n.is_negative or not n.is_Integer:
             return None
 
-        self = Operator.__new__(cls)
+        expr = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (sign*_x + a + k)
 
-        self._poly = Poly(p, _x)
+        expr._poly = Poly(p, _x)
         if sign == -1:
-            self._a = b
-            self._b = a
+            expr._a = b
+            expr._b = a
         else:
-            self._b = Add(1, a - 1, evaluate=False)
-            self._a = Add(1, b - 1, evaluate=False)
+            expr._b = Add(1, a - 1, evaluate=False)
+            expr._a = Add(1, b - 1, evaluate=False)
 
-        return self
+        return expr
 
     @classmethod
     def meijer_minus(cls, b, a):
@@ -1433,7 +1406,7 @@ def _reduce_order(ap, bq, gen, key):
     operators = []
     for a in ap:
         op = None
-        for i in xrange(len(bq)):
+        for i in range(len(bq)):
             op = gen(a, bq[i])
             if op is not None:
                 bq.pop(i)
@@ -1466,7 +1439,7 @@ def reduce_order(func):
     (Hyper_Function((2,), (3,)), [<Reduce order by cancelling
     upper 4 with lower 3.>])
     """
-    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, lambda x: x)
+    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, default_sort_key)
 
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
@@ -1494,9 +1467,9 @@ def reduce_order_meijer(func):
     """
 
     nan, nbq, ops1 = _reduce_order(func.an, func.bq, ReduceOrder.meijer_plus,
-                                   lambda x: -x)
+                                   lambda x: default_sort_key(-x))
     nbm, nap, ops2 = _reduce_order(func.bm, func.ap, ReduceOrder.meijer_minus,
-                                   lambda x: x)
+                                   default_sort_key)
 
     return G_Function(nan, nap, nbm, nbq), ops1 + ops2
 
@@ -1567,15 +1540,15 @@ def devise_plan(target, origin, z):
     abuckets, bbuckets, nabuckets, nbbuckets = [sift(params, _mod1) for
             params in (target.ap, target.bq, origin.ap, origin.bq)]
 
-    if len(abuckets.keys()) != len(nabuckets.keys()) or \
-            len(bbuckets.keys()) != len(nbbuckets.keys()):
+    if len(list(abuckets.keys())) != len(list(nabuckets.keys())) or \
+            len(list(bbuckets.keys())) != len(list(nbbuckets.keys())):
         raise ValueError('%s not reachable from %s' % (target, origin))
 
     ops = []
 
     def do_shifts(fro, to, inc, dec):
         ops = []
-        for i in xrange(len(fro)):
+        for i in range(len(fro)):
             if to[i] - fro[i] > 0:
                 sh = inc
                 ch = 1
@@ -1600,7 +1573,7 @@ def devise_plan(target, origin, z):
                          lambda p, i: UnShiftB(nal + aother, p + bother, i, z),
                          lambda p, i: ShiftB(p[i]))
 
-    for r in sorted(abuckets.keys() + bbuckets.keys(), key=default_sort_key):
+    for r in sorted(list(abuckets.keys()) + list(bbuckets.keys()), key=default_sort_key):
         al = ()
         nal = ()
         bk = ()
@@ -1619,7 +1592,7 @@ def devise_plan(target, origin, z):
 
         def others(dic, key):
             l = []
-            for k, value in dic.iteritems():
+            for k, value in dic.items():
                 if k != key:
                     l += list(dic[k])
             return l
@@ -1636,10 +1609,10 @@ def devise_plan(target, origin, z):
             namax = nal[-1]
             amax = al[-1]
 
-            if nbk[0] <= namax or bk[0] <= amax:
+            if nbk[0] - namax <= 0 or bk[0] - amax <= 0:
                 raise ValueError('Non-suitable parameters.')
 
-            if namax > amax:
+            if namax - amax > 0:
                 # we are going to shift down - first do the as, then the bs
                 ops += do_shifts_a(nal, nbk, al, aother, bother)
                 ops += do_shifts_b(al, nbk, bk, aother, bother)
@@ -1676,11 +1649,11 @@ def try_shifted_sum(func, z):
     nbq = list(func.bq)
     nbq.remove(k)
     k -= 1
-    nap = map(lambda x: x - k, nap)
-    nbq = map(lambda x: x - k, nbq)
+    nap = [x - k for x in nap]
+    nbq = [x - k for x in nbq]
 
     ops = []
-    for n in xrange(r - 1):
+    for n in range(r - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1693,7 +1666,7 @@ def try_shifted_sum(func, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in xrange(k):
+    for n in range(k):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1712,8 +1685,8 @@ def try_polynomial(func, z):
     b0 = bbuckets[S(0)]
     a0.sort()
     b0.sort()
-    al0 = filter(lambda x: x <= 0, a0)
-    bl0 = filter(lambda x: x <= 0, b0)
+    al0 = [x for x in a0 if x <= 0]
+    bl0 = [x for x in b0 if x <= 0]
 
     if bl0:
         return oo
@@ -1723,7 +1696,7 @@ def try_polynomial(func, z):
     a = al0[-1]
     fac = 1
     res = S(1)
-    for n in Tuple(*range(-a)):
+    for n in Tuple(*list(range(-a))):
         fac *= z
         fac /= n + 1
         for a in func.ap:
@@ -1777,7 +1750,7 @@ def try_lerchphi(func):
         # bigger than all the a they differ from by an integer. In particular
         # if there are any negative b left, this function is not well-defined.
         for a, b in zip(avalue, bvalue):
-            if a > b:
+            if (a - b).is_positive:
                 k = a - b
                 numer *= rf(b + t, k)
                 denom *= rf(b, k)
@@ -1798,7 +1771,8 @@ def try_lerchphi(func):
         numer, denom = arg.as_numer_denom()
         if not denom.has(t):
             p = Poly(numer, t)
-            assert p.is_monomial
+            if not p.is_monomial:
+                raise TypeError("p should be monomial")
             ((b, ), a) = p.LT()
             monomials += [(a/denom, b)]
             continue
@@ -1851,9 +1825,9 @@ def try_lerchphi(func):
         deriv[lerchphi(z, 1, a)] = [(-a, lerchphi(z, 1, a)),
                                     (1/(1 - z), S(1))]
     trans = {}
-    for n, b in enumerate([S(1)] + deriv.keys()):
+    for n, b in enumerate([S(1)] + list(deriv.keys())):
         trans[b] = n
-    basis = [expand_func(b) for (b, _) in sorted(trans.items(),
+    basis = [expand_func(b) for (b, _) in sorted(list(trans.items()),
                                                  key=lambda x:x[1])]
     B = Matrix(basis)
     C = Matrix([[0]*len(B)])
@@ -1878,14 +1852,14 @@ def build_hypergeometric_formula(func):
     from sympy import zeros, Matrix, eye
     z = Dummy('z')
     if func.ap:
-        afactors = map(lambda a: _x + a, func.ap)
-        bfactors = map(lambda b: _x + b - 1, func.bq)
+        afactors = [_x + a for a in func.ap]
+        bfactors = [_x + b - 1 for b in func.bq]
         expr = _x*Mul(*bfactors) - z*Mul(*afactors)
         poly = Poly(expr, _x)
         n = poly.degree()
         basis = []
         M = zeros(n)
-        for k in xrange(n):
+        for k in range(n):
             a = func.ap[0] + k
             basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
             if k < n - 1:
@@ -1894,7 +1868,7 @@ def build_hypergeometric_formula(func):
         B = Matrix(basis)
         C = Matrix([[1] + [0]*(n - 1)])
         derivs = [eye(n)]
-        for k in xrange(n):
+        for k in range(n):
             derivs.append(M*derivs[k])
         l = poly.all_coeffs()
         l.reverse()
@@ -1940,7 +1914,7 @@ def hyperexpand_special(ap, bq, z):
     z_ = z
     z = unpolarify(z)
     if z == 0:
-        return S.Zero
+        return S.One
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1951,7 +1925,7 @@ def hyperexpand_special(ap, bq, z):
             b, a = a, b
         if z == -1 and simplify(a - b + c) == 1:
             # Kummer
-            if b.is_integer and b < 0:
+            if b.is_integer and b.is_negative:
                 return 2*cos(pi*b/2)*gamma(-b)*gamma(b - a + 1) \
                     /gamma(-b/2)/gamma(b/2 - a + 1)
             else:
@@ -1973,6 +1947,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
+
+    if z is S.Zero:
+        return S.One
+
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -2007,7 +1985,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     # First reduce order as much as possible.
     func, ops = reduce_order(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
@@ -2024,7 +2002,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     res = try_shifted_sum(func, z0)
     if res is not None:
         func, nops, p = res
-        debug('  Recognised shifted sum, reduced order to', func)
+        debug('  Recognised shifted sum, reduced order to ', func)
         ops += nops
 
     # apply the plan for poly
@@ -2047,12 +2025,12 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         formula = try_lerchphi(func)
 
     if formula is None:
-        debug('  Could not find an origin.',
+        debug('  Could not find an origin. ',
               'Will return answer in terms of '
               'simpler hypergeometric functions.')
         formula = build_hypergeometric_formula(func)
 
-    debug('  Found an origin:', formula.closed_form, formula.func)
+    debug('  Found an origin: ', formula.closed_form, ' ', formula.func)
 
     # We need to find the operators that convert formula into func.
     ops += devise_plan(func, formula.func, z0)
@@ -2210,21 +2188,21 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         rewrite = None
 
     func0 = func
-    debug('Try to expand meijer G function corresponding to', func)
+    debug('Try to expand Meijer G function corresponding to ', func)
 
     # We will play games with analytic continuation - rather use a fresh symbol
     z = Dummy('z')
 
     func, ops = reduce_order_meijer(func)
     if ops:
-        debug('  Reduced order to', func)
+        debug('  Reduced order to ', func)
     else:
         debug('  Could not reduce order.')
 
     # Try to find a direct formula
     f = _meijercollection.lookup_origin(func)
     if f is not None:
-        debug('  Found a Meijer G formula:', f.func)
+        debug('  Found a Meijer G formula: ', f.func)
         ops += devise_plan_meijer(f.func, func, z)
 
         # Now carry out the plan.
@@ -2236,7 +2214,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
         r = r[0].subs(z, z0)
         return powdenest(r, polar=True)
 
-    debug("  Could not find a direct formula. Trying slater's theorem.")
+    debug("  Could not find a direct formula. Trying Slater's theorem.")
 
     # TODO the following would be possible:
     # *) Paired Index Theorems
@@ -2431,7 +2409,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     #      is known to diverge.
     r = Piecewise((slater1, cond1), (slater2, cond2), (func0(z0), True))
     if r.has(hyper) and not allow_hyper:
-        debug('  Could express using hypergeometric functions, ' +
+        debug('  Could express using hypergeometric functions, '
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r

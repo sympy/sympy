@@ -5,11 +5,13 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyclasses import ANP
 from sympy.polys.specialpolys import f_polys, w_polys
 
 from sympy import nextprime, sin, sqrt, I
 from sympy.utilities.pytest import raises
+
+from sympy.core.compatibility import range
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()
@@ -157,7 +159,7 @@ def test_dup_zz_factor():
 
     f = x**4 + x + 1
 
-    for i in xrange(0, 20):
+    for i in range(0, 20):
         assert R.dup_zz_factor(f) == (1, [(f, 1)])
 
     assert R.dup_zz_factor(x**2 + 2*x + 2) == \
@@ -306,7 +308,7 @@ def test_dmp_zz_wang():
     assert R.dmp_expand(factors) == w_1
 
 
-def test_issue_3256():
+def test_issue_6355():
     # This tests a bug in the Wang algorithm that occured only with a very
     # specific set of random numbers.
     random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]
@@ -498,12 +500,12 @@ def test_dup_factor_list():
     assert R.dup_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
     R, x = ring("x", ZZ['t'])
-    assert R.dup_factor_list(0) == (DMP([], ZZ), [])
-    assert R.dup_factor_list(DMP([ZZ(7)], ZZ)) == (DMP([ZZ(7)], ZZ), [])
+    assert R.dup_factor_list(0) == (0, [])
+    assert R.dup_factor_list(7) == (7, [])
 
     R, x = ring("x", QQ['t'])
-    assert R.dup_factor_list(0) == (DMP([], QQ), [])
-    assert R.dup_factor_list(DMP([QQ(1, 7)], QQ)) == (DMP([QQ(1, 7)], QQ), [])
+    assert R.dup_factor_list(0) == (0, [])
+    assert R.dup_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
     R, x = ring("x", ZZ)
     assert R.dup_factor_list_include(0) == [(0, 1)]
@@ -511,6 +513,8 @@ def test_dup_factor_list():
 
     assert R.dup_factor_list(x**2 + 2*x + 1) == (1, [(x + 1, 2)])
     assert R.dup_factor_list_include(x**2 + 2*x + 1) == [(x + 1, 2)]
+    # issue 8037
+    assert R.dup_factor_list(6*x**2 - 5*x - 6) == (1, [(2*x - 3, 1), (3*x + 2, 1)])
 
     R, x = ring("x", QQ)
     assert R.dup_factor_list(QQ(1,2)*x**2 + x + QQ(1,2)) == (QQ(1, 2), [(x + 1, 2)])
@@ -522,21 +526,27 @@ def test_dup_factor_list():
     assert R.dup_factor_list(1.0*x**2 + 2.0*x + 1.0) == (1.0, [(1.0*x + 1.0, 2)])
     assert R.dup_factor_list(2.0*x**2 + 4.0*x + 2.0) == (2.0, [(1.0*x + 1.0, 2)])
 
-    R, x = ring("x", ZZ['t'])
-    f = DMP([ZZ(4), ZZ(0)], ZZ)*x**2 + DMP([ZZ(4), ZZ(0), ZZ(0)], ZZ)*x
+    f = 6.7225336055071*x**2 - 10.6463972754741*x - 0.33469524022264
+    coeff, factors = R.dup_factor_list(f)
+    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+
+    Rt, t = ring("t", ZZ)
+    R, x = ring("x", Rt)
+
+    f = 4*t*x**2 + 4*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (DMP([ZZ(4)], ZZ), [(DMP([ZZ(1), ZZ(0)], ZZ), 1),
-                            (DMP([ZZ(1)], ZZ)*x, 1),
-                            (DMP([ZZ(1)], ZZ)*x + DMP([ZZ(1), ZZ(0)], ZZ), 1)])
+        (4*t, [(x, 1),
+             (x + t, 1)])
 
-    R, x = ring("x", QQ['t'])
-    f = DMP([QQ(1, 2), QQ(0)], QQ)*x**2 + DMP([QQ(1, 2), QQ(0), QQ(0)], QQ)*x
+    Rt, t = ring("t", QQ)
+    R, x = ring("x", Rt)
+
+    f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (DMP([QQ(1, 2)], QQ), [(DMP([QQ(1), QQ(0)], QQ), 1),
-                               (DMP([QQ(1)], QQ)*x + DMP([], QQ), 1),
-                               (DMP([QQ(1)], QQ)*x + DMP([QQ(1), QQ(0)], QQ), 1)])
+        (QQ(1, 2)*t, [(x, 1),
+                    (x + t, 1)])
 
     R, x = ring("x", QQ.algebraic_field(I))
     def anp(element):
@@ -561,13 +571,15 @@ def test_dmp_factor_list():
     assert R.dmp_factor_list(0) == (QQ(0), [])
     assert R.dmp_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
-    R, x, y = ring("x,y", ZZ['y'])
-    assert R.dmp_factor_list(0) == (DMP([], ZZ), [])
-    assert R.dmp_factor_list(DMP([ZZ(7)], ZZ)) == (DMP([ZZ(7)], ZZ), [])
+    Rt, t = ring("t", ZZ)
+    R, x, y = ring("x,y", Rt)
+    assert R.dmp_factor_list(0) == (0, [])
+    assert R.dmp_factor_list(7) == (ZZ(7), [])
 
-    R, x, y = ring("x,y", QQ['y'])
-    assert R.dmp_factor_list(0) == (DMP([], QQ), [])
-    assert R.dmp_factor_list(DMP([QQ(1, 7)], QQ)) == (DMP([QQ(1, 7)], QQ), [])
+    Rt, t = ring("t", QQ)
+    R, x, y = ring("x,y", Rt)
+    assert R.dmp_factor_list(0) == (0, [])
+    assert R.dmp_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
     R, x, y = ring("x,y", ZZ)
     assert R.dmp_factor_list_include(0) == [(0, 1)]
@@ -619,21 +631,25 @@ def test_dmp_factor_list():
         (RR(2.0), [(1.0*x - 2.0*y, 1),
                    (1.0*x + 2.0*y, 1)])
 
-    R, x, y = ring("x,y", ZZ['t'])
-    f = DMP([ZZ(4), ZZ(0)], ZZ)*x**2 + DMP([ZZ(4), ZZ(0), ZZ(0)], ZZ)*x
+    f = 6.7225336055071*x**2*y**2 - 10.6463972754741*x*y - 0.33469524022264
+    coeff, factors = R.dmp_factor_list(f)
+    assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f, 1e-10) and factors[0][1] == 1
+
+    Rt, t = ring("t", ZZ)
+    R, x, y = ring("x,y", Rt)
+    f = 4*t*x**2 + 4*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (DMP([ZZ(4)], ZZ), [(DMP([ZZ(1), ZZ(0)], ZZ), 1),
-                            (DMP([ZZ(1)], ZZ)*x, 1),
-                            (DMP([ZZ(1)], ZZ)*x + DMP([ZZ(1), ZZ(0)], ZZ), 1)])
+        (4*t, [(x, 1),
+             (x + t, 1)])
 
-    R, x, y = ring("x,y", QQ['t'])
-    f = DMP([QQ(1, 2), QQ(0)], QQ)*x**2 + DMP([QQ(1, 2), QQ(0), QQ(0)], QQ)*x
+    Rt, t = ring("t", QQ)
+    R, x, y = ring("x,y", Rt)
+    f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (DMP([QQ(1, 2)], QQ), [(DMP([QQ(1), QQ(0)], QQ), 1),
-                               (DMP([QQ(1)], QQ)*x, 1),
-                               (DMP([QQ(1)], QQ)*x + DMP([QQ(1), QQ(0)], QQ), 1)])
+        (QQ(1, 2)*t, [(x, 1),
+                    (x + t, 1)])
 
     R, x, y = ring("x,y", FF(2))
     raises(NotImplementedError, lambda: R.dmp_factor_list(x**2 + y**2))

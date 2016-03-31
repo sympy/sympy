@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, solve, Sum)
-from sympy.stats.rv import NamedArgsMixin, SinglePSpace
+        Piecewise, S, cacheit, Sum)
+from sympy.solvers.solveset import solveset
+from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
@@ -17,7 +20,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     set = S.Integers
 
     def __new__(cls, *args):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod
@@ -38,7 +41,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(self.cdf(x) - z, x)
+            inverse_cdf = list(solveset(self.cdf(x) - z, x))
         except NotImplementedError:
             inverse_cdf = None
         if not inverse_cdf or len(inverse_cdf) != 1:
@@ -52,7 +55,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', integer=True, finite=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
@@ -66,11 +69,9 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
-    def expectation(self, expr, var, **kwargs):
+    def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
-        evaluate = kwargs.pop('evaluate', True)
         if evaluate:
             return summation(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
@@ -81,8 +82,12 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
+class SingleDiscreteDomain(SingleDomain):
+    pass
+
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
+    is_real = True
 
     @property
     def set(self):
@@ -90,7 +95,7 @@ class SingleDiscretePSpace(SinglePSpace):
 
     @property
     def domain(self):
-        raise NotImplementedError()
+        return SingleDiscreteDomain(self.symbol, self.set)
 
     def sample(self):
         """
@@ -109,15 +114,11 @@ class SingleDiscretePSpace(SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, **kwargs)
-        except:
-            evaluate = kwargs.pop('evaluate', True)
-            if evaluate:
-                return summation(expr * self.pdf, (x, self.set.inf, self.set.sup),
-                        **kwargs)
-            else:
-                return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
-                        **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=False,
+                    **kwargs)
+        except Exception:
+            return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
+                    **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:

@@ -1,6 +1,8 @@
+from __future__ import print_function, division
+
 from sympy.core.numbers import igcdex, igcd
 from sympy.core.mul import prod
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, reduce
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
@@ -17,8 +19,7 @@ def symmetric_residue(a, m):
     """
     if a <= m // 2:
         return a
-    else:
-        return a - m
+    return a - m
 
 
 def crt(m, v, symmetric=False, check=True):
@@ -77,17 +78,16 @@ def crt(m, v, symmetric=False, check=True):
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
     if check:
-        m = map(as_int, m)
-        v = map(as_int, v)
+        m = list(map(as_int, m))
+        v = list(map(as_int, v))
 
     result = gf_crt(v, m, ZZ)
     mm = prod(m)
 
     if check:
         if not all(v % m == result % m for v, m in zip(v, m)):
-            result = solve_congruence(*zip(v, m),
-                                      **dict(check=False,
-                                             symmetric=symmetric))
+            result = solve_congruence(*list(zip(v, m)),
+                    check=False, symmetric=symmetric)
             if result is None:
                 return result
             result, mm = result
@@ -229,14 +229,14 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
                     return None
                 continue
             uniq[m] = r
-        rm = [(r, m) for m, r in uniq.iteritems()]
+        rm = [(r, m) for m, r in uniq.items()]
         del uniq
 
         # if the moduli are co-prime, the crt will be significantly faster;
         # checking all pairs for being co-prime gets to be slow but a prime
         # test is a good trade-off
         if all(isprime(m) for r, m in rm):
-            r, m = zip(*rm)
+            r, m = list(zip(*rm))
             return crt(m, r, symmetric=symmetric, check=False)
 
     rv = (0, 1)

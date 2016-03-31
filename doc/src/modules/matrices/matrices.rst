@@ -7,7 +7,7 @@ Creating Matrices
 -----------------
 
 The linear algebra module is designed to be as simple as possible. First, we
-import and declare our first Matrix object:
+import and declare our first ``Matrix`` object:
 
     >>> from sympy.interactive.printing import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
@@ -41,7 +41,7 @@ including a single list of values and dimension inputs:
     [4  5  6]
 
 More interesting (and useful), is the ability to use a 2-variable function
-(or lambda) to create a matrix. Here we create an indicator function which
+(or ``lambda``) to create a matrix. Here we create an indicator function which
 is 1 on the diagonal and then use it to make the identity matrix:
 
     >>> def f(i,j):
@@ -59,7 +59,7 @@ is 1 on the diagonal and then use it to make the identity matrix:
     [          ]
     [0  0  0  1]
 
-Finally let's use lambda to create a 1-line matrix with 1's in the even
+Finally let's use ``lambda`` to create a 1-line matrix with 1's in the even
 permutation entries:
 
     >>> Matrix(3, 4, lambda i,j: 1 - (i+j) % 2)
@@ -144,7 +144,7 @@ give a matrix in return, even if the dimension is 1 x 1::
     >>> M[:1, 2]
     [3]
 
-In the 2nd example above notice that the slice 2:2 gives an empty range. Note
+In the second example above notice that the slice 2:2 gives an empty range. Note
 also (in keeping with 0-based indexing of Python) the first row/column is 0.
 
 You cannot access rows or columns that are not present unless they
@@ -175,7 +175,7 @@ do not affect the other:
     >>> M[0, 0] == 100
     False
 
-Notice that changing M2 didn't change M. Since we can slice, we can also assign
+Notice that changing ``M2`` didn't change ``M``. Since we can slice, we can also assign
 entries:
 
     >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
@@ -267,7 +267,7 @@ As well as some useful vector operations:
     >>> v1.dot(v3)
     0
 
-Recall that the row_del() and col_del() operations don't return a value - they
+Recall that the ``row_del()`` and ``col_del()`` operations don't return a value - they
 simply change the matrix object. We can also ''glue'' together matrices of the
 appropriate size:
 
@@ -315,7 +315,7 @@ We are not restricted to having multiplication between two matrices:
     [       ]
     [0  0  3]
 
-but we can also apply functions to our matrix entries using applyfunc(). Here we'll declare a function that double any input number. Then we apply it to the 3x3 identity matrix:
+but we can also apply functions to our matrix entries using ``applyfunc()``. Here we'll declare a function that double any input number. Then we apply it to the 3x3 identity matrix:
 
     >>> f = lambda x: 2*x
     >>> eye(3).applyfunc(f)
@@ -368,8 +368,8 @@ determinant:
     >>> M3.det()
     0
 
-Another common operation is the inevers: In SymPy, this is computed by Gaussian
-elimination by default (for dense matrices) but we can specify it be done by LU
+Another common operation is the inverse: In SymPy, this is computed by Gaussian
+elimination by default (for dense matrices) but we can specify it be done by `LU`
 decomposition as well:
 
     >>> M2.inv()
@@ -397,25 +397,25 @@ decomposition as well:
     [       ]
     [0  0  1]
 
-We can perform a QR factorization which is handy for solving systems:
+We can perform a `QR` factorization which is handy for solving systems:
 
     >>> A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     >>> Q, R = A.QRdecomposition()
     >>> Q
-    [  ___     ___     ___]
-    [\/ 6   -\/ 3   -\/ 2 ]
-    [-----  ------  ------]
-    [  6      3       2   ]
-    [                     ]
-    [  ___     ___    ___ ]
-    [\/ 6   -\/ 3   \/ 2  ]
-    [-----  ------  ----- ]
-    [  6      3       2   ]
-    [                     ]
-    [  ___    ___         ]
-    [\/ 6   \/ 3          ]
-    [-----  -----     0   ]
-    [  3      3           ]
+    [  ___     ___      ___ ]
+    [\/ 6   -\/ 3    -\/ 2  ]
+    [-----  -------  -------]
+    [  6       3        2   ]
+    [                       ]
+    [  ___     ___      ___ ]
+    [\/ 6   -\/ 3     \/ 2  ]
+    [-----  -------   ----- ]
+    [  6       3        2   ]
+    [                       ]
+    [  ___     ___          ]
+    [\/ 6    \/ 3           ]
+    [-----   -----      0   ]
+    [  3       3            ]
     >>> R
     [           ___         ]
     [  ___  4*\/ 6       ___]
@@ -437,7 +437,7 @@ We can perform a QR factorization which is handy for solving systems:
     [2  3  4]
 
 
-In addition to the solvers in the solver.py file, we can solve the system Ax=b
+In addition to the solvers in the ``solver.py`` file, we can solve the system Ax=b
 by passing the b vector to the matrix A's LUsolve function. Here we'll cheat a
 little choose A and x then multiply to get b. Then we can solve for x and check
 that it's correct:
@@ -454,9 +454,9 @@ that it's correct:
     [5]
 
 There's also a nice Gram-Schmidt orthogonalizer which will take a set of
-vectors and orthogonalize then with respect to another another. There is an
+vectors and orthogonalize them with respect to another. There is an
 optional argument which specifies whether or not the output should also be
-normalized, it defaults to False. Let's take some vectors and orthogonalize
+normalized, it defaults to ``False``. Let's take some vectors and orthogonalize
 them - one normalized and one not:
 
     >>> L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
@@ -466,13 +466,13 @@ them - one normalized and one not:
 Let's take a look at the vectors:
 
     >>> for i in out1:
-    ...     print i
+    ...     print(i)
     ...
     Matrix([[2], [3], [5]])
     Matrix([[23/19], [63/19], [-47/19]])
     Matrix([[1692/353], [-1551/706], [-423/706]])
     >>> for i in out2:
-    ...      print i
+    ...      print(i)
     ...
     Matrix([[sqrt(38)/19], [3*sqrt(38)/38], [5*sqrt(38)/38]])
     Matrix([[23*sqrt(6707)/6707], [63*sqrt(6707)/6707], [-47*sqrt(6707)/6707]])
@@ -496,7 +496,7 @@ norm():
 
 So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
-here one might want to look over the matrices.py file for all functionality.
+here one might want to look over the ``matrices.py`` file for all functionality.
 
 MatrixBase Class Reference
 --------------------------

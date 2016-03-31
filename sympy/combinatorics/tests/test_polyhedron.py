@@ -1,3 +1,4 @@
+from sympy.core.compatibility import range
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
@@ -34,7 +35,7 @@ def test_polyhedron():
         (0, 1), (6, 7), (1, 2), (5, 6), (0, 3), (2, 3),
         (4, 7), (4, 5), (3, 7), (1, 5), (0, 4), (2, 6)))
 
-    for i in xrange(3):  # add 180 degree face rotations
+    for i in range(3):  # add 180 degree face rotations
         cube.rotate(cube.pgroup[i]**2)
 
     assert cube.corners == corners
@@ -66,7 +67,7 @@ def test_polyhedron():
                 if P.corners == hit:
                     break
             else:
-                print 'error in permutation', p.array_form
+                print('error in permutation', p.array_form)
             for i in range(rpt):
                 P.rotate(p)
                 got.add(tuple(P.corners))
@@ -74,7 +75,7 @@ def test_polyhedron():
                 f = [[c[i] for i in f] for f in P.faces]
                 assert h.faces == Polyhedron(c, f).faces
         assert len(got) == target
-        assert PermutationGroup([Permutation(g) for g in got]).is_group()
+        assert PermutationGroup([Permutation(g) for g in got]).is_group
 
     for h, size, rpt, target in zip(
         (tetrahedron, square, octahedron, dodecahedron, icosahedron),

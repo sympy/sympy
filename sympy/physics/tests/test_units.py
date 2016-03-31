@@ -24,7 +24,7 @@ def test_units():
 def test_issue_quart():
     assert 4*quart/inch**3 == 231
 
-def test_issue_2466():
+def test_issue_5565():
     assert (m < s).is_Relational
 
 

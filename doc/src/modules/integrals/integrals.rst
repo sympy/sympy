@@ -3,12 +3,12 @@ Symbolic Integrals
 
 .. module:: sympy.integrals
 
-The *integrals* module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
+The ``integrals`` module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
 
-Principal method in this module is integrate()
+Principal method in this module is :func:`integrate`
 
-  - integrate(f, x) returns the indefinite integral :math:`\int f\,dx`
-  - integrate(f, (x, a, b)) returns the definite integral :math:`\int_{a}^{b} f\,dx`
+  - ``integrate(f, x)`` returns the indefinite integral :math:`\int f\,dx`
+  - ``integrate(f, (x, a, b))`` returns the definite integral :math:`\int_{a}^{b} f\,dx`
 
 Examples
 --------
@@ -31,7 +31,7 @@ Rational functions::
 	             x + 1
 
 
-Exponential-polynomial functions. Multiplicative combinations of polynomials and the functions exp, cos and sin can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
+Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
 
 ::
 
@@ -76,11 +76,11 @@ SymPy has special support for definite integrals, and integral transforms.
 Internals
 ---------
 
-There is a general method for calculating antiderivatives of elementary functions, called the Risch algorithm. The Risch algorithm is a decision procedure that can determine whether an elementary solution exists, and in that case calculate it. It can be extended to handle many nonelementary functions in addition to the elementary ones.
+There is a general method for calculating antiderivatives of elementary functions, called the *Risch algorithm*. The Risch algorithm is a decision procedure that can determine whether an elementary solution exists, and in that case calculate it. It can be extended to handle many nonelementary functions in addition to the elementary ones.
 
-SymPy currently uses a simplified version of the Risch algorithm, called the Risch-Norman algorithm. This algorithm is much faster, but may fail to find an antiderivative, although it is still very powerful. SymPy also uses pattern matching and heuristics to speed up evaluation of some types of integrals, e.g. polynomials.
+SymPy currently uses a simplified version of the Risch algorithm, called the *Risch-Norman algorithm*. This algorithm is much faster, but may fail to find an antiderivative, although it is still very powerful. SymPy also uses pattern matching and heuristics to speed up evaluation of some types of integrals, e.g. polynomials.
 
-For non-elementary definite integrals, sympy uses so-called Meijer G-functions.
+For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
 Details are described here:
 
 .. toctree::
@@ -91,23 +91,10 @@ Details are described here:
 API reference
 -------------
 
-.. automethod:: sympy.integrals.integrate
+.. autofunction:: sympy.integrals.integrate
+.. autofunction:: sympy.integrals.line_integrate
 
-.. automethod:: sympy.integrals.line_integrate
-
-.. automethod:: sympy.integrals.deltaintegrate
-
-.. automethod:: sympy.integrals.ratint
-
-.. automethod:: sympy.integrals.heurisch
-
-.. automethod:: sympy.integrals.heurisch_wrapper
-
-.. automethod:: sympy.integrals.trigintegrate
-
-.. automethod:: sympy.integrals.manualintegrate
-
-Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
+The class `Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
 .. autoclass:: sympy.integrals.Integral
    :members:
@@ -118,7 +105,7 @@ Class Integral represents an unevaluated integral and has some methods that help
 
 TODO and Bugs
 -------------
-There are still lots of functions that sympy does not know how to integrate. For bugs related to this module, see http://code.google.com/p/sympy/issues/list?q=label:Integration
+There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=label%3AIntegration
 
 Numeric Integrals
 =================

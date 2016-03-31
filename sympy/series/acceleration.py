@@ -9,7 +9,10 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
+from __future__ import print_function, division
+
 from sympy import factorial, Integer, S
+from sympy.core.compatibility import range
 
 
 def richardson(A, k, n, N):
@@ -24,7 +27,7 @@ def richardson(A, k, n, N):
 
         >>> from sympy.abc import n
         >>> e = (1 + 1/n)**n
-        >>> print round(e.subs(n, 100).evalf(), 10)
+        >>> print(round(e.subs(n, 100).evalf(), 10))
         2.7048138294
 
     Richardson extrapolation with 11 appropriately chosen terms gives
@@ -32,9 +35,9 @@ def richardson(A, k, n, N):
 
         >>> from sympy import E
         >>> from sympy.series.acceleration import richardson
-        >>> print round(richardson(e, n, 10, 20).evalf(), 10)
+        >>> print(round(richardson(e, n, 10, 20).evalf(), 10))
         2.7182818285
-        >>> print round(E.evalf(), 10)
+        >>> print(round(E.evalf(), 10))
         2.7182818285
 
     Another useful application is to speed up convergence of series.
@@ -44,15 +47,15 @@ def richardson(A, k, n, N):
         >>> from sympy.abc import k, n
         >>> from sympy import Sum
         >>> A = Sum(k**-2, (k, 1, n))
-        >>> print round(A.subs(n, 100).evalf(), 10)
+        >>> print(round(A.subs(n, 100).evalf(), 10))
         1.6349839002
 
     Richardson extrapolation performs much better:
 
         >>> from sympy import pi
-        >>> print round(richardson(A, n, 10, 20).evalf(), 10)
+        >>> print(round(richardson(A, n, 10, 20).evalf(), 10))
         1.6449340668
-        >>> print round(((pi**2)/6).evalf(), 10)     # Exact value
+        >>> print(round(((pi**2)/6).evalf(), 10))     # Exact value
         1.6449340668
 
     """
@@ -76,11 +79,11 @@ def shanks(A, k, n, m=1):
         >>> from sympy import Sum, Integer
         >>> from sympy.series.acceleration import shanks
         >>> A = Sum(Integer(-1)**(k+1) / k, (k, 1, n))
-        >>> print round(A.subs(n, 100).doit().evalf(), 10)
+        >>> print(round(A.subs(n, 100).doit().evalf(), 10))
         0.6881721793
-        >>> print round(shanks(A, n, 25).evalf(), 10)
+        >>> print(round(shanks(A, n, 25).evalf(), 10))
         0.6931396564
-        >>> print round(shanks(A, n, 25, 5).evalf(), 10)
+        >>> print(round(shanks(A, n, 25, 5).evalf(), 10))
         0.6931471806
 
     The correct value is 0.6931471805599453094172321215.

@@ -1,12 +1,14 @@
 """
 Extract reference documentation from the NumPy source tree.
 """
+from __future__ import division, absolute_import, print_function
 
 import inspect
 import textwrap
 import re
 import pydoc
-from StringIO import StringIO
+import collections
+import sys
 
 
 class Reader(object):
@@ -67,6 +69,7 @@ class Reader(object):
 
         def is_empty(line):
             return not line.strip()
+
         return self.read_to_condition(is_empty)
 
     def read_to_next_unindented_line(self):
@@ -84,7 +87,7 @@ class Reader(object):
         return not ''.join(self._str).strip()
 
 
-class NumpyDocString(object):
+class NumpyDocString(collections.Mapping):
     def __init__(self, docstring, config={}):
         docstring = textwrap.dedent(docstring).split('\n')
 
@@ -95,6 +98,7 @@ class NumpyDocString(object):
             'Extended Summary': [],
             'Parameters': [],
             'Returns': [],
+            'Yields': [],
             'Raises': [],
             'Warns': [],
             'Other Parameters': [],
@@ -119,6 +123,12 @@ class NumpyDocString(object):
             self._other_keys.append(key)
 
         self._parsed_data[key] = val
+
+    def __iter__(self):
+        return iter(self._parsed_data)
+
+    def __len__(self):
+        return len(self._parsed_data)
 
     def _is_at_section(self):
         self._doc.seek_next_non_empty_line()
@@ -270,13 +280,17 @@ class NumpyDocString(object):
         if self._is_at_section():
             return
 
-        summary = self._doc.read_to_next_empty_line()
-        summary_str = " ".join([s.strip() for s in summary]).strip()
-        if re.compile('^([\w., ]+=)?\s*[\w\.]+\(.*\)$').match(summary_str):
-            self['Signature'] = summary_str
-            if not self._is_at_section():
-                self['Summary'] = self._doc.read_to_next_empty_line()
-        else:
+        # If several signatures present, take the last one
+        while True:
+            summary = self._doc.read_to_next_empty_line()
+            summary_str = " ".join([s.strip() for s in summary]).strip()
+            if re.compile('^([\w., ]+=)?\s*[\w\.]+\(.*\)$').match(summary_str):
+                self['Signature'] = summary_str
+                if not self._is_at_section():
+                    continue
+            break
+
+        if summary is not None:
             self['Summary'] = summary
 
         if not self._is_at_section():
@@ -286,11 +300,23 @@ class NumpyDocString(object):
         self._doc.reset()
         self._parse_summary()
 
-        for (section, content) in self._read_sections():
+        sections = list(self._read_sections())
+        section_names = set([section for section, content in sections])
+
+        has_returns = 'Returns' in section_names
+        has_yields = 'Yields' in section_names
+        # We could do more tests, but we are not. Arbitrarily.
+        if has_returns and has_yields:
+            msg = 'Docstring contains both a Returns and Yields section.'
+            raise ValueError(msg)
+
+        for (section, content) in sections:
             if not section.startswith('..'):
-                section = ' '.join([s.capitalize() for s in section.split(' ')])
-            if section in ('Parameters', 'Returns', 'Raises', 'Warns',
-                           'Other Parameters', 'Attributes', 'Methods'):
+                section = (s.capitalize() for s in section.split(' '))
+                section = ' '.join(section)
+            if section in ('Parameters', 'Returns', 'Yields', 'Raises',
+                           'Warns', 'Other Parameters', 'Attributes',
+                           'Methods'):
                 self[section] = self._parse_param_list(content)
             elif section.startswith('.. index::'):
                 self['index'] = self._parse_index(section, content)
@@ -333,7 +359,10 @@ class NumpyDocString(object):
         if self[name]:
             out += self._str_header(name)
             for param, param_type, desc in self[name]:
-                out += ['%s : %s' % (param, param_type)]
+                if param_type:
+                    out += ['%s : %s' % (param, param_type)]
+                else:
+                    out += [param]
                 out += self._str_indent(desc)
             out += ['']
         return out
@@ -376,7 +405,7 @@ class NumpyDocString(object):
         idx = self['index']
         out = []
         out += ['.. index:: %s' % idx.get('default', '')]
-        for section, references in idx.iteritems():
+        for section, references in idx.items():
             if section == 'default':
                 continue
             out += ['   :%s: %s' % (section, ', '.join(references))]
@@ -387,8 +416,8 @@ class NumpyDocString(object):
         out += self._str_signature()
         out += self._str_summary()
         out += self._str_extended_summary()
-        for param_list in ('Parameters', 'Returns', 'Other Parameters',
-                           'Raises', 'Warns'):
+        for param_list in ('Parameters', 'Returns', 'Yields',
+                           'Other Parameters', 'Raises', 'Warns'):
             out += self._str_param_list(param_list)
         out += self._str_section('Warnings')
         out += self._str_see_also(func_role)
@@ -432,11 +461,14 @@ class FunctionDoc(NumpyDocString):
             func, func_name = self.get_func()
             try:
                 # try to read signature
-                argspec = inspect.getargspec(func)
+                if sys.version_info[0] >= 3:
+                    argspec = inspect.getfullargspec(func)
+                else:
+                    argspec = inspect.getargspec(func)
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)
-            except TypeError, e:
+            except TypeError as e:
                 signature = '%s()' % func_name
             self['Signature'] = signature
 
@@ -459,7 +491,7 @@ class FunctionDoc(NumpyDocString):
 
         if self._role:
             if self._role not in roles:
-                print "Warning: invalid role %s" % self._role
+                print("Warning: invalid role %s" % self._role)
             out += '.. %s:: %s\n    \n\n' % (roles.get(self._role, ''),
                                              func_name)
 
@@ -477,6 +509,9 @@ class ClassDoc(NumpyDocString):
             raise ValueError("Expected a class or None, but got %r" % cls)
         self._cls = cls
 
+        self.show_inherited_members = config.get(
+                    'show_inherited_class_members', True)
+
         if modulename and not modulename.endswith('.'):
             modulename += '.'
         self._mod = modulename
@@ -489,12 +524,23 @@ class ClassDoc(NumpyDocString):
         NumpyDocString.__init__(self, doc)
 
         if config.get('show_class_members', True):
-            if not self['Methods']:
-                self['Methods'] = [(name, '', '')
-                                   for name in sorted(self.methods)]
-            if not self['Attributes']:
-                self['Attributes'] = [(name, '', '')
-                                      for name in sorted(self.properties)]
+            def splitlines_x(s):
+                if not s:
+                    return []
+                else:
+                    return s.splitlines()
+
+            for field, items in [('Methods', self.methods),
+                                 ('Attributes', self.properties)]:
+                if not self[field]:
+                    doc_list = []
+                    for name in sorted(items):
+                        try:
+                            doc_item = pydoc.getdoc(getattr(self._cls, name))
+                            doc_list.append((name, '', splitlines_x(doc_item)))
+                        except AttributeError:
+                            pass  # method doesn't exist
+                    self[field] = doc_list
 
     @property
     def methods(self):
@@ -518,11 +564,10 @@ class ClassDoc(NumpyDocString):
 # try/except AttributeError clause added, which catches exceptions like this
 # one: https://gist.github.com/1471949
 def inspect_getmembers(object, predicate=None):
-    """Return all members of an object as (name, value) pairs sorted by name.
-
+    """
+    Return all members of an object as (name, value) pairs sorted by name.
     Optionally, only return members that satisfy a given predicate.
     """
-
     results = []
     for key in dir(object):
         try:
@@ -533,3 +578,10 @@ def inspect_getmembers(object, predicate=None):
             results.append((key, value))
     results.sort()
     return results
+
+    def _is_show_member(self, name):
+        if self.show_inherited_members:
+            return True  # show all class members
+        if name not in self._cls.__dict__:
+            return False  # class member is inherited, we do not show it
+        return True

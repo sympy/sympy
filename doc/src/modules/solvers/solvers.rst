@@ -1,9 +1,17 @@
 Solvers
-==========
+=======
 
 .. module:: sympy.solvers
 
 The *solvers* module in SymPy implements methods for solving equations.
+
+.. note::
+
+   It is recommended to use :func:`solveset` to solve univariate equations and
+   :func:`sympy.solvers.solveset.linsolve` to solve system of linear equations
+   instead of :func:`solve`, since sooner or later the ``solveset`` will take
+   over ``solve`` either internally or externally.
+
 
 Algebraic equations
 --------------------
@@ -30,8 +38,6 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers.solve_undetermined_coeffs
 
-.. autofunction:: sympy.solvers.solvers.tsolve
-
 .. autofunction:: sympy.solvers.solvers.nsolve
 
 .. autofunction:: sympy.solvers.solvers.check_assumptions
@@ -53,16 +59,18 @@ Deutils (Utilities for solving ODE's and PDE's)
 
 .. autofunction:: sympy.solvers.deutils.ode_order
 
-Recurrence Equtions
--------------------
+Recurrence Equations
+--------------------
 
-.. autofunction:: sympy.solvers.recurr.rsolve
+.. module:: sympy.solvers.recurr
 
-.. autofunction:: sympy.solvers.recurr.rsolve_poly
+.. autofunction:: rsolve
 
-.. autofunction:: sympy.solvers.recurr.rsolve_ratio
+.. autofunction:: rsolve_poly
 
-.. autofunction:: sympy.solvers.recurr.rsolve_hyper
+.. autofunction:: rsolve_ratio
+
+.. autofunction:: rsolve_hyper
 
 Systems of Polynomial Equations
 -------------------------------
@@ -71,3 +79,12 @@ Systems of Polynomial Equations
 
 .. autofunction:: sympy.solvers.polysys.solve_triangulated
 
+Diophantine Equations (DEs)
+---------------------------
+
+See :ref:`diophantine-docs`
+
+Inequalities
+------------
+
+See :ref:`inequality-docs`

@@ -1,12 +1,14 @@
-import rl
-from core import do_one, exhaust, switch
-from traverse import top_down
+from __future__ import print_function, division
+
+from . import rl
+from .core import do_one, exhaust, switch
+from .traverse import top_down
 
 def subs(d, **kwargs):
     """ Full simultaneous exact substitution
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.strategies.tools import subs
     >>> from sympy import Basic

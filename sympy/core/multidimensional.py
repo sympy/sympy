@@ -3,7 +3,10 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from __future__ import print_function, division
+
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import range
 
 
 def apply_on_element(f, args, kwargs, n):
@@ -23,7 +26,7 @@ def apply_on_element(f, args, kwargs, n):
     # Define reduced function that is only dependend of the specified argument.
     def f_reduced(x):
         if hasattr(x, "__iter__"):
-            return map(f_reduced, x)
+            return list(map(f_reduced, x))
         else:
             if is_arg:
                 args[n] = x
@@ -33,7 +36,7 @@ def apply_on_element(f, args, kwargs, n):
 
     # f_reduced will call itself recursively so that in the end f is applied to
     # all basic elements.
-    return map(f_reduced, structure)
+    return list(map(f_reduced, structure))
 
 
 def iter_copy(structure):
@@ -67,7 +70,7 @@ class vectorize:
     >>> from sympy import diff, sin, symbols, Function
     >>> from sympy.core.multidimensional import vectorize
     >>> x, y, z = symbols('x y z')
-    >>> f, g, h = map(Function, 'fgh')
+    >>> f, g, h = list(map(Function, 'fgh'))
 
     >>> @vectorize(0)
     ... def vsin(x):
@@ -91,7 +94,8 @@ class vectorize:
         If no argument is given, everything is treated multidimensional.
         """
         for a in mdargs:
-            assert isinstance(a, (int, str))
+            if not isinstance(a, (int, str)):
+                raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
     def __call__(self, f):

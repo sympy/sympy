@@ -1,11 +1,11 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, atan, gamma,
-    atanh, hyper, meijerg)
+from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
+    atanh, hyper, meijerg, O)
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
-                                      test_numerically as tn)
-from sympy.abc import x, y, z, m, n
+                                      verify_numerically as tn)
+from sympy.abc import z, m, n
 
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)
@@ -36,6 +36,9 @@ def test_K():
         meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
     assert tn(K(z), meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2)
 
+    assert K(z).series(z) == pi/2 + pi*z/8 + 9*pi*z**2/128 + \
+        25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
+
 
 def test_F():
     assert F(z, 0) == z
@@ -57,6 +60,9 @@ def test_F():
     assert F(z, mi).conjugate() == F(z.conjugate(), mi.conjugate())
     mr = Symbol('m', real=True, negative=True)
     assert F(z, mr).conjugate() == F(z.conjugate(), mr)
+
+    assert F(z, m).series(z) == \
+        z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
 
 
 def test_E():
@@ -83,14 +89,21 @@ def test_E():
 
     mi = Symbol('m', real=False)
     assert E(z, mi).conjugate() == E(z.conjugate(), mi.conjugate())
+    assert E(mi).conjugate() == E(mi.conjugate())
     mr = Symbol('m', real=True, negative=True)
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
+    assert E(mr).conjugate() == E(mr)
 
     assert E(z).rewrite(hyper) == (pi/2)*hyper((-S.Half, S.Half), (S.One,), z)
     assert tn(E(z), (pi/2)*hyper((-S.Half, S.Half), (S.One,), z))
     assert E(z).rewrite(meijerg) == \
         -meijerg(((S.Half, S(3)/2), []), ((S.Zero,), (S.Zero,)), -z)/4
     assert tn(E(z), -meijerg(((S.Half, S(3)/2), []), ((S.Zero,), (S.Zero,)), -z)/4)
+
+    assert E(z, m).series(z) == \
+        z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
+    assert E(z).series(z) == pi/2 - pi*z/8 - 3*pi*z**2/128 - \
+        5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
 
 
 def test_P():
@@ -134,3 +147,6 @@ def test_P():
     assert td(P(n, rx, ry), n)
     assert td(P(rx, z, ry), z)
     assert td(P(rx, ry, m), m)
+
+    assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
+        z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)

@@ -1,5 +1,8 @@
-from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
-                        Tuple)
+from __future__ import print_function, division
+
+from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
+from sympy.core.compatibility import range, iterable
+from sympy.sets import Set, FiniteSet, EmptySet
 
 
 class Class(Set):
@@ -200,6 +203,7 @@ class NamedMorphism(Morphism):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
@@ -270,7 +274,7 @@ class CompositeMorphism(Morphism):
         normalised_components = Tuple()
 
         # TODO: Fix the unpythonicity.
-        for i in xrange(len(components) - 1):
+        for i in range(len(components) - 1):
             current = components[i]
             following = components[i + 1]
 
@@ -449,7 +453,7 @@ class Category(Basic):
             raise ValueError("A Category cannot have an empty name.")
 
         new_category = Basic.__new__(cls, Symbol(name), Class(objects),
-                                     FiniteSet(commutative_diagrams))
+                                     FiniteSet(*commutative_diagrams))
         return new_category
 
     @property
@@ -623,7 +627,7 @@ class Diagram(Basic):
                 Diagram._set_dict_union(morphisms, id_dom, empty)
                 Diagram._set_dict_union(morphisms, id_cod, empty)
 
-            for existing_morphism, existing_props in morphisms.items():
+            for existing_morphism, existing_props in list(morphisms.items()):
                 new_props = existing_props & props
                 if morphism.domain == existing_morphism.codomain:
                     left = morphism * existing_morphism
@@ -705,7 +709,7 @@ class Diagram(Basic):
                 for morphism, props in premises_arg.items():
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
                     Diagram._add_morphism_closure(
-                        premises, morphism, FiniteSet(props))
+                        premises, morphism, FiniteSet(*props) if iterable(props) else FiniteSet(props))
 
         if len(args) >= 2:
             # We also have some conclusions.
@@ -718,8 +722,8 @@ class Diagram(Basic):
 
                 for morphism in conclusions_arg:
                     # Check that no new objects appear in conclusions.
-                    if (morphism.domain in objects) and \
-                       (morphism.codomain in objects):
+                    if ((sympify(objects.contains(morphism.domain)) is S.true) and
+                        (sympify(objects.contains(morphism.codomain)) is S.true)):
                         # No need to add identities and recurse
                         # composites this time.
                         Diagram._add_morphism_closure(
@@ -736,7 +740,7 @@ class Diagram(Basic):
                         # No need to add identities and recurse
                         # composites this time.
                         Diagram._add_morphism_closure(
-                            conclusions, morphism, FiniteSet(props),
+                            conclusions, morphism, FiniteSet(*props) if iterable(props) else FiniteSet(props),
                             add_identities=False, recurse_composites=False)
 
         return Basic.__new__(cls, Dict(premises), Dict(conclusions), objects)
@@ -748,6 +752,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import pretty
@@ -757,7 +762,7 @@ class Diagram(Basic):
         >>> id_A = IdentityMorphism(A)
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
-        >>> print pretty(d.premises, use_unicode=False)
+        >>> print(pretty(d.premises, use_unicode=False))
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
         """
@@ -770,6 +775,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import FiniteSet
@@ -798,6 +804,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -828,7 +835,7 @@ class Diagram(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g], {g * f: "unique"})
-        >>> print pretty(d.hom(A, C), use_unicode=False)
+        >>> print(pretty(d.hom(A, C), use_unicode=False))
         ({g*f:A-->C}, {g*f:A-->C})
 
         See Also
@@ -858,6 +865,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -893,6 +901,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> from sympy import FiniteSet
         >>> A = Object("A")
@@ -905,18 +914,20 @@ class Diagram(Basic):
         >>> d1 == Diagram([f], {f: "unique"})
         True
         """
-        if not self.objects.subset(objects):
+        if not objects.is_subset(self.objects):
             raise ValueError(
                 "Supplied objects should all belong to the diagram.")
 
         new_premises = {}
         for morphism, props in self.premises.items():
-            if (morphism.domain in objects) and (morphism.codomain in objects):
+            if ((sympify(objects.contains(morphism.domain)) is S.true) and
+                (sympify(objects.contains(morphism.codomain)) is S.true)):
                 new_premises[morphism] = props
 
         new_conclusions = {}
         for morphism, props in self.conclusions.items():
-            if (morphism.domain in objects) and (morphism.codomain in objects):
+            if ((sympify(objects.contains(morphism.domain)) is S.true) and
+                (sympify(objects.contains(morphism.codomain)) is S.true)):
                 new_conclusions[morphism] = props
 
         return Diagram(new_premises, new_conclusions)

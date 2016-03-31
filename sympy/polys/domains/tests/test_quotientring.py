@@ -6,10 +6,11 @@ from sympy.abc import x, y
 from sympy.polys.polyerrors import NotReversible
 
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import range
 
 
 def test_QuotientRingElement():
-    R = QQ[x]/[x**10]
+    R = QQ.old_poly_ring(x)/[x**10]
     X = R.convert(x)
 
     assert X*(X + 1) == R.convert(x**2 + x)
@@ -26,12 +27,12 @@ def test_QuotientRingElement():
 
 
 def test_QuotientRing():
-    I = QQ[x].ideal(x**2 + 1)
-    R = QQ[x]/I
+    I = QQ.old_poly_ring(x).ideal(x**2 + 1)
+    R = QQ.old_poly_ring(x)/I
 
-    assert R == QQ[x]/[x**2 + 1]
-    assert R == QQ[x]/QQ[x].ideal(x**2 + 1)
-    assert R != QQ[x]
+    assert R == QQ.old_poly_ring(x)/[x**2 + 1]
+    assert R == QQ.old_poly_ring(x)/QQ.old_poly_ring(x).ideal(x**2 + 1)
+    assert R != QQ.old_poly_ring(x)
 
     assert R.convert(1)/x == -x + I
     assert -1 + I == x**2 + I
@@ -39,13 +40,13 @@ def test_QuotientRing():
     assert R.convert(R.convert(x), R) == R.convert(x)
 
     X = R.convert(x)
-    Y = QQ[x].convert(x)
+    Y = QQ.old_poly_ring(x).convert(x)
     assert -1 + I == X**2 + I
     assert -1 + I == Y**2 + I
     assert R.to_sympy(X) == x
 
-    raises(ValueError, lambda: QQ[x]/QQ[x, y].ideal(x))
+    raises(ValueError, lambda: QQ.old_poly_ring(x)/QQ.old_poly_ring(x, y).ideal(x))
 
-    R = QQ.poly_ring(x, order="ilex")
+    R = QQ.old_poly_ring(x, order="ilex")
     I = R.ideal(x)
     assert R.convert(1) + I == (R/I).convert(1)

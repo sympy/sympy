@@ -5,7 +5,9 @@ from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
+
 a, b, c, x, y = symbols('a b c x y')
+
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
     F, T, X, Y, Z, u = map(Function, 'FTXYZu')
@@ -76,7 +78,7 @@ def test_pde_classify():
     for eq in [eq1, eq2, eq3]:
         assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
     for eq in [eq4, eq5, eq6]:
-        assert classify_pde(eq) == ()
+        assert classify_pde(eq) == ('1st_linear_variable_coeff',)
 
 
 def test_checkpdesol():
@@ -92,6 +94,12 @@ def test_checkpdesol():
     assert checkpdesol(eq4, [pdsolve(eq5), pdsolve(eq6)]) == [
         (False, (x - 2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
          (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
+    for eq in [eq4, eq5, eq6]:
+        assert checkpdesol(eq, pdsolve(eq))[0]
+    sol = pdsolve(eq4)
+    sol4 = Eq(sol.lhs - sol.rhs, 0)
+    raises(NotImplementedError, lambda:
+        checkpdesol(eq4, sol4, solve_for_func=False))
 
 
 def test_solvefun():
@@ -177,3 +185,30 @@ def test_pdsolve_all():
     assert sol['default'] == '1st_linear_constant_coeff'
     assert sol['1st_linear_constant_coeff'] == Eq(f(x, y),
         -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
+
+def test_pdsolve_variable_coeff():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x, y)
+    eq = x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
+    sol = pdsolve(eq, hint="1st_linear_variable_coeff")
+    assert sol == Eq(u, F(x*y)*exp(y**2/2) + 1)
+    assert checkpdesol(eq, sol)[0]
+
+    eq = x**2*u + x*u.diff(x) + x*y*u.diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, F(y*exp(-x))*exp(-x**2/2))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = y*x**2*u + y*u.diff(x) + u.diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, F(-2*x + y**2)*exp(-x**3/3))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = exp(x)**2*(u.diff(x)) + y
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, y*exp(-2*x)/2 + F(y))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = exp(2*x)*(u.diff(y)) + y*u - u
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, exp((-y**2 + 2*y + 2*F(x))*exp(-2*x)/2))

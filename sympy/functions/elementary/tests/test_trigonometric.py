@@ -1,23 +1,35 @@
-from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
-        acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
+from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
+        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot)
-
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
+        AccumBounds)
+from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
 k = Symbol('k', integer=True)
+p = Symbol('p', positive=True)
+n = Symbol('n', negative=True)
+a = Symbol('a', algebraic=True)
+na = Symbol('na', nonzero=True, algebraic=True)
 
 
 def test_sin():
     x, y = symbols('x y')
 
+    assert sin.nargs == FiniteSet(1)
     assert sin(nan) == nan
 
+    assert sin(oo) == AccumBounds(-1, 1)
+    assert sin(oo) - sin(oo) == AccumBounds(-2, 2)
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
-    assert sin(oo).args[0] == oo
+    assert 0*sin(oo) == S.Zero
+    assert 0/sin(oo) == S.Zero
+    assert 0 + sin(oo) == AccumBounds(-1, 1)
+    assert 5 + sin(oo) == AccumBounds(4, 6)
 
     assert sin(0) == 0
 
@@ -43,6 +55,14 @@ def test_sin():
     assert sin(5*pi/2) == 1
     assert sin(7*pi/2) == -1
 
+    ne = symbols('ne', integer=True, even=False)
+    e = symbols('e', even=True)
+    assert sin(pi*ne/2) == (-1)**(ne/2 - S.Half)
+    assert sin(pi*k/2).func == sin
+    assert sin(pi*e/2) == 0
+    assert sin(pi*k) == 0
+    assert sin(pi*k).subs(k, 3) == sin(pi*k/2).subs(k, 6)  # issue 8298
+
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(-2*pi/3) == -S.Half*sqrt(3)
 
@@ -67,6 +87,13 @@ def test_sin():
 
     assert sin(pi/8) == sqrt((2 - sqrt(2))/4)
 
+    assert sin(pi/10) == -1/4 + sqrt(5)/4
+
+    assert sin(pi/12) == -sqrt(2)/4 + sqrt(6)/4
+    assert sin(5*pi/12) == sqrt(2)/4 + sqrt(6)/4
+    assert sin(-7*pi/12) == -sqrt(2)/4 - sqrt(6)/4
+    assert sin(-11*pi/12) == sqrt(2)/4 - sqrt(6)/4
+
     assert sin(104*pi/105) == sin(pi/105)
     assert sin(106*pi/105) == -sin(pi/105)
 
@@ -82,19 +109,28 @@ def test_sin():
 
     assert sin(r).is_real is True
 
+    assert sin(0, evaluate=False).is_algebraic
+    assert sin(a).is_algebraic is None
+    assert sin(na).is_algebraic is False
+    q = Symbol('q', rational=True)
+    assert sin(pi*q).is_algebraic
+    qn = Symbol('qn', rational=True, nonzero=True)
+    assert sin(qn).is_rational is False
+    assert sin(q).is_rational is None  # issue 8653
+
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
 
-    for d in range(1, 22) + [60, 85]:
-        for n in xrange(0, d*2 + 1):
+    for d in list(range(1, 22)) + [60, 85]:
+        for n in range(0, d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
 
 
 def test_sin_cos():
-    for d in [1, 2, 3, 4, 5, 6, 10, 12]:  # list is not exhaustive...
-        for n in xrange(-2*d, d*2):
+    for d in [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 24, 30, 40, 60, 120]:  # list is not exhaustive...
+        for n in range(-2*d, d*2):
             x = n*pi/d
             assert sin(x + pi/2) == cos(x), "fails for %d*pi/%d" % (n, d)
             assert sin(x - pi/2) == -cos(x), "fails for %d*pi/%d" % (n, d)
@@ -128,6 +164,7 @@ def test_sin_rewrite():
     assert sin(cot(x)).rewrite(
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
+    assert sin(x).rewrite(csc) == 1/csc(x)
 
 
 def test_sin_expansion():
@@ -141,6 +178,17 @@ def test_sin_expansion():
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
     assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
     assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
+
+
+def test_sin_AccumBounds():
+    assert sin(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert sin(AccumBounds(0, 3*S.Pi/4)) == AccumBounds(0, 1)
+    assert sin(AccumBounds(3*S.Pi/4, 7*S.Pi/4)) == AccumBounds(-1, sin(3*S.Pi/4))
+    assert sin(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(sin(S.Pi/4), sin(S.Pi/3))
+    assert sin(AccumBounds(3*S.Pi/4, 5*S.Pi/6)) == AccumBounds(sin(5*S.Pi/6), sin(3*S.Pi/4))
 
 
 def test_trig_symmetry():
@@ -183,8 +231,11 @@ def test_trig_symmetry():
 def test_cos():
     x, y = symbols('x y')
 
+    assert cos.nargs == FiniteSet(1)
     assert cos(nan) == nan
 
+    assert cos(oo) == AccumBounds(-1, 1)
+    assert cos(oo) - cos(oo) == AccumBounds(-2, 2)
     assert cos(oo*I) == oo
     assert cos(-oo*I) == oo
 
@@ -206,6 +257,11 @@ def test_cos():
     assert cos(-pi/2) == 0
     assert cos((-3*10**73 + 1)*pi/2) == 0
     assert cos((7*10**103 + 1)*pi/2) == 0
+
+    n = symbols('n', integer=True, even=False)
+    e = symbols('e', even=True)
+    assert cos(pi*n/2) == 0
+    assert cos(pi*e/2) == (-1)**(e/2)
 
     assert cos(pi) == -1
     assert cos(-pi) == -1
@@ -237,6 +293,11 @@ def test_cos():
 
     assert cos(pi/8) == sqrt((2 + sqrt(2))/4)
 
+    assert cos(pi/12) == sqrt(2)/4 + sqrt(6)/4
+    assert cos(5*pi/12) == -sqrt(2)/4 + sqrt(6)/4
+    assert cos(7*pi/12) == sqrt(2)/4 - sqrt(6)/4
+    assert cos(11*pi/12) == -sqrt(2)/4 - sqrt(6)/4
+
     assert cos(104*pi/105) == -cos(pi/105)
     assert cos(106*pi/105) == -cos(pi/105)
 
@@ -248,17 +309,24 @@ def test_cos():
 
     assert cos(r).is_real is True
 
+    assert cos(0, evaluate=False).is_algebraic
+    assert cos(a).is_algebraic is None
+    assert cos(na).is_algebraic is False
+    q = Symbol('q', rational=True)
+    assert cos(pi*q).is_algebraic
+    assert cos(2*pi/7).is_algebraic
+
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
-    for d in range(1, 22) + [60, 85]:
-        for n in xrange(0, 2*d + 1):
+    for d in list(range(1, 22)) + [60, 85]:
+        for n in range(0, 2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
             assert e < 1e-12
 
 
-def test_issue_3091():
+def test_issue_6190():
     c = Float('123456789012345678901234567890.25', '')
     for cls in [sin, cos, tan, cot]:
         assert cls(c*pi) == cls(pi/4)
@@ -292,6 +360,7 @@ def test_cos_rewrite():
     assert cos(cot(x)).rewrite(
         exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
+    assert cos(x).rewrite(sec) == 1/sec(x)
 
 
 def test_cos_expansion():
@@ -305,9 +374,23 @@ def test_cos_expansion():
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 
+def test_cos_AccumBounds():
+    assert cos(AccumBounds(-oo, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, oo)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-oo, 0)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(0, 2*S.Pi)) == AccumBounds(-1, 1)
+    assert cos(AccumBounds(-S.Pi/3, S.Pi/4)) == AccumBounds(cos(-S.Pi/3), 1)
+    assert cos(AccumBounds(3*S.Pi/4, 5*S.Pi/4)) == AccumBounds(-1, cos(3*S.Pi/4))
+    assert cos(AccumBounds(5*S.Pi/4, 4*S.Pi/3)) == AccumBounds(cos(5*S.Pi/4), cos(4*S.Pi/3))
+    assert cos(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(cos(S.Pi/3), cos(S.Pi/4))
+
+
 def test_tan():
     assert tan(nan) == nan
 
+    assert tan(oo) == AccumBounds(-oo, oo)
+    assert tan(oo) - tan(oo) == AccumBounds(-oo, oo)
+    assert tan.nargs == FiniteSet(1)
     assert tan(oo*I) == I
     assert tan(-oo*I) == -I
 
@@ -345,6 +428,27 @@ def test_tan():
     assert tan(7*pi/6) == 1/sqrt(3)
     assert tan(-5*pi/6) == 1/sqrt(3)
 
+    assert tan(pi/8).expand() == -1 + sqrt(2)
+    assert tan(3*pi/8).expand() == 1 + sqrt(2)
+    assert tan(5*pi/8).expand() == -1 - sqrt(2)
+    assert tan(7*pi/8).expand() == 1 - sqrt(2)
+
+    assert tan(pi/12) == -sqrt(3) + 2
+    assert tan(5*pi/12) == sqrt(3) + 2
+    assert tan(7*pi/12) == -sqrt(3) - 2
+    assert tan(11*pi/12) == sqrt(3) - 2
+
+    assert tan(pi/24).radsimp() == -2 - sqrt(3) + sqrt(2) + sqrt(6)
+    assert tan(5*pi/24).radsimp() == -2 + sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(7*pi/24).radsimp() == 2 - sqrt(3) - sqrt(2) + sqrt(6)
+    assert tan(11*pi/24).radsimp() == 2 + sqrt(3) + sqrt(2) + sqrt(6)
+    assert tan(13*pi/24).radsimp() == -2 - sqrt(3) - sqrt(2) - sqrt(6)
+    assert tan(17*pi/24).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(19*pi/24).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
+    assert tan(23*pi/24).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
+
+    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
+
     assert tan(x*I) == tanh(x)*I
 
     assert tan(k*pi) == 0
@@ -354,9 +458,16 @@ def test_tan():
 
     assert tan(r).is_real is True
 
+    assert tan(0, evaluate=False).is_algebraic
+    assert tan(a).is_algebraic is None
+    assert tan(na).is_algebraic is False
+
     assert tan(10*pi/7) == tan(3*pi/7)
     assert tan(11*pi/7) == -tan(3*pi/7)
     assert tan(-11*pi/7) == tan(3*pi/7)
+
+    assert tan(15*pi/14) == tan(pi/14)
+    assert tan(-15*pi/14) == -tan(pi/14)
 
 
 def test_tan_series():
@@ -387,7 +498,8 @@ def test_tan_rewrite():
     assert tan(cot(x)).rewrite(
         exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
-    assert 0 == (cos(pi/15)*tan(pi/15) - sin(pi/15)).rewrite(pow)
+    assert 0 == (cos(pi/34)*tan(pi/34) - sin(pi/34)).rewrite(pow)
+    assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(8*pi/19).rewrite(sqrt) == tan(8*pi/19)
 
@@ -410,9 +522,16 @@ def test_tan_expansion():
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
 
 
+def test_tan_AccumBounds():
+    assert tan(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/3, 2*S.Pi/3)) == AccumBounds(-oo, oo)
+    assert tan(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(tan(S.Pi/6), tan(S.Pi/3))
+
+
 def test_cot():
     assert cot(nan) == nan
 
+    assert cot.nargs == FiniteSet(1)
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
 
@@ -450,19 +569,56 @@ def test_cot():
     assert cot(7*pi/6) == sqrt(3)
     assert cot(-5*pi/6) == sqrt(3)
 
+    assert cot(pi/8).expand() == 1 + sqrt(2)
+    assert cot(3*pi/8).expand() == -1 + sqrt(2)
+    assert cot(5*pi/8).expand() == 1 - sqrt(2)
+    assert cot(7*pi/8).expand() == -1 - sqrt(2)
+
+    assert cot(pi/12) == sqrt(3) + 2
+    assert cot(5*pi/12) == -sqrt(3) + 2
+    assert cot(7*pi/12) == sqrt(3) - 2
+    assert cot(11*pi/12) == -sqrt(3) - 2
+
+    assert cot(pi/24).radsimp() == sqrt(2) + sqrt(3) + 2 + sqrt(6)
+    assert cot(5*pi/24).radsimp() == -sqrt(2) - sqrt(3) + 2 + sqrt(6)
+    assert cot(7*pi/24).radsimp() == -sqrt(2) + sqrt(3) - 2 + sqrt(6)
+    assert cot(11*pi/24).radsimp() == sqrt(2) - sqrt(3) - 2 + sqrt(6)
+    assert cot(13*pi/24).radsimp() == -sqrt(2) + sqrt(3) + 2 - sqrt(6)
+    assert cot(17*pi/24).radsimp() == sqrt(2) - sqrt(3) + 2 - sqrt(6)
+    assert cot(19*pi/24).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
+    assert cot(23*pi/24).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
+
+    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
+
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
     assert cot(r).is_real is True
 
+    assert cot(a).is_algebraic is None
+    assert cot(na).is_algebraic is False
+
     assert cot(10*pi/7) == cot(3*pi/7)
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
+
+    assert cot(39*pi/34) == cot(5*pi/34)
+    assert cot(-41*pi/34) == -cot(7*pi/34)
+
+    assert cot(x).is_finite is None
+    assert cot(r).is_finite is None
+    i = Symbol('i', imaginary=True)
+    assert cot(i).is_finite is True
+
+    assert cot(x).subs(x, 3*pi) == zoo
 
 
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
         1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
+    # issue 6210
+    assert cot(x**4 + x**5).series(x, 0, 1) == \
+        x**(-4) - 1/x**3 + x**(-2) - 1/x + 1 + O(x)
 
 
 def test_cot_rewrite():
@@ -484,7 +640,8 @@ def test_cot_rewrite():
     assert cot(tan(x)).rewrite(
         exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
-    assert cot(4*pi/15).rewrite(pow) == (cos(4*pi/15)/sin(4*pi/15)).rewrite(pow)
+    assert cot(4*pi/34).rewrite(pow).ratsimp() == (cos(4*pi/34)/sin(4*pi/34)).rewrite(pow).ratsimp()
+    assert cot(4*pi/17).rewrite(pow) == (cos(4*pi/17)/sin(4*pi/17)).rewrite(pow)
     assert cot(pi/19).rewrite(pow) == cot(pi/19)
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
 
@@ -508,9 +665,44 @@ def test_cot_expansion():
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
 
 
+def test_cot_AccumBounds():
+    assert cot(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(-S.Pi/3, S.Pi/3)) == AccumBounds(-oo, oo)
+    assert cot(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(cot(S.Pi/3), cot(S.Pi/6))
+
+
+def test_sinc():
+    assert isinstance(sinc(x), sinc)
+
+    s = Symbol('s', zero=True)
+    assert sinc(s) == S.One
+    assert sinc(S.Infinity) == S.Zero
+    assert sinc(-S.Infinity) == S.Zero
+    assert sinc(S.NaN) == S.NaN
+    assert sinc(S.ComplexInfinity) == S.NaN
+
+    n = Symbol('n', integer=True, nonzero=True)
+    assert sinc(n*pi) == S.Zero
+    assert sinc(-n*pi) == S.Zero
+    assert sinc(pi/2) == 2 / pi
+    assert sinc(-pi/2) == 2 / pi
+    assert sinc(5*pi/2) == 2 / (5*pi)
+    assert sinc(7*pi/2) == -2 / (7*pi)
+
+    assert sinc(-x) == sinc(x)
+
+    assert sinc(x).diff() == (x*cos(x) - sin(x)) / x**2
+
+    assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
+
+    assert sinc(x).rewrite(jn) == jn(0, x)
+    assert sinc(x).rewrite(sin) == sin(x) / x
+
+
 def test_asin():
     assert asin(nan) == nan
 
+    assert asin.nargs == FiniteSet(1)
     assert asin(oo) == -I*oo
     assert asin(-oo) == I*oo
 
@@ -537,8 +729,13 @@ def test_asin():
 
     assert asin(0.2).is_real is True
     assert asin(-2).is_real is False
+    assert asin(r).is_real is None
 
     assert asin(-2*I) == -I*asinh(2)
+
+    assert asin(Rational(1, 7), evaluate=False).is_positive is True
+    assert asin(Rational(-1, 7), evaluate=False).is_positive is False
+    assert asin(p).is_positive is None
 
 
 def test_asin_series():
@@ -553,10 +750,16 @@ def test_asin_rewrite():
     assert asin(x).rewrite(log) == -I*log(I*x + sqrt(1 - x**2))
     assert asin(x).rewrite(atan) == 2*atan(x/(1 + sqrt(1 - x**2)))
     assert asin(x).rewrite(acos) == S.Pi/2 - acos(x)
+    assert asin(x).rewrite(acot) == 2*acot((sqrt(-x**2 + 1) + 1)/x)
+    assert asin(x).rewrite(asec) == -asec(1/x) + pi/2
+    assert asin(x).rewrite(acsc) == acsc(1/x)
 
 
 def test_acos():
     assert acos(nan) == nan
+    assert acos(zoo) == zoo
+
+    assert acos.nargs == FiniteSet(1)
     assert acos(oo) == I*oo
     assert acos(-oo) == -I*oo
 
@@ -573,6 +776,19 @@ def test_acos():
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
+    assert acos(r).is_real is None
+
+    assert acos(Rational(1, 7), evaluate=False).is_positive is True
+    assert acos(Rational(-1, 7), evaluate=False).is_positive is True
+    assert acos(Rational(3, 2), evaluate=False).is_positive is False
+    assert acos(p).is_positive is None
+
+    assert acos(2 + p).conjugate() != acos(10 + p)
+    assert acos(-3 + n).conjugate() != acos(-3 + n)
+    assert acos(S.One/3).conjugate() == acos(S.One/3)
+    assert acos(-S.One/3).conjugate() == acos(-S.One/3)
+    assert acos(p + n*I).conjugate() == acos(p - n*I)
+    assert acos(z).conjugate() != acos(conjugate(z))
 
 
 def test_acos_series():
@@ -591,11 +807,15 @@ def test_acos_rewrite():
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
+    assert acos(x).rewrite(acot) == -2*acot((sqrt(-x**2 + 1) + 1)/x) + pi/2
+    assert acos(x).rewrite(asec) == asec(1/x)
+    assert acos(x).rewrite(acsc) == -acsc(1/x) + pi/2
 
 
 def test_atan():
     assert atan(nan) == nan
 
+    assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
 
@@ -608,24 +828,83 @@ def test_atan():
     assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
+    assert atan(p).is_positive is True
+    assert atan(n).is_positive is False
+    assert atan(x).is_positive is None
 
 
 def test_atan_rewrite():
     assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
+    assert atan(x).rewrite(asin) == (-asin(1/sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
+    assert atan(x).rewrite(acos) == sqrt(x**2)*acos(1/sqrt(x**2 + 1))/x
+    assert atan(x).rewrite(acot) == acot(1/x)
+    assert atan(x).rewrite(asec) == sqrt(x**2)*asec(sqrt(x**2 + 1))/x
+    assert atan(x).rewrite(acsc) == (-acsc(sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
 
 
 def test_atan2():
+    assert atan2.nargs == FiniteSet(2)
     assert atan2(0, 0) == S.NaN
     assert atan2(0, 1) == 0
+    assert atan2(1, 1) == pi/4
     assert atan2(1, 0) == pi/2
     assert atan2(1, -1) == 3*pi/4
-    assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
+    assert atan2(-1, -1) == -3*pi/4
+    assert atan2(-1, 0) == -pi/2
+    assert atan2(-1, 1) == -pi/4
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    eq = atan2(r, i)
+    ans = -I*log((i + I*r)/sqrt(i**2 + r**2))
+    reps = ((r, 2), (i, I))
+    assert eq.subs(reps) == ans.subs(reps)
+
+    x = Symbol('x', negative=True)
+    y = Symbol('y', negative=True)
+    assert atan2(y, x) == atan(y/x) - pi
+    y = Symbol('y', nonnegative=True)
+    assert atan2(y, x) == atan(y/x) + pi
+    y = Symbol('y')
+    assert atan2(y, x) == atan2(y, x, evaluate=False)
+
+    u = Symbol("u", positive=True)
+    assert atan2(0, u) == 0
+    u = Symbol("u", negative=True)
+    assert atan2(0, u) == pi
+
+    assert atan2(y, oo) ==  0
+    assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
+
+    assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
+    assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    ex = atan2(y, x) - arg(x + I*y)
+    assert ex.subs({x:2, y:3}).rewrite(arg) == 0
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(2/S(3)) + atan(3/S(2))
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    e = atan2(i, r)
+    rewrite = e.rewrite(arg)
+    reps = {i: I, r: -2}
+    assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
+    assert (e - rewrite).subs(reps).equals(0)
+
+    assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
+
+    assert diff(atan2(y, x), x) == -y/(x**2 + y**2)
+    assert diff(atan2(y, x), y) == x/(x**2 + y**2)
+
+    assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
+    assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
 
 
 def test_acot():
     assert acot(nan) == nan
 
+    assert acot.nargs == FiniteSet(1)
     assert acot(-oo) == 0
     assert acot(oo) == 0
     assert acot(1) == pi/4
@@ -639,10 +918,19 @@ def test_acot():
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
+    assert acot(x).is_positive is None
+    assert acot(r).is_positive is True
+    assert acot(p).is_positive is True
+    assert acot(I).is_positive is False
 
 
 def test_acot_rewrite():
     assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
+    assert acot(x).rewrite(asin) == x*(-asin(sqrt(-x**2)/sqrt(-x**2 - 1)) + pi/2)*sqrt(x**(-2))
+    assert acot(x).rewrite(acos) == x*sqrt(x**(-2))*acos(sqrt(-x**2)/sqrt(-x**2 - 1))
+    assert acot(x).rewrite(atan) == atan(1/x)
+    assert acot(x).rewrite(asec) == x*sqrt(x**(-2))*asec(sqrt((x**2 + 1)/x**2))
+    assert acot(x).rewrite(acsc) == x*(-acsc(sqrt((x**2 + 1)/x**2)) + pi/2)*sqrt(x**(-2))
 
 
 def test_attributes():
@@ -695,14 +983,14 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue1448():
+def test_issue_4547():
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
     assert cot(x).fdiff() == -1 - cot(x)**2
 
 
-def test_as_leading_term_issue2173():
+def test_as_leading_term_issue_5272():
     assert sin(x).as_leading_term(x) == x
     assert cos(x).as_leading_term(x) == 1
     assert tan(x).as_leading_term(x) == x
@@ -721,15 +1009,15 @@ def test_leading_terms():
 
 
 def test_atan2_expansion():
-    assert cancel(atan2(x + 1, x**2).diff(x) - atan((x + 1)/x**2).diff(x)) == 0
-    assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5)
-                  + atan2(0, y) - atan(0)) == O(x**5)
-    assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)
-                  + atan2(x, 1) - atan(x)) == O(y**4)
-    assert cancel(atan((x + y)/y).series(y, 1, 3) - atan2(x + y, y).series(y, 1, 3)
-                  + atan2(1 + x, 1) - atan(1 + x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) == \
-        Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
+    assert cancel(atan2(x**2, x + 1).diff(x) - atan(x**2/(x + 1)).diff(x)) == 0
+    assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
+                  + atan2(0, x) - atan(0)) == O(y**5)
+    assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
+                  + atan2(y, 1) - atan(y)) == O((x - 1)**4, (x, 1))
+    assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O((x - 1)**3, (x, 1))
+    assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
+        Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
 
 def test_aseries():
@@ -742,7 +1030,7 @@ def test_aseries():
     t(acot, -0.1, '-', 1e-5)
 
 
-def test_issue_1321():
+def test_issue_4420():
     i = Symbol('i', integer=True)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
@@ -873,10 +1161,10 @@ def test_real_imag():
             z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
         assert cos(
             z).as_real_imag(deep=deep) == (cos(a)*cosh(b), -sin(a)*sinh(b))
-        assert tan(z).as_real_imag(deep=deep) == (sin(a)*cos(
-            a)/(cos(a)**2 + sinh(b)**2), sinh(b)*cosh(b)/(cos(a)**2 + sinh(b)**2))
-        assert cot(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(
-            sin(a)**2 + sinh(b)**2), -sinh(b)*cosh(b)/(sin(a)**2 + sinh(b)**2))
+        assert tan(z).as_real_imag(deep=deep) == (sin(2*a)/(cos(2*a) +
+            cosh(2*b)), sinh(2*b)/(cos(2*a) + cosh(2*b)))
+        assert cot(z).as_real_imag(deep=deep) == (-sin(2*a)/(cos(2*a) -
+            cosh(2*b)), -sinh(2*b)/(cos(2*a) - cosh(2*b)))
         assert sin(a).as_real_imag(deep=deep) == (sin(a), 0)
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
@@ -885,8 +1173,8 @@ def test_real_imag():
 
 @XFAIL
 def test_sin_cos_with_infinity():
-    # Test for issue 2097
-    # http://code.google.com/p/sympy/issues/detail?id=2097
+    # Test for issue 5196
+    # https://github.com/sympy/sympy/issues/5196
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
 
@@ -894,40 +1182,300 @@ def test_sin_cos_with_infinity():
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
-    for p in [1, 3, 5, 17, 3*5*17]:
+    for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in xrange(1, (n + 1)//2 + 1):
+            for i in range(1, (n + 1)//2 + 1):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
                     c1 = cos(x).rewrite(sqrt)
                     assert not s1.has(cos, sin), "fails for %d*pi/%d" % (i, n)
                     assert not c1.has(cos, sin), "fails for %d*pi/%d" % (i, n)
-                    assert 1e-10 > abs( sin(float(x)) - float(s1) )
-                    assert 1e-10 > abs( cos(float(x)) - float(c1) )
+                    assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
+                    assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
+    assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
+    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
+    assert cos(-15*pi/2/11, evaluate=False).rewrite(
+        sqrt) == -sqrt(-cos(4*pi/11)/2 + S.Half)
+    assert cos(Mul(2, pi, S.Half, evaluate=False), evaluate=False).rewrite(
+        sqrt) == -1
+    e = cos(pi/3/17)  # don't use pi/15 since that is caught at instantiation
+    a = (
+        -3*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17) + 17)/64 -
+        3*sqrt(34)*sqrt(sqrt(17) + 17)/128 - sqrt(sqrt(17) +
+        17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
+        + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 - sqrt(-sqrt(17)
+        + 17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 - S(1)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
+        3*sqrt(2)*sqrt(sqrt(17) + 17)/128 + sqrt(34)*sqrt(-sqrt(17) + 17)/128
+        + 13*sqrt(2)*sqrt(-sqrt(17) + 17)/128 + sqrt(17)*sqrt(-sqrt(17) +
+        17)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) + 17)
+        + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/128 + 5*sqrt(17)/32
+        + sqrt(3)*sqrt(-sqrt(2)*sqrt(sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/8 -
+        5*sqrt(2)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 -
+        3*sqrt(2)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/32
+        + sqrt(34)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/64 +
+        sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 + S(15)/32)/2 +
+        S.Half + sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 + sqrt(2)*sqrt(-sqrt(17) +
+        17)/32 + sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
+        sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
+        6*sqrt(17) + 34)/32 + S(15)/32)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) -
+        sqrt(2)*sqrt(-sqrt(17) + 17) + sqrt(34)*sqrt(-sqrt(17) + 17) +
+        6*sqrt(17) + 34)/32 + sqrt(34)*sqrt(-sqrt(17) + 17)*sqrt(sqrt(17)/32 +
+        sqrt(2)*sqrt(-sqrt(17) + 17)/32 +
+        sqrt(2)*sqrt(-8*sqrt(2)*sqrt(sqrt(17) + 17) - sqrt(2)*sqrt(-sqrt(17) +
+        17) + sqrt(34)*sqrt(-sqrt(17) + 17) + 6*sqrt(17) + 34)/32 +
+        S(15)/32)/32)/2)
+    assert e.rewrite(sqrt) == a
+    assert e.n() == a.n()
+    # coverage of fermatCoords: multiplicity > 1; the following could be
+    # different but that portion of the code should be tested in some way
+    assert cos(pi/9/17).rewrite(sqrt) == \
+        sin(pi/9)*sin(2*pi/17) + cos(pi/9)*cos(2*pi/17)
 
 
 @slow
 def test_tancot_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
-    for p in [1, 3, 5, 17, 3*5*17]:
+    for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in xrange(1, (n + 1)//2 + 1):
+            for i in range(1, (n + 1)//2 + 1):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     if  2*i != n and 3*i != 2*n:
                         t1 = tan(x).rewrite(sqrt)
                         assert not t1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
-                        assert 1e-10 > abs( tan(float(x)) - float(t1) )
+                        assert 1e-3 > abs( tan(x.evalf(7)) - t1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
                     if  i != 0 and i != n:
                         c1 = cot(x).rewrite(sqrt)
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
-                        assert 1e-10 > abs( cot(float(x)) - float(c1) )
+                        assert 1e-3 > abs( cot(x.evalf(7)) - c1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
 
 def test_sec():
+    x = symbols('x', real=True)
+    z = symbols('z')
+
+    assert sec.nargs == FiniteSet(1)
+
+    assert sec(0) == 1
+    assert sec(pi) == -1
+    assert sec(pi/2) == zoo
+    assert sec(-pi/2) == zoo
+    assert sec(pi/6) == 2*sqrt(3)/3
+    assert sec(pi/3) == 2
+    assert sec(5*pi/2) == zoo
+    assert sec(9*pi/7) == -sec(2*pi/7)
+    assert sec(3*pi/4) == -sqrt(2)  # issue 8421
+    assert sec(I) == 1/cosh(1)
+    assert sec(x*I) == 1/cosh(x)
+    assert sec(-x) == sec(x)
+
+    assert sec(asec(x)) == x
+
+    assert sec(x).rewrite(exp) == 1/(exp(I*x)/2 + exp(-I*x)/2)
+    assert sec(x).rewrite(sin) == sec(x)
+    assert sec(x).rewrite(cos) == 1/cos(x)
+    assert sec(x).rewrite(tan) == (tan(x/2)**2 + 1)/(-tan(x/2)**2 + 1)
+    assert sec(x).rewrite(pow) == sec(x)
+    assert sec(x).rewrite(sqrt) == sec(x)
+    assert sec(z).rewrite(cot) == (cot(z/2)**2 + 1)/(cot(z/2)**2 - 1)
+
+    assert sec(z).conjugate() == sec(conjugate(z))
+
+    assert (sec(z).as_real_imag() ==
+    (cos(re(z))*cosh(im(z))/(sin(re(z))**2*sinh(im(z))**2 +
+                             cos(re(z))**2*cosh(im(z))**2),
+     sin(re(z))*sinh(im(z))/(sin(re(z))**2*sinh(im(z))**2 +
+                             cos(re(z))**2*cosh(im(z))**2)))
+
+    assert sec(x).expand(trig=True) == 1/cos(x)
+    assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
+
+    assert sec(x).is_real == True
+    assert sec(z).is_real == None
+
+    assert sec(a).is_algebraic is None
+    assert sec(na).is_algebraic is False
+
+    assert sec(x).as_leading_term() == sec(x)
+
+    assert sec(0).is_finite == True
+    assert sec(x).is_finite == None
+    assert sec(pi/2).is_finite == False
+
+    assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+
+    # https://github.com/sympy/sympy/issues/7166
+    assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
+
+    # https://github.com/sympy/sympy/issues/7167
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
+            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
+    # Taylor Term checks
+    assert sec(z).taylor_term(4, z) == 5*z**4/24
+    assert sec(z).taylor_term(6, z) == 61*z**6/720
+    assert sec(z).taylor_term(5, z) == 0
+
+
 def test_csc():
+    x = symbols('x', real=True)
+    z = symbols('z')
+
+    # https://github.com/sympy/sympy/issues/6707
+    cosecant = csc('x')
+    alternate = 1/sin('x')
+    assert cosecant.equals(alternate) == True
+    assert alternate.equals(cosecant) == True
+
+    assert csc.nargs == FiniteSet(1)
+
+    assert csc(0) == zoo
+    assert csc(pi) == zoo
+
+    assert csc(pi/2) == 1
+    assert csc(-pi/2) == -1
+    assert csc(pi/6) == 2
+    assert csc(pi/3) == 2*sqrt(3)/3
+    assert csc(5*pi/2) == 1
+    assert csc(9*pi/7) == -csc(2*pi/7)
+    assert csc(3*pi/4) == sqrt(2)  # issue 8421
+    assert csc(I) == -I/sinh(1)
+    assert csc(x*I) == -I/sinh(x)
+    assert csc(-x) == -csc(x)
+
+    assert csc(acsc(x)) == x
+
+    assert csc(x).rewrite(exp) == 2*I/(exp(I*x) - exp(-I*x))
+    assert csc(x).rewrite(sin) == 1/sin(x)
+    assert csc(x).rewrite(cos) == csc(x)
+    assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
+    assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
+
+    assert csc(z).conjugate() == csc(conjugate(z))
+
+    assert (csc(z).as_real_imag() ==
+            (sin(re(z))*cosh(im(z))/(sin(re(z))**2*cosh(im(z))**2 +
+                                     cos(re(z))**2*sinh(im(z))**2),
+             -cos(re(z))*sinh(im(z))/(sin(re(z))**2*cosh(im(z))**2 +
+                          cos(re(z))**2*sinh(im(z))**2)))
+
+    assert csc(x).expand(trig=True) == 1/sin(x)
+    assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
+
+    assert csc(x).is_real == True
+    assert csc(z).is_real == None
+
+    assert csc(a).is_algebraic is None
+    assert csc(na).is_algebraic is False
+
+    assert csc(x).as_leading_term() == csc(x)
+
+    assert csc(0).is_finite == False
+    assert csc(x).is_finite == None
+    assert csc(pi/2).is_finite == True
+
+    assert series(csc(x), x, x0=pi/2, n=6) == \
+        1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
+    assert series(csc(x), x, x0=0, n=6) == \
+            1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
+
     assert csc(x).diff(x) == -cot(x)*csc(x)
+
+    assert csc(x).taylor_term(2, x) == 0
+    assert csc(x).taylor_term(3, x) == 7*x**3/360
+    assert csc(x).taylor_term(5, x) == 31*x**5/15120
+
+
+def test_asec():
+    z = Symbol('z', zero=True)
+    assert asec(z) == zoo
+    assert asec(nan) == nan
+    assert asec(1) == 0
+    assert asec(-1) == pi
+    assert asec(oo) == pi/2
+    assert asec(-oo) == pi/2
+    assert asec(zoo) == pi/2
+
+    assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
+    assert asec(x).as_leading_term(x) == log(x)
+
+    assert asec(x).rewrite(log) == I*log(sqrt(1 - 1/x**2) + I/x) + pi/2
+    assert asec(x).rewrite(asin) == -asin(1/x) + pi/2
+    assert asec(x).rewrite(acos) == acos(1/x)
+    assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
+
+
+def test_asec_is_real():
+    assert asec(S(1)/2).is_real is False
+    n = Symbol('n', positive=True, integer=True)
+    assert asec(n).is_real is True
+    assert asec(x).is_real is None
+    assert asec(r).is_real is None
+    t = Symbol('t', real=False)
+    assert asec(t).is_real is False
+
+
+def test_acsc():
+    assert acsc(nan) == nan
+    assert acsc(1) == pi/2
+    assert acsc(-1) == -pi/2
+    assert acsc(oo) == 0
+    assert acsc(-oo) == 0
+    assert acsc(zoo) == 0
+
+    assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
+    assert acsc(x).as_leading_term(x) == log(x)
+
+    assert acsc(x).rewrite(log) == -I*log(sqrt(1 - 1/x**2) + I/x)
+    assert acsc(x).rewrite(asin) == asin(1/x)
+    assert acsc(x).rewrite(acos) == -acos(1/x) + pi/2
+    assert acsc(x).rewrite(atan) == (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(acot) == (-acot(1/sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(asec) == -asec(x) + pi/2
+
+
+@XFAIL
+def test_csc_rewrite_failing():
+    # Move these 2 tests to test_csc() once bugs fixed
+    # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
+    # https://github.com/sympy/sympy/issues/7171
+    assert csc(x).rewrite(pow) == csc(x)
+    assert csc(x).rewrite(sqrt) == csc(x)
+
+
+def test_issue_8653():
+    n = Symbol('n', integer=True)
+    assert sin(n).is_irrational is None
+    assert cos(n).is_irrational is None
+    assert tan(n).is_irrational is None
+
+
+def test_issue_9157():
+    n = Symbol('n', integer=True, positive=True)
+    atan(n - 1).is_nonnegative is True

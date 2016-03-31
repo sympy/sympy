@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, pi, Rational
 from sympy.functions import assoc_laguerre, sqrt, exp, factorial, factorial2
 
@@ -13,7 +15,7 @@ def R_nl(n, l, nu, r):
     ``l``
         the quantum number for orbital angular momentum
     ``nu``
-        mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass
+        mass-scaled frequency: nu = m*omega/(2*hbar) where `m` is the mass
         and `omega` the frequency of the oscillator.
         (in atomic units nu == omega/2)
     ``r``
@@ -36,7 +38,7 @@ def R_nl(n, l, nu, r):
     >>> R_nl(0, 0, nu, r)
     2*2**(3/4)*sqrt(nu**(3/2))*exp(-nu*r**2)/pi**(1/4)
     >>> R_nl(0, l, 1, r)
-    r**l*sqrt(2**(l + 3/2)*2**(l + 2)/(2*l + 1)!!)*exp(-r**2)/pi**(1/4)
+    r**l*sqrt(2**(l + 3/2)*2**(l + 2)/factorial2(2*l + 1))*exp(-r**2)/pi**(1/4)
 
     The normalization of the radial wavefunction is:
 

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from pyglet import font
 
@@ -6,7 +8,7 @@ from util import strided_range, billboard_matrix
 from util import get_direction_vectors
 from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, range
 
 
 class PlotAxes(PlotObject):
@@ -41,7 +43,8 @@ class PlotAxes(PlotObject):
         except TypeError:
             pass
         if is_sequence(stride):
-            assert len(stride) == 3
+            if len(stride) != 3:
+                raise ValueError("length should be equal to 3")
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]

@@ -1,21 +1,19 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
+    dup_slice,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
-    dup_normal,
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
 
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed)
+from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
+from sympy.core.compatibility import range
 
-from sympy.utilities import cythonized
-
-
-@cythonized("i,n,m")
 def dup_add_term(f, c, i, K):
     """
     Add ``c*x**i`` to ``f`` in ``K[x]``.
@@ -45,7 +43,6 @@ def dup_add_term(f, c, i, K):
             return f[:m] + [f[m] + c] + f[m + 1:]
 
 
-@cythonized("i,u,v,n,m")
 def dmp_add_term(f, c, i, u, K):
     """
     Add ``c(x_2..x_u)*x_0**i`` to ``f`` in ``K[X]``.
@@ -80,7 +77,6 @@ def dmp_add_term(f, c, i, u, K):
             return f[:m] + [dmp_add(f[m], c, v, K)] + f[m + 1:]
 
 
-@cythonized("i,n,m")
 def dup_sub_term(f, c, i, K):
     """
     Subtract ``c*x**i`` from ``f`` in ``K[x]``.
@@ -110,7 +106,6 @@ def dup_sub_term(f, c, i, K):
             return f[:m] + [f[m] - c] + f[m + 1:]
 
 
-@cythonized("i,u,v,n,m")
 def dmp_sub_term(f, c, i, u, K):
     """
     Subtract ``c(x_2..x_u)*x_0**i`` from ``f`` in ``K[X]``.
@@ -145,7 +140,6 @@ def dmp_sub_term(f, c, i, u, K):
             return f[:m] + [dmp_sub(f[m], c, v, K)] + f[m + 1:]
 
 
-@cythonized("i")
 def dup_mul_term(f, c, i, K):
     """
     Multiply ``f`` by ``c*x**i`` in ``K[x]``.
@@ -166,7 +160,6 @@ def dup_mul_term(f, c, i, K):
         return [ cf * c for cf in f ] + [K.zero]*i
 
 
-@cythonized("i,u,v")
 def dmp_mul_term(f, c, i, u, K):
     """
     Multiply ``f`` by ``c(x_2..x_u)*x_0**i`` in ``K[X]``.
@@ -282,7 +275,6 @@ def dup_mul_ground(f, c, K):
         return [ cf * c for cf in f ]
 
 
-@cythonized("u,v")
 def dmp_mul_ground(f, c, u, K):
     """
     Multiply ``f`` by a constant value in ``K[X]``.
@@ -328,13 +320,12 @@ def dup_quo_ground(f, c, K):
     if not f:
         return f
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return [ K.quo(cf, c) for cf in f ]
     else:
         return [ cf // c for cf in f ]
 
 
-@cythonized("u,v")
 def dmp_quo_ground(f, c, u, K):
     """
     Quotient by a constant in ``K[X]``.
@@ -383,7 +374,6 @@ def dup_exquo_ground(f, c, K):
     return [ K.exquo(cf, c) for cf in f ]
 
 
-@cythonized("u,v")
 def dmp_exquo_ground(f, c, u, K):
     """
     Exact quotient by a constant in ``K[X]``.
@@ -406,7 +396,6 @@ def dmp_exquo_ground(f, c, u, K):
     return [ dmp_exquo_ground(cf, c, v, K) for cf in f ]
 
 
-@cythonized("n")
 def dup_lshift(f, n, K):
     """
     Efficiently multiply ``f`` by ``x**n`` in ``K[x]``.
@@ -427,7 +416,6 @@ def dup_lshift(f, n, K):
         return f + [K.zero]*n
 
 
-@cythonized("n")
 def dup_rshift(f, n, K):
     """
     Efficiently divide ``f`` by ``x**n`` in ``K[x]``.
@@ -464,7 +452,6 @@ def dup_abs(f, K):
     return [ K.abs(coeff) for coeff in f ]
 
 
-@cythonized("u,v")
 def dmp_abs(f, u, K):
     """
     Make all coefficients positive in ``K[X]``.
@@ -504,7 +491,6 @@ def dup_neg(f, K):
     return [ -coeff for coeff in f ]
 
 
-@cythonized("u,v")
 def dmp_neg(f, u, K):
     """
     Negate a polynomial in ``K[X]``.
@@ -527,7 +513,6 @@ def dmp_neg(f, u, K):
     return [ dmp_neg(cf, v, K) for cf in f ]
 
 
-@cythonized("df,dg,k")
 def dup_add(f, g, K):
     """
     Add dense polynomials in ``K[x]``.
@@ -563,7 +548,6 @@ def dup_add(f, g, K):
         return h + [ a + b for a, b in zip(f, g) ]
 
 
-@cythonized("u,v,df,dg,k")
 def dmp_add(f, g, u, K):
     """
     Add dense polynomials in ``K[X]``.
@@ -606,7 +590,6 @@ def dmp_add(f, g, u, K):
         return h + [ dmp_add(a, b, v, K) for a, b in zip(f, g) ]
 
 
-@cythonized("df,dg,k")
 def dup_sub(f, g, K):
     """
     Subtract dense polynomials in ``K[x]``.
@@ -642,7 +625,6 @@ def dup_sub(f, g, K):
         return h + [ a - b for a, b in zip(f, g) ]
 
 
-@cythonized("u,v,df,dg,k")
 def dmp_sub(f, g, u, K):
     """
     Subtract dense polynomials in ``K[X]``.
@@ -702,7 +684,6 @@ def dup_add_mul(f, g, h, K):
     return dup_add(f, dup_mul(g, h, K), K)
 
 
-@cythonized("u")
 def dmp_add_mul(f, g, h, u, K):
     """
     Returns ``f + g*h`` where ``f, g, h`` are in ``K[X]``.
@@ -737,7 +718,6 @@ def dup_sub_mul(f, g, h, K):
     return dup_sub(f, dup_mul(g, h, K), K)
 
 
-@cythonized("u")
 def dmp_sub_mul(f, g, h, u, K):
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[X]``.
@@ -755,7 +735,6 @@ def dmp_sub_mul(f, g, h, u, K):
     return dmp_sub(f, dmp_mul(g, h, u, K), u, K)
 
 
-@cythonized("df,dg,i,j")
 def dup_mul(f, g, K):
     """
     Multiply dense polynomials in ``K[x]``.
@@ -779,20 +758,40 @@ def dup_mul(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    h = []
+    n = max(df, dg) + 1
 
-    for i in xrange(0, df + dg + 1):
-        coeff = K.zero
+    if n < 100:
+        h = []
 
-        for j in xrange(max(0, i - dg), min(df, i) + 1):
-            coeff += f[j]*g[i - j]
+        for i in range(0, df + dg + 1):
+            coeff = K.zero
 
-        h.append(coeff)
+            for j in range(max(0, i - dg), min(df, i) + 1):
+                coeff += f[j]*g[i - j]
 
-    return dup_strip(h)
+            h.append(coeff)
+
+        return dup_strip(h)
+    else:
+        # Use Karatsuba's algorithm (divide and conquer), see e.g.:
+        # Joris van der Hoeven, Relax But Don't Be Too Lazy,
+        # J. Symbolic Computation, 11 (2002), section 3.1.1.
+        n2 = n//2
+
+        fl, gl = dup_slice(f, 0, n2, K), dup_slice(g, 0, n2, K)
+
+        fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+        gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+        lo, hi = dup_mul(fl, gl, K), dup_mul(fh, gh, K)
+
+        mid = dup_mul(dup_add(fl, fh, K), dup_add(gl, gh, K), K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+        return dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
+                       dup_lshift(hi, 2*n2, K), K)
 
 
-@cythonized("u,v,df,dg,i,j")
 def dmp_mul(f, g, u, K):
     """
     Multiply dense polynomials in ``K[X]``.
@@ -825,10 +824,10 @@ def dmp_mul(f, g, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, df + dg + 1):
+    for i in range(0, df + dg + 1):
         coeff = dmp_zero(v)
 
-        for j in xrange(max(0, i - dg), min(df, i) + 1):
+        for j in range(max(0, i - dg), min(df, i) + 1):
             coeff = dmp_add(coeff, dmp_mul(f[j], g[i - j], v, K), v, K)
 
         h.append(coeff)
@@ -836,7 +835,6 @@ def dmp_mul(f, g, u, K):
     return dmp_strip(h, u)
 
 
-@cythonized("df,jmin,jmax,n,i,j")
 def dup_sqr(f, K):
     """
     Square dense polynomials in ``K[x]``.
@@ -851,9 +849,9 @@ def dup_sqr(f, K):
     x**4 + 2*x**2 + 1
 
     """
-    df, h = dup_degree(f), []
+    df, h = len(f) - 1, []
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = K.zero
 
         jmin = max(0, i - df)
@@ -863,7 +861,7 @@ def dup_sqr(f, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c += f[j]*f[i - j]
 
         c += c
@@ -877,7 +875,6 @@ def dup_sqr(f, K):
     return dup_strip(h)
 
 
-@cythonized("u,v,df,jmin,jmax,n,i,j")
 def dmp_sqr(f, u, K):
     """
     Square dense polynomials in ``K[X]``.
@@ -902,7 +899,7 @@ def dmp_sqr(f, u, K):
 
     h, v = [], u - 1
 
-    for i in xrange(0, 2*df + 1):
+    for i in range(0, 2*df + 1):
         c = dmp_zero(v)
 
         jmin = max(0, i - df)
@@ -912,7 +909,7 @@ def dmp_sqr(f, u, K):
 
         jmax = jmin + n // 2 - 1
 
-        for j in xrange(jmin, jmax + 1):
+        for j in range(jmin, jmax + 1):
             c = dmp_add(c, dmp_mul(f[j], f[i - j], v, K), v, K)
 
         c = dmp_mul_ground(c, K(2), v, K)
@@ -926,7 +923,6 @@ def dmp_sqr(f, u, K):
     return dmp_strip(h, u)
 
 
-@cythonized("n,m")
 def dup_pow(f, n, K):
     """
     Raise ``f`` to the ``n``-th power in ``K[x]``.
@@ -964,7 +960,6 @@ def dup_pow(f, n, K):
     return g
 
 
-@cythonized("u,n,m")
 def dmp_pow(f, n, u, K):
     """
     Raise ``f`` to the ``n``-th power in ``K[X]``.
@@ -1005,7 +1000,6 @@ def dmp_pow(f, n, u, K):
     return g
 
 
-@cythonized("df,dg,dr,N,j")
 def dup_pdiv(f, g, K):
     """
     Polynomial pseudo-division in ``K[x]``.
@@ -1023,7 +1017,7 @@ def dup_pdiv(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1034,11 +1028,6 @@ def dup_pdiv(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
         j, N = dr - dg, N - 1
 
@@ -1049,6 +1038,13 @@ def dup_pdiv(f, g, K):
         G = dup_mul_term(g, lc_r, j, K)
         r = dup_sub(R, G, K)
 
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
+
     c = lc_g**N
 
     q = dup_mul_ground(q, c, K)
@@ -1057,7 +1053,6 @@ def dup_pdiv(f, g, K):
     return q, r
 
 
-@cythonized("df,dg,dr,N,j")
 def dup_prem(f, g, K):
     """
     Polynomial pseudo-remainder in ``K[x]``.
@@ -1075,7 +1070,7 @@ def dup_prem(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    r = f
+    r, dr = f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1086,17 +1081,19 @@ def dup_prem(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
         j, N = dr - dg, N - 1
 
         R = dup_mul_ground(r, lc_g, K)
         G = dup_mul_term(g, lc_r, j, K)
         r = dup_sub(R, G, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return dup_mul_ground(r, lc_g**N, K)
 
@@ -1148,7 +1145,6 @@ def dup_pexquo(f, g, K):
         raise ExactQuotientFailed(f, g)
 
 
-@cythonized("u,df,dg,dr,N,j")
 def dmp_pdiv(f, g, u, K):
     """
     Polynomial pseudo-division in ``K[X]``.
@@ -1172,7 +1168,7 @@ def dmp_pdiv(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1181,11 +1177,6 @@ def dmp_pdiv(f, g, u, K):
     lc_g = dmp_LC(g, K)
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
         j, N = dr - dg, N - 1
 
@@ -1196,6 +1187,13 @@ def dmp_pdiv(f, g, u, K):
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
 
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
+
     c = dmp_pow(lc_g, N, u - 1, K)
 
     q = dmp_mul_term(q, c, 0, u, K)
@@ -1204,7 +1202,6 @@ def dmp_pdiv(f, g, u, K):
     return q, r
 
 
-@cythonized("u,df,dg,dr,N,j")
 def dmp_prem(f, g, u, K):
     """
     Polynomial pseudo-remainder in ``K[X]``.
@@ -1228,7 +1225,7 @@ def dmp_prem(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    r = f
+    r, dr = f, df
 
     if df < dg:
         return r
@@ -1237,17 +1234,19 @@ def dmp_prem(f, g, u, K):
     lc_g = dmp_LC(g, K)
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
         j, N = dr - dg, N - 1
 
         R = dmp_mul_term(r, lc_g, 0, u, K)
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     c = dmp_pow(lc_g, N, u - 1, K)
 
@@ -1309,7 +1308,6 @@ def dmp_pexquo(f, g, u, K):
         raise ExactQuotientFailed(f, g)
 
 
-@cythonized("df,dg,dr,j")
 def dup_rr_div(f, g, K):
     """
     Univariate division with remainder over a ring.
@@ -1327,7 +1325,7 @@ def dup_rr_div(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1337,11 +1335,6 @@ def dup_rr_div(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
 
         if lc_r % lc_g:
@@ -1352,13 +1345,18 @@ def dup_rr_div(f, g, K):
 
         q = dup_add_term(q, c, j, K)
         h = dup_mul_term(g, c, j, K)
-
         r = dup_sub(r, h, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
 
-@cythonized("u,df,dg,dr,j")
 def dmp_rr_div(f, g, u, K):
     """
     Multivariate division with remainder over a ring.
@@ -1382,7 +1380,7 @@ def dmp_rr_div(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1390,13 +1388,7 @@ def dmp_rr_div(f, g, u, K):
     lc_g, v = dmp_LC(g, K), u - 1
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
-
         c, R = dmp_rr_div(lc_r, lc_g, v, K)
 
         if not dmp_zero_p(R, v):
@@ -1406,13 +1398,18 @@ def dmp_rr_div(f, g, u, K):
 
         q = dmp_add_term(q, c, j, u, K)
         h = dmp_mul_term(g, c, j, u, K)
-
         r = dmp_sub(r, h, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
 
-@cythonized("df,dg,dr,j")
 def dup_ff_div(f, g, K):
     """
     Polynomial division with remainder over a field.
@@ -1430,7 +1427,7 @@ def dup_ff_div(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1440,11 +1437,6 @@ def dup_ff_div(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
 
         c = K.exquo(lc_r, lc_g)
@@ -1452,16 +1444,18 @@ def dup_ff_div(f, g, K):
 
         q = dup_add_term(q, c, j, K)
         h = dup_mul_term(g, c, j, K)
-
         r = dup_sub(r, h, K)
 
-        if not K.is_Exact:
-            r = dup_normal(r, K)
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
 
-@cythonized("u,df,dg,dr,j")
 def dmp_ff_div(f, g, u, K):
     """
     Polynomial division with remainder over a field.
@@ -1485,7 +1479,7 @@ def dmp_ff_div(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1493,13 +1487,7 @@ def dmp_ff_div(f, g, u, K):
     lc_g, v = dmp_LC(g, K), u - 1
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
-
         c, R = dmp_ff_div(lc_r, lc_g, v, K)
 
         if not dmp_zero_p(R, v):
@@ -1509,8 +1497,14 @@ def dmp_ff_div(f, g, u, K):
 
         q = dmp_add_term(q, c, j, u, K)
         h = dmp_mul_term(g, c, j, u, K)
-
         r = dmp_sub(r, h, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
@@ -1533,7 +1527,7 @@ def dup_div(f, g, K):
     (1/2*x + 1, 5)
 
     """
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dup_ff_div(f, g, K)
     else:
         return dup_rr_div(f, g, K)
@@ -1608,7 +1602,6 @@ def dup_exquo(f, g, K):
         raise ExactQuotientFailed(f, g)
 
 
-@cythonized("u")
 def dmp_div(f, g, u, K):
     """
     Polynomial division with remainder in ``K[X]``.
@@ -1627,13 +1620,12 @@ def dmp_div(f, g, u, K):
     (1/2*x + 1/2*y - 1/2, -y + 1)
 
     """
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dmp_ff_div(f, g, u, K)
     else:
         return dmp_rr_div(f, g, u, K)
 
 
-@cythonized("u")
 def dmp_rem(f, g, u, K):
     """
     Returns polynomial remainder in ``K[X]``.
@@ -1655,7 +1647,6 @@ def dmp_rem(f, g, u, K):
     return dmp_div(f, g, u, K)[1]
 
 
-@cythonized("u")
 def dmp_quo(f, g, u, K):
     """
     Returns exact polynomial quotient in ``K[X]``.
@@ -1677,7 +1668,6 @@ def dmp_quo(f, g, u, K):
     return dmp_div(f, g, u, K)[0]
 
 
-@cythonized("u")
 def dmp_exquo(f, g, u, K):
     """
     Returns polynomial quotient in ``K[X]``.
@@ -1729,7 +1719,6 @@ def dup_max_norm(f, K):
         return max(dup_abs(f, K))
 
 
-@cythonized("u,v")
 def dmp_max_norm(f, u, K):
     """
     Returns maximum norm of a polynomial in ``K[X]``.
@@ -1772,7 +1761,6 @@ def dup_l1_norm(f, K):
         return sum(dup_abs(f, K))
 
 
-@cythonized("u,v")
 def dmp_l1_norm(f, u, K):
     """
     Returns l1 norm of a polynomial in ``K[X]``.
@@ -1820,7 +1808,6 @@ def dup_expand(polys, K):
     return f
 
 
-@cythonized("u")
 def dmp_expand(polys, u, K):
     """
     Multiply together several polynomials in ``K[X]``.

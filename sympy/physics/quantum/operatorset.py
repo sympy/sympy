@@ -14,6 +14,7 @@ TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
 
+from __future__ import print_function, division
 
 from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
                                              PositionKet3D)
@@ -42,7 +43,7 @@ state_mapping = { JxKet: frozenset((J2Op, JxOp)),
                   PxKet: PxOp,
                   XKet: XOp }
 
-op_mapping = dict((v, k) for k, v in state_mapping.iteritems())
+op_mapping = dict((v, k) for k, v in state_mapping.items())
 
 
 def operators_to_state(operators, **options):
@@ -109,7 +110,6 @@ def operators_to_state(operators, **options):
                    or issubclass(s, Operator)):
                 raise NotImplementedError("Set is not all Operators!")
 
-        #ops = tuple(operators)
         ops = frozenset(operators)
 
         if ops in op_mapping:  # ops is a list of classes in this case
@@ -262,7 +262,7 @@ def _get_ops(state_inst, op_classes, **options):
         ret = state_inst._state_to_operators(op_classes, **options)
     except NotImplementedError:
         if isinstance(op_classes, (set, tuple, frozenset)):
-            ret = tuple(map(lambda x: _make_default(x), op_classes))
+            ret = tuple(_make_default(x) for x in op_classes)
         else:
             ret = _make_default(op_classes)
 

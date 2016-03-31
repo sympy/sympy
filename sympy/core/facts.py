@@ -47,9 +47,12 @@ http://en.wikipedia.org/wiki/Propositional_formula
 http://en.wikipedia.org/wiki/Inference_rule
 http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 
-from logic import Logic, And, Or, Not
+from .logic import Logic, And, Or, Not
+from sympy.core.compatibility import string_types, range
 
 
 def _base_fact(atom):
@@ -72,6 +75,26 @@ def _as_pair(atom):
 # XXX this prepares forward-chaining rules for alpha-network
 
 
+def transitive_closure(implications):
+    """
+    Computes the transitive closure of a list of implications
+
+    Uses Warshall's algorithm, as described at
+    http://www.cs.hope.edu/~cusack/Notes/Notes/DiscreteMath/Warshall.pdf.
+    """
+    full_implications = set(implications)
+    literals = set().union(*map(set, full_implications))
+
+    for k in literals:
+        for i in literals:
+            if (i, k) in full_implications:
+                for j in literals:
+                    if (k, j) in full_implications:
+                        full_implications.add((i, j))
+
+    return full_implications
+
+
 def deduce_alpha_implications(implications):
     """deduce all implications
 
@@ -92,25 +115,17 @@ def deduce_alpha_implications(implications):
        implications: [] of (a,b)
        return:       {} of a -> set([b, c, ...])
     """
+    implications = implications + [(Not(j), Not(i)) for (i, j) in implications]
     res = defaultdict(set)
-    for a, b in implications:
+    full_implications = transitive_closure(implications)
+    for a, b in full_implications:
         if a == b:
             continue    # skip a->a cyclic input
 
         res[a].add(b)
 
-        # (x >> a) & (a >> b) => x >> b
-        for fact in res:
-            implied = res[fact]
-            if a in implied:
-                implied.add(b)
-
-        # (a >> b) & (b >> x) => a >> x
-        if b in res:
-            res[a] |= res[b]
-
     # Clean up tautologies and check consistency
-    for a, impl in res.iteritems():
+    for a, impl in res.items():
         impl.discard(a)
         na = Not(a)
         if na in impl:
@@ -121,7 +136,8 @@ def deduce_alpha_implications(implications):
 
 
 def apply_beta_to_alpha_route(alpha_implications, beta_rules):
-    """apply additional beta-rules (And conditions) to already-built alpha implication tables
+    """apply additional beta-rules (And conditions) to already-built
+    alpha implication tables
 
        TODO: write about
 
@@ -163,16 +179,17 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
         seen_static_extension = False
 
         for bcond, bimpl in beta_rules:
-            assert isinstance(bcond, And)
+            if not isinstance(bcond, And):
+                raise TypeError("Cond is not And")
             bargs = set(bcond.args)
-            for x, (ximpls, bb) in x_impl.iteritems():
-                x_all = ximpls | set([x])
+            for x, (ximpls, bb) in x_impl.items():
+                x_all = ximpls | {x}
                 # A: ... -> a   B: &(...) -> a  is non-informative
                 if bimpl not in x_all and bargs.issubset(x_all):
                     ximpls.add(bimpl)
 
                     # we introduced new implication - now we have to restore
-                    # completness of the whole set.
+                    # completeness of the whole set.
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]
@@ -181,8 +198,8 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     # attach beta-nodes which can be possibly triggered by an alpha-chain
     for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
-        for x, (ximpls, bb) in x_impl.iteritems():
-            x_all = ximpls | set([x])
+        for x, (ximpls, bb) in x_impl.items():
+            x_all = ximpls | {x}
             # A: ... -> a   B: &(...) -> a      (non-informative)
             if bimpl in x_all:
                 continue
@@ -221,8 +238,12 @@ def rules_2prereq(rules):
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
     prereq = defaultdict(set)
-    for (a, _), impl in rules.iteritems():
+    for (a, _), impl in rules.items():
+        if isinstance(a, Not):
+            a = a.args[0]
         for (i, _) in impl:
+            if isinstance(i, Not):
+                i = i.args[0]
             prereq[i].add(a)
     return prereq
 
@@ -277,7 +298,7 @@ class Prover(object):
             if isinstance(a, And):
                 rules_beta.append((a, b))
             else:
-                rules_alpha.append((a, b) )
+                rules_alpha.append((a, b))
         return rules_alpha, rules_beta
 
     @property
@@ -357,9 +378,9 @@ class Prover(object):
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
 
-       When defined, these rules allow implications to quickly be determined for a
-       set of facts. For this precomputed deduction tables are used. see
-       `deduce_all_facts`   (forward-chaining)
+       When defined, these rules allow implications to quickly be determined
+       for a set of facts. For this precomputed deduction tables are used.
+       see `deduce_all_facts`   (forward-chaining)
 
        Also it is possible to gather prerequisites for a fact, which is tried
        to be proven.    (backward-chaining)
@@ -388,7 +409,7 @@ class FactRules(object):
     def __init__(self, rules):
         """Compile rules into internal lookup tables"""
 
-        if isinstance(rules, basestring):
+        if isinstance(rules, string_types):
             rules = rules.splitlines()
 
         # --- parse and process rules ---
@@ -420,7 +441,8 @@ class FactRules(object):
 
         # now:
         # - apply beta rules to alpha chains  (static extension), and
-        # - further associate beta rules to alpha chain (for inference at runtime)
+        # - further associate beta rules to alpha chain (for inference
+        # at runtime)
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names
@@ -429,7 +451,7 @@ class FactRules(object):
         # build rels (forward chains)
         full_implications = defaultdict(set)
         beta_triggers = defaultdict(set)
-        for k, (impl, betaidxs) in impl_ab.iteritems():
+        for k, (impl, betaidxs) in impl_ab.items():
             full_implications[_as_pair(k)] = set(_as_pair(i) for i in impl)
             beta_triggers[_as_pair(k)] = betaidxs
 
@@ -439,7 +461,7 @@ class FactRules(object):
         # build prereq (backward chains)
         prereq = defaultdict(set)
         rel_prereq = rules_2prereq(full_implications)
-        for k, pitems in rel_prereq.iteritems():
+        for k, pitems in rel_prereq.items():
             prereq[k] |= pitems
         self.prereq = prereq
 
@@ -454,6 +476,10 @@ class FactKB(dict):
     """
     A simple propositional knowledge base relying on compiled inference rules.
     """
+    def __str__(self):
+        return '{\n%s}' % ',\n'.join(
+            ["\t%s: %s" % i for i in sorted(self.items())])
+
     def __init__(self, rules):
         self.rules = rules
 
@@ -488,7 +514,7 @@ class FactKB(dict):
         beta_rules = self.rules.beta_rules
 
         if isinstance(facts, dict):
-            facts = facts.iteritems()
+            facts = facts.items()
 
         while facts:
             beta_maytrigger = set()

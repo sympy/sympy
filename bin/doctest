@@ -7,6 +7,8 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
+from __future__ import print_function
+
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
 blacklist = []
@@ -14,6 +16,7 @@ blacklist = []
 import sys
 import os
 from optparse import OptionParser
+import re
 
 from get_sympy import path_hack
 path_hack()
@@ -31,11 +34,20 @@ parser.add_option("-n", "--normal", action="store_true", dest="normal",
 parser.add_option('-t', '--types', dest='types', action='store',
         default=None, choices=['gmpy', 'gmpy1', 'python'],
         help='setup ground types: gmpy | gmpy1 | python')
+parser.add_option("--no-colors", action="store_false", dest="colors",
+        default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option("--force-colors", action="store_true", dest="force_colors",
+        default=False, help="Always use colors, even if the output is not to a terminal.")
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
+parser.add_option('--split', action="store", type='str', default=None,
+    help="Only run part of the doctests. Should be of the form a/b, e.g., 1/2")
+parser.add_option('--rerun', action="store", dest="rerun",
+                  default=0, help="Number of times to rerun the specified tests",
+                  type='int')
 parser.set_usage("test [options ...] [files ...]")
 parser.epilog = """\
 "options" are any of the options above. "files" are 0 or more glob strings of \
@@ -46,6 +58,13 @@ documentation (doc/src/ directory).\
 
 options, args = parser.parse_args()
 
+# Check this again here to give a better error message
+if options.split:
+    sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+    if not sp.match(options.split):
+        parser.error("option --split: must be of the form a/b where a and b "
+            "are integers, not %r" % options.split)
+
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
@@ -53,8 +72,9 @@ if options.types:
 
 import sympy
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "normal": options.normal, "subprocess": options.subprocess})
+ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
+    normal=options.normal, subprocess=options.subprocess, split=options.split,
+    rerun=options.rerun, colors=options.colors, force_colors=options.force_colors)
 
 if ok:
     sys.exit(0)

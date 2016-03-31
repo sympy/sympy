@@ -14,7 +14,8 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-from __future__ import with_statement
+from __future__ import print_function, division
+
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
@@ -25,9 +26,11 @@ from sympy.polys import Poly, lcm, cancel, sqf_list
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation, DecrementLevel)
+    residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
+from sympy.core.compatibility import reduce, range
+from sympy.utilities.misc import debug
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -41,7 +44,7 @@ def prde_normal_denom(fa, fd, G, DE):
     q == y*h in k<t> satisfies a*Dq + b*q == Sum(ci*Gi, (i, 1, m)).
     """
     dn, ds = splitfactor(fd, DE)
-    Gas, Gds = zip(*G)
+    Gas, Gds = list(zip(*G))
     gd = reduce(lambda i, j: i.lcm(j), Gds, Poly(1, DE.t))
     en, es = splitfactor(gd, DE)
 
@@ -57,6 +60,30 @@ def prde_normal_denom(fa, fd, G, DE):
     G = [(c*A).cancel(D, include=True) for A, D in G]
 
     return (a, (ba, bd), G, h)
+
+def real_imag(ba, bd, gen):
+    """
+    Helper function, to get the real and imaginary part of a rational function
+    evaluated at sqrt(-1) without actually evaluating it at sqrt(-1)
+
+    Separates the even and odd power terms by checking the degree of terms wrt
+    mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
+    of the numerator ba[1] is the imaginary part and bd is the denominator
+    of the rational function.
+    """
+    bd = bd.as_poly(gen).as_dict()
+    ba = ba.as_poly(gen).as_dict()
+    denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
+    denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
+    bd_real = sum(r for r in denom_real)
+    bd_imag = sum(r for r in denom_imag)
+    num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
+    num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
+    ba_real = sum(r for r in num_real)
+    ba_imag = sum(r for r in num_imag)
+    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
+    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    return (ba[0], ba[1], bd)
 
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
@@ -93,24 +120,35 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = min([order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G])
-
     n = min(0, nc - min(0, nb))
     if not nb:
-        # Possible cancellation
-        #
-        # if case == 'exp':
-        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
-        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        # elif case == 'tan':
-        #     alpha*sqrt(-1) + beta = (-b/a)/rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
-        #     if 2*beta == Db/b for some v in k* (see pg. 176) and \
-        #     alpha*sqrt(-1) + beta == 2*b*eta*sqrt(-1) + Dz/z:
-        #     # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        raise NotImplementedError("The ability to solve the parametric "
-            "logarithmic derivative problem is required to solve this PRDE.")
+        # Possible cancellation.
+        if case == 'exp':
+            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    a, m, z = A
+                    if a == 1:
+                        n = min(n, m)
+
+        elif case == 'tan':
+            dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
+                betad = alphad
+                etaa, etad = frac_in(dcoeff, DE.t)
+                if recognize_log_derivative(2*betaa, betad, DE):
+                    A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
+                    if A is not None and B is not None:
+                        a, s, z = A
+                        if a == 1:
+                             n = min(n, s/2)
 
     N = max(0, -nb)
     pN = p**N
@@ -141,7 +179,7 @@ def prde_linear_constraints(a, b, G, DE):
     """
     m = len(G)
 
-    Gns, Gds = zip(*G)
+    Gns, Gds = list(zip(*G))
     d = reduce(lambda i, j: i.lcm(j), Gds)
     d = Poly(d, field=True)
     Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
@@ -152,7 +190,7 @@ def prde_linear_constraints(a, b, G, DE):
     else:
         M = Matrix()  # No constraints, return the empty matrix.
 
-    qs, _ = zip(*Q)
+    qs, _ = list(zip(*Q))
     return (qs, M)
 
 
@@ -175,6 +213,8 @@ def constant_system(A, u, DE):
     Because Poly does not play well with Matrix yet, this algorithm assumes that
     all matrix entries are Basic expressions.
     """
+    if not A:
+        return A, u
     Au = A.row_join(u)
     Au = Au.rref(simplify=cancel)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
@@ -237,7 +277,7 @@ def prde_spde(a, b, Q, n, DE):
     a*Dq + b*q == Sum(ci*gi, (i, 1, m)), p = (q - Sum(ci*ri, (i, 1, m)))/a has
     degree at most n1 and satisfies A*Dp + B*p == Sum(ci*qi, (i, 1, m))
     """
-    R, Z = zip(*[gcdex_diophantine(b, a, qi) for qi in Q])
+    R, Z = list(zip(*[gcdex_diophantine(b, a, qi) for qi in Q]))
 
     A = a
     B = b + derivation(a, DE)
@@ -263,7 +303,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, -1, -1):  # [n, ..., 0]
+    for N in range(n, -1, -1):  # [n, ..., 0]
         for i in range(m):
             si = Q[i].nth(N + db)/b.LC()
             sitn = Poly(si*DE.t**N, DE.t)
@@ -297,7 +337,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, 0, -1):  # [n, ..., 1]
+    for N in range(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
             sitn = Poly(si*DE.t**N, DE.t)
@@ -343,10 +383,8 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(A, B, G, DE, parametric=True)
     except NotImplementedError:
-        # Useful for debugging:
-        # import warnings
-        # warnings.warn("param_rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        debug("param_rischDE: Proceeding with n = oo; may cause "
+              "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
@@ -372,7 +410,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
-    En, Es = zip(*E)
+    En, Es = list(zip(*E))
     c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
@@ -482,7 +520,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             return None
 
         if Q.is_zero or v.is_zero:
-            # Q == 0 or v == 0.
             return None
 
         return (Q*N, Q*M, v)
@@ -520,7 +557,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     Q, v = Qv
 
     if Q.is_zero or v.is_zero:
-        # Q == 0 or v == 0.
         return None
 
     return (Q*N, Q*M, v)
@@ -596,8 +632,8 @@ def is_deriv_k(fa, fd, DE):
 
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
-        if filter(lambda i: i == 'tan', DE.cases) or \
-                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+        if [i for i in DE.cases if i == 'tan'] or \
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -625,16 +661,21 @@ def is_deriv_k(fa, fd, DE):
                 "coefficients in this case.")
         else:
             terms = DE.E_args + [DE.T[i] for i in DE.L_K]
-            ans = zip(terms, u)
+            ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
             l = []
+            ld = []
             for i, j in zip(argterms, u):
                 # We need to get around things like sqrt(x**2) != x
                 # and also sqrt(x**2 + 2*x + 1) != x + 1
+                # Issue 10798: i need not be a polynomial
+                i, d = i.as_numer_denom()
                 icoeff, iterms = sqf_list(i)
                 l.append(Mul(*([Pow(icoeff, j)] + [Pow(b, e*j) for b, e in iterms])))
-            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l))
+                dcoeff, dterms = sqf_list(d)
+                ld.append(Mul(*([Pow(dcoeff, j)] + [Pow(b, e*j) for b, e in dterms])))
+            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l)*Mul(*ld))
 
             return (ans, result, const)
 
@@ -700,8 +741,8 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
-        if filter(lambda i: i == 'tan', DE.cases) or \
-                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+        if [i for i in DE.cases if i == 'tan'] or \
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -733,7 +774,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = [DE.T[i] for i in DE.E_K] + DE.L_args
-            ans = zip(terms, u)
+            ans = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
@@ -755,7 +796,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     logarithmic derivative of a k(t)-radical.
 
     case is one of {'primitive', 'exp', 'tan', 'auto'} for the primitive,
-    hyperexponential, and hypertangent cases, respectively.  If case it 'auto',
+    hyperexponential, and hypertangent cases, respectively.  If case is 'auto',
     it will attempt to determine the type of the derivation automatically.
     """
     fa, fd = fa.cancel(fd, include=True)
@@ -764,7 +805,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     n, s = splitfactor(fd, DE)
     if not s.is_one:
         pass
-        #return None
 
     z = z or Dummy('z')
     H, b = residue_reduce(fa, fd, DE, z=z)
@@ -785,10 +825,10 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
 
     # [(a, i), ...], where i*log(a) is a term in the log-part of the integral
     # of f
-    respolys, residues = zip(*roots) or [[], []]
+    respolys, residues = list(zip(*roots)) or [[], []]
     # Note: this might be empty, but everything below should work find in that
     # case (it should be the same as if it were [[1, 1]])
-    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
+    residueterms = [(H[j][1].subs(z, i), i) for j in range(len(H)) for
         i in residues[j]]
 
     # TODO: finish writing this and write tests
@@ -816,8 +856,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         n, e, u = A
         u *= DE.t**e
-#        raise NotImplementedError("The hyperexponential case is "
-#            "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
         with DecrementLevel(DE):
@@ -856,7 +894,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
-    assert common_denom == n*m  # Verify exact division
+    if common_denom != n*m:  # Verify exact division
+        raise ValueError("Inexact division")
     u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
     return (common_denom, u)

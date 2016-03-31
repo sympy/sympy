@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+
+from sympy.core.compatibility import range
 from sympy.combinatorics.util import _distribute_gens_by_base
 from sympy.combinatorics import Permutation
 
@@ -26,8 +29,8 @@ def _cmp_perm_lists(first, second):
     True
 
     """
-    return set([tuple(a) for a in first]) == \
-        set([tuple(a) for a in second])
+    return {tuple(a) for a in first} == \
+           {tuple(a) for a in second}
 
 
 def _naive_list_centralizer(self, other, af=False):
@@ -35,12 +38,13 @@ def _naive_list_centralizer(self, other, af=False):
     """
     Return a list of elements for the centralizer of a subgroup/set/element.
 
-    This is a brute-force implementation that goes over all elements of the
+    This is a brute force implementation that goes over all elements of the
     group and checks for membership in the centralizer. It is used to
     test ``.centralizer()`` from ``sympy.combinatorics.perm_groups``.
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import _naive_list_centralizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> D = DihedralGroup(4)
@@ -72,6 +76,7 @@ def _naive_list_centralizer(self, other, af=False):
         return _naive_list_centralizer(self, PermutationGroup(other), af)
     elif hasattr(other, 'array_form'):
         return _naive_list_centralizer(self, PermutationGroup([other]), af)
+
 
 def _verify_bsgs(group, base, gens):
     """
@@ -183,13 +188,14 @@ def _verify_normal_closure(group, arg, closure=None):
         subgr_gens = [arg]
     for el in group.generate_dimino():
         for gen in subgr_gens:
-            conjugates.add(gen^el)
+            conjugates.add(gen ^ el)
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
 
+
 def canonicalize_naive(g, dummies, sym, *v):
     """
-    canonicalize tensor formed by tensors of the different types
+    Canonicalize tensor formed by tensors of the different types
 
     g  permutation representing the tensor
     dummies  list of dummy indices
@@ -209,10 +215,11 @@ def canonicalize_naive(g, dummies, sym, *v):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import canonicalize_naive
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> from sympy.combinatorics import Permutation, PermutationGroup
-    >>> g = Permutation([1,3,2,0,4,5])
+    >>> g = Permutation([1, 3, 2, 0, 4, 5])
     >>> base2, gens2 = get_symmetric_group_sgs(2)
     >>> canonicalize_naive(g, [2, 3], 0, (base2, gens2, 2, 0))
     [0, 2, 1, 3, 4, 5]
@@ -255,6 +262,7 @@ def canonicalize_naive(g, dummies, sym, *v):
         prev = h
     return list(a[0])
 
+
 def graph_certificate(gr):
     """
     Return a certificate for the graph
@@ -275,8 +283,8 @@ def graph_certificate(gr):
     ========
 
     >>> from sympy.combinatorics.testutil import graph_certificate
-    >>> gr1 = {0:[1,2,3,5], 1:[0,2,4], 2:[0,1,3,4], 3:[0,2,4], 4:[1,2,3,5], 5:[0,4]}
-    >>> gr2 = {0:[1,5], 1:[0,2,3,4], 2:[1,3,5], 3:[1,2,4,5], 4:[1,3,5], 5:[0,2,3,4]}
+    >>> gr1 = {0:[1, 2, 3, 5], 1:[0, 2, 4], 2:[0, 1, 3, 4], 3:[0, 2, 4], 4:[1, 2, 3, 5], 5:[0, 4]}
+    >>> gr2 = {0:[1, 5], 1:[0, 2, 3, 4], 2:[1, 3, 5], 3:[1, 2, 4, 5], 4:[1, 3, 5], 5:[0, 2, 3, 4]}
     >>> c1 = graph_certificate(gr1)
     >>> c2 = graph_certificate(gr2)
     >>> c1
@@ -286,7 +294,7 @@ def graph_certificate(gr):
     """
     from sympy.combinatorics.permutations import _af_invert
     from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize
-    items = gr.items()
+    items = list(gr.items())
     items.sort(key=lambda x: len(x[1]), reverse=True)
     pvert = [x[0] for x in items]
     pvert = _af_invert(pvert)
@@ -294,7 +302,7 @@ def graph_certificate(gr):
     # the indices of the tensor are twice the number of lines of the graph
     num_indices = 0
     for v, neigh in items:
-      num_indices += len(neigh)
+        num_indices += len(neigh)
     # associate to each vertex its indices; for each line
     # between two vertices assign the
     # even index to the vertex which comes first in items,
@@ -309,11 +317,11 @@ def graph_certificate(gr):
                 i += 2
     g = []
     for v in vertices:
-      g.extend(v)
+        g.extend(v)
     assert len(g) == num_indices
     g += [num_indices, num_indices + 1]
     size = num_indices + 2
-    assert sorted(g) == range(size)
+    assert sorted(g) == list(range(size))
     g = Permutation(g)
     vlen = [0]*(len(vertices[0])+1)
     for neigh in vertices:
@@ -325,6 +333,6 @@ def graph_certificate(gr):
             base, gens = get_symmetric_group_sgs(i)
             v.append((base, gens, n, 0))
     v.reverse()
-    dummies = range(num_indices)
+    dummies = list(range(num_indices))
     can = canonicalize(g, dummies, 0, *v)
     return can

@@ -1,7 +1,10 @@
-from sympy.utilities import default_sort_key
+from __future__ import print_function, division
+import inspect
+
 from sympy.external import import_module
 
 from sympy.printing.printer import Printer
+from sympy.core.compatibility import range
 import sympy
 from functools import partial
 
@@ -9,7 +12,6 @@ theano = import_module('theano')
 if theano:
     ts = theano.scalar
     tt = theano.tensor
-    from theano import sandbox
     from theano.sandbox import linalg as tlinalg
 
     mapping = {
@@ -43,13 +45,14 @@ if theano:
             sympy.loggamma: tt.gammaln,
             sympy.Pow: tt.pow,
             sympy.Eq: tt.eq,
-            sympy.Gt: tt.gt,
-            sympy.Lt: tt.lt,
-            sympy.Le: tt.le,
-            sympy.Ge: tt.ge,
+            sympy.StrictGreaterThan: tt.gt,
+            sympy.StrictLessThan: tt.lt,
+            sympy.LessThan: tt.le,
+            sympy.GreaterThan: tt.ge,
+            sympy.And: tt.and_,
+            sympy.Or: tt.or_,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -63,7 +66,9 @@ class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
     printmethod = "_theano"
 
-    cache = dict()
+    def __init__(self, *args, **kwargs):
+        self.cache = kwargs.pop('cache', dict())
+        super(TheanoPrinter, self).__init__(*args, **kwargs)
 
     def _print_Symbol(self, s, dtypes={}, broadcastables={}):
         dtype = dtypes.get(s, 'floatX')
@@ -99,7 +104,6 @@ class TheanoPrinter(Printer):
 
     def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
         dtype = dtypes.get(X, 'floatX')
-        # shape = [self._print(d, dtypes) for d in X.shape]
         key = (X.name, dtype, type(X))
         if key in self.cache:
             return self.cache[key]
@@ -109,8 +113,14 @@ class TheanoPrinter(Printer):
             return value
 
     def _print_DenseMatrix(self, X, **kwargs):
-        return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
-                                     for L in X.tolist()])
+        try:
+            tt.stacklists
+        except AttributeError:
+            raise NotImplementedError(
+               "Matrix translation not yet supported in this version of Theano")
+        else:
+            return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
+                                         for L in X.tolist()])
     _print_ImmutableMatrix = _print_DenseMatrix
 
     def _print_MatMul(self, expr, **kwargs):
@@ -142,6 +152,17 @@ class TheanoPrinter(Printer):
     def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
+    def _print_Piecewise(self, expr, **kwargs):
+        import numpy as np
+        e, cond = expr.args[0].args
+        if len(expr.args) == 1:
+            return tt.switch(self._print(cond, **kwargs),
+                             self._print(e, **kwargs),
+                             np.nan)
+        return tt.switch(self._print(cond, **kwargs),
+                         self._print(e, **kwargs),
+                         self._print(sympy.Piecewise(*expr.args[1:]), **kwargs))
+
     def _print_Rational(self, expr, **kwargs):
         return tt.true_div(self._print(expr.p, **kwargs),
                            self._print(expr.q, **kwargs))
@@ -166,12 +187,16 @@ class TheanoPrinter(Printer):
         """Returns printer's representation for expr (as a string)"""
         return self._print(expr, **kwargs)
 
+global_cache = {}
 
-def theano_code(expr, **kwargs):
-    return TheanoPrinter({}).doprint(expr, **kwargs)
+def theano_code(expr, cache=global_cache, **kwargs):
+    if not theano:
+        raise ImportError("theano is required for theano_code")
+    return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
-def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
+def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
+        **kwargs):
     """ Handle various input types for dimensions in tensor_wrap
 
     See Also:
@@ -187,11 +212,21 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
     return broadcastables
 
 
-def theano_function(inputs, outputs, dtypes={}, **kwargs):
+def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     """ Create Theano function from SymPy expressions """
+    if not theano:
+        raise ImportError("theano is required for theano_function")
+    cache = {} if cache == None else cache
     broadcastables = dim_handling(inputs, **kwargs)
-    code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
-    tinputs  = map(code, inputs)
-    toutputs = map(code, outputs)
+
+    # Remove keyword arguments corresponding to dim_handling
+    dim_names = inspect.getargspec(dim_handling)[0]
+    theano_kwargs = dict((k, v) for k, v in kwargs.items()
+                                if k not in dim_names)
+
+    code = partial(theano_code, cache=cache, dtypes=dtypes,
+                   broadcastables=broadcastables)
+    tinputs  = list(map(code, inputs))
+    toutputs = list(map(code, outputs))
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
-    return theano.function(tinputs, toutputs)
+    return theano.function(tinputs, toutputs, **theano_kwargs)

@@ -1,6 +1,8 @@
 from sympy.utilities.pytest import raises
-from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin
+from sympy import (symbols, Function, Integer, Matrix, Abs,
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
+from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex
@@ -10,7 +12,7 @@ x, y = symbols('x,y')
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {}
-exec "from sympy import *" in ENV
+exec_("from sympy import *", ENV)
 
 
 def sT(expr, string):
@@ -46,9 +48,9 @@ def test_Function():
     sT(sin, "sin")
 
 def test_Geometry():
-    sT(Point(0, 0), "Point(Integer(0), Integer(0))")
+    sT(Point(0, 0), "Point2D(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),
-       "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
+       "Ellipse(Point2D(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 
@@ -87,6 +89,12 @@ def test_Matrix():
         sT(cls([[x**+1, 1], [y, x + y]]), "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
 
+def test_empty_Matrix():
+    sT(ones(0, 3), "MutableDenseMatrix(0, 3, [])")
+    sT(ones(4, 0), "MutableDenseMatrix(4, 0, [])")
+    sT(ones(0, 0), "MutableDenseMatrix([])")
+
+
 def test_Rational():
     sT(Rational(1, 3), "Rational(1, 3)")
     sT(Rational(-1, 3), "Rational(-1, 3)")
@@ -104,6 +112,41 @@ def test_Float():
 def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
+    sT(Symbol('x', negative=True), "Symbol('x', negative=True)")
+
+
+def test_Symbol_two_assumptions():
+    x = Symbol('x', negative=0, integer=1)
+    # order could vary
+    s1 = "Symbol('x', integer=True, negative=False)"
+    s2 = "Symbol('x', negative=False, integer=True)"
+    assert srepr(x) in (s1, s2)
+    assert eval(srepr(x), ENV) == x
+
+
+def test_Symbol_no_special_commutative_treatment():
+    sT(Symbol('x'), "Symbol('x')")
+    sT(Symbol('x', commutative=False), "Symbol('x', commutative=False)")
+    sT(Symbol('x', commutative=0), "Symbol('x', commutative=False)")
+    sT(Symbol('x', commutative=True), "Symbol('x', commutative=True)")
+    sT(Symbol('x', commutative=1), "Symbol('x', commutative=True)")
+
+
+def test_Wild():
+    sT(Wild('x', even=True), "Wild('x', even=True)")
+
+
+def test_Dummy():
+    # cannot use sT here
+    d = Dummy('d', nonzero=True)
+    assert srepr(d) == "Dummy('d', nonzero=True)"
+
+
+def test_Dummy_from_Symbol():
+    # should not get the full dictionary of assumptions
+    n = Symbol('n', integer=True)
+    d = n.as_dummy()
+    assert srepr(d) == "Dummy('n', integer=True)"
 
 
 def test_tuple():
@@ -123,6 +166,11 @@ def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
 
+def test_AlgebraicNumber():
+    a = AlgebraicNumber(sqrt(2))
+    sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
+    a = AlgebraicNumber(root(-2, 3))
+    sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
 
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"
@@ -144,3 +192,7 @@ def test_PolyElement():
 def test_FracElement():
     F, x, y = field("x,y", ZZ)
     assert srepr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+
+def test_BooleanAtom():
+    assert srepr(true) == "S.true"
+    assert srepr(false) == "S.false"

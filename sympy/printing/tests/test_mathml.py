@@ -1,6 +1,7 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float
+from sympy.core.compatibility import u
 from sympy.printing.mathml import mathml, MathMLPrinter
 
 from sympy.utilities.pytest import raises
@@ -332,7 +333,7 @@ def test_symbol():
 def test_mathml_greek():
     mml = mp._print(Symbol('alpha'))
     assert mml.nodeName == 'ci'
-    assert mml.childNodes[0].nodeValue == u'\u03b1'
+    assert mml.childNodes[0].nodeValue == u'\N{GREEK SMALL LETTER ALPHA}'
 
     assert mp.doprint(Symbol('alpha')) == '<ci>&#945;</ci>'
     assert mp.doprint(Symbol('beta')) == '<ci>&#946;</ci>'
@@ -351,7 +352,7 @@ def test_mathml_greek():
     assert mp.doprint(Symbol('omicron')) == '<ci>&#959;</ci>'
     assert mp.doprint(Symbol('pi')) == '<ci>&#960;</ci>'
     assert mp.doprint(Symbol('rho')) == '<ci>&#961;</ci>'
-    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>'
+    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>', mp.doprint(Symbol('varsigma'))
     assert mp.doprint(Symbol('sigma')) == '<ci>&#963;</ci>'
     assert mp.doprint(Symbol('tau')) == '<ci>&#964;</ci>'
     assert mp.doprint(Symbol('upsilon')) == '<ci>&#965;</ci>'

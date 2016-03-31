@@ -4,7 +4,7 @@ from sympy.polys.galoistools import (
     gf_degree, gf_strip, gf_trunc, gf_normal,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
-    gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground, gf_quo_ground,
+    gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground,
     gf_add, gf_sub, gf_add_mul, gf_sub_mul, gf_mul, gf_sqr,
     gf_div, gf_rem, gf_quo, gf_exquo,
     gf_lshift, gf_rshift, gf_expand,
@@ -14,16 +14,17 @@ from sympy.polys.galoistools import (
     gf_eval, gf_multi_eval,
     gf_compose, gf_compose_mod,
     gf_trace_map,
-    gf_diff, gf_random,
+    gf_diff,
     gf_irreducible, gf_irreducible_p,
     gf_irred_p_ben_or, gf_irred_p_rabin,
     gf_sqf_list, gf_sqf_part, gf_sqf_p,
     gf_Qmatrix, gf_Qbasis,
     gf_ddf_zassenhaus, gf_ddf_shoup,
     gf_edf_zassenhaus, gf_edf_shoup,
-    gf_berlekamp, gf_zassenhaus, gf_shoup,
+    gf_berlekamp,
     gf_factor_sqf, gf_factor,
     gf_value, linear_congruence, csolve_prime, gf_csolve,
+    gf_frobenius_map, gf_frobenius_monomial_base
 )
 
 from sympy.polys.polyerrors import (
@@ -515,6 +516,16 @@ def test_gf_squarefree():
         (1, [([1, 0], 1),
              ([1, 1], 3),
              ([1, 2], 6)])
+
+def test_gf_frobenius_map():
+    f = ZZ.map([2, 0, 1, 0, 2, 2, 0, 2, 2, 2])
+    g = ZZ.map([1,1,0,2,0,1,0,2,0,1])
+    p = 3
+    n = 4
+    b = gf_frobenius_monomial_base(g, p, ZZ)
+    h = gf_frobenius_map(f, g, b, p, ZZ)
+    h1 = gf_pow_mod(f, p, g, p, ZZ)
+    assert h == h1
 
 
 def test_gf_berlekamp():

@@ -6,15 +6,18 @@ Curve
 
 """
 
+from __future__ import division, print_function
+
 from sympy.core import sympify
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.geometry.entity import GeometryEntity
+from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
-from util import _symbol
+
+from .util import _symbol
 
 
-class Curve(GeometryEntity):
+class Curve(GeometrySet):
     """A curve in space.
 
     A curve is defined by parametric functions for the coordinates, a
@@ -63,9 +66,9 @@ class Curve(GeometryEntity):
     >>> C = Curve((t, interpolate([1, 4, 9, 16], t)), (t, 0, 1)); C
     Curve((t, t**2), (t, 0, 1))
     >>> C.subs(t, 4)
-    Point(4, 16)
+    Point2D(4, 16)
     >>> C.arbitrary_point(a)
-    Point(a, a**2)
+    Point2D(a, a**2)
     """
 
     def __new__(cls, function, limits):
@@ -102,7 +105,7 @@ class Curve(GeometryEntity):
         free = set()
         for a in self.functions + self.limits[1:]:
             free |= a.free_symbols
-        free = free.difference(set([self.parameter]))
+        free = free.difference({self.parameter})
         return free
 
     @property
@@ -191,6 +194,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy.abc import x
         >>> from sympy import pi
@@ -215,6 +219,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x
@@ -232,6 +237,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x
@@ -277,13 +283,13 @@ class Curve(GeometryEntity):
         >>> from sympy.geometry import Curve
         >>> C = Curve([2*s, s**2], (s, 0, 2))
         >>> C.arbitrary_point()
-        Point(2*t, t**2)
+        Point2D(2*t, t**2)
         >>> C.arbitrary_point(C.parameter)
-        Point(2*s, s**2)
+        Point2D(2*s, s**2)
         >>> C.arbitrary_point(None)
-        Point(2*s, s**2)
+        Point2D(2*s, s**2)
         >>> C.arbitrary_point(Symbol('a'))
-        Point(2*a, a**2)
+        Point2D(2*a, a**2)
 
         """
         if parameter is None:

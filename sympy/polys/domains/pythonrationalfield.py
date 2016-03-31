@@ -1,13 +1,14 @@
 """Implementation of :class:`PythonRationalField` class. """
 
-from sympy.polys.domains.rationalfield import RationalField
+from __future__ import print_function, division
 
-from sympy.polys.domains.groundtypes import PythonInteger
-from sympy.polys.domains.groundtypes import PythonRational
-from sympy.polys.domains.groundtypes import SymPyRational
+from sympy.polys.domains.rationalfield import RationalField
+from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
+@public
 class PythonRationalField(RationalField):
     """Rational field based on Python rational number type. """
 
@@ -19,6 +20,11 @@ class PythonRationalField(RationalField):
     def __init__(self):
         pass
 
+    def get_ring(self):
+        """Returns ring associated with ``self``. """
+        from sympy.polys.domains import PythonIntegerRing
+        return PythonIntegerRing()
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return SymPyRational(a.numerator, a.denominator)
@@ -29,7 +35,8 @@ class PythonRationalField(RationalField):
             return PythonRational(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
-            return PythonRational(*RR.as_integer_ratio(a))
+            p, q = RR.to_rational(a)
+            return PythonRational(int(p), int(q))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -50,9 +57,10 @@ class PythonRationalField(RationalField):
         return PythonRational(PythonInteger(a.numer()),
                               PythonInteger(a.denom()))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return PythonRational(*K0.as_integer_ratio(a))
+        p, q = K0.to_rational(a)
+        return PythonRational(int(p), int(q))
 
     def numer(self, a):
         """Returns numerator of `a`. """

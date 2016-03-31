@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from functools import partial
 from sympy.strategies import chain, minimize
 import sympy.strategies.branch as branch
@@ -14,7 +16,7 @@ def treeapply(tree, join, leaf=identity):
     Keys are containers/iterables.  Values are functions [a] -> a.
 
     Examples
-    --------
+    ========
 
     >>> from sympy.strategies.tree import treeapply
     >>> tree = [(3, 2), (4, 1)]
@@ -69,8 +71,8 @@ def greedy(tree, objective=identity, **kwargs):
     "Better" is determined by the objective keyword.  This function makes
     choices to minimize the objective.  It defaults to the identity.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy.strategies.tree import greedy
     >>> inc    = lambda x: x + 1

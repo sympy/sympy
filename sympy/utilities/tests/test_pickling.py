@@ -1,15 +1,14 @@
 import copy
 import pickle
 import warnings
-import sys
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta, BasicType, ClassRegistry
+from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer, Number,
-        NumberSymbol, Rational, Float)
+from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
+        Rational, Float)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
         StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
@@ -17,12 +16,10 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
     WildFunction
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
-from sympy.functions import exp
-#from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable
+from sympy.core.compatibility import HAS_GMPY, PY3
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S
@@ -30,19 +27,22 @@ from sympy import symbols, S
 excluded_attrs = set(['_assumptions', '_mhash'])
 
 
-def check(a, check_attr=True):
+def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    # The below hasattr() check will warn about is_Real in Python 2.5, so
-    # disable this to keep the tests clean
-    warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    # Python 2.6+ warns about BasicException.message, for example.
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
-    if sys.version_info[0] > 2:
+    if PY3:
         protocols.extend([3])
     for protocol in protocols:
+        if protocol in exclude:
+            continue
+
         if callable(protocol):
-            if isinstance(a, BasicType):
+            if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
                 return
             b = protocol(a)
@@ -51,7 +51,7 @@ def check(a, check_attr=True):
 
         d1 = dir(a)
         d2 = dir(b)
-        assert d1 == d2
+        assert set(d1) == set(d2)
 
         if not check_attr:
             continue
@@ -63,11 +63,13 @@ def check(a, check_attr=True):
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
-                    assert getattr(b, i) == attr
+                    assert getattr(b, i) == attr, "%s != %s" % (getattr(b, i), attr)
         c(a, b, d1)
         c(b, a, d2)
 
-    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
+    # reset filters
+    warnings.simplefilter("default", category=DeprecationWarning)
+    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
 #================== core =========================
 
@@ -77,8 +79,6 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              # BasicType, BasicType("test", (), {}),
-              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 
@@ -151,7 +151,7 @@ def test_core_multidimensional():
 
 def test_Singletons():
     protocols = [0, 1, 2]
-    if sys.version_info[0] > 2:
+    if PY3:
         protocols.extend([3])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
@@ -315,27 +315,24 @@ def test_plotting2():
     check(PlotAxes())
 
 #================== polys =======================
-from sympy.polys.polytools import Poly
-from sympy.polys.polyclasses import DMP, DMF, ANP
-from sympy.polys.rootoftools import RootOf, RootSum
+from sympy import Poly, ZZ, QQ, lex
 
-from sympy.polys.domains import (
-    PythonIntegerRing,
-    PythonRationalField,
-    PolynomialRing,
-    FractionField,
-    ExpressionDomain,
-)
-
-
-def test_polys():
-    x = Symbol("X")
-
-    ZZ = PythonIntegerRing()
-    QQ = PythonRationalField()
+def test_pickling_polys_polytools():
+    from sympy.polys.polytools import Poly, PurePoly, GroebnerBasis
+    x = Symbol('x')
 
     for c in (Poly, Poly(x, x)):
         check(c)
+
+    for c in (PurePoly, PurePoly(x)):
+        check(c)
+
+    # TODO: fix pickling of Options class (see GroebnerBasis._options)
+    # for c in (GroebnerBasis, GroebnerBasis([x**2 - 1], x, order=lex)):
+    #     check(c)
+
+def test_pickling_polys_polyclasses():
+    from sympy.polys.polyclasses import DMP, DMF, ANP
 
     for c in (DMP, DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)):
         check(c)
@@ -344,33 +341,263 @@ def test_polys():
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
 
+@XFAIL
+def test_pickling_polys_rings():
+    # NOTE: can't use protocols < 2 because we have to execute __new__ to
+    # make sure caching of rings works properly.
+
+    from sympy.polys.rings import PolyRing
+
+    ring = PolyRing("x,y,z", ZZ, lex)
+
+    for c in (PolyRing, ring):
+        check(c, exclude=[0, 1])
+
+    for c in (ring.dtype, ring.one):
+        check(c, exclude=[0, 1], check_attr=False) # TODO: Py3k
+
+def test_pickling_polys_fields():
+    # NOTE: can't use protocols < 2 because we have to execute __new__ to
+    # make sure caching of fields works properly.
+
+    from sympy.polys.fields import FracField
+
+    field = FracField("x,y,z", ZZ, lex)
+
+    # TODO: AssertionError: assert id(obj) not in self.memo
+    # for c in (FracField, field):
+    #     check(c, exclude=[0, 1])
+
+    # TODO: AssertionError: assert id(obj) not in self.memo
+    # for c in (field.dtype, field.one):
+    #     check(c, exclude=[0, 1])
+
+def test_pickling_polys_elements():
+    from sympy.polys.domains.pythonrational import PythonRational
+    from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    from sympy.polys.domains.mpelements import MPContext
+
+    for c in (PythonRational, PythonRational(1, 7)):
+        check(c)
+
+    gf = PythonFiniteField(17)
+
+    # TODO: fix pickling of ModularInteger
+    # for c in (gf.dtype, gf(5)):
+    #     check(c)
+
+    mp = MPContext()
+
+    # TODO: fix pickling of RealElement
+    # for c in (mp.mpf, mp.mpf(1.0)):
+    #     check(c)
+
+    # TODO: fix pickling of ComplexElement
+    # for c in (mp.mpc, mp.mpc(1.0, -1.5)):
+    #     check(c)
+
+def test_pickling_polys_domains():
+    from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    from sympy.polys.domains.pythonintegerring import PythonIntegerRing
+    from sympy.polys.domains.pythonrationalfield import PythonRationalField
+
+    # TODO: fix pickling of ModularInteger
+    # for c in (PythonFiniteField, PythonFiniteField(17)):
+    #     check(c)
+
     for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c)
+
     for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
-    for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
+    if HAS_GMPY:
+        from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
+        from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
+        from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
+
+        # TODO: fix pickling of ModularInteger
+        # for c in (GMPYFiniteField, GMPYFiniteField(17)):
+        #     check(c)
+
+        for c in (GMPYIntegerRing, GMPYIntegerRing()):
+            check(c)
+
+        for c in (GMPYRationalField, GMPYRationalField()):
+            check(c)
+
+    from sympy.polys.domains.realfield import RealField
+    from sympy.polys.domains.complexfield import ComplexField
+    from sympy.polys.domains.algebraicfield import AlgebraicField
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.fractionfield import FractionField
+    from sympy.polys.domains.expressiondomain import ExpressionDomain
+
+    # TODO: fix pickling of RealElement
+    # for c in (RealField, RealField(100)):
+    #     check(c)
+
+    # TODO: fix pickling of ComplexElement
+    # for c in (ComplexField, ComplexField(100)):
+    #     check(c)
+
+    for c in (AlgebraicField, AlgebraicField(QQ, sqrt(3))):
         check(c)
-    for c in (FractionField, FractionField(ZZ, 'x', 'y')):
-        check(c)
+
+    # TODO: AssertionError
+    # for c in (PolynomialRing, PolynomialRing(ZZ, "x,y,z")):
+    #     check(c)
+
+    # TODO: AttributeError: 'PolyElement' object has no attribute 'ring'
+    # for c in (FractionField, FractionField(ZZ, "x,y,z")):
+    #     check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    from sympy.core.compatibility import HAS_GMPY
+def test_pickling_polys_numberfields():
+    from sympy.polys.numberfields import AlgebraicNumber
 
-    if HAS_GMPY:
-        from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
+    for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
+        check(c)
 
-        for c in (GMPYIntegerRing, GMPYIntegerRing()):
-            check(c)
-        for c in (GMPYRationalField, GMPYRationalField()):
-            check(c)
+def test_pickling_polys_orderings():
+    from sympy.polys.orderings import (LexOrder, GradedLexOrder,
+        ReversedGradedLexOrder, ProductOrder, InverseOrder)
 
+    for c in (LexOrder, LexOrder()):
+        check(c)
+
+    for c in (GradedLexOrder, GradedLexOrder()):
+        check(c)
+
+    for c in (ReversedGradedLexOrder, ReversedGradedLexOrder()):
+        check(c)
+
+    # TODO: Argh, Python is so naive. No lambdas nor inner function support in
+    # pickling module. Maybe someone could figure out what to do with this.
+    #
+    # for c in (ProductOrder, ProductOrder((LexOrder(),       lambda m: m[:2]),
+    #                                      (GradedLexOrder(), lambda m: m[2:]))):
+    #     check(c)
+
+    for c in (InverseOrder, InverseOrder(LexOrder())):
+        check(c)
+
+def test_pickling_polys_monomials():
+    from sympy.polys.monomials import MonomialOps, Monomial
+    x, y, z = symbols("x,y,z")
+
+    for c in (MonomialOps, MonomialOps(3)):
+        check(c)
+
+    for c in (Monomial, Monomial((1, 2, 3), (x, y, z))):
+        check(c)
+
+def test_pickling_polys_errors():
+    from sympy.polys.polyerrors import (ExactQuotientFailed, OperationNotSupported,
+        HeuristicGCDFailed, HomomorphismFailed, IsomorphismFailed, ExtraneousFactors,
+        EvaluationFailed, RefinementFailed, CoercionFailed, NotInvertible, NotReversible,
+        NotAlgebraic, DomainError, PolynomialError, UnificationFailed, GeneratorsError,
+        GeneratorsNeeded, ComputationFailed, UnivariatePolynomialError,
+        MultivariatePolynomialError, PolificationFailed, OptionError, FlagError)
+
+    x = Symbol('x')
+
+    # TODO: TypeError: __init__() takes at least 3 arguments (1 given)
+    # for c in (ExactQuotientFailed, ExactQuotientFailed(x, 3*x, ZZ)):
+    #    check(c)
+
+    # TODO: TypeError: can't pickle instancemethod objects
+    # for c in (OperationNotSupported, OperationNotSupported(Poly(x), Poly.gcd)):
+    #    check(c)
+
+    for c in (HeuristicGCDFailed, HeuristicGCDFailed()):
+        check(c)
+
+    for c in (HomomorphismFailed, HomomorphismFailed()):
+        check(c)
+
+    for c in (IsomorphismFailed, IsomorphismFailed()):
+        check(c)
+
+    for c in (ExtraneousFactors, ExtraneousFactors()):
+        check(c)
+
+    for c in (EvaluationFailed, EvaluationFailed()):
+        check(c)
+
+    for c in (RefinementFailed, RefinementFailed()):
+        check(c)
+
+    for c in (CoercionFailed, CoercionFailed()):
+        check(c)
+
+    for c in (NotInvertible, NotInvertible()):
+        check(c)
+
+    for c in (NotReversible, NotReversible()):
+        check(c)
+
+    for c in (NotAlgebraic, NotAlgebraic()):
+        check(c)
+
+    for c in (DomainError, DomainError()):
+        check(c)
+
+    for c in (PolynomialError, PolynomialError()):
+        check(c)
+
+    for c in (UnificationFailed, UnificationFailed()):
+        check(c)
+
+    for c in (GeneratorsError, GeneratorsError()):
+        check(c)
+
+    for c in (GeneratorsNeeded, GeneratorsNeeded()):
+        check(c)
+
+    # TODO: PicklingError: Can't pickle <function <lambda> at 0x38578c0>: it's not found as __main__.<lambda>
+    # for c in (ComputationFailed, ComputationFailed(lambda t: t, 3, None)):
+    #    check(c)
+
+    for c in (UnivariatePolynomialError, UnivariatePolynomialError()):
+        check(c)
+
+    for c in (MultivariatePolynomialError, MultivariatePolynomialError()):
+        check(c)
+
+    # TODO: TypeError: __init__() takes at least 3 arguments (1 given)
+    # for c in (PolificationFailed, PolificationFailed({}, x, x, False)):
+    #    check(c)
+
+    for c in (OptionError, OptionError()):
+        check(c)
+
+    for c in (FlagError, FlagError()):
+        check(c)
+
+def test_pickling_polys_options():
+    from sympy.polys.polyoptions import Options
+
+    # TODO: fix pickling of `symbols' flag
+    # for c in (Options, Options((), dict(domain='ZZ', polys=False))):
+    #    check(c)
+
+# TODO: def test_pickling_polys_rootisolation():
+#    RealInterval
+#    ComplexInterval
+
+def test_pickling_polys_rootoftools():
+    from sympy.polys.rootoftools import CRootOf, RootSum
+
+    x = Symbol('x')
     f = x**3 + x + 3
-    g = exp
 
-    for c in (RootOf, RootOf(f, 0), RootSum, RootSum(f, g)):
+    for c in (CRootOf, CRootOf(f, 0)):
+        check(c)
+
+    for c in (RootSum, RootSum(f, exp)):
         check(c)
 
 #================== printing ====================

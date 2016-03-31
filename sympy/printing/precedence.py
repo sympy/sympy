@@ -1,16 +1,20 @@
 """A module providing information about the necessity of brackets"""
 
+from __future__ import print_function, division
+
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda": 1,
-    "Relational": 20,
+    "Xor": 10,
     "Or": 20,
     "And": 30,
+    "Relational": 35,
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
+    "Func": 70,
     "Not": 100,
     "Atom": 1000
 }
@@ -19,6 +23,9 @@ PRECEDENCE = {
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
+    "Equivalent": PRECEDENCE["Xor"],
+    "Xor": PRECEDENCE["Xor"],
+    "Implies": PRECEDENCE["Xor"],
     "Or": PRECEDENCE["Or"],
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],
@@ -26,11 +33,11 @@ PRECEDENCE_VALUES = {
     "Relational": PRECEDENCE["Relational"],
     "Sub": PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
-    "factorial": PRECEDENCE["Pow"],
-    "factorial2": PRECEDENCE["Pow"],
+    "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
+    "MatPow": PRECEDENCE["Pow"],
     "HadamardProduct": PRECEDENCE["Mul"]
 }
 
@@ -69,6 +76,8 @@ def precedence_Float(item):
 def precedence_PolyElement(item):
     if item.is_generator:
         return PRECEDENCE["Atom"]
+    elif item.is_ground:
+        return precedence(item.coeff(1))
     elif item.is_term:
         return PRECEDENCE["Mul"]
     else:
