@@ -117,7 +117,7 @@ def _lucas_sequence(n, P, Q, k):
     >>> from sympy.ntheory.primetest import _lucas_sequence
     >>> N = 10**2000 + 4561
     >>> U, V, Qk = _lucas_sequence(N, 3, 1, N//2)
-    >>> print U, V, Qk
+    >>> print(U, V, Qk)
     0 2 1
 
     """
@@ -262,9 +262,9 @@ def is_lucas_prp(n):
     Examples
     ========
     >>> from sympy.ntheory.primetest import isprime, is_lucas_prp
-    >>> for i in xrange(10000):
+    >>> for i in range(10000):
     ...     if is_lucas_prp(i) and not isprime(i):
-    ...        print i
+    ...        print(i)
     323
     377
     1159
@@ -310,9 +310,9 @@ def is_strong_lucas_prp(n):
     Examples
     ========
     >>> from sympy.ntheory.primetest import isprime, is_strong_lucas_prp
-    >>> for i in xrange(20000):
+    >>> for i in range(20000):
     ...     if is_strong_lucas_prp(i) and not isprime(i):
-    ...        print i
+    ...        print(i)
     5459
     5777
     10877
@@ -340,7 +340,7 @@ def is_strong_lucas_prp(n):
 
     if U == 0 or V == 0:
         return True
-    for r in xrange(1, s):
+    for r in range(1, s):
         V = (V * V - 2 * Qk) % n
         if V == 0:
             return True
@@ -377,9 +377,9 @@ def is_extra_strong_lucas_prp(n):
     Examples
     ========
     >>> from sympy.ntheory.primetest import isprime, is_extra_strong_lucas_prp
-    >>> for i in xrange(20000):
+    >>> for i in range(20000):
     ...     if is_extra_strong_lucas_prp(i) and not isprime(i):
-    ...        print i
+    ...        print(i)
     989
     3239
     5777
@@ -415,7 +415,7 @@ def is_extra_strong_lucas_prp(n):
         return True
     if V == 0:
         return True
-    for r in xrange(1, s):
+    for r in range(1, s):
         V = (V * V - 2) % n
         if V == 0:
             return True
@@ -462,7 +462,7 @@ def isprime(n):
     """
     if isinstance(n, (Float, float)):
         return False
-    n = as_int(n)
+    n = int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.
