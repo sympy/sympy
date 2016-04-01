@@ -10,4 +10,3 @@ exclude_lines =
   # Code with the below comment is excluded
   pragma: NO COVER
 ignore_errors = True
-omit = tests/*

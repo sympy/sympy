@@ -24,6 +24,7 @@ matrix:
         - TEST_MATPLOTLIB="true"
         - TEST_THEANO="true"
         - TEST_ASCII="true"
+        - TEST_COVERAGE="true"
       addons:
         apt:
           packages:
@@ -268,7 +269,9 @@ matrix:
             - pypy
 
 before_install:
-  - pip install codecov
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install codecov
+    fi
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
@@ -333,4 +336,6 @@ script:
 notifications:
   email: false
 after_success:
-  - codecov
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      codecov;
+    fi
