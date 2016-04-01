@@ -1,6 +1,6 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence, crt_cartesian
 from sympy.utilities.pytest import raises
 
 
@@ -34,3 +34,7 @@ def test_modular():
     assert solve_congruence(*list(zip((1, 1, 2), (3, 2, 4)))) is None
     raises(
         ValueError, lambda: solve_congruence(*list(zip([3, 4, 2], [12.1, 35, 17]))))
+    assert crt_cartesian( [ [3, 5], [3, 7] ], [7, 11] ) == [3, 40, 47, 73]
+    assert crt_cartesian( [ [1, 5], [4, 7], [6, 8] ], [6, 11, 13] ) == [73, 125, 227, 359, 565, 697, 799, 851]
+    assert crt_cartesian( [ [5, 3], [7, 9], [3, 7] ], [7, 11, 13] ) == [150, 185, 306, 458, 579, 614, 878, 887]
+    assert crt_cartesian( [ [11, 51], [54, 72], [16, 38] ], [67,  79, 43] ) == [38308, 45102, 104571, 111365, 122996, 129790, 189259, 196053]
