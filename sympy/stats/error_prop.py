@@ -42,14 +42,3 @@ def variance_prop(expr, consts=()):
     else:
         raise RuntimeError("unknown operator")
 
-
-if __name__ == '__main__':
-    x, y, z = symbols('x y z')
-    phi, t = consts = symbols('phi t')
-    cases = [x + y, x + y + z, 2*x, x*y, 1/x, x/y, exp(x),
-             exp(2*x), exp(-x*t)]
-    for case in cases:
-        print(case, "=>")
-        print(variance_prop(case, consts=consts))
-        print('~'*10)
-
