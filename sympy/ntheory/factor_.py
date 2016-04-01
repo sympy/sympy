@@ -1529,6 +1529,18 @@ class totient(Function):
     """
     Calculate the Euler totient function phi(n)
 
+    ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
+    that are relatively prime to n.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+
+    Examples
+    ========
+
     >>> from sympy.ntheory import totient
     >>> totient(1)
     1
@@ -1559,6 +1571,18 @@ class totient(Function):
 class reduced_totient(Function):
     """
     Calculate the Carmichael reduced totient function lambda(n)
+
+    ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
+    `k^m \equiv 1 \mod n` for all k relatively prime to n.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+
+    Examples
+    ========
 
     >>> from sympy.ntheory import reduced_totient
     >>> reduced_totient(1)
