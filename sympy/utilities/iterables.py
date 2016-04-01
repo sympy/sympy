@@ -1381,6 +1381,12 @@ def partitions(n, m=None, k=None, size=False):
         raise ValueError("n must be >= 0")
     if m == 0:
         raise ValueError("m must be > 0")
+    if n == 0:
+        if size:
+            yield 1, {0: 1}
+        else:
+            yield {0: 1}
+        return
     m = min(m or n, n)
     if m < 1:
         raise ValueError("maximum numbers in partition, m, must be > 0")

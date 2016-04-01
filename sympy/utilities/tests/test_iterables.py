@@ -390,6 +390,8 @@ def test_multiset_permutations():
 
 
 def test_partitions():
+    assert list(partitions(0)) == [{0:1}]
+    assert list(partitions(0, size=True)) == [(1, {0:1})]
     assert [p.copy() for p in partitions(6, k=2)] == [
         {2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
 
