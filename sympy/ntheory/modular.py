@@ -265,10 +265,8 @@ def crt_cartesian(rem, mod):
 
     >>> from sympy.ntheory.modular import crt_cartesian
 
-    >>> crt_cartesian( [ [3,5] , [3,7] ] , [ 7 , 11] )
+    >>> crt_cartesian([[3,5], [3,7]], [7, 11])
     >>> [3, 40, 47, 73]
-
-    which is correct because
 
     >>> for p in [3, 40, 47, 73]:
             print ( p % 7, p % 11)
