@@ -323,6 +323,9 @@ def test_input_format():
     assert KM.kanes_equations(BL, loads=None)[0] == Matrix([0])
     # test for input format kane.kanes_equations(bodies=(body1, body 2))
     assert KM.kanes_equations(BL)[0] == Matrix([0])
+    # test for error raised when a wrong force list (in this case a string) is provided
+    from sympy.utilities.pytest import raises
+    raises(ValueError, lambda: KM._form_fr('bad input'))
 
     # 2 dof problem from test_two_dof
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
