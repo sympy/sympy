@@ -713,10 +713,9 @@ class KanesMethod(object):
                     'that the loads (forces and torques) are now the second argument '
                     'and is optional with None being the default.',
                     feature='The kanes_equation() argument order',
-                    last_supported_version="1.0",
                     useinstead='switched argument order to update your code, For example: '
                     'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
-                    issue=10945, deprecated_since_version="1.0").warn()
+                    issue=10945, deprecated_since_version="1.1").warn()
 
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
