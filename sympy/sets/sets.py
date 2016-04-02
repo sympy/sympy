@@ -1620,7 +1620,7 @@ class Complement(Set, EvalfMixin):
 
         """
         # Fixed Issue 10931
-        if B == S.UniversalSet or B == A or (A == S.Integers and B == S.Reals):
+        if B == S.UniversalSet or A.is_subset(B):
             return EmptySet()
 
         if isinstance(B, Union):
