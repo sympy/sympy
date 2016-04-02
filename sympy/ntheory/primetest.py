@@ -114,15 +114,14 @@ def _lucas_sequence(n, P, Q, k):
     would be completely unusable.
 
     The modular Lucas sequences are used in numerous places in number theory,
-    especially in the Lucas compositeness tests and the various n+1 proofs.
+    especially in the Lucas compositeness tests and the various n + 1 proofs.
 
     Examples
     ========
 
     >>> from sympy.ntheory.primetest import _lucas_sequence
     >>> N = 10**2000 + 4561
-    >>> U, V, Qk = _lucas_sequence(N, 3, 1, N//2)
-    >>> print(U, V, Qk)
+    >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
     (0, 2, 1)
 
     """
