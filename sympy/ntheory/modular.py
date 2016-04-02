@@ -251,6 +251,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
             return symmetric_residue(n, m), m
         return n, m
 
+
 def crt_cartesian(rem, mod):
     """
     Crt over a cartesian product of vectors.given a vector of modulus,
@@ -266,15 +267,10 @@ def crt_cartesian(rem, mod):
     >>> from sympy.ntheory.modular import crt_cartesian
 
     >>> crt_cartesian([[3,5], [3,7]], [7, 11])
-    >>> [3, 40, 47, 73]
+    [3, 40, 47, 73]
 
-    >>> for p in [3, 40, 47, 73]:
-            print ( p % 7, p % 11)
-    >>> (3, 3)
-        (5, 7)
-        (5, 3)
-        (3, 7)
-
+    >>> [(p%7, p%11) for p in [3, 40, 47, 73]]
+    [(3, 3), (5, 7), (5, 3), (3, 7)]
     """
     if len(mod) > len(rem):
         raiseerror
