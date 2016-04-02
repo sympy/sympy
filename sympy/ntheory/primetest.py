@@ -12,6 +12,10 @@ from mpmath.libmp import bitcount as _bitlength
 
 
 
+def _int_tuple(*i):
+    return tuple(int(_) for _ in i)
+
+
 def is_square(n, prep=True):
     """Quickly answer whether n = a * a for some integer a.
 
@@ -114,14 +118,15 @@ def _lucas_sequence(n, P, Q, k):
 
     Examples
     ========
+
     >>> from sympy.ntheory.primetest import _lucas_sequence
     >>> N = 10**2000 + 4561
     >>> U, V, Qk = _lucas_sequence(N, 3, 1, N//2)
     >>> print(U, V, Qk)
-    0 2 1
+    (0, 2, 1)
 
     """
-    D = P * P - 4 * Q
+    D = P*P - 4*Q
     if n < 2:
         raise ValueError("n must be >= 2")
     if k < 0:
@@ -130,7 +135,7 @@ def _lucas_sequence(n, P, Q, k):
         raise ValueError("D must not be zero")
 
     if k == 0:
-        return (0, 2, Q)
+        return _int_tuple(0, 2, Q)
     U = 1
     V = P
     Qk = Q
@@ -138,11 +143,11 @@ def _lucas_sequence(n, P, Q, k):
     if Q == 1:
         # Optimization for extra strong tests.
         while b > 1:
-            U = (U * V) % n
-            V = (V * V - 2) % n
+            U = (U*V) % n
+            V = (V*V - 2) % n
             b -= 1
-            if (k >> (b-1)) & 1:
-                t = U * D
+            if (k >> (b - 1)) & 1:
+                t = U*D
                 U = U*P + V
                 if U & 1:
                     U += n
@@ -154,15 +159,15 @@ def _lucas_sequence(n, P, Q, k):
     elif P == 1 and Q == -1:
         # Small optimization for 50% of Selfridge parameters.
         while b > 1:
-            U = (U * V) % n
+            U = (U*V) % n
             if Qk == 1:
-                V = (V * V - 2) % n
+                V = (V*V - 2) % n
             else:
-                V = (V * V + 2) % n
+                V = (V*V + 2) % n
                 Qk = 1
             b -= 1
             if (k >> (b-1)) & 1:
-                t = U * D
+                t = U*D
                 U = U + V
                 if U & 1:
                     U += n
@@ -175,12 +180,12 @@ def _lucas_sequence(n, P, Q, k):
     else:
         # The general case with any P and Q.
         while b > 1:
-            U = (U * V) % n
-            V = (V * V - 2 * Qk) % n
+            U = (U*V) % n
+            V = (V*V - 2*Qk) % n
             Qk *= Qk
             b -= 1
-            if (k >> (b-1)) & 1:
-                t = U * D
+            if (k >> (b - 1)) & 1:
+                t = U*D
                 U = U*P + V
                 if U & 1:
                     U += n
@@ -193,7 +198,7 @@ def _lucas_sequence(n, P, Q, k):
             Qk %= n
     U %= n
     V %= n
-    return (U, V, Qk)
+    return _int_tuple(U, V, Qk)
 
 
 def _lucas_selfridge_params(n):
@@ -218,7 +223,7 @@ def _lucas_selfridge_params(n):
           D = -D - 2
         else:
           D = -D + 2
-    return (D, 1, int((1 - D)/4))
+    return _int_tuple(D, 1, (1 - D)/4)
 
 
 def _lucas_extrastrong_params(n):
@@ -240,8 +245,8 @@ def _lucas_extrastrong_params(n):
         if jacobi_symbol(D, n) == -1:
             break
         P += 1
-        D = P * P - 4
-    return (D, P, Q)
+        D = P*P - 4
+    return _int_tuple(D, P, Q)
 
 
 def is_lucas_prp(n):
@@ -261,6 +266,7 @@ def is_lucas_prp(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory.primetest import isprime, is_lucas_prp
     >>> for i in range(10000):
     ...     if is_lucas_prp(i) and not isprime(i):
@@ -309,6 +315,7 @@ def is_strong_lucas_prp(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory.primetest import isprime, is_strong_lucas_prp
     >>> for i in range(20000):
     ...     if is_strong_lucas_prp(i) and not isprime(i):
@@ -341,7 +348,7 @@ def is_strong_lucas_prp(n):
     if U == 0 or V == 0:
         return True
     for r in range(1, s):
-        V = (V * V - 2 * Qk) % n
+        V = (V*V - 2*Qk) % n
         if V == 0:
             return True
         Qk = pow(Qk, 2, n)
@@ -376,6 +383,7 @@ def is_extra_strong_lucas_prp(n):
 
     Examples
     ========
+
     >>> from sympy.ntheory.primetest import isprime, is_extra_strong_lucas_prp
     >>> for i in range(20000):
     ...     if is_extra_strong_lucas_prp(i) and not isprime(i):
@@ -416,7 +424,7 @@ def is_extra_strong_lucas_prp(n):
     if V == 0:
         return True
     for r in range(1, s):
-        V = (V * V - 2) % n
+        V = (V*V - 2) % n
         if V == 0:
             return True
     return False
