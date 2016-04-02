@@ -369,7 +369,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i] + [0])
             size = max(size, big + 1)
         else:
             size = self.size
