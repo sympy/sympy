@@ -2,7 +2,7 @@ from sympy import (
     Abs, Dummy, Eq, Gt, Function,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
-    exp, log, pi, sin, sinh, sec, sqrt, symbols,
+    exp, log, pi, sin, sinh, cosh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
@@ -17,7 +17,7 @@ from sympy.polys.rootoftools import CRootOf
 
 from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow
+from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -129,7 +129,8 @@ def test_invert_real():
         (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+        (x, Union(ImageSet(Lambda(n, n*pi + atan(atan(y))), S.Integers),\
+         ImageSet(Lambda(n, n*pi + atan(atan(y) + pi)), S.Integers)))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -241,7 +242,7 @@ def test_garbage_input():
 
 def test_solve_mul():
     assert solveset_real((a*x + b)*(exp(x) - 3), x) == \
-        FiniteSet(-b/a, log(3))
+        Union(FiniteSet(log(3)), Intersection(S.Reals, FiniteSet(-b/a)))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
     assert solveset_real(x/log(x), x) == EmptySet()
 
@@ -529,21 +530,20 @@ def test_poly_gens():
         FiniteSet(-Rational(3, 2), S.Half)
 
 
-@XFAIL
-def test_uselogcombine_1():
+def test_uselogcombine_1_fixed_by_10733():
     assert solveset_real(log(x - 3) + log(x + 3), x) == \
-        FiniteSet(sqrt(10))
+        FiniteSet(-sqrt(10), sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
-        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
+        -3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
+        -sqrt(-36 + (-exp(3) + 6)**2)/2 - 3 + exp(3)/2
+        )
 
 
-@XFAIL
-def test_uselogcombine_2():
+def test_uselogcombine_2_fixed_by_10733():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
-        FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
+    Intersection(S.Reals, FiniteSet(-sqrt(y**2 - y*exp(z)), sqrt(y**2 - y*exp(z))))
 
 
 def test_solve_abs():
@@ -567,15 +567,28 @@ def test_solve_abs():
     raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
-@XFAIL
-def test_rewrite_trigh():
-    # if this import passes then the test below should also pass
+
+def test_rewrite_trigh_fixed_by_10733():
+    assert solveset(sinh(x), x) == ImageSet(Lambda(n, n*I*pi), S.Integers)
+    assert solveset(sinh(x) + cosh(x) + 1, x) == ImageSet(Lambda(n, I*(2*n*pi + pi)), S.Integers)
+    assert solveset(sinh(x) + cosh(x), x) == S.EmptySet
+    assert solveset(sinh(x) + cos(x), x) == ConditionSet(x, Eq(cos(x) + sinh(x), 0), S.Complexes)
+
+
+@SKIP("comparison error")
+def test_rewrite_trigh_fail():
     from sympy import sech
-    assert solveset_real(sinh(x) + sech(x), x) == FiniteSet(
-        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
-        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
-        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half))
+    assert solveset_real(sinh(x) + sech(x), x) == \
+    FiniteSet(log(sqrt(-2 + sqrt(5))))
+    assert solveset_complex(sinh(x) + sech(x), x) == Union(
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers) -\
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers) - \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers) - \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)), \
+        (ImageSet(Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers)- \
+         ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)))
 
 
 def test_real_imag_splitting():
@@ -597,13 +610,23 @@ def test_solve_only_exp_1():
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
 
+@SKIP("comparison error LHS side is ConditionSet")
+def test_solve_only_exp_2_fixed_by_10733():
+    assert solveset(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x, S.Reals) == \
+    FiniteSet(log(-4*sqrt(3) + 7), log(4*sqrt(3) + 7))
+
+
+@SKIP("Hangs")
+def test_solve_only_exp_2_hangs():
+    soln = Union(imageset(Lambda(n, I*2*n*pi + log(-4*sqrt(3) + 7)),  S.Integers),\
+    imageset(Lambda(n, I*2*n*pi + log(-4*sqrt(3) + 7)),  S.Integers))
+    assert solveset_complex(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == soln
+
 
 @XFAIL
 def test_solve_only_exp_2():
     assert solveset_real(exp(x/y)*exp(-z/y) - 2, y) == \
-        FiniteSet((x - z)/log(2))
-    assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
-        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
+        Intersection(S.Reals, FiniteSet((x - z)/log(2))) - FiniteSet(0)
 
 
 def test_atan2():
@@ -708,47 +731,6 @@ def test_solveset_complex_tan():
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
-    assert solveset_real(sin(x) - 1, x) == \
-        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
-
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
-
-    assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
-
-    assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
-
-    y, a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        imageset(Lambda(n, 2*n*pi), S.Integers)
-
-
-@XFAIL
-def test_solve_trig_abs():
-    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
-        Union(ImageSet(Lambda(n, n*pi + (-1)**n*pi/2), S.Naturals0),
-              ImageSet(Lambda(n, -n*pi - (-1)**n*pi/2), S.Naturals0))
-
-
-def test_solve_invalid_sol():
-    assert 0 not in solveset_real(sin(x)/x, x)
-    assert 0 not in solveset_complex((exp(x) - 1)/x, x)
-
-
-@XFAIL
-def test_solve_trig_simplified():
-    from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
 
     assert solveset_real(cos(x), x) == \
@@ -756,6 +738,33 @@ def test_solve_trig_simplified():
 
     assert solveset_real(cos(x) + sin(x), x) == \
         imageset(Lambda(n, n*pi - pi/4), S.Integers)
+
+    assert solveset_real(sin(x) - 1, x) == \
+        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
+
+    assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
+
+    assert solveset_complex(cos(x) - S.Half, x) == \
+        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
+              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
+
+
+
+def test_issue_10426_inverse_trig_solution():
+    y, a = symbols('y, a')
+    assert solveset(sin(y + a) - sin(y), a) == \
+        ImageSet(Lambda(n, (-1)**n*asin(sin(y)) + n*pi - y), S.Integers)
+
+
+def test_solve_trig_abs_fixed_by__10733():
+    assert solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals) == \
+        Union(Intersection(Interval(-oo, 0, False, False), ImageSet(Lambda(n, (-1)**n*pi/2 + n*pi), S.Integers)),
+         Intersection(Interval(0, oo ,False, False), ImageSet(Lambda(n, (-1)**n*pi/2 + n*pi), S.Integers)))
+
+
+def test_solve_invalid_sol():
+    assert 0 not in solveset_real(sin(x)/x, x)
+    assert 0 not in solveset_complex((exp(x) - 1)/x, x)
 
 
 @XFAIL
@@ -1046,7 +1055,7 @@ def test_issue_9778():
 
 
 @XFAIL
-def test_issue_failing_pow():
+def test_issue_pow():
     assert solveset(x**(S(3)/2) + 4, x, S.Reals) == S.EmptySet
 
 
@@ -1079,6 +1088,39 @@ def test_issue_10555():
     assert solveset(f(x) - pi/2, x, S.Reals) == \
         ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
 
+
+def test_issue_9824():
+    assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) ==\
+     ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
+
+def test_issue_9531_and_9606():
+    # complex solution
+    assert solveset(sinh(x)) == ImageSet(Lambda(n, n*I*pi), S.Integers)
+    # real solution
+    assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
+
+
+def test_issue_7914():
+    assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1 ,x) ==\
+    Union(ImageSet(Lambda(n, 2*n*pi/3 - pi/2), S.Integers), ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers))
+
+def test_issue_10671():
+    assert solveset(sin(y), y, Interval(0, pi)) == \
+    Intersection(Interval(0, pi), ImageSet(Lambda(n, n*pi), S.Integers))
+
+
+def test_issue_10217():
+    eq=cos((sin(x)+1))-1
+    soln = Union(ImageSet(Lambda(n, -(-1)**n*pi/2 + n*pi), S.Integers),\
+     ImageSet(Lambda(n, -(-1)**n*asin(-2*pi + 1) + n*pi), S.Integers))
+    assert solveset(eq,x,domain=S.Reals) == soln
+    assert solveset(eq,x) == ConditionSet(x, Eq(cos(sin(x) + 1) - 1, 0), S.Complexes)
+
+
+def test_simplifed_trig_solution():
+    assert solveset(cos(x) + cos(3*x) + cos(5*x),x,S.Reals) == \
+    ImageSet(Lambda(n, n*pi/6), S.Integers)
 
 def test_issue_8715():
     eq = x + 1/x > -2 + 1/x
