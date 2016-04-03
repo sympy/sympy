@@ -364,6 +364,8 @@ def test_Cycle():
     raises(ValueError, lambda: Cycle().list())
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
+    assert Cycle(3).list(2) == [0, 1]
+    assert Cycle(3).list(6) == [0, 1, 2, 3, 4, 5]
     assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
     assert str(Cycle(1, 2)(4, 5)) == '(1 2)(4 5)'

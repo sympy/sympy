@@ -131,7 +131,7 @@ or ``(ReferenceFrame, Vector)`` to represent applied forces and torques. ::
   >>> BL = [Pa]
   >>> FL = [(P, 7 * N.x)]
   >>> KM = KanesMethod(N, [q], [u], [qd - u])
-  >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+  >>> (fr, frstar) = KM.kanes_equations(BL, FL)
   >>> KM.mass_matrix
   Matrix([[5]])
   >>> KM.forcing
