@@ -94,6 +94,8 @@ class factorial(CombinatorialFunction):
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
 
+    _small_factorials = []
+
     @classmethod
     def _swing(cls, n):
         if n < 33:
@@ -153,14 +155,15 @@ class factorial(CombinatorialFunction):
                     n = n.p
 
                     if n < 20:
-                        result = (1, 2, 6, 24, 120, 720, 5040, 40320, 362880,
-                                  3628800, 39916800, 479001600, 6227020800,
-                                  87178291200, 1307674368000, 20922789888000,
-                                  355687428096000, 6402373705728000,
-                                  121645100408832000)[n-1]
+                        if not cls._small_factorials:
+                            result = 1
+                            for i in range(1, 20):
+                                result *= i
+                                cls._small_factorials.append(result)
+                        result = cls._small_factorials[n-1]
 
                     else:
-                        bits = format(n, 'b').count('1')
+                        bits = bin(n).count('1')
                         result = cls._recursive(n)*2**(n - bits)
 
                     return Integer(result)
