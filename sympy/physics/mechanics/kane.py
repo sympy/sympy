@@ -5,7 +5,7 @@ __all__ = ['KanesMethod']
 from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
-from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
+from sympy.physics.vector import (Vector, ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
@@ -97,7 +97,7 @@ class KanesMethod(object):
     generalized speeds, and forcing is a vector representing "forcing" terms.
 
         >>> KM = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=kd)
-        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> (fr, frstar) = KM.kanes_equations(BL, FL)
         >>> MM = KM.mass_matrix
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
@@ -267,9 +267,9 @@ class KanesMethod(object):
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
-
-        if not iterable(fl):
-            raise TypeError('Force pairs must be supplied in an iterable.')
+        if fl != None and (len(fl) == 0 or not iterable(fl)):
+            raise ValueError('Force pairs must be supplied in an '
+                'non-empty iterable or None.')
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
@@ -684,7 +684,7 @@ class KanesMethod(object):
             f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
-    def kanes_equations(self, FL, BL):
+    def kanes_equations(self, bodies, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -697,20 +697,31 @@ class KanesMethod(object):
         Parameters
         ==========
 
-        FL : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+        bodies : iterable
+            An iterable of all RigidBody's and Particle's in the system.
+            A system must have at least one body.
+        loads : iterable
+            Takes in an iterable of (Particle, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
-        BL : list
-            A list of all RigidBody's and Particle's in the system.
-
+            Must be either a non-empty iterable of tuples or None which corresponds
+            to a system with no constraints.
         """
+        if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
+            # This switches the order if they use the old way.
+            bodies, loads = loads, bodies
+            SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '
+                    'that the loads (forces and torques) are now the second argument '
+                    'and is optional with None being the default.',
+                    feature='The kanes_equation() argument order',
+                    useinstead='switched argument order to update your code, For example: '
+                    'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
+                    issue=10945, deprecated_since_version="1.1").warn()
 
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-
-        fr = self._form_fr(FL)
-        frstar = self._form_frstar(BL)
+        fr = self._form_fr(loads)
+        frstar = self._form_frstar(bodies)
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
@@ -722,8 +733,8 @@ class KanesMethod(object):
                         self._f_nh))
             km._qdot_u_map = self._qdot_u_map
             self._km = km
-            fraux = km._form_fr(FL)
-            frstaraux = km._form_frstar(BL)
+            fraux = km._form_fr(loads)
+            frstaraux = km._form_frstar(bodies)
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
