@@ -973,8 +973,9 @@ def _laplace_transform(f, t, s_, simplify=True):
     a = Wild('a')
     b = Wild('b',exclude=[Heaviside(0)])
     r = F.match(a+b*Heaviside(0))
-    if r:
+    while r and r[b]!= 0:
         F = r[a]
+        r = F.match(a+b*Heaviside(0))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, True

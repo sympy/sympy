@@ -476,7 +476,7 @@ def test_laplace_transform():
     assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
     assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
-    assert LT(DiracDelta(t), t, s) == (1, -oo, True)
+
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
     assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
@@ -500,6 +500,12 @@ def test_laplace_transform():
         ((s - 1)/(s**2 - 2*s + 2), -oo),
         ((s - 1)/((s - 1)**2 + 1), -oo),
     ]
+
+    # Evaluate dirac delta functions appearing at the boundary
+    # of the integrand according to convention in the Laplace-Transform
+    # literature.
+    assert LT(DiracDelta(t), t, s) == (1, -oo, True)
+    assert LT((a + b*exp(t))*DiracDelta(t), t, s) == (a+b, -oo, True)
 
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
