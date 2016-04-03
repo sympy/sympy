@@ -12,7 +12,6 @@ from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.matrixutils import matrix_zeros
-from sympy.physics.quantum.represent import represent
 
 #------------------------------------------------------------------------------
 
@@ -157,7 +156,7 @@ class RaisingOp(SHOOp):
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u('\N{DAGGER}'))
+        pform = pform**prettyForm(u'\N{DAGGER}')
         return pform
 
     def _print_contents_latex(self, printer, *args):

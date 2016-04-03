@@ -1,17 +1,18 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations, permutations, product, product as cartes
+from itertools import (
+    combinations, combinations_with_replacement, permutations,
+    product, product as cartes
+)
 import random
 from operator import gt
 
-from sympy.core.decorators import deprecated
 from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered, range
+    as_int, default_sort_key, is_sequence, iterable, ordered, range
 )
 
 from sympy.utilities.enumerative import (
@@ -1751,13 +1752,6 @@ def generate_derangements(perm):
     for pi in p:
         if all(pi[i] != p0[i] for i in indices):
             yield pi
-
-
-@deprecated(
-    useinstead="bracelets", deprecated_since_version="0.7.3")
-def unrestricted_necklace(n, k):
-    """Wrapper to necklaces to return a free (unrestricted) necklace."""
-    return necklaces(n, k, free=True)
 
 
 def necklaces(n, k, free=False):

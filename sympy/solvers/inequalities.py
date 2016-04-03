@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
@@ -215,7 +215,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.EmptySet
+    solution = S.Reals if exprs else S.EmptySet
     for _exprs in exprs:
         _eqs = []
 
@@ -251,13 +251,15 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution = Union(solution, solve_univariate_inequality(expr, gen, relational=False))
+                solution &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
-        eqs.append(_eqs)
+        if _eqs:
+            eqs.append(_eqs)
 
-    solution = Union(solution, solve_rational_inequalities(eqs))
+    if eqs:
+        solution &= solve_rational_inequalities(eqs)
 
     if not exact:
         solution = solution.evalf()
@@ -315,10 +317,8 @@ def reduce_abs_inequality(expr, rel, gen):
                     exprs = args
         elif expr.is_Pow:
             n = expr.exp
-
-            if not n.is_Integer or n < 0:
-                raise ValueError(
-                    "only non-negative integer powers are allowed")
+            if not n.is_Integer:
+                raise ValueError("Only Integer Powers are allowed on Abs.")
 
             _exprs = _bottom_up_scan(expr.base)
 
@@ -592,7 +592,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     recast = dict([(i, Dummy(i.name, real=True))
         for i in gens if i.is_real is None])
     inequalities = [i.xreplace(recast) for i in inequalities]
-    symbols = set([i.xreplace(recast) for i in symbols])
+    symbols = {i.xreplace(recast) for i in symbols}
 
     # prefilter
     keep = []
@@ -616,4 +616,4 @@ def reduce_inequalities(inequalities, symbols=[]):
     rv = _reduce_inequalities(inequalities, symbols)
 
     # restore original symbols and return
-    return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
+    return rv.xreplace({v: k for k, v in recast.items()})

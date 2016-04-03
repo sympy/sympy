@@ -106,8 +106,18 @@ class MatrixExpr(Basic):
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __matmul__(self, other):
+        return MatMul(self, other).doit()
+
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return MatMul(other, self).doit()
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmatmul__(self, other):
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)

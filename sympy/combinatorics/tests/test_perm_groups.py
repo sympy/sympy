@@ -60,6 +60,7 @@ def test_order():
     b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
+    assert PermutationGroup().order() == 1
 
 
 def test_equality():
@@ -229,8 +230,8 @@ def test_orbits():
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     g = PermutationGroup([a, b])
-    assert g.orbit(0) == set([0, 1, 2])
-    assert g.orbits() == [set([0, 1, 2])]
+    assert g.orbit(0) == {0, 1, 2}
+    assert g.orbits() == [{0, 1, 2}]
     assert g.is_transitive() and g.is_transitive(strict=False)
     assert g.orbit_transversal(0) == \
         [Permutation(
@@ -273,6 +274,10 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
+    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
+    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
+    assert s6.is_normal(s4, strict=False)
+    assert not s4.is_normal(s6, strict=False)
 
 
 def test_eq():
@@ -711,9 +716,13 @@ def test_make_perm():
 
 def test_elements():
     p = Permutation(2, 3)
-    assert PermutationGroup(p).elements == set([Permutation(3), Permutation(2, 3)])
+    assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
 
 
 def test_is_group():
     assert PermutationGroup(Permutation(1,2), Permutation(2,4)).is_group == True
     assert SymmetricGroup(4).is_group == True
+
+
+def test_PermutationGroup():
+    assert PermutationGroup() == PermutationGroup(Permutation())
