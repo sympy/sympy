@@ -1,14 +1,17 @@
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, PY3
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
+from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, Abs, I)
+                   Rational, sqrt, tan, log, Abs, I, Tuple)
+from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.abc import x, y, z, t
+
 import itertools
 
-x = Symbol('x')
 
 
 def test_naturals():
@@ -55,6 +58,8 @@ def test_integers():
 
 
 def test_ImageSet():
+    assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
+    assert ImageSet(Lambda(x, y), S.Integers) == FiniteSet(y)
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
@@ -73,6 +78,19 @@ def test_ImageSet():
     assert Rational(.3) not in harmonics
 
     assert harmonics.is_iterable
+
+    c = ComplexRegion(Interval(1, 3)*Interval(1, 3))
+    assert Tuple(2, 6) in ImageSet(Lambda((x, y), (x, 2*y)), c)
+    assert Tuple(2, S.Half) in ImageSet(Lambda((x, y), (x, 1/y)), c)
+    assert Tuple(2, -2) not in ImageSet(Lambda((x, y), (x, y**2)), c)
+    assert Tuple(2, -2) in ImageSet(Lambda((x, y), (x, -2)), c)
+    c3 = Interval(3, 7)*Interval(8, 11)*Interval(5, 9)
+    assert Tuple(8, 3, 9) in ImageSet(Lambda((t, y, x), (y, t, x)), c3)
+    assert Tuple(S(1)/8, 3, 9) in ImageSet(Lambda((t, y, x), (1/y, t, x)), c3)
+    assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
+    assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
+    assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
+
 
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
@@ -94,7 +112,7 @@ def test_halfcircle():
     assert not halfcircle.is_iterable
 
 
-def test_ImageSet_iterator_not_injetive():
+def test_ImageSet_iterator_not_injective():
     L = Lambda(x, x - x % 2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
     evens = ImageSet(L, S.Naturals)
     i = iter(evens)
@@ -102,7 +120,17 @@ def test_ImageSet_iterator_not_injetive():
     assert (next(i), next(i), next(i), next(i)) == (0, 2, 4, 6)
 
 
-def test_Range():
+def test_inf_Range_len():
+    raises(ValueError, lambda: len(Range(0, oo, 2)))
+    assert Range(0, oo, 2).size is S.Infinity
+    assert Range(0, -oo, -2).size is S.Infinity
+    assert Range(oo, 0, -2).size is S.Infinity
+    assert Range(-oo, 0, 2).size is S.Infinity
+
+
+def test_Range_set():
+    empty = Range(0)
+
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
 
     r = Range(10, 20, 2)
@@ -112,9 +140,8 @@ def test_Range():
     assert 30 not in r
 
     assert list(Range(0, 5)) == list(range(5))
-    assert list(Range(5, 0, -1)) == list(range(1, 6))
+    assert list(Range(5, 0, -1)) == list(range(5, 0, -1))
 
-    assert Range(0, 10, -1) == S.EmptySet
 
     assert Range(5, 15).sup == 14
     assert Range(5, 15).inf == 5
@@ -124,54 +151,201 @@ def test_Range():
     assert Range(60, 7, -10).inf == 10
 
     assert len(Range(10, 38, 10)) == 3
-    assert Range(0, 0, 5) == S.EmptySet
 
-    assert Range(1, 1) == S.EmptySet
-    raises(ValueError, lambda: Range(0, oo, oo))
+    assert Range(0, 0, 5) == empty
+    assert Range(oo, oo, 1) == empty
+    raises(ValueError, lambda: Range(1, 4, oo))
     raises(ValueError, lambda: Range(-oo, oo))
+    raises(ValueError, lambda: Range(oo, -oo, -1))
     raises(ValueError, lambda: Range(-oo, oo, 2))
     raises(ValueError, lambda: Range(0, pi, 1))
+    raises(ValueError, lambda: Range(1, 10, 0))
 
     assert 5 in Range(0, oo, 5)
     assert -5 in Range(-oo, 0, 5)
-
-    assert Range(0, oo)
-    assert Range(-oo, 0)
-    assert Range(0, -oo, -1)
-
-    assert Range(0, oo, 2)._last_element is oo
-    assert Range(-oo, 1, 1)._last_element is S.Zero
+    assert oo not in Range(0, oo)
+    ni = symbols('ni', integer=False)
+    assert ni not in Range(oo)
+    u = symbols('u', integer=None)
+    assert Range(oo).contains(u) is not False
+    inf = symbols('inf', infinite=True)
+    assert inf not in Range(oo)
+    inf = symbols('inf', infinite=True)
+    assert inf not in Range(oo)
+    assert Range(0, oo, 2)[-1] == oo
+    assert Range(-oo, 1, 1)[-1] is S.Zero
+    assert Range(oo, 1, -1)[-1] == 2
+    assert Range(0, -oo, -2)[-1] == -oo
+    assert Range(1, 10, 1)[-1] == 9
 
     it = iter(Range(-oo, 0, 2))
-    assert (next(it), next(it)) == (-2, -4)
+    raises(ValueError, lambda: next(it))
 
+    assert empty.intersect(S.Integers) == empty
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
 
-    assert Range(1, 10, 1)._ith_element(5) == 6 # the index starts from zero
-    assert Range(1, 10, 1)._last_element == 9
+    # test slicing
+    assert Range(1, 10, 1)[5] == 6
+    assert Range(1, 12, 2)[5] == 11
+    assert Range(1, 10, 1)[-1] == 9
+    assert Range(1, 10, 3)[-1] == 7
+    raises(ValueError, lambda: Range(oo,0,-1)[1:3:0])
+    raises(ValueError, lambda: Range(oo,0,-1)[:1])
+    raises(ValueError, lambda: Range(1, oo)[-2])
+    raises(ValueError, lambda: Range(-oo, 1)[2])
+    raises(IndexError, lambda: Range(10)[-20])
+    raises(IndexError, lambda: Range(10)[20])
+    raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
+    assert Range(2, -oo, -2)[2:2:2] == empty
+    assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:2])
+    assert Range(-oo, 4, 2)[::-2] == Range(2, -oo, -4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[::2])
+    assert Range(oo, 2, -2)[::] == Range(oo, 2, -2)
+    assert Range(-oo, 4, 2)[:-2:-2] == Range(2, 0, -4)
+    assert Range(-oo, 4, 2)[:-2:2] == Range(-oo, 0, 4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:0:-2])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[:2:-2])
+    assert Range(-oo, 4, 2)[-2::-2] == Range(0, -oo, -4)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[-2:0:-2])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[0::2])
+    assert Range(oo, 2, -2)[0::] == Range(oo, 2, -2)
+    raises(ValueError, lambda: Range(-oo, 4, 2)[0:-2:2])
+    assert Range(oo, 2, -2)[0:-2:] == Range(oo, 6, -2)
+    raises(ValueError, lambda: Range(oo, 2, -2)[0:2:])
+    raises(ValueError, lambda: Range(-oo, 4, 2)[2::-1])
+    assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
+    assert Range(oo, 0, -2)[-10:0:2] == empty
+    raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
+    raises(ValueError, lambda: Range(oo, 0, -2)[0::-2])
+    assert Range(oo, 0, -2)[0:-4:-2] == empty
+    assert Range(oo, 0, -2)[:0:2] == empty
+    raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
+
+    # test empty Range
+    assert empty.reversed == empty
+    assert 0 not in empty
+    assert list(empty) == []
+    assert len(empty) == 0
+    assert empty.size is S.Zero
+    assert empty.intersect(FiniteSet(0)) is S.EmptySet
+    assert bool(empty) is False
+    raises(IndexError, lambda: empty[0])
+    assert empty[:0] == empty
+    raises(NotImplementedError, lambda: empty.inf)
+    raises(NotImplementedError, lambda: empty.sup)
+
+    AB = [None] + list(range(12))
+    for R in [
+            Range(1, 10),
+            Range(1, 10, 2),
+        ]:
+        r = list(R)
+        for a, b, c in cartes(AB, AB, [-3, -1, None, 1, 3]):
+            for reverse in range(2):
+                r = list(reversed(r))
+                R = R.reversed
+                result = list(R[a:b:c])
+                ans = r[a:b:c]
+                txt = ('\n%s[%s:%s:%s] = %s -> %s' % (
+                R, a, b, c, result, ans))
+                check = ans == result
+                assert check, txt
 
     assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
+    for r in (Range(1, 10, 2), Range(1, oo, 2)):
+        rev = r.reversed
+        assert r.inf == rev.inf and r.sup == rev.sup
+        assert r.step == -rev.step
+
+    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
+    # compatibility imports above)
+    if PY3:
+        builtin_range = range
+    else:
+        builtin_range = xrange
+
+    assert Range(builtin_range(10)) == Range(10)
+    assert Range(builtin_range(1, 10)) == Range(1, 10)
+    assert Range(builtin_range(1, 10, 2)) == Range(1, 10, 2)
+    if PY3:
+        assert Range(builtin_range(1000000000000)) == \
+            Range(1000000000000)
+
+
+def test_range_range_intersection():
+    for a, b, r in [
+            (Range(0), Range(1), S.EmptySet),
+            (Range(3), Range(4, oo), S.EmptySet),
+            (Range(3), Range(-3, -1), S.EmptySet),
+            (Range(1, 3), Range(0, 3), Range(1, 3)),
+            (Range(1, 3), Range(1, 4), Range(1, 3)),
+            (Range(1, oo, 2), Range(2, oo, 2), S.EmptySet),
+            (Range(0, oo, 2), Range(oo), Range(0, oo, 2)),
+            (Range(0, oo, 2), Range(100), Range(0, 100, 2)),
+            (Range(2, oo, 2), Range(oo), Range(2, oo, 2)),
+            (Range(0, oo, 2), Range(5, 6), S.EmptySet),
+            (Range(2, 80, 1), Range(55, 71, 4), Range(55, 71, 4)),
+            (Range(0, 6, 3), Range(-oo, 5, 3), S.EmptySet),
+            (Range(0, oo, 2), Range(5, oo, 3), Range(8, oo, 6)),
+            (Range(4, 6, 2), Range(2, 16, 7), S.EmptySet),]:
+        assert a.intersect(b) == r
+        assert a.intersect(b.reversed) == r
+        assert a.reversed.intersect(b) == r
+        assert a.reversed.intersect(b.reversed) == r
+        a, b = b, a
+        assert a.intersect(b) == r
+        assert a.intersect(b.reversed) == r
+        assert a.reversed.intersect(b) == r
+        assert a.reversed.intersect(b.reversed) == r
+
 
 def test_range_interval_intersection():
-    # Intersection with intervals
-    assert FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6))) == \
-        FiniteSet(2, 3, 4, 5, 6)
+    p = symbols('p', positive=True)
+    assert isinstance(Range(3).intersect(Interval(p, p + 2)), Intersection)
+    assert Range(4).intersect(Interval(0, 3)) == Range(4)
+    assert Range(4).intersect(Interval(-oo, oo)) == Range(4)
+    assert Range(4).intersect(Interval(1, oo)) == Range(1, 4)
+    assert Range(4).intersect(Interval(1.1, oo)) == Range(2, 4)
+    assert Range(4).intersect(Interval(0.1, 3)) == Range(1, 4)
+    assert Range(4).intersect(Interval(0.1, 3.1)) == Range(1, 4)
+    assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
+    assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
 
-    # Open Intervals are removed
-    assert (FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
-            == FiniteSet(3, 4, 5))
 
-    # Try this with large steps
-    assert (FiniteSet(*Range(0, 100, 10).intersect(Interval(15, 55))) ==
-            FiniteSet(20, 30, 40, 50))
+def test_Integers_eval_imageset():
+    ans = ImageSet(Lambda(x, 2*x + S(3)/7), S.Integers)
+    im = imageset(Lambda(x, -2*x + S(3)/7), S.Integers)
+    assert im == ans
+    im = imageset(Lambda(x, -2*x - S(11)/7), S.Integers)
+    assert im == ans
+    y = Symbol('y')
+    assert imageset(x, 2*x + y, S.Integers) == \
+        imageset(x, 2*x + y % 2, S.Integers)
 
-    # Going backwards
-    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6))) == \
-        FiniteSet(-5, -2, 1, 4)
-    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
-        FiniteSet(-2, 1, 4)
+    _x = symbols('x', negative=True)
+    eq = _x**2 - _x + 1
+    assert imageset(_x, eq, S.Integers).lamda.expr == _x**2 + _x + 1
+    eq = 3*_x - 1
+    assert imageset(_x, eq, S.Integers).lamda.expr == 3*_x + 2
+
+    assert imageset(x, (x, 1/x), S.Integers) == \
+        ImageSet(Lambda(x, (x, 1/x)), S.Integers)
+
+
+def test_Range_eval_imageset():
+    a, b, c = symbols('a b c')
+    assert imageset(x, a*(x + b) + c, Range(3)) == \
+        imageset(x, a*x + a*b + c, Range(3))
+    eq = (x + 1)**2
+    assert imageset(x, eq, Range(3)).lamda.expr == eq
+    eq = a*(x + b) + c
+    r = Range(3, -3, -2)
+    imset = imageset(x, eq, r)
+    assert imset.lamda.expr != eq
+    assert list(imset) == [eq.subs(x, i).expand() for i in list(r)]
 
 
 def test_fun():
@@ -197,8 +371,10 @@ def test_Complex():
     assert -I in S.Complexes
     assert sqrt(-1) in S.Complexes
     assert S.Complexes.intersect(S.Reals) == S.Reals
-    # assert S.Complexes.union(S.Reals) == S.Complexes
+    assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
+    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
+    assert str(S.Complexes) == "S.Complexes"
 
 
 def take(n, iterable):
@@ -222,26 +398,33 @@ def test_infinitely_indexed_set_1():
     from sympy.abc import n, m, t
     assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
 
-    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(m, 2*m + 1), S.Integers)) == \
-            EmptySet()
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(
+            imageset(Lambda(m, 2*m + 1), S.Integers)) is S.EmptySet
 
-    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(n, 2*n + 1), S.Integers)) == \
-            EmptySet()
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(
+            imageset(Lambda(n, 2*n + 1), S.Integers)) is S.EmptySet
 
-    assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(n, 3*n), S.Integers)) == \
+    assert imageset(Lambda(m, 2*m), S.Integers).intersect(
+                imageset(Lambda(n, 3*n), S.Integers)) == \
             ImageSet(Lambda(t, 6*t), S.Integers)
+
+    assert imageset(x, x/2 + S(1)/3, S.Integers).intersect(S.Integers) is S.EmptySet
+    assert imageset(x, x/2 + S.Half, S.Integers).intersect(S.Integers) is S.Integers
 
 
 def test_infinitely_indexed_set_2():
-    from sympy import exp
     from sympy.abc import n
     a = Symbol('a', integer=True)
-    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, n + a), S.Integers)
-    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, -n + a), S.Integers)
-    assert imageset(Lambda(n, -6*n), S.Integers) == ImageSet(Lambda(n, 6*n), S.Integers)
-    assert imageset(Lambda(n, 2*n + pi), S.Integers) == ImageSet(Lambda(n, 2*n + pi), S.Integers)
-    assert imageset(Lambda(n, pi*n + pi), S.Integers) == ImageSet(Lambda(n, pi*n + pi), S.Integers)
-    assert imageset(Lambda(n, exp(n)), S.Integers) != imageset(Lambda(n, n), S.Integers)
+    assert imageset(Lambda(n, n), S.Integers) == \
+        imageset(Lambda(n, n + a), S.Integers)
+    assert imageset(Lambda(n, n + pi), S.Integers) == \
+        imageset(Lambda(n, n + a + pi), S.Integers)
+    assert imageset(Lambda(n, n), S.Integers) == \
+        imageset(Lambda(n, -n + a), S.Integers)
+    assert imageset(Lambda(n, -6*n), S.Integers) == \
+        ImageSet(Lambda(n, 6*n), S.Integers)
+    assert imageset(Lambda(n, 2*n + pi), S.Integers) == \
+        ImageSet(Lambda(n, 2*n + pi - 2), S.Integers)
 
 
 def test_imageset_intersect_real():
@@ -254,18 +437,15 @@ def test_imageset_intersect_real():
     assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
-@XFAIL
-def test_infinitely_indexed_failed_diophantine():
-    from sympy.abc import n, m, t
-    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(imageset(Lambda(n, 3*pi*n), S.Integers)) == \
-            ImageSet(Lambda(t, -6*pi*t), S.Integers)
-
-
-@XFAIL
 def test_infinitely_indexed_set_3():
-    from sympy.abc import n
-    assert imageset(Lambda(n, 2*n + 1), S.Integers) == imageset(Lambda(n, 2*n - 1), S.Integers)
-    assert imageset(Lambda(n, 3*n + 2), S.Integers) == imageset(Lambda(n, 3*n - 1), S.Integers)
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
+            imageset(Lambda(n, 3*pi*n), S.Integers)) == \
+        ImageSet(Lambda(t, 6*pi*t), S.Integers)
+    assert imageset(Lambda(n, 2*n + 1), S.Integers) == \
+        imageset(Lambda(n, 2*n - 1), S.Integers)
+    assert imageset(Lambda(n, 3*n + 2), S.Integers) == \
+        imageset(Lambda(n, 3*n - 1), S.Integers)
 
 
 def test_ImageSet_simplification():
@@ -274,6 +454,11 @@ def test_ImageSet_simplification():
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
+
+
+def test_ImageSet_contains():
+    from sympy.abc import x
+    assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
 
 
 def test_ComplexRegion_contains():
@@ -322,7 +507,7 @@ def test_ComplexRegion_intersect():
     c1 = ComplexRegion(Interval(0, 4)*Interval(0, 2*S.Pi), polar=True)
     assert c1.intersect(Interval(1, 5)) == Interval(1, 4)
     assert c1.intersect(Interval(4, 9)) == FiniteSet(4)
-    assert c1.intersect(Interval(5, 12)) == EmptySet()
+    assert c1.intersect(Interval(5, 12)) is S.EmptySet
 
     # Rectangular form
     X_axis = ComplexRegion(Interval(-oo, oo)*FiniteSet(0))
@@ -342,12 +527,12 @@ def test_ComplexRegion_intersect():
     c1 = ComplexRegion(Interval(-5, 5)*Interval(-10, 10))
     assert c1.intersect(Interval(2, 7)) == Interval(2, 5)
     assert c1.intersect(Interval(5, 7)) == FiniteSet(5)
-    assert c1.intersect(Interval(6, 9)) == EmptySet()
+    assert c1.intersect(Interval(6, 9)) is S.EmptySet
 
     # unevaluated object
     C1 = ComplexRegion(Interval(0, 1)*Interval(0, 2*S.Pi), polar=True)
     C2 = ComplexRegion(Interval(-1, 1)*Interval(-1, 1))
-    assert C1.intersect(C2) == Intersection(C1, C2)
+    assert C1.intersect(C2) == Intersection(C1, C2, evaluate=False)
 
 
 def test_ComplexRegion_union():
@@ -376,8 +561,8 @@ def test_ComplexRegion_union():
     assert c5.union(c6) == ComplexRegion(p3)
     assert c7.union(c8) == ComplexRegion(p4)
 
-    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4))
-    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4))
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4), evaluate=False)
 
 
 def test_ComplexRegion_measure():
@@ -393,24 +578,46 @@ def test_ComplexRegion_measure():
 def test_normalize_theta_set():
 
     # Interval
+    assert normalize_theta_set(Interval(pi, 2*pi)) == \
+        Union(FiniteSet(0), Interval.Ropen(pi, 2*pi))
     assert normalize_theta_set(Interval(9*pi/2, 5*pi)) == Interval(pi/2, pi)
-    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == \
-        Interval(0, 2*pi, False, True)
+    assert normalize_theta_set(Interval(-3*pi/2, pi/2)) == Interval.Ropen(0, 2*pi)
+    assert normalize_theta_set(Interval.open(-3*pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(-7*pi/2, -3*pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(pi/2, 2*pi))
     assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
-    assert normalize_theta_set(Interval(-4*pi, 3*pi)) == \
-        Interval(0, 2*pi, False, True)
-    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == \
-        Interval(pi/2, 3*pi/2)
+        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(-pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.open(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval(-4*pi, 3*pi)) == Interval.Ropen(0, 2*pi)
+    assert normalize_theta_set(Interval(-3*pi/2, -pi/2)) == Interval(pi/2, 3*pi/2)
+    assert normalize_theta_set(Interval.open(0, 2*pi)) == Interval.open(0, 2*pi)
+    assert normalize_theta_set(Interval.Ropen(-pi/2, pi/2)) == \
+        Union(Interval.Ropen(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.Lopen(-pi/2, pi/2)) == \
+        Union(Interval(0, pi/2), Interval.open(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval(-pi/2, pi/2)) == \
+        Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
+    assert normalize_theta_set(Interval.open(4*pi, 9*pi/2)) == Interval.open(0, pi/2)
+    assert normalize_theta_set(Interval.Lopen(4*pi, 9*pi/2)) == Interval.Lopen(0, pi/2)
+    assert normalize_theta_set(Interval.Ropen(4*pi, 9*pi/2)) == Interval.Ropen(0, pi/2)
+    assert normalize_theta_set(Interval.open(3*pi, 5*pi)) == \
+        Union(Interval.Ropen(0, pi), Interval.open(pi, 2*pi))
 
     # FiniteSet
     assert normalize_theta_set(FiniteSet(0, pi, 3*pi)) == FiniteSet(0, pi)
-    assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == \
-        FiniteSet(0, pi/2, pi)
-    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == \
-        FiniteSet(0, pi, 3*pi/2)
+    assert normalize_theta_set(FiniteSet(0, pi/2, pi, 2*pi)) == FiniteSet(0, pi/2, pi)
+    assert normalize_theta_set(FiniteSet(0, -pi/2, -pi, -2*pi)) == FiniteSet(0, pi, 3*pi/2)
     assert normalize_theta_set(FiniteSet(-3*pi/2, pi/2)) == \
         FiniteSet(pi/2)
+    assert normalize_theta_set(FiniteSet(2*pi)) == FiniteSet(0)
+
+    # Unions
+    assert normalize_theta_set(Union(Interval(0, pi/3), Interval(pi/2, pi))) == \
+        Union(Interval(0, pi/3), Interval(pi/2, pi))
+    assert normalize_theta_set(Union(Interval(0, pi), Interval(2*pi, 7*pi/3))) == \
+        Interval(0, pi)
 
     # ValueError for non-real sets
     raises(ValueError, lambda: normalize_theta_set(S.Complexes))
@@ -429,3 +636,13 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_issue_9980():
+    c1 = ComplexRegion(Interval(1, 2)*Interval(2, 3))
+    c2 = ComplexRegion(Interval(1, 5)*Interval(1, 3))
+    R = Union(c1, c2)
+    assert simplify(R) == ComplexRegion(Union(Interval(1, 2)*Interval(2, 3), \
+                                    Interval(1, 5)*Interval(1, 3)), False)
+    assert c1.func(*c1.args) == c1
+    assert R.func(*R.args) == R

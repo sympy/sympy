@@ -235,7 +235,7 @@ class Cycle(dict):
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
     A cycle shows the rule to use to move subsets of elements to obtain
-    a permutation. The Cycle class is more flexible that Permutation in
+    a permutation. The Cycle class is more flexible than Permutation in
     that 1) all elements need not be present in order to investigate how
     multiple cycles act in sequence and 2) it can contain singletons:
 
@@ -369,7 +369,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i] + [0])
             size = max(size, big + 1)
         else:
             size = self.size
@@ -687,7 +687,7 @@ class Permutation(Basic):
     2
     >>> q(1) # the easy way
     2
-    >>> dict([(i, q(i)) for i in range(q.size)]) # showing the bijection
+    >>> {i: q(i) for i in range(q.size)} # showing the bijection
     {0: 5, 1: 2, 2: 3, 3: 4, 4: 1, 5: 0}
 
     The full cyclic form (including singletons) can be obtained:

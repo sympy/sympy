@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify
+from sympy import Matrix, Integer, sympify, Basic, Derivative
 
 
 class NDimArray(object):
@@ -72,7 +72,7 @@ class NDimArray(object):
         real_index = 0
         # check if input index can exist in current indexing
         for i in range(self._rank):
-            if index[i] > self.shape[i]:
+            if index[i] >= self.shape[i]:
                 raise ValueError('Index ' + str(index) + ' out of border')
             real_index = real_index*self.shape[i] + index[i]
 
@@ -112,6 +112,10 @@ class NDimArray(object):
         if shape is None and iterable is None:
             shape = ()
             iterable = ()
+        # Construction from another `NDimArray`:
+        elif shape is None and isinstance(iterable, NDimArray):
+            shape = iterable.shape
+            iterable = list(iterable)
         # Construct N-dim array from an iterable (numpy arrays included):
         elif shape is None and isinstance(iterable, collections.Iterable):
             iterable, shape = cls._scan_iterable_shape(iterable)
@@ -185,6 +189,37 @@ class NDimArray(object):
 
         """
         return self._rank
+
+    def diff(self, *args):
+        """
+        Calculate the derivative of each element in the array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy.abc import x, y
+        >>> M = ImmutableDenseNDimArray([[x, y], [1, x*y]])
+        >>> M.diff(x)
+        [[1, 0], [0, y]]
+
+        """
+        return type(self)(map(lambda x: x.diff(*args), self), self.shape)
+
+    def applyfunc(self, f):
+        """Apply a function to each element of the N-dim array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> m = ImmutableDenseNDimArray([i*2+j for i in range(2) for j in range(2)], (2, 2))
+        >>> m
+        [[0, 1], [2, 3]]
+        >>> m.applyfunc(lambda i: 2*i)
+        [[0, 2], [4, 6]]
+        """
+        return type(self)(map(f, self), self.shape)
 
     def __str__(self):
         """Returns string, allows to use standard functions print() and str().
@@ -273,14 +308,14 @@ class NDimArray(object):
 
     def __mul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
-            raise ValueError("scalar expected")
+            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
-            raise ValueError("scalar expected")
+            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
@@ -293,7 +328,7 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __rdiv__(self, other):
-        raise TypeError('unsupported operation on NDimArray')
+        raise NotImplementedError('unsupported operation on NDimArray')
 
     def __eq__(self, other):
         """
@@ -325,3 +360,13 @@ class NDimArray(object):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+    def _eval_diff(self, *args, **kwargs):
+        if kwargs.pop("evaluate", True):
+            return self.diff(*args)
+        else:
+            return Derivative(self, *args, **kwargs)
+
+
+class ImmutableNDimArray(NDimArray, Basic):
+    _op_priority = 11.0

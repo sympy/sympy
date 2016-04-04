@@ -10,7 +10,6 @@ from sympy.simplify.simplify import nsimplify
 from sympy.core.containers import Tuple
 from sympy.core.numbers import comp
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, as_int
 
 

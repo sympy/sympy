@@ -1,3 +1,4 @@
+from collections import defaultdict
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
@@ -113,7 +114,7 @@ def test_tuple_wrapper():
 def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u('')]
+    not_sympy_iterable = [{}, '', u'']
     assert all(is_sequence(i) for i in ordered)
     assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)
@@ -146,13 +147,24 @@ def test_Dict():
 
     assert set(
         d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
-    assert set(d) == set([x, y, z])
+    assert set(d) == {x, y, z}
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
 
     # Test creating a Dict from a Dict.
     d = Dict({x: 1, y: 2, z: 3})
     assert d == Dict(d)
+
+    # Test for supporting defaultdict
+    d = defaultdict(int)
+    assert d[x] == 0
+    assert d[y] == 0
+    assert d[z] == 0
+    assert Dict(d)
+    d = Dict(d)
+    assert len(d) == 3
+    assert set(d.keys()) == set((x, y, z))
+    assert set(d.values()) == set((S(0), S(0), S(0)))
 
 
 def test_issue_5788():

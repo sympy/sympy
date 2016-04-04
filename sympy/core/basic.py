@@ -1,12 +1,12 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
+from collections import Mapping
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import (iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest, range)
-from .decorators import deprecated
 from .singleton import S
 
 from inspect import getmro
@@ -575,6 +575,19 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
+
+        A False result does not mean that `self` cannot be rewritten
+        into a form that would be comparable. For example, the
+        difference computed below is zero but without simplification
+        it does not evaluate to a zero with precision:
+
+        >>> e = 2**pi*(1 + 2**pi)
+        >>> dif = e - e.expand()
+        >>> dif.is_comparable
+        False
+        >>> dif.n(2)._prec
+        1
+
         """
         is_real = self.is_real
         if is_real is False:
@@ -662,12 +675,6 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
-    @deprecated(useinstead="iter(self.args)", issue=7717, deprecated_since_version="0.7.6")
-    def iter_basic_args(self):
-        """
-        Iterates arguments of ``self``.
-        """
-        return iter(self.args)
 
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
@@ -697,7 +704,7 @@ class Basic(with_metaclass(ManagedProperties)):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -827,7 +834,7 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
-            elif isinstance(sequence, (Dict, dict)):
+            elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
@@ -843,15 +850,20 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i in range(len(sequence)):
-            o, n = sequence[i]
-            so, sn = sympify(o), sympify(n)
-            if not isinstance(so, Basic):
-                if type(o) is str:
-                    so = Symbol(o)
-            sequence[i] = (so, sn)
-            if _aresame(so, sn):
-                sequence[i] = None
-                continue
+            s = list(sequence[i])
+            for j, si in enumerate(s):
+                try:
+                    si = sympify(si, strict=True)
+                except SympifyError:
+                    if type(si) is str:
+                        si = Symbol(si)
+                    else:
+                        # if it can't be sympified, skip it
+                        sequence[i] = None
+                        break
+                s[j] = si
+            else:
+                sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -1379,8 +1391,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # restore subexpressions in mapping
                 for o, n in mask:
                     r = {o: n}
-                    mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.items()])
+                    mapping = {k.xreplace(r): v.xreplace(r)
+                        for k, v in mapping.items()}
             return rv, mapping
 
     def find(self, query, group=False):
@@ -1597,20 +1609,6 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
-    @property
-    @deprecated(useinstead="is_finite", issue=8071, deprecated_since_version="0.7.6")
-    def is_bounded(self):
-        return super(Basic, self).__getattribute__('is_finite')
-
-    @property
-    @deprecated(useinstead="is_infinite", issue=8071, deprecated_since_version="0.7.6")
-    def is_unbounded(self):
-        return super(Basic, self).__getattribute__('is_infinite')
-
-    @deprecated(useinstead="is_zero", issue=8071, deprecated_since_version="0.7.6")
-    def is_infinitesimal(self):
-        return super(Basic, self).__getattribute__('is_zero')
-
 
 class Atom(Basic):
     """
@@ -1643,7 +1641,6 @@ class Atom(Basic):
 
     @cacheit
     def sort_key(self, order=None):
-        from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def _eval_simplify(self, ratio, measure):
@@ -1719,7 +1716,7 @@ def _atomic(e):
     try:
         free = e.free_symbols
     except AttributeError:
-        return set([e])
+        return {e}
     atoms = set()
     for p in pot:
         if p in seen:

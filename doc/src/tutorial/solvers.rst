@@ -70,7 +70,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
 In future we would be able to use linsolve directly from ``solveset``. Following
-is an example of the syntax of ``linsolve``. 
+is an example of the syntax of ``linsolve``.
 
 * List of Equations Form:
 

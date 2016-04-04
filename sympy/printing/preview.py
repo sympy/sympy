@@ -1,16 +1,13 @@
 from __future__ import print_function, division
 
 from os.path import join
-from itertools import chain
 import tempfile
 import shutil
-import sys
 import io
 from io import BytesIO
 
 try:
-    from subprocess import STDOUT, CalledProcessError
-    from sympy.core.compatibility import check_output
+    from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
 

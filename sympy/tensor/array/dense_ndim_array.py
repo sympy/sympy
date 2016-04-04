@@ -7,7 +7,7 @@ from sympy.core.sympify import _sympify
 
 from sympy import Matrix, flatten, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
-from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
 
 class DenseNDimArray(NDimArray):
@@ -112,7 +112,7 @@ class DenseNDimArray(NDimArray):
         return type(self)(self._array, newshape)
 
 
-class ImmutableDenseNDimArray(DenseNDimArray, Basic):
+class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
     """
 
     """

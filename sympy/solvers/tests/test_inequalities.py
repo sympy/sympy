@@ -8,7 +8,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality)
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
@@ -168,6 +168,10 @@ def test_reduce_rational_inequalities_real_relational():
         relational=False) == \
         Union(Interval.Lopen(-oo, -2), Interval.Lopen(0, 4))
 
+    # issue sympy/sympy#10237
+    assert reduce_rational_inequalities(
+        [[x < oo, x >= 0, -oo < x]], x, relational=False) == Interval(0, oo)
+
 
 def test_reduce_abs_inequalities():
     e = abs(x - 5) < 3
@@ -234,9 +238,9 @@ def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 >= 0) == \
         Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
 
-    eq = x**8 + x - 9  # we want RootOf solns here
+    eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
-    tru = Or(And(RootOf(eq, 1) <= x, x < oo), And(-oo < x, x <= RootOf(eq, 0)))
+    tru = Or(And(rootof(eq, 1) <= x, x < oo), And(-oo < x, x <= rootof(eq, 0)))
     assert sol == tru
 
     # recast vanilla as real
@@ -277,7 +281,7 @@ def test_solve_univariate_inequality():
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
-        And(RootOf(x**7 - x - 2, 0) < x, x < oo)
+        And(rootof(x**7 - x - 2, 0) < x, x < oo)
 
     # handle numerator and denominator; although these would be handled as
     # rational inequalities, these test confirm that the right thing is done
@@ -296,7 +300,7 @@ def test_issue_9954():
 
 
 def test_slow_general_univariate():
-    r = RootOf(x**5 - x**2 + 1, 0)
+    r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
         Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
 
@@ -313,6 +317,18 @@ def test_issue_8974():
     assert isolve(-oo < x, x) == And(-oo < x, x < oo)
     assert isolve(oo > x, x) == And(-oo < x, x < oo)
 
+
+def test_issue_10198():
+    assert reduce_inequalities(
+        -1 + 1/abs(1/x - 1) < 0) == Or(
+        And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2)
+        )
+    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, -1)
+    assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
+        Or(And(-oo < x, x < 0),
+        And(S(0) < x, x < S(3)/4), And(S(3)/2 < x, x < oo))
+    raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
+        1 - 1/sqrt(x)), '<', x))
 
 def test_issue_10047():
     assert solve(sin(x) < 2) == And(-oo < x, x < oo)

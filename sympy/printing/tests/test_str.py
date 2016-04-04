@@ -9,7 +9,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     AccumBounds)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -327,6 +327,15 @@ def test_Poly():
     assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+    assert str(Poly(2*x + x**5, x)) == "Poly(x**5 + 2*x, x, domain='ZZ')"
+
+    assert str(Poly(3**(2*x), 3**x)) == "Poly((3**x)**2, 3**x, domain='ZZ')"
+    assert str(Poly((x**2)**x)) == "Poly(((x**2)**x), (x**2)**x, domain='ZZ')"
+
+    assert str(Poly((x + y)**3, (x + y), expand=False)
+                ) == "Poly((x + y)**3, x + y, domain='ZZ')"
+    assert str(Poly((x - 1)**2, (x - 1), expand=False)
+                ) == "Poly((x - 1)**2, x - 1, domain='ZZ')"
 
     assert str(
         Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
@@ -499,8 +508,8 @@ def test_Relational():
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
     assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
 
-def test_RootOf():
-    assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+def test_CRootOf():
+    assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
 
 def test_RootSum():

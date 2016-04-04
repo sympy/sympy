@@ -36,7 +36,8 @@ def satask(proposition, assumptions=True, context=global_assumptions,
 
 
 def get_relevant_facts(proposition, assumptions=(True,),
-    context=global_assumptions, use_known_facts=True, exprs=None, relevant_facts=None):
+    context=global_assumptions, use_known_facts=True, exprs=None,
+    relevant_facts=None):
 
     newexprs = set()
     if not exprs:
@@ -46,7 +47,7 @@ def get_relevant_facts(proposition, assumptions=(True,),
         if context:
             keys |= And(*context).atoms(AppliedPredicate)
 
-        exprs = set([key.args[0] for key in keys])
+        exprs = {key.args[0] for key in keys}
 
     if not relevant_facts:
         relevant_facts = set([])
@@ -75,8 +76,10 @@ def get_all_relevant_facts(proposition, assumptions=True,
     relevant_facts = set()
     exprs = None
     while exprs != set():
-        (relevant_facts, exprs) = get_relevant_facts(proposition, And.make_args(assumptions),
-                context, use_known_facts=use_known_facts, exprs=exprs, relevant_facts=relevant_facts)
+        (relevant_facts, exprs) = get_relevant_facts(proposition,
+                And.make_args(assumptions), context,
+                use_known_facts=use_known_facts, exprs=exprs,
+                relevant_facts=relevant_facts)
         i += 1
         if i >= iterations:
             return And(*relevant_facts)

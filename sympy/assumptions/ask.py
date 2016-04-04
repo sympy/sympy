@@ -357,7 +357,7 @@ class AssumptionKeys(object):
         return Predicate('finite')
 
     @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
     def bounded(self):
         """
         See documentation of ``Q.finite``.
@@ -377,7 +377,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
     def infinity(self):
         """
         See documentation of ``Q.infinite``.
@@ -385,7 +385,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
@@ -1357,7 +1357,7 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
-        mapping[key] = set([key])
+        mapping[key] = {key}
         for other_key in known_facts_keys:
             if other_key != key:
                 if ask_full_inference(other_key, key, known_facts_cnf):

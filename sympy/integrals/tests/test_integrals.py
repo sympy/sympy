@@ -1,10 +1,10 @@
 from sympy import (
-    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh, cosh, tanh,
-    Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
-    I, Integral, integrate, Interval, Lambda, LambertW, log,
-    Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
-    sstr, Sum, Symbol, symbols, sympify, trigsimp,
-    Tuple, nan, And, Eq, Ne, re, im, polar_lift, meijerg
+    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos, sinh,
+    cosh, tanh, Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma,
+    Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
+    LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
+    sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
+    And, Eq, Ne, re, im, polar_lift, meijerg,
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -32,6 +32,7 @@ def diff_test(i):
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
     assert integrate(x**(-2), (x, 1, oo)) == 1
+    assert integrate(1/(1 + exp(x)), (x, 0, oo)) == log(2)
 
 
 def test_constructor():
@@ -79,11 +80,11 @@ def test_basics():
 
     assert integrate(t**2, (t, x, 2*x)).diff(x) == 7*x**2
 
-    assert Integral(x, x).atoms() == set([x])
-    assert Integral(f(x), (x, 0, 1)).atoms() == set([S(0), S(1), x])
+    assert Integral(x, x).atoms() == {x}
+    assert Integral(f(x), (x, 0, 1)).atoms() == {S(0), S(1), x}
 
-    assert diff_test(Integral(x, (x, 3*y))) == set([y])
-    assert diff_test(Integral(x, (a, 3*y))) == set([x, y])
+    assert diff_test(Integral(x, (x, 3*y))) == {y}
+    assert diff_test(Integral(x, (a, 3*y))) == {x, y}
 
     assert integrate(x, (x, oo, oo)) == 0 #issue 8171
     assert integrate(x, (x, -oo, -oo)) == 0
@@ -96,15 +97,27 @@ def test_basics():
     assert Integral(n + x, x).is_commutative is False
 
 
+def test_diff_wrt():
+    class Test(Expr):
+        _diff_wrt = True
+        is_commutative = True
+
+    t = Test()
+    assert integrate(t + 1, t) == t**2/2 + t
+    assert integrate(t + 1, (t, 0, 1)) == S(3)/2
+
+    raises(ValueError, lambda: integrate(x + 1, x + 1))
+    raises(ValueError, lambda: integrate(x + 1, (x + 1, 0, 1)))
+
 def test_basics_multiple():
 
-    assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == set([x])
-    assert diff_test(Integral(x, (x, 5*y), (y, x, 2*x))) == set([x])
-    assert diff_test(Integral(x, (x, 5*y), (y, y, 2*x))) == set([x, y])
-    assert diff_test(Integral(y, y, x)) == set([x, y])
-    assert diff_test(Integral(y*x, x, y)) == set([x, y])
-    assert diff_test(Integral(x + y, y, (y, 1, x))) == set([x])
-    assert diff_test(Integral(x + y, (x, x, y), (y, y, x))) == set([x, y])
+    assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == {x}
+    assert diff_test(Integral(x, (x, 5*y), (y, x, 2*x))) == {x}
+    assert diff_test(Integral(x, (x, 5*y), (y, y, 2*x))) == {x, y}
+    assert diff_test(Integral(y, y, x)) == {x, y}
+    assert diff_test(Integral(y*x, x, y)) == {x, y}
+    assert diff_test(Integral(x + y, y, (y, 1, x))) == {x}
+    assert diff_test(Integral(x + y, (x, x, y), (y, y, x))) == {x, y}
 
 
 def test_conjugate_transpose():
@@ -712,24 +725,24 @@ def test_is_number():
 
 def test_symbols():
     from sympy.abc import x, y, z
-    assert Integral(0, x).free_symbols == set([x])
-    assert Integral(x).free_symbols == set([x])
-    assert Integral(x, (x, None, y)).free_symbols == set([y])
-    assert Integral(x, (x, y, None)).free_symbols == set([y])
-    assert Integral(x, (x, 1, y)).free_symbols == set([y])
-    assert Integral(x, (x, y, 1)).free_symbols == set([y])
-    assert Integral(x, (x, x, y)).free_symbols == set([x, y])
-    assert Integral(x, x, y).free_symbols == set([x, y])
+    assert Integral(0, x).free_symbols == {x}
+    assert Integral(x).free_symbols == {x}
+    assert Integral(x, (x, None, y)).free_symbols == {y}
+    assert Integral(x, (x, y, None)).free_symbols == {y}
+    assert Integral(x, (x, 1, y)).free_symbols == {y}
+    assert Integral(x, (x, y, 1)).free_symbols == {y}
+    assert Integral(x, (x, x, y)).free_symbols == {x, y}
+    assert Integral(x, x, y).free_symbols == {x, y}
     assert Integral(x, (x, 1, 2)).free_symbols == set()
-    assert Integral(x, (y, 1, 2)).free_symbols == set([x])
+    assert Integral(x, (y, 1, 2)).free_symbols == {x}
     # pseudo-free in this case
-    assert Integral(x, (y, z, z)).free_symbols == set([x, z])
-    assert Integral(x, (y, 1, 2), (y, None, None)).free_symbols == set([x, y])
-    assert Integral(x, (y, 1, 2), (x, 1, y)).free_symbols == set([y])
+    assert Integral(x, (y, z, z)).free_symbols == {x, z}
+    assert Integral(x, (y, 1, 2), (y, None, None)).free_symbols == {x, y}
+    assert Integral(x, (y, 1, 2), (x, 1, y)).free_symbols == {y}
     assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
     assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
     assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).free_symbols == \
-        set([x])
+        {x}
 
 
 def test_is_zero():
@@ -1055,7 +1068,6 @@ def test_issue_4492():
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
 
-
 def test_issue_2708():
     # This test needs to use an integration function that can
     # not be evaluated in closed form.  Update as needed.
@@ -1063,7 +1075,11 @@ def test_issue_2708():
     integral_f = NonElementaryIntegral(f, (z, 2, 3))
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
-
+    assert integrate(2*f + exp(z), (z, 2, 3)) == \
+        2*integral_f - exp(2) + exp(3)
+    assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
+        1.0*NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+                                  (z, 0, x))
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
@@ -1111,6 +1127,11 @@ def test_issue_7130():
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
 
+def test_issue_10567():
+    a, b, c, t = symbols('a b c t')
+    vt = Matrix([a*t, b, c])
+    assert integrate(vt, t) == Integral(vt, t).doit()
+    assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
 
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\

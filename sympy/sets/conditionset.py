@@ -3,9 +3,11 @@ from __future__ import print_function, division
 from sympy import S
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
+from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet)
+from sympy.utilities.iterables import sift
 
 
 class ConditionSet(Set):
@@ -34,6 +36,15 @@ class ConditionSet(Set):
             return S.EmptySet
         if condition == S.true:
             return base_set
+        if isinstance(base_set, EmptySet):
+            return base_set
+        if isinstance(base_set, FiniteSet):
+            sifted = sift(base_set, lambda _: fuzzy_bool(condition.subs(sym, _)))
+            if sifted[None]:
+                return Union(FiniteSet(*sifted[True]),
+                             Basic.__new__(cls, sym, condition, FiniteSet(*sifted[None])))
+            else:
+                return FiniteSet(*sifted[True])
         return Basic.__new__(cls, sym, condition, base_set)
 
     sym = property(lambda self: self.args[0])

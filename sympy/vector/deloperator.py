@@ -3,6 +3,7 @@ from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.scalar import BaseScalar
 from sympy.core import S
 
 
@@ -48,7 +49,8 @@ class Del(Basic):
         >>> from sympy.vector import CoordSysCartesian
         >>> C = CoordSysCartesian('C')
         >>> C.delop.gradient(9)
-        (Derivative(9, C.x))*C.i + (Derivative(9, C.y))*C.j + (Derivative(9, C.z))*C.k
+        (Derivative(9, C.x))*C.i + (Derivative(9, C.y))*C.j +
+            (Derivative(9, C.z))*C.k
         >>> C.delop(C.x*C.y*C.z).doit()
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
@@ -61,8 +63,8 @@ class Del(Basic):
         vz = Derivative(scalar_field, self._z)
 
         if doit:
-            return (vx*self._i + vy*self._j + vz*self._k).doit()
-        return vx*self._i + vy*self._j + vz*self._k
+            return (vx * self._i + vy * self._j + vz * self._k).doit()
+        return vx * self._i + vy * self._j + vz * self._k
 
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
@@ -130,7 +132,8 @@ class Del(Basic):
         >>> C = CoordSysCartesian('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> C.delop.cross(v, doit = True)
-        (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j + (-C.x*C.z + C.y*C.z)*C.k
+        (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j +
+            (-C.x*C.z + C.y*C.z)*C.k
         >>> (C.delop ^ C.i).doit()
         0
 
@@ -161,7 +164,6 @@ class Del(Basic):
     _sympystr = __str__
 
 
-
 def _diff_conditional(expr, base_scalar):
     """
     First re-expresses expr in the system that base_scalar belongs to.
@@ -170,7 +172,7 @@ def _diff_conditional(expr, base_scalar):
     Else, returns S(0)
     """
 
-    new_expr = express(expr, base_scalar.system, variables = True)
-    if base_scalar in new_expr.atoms():
+    new_expr = express(expr, base_scalar.system, variables=True)
+    if base_scalar in new_expr.atoms(BaseScalar):
         return Derivative(new_expr, base_scalar)
     return S(0)

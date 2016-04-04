@@ -157,6 +157,13 @@ class NumPyPrinter(LambdaPrinter):
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
 
+    def _print_Min(self, expr):
+        return '{0}(({1}))'.format('amin', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Max(self, expr):
+        return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
+
+
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
@@ -237,7 +244,7 @@ class NumExprPrinter(LambdaPrinter):
 
     def doprint(self, expr):
         lstr = super(NumExprPrinter, self).doprint(expr)
-        return "evaluate('%s')" % lstr
+        return "evaluate('%s', truediv=True)" % lstr
 
 def lambdarepr(expr, **settings):
     """

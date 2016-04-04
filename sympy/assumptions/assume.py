@@ -1,10 +1,8 @@
 from __future__ import print_function, division
-
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
-
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
@@ -39,6 +37,7 @@ class AssumptionsContext(set):
         """Add an assumption."""
         for a in assumptions:
             super(AssumptionsContext, self).add(a)
+
 
 global_assumptions = AssumptionsContext()
 
@@ -94,7 +93,8 @@ class AppliedPredicate(Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (2, (self.func.name, self.arg.sort_key())), S.One.sort_key(), S.One
+        return (self.class_key(), (2, (self.func.name, self.arg.sort_key())),
+                S.One.sort_key(), S.One)
 
     def __eq__(self, other):
         if type(other) is AppliedPredicate:
@@ -191,6 +191,7 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
 
 @contextmanager
 def assuming(*assumptions):
