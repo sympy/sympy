@@ -1,6 +1,8 @@
 """Tools for arithmetic error propogation."""
+from __future__ import print_function, division
 from itertools import repeat
-from sympy import Symbol, symbols, Add, Sum, Mul, simplify, Pow, exp
+from sympy import Symbol, symbols, Add, Mul, simplify, Pow, exp
+
 
 def variance_prop(expr, consts=()):
     """Symbolically propagates variance (sigma^2) for expressions.
@@ -19,6 +21,23 @@ def variance_prop(expr, consts=()):
         An expression for the total variance of the expr.
         The variance for the original symbols (e.g. x) have a 'var_'
         prepended to their name ('var_x').
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp
+    >>> from sympy.stats.error_prop import variance_prop
+    >>> x, y = symbols('x y')
+
+    >>> variance_prop(x + y)
+    var_x + var_y
+
+    >>> variance_prop(x * y)
+    var_x*y**2 + var_y*x**2
+
+    >>> variance_prop(exp(2*x))
+    4*var_x*exp(4*x)
+
     """
     args = expr.args
     if len(args) == 0:
@@ -41,4 +60,3 @@ def variance_prop(expr, consts=()):
         return simplify(var_args[0] * expr**2)
     else:
         raise RuntimeError("unknown operator")
-

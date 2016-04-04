@@ -1,6 +1,7 @@
 from sympy import symbols, exp
 from sympy.stats.error_prop import variance_prop
 
+
 def test_variance_prop():
     x, y, z = symbols('x y z')
     phi, t = consts = symbols('phi t')
@@ -19,4 +20,3 @@ def test_variance_prop():
     for inp, out in cases.items():
         obs = variance_prop(case, consts=consts)
         assert out == obs
-
