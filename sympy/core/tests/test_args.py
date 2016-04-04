@@ -713,6 +713,20 @@ def test_sympy__stats__rv__ProductDomain():
     assert _test_args(ProductDomain(D, E))
 
 
+def test_sympy__sandbox__symbolic_probability__Probability():
+    from sympy.sandbox.symbolic_probability import Probability
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Probability(X > 0))
+
+
+def test_sympy__sandbox__symbolic_probability__Expectation():
+    from sympy.sandbox.symbolic_probability import Expectation
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Expectation(X > 0))
+
+
 def test_sympy__sandbox__symbolic_probability__Covariance():
     from sympy.sandbox.symbolic_probability import Covariance
     from sympy.stats import Normal

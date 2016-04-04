@@ -7,7 +7,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy import Expr, Add, Mul, S
 from sympy.core.evaluate import global_evaluate
 from sympy.stats import variance, covariance
-from sympy.stats.rv import RandomSymbol
+from sympy.stats.rv import RandomSymbol, probability, expectation
 
 
 class Probability(Expr):
@@ -15,19 +15,49 @@ class Probability(Expr):
     Symbolic expression for the probability.
     """
     def __new__(cls, prob, condition=None, **kwargs):
-        pass
+        prob = _sympify(prob)
+        if condition is None:
+            obj = Expr.__new__(cls, prob, **kwargs)
+        else:
+            condition = _sympify(condition)
+            obj = Expr.__new__(cls, prob, condition, **kwargs)
+        obj._condition = condition
+        return obj
+
+    def doit(self, **kwargs):
+        return probability(self.args[0], given_condition=self._condition)
+
+
+class Expectation(Expr):
+    """
+    Symbolic expression for the expectation.
+    """
+    def __new__(cls, expr, condition=None, **kwargs):
+        expr = _sympify(expr)
+        if condition is None:
+            obj = Expr.__new__(cls, expr, **kwargs)
+        else:
+            condition = _sympify(condition)
+            obj = Expr.__new__(cls, expr, condition, **kwargs)
+        obj._condition = condition
+        return obj
+
+    def doit(self, **kwargs):
+        return expectation(self.args[0], condition=self._condition)
+
 
 class Variance(Expr):
     """
     Symbolic expression for the variance.
     """
     def __new__(cls, arg, condition=None, **kwargs):
-
+        arg = _sympify(arg)
         if not kwargs.pop('evaluate', global_evaluate[0]):
             if condition is None:
                 obj = Expr.__new__(cls, arg, **kwargs)
             else:
-                obj = Expr.__new__(cls, arg, _sympify(condition), **kwargs)
+                condition = _sympify(condition)
+                obj = Expr.__new__(cls, arg, condition, **kwargs)
             obj._condition = condition
             return obj
 

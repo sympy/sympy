@@ -2,7 +2,8 @@ from sympy import symbols, Mul
 
 from sympy.stats import Normal, Poisson, variance
 
-from sympy.sandbox.symbolic_probability import Covariance, Variance
+from sympy.sandbox.symbolic_probability import Covariance, Variance, Probability, Expectation
+from sympy.stats.rv import probability, expectation
 
 
 def test_literal_probability():
@@ -11,6 +12,12 @@ def test_literal_probability():
     Z = Poisson('Z', 4)
     W = Poisson('W', 3)
     x, y, w, z = symbols('x, y, w, z')
+
+    assert Probability(X > 0).doit() == probability(X > 0)
+    assert Probability(X > x).doit() == probability(X > x)
+
+    assert Expectation(X).doit() == expectation(X)
+    assert Expectation(X**2).doit() == expectation(X**2)
 
     assert Variance(w) == 0
     assert Variance(X).doit() == variance(X)
