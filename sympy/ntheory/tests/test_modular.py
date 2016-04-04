@@ -38,3 +38,5 @@ def test_modular():
     assert crt_cartesian([[1, 5], [4, 7], [6, 8]], [6, 11, 13]) == [73, 125, 227, 359, 565, 697, 799, 851]
     assert crt_cartesian([[5, 3], [7, 9], [3, 7]], [7, 11, 13]) == [150, 185, 306, 458, 579, 614, 878, 887]
     assert crt_cartesian([[11, 51], [54, 72], [16, 38]], [67, 79, 43]) == [38308, 45102, 104571, 111365, 122996, 129790, 189259, 196053]
+    raises(ValueError, lambda: crt_cartesian([[2, 3], [3, 4]], [4, 5, 6]))
+    raises(ValueError, lambda: crt_cartesian([[4, 7], [3, 5]], []))

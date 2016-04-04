@@ -254,9 +254,9 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
 def crt_cartesian(rem, mod):
     """
-    Crt over a cartesian product of vectors.given a vector of modulus,
+    Crt over a cartesian product of vectors.given a vector of moduli,
     and for each modulus given a vector of remainders, instead of usual one remainder in crt.
-    It outputs all the solutions that leave a remainder matching one of the remainders
+    It outputs solutions that leave a remainder matching one of the remainders
     of the vector of remainders corresponding to a modulus.
 
     Assuming that moduli are pairwise relatively prime.
@@ -273,12 +273,11 @@ def crt_cartesian(rem, mod):
     [(3, 3), (5, 7), (5, 3), (3, 7)]
     """
     if len(mod) > len(rem):
-        raiseerror
+        raise ValueError("Too few remainders")
     if len(mod) == 0:
-        raiseerror
+        raise ValueError("Moduli Vector can't be empty")
     m = mod[0]
     R = rem[0]
-
     for i in range(1,len(mod)):
         rem2 = []
         s = mod_inverse(m, mod[i])
