@@ -108,14 +108,20 @@ class Covariance(Expr):
     Symbolic expression for the covariance.
     """
     def __new__(cls, arg1, arg2, condition=None, **kwargs):
+        arg1 = _sympify(arg1)
+        arg2 = _sympify(arg2)
 
         if not kwargs.pop('evaluate', global_evaluate[0]):
             if condition is None:
                 obj = Expr.__new__(cls, arg1, arg2, **kwargs)
             else:
-                obj = Expr.__new__(cls, arg1, arg2, _sympify(condition), **kwargs)
+                condition = _sympify(condition)
+                obj = Expr.__new__(cls, arg1, arg2, condition, **kwargs)
             obj._condition = condition
             return obj
+
+        if condition is not None:
+            condition = _sympify(condition)
 
         if arg1 == arg2:
             return Variance(arg1, condition)
