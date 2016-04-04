@@ -175,7 +175,9 @@ def test_bicycle():
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
             kd_eqs=kd)
-    (fr, frstar) = KM.kanes_equations(FL, BL)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        (fr, frstar) = KM.kanes_equations(FL, BL)
 
     # This is the start of entering in the numerical values from the benchmark
     # paper to validate the eigen values of the linearized equations from this
