@@ -86,6 +86,8 @@ def diophantine(eq, param=symbols("t", integer=True)):
         base = term[0]
 
         var_t, jnk, eq_type = classify_diop(base)
+        if not var_t:
+            continue
         solution = diop_solve(base, param)
 
         if eq_type in ["linear", "homogeneous_ternary_quadratic", "general_pythagorean"]:
