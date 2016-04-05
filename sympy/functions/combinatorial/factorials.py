@@ -210,9 +210,11 @@ class subfactorial(CombinatorialFunction):
         !n = {  0                             for n = 1
              |  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
               `
+    recurrence can be reduced to 
 
-    It can also be written as int(round(n!/exp(1))) but the recursive
-    definition with caching is implemented for this function.
+    !n = n*( !(n-1) ) + (-1)**n
+
+    It can also be written as int(round(n!/exp(1))).
 
     An interesting analytic expression is the following [2]_
 
@@ -248,13 +250,15 @@ class subfactorial(CombinatorialFunction):
     """
 
     @classmethod
-    @cacheit
     def _eval(self, n):
         if not n:
             return S.One
         elif n == 1:
             return S.Zero
-        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+        a = S.Zero
+        for i in range(2,n+1):
+            a = a*i + (-1)**i
+        return a
 
     @classmethod
     def eval(cls, arg):

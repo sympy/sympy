@@ -343,6 +343,7 @@ def test_factorial_simplify_fail():
 def test_subfactorial():
     assert all(subfactorial(i) == ans for i, ans in enumerate(
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
+    assert subfactorial(20) == 895014631192902121
     assert subfactorial(oo) == oo
     assert subfactorial(nan) == nan
 
