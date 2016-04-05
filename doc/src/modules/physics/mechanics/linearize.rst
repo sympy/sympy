@@ -143,7 +143,7 @@ pendulum system: ::
 
   >>> # Solve for eom with kanes method
   >>> KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-  >>> fr, frstar = KM.kanes_equations([(P, R)], [pP])
+  >>> fr, frstar = KM.kanes_equations([pP], [(P, R)])
 
 1. Using the ``Linearizer`` class directly:
 -------------------------------------------
