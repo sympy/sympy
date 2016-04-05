@@ -270,7 +270,7 @@ matrix:
 
 before_install:
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-      pip install codecov
+      pip install codecov;
     fi
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
