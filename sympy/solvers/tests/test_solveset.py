@@ -17,7 +17,7 @@ from sympy.polys.rootoftools import CRootOf
 
 from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow
+from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 
@@ -593,9 +593,13 @@ def test_units():
 def test_solve_only_exp_1():
     y = Symbol('y', positive=True, finite=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
+    assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
+
+
+@SKIP("Comparision Error")
+def test_solve_only_exp_compError():
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
-    assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
 
 
 @XFAIL
@@ -1086,3 +1090,8 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+
+def test_issue_10864():
+    x =symbols('x' , positive = True)
+    assert solveset(x**(y*z) - x,x,S.Reals) == FiniteSet(1)

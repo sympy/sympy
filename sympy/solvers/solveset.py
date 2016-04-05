@@ -9,10 +9,12 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
+from sympy.core.compatibility import ordered
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand, expand_complex)
+from sympy.core.function import (Lambda, expand, expand_complex, Function)
 from sympy.core.relational import Eq
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp, powsimp
+from sympy.simplify import powdenest
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
@@ -28,6 +30,11 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+
+
+def _ispow(e):
+    """Return True if e is a Pow or is exp."""
+    return isinstance(e, Expr) and (e.is_Pow or e.func is exp)
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -136,6 +143,40 @@ def _invert_real(f, g_ys, symbol):
         g, h = f.as_independent(symbol)
         if g is not S.Zero:
             return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
+        else:
+            if len(f.args) == 2 and \
+                not f.is_polynomial(symbol):
+                lhs = f
+                rhs = FiniteSet(0)
+                a, b = ordered(f.args)
+                ai, ad = a.as_independent(symbol)
+                bi, bd = b.as_independent(symbol)
+                if any(_ispow(i) for i in (ad, bd)):
+                    a_base, a_exp = ad.as_base_exp()
+                    b_base, b_exp = bd.as_base_exp()
+                    if a_base == b_base:
+                        # a = -b
+                        lhs = powsimp(powdenest(ad/bd))
+                        rhs = -bi/ai
+                    else:
+                        rat = ad/bd
+                        _lhs = powsimp(ad/bd)
+                        if _lhs != rat:
+                            lhs = _lhs
+                            rhs = -bi/ai
+                if ai*bi is S.NegativeOne:
+                    if all(
+                            isinstance(i, Function) for i in (ad, bd)) and \
+                            ad.func == bd.func and len(ad.args) == len(bd.args):
+                        if len(ad.args) == 1:
+                            lhs = ad.args[0] - bd.args[0]
+                        else:
+                            # should be able to solve
+                            # f(x, y) == f(2, 3) -> x == 2
+                            # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
+                            raise NotImplementedError('equal function with more than 1 argument')
+                if lhs is not f:
+                    return _invert_real(lhs - rhs, imageset(Lambda(n, n ), g_ys), symbol)
 
     if f.is_Mul:
         # f = g*h
