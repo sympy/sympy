@@ -210,9 +210,10 @@ class subfactorial(CombinatorialFunction):
         !n = {  0                             for n = 1
              |  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
               `
-    recurrence can be reduced to 
+    recurrence can be reduced to
 
-    !n = n*( !(n-1) ) + (-1)**n
+    !n = n*(!(n-1)) + (-1)**n
+    function uses this recurrence(iterative)
 
     It can also be written as int(round(n!/exp(1))).
 
