@@ -17,15 +17,15 @@ class Probability(Expr):
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
         if condition is None:
-            obj = Expr.__new__(cls, prob, **kwargs)
+            obj = Expr.__new__(cls, prob)
         else:
             condition = _sympify(condition)
-            obj = Expr.__new__(cls, prob, condition, **kwargs)
+            obj = Expr.__new__(cls, prob, condition)
         obj._condition = condition
         return obj
 
     def doit(self, **kwargs):
-        return probability(self.args[0], given_condition=self._condition)
+        return probability(self.args[0], given_condition=self._condition, **kwargs)
 
 
 class Expectation(Expr):
@@ -35,15 +35,15 @@ class Expectation(Expr):
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
         if condition is None:
-            obj = Expr.__new__(cls, expr, **kwargs)
+            obj = Expr.__new__(cls, expr)
         else:
             condition = _sympify(condition)
-            obj = Expr.__new__(cls, expr, condition, **kwargs)
+            obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
         return obj
 
     def doit(self, **kwargs):
-        return expectation(self.args[0], condition=self._condition)
+        return expectation(self.args[0], condition=self._condition, **kwargs)
 
 
 class Variance(Expr):
@@ -54,21 +54,24 @@ class Variance(Expr):
         arg = _sympify(arg)
         if not kwargs.pop('evaluate', global_evaluate[0]):
             if condition is None:
-                obj = Expr.__new__(cls, arg, **kwargs)
+                obj = Expr.__new__(cls, arg)
             else:
                 condition = _sympify(condition)
-                obj = Expr.__new__(cls, arg, condition, **kwargs)
+                obj = Expr.__new__(cls, arg, condition)
             obj._condition = condition
             return obj
 
         if not arg.has(RandomSymbol):
             return S.Zero
 
+        if condition is not None:
+            condition = _sympify(condition)
+
         if isinstance(arg, RandomSymbol):
             if condition is None:
-                obj = Expr.__new__(cls, arg, **kwargs)
+                obj = Expr.__new__(cls, arg)
             else:
-                obj = Expr.__new__(cls, arg, _sympify(condition), **kwargs)
+                obj = Expr.__new__(cls, arg, condition)
             obj._condition = condition
             return obj
         elif isinstance(arg, Add):
@@ -91,9 +94,9 @@ class Variance(Expr):
             if len(rv) == 0:
                 return S.Zero
             if condition is None:
-                obj = Expr.__new__(cls, Mul(*rv), **kwargs)
+                obj = Expr.__new__(cls, Mul(*rv))
             else:
-                obj = Expr.__new__(cls, Mul(*rv), condition, **kwargs)
+                obj = Expr.__new__(cls, Mul(*rv), condition)
             obj._condition = condition
             return Mul(*nonrv)*obj
 
@@ -113,10 +116,10 @@ class Covariance(Expr):
 
         if not kwargs.pop('evaluate', global_evaluate[0]):
             if condition is None:
-                obj = Expr.__new__(cls, arg1, arg2, **kwargs)
+                obj = Expr.__new__(cls, arg1, arg2)
             else:
                 condition = _sympify(condition)
-                obj = Expr.__new__(cls, arg1, arg2, condition, **kwargs)
+                obj = Expr.__new__(cls, arg1, arg2, condition)
             obj._condition = condition
             return obj
 
@@ -134,7 +137,7 @@ class Covariance(Expr):
         arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
 
         if isinstance(arg1, RandomSymbol) and isinstance(arg2, RandomSymbol):
-            return Expr.__new__(cls, arg1, arg2, **kwargs)
+            return Expr.__new__(cls, arg1, arg2)
 
         coeff_rv_list1 = cls._expand_single_argument(arg1.expand())
         coeff_rv_list2 = cls._expand_single_argument(arg2.expand())
