@@ -52,7 +52,7 @@ represent the constraint forces in those directions. ::
 
   >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
   ...           u_auxiliary=[u4, u5, u6])
-  >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+  >>> (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
   >>> rhs = MM.inv() * forcing

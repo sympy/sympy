@@ -7,7 +7,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -651,3 +651,13 @@ def test_Min_Max():
     # see gh-10375
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
+
+def test_Indexed():
+    # Issue #10934
+    if not numpy:
+        skip("numpy not installed")
+
+    a = IndexedBase('a')
+    i, j = symbols('i j')
+    b = numpy.array([[1, 2], [3, 4]])
+    assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
