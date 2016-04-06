@@ -330,6 +330,9 @@ install:
     fi
 script:
   - bin/test_travis.sh
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      bin/coverage_report.py;
+    fi
 #  - if [[ "${TEST_SPHINX}" == "true" ]]; then
 #      bin/deploy_doc.sh;
 #    fi
