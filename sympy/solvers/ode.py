@@ -252,7 +252,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import (Poly, RootOf, CRootOf, rootof, terms_gcd,
+from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm)
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
@@ -1784,9 +1784,11 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
         return 'type3'
     r1 = eq[0].match(diff(x(t),t) - f)
     r2 = eq[1].match(diff(y(t),t) - g)
-    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    num, den = (
+        (r1[f].subs(x(t),u).subs(y(t),v))/
+        (r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
     R1 = num.match(f1*g1)
-    R2 = denum.match(f2*g2)
+    R2 = den.match(f2*g2)
     phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
     if R1 and R2:
         return 'type4'
@@ -1947,27 +1949,27 @@ def checksysodesol(eqs, sols, func=None):
                 funcs.append(func_)
         funcs = list(set(funcs))
     if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
-    and len(set([func.args for func in funcs]))!=1:
+    and len({func.args for func in funcs})!=1:
         raise ValueError("func must be a function of one variable, not %s" % func)
     for sol in sols:
         if len(sol.atoms(AppliedUndef)) != 1:
             raise ValueError("solutions should have one function only")
-    if len(funcs) != len(set([sol.lhs for sol in sols])):
+    if len(funcs) != len({sol.lhs for sol in sols}):
         raise ValueError("number of solutions provided does not match the number of equations")
     t = funcs[0].args[0]
     dictsol = dict()
     for sol in sols:
-        sol_func = list(sol.atoms(AppliedUndef))[0]
-        if not (sol.lhs == sol_func and not sol.rhs.has(sol_func)) and not (\
-        sol.rhs == sol_func and not sol.lhs.has(sol_func)):
-            solved = solve(sol, sol_func)
-            if not solved:
+        func = list(sol.atoms(AppliedUndef))[0]
+        if sol.rhs == func:
+            sol = sol.reversed
+        solved = sol.lhs == func and not sol.rhs.has(func)
+        if not solved:
+            rhs = solve(sol, func)
+            if not rhs:
                 raise NotImplementedError
-            dictsol[sol_func] = solved
-        if sol.lhs == sol_func:
-            dictsol[sol_func] = sol.rhs
-        if sol.rhs == sol_func:
-            dictsol[sol_func] = sol.lhs
+        else:
+            rhs = sol.rhs
+        dictsol[func] = rhs
     checkeq = []
     for eq in eqs:
         for func in funcs:
@@ -2113,7 +2115,8 @@ def odesimp(eq, func, order, constants, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solve(eq, func, force=True)
+            floats = any(i.is_Float for i in eq.atoms(Number))
+            eqsol = solve(eq, func, force=True, rational=False if floats else None)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
@@ -2240,15 +2243,13 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         order = ode_order(ode, func)
     solved = sol.lhs == func and not sol.rhs.has(func)
     if solve_for_func and not solved:
-        solved = solve(sol, func)
-        if solved:
-            if len(solved) == 1:
-                result = checkodesol(ode, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
-            else:
-                result = checkodesol(ode, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
-            return result
+        rhs = solve(sol, func)
+        if rhs:
+            eqs = [Eq(func, t) for t in rhs]
+            if len(rhs) == 1:
+                eqs = eqs[0]
+            return checkodesol(ode, eqs, order=order,
+                solve_for_func=False)
 
     s = True
     testnum = 0
@@ -2518,7 +2519,7 @@ def _get_constant_subexpressions(expr, Cs):
     return Ces
 
 def __remove_linear_redundancies(expr, Cs):
-    cnts = dict([(i, expr.count(i)) for i in Cs])
+    cnts = {i: expr.count(i) for i in Cs}
     Cs = [i for i in Cs if cnts[i] > 0]
 
     def _linear(expr):
@@ -3558,8 +3559,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     seriesdict = {}
     recurr = Function("r")
 
-    # Generating the recurrence relation which works this way
-    # a] For the second order term the summation begins at n = 2. The coefficients
+    # Generating the recurrence relation which works this way:
+    # for the second order term the summation begins at n = 2. The coefficients
     # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
     # the exponent of x becomes n.
     # For example, if p is x, then the second degree recurrence term is
@@ -3635,8 +3636,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     # Checking how many values are already present
     tcounter = len([t for t in finaldict.values() if t])
 
-    for count in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
-    #while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
+    for _ in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
         check = rhs.subs(n, startiter)
         nlhs = lhs.subs(n, startiter)
         nrhs = check.subs(finaldict)
@@ -3863,8 +3863,8 @@ def _nth_linear_match(eq, func, order):
 
     """
     x = func.args[0]
-    one_x = set([x])
-    terms = dict([(i, S.Zero) for i in range(-1, order + 1)])
+    one_x = {x}
+    terms = {i: S.Zero for i in range(-1, order + 1)}
     for i in Add.make_args(eq):
         if not i.has(func):
             terms[-1] += i
@@ -4265,7 +4265,7 @@ def _linear_coeff_match(expr, func):
         if eq is a*x + b*f(x) + c, else None.
         '''
         eq = _mexpand(eq)
-        c = eq.as_independent(x, f(x), as_Add = True)[0]
+        c = eq.as_independent(x, f(x), as_Add=True)[0]
         if not c.is_Rational:
             return
         a = eq.coeff(x)
@@ -4296,7 +4296,7 @@ def _linear_coeff_match(expr, func):
                     return a1, b1, c1, a2, b2, c2, d
 
     m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-         len(fi.args) == 1 and not fi.args[0].is_Function] or set([expr])
+         len(fi.args) == 1 and not fi.args[0].is_Function] or {expr}
     m1 = match(m.pop())
     if m1 and all(match(mi) == m1 for mi in m):
         a1, b1, c1, a2, b2, c2, denom = m1
@@ -4812,7 +4812,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
 
-    eqs = expand_mul(eqs)
+    eqs = _mexpand(eqs)
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
@@ -4946,7 +4946,7 @@ def _undetermined_coefficients_match(expr, x):
                     exprs = exprs.union(_get_trial_set(term, x, exprs))
         else:
             term = _remove_coefficient(expr, x)
-            tmpset = exprs.union(set([term]))
+            tmpset = exprs.union({term})
             oldset = set([])
             while tmpset != oldset:
                 # If you get stuck in this loop, then _test_term is probably
@@ -5845,7 +5845,7 @@ def lie_heuristic_bivariate(match, comp=False):
             if pden.is_polynomial(x, y) and pden.is_Add:
                 polyy = Poly(pden, x, y).as_dict()
             if polyy:
-                symset = xieq.free_symbols.union(etaeq.free_symbols) - set([x, y])
+                symset = xieq.free_symbols.union(etaeq.free_symbols) - {x, y}
                 soldict = solve(polyy.values(), *symset)
                 if isinstance(soldict, list):
                     soldict = soldict[0]
@@ -5912,7 +5912,7 @@ def lie_heuristic_chi(match, comp=False):
             if cnum.is_polynomial(x, y) and cnum.is_Add:
                 cpoly = Poly(cnum, x, y).as_dict()
                 if cpoly:
-                    solsyms = chieq.free_symbols - set([x, y])
+                    solsyms = chieq.free_symbols - {x, y}
                     soldict = solve(cpoly.values(), *solsyms)
                     if isinstance(soldict, list):
                         soldict = soldict[0]
@@ -6800,10 +6800,10 @@ def sysode_linear_2eq_order2(match_):
     r = dict()
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
-        eqs = 0
+        eqs = []
         for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],2]
-        eq[i] = eqs
+            eqs.append(terms/fc[i,func[i],2])
+        eq[i] = Add(*eqs)
     # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
     # and Eq(a2*diff(y(t),t,t), a2*diff(x(t),t)+b2*diff(y(t),t)+c2*x(t)+d2*y(t)+e2)
     r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
@@ -7184,14 +7184,16 @@ def _linear_2eq_order2_type6(x, y, t, r, eq):
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
     z = Function('z')
-    num, denum = cancel((r['c1']*x(t) + r['d1']*y(t))/(r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
+    num, den = cancel(
+        (r['c1']*x(t) + r['d1']*y(t))/
+        (r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
     f = r['c1']/num.coeff(x(t))
     a1 = num.coeff(x(t))
     b1 = num.coeff(y(t))
-    a2 = denum.coeff(x(t))
-    b2 = denum.coeff(y(t))
+    a2 = den.coeff(x(t))
+    b2 = den.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
+    k1, k2 = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
     z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
@@ -7229,12 +7231,14 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
     k = Symbol('k')
-    num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
+    num, den = cancel(
+        (r['a1']*x(t) + r['b1']*y(t))/
+        (r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
     f = r['a1']/num.coeff(x(t))
     a1 = num.coeff(x(t))
     b1 = num.coeff(y(t))
-    a2 = denum.coeff(x(t))
-    b2 = denum.coeff(y(t))
+    a2 = den.coeff(x(t))
+    b2 = den.coeff(y(t))
     chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
     [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
     F = Integral(f, t)
@@ -7283,10 +7287,10 @@ def _linear_2eq_order2_type8(x, y, t, r, eq):
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
+    num, den = cancel(r['d1']/r['c2']).as_numer_denom()
     f = -r['d1']/num
     a = num
-    b = denum
+    b = den
     mul = sqrt(abs(a*b))
     Igral = Integral(t*f, t)
     if a*b > 0:
@@ -7386,8 +7390,8 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
     q = Wild('q', exclude=[t, t**2])
     s = Wild('s', exclude=[t, t**2])
     n = Wild('n', exclude=[t, t**2])
-    num, denum = r['c1'].as_numer_denom()
-    dic = denum.match((n*(p*t**2+q*t+s)**2).expand())
+    num, den = r['c1'].as_numer_denom()
+    dic = den.match((n*(p*t**2+q*t+s)**2).expand())
     eqz = dic[p]*t**2 + dic[q]*t + dic[s]
     a = num/dic[n]
     b = cancel(r['d1']*eqz**2)
@@ -7456,21 +7460,10 @@ def sysode_linear_3eq_order1(match_):
     r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
     r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
     r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    forcing = [S(0), S(0), S(0)]
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                forcing[i] += j
-    if not (forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t)):
-        # We can handle homogeneous case and simple constant forcings
-        r['d1'] = -forcing[0]
-        r['d2'] = -forcing[1]
-        r['d3'] = -forcing[2]
-    else:
-        # Issue #9244: nonhomogeneous linear systems are not supported
-        raise NotImplementedError("Only homogeneous problems are supported" +
-                                  " (and constant inhomogeneity)")
-
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':
@@ -7938,9 +7931,11 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     g2 = Wild('g2', exclude=[u,t])
     r1 = eq[0].match(diff(x(t),t) - f)
     r2 = eq[1].match(diff(y(t),t) - g)
-    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    num, den = (
+        (r1[f].subs(x(t),u).subs(y(t),v))/
+        (r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
     R1 = num.match(f1*g1)
-    R2 = denum.match(f2*g2)
+    R2 = den.match(f2*g2)
     phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
     F1 = R1[f1]; F2 = R2[f2]
     G1 = R1[g1]; G2 = R2[g2]
@@ -8000,7 +7995,7 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
                 [r1, r2] = check_type(y, x)
                 x, y = y, x
     x1 = diff(x(t),t); y1 = diff(y(t),t)
-    return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])
+    return {Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))}
 
 def sysode_nonlinear_3eq_order1(match_):
     x = match_['func'][0].func

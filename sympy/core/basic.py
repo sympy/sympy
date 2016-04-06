@@ -1,5 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
+from collections import Mapping
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -703,7 +704,7 @@ class Basic(with_metaclass(ManagedProperties)):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -833,7 +834,7 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
-            elif isinstance(sequence, (Dict, dict)):
+            elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
@@ -849,15 +850,20 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i in range(len(sequence)):
-            o, n = sequence[i]
-            so, sn = sympify(o), sympify(n)
-            if not isinstance(so, Basic):
-                if type(o) is str:
-                    so = Symbol(o)
-            sequence[i] = (so, sn)
-            if _aresame(so, sn):
-                sequence[i] = None
-                continue
+            s = list(sequence[i])
+            for j, si in enumerate(s):
+                try:
+                    si = sympify(si, strict=True)
+                except SympifyError:
+                    if type(si) is str:
+                        si = Symbol(si)
+                    else:
+                        # if it can't be sympified, skip it
+                        sequence[i] = None
+                        break
+                s[j] = si
+            else:
+                sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -1385,8 +1391,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # restore subexpressions in mapping
                 for o, n in mask:
                     r = {o: n}
-                    mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.items()])
+                    mapping = {k.xreplace(r): v.xreplace(r)
+                        for k, v in mapping.items()}
             return rv, mapping
 
     def find(self, query, group=False):
@@ -1635,7 +1641,6 @@ class Atom(Basic):
 
     @cacheit
     def sort_key(self, order=None):
-        from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def _eval_simplify(self, ratio, measure):
@@ -1711,7 +1716,7 @@ def _atomic(e):
     try:
         free = e.free_symbols
     except AttributeError:
-        return set([e])
+        return {e}
     atoms = set()
     for p in pot:
         if p in seen:

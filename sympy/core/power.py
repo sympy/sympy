@@ -220,16 +220,17 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
-    def _eval_refine(self):
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask, Q
         b, e = self.as_base_exp()
-        if e.is_integer and _coeff_isneg(b):
-            if e.is_even:
+        if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
+            if ask(Q.even(e), assumptions):
                 return Pow(-b, e)
-            elif e.is_odd:
+            elif ask(Q.odd(e), assumptions):
                 return -Pow(-b, e)
 
     def _eval_power(self, other):
-        from sympy import Abs, arg, exp, floor, im, log, re, sign, refine
+        from sympy import Abs, arg, exp, floor, im, log, re, sign
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
@@ -273,9 +274,9 @@ class Pow(Expr):
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
                     if b.is_real:
-                        b = refine(abs(b))
+                        b = abs(b)
                     if b.is_imaginary:
-                        b = refine(abs(im(b)))*S.ImaginaryUnit
+                        b = abs(im(b))*S.ImaginaryUnit
 
                 if (abs(e) < 1) == True or (e == 1) == True:
                     s = 1  # floor = 0
@@ -563,6 +564,12 @@ class Pow(Expr):
 
         if old == self.base:
             return new**self.exp._subs(old, new)
+
+        # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
+        if old.func is self.func and self.exp == old.exp:
+            l = log(self.base, old.base)
+            if l.is_Number:
+                return Pow(new, l)
 
         if old.func is self.func and self.base == old.base:
             if self.exp.is_Add is False:
@@ -1027,6 +1034,8 @@ class Pow(Expr):
         if self.base.is_zero or (self.base - 1).is_zero:
             return True
         elif self.exp.is_rational:
+            if self.base.is_algebraic is False:
+                return self.exp.is_nonzero
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
@@ -1193,7 +1202,7 @@ class Pow(Expr):
                     dn = 0
 
                 terms = [1/prefactor]
-                for m in range(1, ceiling((n - dn)/l*cf)):
+                for m in range(1, ceiling((n - dn + 1)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -1357,7 +1366,7 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1401,8 +1410,8 @@ class Pow(Expr):
         """
 
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive(radical=radical))
-        ce, pe = e.as_content_primitive(radical=radical)
+        b = _keep_coeff(*b.as_content_primitive(radical=radical, clear=clear))
+        ce, pe = e.as_content_primitive(radical=radical, clear=clear)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -1426,7 +1435,7 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive(radical=radical)  # h is positive
+            h, t = b.as_content_primitive(radical=radical, clear=clear)  # h is positive
             c, m = self.func(h, e).as_coeff_Mul()  # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true

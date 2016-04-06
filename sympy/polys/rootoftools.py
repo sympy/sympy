@@ -34,7 +34,6 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import range
-from sympy.core.decorators import deprecated
 
 from math import log as mathlog
 

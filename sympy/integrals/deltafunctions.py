@@ -104,7 +104,7 @@ def deltaintegrate(f, x):
 
       First we expand it.
 
-      If the expansion did work, the we try to integrate the expansion.
+      If the expansion did work, then we try to integrate the expansion.
 
       If not, we try to extract a simple DiracDelta term, then we have two
       cases:

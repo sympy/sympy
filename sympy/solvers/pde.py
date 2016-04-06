@@ -34,10 +34,10 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement
 from sympy.simplify import simplify
 from sympy.core import Add, S
-from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence, range)
+from sympy.core.compatibility import (reduce, is_sequence, range)
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
@@ -59,6 +59,7 @@ allhints = (
     "1st_linear_constant_coeff_Integral",
     "1st_linear_variable_coeff"
     )
+
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     """
@@ -196,10 +197,11 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return _helper_simplify(eq, hints['hint'],
             hints['func'], hints['order'], hints[hints['hint']], solvefun)
 
+
 def _helper_simplify(eq, hint, func, order, match, solvefun):
     """Helper function of pdsolve that calls the respective
     pde functions to solve for the partial differential
-    equations. This minimises the computation in
+    equations. This minimizes the computation in
     calling _desolve multiple times.
     """
 
@@ -210,6 +212,7 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
         solvefunc = globals()["pde_" + hint]
     return _handle_Integral(solvefunc(eq, func, order,
         match, solvefun), func, order, hint)
+
 
 def _handle_Integral(expr, func, order, hint):
     r"""
@@ -387,6 +390,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     else:
         return tuple(retlist)
 
+
 def checkpdesol(pde, sol, func=None, solve_for_func=True):
     """
     Checks if the given solution satisfies the partial differential
@@ -480,6 +484,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         Unable to test if %s is a solution to %s.''' % (sol, pde)))
 
 
+
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     r"""
     Solves a first order linear homogeneous
@@ -548,6 +553,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     c = match[match['c']]
     d = match[match['d']]
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+
 
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
@@ -652,6 +658,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     return Eq(f(x,y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
+
 def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     r"""
     Solves a first order linear partial differential equation
@@ -745,7 +752,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         # The PDE reduces to b*(u.diff(x)) + d*u = e, which is a linear ODE in x
         plode = f(x).diff(x)*b + d*f(x) - e
         sol = dsolve(plode, f(x))
-        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
         return Eq(f(x, y), rhs)
 
@@ -754,7 +761,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         # The PDE reduces to c*(u.diff(y)) + d*u = e, which is a linear ODE in y
         plode = f(y).diff(y)*c + d*f(y) - e
         sol = dsolve(plode, f(y))
-        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
         return Eq(f(x, y), rhs)
 
@@ -763,7 +770,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     sol = dsolve(dummy(x).diff(x) - h, dummy(x))
     if isinstance(sol, list):
         sol = sol[0]
-    solsym = sol.free_symbols - h.free_symbols - set([x, y])
+    solsym = sol.free_symbols - h.free_symbols - {x, y}
     if len(solsym) == 1:
         solsym = solsym.pop()
         etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
@@ -772,13 +779,14 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         final = (dsolve(deq, f(x), hint='1st_linear')).rhs
         if isinstance(final, list):
             final = final[0]
-        finsyms = final.free_symbols - deq.free_symbols - set([x, y])
+        finsyms = final.free_symbols - deq.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(final, finsyms, solvefun, etat)
         return Eq(f(x, y), rhs)
 
     else:
         raise NotImplementedError("Cannot solve the partial differential equation due"
             " to inability of constantsimp")
+
 
 def _simplify_variable_coeff(sol, syms, func, funcarg):
     r"""
@@ -796,6 +804,7 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
             final = sol.subs(sym, func(funcarg))
 
     return simplify(final.subs(eta, funcarg))
+
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive

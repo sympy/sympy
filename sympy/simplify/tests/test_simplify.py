@@ -462,6 +462,11 @@ def test_simplify_float_vs_integer():
 
 
 def test_as_content_primitive():
+    assert (x/2 + y).as_content_primitive() == (S.Half, x + 2*y)
+    assert (x/2 + y).as_content_primitive(clear=False) == (S.One, x/2 + y)
+    assert (y*(x/2 + y)).as_content_primitive() == (S.Half, y*(x + 2*y))
+    assert (y*(x/2 + y)).as_content_primitive(clear=False) == (S.One, y*(x/2 + y))
+
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
@@ -630,3 +635,12 @@ def test_simplify_function_inverse():
     assert simplify(f(g(x))) == x
     assert simplify(f(g(sin(x)**2 + cos(x)**2))) == 1
     assert simplify(f(g(x, y))) == f(g(x, y))
+
+
+def test_clear_coefficients():
+    from sympy.simplify.simplify import clear_coefficients
+    assert clear_coefficients(4*y*(6*x + 3)) == (y*(2*x + 1), 0)
+    assert clear_coefficients(4*y*(6*x + 3) - 2) == (y*(2*x + 1), S(1)/6)
+    assert clear_coefficients(4*y*(6*x + 3) - 2, x) == (y*(2*x + 1), x/12 + S(1)/6)
+    assert clear_coefficients(sqrt(2) - 2) == (sqrt(2), 2)
+    assert clear_coefficients(4*sqrt(2) - 2) == (sqrt(2), S.Half)

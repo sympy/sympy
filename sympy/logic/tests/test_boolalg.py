@@ -1,3 +1,5 @@
+from __future__ import division
+
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality
@@ -346,19 +348,19 @@ def test_eliminate_implications():
 
 
 def test_conjuncts():
-    assert conjuncts(A & B & C) == set([A, B, C])
-    assert conjuncts((A | B) & C) == set([A | B, C])
-    assert conjuncts(A) == set([A])
-    assert conjuncts(True) == set([True])
-    assert conjuncts(False) == set([False])
+    assert conjuncts(A & B & C) == {A, B, C}
+    assert conjuncts((A | B) & C) == {A | B, C}
+    assert conjuncts(A) == {A}
+    assert conjuncts(True) == {True}
+    assert conjuncts(False) == {False}
 
 
 def test_disjuncts():
-    assert disjuncts(A | B | C) == set([A, B, C])
-    assert disjuncts((A | B) & C) == set([(A | B) & C])
-    assert disjuncts(A) == set([A])
-    assert disjuncts(True) == set([True])
-    assert disjuncts(False) == set([False])
+    assert disjuncts(A | B | C) == {A, B, C}
+    assert disjuncts((A | B) & C) == {(A | B) & C}
+    assert disjuncts(A) == {A}
+    assert disjuncts(True) == {True}
+    assert disjuncts(False) == {False}
 
 
 def test_distribute():
@@ -536,7 +538,7 @@ def test_true_false():
 
     assert hash(true) == hash(True)
     assert hash(false) == hash(False)
-    assert len(set([true, True])) == len(set([false, False])) == 1
+    assert len({true, True}) == len({false, False}) == 1
 
     assert isinstance(true, BooleanAtom)
     assert isinstance(false, BooleanAtom)
@@ -725,3 +727,23 @@ def test_truth_table():
     assert list(truth_table(And(x, y), [x, y], input=False)) == [False, False, False, True]
     assert list(truth_table(x | y, [x, y], input=False)) == [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == [True, True, False, True]
+
+
+def test_issue_8571():
+    x = symbols('x')
+    for t in (S.true, S.false):
+        raises(TypeError, lambda: +t)
+        raises(TypeError, lambda: -t)
+        raises(TypeError, lambda: abs(t))
+        # use int(bool(t)) to get 0 or 1
+        raises(TypeError, lambda: int(t))
+
+        for o in [S.Zero, S.One, x]:
+            for _ in range(2):
+                raises(TypeError, lambda: o + t)
+                raises(TypeError, lambda: o - t)
+                raises(TypeError, lambda: o % t)
+                raises(TypeError, lambda: o*t)
+                raises(TypeError, lambda: o/t)
+                raises(TypeError, lambda: o**t)
+                o, t = t, o  # do again in reversed order

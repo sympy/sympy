@@ -1245,7 +1245,7 @@ class PermutationGroup(Basic):
         idn = list(range(self.degree))
         order = 0
         element_list = [idn]
-        set_element_list = set([tuple(idn)])
+        set_element_list = {tuple(idn)}
         if af:
             yield idn
         else:
@@ -1306,14 +1306,14 @@ class PermutationGroup(Basic):
                     yield x._array_form
                 else:
                     yield x
-            raise StopIteration
+            return
         if len(u) == 1:
             for i in basic_orbits[0]:
                 if af:
                     yield u[0][i]._array_form
                 else:
                     yield u[0][i]
-            raise StopIteration
+            return
 
         u = list(reversed(u))
         basic_orbits = basic_orbits[::-1]
@@ -1327,7 +1327,7 @@ class PermutationGroup(Basic):
             # backtrack when finished iterating over coset
             if pos[h] >= posmax[h]:
                 if h == 0:
-                    raise StopIteration
+                    return
                 pos[h] = 0
                 h -= 1
                 stg.pop()
@@ -3215,7 +3215,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
     elif action == 'tuples':
         alpha = tuple(alpha)
         orb = [alpha]
-        used = set([alpha])
+        used = {alpha}
         for b in orb:
             for gen in gens:
                 temp = tuple([gen[x] for x in b])
@@ -3226,14 +3226,14 @@ def _orbit(degree, generators, alpha, action='tuples'):
     elif action == 'sets':
         alpha = frozenset(alpha)
         orb = [alpha]
-        used = set([alpha])
+        used = {alpha}
         for b in orb:
             for gen in gens:
                 temp = frozenset([gen[x] for x in b])
                 if temp not in used:
                     orb.append(temp)
                     used.add(temp)
-        return set([tuple(x) for x in orb])
+        return {tuple(x) for x in orb}
 
 def _orbits(degree, generators):
     """Compute the orbits of G.

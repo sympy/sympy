@@ -8,6 +8,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
+from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
@@ -564,7 +565,7 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
-        if isinstance(e, Add):
+        if precedence(e) <= PRECEDENCE["Mul"]:
             E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
@@ -584,7 +585,7 @@ class PrettyPrinter(Printer):
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
-        Lim = prettyForm(*Lim.right(E))
+        Lim = prettyForm(*Lim.right(E), binding=prettyForm.MUL)
 
         return Lim
 
@@ -1469,12 +1470,11 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if s.start is S.NegativeInfinity:
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = s.start, dots, s._last_element - s.step, s._last_element
-        elif s.stop is S.Infinity or len(s) > 4:
-            it = iter(s)
-            printset = next(it), next(it), dots, s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 
@@ -1556,8 +1556,15 @@ class PrettyPrinter(Printer):
         else:
             inn = 'in'
             _and = 'and'
+
         variables = self._print_seq(Tuple(ts.sym))
-        cond = self._print(ts.condition.as_expr())
+        try:
+            cond = self._print(ts.condition.as_expr())
+        except AttributeError:
+            cond = self._print(ts.condition)
+            if self._use_unicode:
+                cond = self._print_seq(cond, "(", ")")
+
         bar = self._print("|")
         base = self._print(ts.base_set)
 

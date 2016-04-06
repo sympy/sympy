@@ -5,11 +5,10 @@ from .compatibility import ordered
 from .expr import Expr
 from .evalf import EvalfMixin
 from .function import _coeff_isneg
-from .symbol import Symbol
 from .sympify import _sympify
 from .evaluate import global_evaluate
 
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -285,6 +284,10 @@ class Equality(Relational):
     is_Equality = True
 
     def __new__(cls, lhs, rhs=0, **options):
+        from sympy.core.add import Add
+        from sympy.core.logic import fuzzy_bool
+        from sympy.simplify.simplify import clear_coefficients
+
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
@@ -303,13 +306,49 @@ class Equality(Relational):
             # If expressions have the same structure, they must be equal.
             if lhs == rhs:
                 return S.true
+            elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+                return S.false
 
-            # If appropriate, check if the difference evaluates.  Detect
-            # incompatibility such as lhs real and rhs not real.
-            if lhs.is_complex and rhs.is_complex:
-                r = (lhs - rhs).is_zero
-                if r is not None:
-                    return _sympify(r)
+            # check finiteness
+            fin = L, R = [i.is_finite for i in (lhs, rhs)]
+            if None not in fin:
+                if L != R:
+                    return S.false
+                if L is False:
+                    return S.true
+
+            if all(isinstance(i, Expr) for i in (lhs, rhs)):
+                # see if the difference evaluates
+                dif = lhs - rhs
+                z = dif.is_zero
+                if z is not None:
+                    if z is False and dif.is_commutative:  # issue 10728
+                        return S.false
+                    if z:
+                        return S.true
+                # see if the ratio evaluates
+                n, d = dif.as_numer_denom()
+                rv = None
+                if n.is_zero:
+                    rv = d.is_nonzero
+                elif n.is_finite:
+                    if d.is_infinite:
+                        rv = S.true
+                    elif n.is_zero is False:
+                        rv = d.is_infinite
+                        if rv is None:
+                            # if the condition that makes the denominator infinite does not
+                            # make the original expression True then False can be returned
+                            l, r = clear_coefficients(d, S.Infinity)
+                            args = [_.subs(l, r) for _ in (lhs, rhs)]
+                            if args != [lhs, rhs]:
+                                rv = fuzzy_bool(Eq(*args))
+                                if rv is True:
+                                    rv = None
+                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                    rv = S.false
+                if rv is not None:
+                    return _sympify(rv)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -362,7 +401,7 @@ class Unequality(Relational):
 
         if evaluate:
             is_equal = Equality(lhs, rhs)
-            if is_equal == True or is_equal == False:
+            if isinstance(is_equal, BooleanAtom):
                 return ~is_equal
 
         return Relational.__new__(cls, lhs, rhs, **options)

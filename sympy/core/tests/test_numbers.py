@@ -241,11 +241,11 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u('-1')) is S.NegativeOne
+    assert cls(u'-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u('10')))
+    assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(long(10)))
     assert _strictly_equal(i, cls(i))
 
@@ -1097,7 +1097,7 @@ def test_Integer_factors():
     def F(i):
         return Integer(i).factors()
 
-    assert F(1) == {1: 1}
+    assert F(1) == {}
     assert F(2) == {2: 1}
     assert F(3) == {3: 1}
     assert F(4) == {2: 2}
@@ -1158,10 +1158,6 @@ def test_Rational_factors():
     assert F(2, 9) == {2: 1, 3: -2}
     assert F(2, 15) == {2: 1, 3: -1, 5: -1}
     assert F(6, 10) == {3: 1, 5: -1}
-    assert str(F(12, 1, visual=True)) == '2**2*3**1'
-    assert str(F(1, 1, visual=True)) == '1'
-    assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
-    assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
 def test_issue_4107():
@@ -1548,3 +1544,7 @@ def test_mod_inverse():
     raises(TypeError, lambda: mod_inverse(2, x))
     raises(ValueError, lambda: mod_inverse(2, S.Half))
     raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
+
+
+def test_golden_ratio_rewrite_as_sqrt():
+    assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half

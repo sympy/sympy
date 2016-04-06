@@ -15,7 +15,7 @@ from __future__ import division, print_function
 from sympy import Function, Symbol
 from sympy.solvers import solve
 from sympy.core.compatibility import (
-    is_sequence, range, string_types, ordered)
+    is_sequence, range, string_types)
 from .point import Point, Point2D
 
 
@@ -68,7 +68,7 @@ def idiff(eq, y, x, n=1):
         dep = set(y)
         y = y[0]
     elif isinstance(y, Symbol):
-        dep = set([y])
+        dep = {y}
     else:
         raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
 
@@ -410,7 +410,7 @@ def closest_points(*args):
         box.append(i)
         i += 1
 
-    return set([tuple([p[i] for i in pair]) for pair in rv])
+    return {tuple([p[i] for i in pair]) for pair in rv}
 
 
 def farthest_points(*args):
