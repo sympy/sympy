@@ -17,13 +17,18 @@ def _int_tuple(*i):
 
 
 def is_square(n, prep=True):
-    """Quickly answer whether n = a * a for some integer a.
+    """Return True if n == a * a for some integer a, else False.
+    If n is suspected of *not* being a square then this is a
+    quick method of confirming that it is not.
 
     References
     ==========
 
     [1]  http://mersenneforum.org/showpost.php?p=110896
 
+    See Also
+    ========
+    sympy.core.power.integer_nthroot
     """
     if prep:
         n = as_int(n)
