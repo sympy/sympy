@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce, range
+from sympy.core.compatibility import is_sequence, reduce, range, as_int
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
@@ -305,6 +305,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
+        arg = as_int(arg)
         self[arg] = arg
         return arg
 
@@ -443,7 +444,9 @@ class Cycle(dict):
                 for k, v in args[0].items():
                     self[k] = v
                 return
-        args = [int(a) for a in args]
+        args = [as_int(a) for a in args]
+        if any(i < 0 for i in args):
+            raise ValueError('negative integers are not allowed in a cycle.')
         if has_dups(args):
             raise ValueError('All elements must be unique in a cycle.')
         for i in range(-len(args), 0):
@@ -451,6 +454,8 @@ class Cycle(dict):
 
     @property
     def size(self):
+        if not self:
+            return 0
         return max(self.keys()) + 1
 
     def copy(self):
