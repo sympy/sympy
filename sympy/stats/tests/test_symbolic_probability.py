@@ -1,9 +1,7 @@
 from sympy import symbols, Mul
-
 from sympy.stats import Normal, Poisson, variance
-
-from sympy.sandbox.symbolic_probability import Covariance, Variance, Probability, Expectation
 from sympy.stats.rv import probability, expectation
+from sympy.stats.symbolic_probability import Covariance, Variance, Probability, Expectation
 
 
 def test_literal_probability():
