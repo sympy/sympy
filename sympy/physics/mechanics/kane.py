@@ -2,7 +2,9 @@ from __future__ import print_function, division
 
 __all__ = ['KanesMethod']
 
-from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.core.backend import zeros, Matrix, diff, eye
+from sympy import solve_linear_system_LU
+
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (Vector, ReferenceFrame, dynamicsymbols,

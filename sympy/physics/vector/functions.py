@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import (sympify, diff, sin, cos, Matrix, Symbol, integrate,
-                   trigsimp, Function, symbols)
+from sympy.core.backend import sympify, diff, sin, cos, Matrix, symbols, Function
+from sympy import (Symbol, integrate, trigsimp)
 from sympy.core.basic import S
 from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
@@ -599,7 +599,6 @@ def dynamicsymbols(names, level=0):
     Derivative(q1(t), t)
 
     """
-
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
     if iterable(esses):
@@ -609,5 +608,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
+dynamicsymbols._t = symbols('t')
 dynamicsymbols._str = '\''
