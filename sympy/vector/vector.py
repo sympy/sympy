@@ -1,11 +1,11 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol, Basic
+from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.basisdependent import BasisDependent, \
-     BasisDependentAdd, BasisDependentMul, BasisDependentZero
+from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
+                                         BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
 from sympy.core.compatibility import u
 
@@ -37,8 +37,8 @@ class Vector(BasisDependent):
         {C.i: 3, C.j: 4, C.k: 5}
 
         """
-        #The '_components' attribute is defined according to the
-        #subclass of Vector the instance belongs to.
+        # The '_components' attribute is defined according to the
+        # subclass of Vector the instance belongs to.
         return self._components
 
     def magnitude(self):
@@ -92,7 +92,7 @@ class Vector(BasisDependent):
         """
 
         from sympy.vector.functions import express
-        #Check special cases
+        # Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
                 return Vector.zero
@@ -106,16 +106,17 @@ class Vector(BasisDependent):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
-        #Check if the other is a del operator
+        # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                field = express(field, other.system, variables = True)
+                field = express(field, other.system, variables=True)
                 out = self.dot(other._i) * df(field, other._x)
                 out += self.dot(other._j) * df(field, other._y)
                 out += self.dot(other._k) * df(field, other._z)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.zero
                 return out
+
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
@@ -132,6 +133,7 @@ class Vector(BasisDependent):
 
     def __and__(self, other):
         return self.dot(other)
+
     __and__.__doc__ = dot.__doc__
 
     def cross(self, other):
@@ -165,7 +167,7 @@ class Vector(BasisDependent):
 
         """
 
-        #Check special cases
+        # Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
                 return Dyadic.zero
@@ -178,10 +180,10 @@ class Vector(BasisDependent):
         elif not isinstance(other, Vector):
             raise TypeError(str(other) + " is not a vector")
         elif (isinstance(self, VectorZero) or
-              isinstance(other, VectorZero)):
+                isinstance(other, VectorZero)):
             return Vector.zero
 
-        #Compute cross product
+        # Compute cross product
         def _det(mat):
             """This is needed as a little method for to find the determinant
             of a list in python.
@@ -191,10 +193,11 @@ class Vector(BasisDependent):
             """
 
             return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] *
-                                 mat[2][1])
-                    + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
-                    mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
-                    mat[1][1] * mat[2][0]))
+                                 mat[2][1]) +
+                    mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
+                                 mat[2][2]) +
+                    mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] *
+                                 mat[2][0]))
 
         outvec = Vector.zero
         for system, vect in other.separate().items():
@@ -210,6 +213,7 @@ class Vector(BasisDependent):
 
     def __xor__(self, other):
         return self.cross(other)
+
     __xor__.__doc__ = cross.__doc__
 
     def outer(self, other):
@@ -234,19 +238,19 @@ class Vector(BasisDependent):
 
         """
 
-        #Handle the special cases
+        # Handle the special cases
         if not isinstance(other, Vector):
             raise TypeError("Invalid operand for outer product")
         elif (isinstance(self, VectorZero) or
-              isinstance(other, VectorZero)):
+                isinstance(other, VectorZero)):
             return Dyadic.zero
 
-        #Iterate over components of both the vectors to generate
-        #the required Dyadic instance
+        # Iterate over components of both the vectors to generate
+        # the required Dyadic instance
         args = []
         for k1, v1 in self.components.items():
             for k2, v2 in other.components.items():
-                args.append((v1*v2) * BaseDyadic(k1, k2))
+                args.append((v1 * v2) * BaseDyadic(k1, k2))
 
         return DyadicAdd(*args)
 
@@ -279,6 +283,7 @@ class Vector(BasisDependent):
 
     def __or__(self, other):
         return self.outer(other)
+
     __or__.__doc__ = outer.__doc__
 
     def to_matrix(self, system):
@@ -333,7 +338,7 @@ class Vector(BasisDependent):
         parts = {}
         for vect, measure in self.components.items():
             parts[vect.system] = (parts.get(vect.system, Vector.zero) +
-                                  vect*measure)
+                                  vect * measure)
         return parts
 
 
@@ -346,16 +351,16 @@ class BaseVector(Vector, AtomicExpr):
         name = str(name)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
-        #Verify arguments
-        if not index in range(0, 3):
+        # Verify arguments
+        if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(system, CoordSysCartesian):
             raise TypeError("system should be a CoordSysCartesian")
-        #Initialize an object
+        # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
                                              system, Symbol(pretty_str),
                                              Symbol(latex_str))
-        #Assign important attributes
+        # Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
@@ -364,13 +369,12 @@ class BaseVector(Vector, AtomicExpr):
         obj._latex_form = latex_str
         obj._system = system
 
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
 
-        #This attr is used for re-expression to one of the systems
-        #involved in the definition of the Vector. Applies to
-        #VectorMul and VectorAdd too.
+        # This attr is used for re-expression to one of the systems
+        # involved in the definition of the Vector. Applies to
+        # VectorMul and VectorAdd too.
         obj._sys = system
 
         return obj
@@ -384,7 +388,7 @@ class BaseVector(Vector, AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     __repr__ = __str__
     _sympystr = __str__
@@ -402,12 +406,12 @@ class VectorAdd(BasisDependentAdd, Vector):
     def __str__(self, printer=None):
         ret_str = ''
         items = list(self.separate().items())
-        items.sort(key = lambda x: x[0].__str__())
+        items.sort(key=lambda x: x[0].__str__())
         for system, vect in items:
             base_vects = system.base_vectors()
             for x in base_vects:
                 if x in vect.components:
-                    temp_vect = self.components[x]*x
+                    temp_vect = self.components[x] * x
                     ret_str += temp_vect.__str__(printer) + " + "
         return ret_str[:-3]
 
@@ -443,7 +447,7 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u('0')
+    _pretty_form = u'0'
     _latex_form = '\mathbf{\hat{0}}'
 
     def __new__(cls):

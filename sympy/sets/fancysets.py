@@ -1,16 +1,15 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And
-from sympy.core import oo
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
-from sympy.core.singleton import Singleton, S, sympify
-from sympy.core.sympify import _sympify, converter
+                             FiniteSet, imageset)
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.singleton import Singleton, S
+from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.function import Lambda
 from sympy.utilities.misc import filldedent, func_name
-
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -154,7 +153,6 @@ class Integers(with_metaclass(Singleton, Set)):
         return self
 
     def _eval_imageset(self, f):
-        from sympy import Wild
         expr = f.expr
         if len(f.variables) > 1:
             return
@@ -188,7 +186,15 @@ class Reals(with_metaclass(Singleton, Interval)):
 
 class ImageSet(Set):
     """
-    Image of a set under a mathematical function
+    Image of a set under a mathematical function. The transformation
+    must be given as a Lambda function which has as many arguments
+    as the elements of the set upon which it operates, e.g. 1 argument
+    when acting on the set of integers or 2 arguments when acting on
+    a complex region.
+
+    This function is not normally called directly, but is called
+    from `imageset`.
+
 
     Examples
     ========
@@ -213,8 +219,19 @@ class ImageSet(Set):
     4
     9
     16
+
+    See Also
+    ========
+    sympy.sets.sets.imageset
     """
     def __new__(cls, lamda, base_set):
+        if not isinstance(lamda, Lambda):
+            raise ValueError('first argument must be a Lambda')
+        if lamda is S.IdentityFunction:
+            return base_set
+        if not lamda.expr.free_symbols or not lamda.expr.args:
+            return FiniteSet(lamda.expr)
+
         return Basic.__new__(cls, lamda, base_set)
 
     lamda = property(lambda self: self.args[0])
@@ -234,15 +251,51 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
+        from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.utilities.iterables import iterable, cartes
         L = self.lamda
         if self._is_multivariate():
-            solns = list(linsolve([expr - val for val, expr in
-            zip(other, L.expr)], L.variables).args[0])
+            if not iterable(L.expr):
+                if iterable(other):
+                    return S.false
+                return other.as_numer_denom() in self.func(
+                    Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
+            if len(L.expr) != len(self.lamda.variables):
+                raise NotImplementedError(filldedent('''
+    Dimensions of input and output of Lambda are different.'''))
+            eqs = [expr - val for val, expr in zip(other, L.expr)]
+            variables = L.variables
+            free = set(variables)
+            if all(i.is_number for i in list(Matrix(eqs).jacobian(variables))):
+                solns = list(linsolve([e - val for e, val in
+                zip(L.expr, other)], variables))
+            else:
+                syms = [e.free_symbols & free for e in eqs]
+                solns = {}
+                for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
+                    if not s:
+                        if e != v:
+                            return S.false
+                        solns[vars[i]] = [v]
+                        continue
+                    elif len(s) == 1:
+                        sy = s.pop()
+                        sol = solveset(e, sy)
+                        if sol is S.EmptySet:
+                            return S.false
+                        elif isinstance(sol, FiniteSet):
+                            solns[sy] = list(sol)
+                        else:
+                            raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+                solns = cartes(*[solns[s] for s in variables])
         else:
-            solnsSet = solveset(L.expr-other, L.variables[0])
+            # assume scalar -> scalar mapping
+            solnsSet = solveset(L.expr - other, L.variables[0])
             if solnsSet.is_FiniteSet:
-                solns = list(solveset(L.expr - other, L.variables[0]))
+                solns = list(solnsSet)
             else:
                 raise NotImplementedError(filldedent('''
                 Determining whether an ImageSet contains %s has not
@@ -260,9 +313,7 @@ class ImageSet(Set):
         return self.base_set.is_iterable
 
     def _intersect(self, other):
-        from sympy import Dummy
         from sympy.solvers.diophantine import diophantine
-        from sympy.sets.sets import imageset
         if self.base_set is S.Integers:
             if isinstance(other, ImageSet) and other.base_set is S.Integers:
                 f, g = self.lamda.expr, other.lamda.expr
@@ -308,20 +359,63 @@ class ImageSet(Set):
 
 class Range(Set):
     """
-    Represents a range of integers.
+    Represents a range of integers. Can be called as Range(stop),
+    Range(start, stop), or Range(start, stop, step); when stop is
+    not given it defaults to 1.
 
-    Examples
-    ========
+    `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
+    (juse as for Python ranges) is not included in the Range values.
 
-    >>> from sympy import Range
-    >>> list(Range(5)) # 0 to 5
-    [0, 1, 2, 3, 4]
-    >>> list(Range(10, 15)) # 10 to 15
-    [10, 11, 12, 13, 14]
-    >>> list(Range(10, 20, 2)) # 10 to 20 in steps of 2
-    [10, 12, 14, 16, 18]
-    >>> list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2
-    [12, 14, 16, 18, 20]
+        >>> from sympy import Range
+        >>> list(Range(3))
+        [0, 1, 2]
+
+    The step can also be negative:
+
+        >>> list(Range(10, 0, -2))
+        [10, 8, 6, 4, 2]
+
+    The stop value is made canonical so equivalent ranges always
+    have the same args:
+
+        >>> Range(0, 10, 3)
+        Range(0, 12, 3)
+
+    Infinite ranges are allowed. If the starting point is infinite,
+    then the final value is ``stop - step``. To iterate such a range,
+    it needs to be reversed:
+
+        >>> from sympy import oo
+        >>> r = Range(-oo, 1)
+        >>> r[-1]
+        0
+        >>> next(iter(r))
+        Traceback (most recent call last):
+        ...
+        ValueError: Cannot iterate over Range with infinite start
+        >>> next(iter(r.reversed))
+        0
+
+    Although Range is a set (and supports the normal set
+    operations) it maintains the order of the elements and can
+    be used in contexts where `range` would be used.
+
+        >>> from sympy import Interval
+        >>> Range(0, 10, 2).intersect(Interval(3, 7))
+        Range(4, 8, 2)
+        >>> list(_)
+        [4, 6]
+
+    Athough slicing of a Range will always return a Range -- possibly
+    empty -- an empty set will be returned from any intersection that
+    is empty:
+
+        >>> Range(3)[:0]
+        Range(0, 0, 1)
+        >>> Range(3).intersect(Interval(4, oo))
+        EmptySet()
+        >>> Range(3).intersect(Range(4, oo))
+        EmptySet()
 
     """
 
@@ -335,122 +429,401 @@ class Range(Set):
 
         # expand range
         slc = slice(*args)
+
+        if slc.step == 0:
+            raise ValueError("step cannot be 0")
+
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else sympify(as_int(w))
-                                 for w in (start, stop, step)]
+            start, stop, step = [
+                w if w in [S.NegativeInfinity, S.Infinity]
+                else sympify(as_int(w))
+                for w in (start, stop, step)]
         except ValueError:
-            raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use ImageSets of Ranges for other cases")
+            raise ValueError(filldedent('''
+    Finite arguments to Range must be integers; `imageset` can define
+    other cases, e.g. use `imageset(i, i/10, Range(3))` to give
+    [0, 1/10, 1/5].'''))
 
-        if not step.is_finite:
-            raise ValueError("Infinite step is not allowed")
-        if start == stop:
-            return S.EmptySet
+        if not step.is_Integer:
+            raise ValueError(filldedent('''
+    Ranges must have a literal integer step.'''))
 
-        n = ceiling((stop - start)/step)
-        if n <= 0:
-            return S.EmptySet
+        if all(i.is_infinite for i in  (start, stop)):
+            if start == stop:
+                # canonical null handled below
+                start = stop = S.One
+            else:
+                raise ValueError(filldedent('''
+    Either the start or end value of the Range must be finite.'''))
 
-        # normalize args: regardless of how they are entered they will show
-        # canonically as Range(inf, sup, step) with step > 0
-        if n.is_finite:
-            start, stop = sorted((start, start + (n - 1)*step))
+        if start.is_infinite:
+            end = stop
         else:
-            start, stop = sorted((start, stop - step))
-
-        step = abs(step)
-        if (start, stop) == (S.NegativeInfinity, S.Infinity):
-            raise ValueError("Both the start and end value of "
-                             "Range cannot be unbounded")
-        else:
-            return Basic.__new__(cls, start, stop + step, step)
+            ref = start if start.is_finite else stop
+            n = ceiling((stop - ref)/step)
+            if n <= 0:
+                # null Range
+                start = end = 0
+                step = 1
+            else:
+                end = ref + n*step
+        return Basic.__new__(cls, start, end, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
     step = property(lambda self: self.args[2])
 
+    @property
+    def reversed(self):
+        """Return an equivalent Range in the opposite order.
+
+        Examples
+        ========
+
+        >>> from sympy import Range
+        >>> Range(10).reversed
+        Range(9, -1, -1)
+        """
+        if not self:
+            return self
+        return self.func(
+            self.stop - self.step, self.start - self.step, -self.step)
+
     def _intersect(self, other):
-        from sympy.functions.elementary.integers import floor, ceiling
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if other.is_Interval:
-            osup = other.sup
-            oinf = other.inf
-            # if other is [0, 10) we can only go up to 9
-            if osup.is_integer and other.right_open:
-                osup -= 1
-            if oinf.is_integer and other.left_open:
-                oinf += 1
+        from sympy.functions.elementary.integers import ceiling, floor
+        from sympy.functions.elementary.complexes import sign
 
-            # Take the most restrictive of the bounds set by the two sets
-            # round inwards
-            inf = ceiling(Max(self.inf, oinf))
-            sup = floor(Min(self.sup, osup))
-            # if we are off the sequence, get back on
-            if inf.is_finite and self.inf.is_finite:
-                off = (inf - self.inf) % self.step
-            else:
-                off = S.Zero
-            if off:
-                inf += self.step - off
-
-            return Range(inf, sup + 1, self.step)
-
-        if other == S.Naturals:
+        if other is S.Naturals:
             return self._intersect(Interval(1, S.Infinity))
 
-        if other == S.Integers:
+        if other is S.Integers:
             return self
 
-        return None
+        if other.is_Interval:
+            if not all(i.is_number for i in other.args[:2]):
+                return
+
+            o = other.intersect(Interval(self.inf, self.sup))
+            if o is S.EmptySet:
+                return o
+
+            # get inf/sup and handle below
+            if isinstance(o, FiniteSet):
+                assert len(o) == 1
+                inf = sup = list(o)[0]
+            else:
+                assert isinstance(o, Interval)
+                sup = o.sup
+                inf = o.inf
+
+            # get onto sequence
+            step = abs(self.step)
+            ref = self.start if self.start.is_finite else self.stop
+            a = ref + ceiling((inf - ref)/step)*step
+            if a not in other:
+                a += step
+            b = ref + floor((sup - ref)/step)*step
+            if b not in other:
+                b -= step
+            if self.step < 0:
+                a, b = b, a
+            # make sure to include end point
+            b += self.step
+
+            rv = Range(a, b, self.step)
+            if not rv:
+                return S.EmptySet
+            return rv
+
+        elif isinstance(other, Range):
+            from sympy.solvers.diophantine import diop_linear
+            from sympy.core.numbers import ilcm
+
+            # non-overlap quick exits
+            if not other:
+                return S.EmptySet
+            if not self:
+                return S.EmptySet
+            if other.sup < self.inf:
+                return S.EmptySet
+            if other.inf > self.sup:
+                return S.EmptySet
+
+            # work with finite end at the start
+            r1 = self
+            if r1.start.is_infinite:
+                r1 = r1.reversed
+            r2 = other
+            if r2.start.is_infinite:
+                r2 = r2.reversed
+
+            # this equation represents the values of the Range;
+            # it's a linear equation
+            eq = lambda r, i: r.start + i*r.step
+
+            # we want to know when the two equations might
+            # have integer solutions so we use the diophantine
+            # solver
+            a, b = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+
+            # check for no solution
+            no_solution = a is None and b is None
+            if no_solution:
+                return S.EmptySet
+
+            # there is a solution
+            # -------------------
+
+            # find the coincident point, c
+            a0 = a.as_coeff_Add()[0]
+            c = eq(r1, a0)
+
+            # find the first point, if possible, in each range
+            # since c may not be that point
+            def _first_finite_point(r1, c):
+                if c == r1.start:
+                    return c
+                # st is the signed step we need to take to
+                # get from c to r1.start
+                st = sign(r1.start - c)*step
+                # use Range to calculate the first point:
+                # we want to get as close as possible to
+                # r1.start; the Range will not be null since
+                # it will at least contain c
+                s1 = Range(c, r1.start + st, st)[-1]
+                if s1 == r1.start:
+                    pass
+                else:
+                    # if we didn't hit r1.start then, if the
+                    # sign of st didn't match the sign of r1.step
+                    # we are off by one and s1 is not in r1
+                    if sign(r1.step) != sign(st):
+                        s1 -= st
+                if s1 not in r1:
+                    return
+                return s1
+
+            # calculate the step size of the new Range
+            step = abs(ilcm(r1.step, r2.step))
+            s1 = _first_finite_point(r1, c)
+            if s1 is None:
+                return S.EmptySet
+            s2 = _first_finite_point(r2, c)
+            if s2 is None:
+                return S.EmptySet
+
+            # replace the corresponding start or stop in
+            # the original Ranges with these points; the
+            # result must have at least one point since
+            # we know that s1 and s2 are in the Ranges
+            def _updated_range(r, first):
+                st = sign(r.step)*step
+                if r.start.is_finite:
+                    rv = Range(first, r.stop, st)
+                else:
+                    rv = Range(r.start, first + st, st)
+                return rv
+            r1 = _updated_range(self, s1)
+            r2 = _updated_range(other, s2)
+
+            # work with them both in the increasing direction
+            if sign(r1.step) < 0:
+                r1 = r1.reversed
+            if sign(r2.step) < 0:
+                r2 = r2.reversed
+
+            # return clipped Range with positive step; it
+            # can't be empty at this point
+            start = max(r1.start, r2.start)
+            stop = min(r1.stop, r2.stop)
+            return Range(start, stop, step)
+        else:
+            return
+
 
     def _contains(self, other):
-        if (((self.start - other)/self.step).is_integer or
-            ((self.stop - other)/self.step).is_integer):
-            return _sympify(other >= self.inf and other <= self.sup)
-        elif (((self.start - other)/self.step).is_integer is False and
-            ((self.stop - other)/self.step).is_integer is False):
+        if not self:
             return S.false
+        if other.is_infinite:
+            return S.false
+        if not other.is_integer:
+            return other.is_integer
+        ref = self.start if self.start.is_finite else self.stop
+        if (ref - other) % self.step:  # off sequence
+            return S.false
+        return _sympify(other >= self.inf and other <= self.sup)
 
     def __iter__(self):
-        if self.start is S.NegativeInfinity:
-            i = self.stop - self.step
-            step = -self.step
-        else:
+        if self.start in [S.NegativeInfinity, S.Infinity]:
+            raise ValueError("Cannot iterate over Range with infinite start")
+        elif self:
             i = self.start
             step = self.step
 
-        while(i < self.stop and i >= self.start):
-            yield i
-            i += step
+            while True:
+                if (step > 0 and not (self.start <= i < self.stop)) or \
+                   (step < 0 and not (self.stop < i <= self.start)):
+                    break
+                yield i
+                i += step
 
     def __len__(self):
-        return (self.stop - self.start)//self.step
+        if not self:
+            return 0
+        dif = self.stop - self.start
+        if dif.is_infinite:
+            raise ValueError(
+                "Use .size to get the length of an infinite Range")
+        return abs(dif//self.step)
+
+    @property
+    def size(self):
+        try:
+            return _sympify(len(self))
+        except ValueError:
+            return S.Infinity
 
     def __nonzero__(self):
-        return True
+        return self.start != self.stop
 
     __bool__ = __nonzero__
 
-    def _ith_element(self, i):
-        return self.start + i*self.step
-
-    @property
-    def _last_element(self):
-        if self.stop is S.Infinity:
-            return S.Infinity
-        elif self.start is S.NegativeInfinity:
-            return self.stop - self.step
+    def __getitem__(self, i):
+        from sympy.functions.elementary.integers import ceiling
+        ooslice = "cannot slice from the end with an infinite value"
+        zerostep = "slice step cannot be zero"
+        # if we had to take every other element in the following
+        # oo, ..., 6, 4, 2, 0
+        # we might get oo, ..., 4, 0 or oo, ..., 6, 2
+        ambiguous = "cannot unambiguously re-stride from the end " + \
+            "with an infinite value"
+        if isinstance(i, slice):
+            if self.size.is_finite:
+                start, stop, step = i.indices(self.size)
+                n = ceiling((stop - start)/step)
+                if n <= 0:
+                    return Range(0)
+                canonical_stop = start + n*step
+                end = canonical_stop - step
+                ss = step*self.step
+                return Range(self[start], self[end] + ss, ss)
+            else:  # infinite Range
+                start = i.start
+                stop = i.stop
+                if i.step == 0:
+                    raise ValueError(zerostep)
+                step = i.step or 1
+                ss = step*self.step
+                #---------------------
+                # handle infinite on right
+                #   e.g. Range(0, oo) or Range(0, -oo, -1)
+                # --------------------
+                if self.stop.is_infinite:
+                    # start and stop are not interdependent --
+                    # they only depend on step --so we use the
+                    # equivalent reversed values
+                    return self.reversed[
+                        stop if stop is None else -stop + 1:
+                        start if start is None else -start:
+                        step].reversed
+                #---------------------
+                # handle infinite on the left
+                #   e.g. Range(oo, 0, -1) or Range(-oo, 0)
+                # --------------------
+                # consider combinations of
+                # start/stop {== None, < 0, == 0, > 0} and
+                # step {< 0, > 0}
+                if start is None:
+                    if stop is None:
+                        if step < 0:
+                            return Range(self[-1], self.start, ss)
+                        elif step > 1:
+                            raise ValueError(ambiguous)
+                        else:  # == 1
+                            return self
+                    elif stop < 0:
+                        if step < 0:
+                            return Range(self[-1], self[stop], ss)
+                        else:  # > 0
+                            return Range(self.start, self[stop], ss)
+                    elif stop == 0:
+                        if step > 0:
+                            return Range(0)
+                        else:  # < 0
+                            raise ValueError(ooslice)
+                    elif stop == 1:
+                        if step > 0:
+                            raise ValueError(ooslice)  # infinite singleton
+                        else:  # < 0
+                            raise ValueError(ooslice)
+                    else:  # > 1
+                        raise ValueError(ooslice)
+                elif start < 0:
+                    if stop is None:
+                        if step < 0:
+                            return Range(self[start], self.start, ss)
+                        else:  # > 0
+                            return Range(self[start], self.stop, ss)
+                    elif stop < 0:
+                        return Range(self[start], self[stop], ss)
+                    elif stop == 0:
+                        if step < 0:
+                            raise ValueError(ooslice)
+                        else:  # > 0
+                            return Range(0)
+                    elif stop > 0:
+                        raise ValueError(ooslice)
+                elif start == 0:
+                    if stop is None:
+                        if step < 0:
+                            raise ValueError(ooslice)  # infinite singleton
+                        elif step > 1:
+                            raise ValueError(ambiguous)
+                        else:  # == 1
+                            return self
+                    elif stop < 0:
+                        if step > 1:
+                            raise ValueError(ambiguous)
+                        elif step == 1:
+                            return Range(self.start, self[stop], ss)
+                        else:  # < 0
+                            return Range(0)
+                    else:  # >= 0
+                        raise ValueError(ooslice)
+                elif start > 0:
+                    raise ValueError(ooslice)
         else:
-            return self._ith_element(len(self) - 1)
+            if not self:
+                raise IndexError('Range index out of range')
+            if i == 0:
+                return self.start
+            if i == -1 or i is S.Infinity:
+                return self.stop - self.step
+            rv = (self.stop if i < 0 else self.start) + i*self.step
+            if rv.is_infinite:
+                raise ValueError(ooslice)
+            if rv < self.inf or rv > self.sup:
+                raise IndexError("Range index out of range")
+            return rv
 
     @property
     def _inf(self):
-        return self.start
+        if not self:
+            raise NotImplementedError
+        if self.step > 0:
+            return self.start
+        else:
+            return self.stop - self.step
 
     @property
     def _sup(self):
-        return self.stop - self.step
+        if not self:
+            raise NotImplementedError
+        if self.step > 0:
+            return self.stop - self.step
+        else:
+            return self.start
 
     @property
     def _boundary(self):
@@ -628,7 +1001,7 @@ class ComplexRegion(Set):
     is_ComplexRegion = True
 
     def __new__(cls, sets, polar=False):
-        from sympy import symbols, Dummy, sympify, sin, cos
+        from sympy import sin, cos
 
         x, y, r, theta = symbols('x, y, r, theta', cls=Dummy)
         I = S.ImaginaryUnit
@@ -843,10 +1216,14 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-
+        from sympy.core.containers import Tuple
+        other = sympify(other)
+        isTuple = isinstance(other, Tuple)
+        if isTuple and len(other) != 2:
+            raise ValueError('expecting Tuple of length 2')
         # self in rectangular form
         if not self.polar:
-            re, im = other.as_real_imag()
+            re, im = other if isTuple else other.as_real_imag()
             for element in self.psets:
                 if And(element.args[0]._contains(re),
                         element.args[1]._contains(im)):
@@ -855,7 +1232,9 @@ class ComplexRegion(Set):
 
         # self in polar form
         elif self.polar:
-            if sympify(other).is_zero:
+            if isTuple:
+                r, theta = other
+            elif other.is_zero:
                 r, theta = S.Zero, S.Zero
             else:
                 r, theta = Abs(other), arg(other)

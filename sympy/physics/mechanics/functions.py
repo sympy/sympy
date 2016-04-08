@@ -410,7 +410,7 @@ def find_dynamicsymbols(expression, exclude=None):
     >>> find_dynamicsymbols(expr, [x, y])
     set([Derivative(x(t), t)])
     """
-    t_set = set([dynamicsymbols._t])
+    t_set = {dynamicsymbols._t}
     if exclude:
         if iterable(exclude):
             exclude_set = set(exclude)

@@ -5,12 +5,11 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.symbol import Dummy, Wild
 from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
-from sympy.integrals.integrals import integrate
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError

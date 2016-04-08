@@ -273,3 +273,8 @@ def test_DieDistribution():
     assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
     raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
     raises(ValueError, lambda: X.pdf(x**2 - 1))
+
+def test_FinitePSpace():
+    X = Die('X', 6)
+    space = pspace(X)
+    assert space.density == DieDistribution(6)

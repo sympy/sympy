@@ -59,7 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 expressions to specific languages. Supported languages are C
 (:py:func:`sympy.printing.ccode.ccode`), Fortran 95
 (:py:func:`sympy.printing.fcode.fcode`), Javascript
-(:py:func:`sympy.printing.jscode.jscode`) , Mathematica
+(:py:func:`sympy.printing.jscode.jscode`), Julia
+(:py:func:`sympy.printing.julia.julia_code`), Mathematica
 (:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
 (:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
@@ -180,14 +181,16 @@ how it works::
                 ⎛     2       ⎞
     I⋅S⋅γ₁⋅γ₂⋅k⋅⎝3⋅cos (β) - 1⎠
     ───────────────────────────
-                  3            
-                 r             
+                  3
+                 r
     >>> print(jscode(expr, assign_to="H_is"))
     H_is = I*S*gamma_1*gamma_2*k*(3*Math.pow(Math.cos(beta), 2) - 1)/Math.pow(r, 3);
     >>> print(ccode(expr, assign_to="H_is"))
     H_is = I*S*gamma_1*gamma_2*k*(3*pow(cos(beta), 2) - 1)/pow(r, 3);
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
+    >>> print(julia_code(expr, assign_to="H_is"))
+    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(mathematica_code(expr))
@@ -257,16 +260,9 @@ given prefix.
 Here is an example::
 
     >>> [(f_name, f_code), header] = codegen(("volume", length*breadth*height),
-    ...     "F95", header=True, empty=False, argument_sequence=(breadth, length),
+    ...     "F95", header=False, empty=False, argument_sequence=(breadth, length),
     ...     global_vars=(height,))
     >>> print(f_code)
-    !******************************************************************************
-    !*                    Code generated with sympy 0.7.7.dev                     *
-    !*                                                                            *
-    !*              See http://www.sympy.org/ for more information.               *
-    !*                                                                            *
-    !*                       This file is part of 'project'                       *
-    !******************************************************************************
     REAL*8 function volume(breadth, length)
     implicit none
     REAL*8, intent(in) :: breadth
@@ -343,7 +339,7 @@ imports it into the current session. Main functions of this module are
 
 It also automatically converts expressions containing ``Indexed`` objects into
 summations. The classes IndexedBase, Indexed and Idx represent a matrix element
-M[i, j]. See :ref:`tensor_module` for more on this.  
+M[i, j]. See :ref:`tensor_module` for more on this.
 
 .. _autowrap:
 
@@ -446,7 +442,7 @@ functions with Sympy attributes and methods. An illustration::
 .. _ufuncify_method:
 
 While NumPy operations are very efficient for vectorized data but they
-sometimes incur unnecessary costs when chained together. 
+sometimes incur unnecessary costs when chained together.
 Consider the following operation
 
     >>> x = get_numpy_array(...) # doctest: +SKIP
@@ -485,12 +481,12 @@ optimizations. Fortunately, SymPy is able to generate efficient low-level C
 or Fortran code. It can then depend on projects like ``Cython`` or ``f2py`` to
 compile and reconnect that code back up to Python. Fortunately this process is
 well automated and a SymPy user wishing to make use of this code generation
-should call the ``ufuncify`` function. 
+should call the ``ufuncify`` function.
 
-``ufuncify`` is the third method available with Autowrap module. It basically 
-implies 'Universal functions' and follows an ideology set by Numpy. The main 
-point of ufuncify as compared to autowrap is that it allows arrays as arguments 
-and can operate in an element-by-element fashion. The core operation done 
+``ufuncify`` is the third method available with Autowrap module. It basically
+implies 'Universal functions' and follows an ideology set by Numpy. The main
+point of ufuncify as compared to autowrap is that it allows arrays as arguments
+and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
 
@@ -544,5 +540,5 @@ Let us compare the speeds::
 The options available with ufuncify are more or less the same as those
 available with ``autowrap``.
 
-There are other facilities available with Sympy to do efficient numeric 
+There are other facilities available with Sympy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.

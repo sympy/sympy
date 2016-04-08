@@ -3,7 +3,7 @@ import warnings
 
 from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import verify_numerically
@@ -367,3 +367,12 @@ def test_reflect():
         == Triangle(Point(1, 6), Point(2, 6), Point(2, 4))
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
         == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
+
+
+def test_eulerline():
+    assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).eulerline \
+        == Line(Point2D(0, 0), Point2D(1/2, 1/2))
+    assert Triangle(Point(0, 0), Point(10, 0), Point(5, 5*sqrt(3))).eulerline \
+        == Point2D(5, 5*sqrt(3)/3)
+    assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
+        == Line(Point2D(64/7, 3), Point2D(-29/14, -7/2))

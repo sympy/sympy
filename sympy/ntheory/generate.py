@@ -192,16 +192,36 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-
 def prime(nth):
     """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
-        can never be larger than 2**n.
+        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+
+        Logarithmic integral of x is a pretty nice approximation for number of
+        primes <= x, i.e.
+        li(x) ~ pi(x)
+        In fact, for the numbers we are concerned about( x<1e11 ),
+        li(x) - pi(x) < 50000
+
+        Also,
+        li(x) > pi(x) can be safely assumed for the numbers which
+        can be evaluated by this function.
+
+        Here, we find the least integer m such that li(m) > n using binary search.
+        Now pi(m-1) < li(m-1) <= n,
+
+        We find pi(m - 1) using primepi function.
+
+        Starting from m, we have to find n - pi(m-1) more primes.
+
+        For the inputs this implementation can handle, we will have to test
+        primality for at max about 10**5 numbers, to get our answer.
 
         References
         ==========
 
-        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+        - https://en.wikipedia.org/wiki/Skewes%27_number
 
         Examples
         ========
@@ -211,6 +231,8 @@ def prime(nth):
         29
         >>> prime(1)
         2
+        >>> prime(100000)
+        1299709
 
         See Also
         ========
@@ -222,12 +244,81 @@ def prime(nth):
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    return sieve[n]
+    prime_arr = [2, 3, 5, 7, 11, 13, 17]
+    if n <= 7:
+        return prime_arr[n - 1]
 
+    from sympy.functions.special.error_functions import li
+    from sympy.functions.elementary.exponential import log
+
+    a = 2 # Lower bound for binary search
+    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+    while a < b:
+        mid = (a + b) >> 1
+        if li(mid) > n:
+            b = mid
+        else:
+            a = mid + 1
+    n_primes = primepi(a - 1)
+    while n_primes < n:
+        if isprime(a):
+            n_primes += 1
+        a += 1
+    return a - 1
 
 def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
+
+        Algorithm Description:
+
+        In sieve method, we remove all multiples of prime p
+        except p itself.
+
+        Let phi(i,j) be the number of integers 2 <= k <= i
+        which remain after sieving from primes less than
+        or equal to j.
+        Clearly, pi(n) = phi(n, sqrt(n))
+
+        If j is not a prime,
+        phi(i,j) = phi(i, j - 1)
+
+        if j is a prime,
+        We remove all numbers(except j) whose
+        smallest prime factor is j.
+
+        Let x= j*a be such a number, where 2 <= a<= i / j
+        Now, after sieving from primes <= j - 1,
+        a must remain
+        (because x, and hence a has no prime factor <= j - 1)
+        Clearly, there are phi(i / j, j - 1) such a
+        which remain on sieving from primes <= j - 1
+
+        Now, if a is a prime less than equal to j - 1,
+        x= j*a has smallest prime factor = a, and
+        has already been removed(by sieving from a).
+        So, we don't need to remove it again.
+        (Note: there will be pi(j - 1) such x)
+
+        Thus, number of x, that will be removed are:
+        phi(i / j, j - 1) - phi(j - 1, j - 1)
+        (Note that pi(j - 1) = phi(j - 1, j - 1))
+
+        => phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
+
+        So,following recursion is used and implemented as dp:
+
+        phi(a, b) = phi(a, b - 1), if b is not a prime
+        phi(a, b) = phi(a, b-1)-phi(a / b, b-1) + phi(b-1, b-1), if b is prime
+
+        Clearly a is always of the form floor(n / k),
+        which can take at most 2*sqrt(n) values.
+        Two arrays arr1,arr2 are maintained
+        arr1[i] = phi(i, j),
+        arr2[i] = phi(n // i, j)
+
+        Finally the answer is arr2[1]
 
         Examples
         ========
@@ -246,9 +337,33 @@ def primepi(n):
     n = int(n)
     if n < 2:
         return 0
-    else:
-        return sieve.search(n)[0]
-
+    lim = int(n ** 0.5)
+    lim -= 1
+    lim = max(lim,0)
+    while lim * lim <= n:
+        lim += 1
+    lim-=1
+    arr1 = [0] * (lim + 1)
+    arr2 = [0] * (lim + 1)
+    for i in range(1, lim + 1):
+        arr1[i] = i - 1
+        arr2[i] = n // i - 1
+    for i in range(2, lim + 1):
+        # Presently, arr1[k]=phi(k,i - 1),
+        # arr2[k] = phi(n // k,i - 1)
+        if arr1[i] == arr1[i - 1]:
+            continue
+        p = arr1[i - 1]
+        for j in range(1,min(n // (i * i), lim) + 1):
+            st = i * j
+            if st <= lim:
+                arr2[j] -= arr2[st] - p
+            else:
+                arr2[j] -= arr1[n // st] - p
+        lim2 = min(lim, i*i - 1)
+        for j in range(lim, lim2, -1):
+            arr1[j] -= arr1[j // i] - p
+    return arr2[1]
 
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.

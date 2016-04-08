@@ -68,8 +68,8 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
-    assert re(x).rewrite(im) == x - im(x)
-    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+    assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -137,8 +137,8 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
-    assert im(x).rewrite(re) == x - re(x)
-    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
+    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -214,7 +214,7 @@ def test_sign():
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is False
-    assert sign(x).doit() == x/Abs(x)
+    assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
@@ -289,7 +289,7 @@ def test_as_real_imag():
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
-    assert sqrt(i**2).as_real_imag() == (0, Abs(-i))
+    assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
 
 @XFAIL
@@ -317,10 +317,10 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
-    assert Abs(I*pi) == pi
-    assert Abs(-I*pi) == pi
-    assert Abs(I*x) == Abs(x)
-    assert Abs(-I*x) == Abs(x)
+    assert Abs(I * pi) == pi
+    assert Abs(-I * pi) == pi
+    assert Abs(I * x) == Abs(x)
+    assert Abs(-I * x) == Abs(x)
     assert Abs(-2*x) == 2*Abs(x)
     assert Abs(-2.0*x) == 2.0*Abs(x)
     assert Abs(2*pi*x*y) == 2*pi*Abs(x*y)

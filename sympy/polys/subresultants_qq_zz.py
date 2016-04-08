@@ -53,6 +53,16 @@ Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
+In sympy the resultant is computed with the function
+resultant(f, g, x). This function does _not_ evaluate the
+determinant of sylvester(f, g, x, 1); instead, it returns
+the last member of the subresultant prs of f, g, multiplied
+(if needed) by an appropriate power of -1; see the caveat below.
+
+Caveat: If Df = degree(f, x) and Dg = degree(g, x), then:
+
+resultant(f, g, x) = (-1)**(Df*Dg) * resultant(g, f, x).
+
 For complete prs’s the sign sequence of the Euclidean prs of f, g
 is identical to the sign sequence of the subresultant prs of f, g
 and the coefficients of one sequence  are easily computed from the
@@ -213,7 +223,8 @@ from sympy import (QQ, quo, rem, S, sign, simplify, summation, var, zeros)
 
 def sylvester(f, g, x, method = 1):
     '''
-      f, g polys in x, m = deg(f) >= deg(g) = n.
+      The input polynomials f, g are in Z[x] or in Q[x].
+      Let mx = max( degree(f, x) , degree(g, x) ).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -221,7 +232,7 @@ def sylvester(f, g, x, method = 1):
           used to compute the coefficients of the Euclidean PRS of f, g.
 
       b. If method = 2, computes sylvester2, Sylvester's matrix of 1853
-          of dimension (2*m) x (2*m). The determinants of properly chosen
+          of dimension (2*mx) x (2*mx). The determinants of properly chosen
           submatrices of this matrix (a.k.a. ``modified'' subresultants) can be
           used to compute the coefficients of the Sturmian PRS of f, g.
 
@@ -268,11 +279,6 @@ def sylvester(f, g, x, method = 1):
     fp = Poly(f, x).all_coeffs()
     gp = Poly(g, x).all_coeffs()
 
-    # order lists of poly coeffs according to degree
-    if m < n:
-        fp, gp = gp, fp
-        m, n = n, m
-
     # Sylvester's matrix of 1840 (default; a.k.a. sylvester1)
     if method <= 1:
         M = zeros(m + n)
@@ -294,23 +300,28 @@ def sylvester(f, g, x, method = 1):
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
     if method >= 2:
-        dim = 2*m
+        if len(fp) < len(gp):
+            h = []
+            for i in range(len(gp) - len(fp)):
+                h.append(0)
+            fp[ : 0] = h
+        else:
+            h = []
+            for i in range(len(fp) - len(gp)):
+                h.append(0)
+            gp[ : 0] = h
+        mx = max(m, n)
+        dim = 2*mx
         M = zeros( dim )
         k = 0
-        for i in range( m ):
+        for i in range( mx ):
             j = k
             for coeff in fp:
-                if i == 0:
-                    M[i, j] = coeff
-                else:
-                    M[2*i, j] = coeff
+                M[2*i, j] = coeff
                 j = j + 1
-            j = m - n + k
+            j = k
             for coeff in gp:
-                if i == 0:
-                    M[i+1, j] = coeff
-                else:
-                    M[2*i + 1, j] = coeff
+                M[2*i + 1, j] = coeff
                 j = j + 1
             k = k + 1
         return M
@@ -326,14 +337,14 @@ def sign_seq(poly_seq, x):
 
 def bezout(p, q, x, method='bz'):
     """
-    The input polynomials p, q are in Z[x] or in Q[x]. It is assumed
-    that degree(p, x) >= degree(q, x).
+    The input polynomials p, q are in Z[x] or in Q[x]. Let
+    mx = max( degree(p, x) , degree(q, x) ).
 
     The default option bezout(p, q, x, method='bz') returns Bezout's
-    symmetric matrix of p and q, of dimensions deg(p) x deg(p). The
+    symmetric matrix of p and q, of dimensions (mx) x (mx). The
     determinant of this matrix is equal to the determinant of sylvester2,
-    Sylvester's matrix of 1853, whose dimensions are 2*deg(p) x 2*deg(p);
-    however, the subresultants of these two matrices may vary in sign.
+    Sylvester's matrix of 1853, whose dimensions are (2*mx) x (2*mx);
+    however the subresultants of these two matrices may differ.
 
     The other option, bezout(p, q, x, 'prs'), is of interest to us
     in this module because it returns a matrix equivalent to sylvester2.
@@ -360,8 +371,33 @@ def bezout(p, q, x, method='bz'):
     Vol. 15, 233–266, 2004.
 
     """
+    # obtain degrees of polys
+    m, n = degree( Poly(p, x), x), degree( Poly(q, x), x)
+
+    # Special cases:
+    # A:: case m = n < 0 (i.e. both polys are 0)
+    if m == n and n < 0:
+        return Matrix([])
+
+    # B:: case m = n = 0  (i.e. both polys are constants)
+    if m == n and n == 0:
+        return Matrix([])
+
+    # C:: m == 0 and n < 0 or m < 0 and n == 0
+    # (i.e. one poly is constant and the other is 0)
+    if m == 0 and n < 0:
+        return Matrix([])
+    elif m < 0 and n == 0:
+        return Matrix([])
+
+    # D:: m >= 1 and n < 0 or m < 0 and n >=1
+    # (i.e. one poly is of degree >=1 and the other is 0)
+    if m >= 1 and n < 0:
+        return Matrix([0])
+    elif m < 0 and n >= 1:
+        return Matrix([0])
+
     y = var('y')
-    degP = degree(p, x)
 
     # expr is 0 when x = y
     expr = p * q.subs({x:y}) - p.subs({x:y}) * q
@@ -370,12 +406,14 @@ def bezout(p, q, x, method='bz'):
     poly = Poly( quo(expr, x-y), x, y)
 
     # form Bezout matrix and store them in B as indicated to get
-    # the LC coefficient of each poly in the first position of each row
-    B = zeros(degP)
-    for i in range(degP):
-        for j in range(degP):
+    # the LC coefficient of each poly either in the first position
+    # of each row (method='prs') or in the last (method='bz').
+    mx = max(m, n)
+    B = zeros(mx)
+    for i in range(mx):
+        for j in range(mx):
             if method == 'prs':
-                B[degP - 1 - i, degP - 1 - j] = poly.nth(i, j)
+                B[mx - 1 - i, mx - 1 - j] = poly.nth(i, j)
             else:
                 B[i, j] = poly.nth(i, j)
     return B
@@ -571,7 +609,8 @@ def modified_subresultants_bezout(p, q, x):
 
 def sturm_pg(p, q, x, method=0):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the (generalized) Sturm sequence of p and q in Z[x] or Q[x].
     If q = diff(p, x, 1) it is the usual Sturm sequence.
@@ -698,7 +737,8 @@ def sturm_pg(p, q, x, method=0):
 
 def sturm_q(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x];
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the (generalized) Sturm sequence of p and q in Q[x].
     Polynomial divisions in Q[x] are performed, using the function rem(p, q, x).
@@ -775,7 +815,8 @@ def sturm_q(p, q, x):
 
 def sturm_amv(p, q, x, method=0):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the (generalized) Sturm sequence of p and q in Z[x] or Q[x].
     If q = diff(p, x, 1) it is the usual Sturm sequence.
@@ -875,7 +916,8 @@ def sturm_amv(p, q, x, method=0):
 
 def euclid_pg(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x];
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the Euclidean sequence of p and q in Z[x] or Q[x].
 
@@ -949,7 +991,8 @@ def euclid_pg(p, q, x):
 
 def euclid_q(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x];
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the Euclidean sequence of p and q in Q[x].
     Polynomial divisions in Q[x] are performed, using the function rem(p, q, x).
@@ -1027,7 +1070,8 @@ def euclid_q(p, q, x):
 
 def euclid_amv(f, g, x):
     """
-    f, g are polynomials in Z[x] or Q[x].
+    f, g are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(f, x) >= degree(g, x).
 
     Computes the Euclidean sequence of p and q in Z[x] or Q[x].
 
@@ -1103,9 +1147,10 @@ def euclid_amv(f, g, x):
 
     return euclid_seq
 
-def modified_subresultants_pg(p,q,x):
+def modified_subresultants_pg(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the ``modified'' subresultant prs of p and q in Z[x] or Q[x];
     the coefficients of the polynomials in the sequence are
@@ -1286,9 +1331,10 @@ def modified_subresultants_pg(p,q,x):
 
     return  subres_l
 
-def subresultants_pg(p,q,x):
+def subresultants_pg(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the subresultant prs of p and q in Z[x] or Q[x], from
     the modified subresultant prs of p and q.
@@ -1350,9 +1396,10 @@ def subresultants_pg(p,q,x):
 
     return subr_seq
 
-def subresultants_amv_q(p,q,x):
+def subresultants_amv_q(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the subresultant prs of p and q in Q[x];
     the coefficients of the polynomials in the sequence are
@@ -1474,7 +1521,8 @@ def rem_z(p, q, x):
     '''
     Intended mainly for p, q polynomials in Z[x] so that,
     on dividing p by q, the remainder will also be in Z[x]. (However,
-    it also works fine for polynomials in Q[x].)
+    it also works fine for polynomials in Q[x].) It is assumed
+    that degree(p, x) >= degree(q, x).
 
     It premultiplies p by the _absolute_ value of the leading coefficient
     of q, raised to the power deg(p) - deg(q) + 1 and then performs
@@ -1509,7 +1557,8 @@ def quo_z(p, q, x):
     """
     Intended mainly for p, q polynomials in Z[x] so that,
     on dividing p by q, the quotient will also be in Z[x]. (However,
-    it also works fine for polynomials in Q[x].)
+    it also works fine for polynomials in Q[x].) It is assumed
+    that degree(p, x) >= degree(q, x).
 
     It premultiplies p by the _absolute_ value of the leading coefficient
     of q, raised to the power deg(p) - deg(q) + 1 and then performs
@@ -1526,7 +1575,8 @@ def quo_z(p, q, x):
 
 def subresultants_amv(f, g, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(f, x) >= degree(g, x).
 
     Computes the subresultant prs of p and q in Z[x] or Q[x];
     the coefficients of the polynomials in the sequence are
@@ -1665,9 +1715,10 @@ def subresultants_amv(f, g, x):
 
     return subres_l
 
-def modified_subresultants_amv(p,q,x):
+def modified_subresultants_amv(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the modified subresultant prs of p and q in Z[x] or Q[x],
     from the subresultant prs of p and q.
@@ -1775,7 +1826,8 @@ def correct_sign(deg_f, deg_g, s1, rdel, cdel):
 
 def subresultants_rem(p, q, x):
     """
-    p, q are polynomials in Z[x] or Q[x].
+    p, q are polynomials in Z[x] or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the subresultant prs of p and q in Z[x] or Q[x];
     the coefficients of the polynomials in the sequence are
@@ -1999,7 +2051,8 @@ def final_touches(s2, r, deg_g):
 
 def subresultants_vv(p, q, x, method = 0):
     """
-    p, q are polynomials in Z[x] (intended) or Q[x].
+    p, q are polynomials in Z[x] (intended) or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the subresultant prs of p, q by triangularizing,
     in Z[x] or in Q[x], all the smaller matrices encountered in the
@@ -2144,7 +2197,8 @@ def subresultants_vv(p, q, x, method = 0):
 
 def subresultants_vv_2(p, q, x):
     """
-    p, q are polynomials in Z[x] (intended) or Q[x].
+    p, q are polynomials in Z[x] (intended) or Q[x]. It is assumed
+    that degree(p, x) >= degree(q, x).
 
     Computes the subresultant prs of p, q by triangularizing,
     in Z[x] or in Q[x], all the smaller matrices encountered in the
