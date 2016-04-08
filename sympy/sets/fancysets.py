@@ -1,14 +1,16 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet, imageset)
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.expr import Expr
+from sympy.core.function import Lambda, _coeff_isneg
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Wild
-from sympy.core.function import Lambda
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
+                             FiniteSet, imageset)
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -154,22 +156,32 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def _eval_imageset(self, f):
         expr = f.expr
+        if not isinstance(expr, Expr):
+            return
+
         if len(f.variables) > 1:
             return
+
         n = f.variables[0]
 
-        a = Wild('a')
-        b = Wild('b')
+        # f(x) + c and f(-x) + c cover the same integers
+        # so choose the form that has the fewest negatives
+        c = f(0)
+        fx = f(n) - c
+        f_x = f(-n) - c
+        neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+        if neg_count(f_x) < neg_count(fx):
+            expr = f_x + c
 
+        a = Wild('a', exclude=[n])
+        b = Wild('b', exclude=[n])
         match = expr.match(a*n + b)
-        if match[a].is_negative:
-            expr = -expr
+        if match and match[a]:
+            # canonical shift
+            expr = match[a]*n + match[b] % match[a]
 
-        match = expr.match(a*n + b)
-        if match[a] is S.One and match[b].is_integer:
-            expr = expr - match[b]
-
-        return ImageSet(Lambda(n, expr), S.Integers)
+        if expr != f.expr:
+            return ImageSet(Lambda(n, expr), S.Integers)
 
 
 class Reals(with_metaclass(Singleton, Interval)):
@@ -253,17 +265,26 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
-        from sympy.utilities.iterables import iterable, cartes
+        from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
+        if is_sequence(other):
+            if not is_sequence(L.expr):
+                return S.false
+            if len(L.expr) != len(other):
+                raise ValueError(filldedent('''
+    Dimensions of other and output of Lambda are different.'''))
+        elif iterable(other):
+                raise ValueError(filldedent('''
+    `other` should be an ordered object like a Tuple.'''))
+
+        solns = None
         if self._is_multivariate():
-            if not iterable(L.expr):
-                if iterable(other):
-                    return S.false
+            if not is_sequence(L.expr):
+                # exprs -> (numer, denom) and check again
+                # XXX this is a bad idea -- make the user
+                # remap self to desired form
                 return other.as_numer_denom() in self.func(
                     Lambda(L.variables, L.expr.as_numer_denom()), self.base_set)
-            if len(L.expr) != len(self.lamda.variables):
-                raise NotImplementedError(filldedent('''
-    Dimensions of input and output of Lambda are different.'''))
             eqs = [expr - val for val, expr in zip(other, L.expr)]
             variables = L.variables
             free = set(variables)
@@ -292,14 +313,35 @@ class ImageSet(Set):
                         raise NotImplementedError
                 solns = cartes(*[solns[s] for s in variables])
         else:
-            # assume scalar -> scalar mapping
-            solnsSet = solveset(L.expr - other, L.variables[0])
-            if solnsSet.is_FiniteSet:
-                solns = list(solnsSet)
+            x = L.variables[0]
+            if isinstance(L.expr, Expr):
+                # scalar -> scalar mapping
+                solnsSet = solveset(L.expr - other, x)
+                if solnsSet.is_FiniteSet:
+                    solns = list(solnsSet)
+                else:
+                    msgset = solnsSet
             else:
-                raise NotImplementedError(filldedent('''
-                Determining whether an ImageSet contains %s has not
-                been implemented.''' % func_name(other)))
+                # scalar -> vector
+                for e, o in zip(L.expr, other):
+                    solns = solveset(e - o, x)
+                    if solns is S.EmptySet:
+                        return S.false
+                    for soln in solns:
+                        try:
+                            if soln in self.base_set:
+                                break  # check next pair
+                        except TypeError:
+                            if self.base_set.contains(soln.evalf()):
+                                break
+                    else:
+                        return S.false  # never broke so there was no True
+                return S.true
+
+        if solns is None:
+            raise NotImplementedError(filldedent('''
+            Determining whether %s contains %s has not
+            been implemented.''' % (msgset, other)))
         for soln in solns:
             try:
                 if soln in self.base_set:
@@ -315,10 +357,15 @@ class ImageSet(Set):
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
         if self.base_set is S.Integers:
+            g = None
             if isinstance(other, ImageSet) and other.base_set is S.Integers:
-                f, g = self.lamda.expr, other.lamda.expr
-                n, m = self.lamda.variables[0], other.lamda.variables[0]
-
+                g = other.lamda.expr
+                m = other.lamda.variables[0]
+            elif other is S.Integers:
+                m = g = Dummy('x')
+            if g is not None:
+                f = self.lamda.expr
+                n = self.lamda.variables[0]
                 # Diophantine sorts the solutions according to the alphabetic
                 # order of the variable names, since the result should not depend
                 # on the variable name, they are replaced by the dummy variables
@@ -329,13 +376,14 @@ class ImageSet(Set):
                 if solns_set == set():
                     return EmptySet()
                 solns = list(diophantine(f - g))
-                if len(solns) == 1:
-                    t = list(solns[0][0].free_symbols)[0]
-                else:
-                    return None
 
-                # since 'a' < 'b'
-                return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
+                if len(solns) != 1:
+                    return
+
+                # since 'a' < 'b', select soln for n
+                nsol = solns[0][0]
+                t = nsol.free_symbols.pop()
+                return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
 
         if other == S.Reals:
             from sympy.solvers.solveset import solveset_real
@@ -504,39 +552,17 @@ class Range(Set):
             if not all(i.is_number for i in other.args[:2]):
                 return
 
-            o = other.intersect(Interval(self.inf, self.sup))
-            if o is S.EmptySet:
-                return o
+            # trim down to self's size, and represent
+            # as a Range with step 1
+            start = ceiling(max(other.inf, self.inf))
+            if start not in other:
+                start += 1
+            end = floor(min(other.sup, self.sup))
+            if end not in other:
+                end -= 1
+            return self.intersect(Range(start, end + 1))
 
-            # get inf/sup and handle below
-            if isinstance(o, FiniteSet):
-                assert len(o) == 1
-                inf = sup = list(o)[0]
-            else:
-                assert isinstance(o, Interval)
-                sup = o.sup
-                inf = o.inf
-
-            # get onto sequence
-            step = abs(self.step)
-            ref = self.start if self.start.is_finite else self.stop
-            a = ref + ceiling((inf - ref)/step)*step
-            if a not in other:
-                a += step
-            b = ref + floor((sup - ref)/step)*step
-            if b not in other:
-                b -= step
-            if self.step < 0:
-                a, b = b, a
-            # make sure to include end point
-            b += self.step
-
-            rv = Range(a, b, self.step)
-            if not rv:
-                return S.EmptySet
-            return rv
-
-        elif isinstance(other, Range):
+        if isinstance(other, Range):
             from sympy.solvers.diophantine import diop_linear
             from sympy.core.numbers import ilcm
 
@@ -640,7 +666,6 @@ class Range(Set):
             return Range(start, stop, step)
         else:
             return
-
 
     def _contains(self, other):
         if not self:
@@ -806,6 +831,30 @@ class Range(Set):
             if rv < self.inf or rv > self.sup:
                 raise IndexError("Range index out of range")
             return rv
+
+    def _eval_imageset(self, f):
+        from sympy.core.function import expand_mul
+        if not self:
+            return S.EmptySet
+        if not isinstance(f.expr, Expr):
+            return
+        if self.size == 1:
+            return FiniteSet(f(self[0]))
+        if f is S.IdentityFunction:
+            return self
+
+        x = f.variables[0]
+        expr = f.expr
+        # handle f that is linear in f's variable
+        if x not in expr.free_symbols or x in expr.diff(x).free_symbols:
+            return
+        if self.start.is_finite:
+            F = f(self.step*x + self.start)  # for i in range(len(self))
+        else:
+            F = f(-self.step*x + self[-1])
+        F = expand_mul(F)
+        if F != expr:
+            return imageset(x, F, Range(self.size))
 
     @property
     def _inf(self):
