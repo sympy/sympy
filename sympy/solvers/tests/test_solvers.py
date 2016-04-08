@@ -1817,4 +1817,4 @@ def test_issue_9567():
 
 def test_issue_10122():
     assert solve(Piecewise((x,x>=0),(-x,True))+Piecewise((x-1,x>=1),(1-x,True))-1>0,x) == \
-    Or(And(Lt(S.NegativeInfinity, x), Lt(x, S.Zero)), And(Lt(S.One, x), Lt(x, S.Infinity)) 
+    Or(And(Lt(S.NegativeInfinity, x), Lt(x, S.Zero)), And(Lt(S.One, x), Lt(x, S.Infinity)))
