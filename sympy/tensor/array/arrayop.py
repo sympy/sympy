@@ -130,9 +130,16 @@ def tensorcontraction(array, *contraction_axes):
     for icontrib in itertools.product(*remaining_indices):
         i = sum(icontrib)
         isum = S.Zero
+        summed_deltas = []
         for axes_group in contraction_axes:
+            lidx = []
             for js in range(array.shape[axes_group[0]]):
-                isum += array[i + sum([cum_shape[ig]*js for ig in axes_group])]
+                lidx.append(sum([cum_shape[ig]*js for ig in axes_group]))
+            summed_deltas.append(lidx)
+
+        for sum_to_index in itertools.product(*summed_deltas):
+            isum += array[i + sum(sum_to_index)]
+
         contracted_array.append(isum)
 
     if len(remaining_indices) == 0:
