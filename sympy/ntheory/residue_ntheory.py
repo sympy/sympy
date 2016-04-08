@@ -902,8 +902,8 @@ def jacobi_symbol(m, n):
     is_quad_residue, legendre_symbol
     """
     m, n = as_int(m), as_int(n)
-    if not n % 2:
-        raise ValueError("n should be an odd integer")
+    if n < 0 or not n % 2:
+        raise ValueError("n should be an odd positive integer")
     if m < 0 or m > n:
         m = m % n
     if not m:
@@ -914,19 +914,21 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    s = trailing(m)
-    m = m >> s
-    if s % 2 and n % 8 in [3, 5]:
-        j *= -1
-
-    while m != 1:
+    if m < 0:
+        m = -m
+        if n % 4 == 3:
+            j = -j
+    while m != 0:
+        while m % 2 == 0 and m > 0:
+            m >>= 1
+            if n % 8 in [3, 5]:
+                j = -j
+        m, n = n, m
         if m % 4 == 3 and n % 4 == 3:
-            j *= -1
-        m, n = n % m, m
-        s = trailing(m)
-        m = m >> s
-        if s % 2 and n % 8 in [3, 5]:
-            j *= -1
+            j = -j
+        m %= n
+    if n != 1:
+        j = 0
     return j
 
 
