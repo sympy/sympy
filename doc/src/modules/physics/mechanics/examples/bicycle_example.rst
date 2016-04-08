@@ -192,7 +192,7 @@ linearization to correctly work. ::
   ...           kd_eqs=kd)
   >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
   Before Forming Generalized Active and Inertia Forces, Fr and Fr*
-  >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+  >>> (fr, frstar) = KM.kanes_equations(BL, FL)
   >>> print('Base Equations of Motion Computed')
   Base Equations of Motion Computed
 
