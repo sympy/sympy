@@ -144,8 +144,8 @@ def _invert_real(f, g_ys, symbol):
         if g is not S.Zero:
             return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
         else:
-            if len(f.args) == 2 and \
-                not f.is_polynomial(symbol):
+            if len(f.args) == 2 and g_ys == FiniteSet(0) and \
+            not f.is_polynomial(symbol):
                 lhs = f
                 rhs = FiniteSet(0)
                 a, b = ordered(f.args)

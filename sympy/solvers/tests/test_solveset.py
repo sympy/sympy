@@ -594,10 +594,6 @@ def test_solve_only_exp_1():
     y = Symbol('y', positive=True, finite=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
-
-
-@SKIP("Comparision Error")
-def test_solve_only_exp_compError():
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
 
@@ -913,7 +909,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    unsolved_object = ConditionSet(x, Eq(exp(x + x**(-2)) + exp(2*x + 2/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
