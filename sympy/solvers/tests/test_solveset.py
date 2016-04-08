@@ -1110,7 +1110,7 @@ def test_issue_9531_and_9606():
 
 def test_issue_7914():
     assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1 ,x) ==\
-    Union(ImageSet(Lambda(n, 2*n*pi/3 - pi/2), S.Integers), ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers))
+    Union(ImageSet(Lambda(n, pi*(4*n - 3)/6), S.Integers), ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers))
 
 def test_issue_10671():
     assert solveset(sin(y), y, Interval(0, pi)) == \

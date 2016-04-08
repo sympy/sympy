@@ -400,6 +400,7 @@ def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     from sympy.polys import factor
     from sympy.sets import ImageSet
+    from sympy.polys.polyfuncs import interpolate
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
@@ -418,8 +419,6 @@ def _solve_trig(f, symbol, domain):
             val = lamb(0)
             soln_2pi.append(val)
         soln_2pi.sort()
-        a = Dummy('a', real=True)
-        b = Dummy('b', real=True)
         n = Dummy('n', real =True)
         equations = []
         positive_eq = []
@@ -436,25 +435,12 @@ def _solve_trig(f, symbol, domain):
             negative_eq.sort()
             negative_eq.reverse()
             if not nlen == 1:
-                for i in range(0,len(negative_eq)):
-                    eq = a*(i+1) + b - negative_eq[i]
-                    equations.append(eq)
-
-                a, b= list(linsolve(equations,(a,b)))[0]
-                res1 = a*n + b
+                res1 = factor(interpolate(negative_eq,n))
             else:
                 res1 = 2*n*pi + negative_eq[0]
             equations = []
-            c = Dummy('c', real=True)
-            d = Dummy('d', real=True)
             if not plen == 1:
-                for i in range(0,len(positive_eq)):
-                    eq = c*(i+1) + d - positive_eq[i]
-                    equations.append(eq)
-
-                c, d= list(linsolve(equations,(c,d)))[0]
-
-                res2 = c*n + d
+                res2 = factor(interpolate(positive_eq,n))
             else:
                 res2 = 2*n*pi + positive_eq[0]
             soln = Union(imageset(Lambda(n, res1), S.Integers),\
