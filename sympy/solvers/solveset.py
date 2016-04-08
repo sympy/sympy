@@ -351,169 +351,9 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
-def solveset_real(f, symbol):
-    """ Solves a real valued equation.
-
-    Parameters
-    ==========
-
-    f : Expr
-        The target equation
-    symbol : Symbol
-        The variable for which the equation is solved
-
-    Returns
-    =======
-
-    Set
-        A set of values for `symbol` for which `f` is equal to
-        zero. An `EmptySet` is returned if no solution is found.
-        A `ConditionSet` is returned as unsolved object if algorithms
-        to evaluate complete solutions are not yet implemented.
-
-    `solveset_real` claims to be complete in the set of the solution it
-    returns.
-
-    Raises
-    ======
-
-    NotImplementedError
-        Algorithms to solve inequalities in complex domain are
-        not yet implemented.
-    ValueError
-        The input is not valid.
-    RuntimeError
-        It is a bug, please report to the github issue tracker.
 
 
-    See Also
-    =======
-
-    solveset_complex : solver for complex domain
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, exp, sin, sqrt, I
-    >>> from sympy.solvers.solveset import solveset_real
-    >>> x = Symbol('x', real=True)
-    >>> a = Symbol('a', real=True, finite=True, positive=True)
-    >>> solveset_real(x**2 - 1, x)
-    {-1, 1}
-    >>> solveset_real(sqrt(5*x + 6) - 2 - x, x)
-    {-1, 2}
-    >>> solveset_real(x - I, x)
-    EmptySet()
-    >>> solveset_real(x - a, x)
-    {a}
-    >>> solveset_real(exp(x) - a, x)
-    {log(a)}
-
-    * In case the equation has infinitely many solutions an infinitely indexed
-      `ImageSet` is returned.
-
-    >>> solveset_real(sin(x) - 1, x)
-    ImageSet(Lambda(_n, 2*_n*pi + pi/2), Integers())
-
-    * If the equation is true for any arbitrary value of the symbol a `S.Reals`
-      set is returned.
-
-    >>> solveset_real(x - x, x)
-    (-oo, oo)
-
-    """
-    if not getattr(symbol, 'is_Symbol', False):
-        raise ValueError('A Symbol must be given, not type %s: %s' %
-            (type(symbol), symbol))
-
-    f = sympify(f)
-    if not isinstance(f, (Expr, Number)):
-        raise ValueError("%s is not a valid SymPy expression" % (f))
-
-    original_eq = f
-    f = together(f)
-
-    # In this, unlike in solveset_complex, expression should only
-    # be expanded when fraction(f)[1] does not contain the symbol
-    # for which we are solving
-    if not symbol in fraction(f)[1].free_symbols and f.is_rational_function():
-        f = expand(f)
-
-    f = piecewise_fold(f)
-
-    result = EmptySet()
-
-    if f.expand().is_zero:
-        return S.Reals
-    elif not f.has(symbol):
-        return EmptySet()
-    elif f.is_Mul and all([_is_finite_with_finite_vars(m) for m in f.args]):
-        # if f(x) and g(x) are both finite we can say that the solution of
-        # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
-        # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we are not silently allowing any
-        # wrong solutions we are using this technique only if both f and g are
-        # finite for a finite input.
-        result = Union(*[solveset_real(m, symbol) for m in f.args])
-    elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
-            _is_function_class_equation(HyperbolicFunction, f, symbol):
-        result = _solve_real_trig(f, symbol)
-    elif f.is_Piecewise:
-        result = EmptySet()
-        expr_set_pairs = f.as_expr_set_pairs()
-        expr_cond = dict(f.args)
-        sym_interval ={}
-        for (expr, in_set_symbol) in expr_set_pairs:
-            solns_tmp = solveset_real(expr, symbol)
-            # by default symbol interval. many times cond symbols are expr symbols
-            for sym in expr.atoms(Symbol):
-                if expr_cond[expr] != True:
-                    cond_symbol_set = expr_cond[expr].atoms(Symbol)
-                for cond_symbol in cond_symbol_set:
-                    if sym == cond_symbol:
-                        sym_interval[sym] = in_set_symbol
-                    elif sym != cond_symbol:
-                        sym_interval[sym] = (S.Reals)
-            if not expr.has(Symbol):
-                solns = solns_tmp.intersect(in_set_symbol)
-                result = result + solns
-            else:
-                solns = solns_tmp.intersect(sym_interval[symbol])
-                result = result + solns
-    else:
-        lhs, rhs_s = invert_real(f, 0, symbol)
-        if lhs == symbol:
-            result = rhs_s
-        elif isinstance(rhs_s, FiniteSet):
-            equations = [lhs - rhs for rhs in rhs_s]
-            for equation in equations:
-                if equation == f:
-                    if any(_has_rational_power(g, symbol)[0]
-                           for g in equation.args):
-                        result += _solve_radical(equation,
-                                                 symbol,
-                                                 solveset_real)
-                    elif equation.has(Abs):
-                        result += _solve_abs(f, symbol)
-                    else:
-                        result += _solve_as_rational(equation, symbol,
-                                                     solveset_solver=solveset_real,
-                                                     as_poly_solver=_solve_as_poly_real)
-                else:
-                    result += solveset_real(equation, symbol)
-        else:
-            result = ConditionSet(symbol, Eq(f, 0), S.Reals)
-
-    if isinstance(result, FiniteSet):
-        result = [s for s in result
-                  if isinstance(s, RootOf)
-                  or domain_check(original_eq, symbol, s)]
-        return FiniteSet(*result).intersect(S.Reals)
-    else:
-        return result.intersect(S.Reals)
-
-
-def _solve_as_rational(f, symbol, solveset_solver, as_poly_solver):
+def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
@@ -742,13 +582,29 @@ def _solveset(f, symbol, domain, _check=False):
         dom = domain
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
-        for (expr, in_set) in expr_set_pairs:
-            if in_set.is_Relational:
-                in_set = in_set.as_set()
-            if in_set.is_Interval:
-                dom -= in_set
-            solns = solver(expr, symbol, in_set)
-            result += solns
+        expr_cond = dict(f.args)
+        sym_interval ={}
+        for (expr, in_set_symbol) in expr_set_pairs:
+            if in_set_symbol.is_Relational:
+                in_set_symbol = in_set.as_set()
+            if in_set_symbol.is_Interval:
+                dom -= in_set_symbol
+            solns_tmp = solveset_real(expr, symbol)
+            # by default symbol interval. many times cond symbols are expr symbols
+            for sym in expr.atoms(Symbol):
+                if expr_cond[expr] != True:
+                    cond_symbol_set = expr_cond[expr].atoms(Symbol)
+                for cond_symbol in cond_symbol_set:
+                    if sym == cond_symbol:
+                        sym_interval[sym] = in_set_symbol
+                    elif sym != cond_symbol:
+                        sym_interval[sym] = (S.Reals)
+            if not expr.has(Symbol):
+                solns = solns_tmp.intersect(in_set_symbol)
+                result = result + solns
+            else:
+                solns = solns_tmp.intersect(sym_interval[symbol])
+                result = result + solns
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
