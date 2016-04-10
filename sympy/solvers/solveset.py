@@ -540,6 +540,7 @@ def _solveset(f, symbol, domain, _check=False):
     # _check controls whether the answer is checked or not
 
     from sympy.simplify.simplify import signsimp
+    from sympy.solvers.diophantine import diop_solve
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -552,7 +553,14 @@ def _solveset(f, symbol, domain, _check=False):
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
-    if domain.is_subset(S.Reals):
+    if domain is S.Integers:
+        # calling methods from diophantine.py
+        solution = diop_solve(orig_f)
+        # solution in finiteset
+        # return FiniteSet(tuple(solution))
+        # solution in imageset
+        return imageset(Lambda(solution[0].free_symbols, tuple(solution)), S.Integers)
+    elif domain.is_subset(S.Reals):
         inverter_func = invert_real
     else:
         inverter_func = invert_complex
@@ -764,6 +772,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if symbol is None:
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
+        elif domain is S.Integers:
+            pass
         else:
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
