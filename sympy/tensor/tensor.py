@@ -966,7 +966,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         numpy = import_module('numpy')
 
         def ikey(x):
-            return x[1:]
+            # sort by component number , then by position in component
+            return x[2], x[1]
 
         free1 = free1[:]
         free2 = free2[:]
