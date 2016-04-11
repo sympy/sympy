@@ -20,6 +20,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
+from sympy.assumptions.refine import refine
 
 from types import FunctionType
 
@@ -997,6 +998,7 @@ class MatrixBase(object):
 
         For a list of possible inversion methods, see the .inv() docstring.
         """
+
         if not self.is_square:
             if self.rows < self.cols:
                 raise ValueError('Under-determined system. '
@@ -1053,9 +1055,25 @@ class MatrixBase(object):
         [2],
         [8]])
 
+        RowsList or colsList can also be a list of booleans, in which case
+        the rows or columns corresponding to the True values will be selected:
+
+        >>> m.extract([0, 1, 2, 3], [True, False, True])
+        Matrix([
+        [0,  2],
+        [3,  5],
+        [6,  8],
+        [9, 11]])
         """
+
         cols = self.cols
         flat_list = self._mat
+        if rowsList and all(isinstance(i, bool) for i in rowsList):
+            rowsList = [index for index, item in enumerate(rowsList) if item]
+
+        if colsList and all(isinstance(i, bool) for i in colsList):
+            colsList = [index for index, item in enumerate(colsList) if item]
+
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),
@@ -1225,6 +1243,26 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
     _eval_simplify = simplify
+
+    def refine(self, assumptions=True):
+        """Apply refine to each element of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
+        >>> x = Symbol('x')
+        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
+        Matrix([
+        [ Abs(x)**2, sqrt(x**2)],
+        [sqrt(x**2),  Abs(x)**2]])
+        >>> _.refine(Q.real(x))
+        Matrix([
+        [  x**2, Abs(x)],
+        [Abs(x),   x**2]])
+
+        """
+        return self.applyfunc(lambda x: refine(x, assumptions))
 
     def doit(self, **kwargs):
         return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
@@ -2064,6 +2102,8 @@ class MatrixBase(object):
         >>> a.is_nilpotent()
         False
         """
+        if not self:
+            return True
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
@@ -2878,15 +2918,18 @@ class MatrixBase(object):
 
            >>> M = Matrix([[x, y, z], [1, 0, 0], [y, z, x]])
 
-           >>> p, q, r = M.berkowitz()
+           >>> p, q, r, s = M.berkowitz()
 
-           >>> p # 1 x 1 M's sub-matrix
+           >>> p # 0 x 0 M's sub-matrix
+           (1,)
+
+           >>> q # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> q # 2 x 2 M's sub-matrix
+           >>> r # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> r # 3 x 3 M's sub-matrix
+           >>> s # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2908,6 +2951,9 @@ class MatrixBase(object):
         berkowitz_eigenvals
         """
         from sympy.matrices import zeros
+        berk = ((1,),)
+        if not self:
+            return berk
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -2941,7 +2987,8 @@ class MatrixBase(object):
         for i, T in enumerate(transforms):
             polys.append(T*polys[i])
 
-        return tuple(map(tuple, polys))
+        return berk + tuple(map(tuple, polys))
+
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
@@ -2968,7 +3015,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        sign, minors = S.NegativeOne, []
+        sign, minors = S.One, []
 
         for poly in self.berkowitz():
             minors.append(sign*poly[-1])
@@ -3037,6 +3084,9 @@ class MatrixBase(object):
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
         mat = self
+
+        if not mat:
+            return {}
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
                 mat = mat._new(mat.rows, mat.cols,
@@ -3201,7 +3251,8 @@ class MatrixBase(object):
 
         singular_values
         """
-
+        if not self:
+            return S.Zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
@@ -3963,11 +4014,14 @@ class MatrixBase(object):
         row
         col_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(rhs)
+
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
@@ -3995,11 +4049,14 @@ class MatrixBase(object):
         col
         row_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(bott)
+
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
         newmat[self.rows:, :] = bott
@@ -4027,6 +4084,11 @@ class MatrixBase(object):
         row
         col_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4068,6 +4130,11 @@ class MatrixBase(object):
         col
         row_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
@@ -4080,7 +4147,6 @@ class MatrixBase(object):
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
 
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
         newmat[:, :i] = self[:, :i]

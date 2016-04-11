@@ -37,7 +37,7 @@ def test_SeqPer():
     assert s.periodical == Tuple(1, n, 3)
     assert s.period == 3
     assert s.coeff(3) == 1
-    assert s.free_symbols == set([n])
+    assert s.free_symbols == {n}
 
     assert list(s) == [1, n, 3, 1, n, 3]
     assert s[:] == [1, n, 3, 1, n, 3]

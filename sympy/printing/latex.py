@@ -144,8 +144,18 @@ class LatexPrinter(Printer):
 
         self._delim_dict = {'(': ')', '[': ']'}
 
-    def parenthesize(self, item, level):
-        if precedence(item) <= level:
+    def parenthesize(self, item, level, strict=False):
+        # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
+        # the precedence of Atom for other printers:
+        from sympy import Integral, Sum, Product, Limit, Derivative
+        if isinstance(item, (Integral, Sum, Product, Limit)):
+            prec_val = PRECEDENCE["Mul"]
+        elif isinstance(item, Derivative) and not isinstance(item.doit(), Derivative):
+            prec_val = PRECEDENCE["Mul"]
+        else:
+            prec_val = precedence(item)
+
+        if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left(%s\right)" % self._print(item)
         else:
             return self._print(item)
@@ -322,9 +332,13 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
+        include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
             tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
         else:
             tex = ""
 
@@ -405,6 +419,8 @@ class LatexPrinter(Printer):
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
+        if include_parens:
+            tex += ")"
         return tex
 
     def _print_Pow(self, expr):
@@ -605,7 +621,7 @@ class LatexPrinter(Printer):
                 symbols.insert(0, r"\, d%s" % self._print(symbol))
 
         return r"%s %s%s" % (tex,
-            str(self._print(expr.function)), "".join(symbols))
+            self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True), "".join(symbols))
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
@@ -1225,7 +1241,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
-            s += r'\rightarrow'
+            s += r'\rightarrow '
             if len(expr.point) > 1:
                 s += self._print(expr.point)
             else:
@@ -1484,9 +1500,13 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        if len(s) > 4:
+        dots = r'\ldots'
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = next(it), next(it), '\ldots', s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 
@@ -1591,9 +1611,6 @@ class LatexPrinter(Printer):
 
     def _print_FourierSeries(self, s):
         return self._print_Add(s.truncate()) + self._print(' + \ldots')
-
-    def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
 
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.truncate())

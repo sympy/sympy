@@ -169,7 +169,7 @@ def test_IdentityFunction():
 
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
-    assert Lambda(x, x*y).free_symbols == set([y])
+    assert Lambda(x, x*y).free_symbols == {y}
 
 
 def test_Lambda_arguments():
@@ -217,7 +217,7 @@ def test_Subs():
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
 
     assert Subs(f(x), x, 0).free_symbols == set([])
-    assert Subs(f(x, y), x, z).free_symbols == set([y, z])
+    assert Subs(f(x, y), x, z).free_symbols == {y, z}
 
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
     assert Subs(1 + f(x).diff(x), x, 0).doit(), 1 + Subs(f(x).diff(x), x, 0)

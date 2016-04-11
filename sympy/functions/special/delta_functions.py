@@ -94,7 +94,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           is_simple, Directdelta
+           is_simple, Diracdelta
 
         """
         from sympy.polys.polyroots import roots
@@ -151,7 +151,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           simplify, Directdelta
+           simplify, Diracdelta
 
         """
         p = self.args[0].as_poly(x)

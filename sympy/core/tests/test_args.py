@@ -604,7 +604,7 @@ die = DieDistribution(6)
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
-    assert _test_args(ContinuousDomain(set([x]), Interval(-oo, oo)))
+    assert _test_args(ContinuousDomain({x}, Interval(-oo, oo)))
 
 
 def test_sympy__stats__crv__SingleContinuousDomain():
@@ -746,32 +746,32 @@ def test_sympy__stats__frv_types__RademacherDistribution():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
+    assert _test_args(FiniteDomain({(x, 1), (x, 2)}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, set([1, 2])))  # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, {1, 2}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
-    yd = SingleFiniteDomain(y, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
+    yd = SingleFiniteDomain(y, {1, 2})
     assert _test_args(ProductFiniteDomain(xd, yd))
 
 
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(ConditionalFiniteDomain(xd, x > 1))
 
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2, 3, 4, 5, 6]))
+    xd = SingleFiniteDomain(x, {1, 2, 3, 4, 5, 6})
     p = 1.0/6
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(FinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 

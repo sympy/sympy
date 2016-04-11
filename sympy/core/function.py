@@ -138,6 +138,22 @@ class FunctionClass(ManagedProperties):
         cls._nargs = nargs
 
     @property
+    def __signature__(self):
+        """
+        Allow Python 3's inspect.signature to give a useful signature for
+        Function subclasses.
+        """
+        # Python 3 only, but backports (like the one in IPython) still might
+        # call this.
+        try:
+            from inspect import signature
+        except ImportError:
+            return None
+
+        # TODO: Look at nargs
+        return signature(self.eval)
+
+    @property
     def nargs(self):
         """Return a set of the allowed number of arguments for the function.
 
@@ -466,7 +482,7 @@ class Function(Application, Expr):
         except (AttributeError, KeyError):
             try:
                 return Float(self._imp_(*self.args), prec)
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError, ValueError):
                 return
 
         # Convert all args to mpf or mpc
@@ -1544,7 +1560,7 @@ class Subs(Expr):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
+            s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -2480,14 +2496,14 @@ def nfloat(expr, n=15, exponent=False):
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
     # problems with evaluating at low precision (issue 6393)
-    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
+    rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
     rv = rv.n(n)
     if not exponent:
-        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
+        rv = rv.xreplace({d.exp: p.exp for p, d in reps})
     else:
         # Pow._eval_evalf special cases Integer exponents so if
         # exponent is suppose to be handled we have to do so here

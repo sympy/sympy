@@ -665,12 +665,17 @@ def is_deriv_k(fa, fd, DE):
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
             l = []
+            ld = []
             for i, j in zip(argterms, u):
                 # We need to get around things like sqrt(x**2) != x
                 # and also sqrt(x**2 + 2*x + 1) != x + 1
+                # Issue 10798: i need not be a polynomial
+                i, d = i.as_numer_denom()
                 icoeff, iterms = sqf_list(i)
                 l.append(Mul(*([Pow(icoeff, j)] + [Pow(b, e*j) for b, e in iterms])))
-            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l))
+                dcoeff, dterms = sqf_list(d)
+                ld.append(Mul(*([Pow(dcoeff, j)] + [Pow(b, e*j) for b, e in dterms])))
+            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l)*Mul(*ld))
 
             return (ans, result, const)
 
