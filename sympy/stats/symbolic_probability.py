@@ -153,14 +153,11 @@ class Covariance(Expr):
         elif isinstance(expr, Add):
             outval = []
             for a in expr.args:
-                rv = []
-                nonrv = []
                 if isinstance(a, Mul):
                     outval.append(cls._get_mul_nonrv_rv_tuple(a))
                 elif isinstance(a, RandomSymbol):
                     outval.append((S.One, a))
 
-                outval.append((Mul(*nonrv), Mul(*rv)))
             return outval
         elif isinstance(expr, Mul):
             return [cls._get_mul_nonrv_rv_tuple(expr)]
