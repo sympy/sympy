@@ -974,11 +974,11 @@ x - ── + ─── + O⎝x ⎠\n\
 
 def test_EulerGamma():
     assert pretty(EulerGamma) == str(EulerGamma) == "EulerGamma"
-    assert upretty(EulerGamma) == "γ"
+    assert upretty(EulerGamma) == u"γ"
 
 def test_GoldenRatio():
     assert pretty(GoldenRatio) == str(GoldenRatio) == "GoldenRatio"
-    assert upretty(GoldenRatio) == "φ"
+    assert upretty(GoldenRatio) == u"φ"
 
 def test_pretty_relational():
     expr = Eq(x, y)
