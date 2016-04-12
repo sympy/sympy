@@ -1296,6 +1296,9 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
         Robertson, July 31, 2004, Page 15. http://www.jpr2718.org/pell.pdf
     """
+    D = as_int(D)
+    N = as_int(N)
+
     sol = []
     a = diop_DN(D, 1)
     u = a[0][0]
@@ -1307,27 +1310,33 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
 
     elif N > 1:
         L1 = 0
-        L2 = floor(sqrt(S(N*(u - 1))/(2*D))) + 1
+        L2 = integer_nthroot(int(N*(u - 1)/(2*D)), 2)[0] + 1
 
     elif N < -1:
-        L1 = ceiling(sqrt(S(-N)/D))
-        L2 = floor(sqrt(S(-N*(u + 1))/(2*D))) + 1
+        L1, _exact = integer_nthroot(-int(N/D), 2)
+        if not _exact:
+            L1 += 1
+        L2 = integer_nthroot(-int(N*(u + 1)/(2*D)), 2)[0] + 1
 
-    else:
+    else:  # N = 0
         if D < 0:
-            return [(S.Zero, S.Zero)]
+            return [(0, 0)]
         elif D == 0:
-            return [(S.Zero, t)]
+            return [(0, t)]
         else:
-            if isinstance(sqrt(D), Integer):
-                return [(sqrt(D)*t, t), (-sqrt(D)*t, t)]
+            sD, _exact = integer_nthroot(D, 2)
+            if _exact:
+                return [(sD*t, t), (-sD*t, t)]
             else:
-                return [(S.Zero, S.Zero)]
+                return [(0, 0)]
 
 
     for y in range(L1, L2):
-        if isinstance(sqrt(N + D*y**2), Integer):
-            x = sqrt(N + D*y**2)
+        try:
+            x, _exact = integer_nthroot(N + D*y**2, 2)
+        except ValueError:
+            _exact = False
+        if _exact:
             sol.append((x, y))
             if not equivalent(x, y, -x, y, D, N):
                 sol.append((-x, y))
