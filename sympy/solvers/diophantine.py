@@ -427,14 +427,13 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
     >>> from sympy.solvers.diophantine import diop_linear
     >>> from sympy.abc import x, y, z, t
-    >>> from sympy import Integer
-    >>> diop_linear(2*x - 3*y - 5) #solves equation 2*x - 3*y -5 = 0
-    (-3*t_0 - 5, -2*t_0 - 5)
+    >>> diop_linear(2*x - 3*y - 5) # solves equation 2*x - 3*y - 5 == 0
+    (3*t_0 - 5, 2*t_0 - 5)
 
     Here x = -3*t_0 - 5 and y = -2*t_0 - 5
 
     >>> diop_linear(2*x - 3*y - 4*z -3)
-    (t_0, -6*t_0 - 4*t_1 + 3, 5*t_0 + 3*t_1 - 3)
+    (t_0, 2*t_0 + 4*t_1 + 3, -t_0 - 3*t_1 - 3)
 
     See Also
     ========
@@ -442,6 +441,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     diop_quadratic(), diop_ternary_quadratic(), diop_general_pythagorean(),
     diop_general_sum_of_squares()
     """
+    from sympy.core.function import count_ops
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "linear":
@@ -456,32 +456,29 @@ def _diop_linear(var, coeff, param):
 
     Note that no solution exists if gcd(a_0, ..., a_n) doesn't divide c.
     """
-    if len(var) == 0:
-        return None
 
-    if Integer(1) in coeff:
-        #coeff[] is negated because input is of the form: ax + by + c ==  0
-        #                                 but is used as: ax + by     == -c
-        c = -coeff[Integer(1)]
+    if 1 in coeff:
+        # negate coeff[] because input is of the form: ax + by + c ==  0
+        #                              but is used as: ax + by     == -c
+        c = -coeff[1]
     else:
         c = 0
 
     # Some solutions will have multiple free variables in their solutions.
-    params = [str(param) + "_" + str(i) for i in range(len(var))]
-    params = [symbols(p, integer=True) for p in params]
+    if param is None:
+        params = [symbols('t')]*len(var)
+    else:
+        temp = str(param) + "_%i"
+        params = [symbols(temp % i, integer=True) for i in range(len(var))]
 
     if len(var) == 1:
-        if coeff[var[0]] == 0:
-            if c == 0:
-                return tuple([params[0]])
-            else:
-                return tuple([None])
-        elif divisible(c, coeff[var[0]]):
-            return tuple([c/coeff[var[0]]])
+        q, r = divmod(c, coeff[var[0]])
+        if not r:
+            return (q,)
         else:
-            return tuple([None])
+            return (None,)
 
-    """
+    '''
     base_solution_linear() can solve diophantine equations of the form:
 
     a*x + b*y == c
@@ -521,7 +518,7 @@ def _diop_linear(var, coeff, param):
 
     The arrays A and B are the arrays of integers used for
     'a' and 'b' in each of the n-1 bivariate equations we solve.
-    """
+    '''
 
     A = [coeff[v] for v in var]
     B = []
@@ -536,7 +533,7 @@ def _diop_linear(var, coeff, param):
             B.insert(0, gcd)
     B.append(A[-1])
 
-    """
+    '''
     Consider the trivariate linear equation:
 
     4*x_0 + 6*x_1 + 3*x_2 == 2
@@ -587,64 +584,51 @@ def _diop_linear(var, coeff, param):
 
     This method is generalised for many variables, below.
 
-    """
+    '''
 
     solutions = []
-    no_solution = tuple([None] * len(var))
     for i in range(len(B)):
-        tot_x, tot_y = 0, 0
+        tot_x, tot_y = [], []
 
-        if isinstance(c, Add):
-            # example: 5 + t_0 + 3*t_1
-            args = c.args
-        else: # c is a Mul, a Symbol, or an Integer
-            args = [c]
-
-        for j in range(len(args)):
-            if isinstance(args[j], Mul):
-                # example: 3*t_1 -> k = 3
-                k = args[j].as_two_terms()[0]
-                param_index = params.index(args[j].as_two_terms()[1]) + 1
-            elif isinstance(args[j], Symbol):
-                # example: t_0 -> k = 1
-                k = 1
-                param_index = params.index(args[j]) + 1
-            else: #args[j] is an Integer
+        for j, arg in enumerate(Add.make_args(c)):
+            if arg.is_Integer:
                 # example: 5 -> k = 5
-                k = args[j]
-                param_index = 0
+                k, p = arg, S.One
+                pnew = params[0]
+            else:  # arg is a Mul or Symbol
+                # example: 3*t_1 -> k = 3
+                # example: t_0 -> k = 1
+                k, p = arg.as_coeff_Mul()
+                pnew = params[params.index(p) + 1]
 
-            sol_x, sol_y = base_solution_linear(k, A[i], B[i], params[param_index])
-            if isinstance(args[j], Mul) or isinstance(args[j], Symbol):
-                if isinstance(sol_x, Add):
-                    sol_x = sol_x.args[0]*params[param_index - 1] + sol_x.args[1]
-                elif isinstance(sol_x, Integer):
-                    sol_x = sol_x*params[param_index - 1]
+            sol = sol_x, sol_y = base_solution_linear(k, A[i], B[i], pnew)
 
-                if isinstance(sol_y, Add):
-                    sol_y = sol_y.args[0]*params[param_index - 1] + sol_y.args[1]
-                elif isinstance(sol_y, Integer):
-                    sol_y = sol_y*params[param_index - 1]
-
+            if p is S.One:
+                if None in sol:
+                    return tuple([None]*len(var))
             else:
-                if sol_x is None or sol_y is None:
-                    return no_solution
+                # convert a + b*pnew -> a*p + b*pnew
+                if isinstance(sol_x, Add):
+                    sol_x = sol_x.args[0]*p + sol_x.args[1]
+                if isinstance(sol_y, Add):
+                    sol_y = sol_y.args[0]*p + sol_y.args[1]
 
-            tot_x += sol_x
-            tot_y += sol_y
+            tot_x.append(sol_x)
+            tot_y.append(sol_y)
 
-        solutions.append(tot_x)
-        c = tot_y
+        solutions.append(Add(*tot_x))
+        c = Add(*tot_y)
 
-    solutions.append(tot_y)
-
+    solutions.append(c)
+    if param is None:
+        # just keep the additive constant (i.e. replace t with 0)
+        solutions = [i.as_coeff_Add()[0] for i in solutions]
     return tuple(solutions)
 
 
 def base_solution_linear(c, a, b, t=None):
     """
-    Return the base solution for a linear diophantine equation with two
-    variables.
+    Return the base solution for the linear equation, `ax + by = c`.
 
     Used by ``diop_linear()`` to find the base solution of a linear
     Diophantine equation. If ``t`` is given then the parametrized solution is
@@ -670,27 +654,28 @@ def base_solution_linear(c, a, b, t=None):
     >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """
-    d = igcd(a, igcd(b, c))
-    a = a // d
-    b = b // d
-    c = c // d
+    a, b, c = _remove_gcd(a, b, c)
 
     if c == 0:
-        if t != None:
+        if t is not None:
+            if b < 0:
+                t = -t
             return (b*t , -a*t)
         else:
-            return (S.Zero, S.Zero)
+            return (0, 0)
     else:
-        x0, y0, d = extended_euclid(int(abs(a)), int(abs(b)))
+        x0, y0, d = igcdex(abs(a), abs(b))
 
-        x0 = x0 * sign(a)
-        y0 = y0 * sign(b)
+        x0 *= sign(a)
+        y0 *= sign(b)
 
         if divisible(c, d):
-            if t != None:
+            if t is not None:
+                if b < 0:
+                    t = -t
                 return (c*x0 + b*t, c*y0 - a*t)
             else:
-                return (Integer(c*x0), Integer(c*y0))
+                return (c*x0, c*y0)
         else:
             return (None, None)
 
