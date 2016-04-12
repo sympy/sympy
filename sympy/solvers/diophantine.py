@@ -2441,7 +2441,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
     if sign(coeff[var[0]**2]) + sign(coeff[var[1]**2]) + sign(coeff[var[2]**2]) < 0:
         for key in coeff.keys():
-            coeff[key] = coeff[key] * -1
+            coeff[key] = -coeff[key]
 
     n = len(var)
     index = 0
@@ -2450,14 +2450,9 @@ def _diop_general_pythagorean(var, coeff, t):
         if sign(coeff[v**2]) == -1:
             index = i
 
-    m = symbols(str(t) + "1:" + str(n), integer=True)
-    l = []
-    ith = 0
-
-    for m_i in m:
-        ith = ith + m_i**2
-
-    l.append(ith - 2*m[n - 2]**2)
+    m = symbols('%s1:%i' % (t, n), integer=True)
+    ith = sum(m_i**2 for m_i in m)
+    l = [ith - 2*m[n - 2]**2]
 
     for i in range(n - 2):
         l.append(2*m[i]*m[n-2])
@@ -2469,7 +2464,8 @@ def _diop_general_pythagorean(var, coeff, t):
         if i == index or (index > 0 and i == 0) or (index == 0 and i == 1):
             lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
         else:
-            lcm = ilcm(lcm, sqrt(coeff[v**2]) if sqrt(coeff[v**2]) % 2 else sqrt(coeff[v**2]) // 2)
+            s = sqrt(coeff[v**2])
+            lcm = ilcm(lcm, s if _odd(s) else s//2)
 
     for i, v in enumerate(var):
         sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
