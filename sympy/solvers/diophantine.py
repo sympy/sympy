@@ -1918,39 +1918,46 @@ def parametrize_ternary_quadratic(eq):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "homogeneous_ternary_quadratic":
+    if diop_type in (
+            "homogeneous_ternary_quadratic",
+            "homogeneous_ternary_quadratic_normal"):
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
-        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+        return _parametrize_ternary_quadratic(
+            (x_0, y_0, z_0), var, coeff)
 
 
 def _parametrize_ternary_quadratic(solution, _var, coeff):
+    # called for a*x**2 + b*y**2 + c*z**2 + d*x*y + e*y*z + f*x*z = 0
+    assert 1 not in coeff
 
-    x, y, z = _var[:3]
+    x, y, z = _var
 
-    x_0, y_0, z_0 = solution[:3]
+    x_0, y_0, z_0 = solution
 
-    v = [x]*3
-    v[0], v[1], v[2] = _var[0], _var[1], _var[2]
+    v = list(_var)  # copy
 
-    if x_0 == None:
+    if x_0 is None:
+        return (None, None, None)
+
+    if solution.count(0) >= 2:
+        # if there are 2 zeros the the equation reduces
+        # to k*X**2 == 0 where X is x, y, or z so X must
+        # be zero, too. So there is only the trivial
+        # solution.
         return (None, None, None)
 
     if x_0 == 0:
-        if y_0 == 0:
-            v[0], v[2] = v[2], v[0]
-            z_p, y_p, x_p = _parametrize_ternary_quadratic((z_0, y_0, x_0), v, coeff)
-            return x_p, y_p, z_p
-        else:
-            v[0], v[1] = v[1], v[0]
-            y_p, x_p, z_p = _parametrize_ternary_quadratic((y_0, x_0, z_0), v, coeff)
-            return x_p, y_p, z_p
+        v[0], v[1] = v[1], v[0]
+        y_p, x_p, z_p = _parametrize_ternary_quadratic(
+            (y_0, x_0, z_0), v, coeff)
+        return x_p, y_p, z_p
 
-    x, y, z = v[:3]
+    x, y, z = v
     r, p, q = symbols("r, p, q", integer=True)
 
-    eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
-    eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
-    eq_1 = _mexpand(eq_1)
+    eq = sum(k*v for k, v in coeff.items())
+    eq_1 = _mexpand(eq.subs(zip(
+        (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q))))
     A, B = eq_1.as_independent(r, as_Add=True)
 
 
