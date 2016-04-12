@@ -680,45 +680,11 @@ def base_solution_linear(c, a, b, t=None):
             return (None, None)
 
 
-def extended_euclid(a, b):
-    """
-    For given ``a``, ``b`` returns a tuple containing integers `x`, `y` and `d`
-    such that `ax + by = d`. Here `d = gcd(a, b)`.
-
-    Usage
-    =====
-
-    ``extended_euclid(a, b)``: returns `x`, `y` and `\gcd(a, b)`.
-
-    Details
-    =======
-
-    ``a`` Any instance of Integer.
-    ``b`` Any instance of Integer.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.diophantine import extended_euclid
-    >>> extended_euclid(4, 6)
-    (-1, 1, 2)
-    >>> extended_euclid(3, 5)
-    (2, -1, 1)
-    """
-    if b == 0:
-        return (1, 0, a)
-
-    x0, y0, d = extended_euclid(b, a%b)
-    x, y = y0, x0 - (a//b) * y0
-
-    return x, y, d
-
-
 def divisible(a, b):
     """
     Returns `True` if ``a`` is divisible by ``b`` and `False` otherwise.
     """
-    return igcd(int(a), int(b)) == abs(int(b))
+    return not a % b
 
 
 def diop_quadratic(eq, param=symbols("t", integer=True)):
