@@ -2293,9 +2293,9 @@ def gaussian_reduce(w, a, b):
     ==========
 
     .. [1] Gaussian lattice Reduction [online]. Available:
-        http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+           http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-        Mathematics of Computation, Volume 00, Number 0.
+           Mathematics of Computation, Volume 00, Number 0.
     """
     u = (0, 1)
     v = (1, 0)
@@ -2326,8 +2326,8 @@ def dot(u, v, w, a, b):
     `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
     the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
     """
-    u_1, u_2 = u[:2]
-    v_1, v_2 = v[:2]
+    u_1, u_2 = u
+    v_1, v_2 = v
     return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
 
 
@@ -2337,7 +2337,7 @@ def norm(u, w, a, b):
     defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
     where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
     """
-    u_1, u_2 = u[:2]
+    u_1, u_2 = u
     return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
 
 
