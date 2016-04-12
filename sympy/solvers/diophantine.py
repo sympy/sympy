@@ -1621,53 +1621,30 @@ def _find_DN(var, coeff):
 
 def check_param(x, y, a, t):
     """
-    Check if there is a number modulo ``a`` such that ``x`` and ``y`` are both
-    integers. If exist, then find a parametric representation for ``x`` and
-    ``y``.
+    If there is a number modulo ``a`` such that ``x`` and ``y`` are both
+    integers, then return a parametric representation for ``x`` and ``y``
+    else return (None, None).
 
     Here ``x`` and ``y`` are functions of ``t``.
     """
-    k, m, n = symbols("k, m, n", integer=True)
-    p = Wild("p", exclude=[k])
-    q = Wild("q", exclude=[k])
-    ok = False
+    from sympy.simplify.simplify import clear_coefficients
 
-    for i in range(a):
-
-        z_x = _mexpand(Subs(x, t, a*k + i).doit()).match(p*k + q)
-        z_y = _mexpand(Subs(y, t, a*k + i).doit()).match(p*k + q)
-
-        if (isinstance(z_x[p], Integer) and isinstance(z_x[q], Integer) and
-            isinstance(z_y[p], Integer) and isinstance(z_y[q], Integer)):
-            ok = True
-            break
-
-    if ok == True:
-
-        x_param = x.match(p*t + q)
-        y_param = y.match(p*t + q)
-
-        if x_param[p] == 0 or y_param[p] == 0:
-            if x_param[p] == 0:
-                l1, junk = Poly(y).clear_denoms()
-            else:
-                l1 = 1
-
-            if y_param[p] == 0:
-                l2, junk = Poly(x).clear_denoms()
-            else:
-                l2 = 1
-
-            return x*ilcm(l1, l2), y*ilcm(l1, l2)
-
-        eq = S(m - x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
-
-        lcm_denom, junk = Poly(eq).clear_denoms()
-        eq = eq * lcm_denom
-
-        return diop_solve(eq, t)[0], diop_solve(eq, t)[1]
-    else:
+    if x.is_number and not x.is_Integer:
         return (None, None)
+
+    if y.is_number and not y.is_Integer:
+        return (None, None)
+
+    m, n = symbols("m, n", integer=True)
+    c, p = (m*x + n*y).as_content_primitive()
+    if a % c.q:
+        return (None, None)
+
+    # clear_coefficients(mx + b, R)[1] -> (R - b)/m
+    eq = clear_coefficients(x, m)[1] - clear_coefficients(y, n)[1]
+    junk, eq = eq.as_content_primitive()
+
+    return diop_solve(eq, t)
 
 
 def diop_ternary_quadratic(eq):
