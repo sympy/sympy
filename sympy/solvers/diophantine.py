@@ -2563,12 +2563,11 @@ def partition(n, k=None, zeros=False):
     Returns a generator that can be used to generate partitions of an integer
     `n`.
 
-    A partition of `n` is a set of positive integers which add upto `n`. For
-    example, partitions of 3 are 3 , 1 + 2, 1 + 1+ 1. A partition is returned
+    A partition of `n` is a set of positive integers which add up to `n`. For
+    example, partitions of 3 are 3, 1 + 2, 1 + 1 + 1. A partition is returned
     as a tuple. If ``k`` equals None, then all possible partitions are returned
     irrespective of their size, otherwise only the partitions of size ``k`` are
-    returned. If there are no partions of `n` with size `k` then an empty tuple
-    is returned. If the ``zero`` parameter is set to True then a suitable
+    returned. If the ``zero`` parameter is set to True then a suitable
     number of zeros are added at the end of every partition of size less than
     ``k``.
 
@@ -2589,14 +2588,14 @@ def partition(n, k=None, zeros=False):
     >>> from sympy.solvers.diophantine import partition
     >>> f = partition(5)
     >>> next(f)
-    (1, 1, 1, 1, 1)
+    (5,)
     >>> next(f)
-    (1, 1, 1, 2)
+    (1, 4)
     >>> g = partition(5, 3)
     >>> next(g)
-    (3, 1, 1)
+    (1, 1, 3)
     >>> next(g)
-    (2, 2, 1)
+    (1, 2, 2)
 
     Reference
     =========
@@ -2604,71 +2603,16 @@ def partition(n, k=None, zeros=False):
     .. [1] Generating Integer Partitions, [online],
         Available: http://jeromekelleher.net/partitions.php
     """
-    if n < 1:
-        yield tuple()
-
-    if k is not None:
-        if k < 1:
-            yield tuple()
-
-        elif k > n:
-            if zeros:
-                for i in range(1, n):
-                    for t in partition(n, i):
-                        yield (t,) + (0,) * (k - i)
-            else:
-                yield tuple()
-
-        else:
-            a = [1 for i in range(k)]
-            a[0] = n - k + 1
-
-            yield tuple(a)
-
-            i = 1
-            while a[0] >= n // k + 1:
-                j = 0
-
-                while j < i and j + 1 < k:
-                    a[j] = a[j] - 1
-                    a[j + 1] = a[j + 1] + 1
-
-                    yield tuple(a)
-
-                    j = j + 1
-
-                i = i + 1
-
-            if zeros:
-                for m in range(1, k):
-                    for a in partition(n, m):
-                        yield tuple(a) + (0,) * (k - m)
-
-    else:
-        a = [0 for i in range(n + 1)]
-        l = 1
-        y = n - 1
-
-        while l != 0:
-            x = a[l - 1] + 1
-            l -= 1
-
-            while 2*x <= y:
-                a[l] = x
-                y -= x
-                l += 1
-
-            m = l + 1
-            while x <= y:
-                a[l] = x
-                a[m] = y
-                yield tuple(a[:l + 2])
-                x += 1
-                y -= 1
-
-            a[l] = x + y
-            y = x + y - 1
-            yield tuple(a[:l + 1])
+    from sympy.utilities.iterables import partitions
+    for s, p in partitions(n, k, size=True):
+        if k and not zeros and s != k:
+            continue
+        rv = ()
+        for e in p:
+            rv += (e,)*p[e]
+        if zeros:
+            rv += (0,)*(k - s)
+        yield _sorted_tuple(*rv)
 
 
 def prime_as_sum_of_two_squares(p):
