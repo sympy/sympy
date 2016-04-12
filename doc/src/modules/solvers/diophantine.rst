@@ -45,6 +45,7 @@ structured in the following manner.
     - :py:meth:`~sympy.solvers.diophantine.diop_linear`
     - :py:meth:`~sympy.solvers.diophantine.diop_quadratic`
     - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic_normal`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares`
 
@@ -135,7 +136,7 @@ For linear Diophantine equations, the customized parameter is the prefix used
 for each free variable in the solution. Consider the following example:
 
 >>> diop_solve(2*x + 3*y - 5*z + 7, m)
-(m_0, -9*m_0 - 5*m_1 - 14, -5*m_0 - 3*m_1 - 7)
+(m_0, m_0 + 5*m_1 - 14, m_0 + 3*m_1 - 7)
 
 In the solution above, m_0 and m_1 are independent free variables.
 
@@ -278,7 +279,7 @@ general sum of squares too. Either you can call
 level API.
 
 >>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
-set([(8, 4, 4, 4, 0, 0)])
+set([(-10, -3, 0, 1, 1, 1)])
 
 If you want to get a more thorough idea about the the Diophantine module please
 refer to the following blog.
@@ -392,10 +393,6 @@ These functions are intended for the internal use in Diophantine module.
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.divisible
 
-:obj:`extended_euclid`
-^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.extended_euclid
-
 :obj:`PQa`
 ^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.PQa
@@ -403,10 +400,6 @@ These functions are intended for the internal use in Diophantine module.
 :obj:`equivalent`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.equivalent
-
-:obj:`simplified`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.simplified
 
 :obj:`parametrize_ternary_quadratic`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -432,13 +425,9 @@ These functions are intended for the internal use in Diophantine module.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
 
-:obj:`pairwise_prime`
+:obj:`sqf_normal`
 ^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.pairwise_prime
-
-:obj:`make_prime`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.make_prime
+.. autofunction:: sympy.solvers.diophantine.sqf_normal
 
 :obj:`reconstruct`
 ^^^^^^^^^^^^^^^^^^
