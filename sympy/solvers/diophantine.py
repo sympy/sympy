@@ -221,9 +221,9 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     """
     Solves the diophantine equation ``eq``.
 
-    Similar to ``diophantine()`` but doesn't try to factor ``eq`` as latter
-    does. Uses ``classify_diop()`` to determine the type of the eqaution and
-    calls the appropriate solver function.
+    Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
+    ``classify_diop()`` to determine the type of the equation and calls
+    the appropriate solver function.
 
     Usage
     =====
@@ -244,10 +244,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
     (3*t_0 - 5, -2*t_0 + 5)
-    >>> diop_solve(4*x + 3*y -4*z + 5)
-    (t_0, -4*t_1 + 5, t_0 - 3*t_1 + 5)
-    >>> diop_solve(x + 3*y - 4*z + w -6)
-    (t_0, t_0 + t_1, -2*t_0 - 3*t_1 - 4*t_2 - 6, -t_0 - 2*t_1 - 3*t_2 - 6)
+    >>> diop_solve(4*x + 3*y - 4*z + 5)
+    (t_0, 8*t_0 + 4*t_1 + 5, 7*t_0 + 3*t_1 + 5)
+    >>> diop_solve(x + 3*y - 4*z + w - 6)
+    (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
     set([(-2, -1), (-2, 1), (2, -1), (2, 1)])
 
@@ -266,23 +266,32 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     elif eq_type == "homogeneous_ternary_quadratic":
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
-        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+        return _parametrize_ternary_quadratic(
+            (x_0, y_0, z_0), var, coeff)
+
+    elif eq_type == "homogeneous_ternary_quadratic_normal":
+        return _diop_ternary_quadratic_normal(var, coeff)
 
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
     elif eq_type == "univariate":
-        l = solve(eq)
-        s = set([])
-
-        for soln in l:
-            if isinstance(soln, Integer):
-                s.add((soln,))
-        return s
+        return set([(int(i),) for i in solveset_real(
+            eq, var[0]).intersect(S.Integers)])
 
     elif eq_type == "general_sum_of_squares":
-        return _diop_general_sum_of_squares(var, coeff)
+        return _diop_general_sum_of_squares(len(var), -int(coeff[1]))
 
+    if eq_type is not None and eq_type not in diop_known:
+            raise ValueError(filldedent('''
+    Alhough this type of equation was identified, it is not yet
+    handled. It should, however, be listed in `diop_known` at the
+    top of this file. Developers should see comments at the end of
+    `classify_diop`.
+            '''))
+    else:
+        raise NotImplementedError(
+            'equation recognized but not yet handled.')
 
 def classify_diop(eq):
     """
