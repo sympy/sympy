@@ -2162,8 +2162,9 @@ def reconstruct(A, B, z):
 
 def ldescent(A, B):
     """
-    Uses Lagrange's method to find a non trivial solution to
-    `w^2 = Ax^2 + By^2`.
+    Return a non-trivial solution to `w^2 = Ax^2 + By^2` using
+    Lagrange's method; return None if there is no such solution.
+    .
 
     Here, `A \\neq 0` and `B \\neq 0` and `A` and `B` are square free. Output a
     tuple `(w_0, x_0, y_0)` which is a solution to the above equation.
@@ -2190,17 +2191,18 @@ def ldescent(A, B):
            London Mathematical Society Student Texts 41, Cambridge University
            Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
-           Mathematics of Computation, Volume 00, Number 0.
+           [online], Available:
+           http://eprints.nottingham.ac.uk/60/1/kvxefz87.pdf
     """
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)
         return w, x, y
 
     if A == 1:
-        return (S.One, S.One, 0)
+        return (1, 1, 0)
 
     if B == 1:
-        return (S.One, 0, S.One)
+        return (1, 0, 1)
 
     r = sqrt_mod(A, B)
 
@@ -2214,27 +2216,24 @@ def ldescent(A, B):
         B_0 = None
 
         for i in div:
-            if isinstance(sqrt(abs(Q) // i), Integer):
-                B_0, d = sign(Q)*i, sqrt(abs(Q) // i)
+            sQ, _exact = integer_nthroot(abs(Q) // i, 2)
+            if _exact:
+                B_0, d = sign(Q)*i, sQ
                 break
 
-    if B_0 != None:
+    if B_0 is not None:
         W, X, Y = ldescent(A, B_0)
-        return simplified((-A*X + r*W), (r*X - W), Y*(B_0*d))
-    # In this module Descent will always be called with inputs which have solutions.
+        return _remove_gcd((-A*X + r*W), (r*X - W), Y*(B_0*d))
 
 
 def descent(A, B):
     """
-    Lagrange's `descent()` with lattice-reduction to find solutions to
-    `x^2 = Ay^2 + Bz^2`.
+    Returns a non-trivial solution, (x, y, z), to `x^2 = Ay^2 + Bz^2`
+    using Lagrange's descent method with lattice-reduction. `A` and `B`
+    are assumed to be valid for such a solution to exist.
 
-    Here `A` and `B` should be square free and pairwise prime. Always should be
-    called with suitable ``A`` and ``B`` so that the above equation has
-    solutions.
-
-    This is more faster than the normal Lagrange's descent algorithm because
-    the gaussian reduction is used.
+    This is faster than the normal Lagrange's descent algorithm because
+    the Gaussian reduction is used.
 
     Examples
     ========
@@ -2262,8 +2261,6 @@ def descent(A, B):
         return (1, 0, 1)
     if A == 1:
         return (1, 1, 0)
-    if B == -1:
-        return (None, None, None)
     if B == -A:
         return (0, 1, 1)
     if B == A:
@@ -2279,7 +2276,7 @@ def descent(A, B):
 
     x_1, z_1, y_1 = descent(A, t_1)
 
-    return simplified(x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
+    return _remove_gcd(x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
 
 
 def gaussian_reduce(w, a, b):
