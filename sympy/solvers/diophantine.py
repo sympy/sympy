@@ -2062,58 +2062,61 @@ def _diop_ternary_quadratic_normal(var, coeff):
     return _remove_gcd(x_0, y_0, z_0)
 
 
-def square_factor(a):
+def sqf_normal(a, b, c, steps=False):
     """
-    Returns an integer `c` s.t. `a = c^2k, \ c,k \in Z`. Here `k` is square
-    free.
+    Return `a', b', c'`, the coefficients of the square-free normal
+    form of `ax^2 + by^2 + cz^2 = 0`, where `a', b', c'` are pairwise
+    prime and `\gcd(a', b', c')` is `1`.  If `steps` is True then
+    also return three tuples: `sq`, `sqf`, and `(a', b', c')` where
+    `sq` contains the square factors of `a`, `b` and `c` after removing
+    the `gcd(a, b, c)`; `sqf` contains the values of `a`, `b` and `c`
+    after removing both the `gcd(a, b, c)` and the square factors.
 
-    Examples
-    ========
-
-    >>> from sympy.solvers.diophantine import square_factor
-    >>> square_factor(24)
-    2
-    >>> square_factor(36)
-    6
-    >>> square_factor(1)
-    1
-    """
-    f = factorint(abs(a))
-    c = 1
-
-    for p, e in f.items():
-        c = c * p**(e//2)
-
-    return c
-
-
-def pairwise_prime(a, b, c):
-    """
-    Transform `ax^2 + by^2 + cz^2 = 0` into an equivalent equation
-    `a'x^2 + b'y^2 + c'z^2 = 0` where `a', b', c'` are pairwise relatively
-    prime.
-
-    Returns a tuple containing `a', b', c'`. `\gcd(a, b, c)` should equal `1`
-    for this to work. The solutions for `ax^2 + by^2 + cz^2 = 0` can be
+    The solutions for `ax^2 + by^2 + cz^2 = 0` can be
     recovered from the solutions of `a'x^2 + b'y^2 + c'z^2 = 0`.
 
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import pairwise_prime
-    >>> pairwise_prime(6, 15, 10)
-    (5, 2, 3)
+    >>> from sympy.solvers.diophantine import sqf_normal
+    >>> sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11)
+    (11, 1, 5)
+    >>> sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11, True)
+    ((3, 1, 7), (5, 55, 11), (11, 1, 5))
+
+    References
+    ==========
+
+    .. [1] Legendre's Theorem, Legrange's Descent,
+           http://public.csusm.edu/aitken_html/notes/legendre.pdf
+
 
     See Also
     ========
 
-    make_prime(), reocnstruct()
+    reconstruct()
     """
-    a, b, c = make_prime(a, b, c)
-    b, c, a = make_prime(b, c, a)
-    c, a, b = make_prime(c, a, b)
+    ABC = A, B, C = _remove_gcd(a, b, c)
+    sq = tuple(square_factor(i) for i in ABC)
+    sqf = A, B, C = tuple([i//j**2 for i,j in zip(ABC, sq)])
+    pc = igcd(A, B)
+    A /= pc
+    B /= pc
+    pa = igcd(B, C)
+    B /= pa
+    C /= pa
+    pb = igcd(A, C)
+    A /= pb
+    B /= pb
 
-    return a, b, c
+    A *= pa
+    B *= pb
+    C *= pc
+
+    if steps:
+        return (sq, sqf, (A, B, C))
+    else:
+        return A, B, C
 
 
 def make_prime(a, b, c):
