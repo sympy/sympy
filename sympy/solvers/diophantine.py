@@ -951,13 +951,13 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`.
 
-    Mainly concerned in the case `D > 0, D` is not a perfect square, which is
-    the same as generalized Pell equation. To solve the generalized Pell
-    equation this function Uses LMM algorithm. Refer [1]_ for more details on
-    the algorithm.
-    Returns one solution for each class of the solutions. Other solutions of
-    the class can be constructed according to the values of ``D`` and ``N``.
-    Returns a list containing the solution tuples `(x, y)`.
+    Mainly concerned with the case `D > 0, D` is not a perfect square,
+    which is the same as the generalized Pell equation. The LMM
+    algorithm [1]_ is used to solve this equation.
+
+    Returns one solution tuple, (`x, y)` for each class of the solutions.
+    Other solutions of the class can be constructed according to the
+    values of ``D`` and ``N``.
 
     Usage
     =====
@@ -1000,52 +1000,55 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     if D < 0:
         if N == 0:
-            return [(S.Zero, S.Zero)]
+            return [(0, 0)]
         elif N < 0:
             return []
         elif N > 0:
-            d = divisors(square_factor(N))
             sol = []
-
-            for divisor in d:
-                sols = cornacchia(1, -D, N // divisor**2)
+            for d in divisors(square_factor(N)):
+                sols = cornacchia(1, -D, N // d**2)
                 if sols:
                     for x, y in sols:
-                        sol.append((divisor*x, divisor*y))
+                        sol.append((d*x, d*y))
 
             return sol
 
     elif D == 0:
-        if N < 0 or not isinstance(sqrt(N), Integer):
+        if N < 0:
             return []
         if N == 0:
-            return [(S.Zero, t)]
-        if isinstance(sqrt(N), Integer):
-            return [(sqrt(N), t)]
+            return [(0, t)]
+        sN, _exact = integer_nthroot(N, 2)
+        if _exact:
+            return [(sN, t)]
+        else:
+            return []
 
-    else: # D > 0
-        if isinstance(sqrt(D), Integer):
-            r = sqrt(D)
-
+    else:  # D > 0
+        sD, _exact = integer_nthroot(D, 2)
+        if _exact:
             if N == 0:
-                return [(r*t, t)]
+                return [(sD*t, t)]
             else:
                 sol = []
 
-                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
-                    if isinstance(sqrt(D*y**2 + N), Integer):
-                        sol.append((sqrt(D*y**2 + N), y))
+                for y in range(floor(sign(N)*(N - 1)/(2*sD)) + 1):
+                    try:
+                        sq, _exact = integer_nthroot(D*y**2 + N, 2)
+                    except ValueError:
+                        _exact = False
+                    if _exact:
+                        sol.append((sq, y))
 
                 return sol
         else:
             if N == 0:
-                return [(S.Zero, S.Zero)]
+                return [(0, 0)]
 
             elif abs(N) == 1:
 
                 pqa = PQa(0, 1, D)
-                a_0 = floor(sqrt(D))
-                l = 0
+                j = 0
                 G = []
                 B = []
 
@@ -1055,29 +1058,29 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                     G.append(i[5])
                     B.append(i[4])
 
-                    if l != 0 and a == 2*a_0:
+                    if j != 0 and a == 2*sD:
                         break
-                    l = l + 1
+                    j = j + 1
 
-                if l % 2 == 1:
+                if _odd(j):
 
                     if N == -1:
-                        x = G[l-1]
-                        y = B[l-1]
+                        x = G[j - 1]
+                        y = B[j - 1]
                     else:
-                        count = l
-                        while count < 2*l - 1:
+                        count = j
+                        while count < 2*j - 1:
                             i = next(pqa)
                             G.append(i[5])
                             B.append(i[4])
-                            count = count + 1
+                            count += 1
 
                         x = G[count]
                         y = B[count]
                 else:
                     if N == 1:
-                        x = G[l-1]
-                        y = B[l-1]
+                        x = G[j - 1]
+                        y = B[j - 1]
                     else:
                         return []
 
@@ -1095,18 +1098,17 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
                 for f in fs:
                     m = N // f**2
-                    zs = sqrt_mod(D, abs(m), True)
 
+                    zs = sqrt_mod(D, abs(m), all_roots=True)
                     zs = [i for i in zs if i <= abs(m) // 2 ]
+
                     if abs(m) != 2:
-                        zs = zs + [-i for i in zs]
-                        if S.Zero in zs:
-                            zs.remove(S.Zero) # Remove duplicate zero
+                        zs = zs + [-i for i in zs if i]  # omit dupl 0
 
                     for z in zs:
 
                         pqa = PQa(z, abs(m), D)
-                        l = 0
+                        j = 0
                         G = []
                         B = []
 
@@ -1116,9 +1118,9 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                             G.append(i[5])
                             B.append(i[4])
 
-                            if l != 0 and abs(i[1]) == 1:
-                                r = G[l-1]
-                                s = B[l-1]
+                            if j != 0 and abs(i[1]) == 1:
+                                r = G[j-1]
+                                s = B[j-1]
 
                                 if r**2 - D*s**2 == m:
                                     sol.append((f*r, f*s))
@@ -1129,8 +1131,8 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
                                 break
 
-                            l = l + 1
-                            if l == length(z, abs(m), D):
+                            j = j + 1
+                            if j == length(z, abs(m), D):
                                 break
 
                 return sol
