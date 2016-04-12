@@ -2671,7 +2671,7 @@ def sum_of_three_squares(n):
 
     >>> from sympy.solvers.diophantine import sum_of_three_squares
     >>> sum_of_three_squares(44542)
-    (207, 37, 18)
+    (18, 37, 207)
 
     References
     ==========
@@ -2689,26 +2689,25 @@ def sum_of_three_squares(n):
     if n == 0:
         return (0, 0, 0)
 
-    while n % 4 == 0:
-        v = v + 1
-        n = n // 4
+    v = multiplicity(4, n)
+    n //= 4**v
 
     if n % 8 == 7:
         return (None, None, None)
 
     if n in special.keys():
         x, y, z = special[n]
-        return (2**v*x, 2**v*y, 2**v*z)
+        return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
 
-    l = int(sqrt(n))
+    l, _exact = integer_nthroot(n, 2)
 
-    if n == l**2:
+    if _exact:
         return (2**v*l, 0, 0)
 
     x = None
 
     if n % 8 == 3:
-        l = l if l % 2 else l - 1
+        l = l if _odd(l) else l - 1
 
         for i in range(l, -1, -2):
             if isprime((n - i**2) // 2):
@@ -2716,12 +2715,12 @@ def sum_of_three_squares(n):
                 break
 
         y, z = prime_as_sum_of_two_squares((n - x**2) // 2)
-        return (2**v*x, 2**v*(y + z), 2**v*abs(y - z))
+        return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
 
     if n % 8 == 2 or n % 8 == 6:
-        l = l if l % 2 else l - 1
+        l = l if _odd(l) else l - 1
     else:
-        l = l - 1 if l % 2 else l
+        l = l - 1 if _odd(l) else l
 
     for i in range(l, -1, -2):
         if isprime(n - i**2):
@@ -2729,7 +2728,7 @@ def sum_of_three_squares(n):
             break
 
     y, z = prime_as_sum_of_two_squares(n - x**2)
-    return (2**v*x, 2**v*y, 2**v*z)
+    return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
 
 
 def sum_of_four_squares(n):
@@ -2748,9 +2747,9 @@ def sum_of_four_squares(n):
 
     >>> from sympy.solvers.diophantine import sum_of_four_squares
     >>> sum_of_four_squares(3456)
-    (8, 48, 32, 8)
+    (8, 8, 32, 48)
     >>> sum_of_four_squares(1294585930293)
-    (0, 1137796, 2161, 1234)
+    (0, 1234, 2161, 1137796)
 
     References
     ==========
@@ -2761,10 +2760,8 @@ def sum_of_four_squares(n):
     if n == 0:
         return (0, 0, 0, 0)
 
-    v = 0
-    while n % 4 == 0:
-        v = v + 1
-        n = n // 4
+    v = multiplicity(4, n)
+    n //= 4**v
 
     if n % 8 == 7:
         d = 2
@@ -2777,7 +2774,7 @@ def sum_of_four_squares(n):
 
     x, y, z = sum_of_three_squares(n)
 
-    return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
+    return _sorted_tuple(2**v*d, 2**v*x, 2**v*y, 2**v*z)
 
 
 def power_representation(n, p, k, zeros=False):
