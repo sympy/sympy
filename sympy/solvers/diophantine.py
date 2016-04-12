@@ -1386,7 +1386,7 @@ def length(P, Q, D):
     continued fraction representation of `\\frac{P + \sqrt{D}}{Q}`.
 
     It is important to remember that this does NOT return the length of the
-    periodic part but the addition of the legths of the two parts as mentioned
+    periodic part but the sum of the legths of the two parts as mentioned
     above.
 
     Usage
@@ -1408,35 +1408,21 @@ def length(P, Q, D):
     >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
-    4
+    5
+
+    See Also
+    ========
+    sympy.ntheory.continued_fraction.continued_fraction_periodic
     """
-    x = P + sqrt(D)
-    y = Q
-
-    x = sympify(x)
-    v, res = [], []
-    q = x/y
-
-    if q < 0:
-        v.append(q)
-        res.append(floor(q))
-        q = q - floor(q)
-        num, den = rad_rationalize(1, q)
-        q = num / den
-
-    while 1:
-        v.append(q)
-        a = int(q)
-        res.append(a)
-
-        if q == a:
-            return len(res)
-
-        num, den = rad_rationalize(1,(q - a))
-        q = num / den
-
-        if q in v:
-            return len(res)
+    from sympy.ntheory.continued_fraction import continued_fraction_periodic
+    v = continued_fraction_periodic(P, Q, D)
+    if type(v[-1]) is list:
+        rpt = len(v[-1])
+        nonrpt = len(v) - 1
+    else:
+        rpt = 0
+        nonrpt = len(v)
+    return rpt + nonrpt
 
 
 def transformation_to_DN(eq):
