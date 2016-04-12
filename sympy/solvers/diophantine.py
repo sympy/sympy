@@ -22,8 +22,6 @@ from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
 
-from collections import defaultdict
-
 
 
 __all__ = ['base_solution_linear', 'classify_diop', 'cornacchia', 'descent',
@@ -302,8 +300,7 @@ def classify_diop(eq):
         raise ValueError('equation should have 1 or more free symbols')
     var.sort(key=default_sort_key)
     eq = eq.expand(force=True)
-    coeff = defaultdict(int)
-    coeff.update(eq.as_coefficients_dict())
+    coeff = eq.as_coefficients_dict()
     if not all(_is_int(c) for c in coeff.values()):
         raise TypeError("Coefficients should be Integers")
 
@@ -1613,8 +1610,7 @@ def _find_DN(var, coeff):
 
     simplified = _mexpand(eq.subs(zip((x, y), (u, v))))
 
-    coeff = defaultdict(int)
-    coeff.update(simplified.as_coefficients_dict())
+    coeff = simplified.as_coefficients_dict()
 
     return -coeff[Y**2]/coeff[X**2], -coeff[1]/coeff[X**2]
 
