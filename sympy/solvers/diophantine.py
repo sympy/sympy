@@ -738,62 +738,51 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
 
 def _diop_quadratic(var, coeff, t):
 
-    x, y = var[:2]
-
-    for term in [x**2, y**2, x*y, x, y, Integer(1)]:
-        if term not in coeff.keys():
-            coeff[term] = Integer(0)
+    x, y = var
 
     A = coeff[x**2]
     B = coeff[x*y]
     C = coeff[y**2]
     D = coeff[x]
     E = coeff[y]
-    F = coeff[Integer(1)]
+    F = coeff[1]
 
-    d = igcd(A, igcd(B, igcd(C, igcd(D, igcd(E, F)))))
-    A = A // d
-    B = B // d
-    C = C // d
-    D = D // d
-    E = E // d
-    F = F // d
+    A, B, C, D, E, F = [as_int(i) for i in _remove_gcd(A, B, C, D, E, F)]
 
-    # (1) Linear case: A = B = C = 0 ==> considered under linear diophantine equations
-
-    # (2) Simple-Hyperbolic case:A = C = 0, B != 0
+    # (1) Simple-Hyperbolic case: A = C = 0, B != 0
     # In this case equation can be converted to (Bx + E)(By + D) = DE - BF
     # We consider two cases; DE - BF = 0 and DE - BF != 0
     # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
     l = set([])
-
+    discr = B**2 - 4*A*C
     if A == 0 and C == 0 and B != 0:
 
         if D*E - B*F == 0:
-            if divisible(int(E), int(B)):
-                l.add((-E/B, t))
-            if divisible(int(D), int(B)):
-                l.add((t, -D/B))
-
+            q, r = divmod(E, B)
+            if not r:
+                l.add((-q, t))
+            q, r = divmod(D, B)
+            if not r:
+                l.add((t, -q))
         else:
             div = divisors(D*E - B*F)
             div = div + [-term for term in div]
-
             for d in div:
-                if divisible(int(d - E), int(B)):
-                    x0  = (d - E) // B
-                    if divisible(int(D*E - B*F), int(d)):
-                        if divisible(int((D*E - B*F)// d - D), int(B)):
-                            y0 = ((D*E - B*F) // d - D) // B
+                x0, r = divmod(d - E, B)
+                if not r:
+                    q, r = divmod(D*E - B*F, d)
+                    if not r:
+                        y0, r = divmod(q - D, B)
+                        if not r:
                             l.add((x0, y0))
 
-    # (3) Parabolic case: B**2 - 4*A*C = 0
+    # (2) Parabolic case: B**2 - 4*A*C = 0
     # There are two subcases to be considered in this case.
     # sqrt(c)D - sqrt(a)E = 0 and sqrt(c)D - sqrt(a)E != 0
     # More Details, http://www.alpertron.com.ar/METHODS.HTM#Parabol
 
-    elif B**2 - 4*A*C == 0:
+    elif discr == 0:
 
         if A == 0:
             s = _diop_quadratic([y, x], coeff, t)
@@ -801,8 +790,7 @@ def _diop_quadratic(var, coeff, t):
                 l.add((soln[1], soln[0]))
 
         else:
-            g = igcd(A, C)
-            g = abs(g) * sign(A)
+            g = sign(A)*igcd(A, C)
             a = A // g
             b = B // g
             c = C // g
@@ -811,61 +799,63 @@ def _diop_quadratic(var, coeff, t):
 
             if e*sqrt(c)*D - sqrt(a)*E == 0:
                 z = symbols("z", real=True)
-                roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
+                eq = sqrt(a)*g*z**2 + D*z + sqrt(a)*F
+                roots = solveset_real(eq, z).intersect(S.Integers)
                 for root in roots:
-                    if isinstance(root, Integer):
-                        l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
+                    ans = diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)
+                    l.add((ans[0], ans[1]))
 
-            elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
-                solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
-                    - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+            elif _is_int(e*sqrt(c)*D - sqrt(a)*E):
+                _c = e*sqrt(c)*D - sqrt(a)*E
+                solve_x = lambda u: -e*sqrt(c)*g*_c*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
+                    - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // _c
 
-                solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
-                    + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+                solve_y = lambda u: sqrt(a)*g*_c*t**2 + (D + 2*sqrt(a)*g*u)*t \
+                    + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // _c
 
                 for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
-                    if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
+                    if divisible(
+                            sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F,
+                            e*sqrt(c)*D - sqrt(a)*E):
                         l.add((solve_x(z0), solve_y(z0)))
 
-    # (4) Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
+    # (3) Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
     # by John P. Robertson.
     # http://www.jpr2718.org/ax2p.pdf
 
-    elif isinstance(sqrt(B**2 - 4*A*C), Integer):
+    elif square(discr):
         if A != 0:
-            r = sqrt(B**2 - 4*A*C)
+            r = sqrt(discr)
             u, v = symbols("u, v", integer=True)
-            eq = _mexpand(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
+            eq = _mexpand(
+                4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) +
+                2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
 
             sol = diop_solve(eq, t)
             sol = list(sol)
 
             for solution in sol:
-                s0 = solution[0]
-                t0 = solution[1]
+                s0, t0 = solution
 
                 x_0 = S(B*t0 + r*s0 + r*t0 - B*s0)/(4*A*r)
                 y_0 = S(s0 - t0)/(2*r)
 
                 if isinstance(s0, Symbol) or isinstance(t0, Symbol):
                     if check_param(x_0, y_0, 4*A*r, t) != (None, None):
-                        l.add((check_param(x_0, y_0, 4*A*r, t)[0], check_param(x_0, y_0, 4*A*r, t)[1]))
+                        ans = check_param(x_0, y_0, 4*A*r, t)
+                        l.add((ans[0], ans[1]))
 
                 elif divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
                     if divisible(s0 - t0, 2*r):
                         if is_solution_quad(var, coeff, x_0, y_0):
                             l.add((x_0, y_0))
         else:
-            _var = var
-            _var[0], _var[1] = _var[1], _var[0] # Interchange x and y
-            s = _diop_quadratic(_var, coeff, t)
-
-            while len(s) > 0:
-                sol = s.pop()
-                l.add((sol[1], sol[0]))
+            s = _diop_quadratic(var[::-1], coeff, t)  # Interchange x and y
+            while s:                                  #         |
+                l.add(s.pop()[::-1])  # and solution <----------+
 
 
-    # (5) B**2 - 4*A*C > 0 and B**2 - 4*A*C not a square or B**2 - 4*A*C < 0
+    # (4) B**2 - 4*A*C > 0 and B**2 - 4*A*C not a square or B**2 - 4*A*C < 0
 
     else:
 
@@ -878,12 +868,13 @@ def _diop_quadratic(var, coeff, t):
                 for X_i in [-solution[0], solution[0]]:
                     for Y_i in [-solution[1], solution[1]]:
                         x_i, y_i = (P*Matrix([X_i, Y_i]) + Q)[0], (P*Matrix([X_i, Y_i]) + Q)[1]
-                        if isinstance(x_i, Integer) and isinstance(y_i, Integer):
-                            l.add((x_i, y_i))
+                        try:
+                            l.add((as_int(x_i), as_int(y_i)))
+                        except ValueError:
+                            pass
 
         else:
             # In this case equation can be transformed into a Pell equation
-            #n = symbols("n", integer=True)
 
             fund_solns = solns_pell
             solns_pell = set(fund_solns)
@@ -894,9 +885,7 @@ def _diop_quadratic(var, coeff, t):
             T = a[0][0]
             U = a[0][1]
 
-            if (isinstance(P[0], Integer) and isinstance(P[1], Integer) and isinstance(P[2], Integer)
-                and isinstance(P[3], Integer) and isinstance(Q[0], Integer) and isinstance(Q[1], Integer)):
-
+            if all(_is_int(_) for _ in P[:4] + Q[:2]):
                 for sol in solns_pell:
 
                     r = sol[0]
@@ -911,8 +900,7 @@ def _diop_quadratic(var, coeff, t):
                     l.add((x_n, y_n))
 
             else:
-                L = ilcm(S(P[0]).q, ilcm(S(P[1]).q, ilcm(S(P[2]).q,
-                         ilcm(S(P[3]).q, ilcm(S(Q[0]).q, S(Q[1]).q)))))
+                L = ilcm(*[_.q for _ in P[:4] + Q[:2]])
 
                 k = 1
 
@@ -929,13 +917,16 @@ def _diop_quadratic(var, coeff, t):
                         Z = P*Matrix([X, Y]) + Q
                         x, y = Z[0], Z[1]
 
-                        if isinstance(x, Integer) and isinstance(y, Integer):
+                        try:
+                            x, y = as_int(x), as_int(y)
                             Xt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t +
                                   (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ 2
                             Yt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t -
                                   (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ (2*sqrt(D))
                             Zt = P*Matrix([Xt, Yt]) + Q
                             l.add((Zt[0], Zt[1]))
+                        except ValueError:
+                            pass
 
                         X, Y = X*T + D*U*Y, X*U + Y*T
 
@@ -951,11 +942,9 @@ def is_solution_quad(var, coeff, u, v):
 
     Not intended for use by normal users.
     """
-    x, y = var[:2]
-
-    eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
-
-    return _mexpand(Subs(eq, (x, y), (u, v)).doit()) == 0
+    reps = dict(zip(var, (u, v)))
+    eq = Add(*[j*i.xreplace(reps) for i, j in coeff.items()])
+    return _mexpand(eq) == 0
 
 
 def diop_DN(D, N, t=symbols("t", integer=True)):
