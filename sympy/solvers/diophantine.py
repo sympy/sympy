@@ -2477,17 +2477,14 @@ def diop_general_sum_of_squares(eq, limit=1):
     """
     Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
-    Returns at most ``limit`` number of solutions. Currently there is no way to
-    set ``limit`` using higher level API's like ``diophantine()`` or
-    ``diop_solve()`` but that will be fixed soon.
+    Returns at most ``limit`` number of solutions.
 
     Usage
     =====
 
     ``general_sum_of_squares(eq, limit)`` : Here ``eq`` is an expression which
     is assumed to be zero. Also, ``eq`` should be in the form,
-    `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit`` number of
-    solutions are returned.
+    `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
     Details
     =======
@@ -2501,55 +2498,59 @@ def diop_general_sum_of_squares(eq, limit=1):
     >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
     >>> from sympy.abc import a, b, c, d, e, f
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
-    set([(0, 48, 5, 4, 0)])
+    set([(-48, 0, 1, 2, 6)])
 
     Reference
     =========
 
-    .. [1] Representing an Integer as a sum of three squares, [online],
+    .. [1] Representing an integer as a sum of three squares, [online],
         Available:
         http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "general_sum_of_squares":
-        return _diop_general_sum_of_squares(var, coeff, limit)
+        return _diop_general_sum_of_squares(len(var), -int(coeff[1]), limit)
 
 
-def _diop_general_sum_of_squares(var, coeff, limit=1):
+def _diop_general_sum_of_squares(n, k, limit=1):
+    # sum(i**2 for i in var) == k
+    if n < 3:
+        raise ValueError('n must be greater than 2')
 
-    n = len(var)
-    k = -int(coeff[Integer(1)])
-    s = set([])
+    s = set()
 
     if k < 0:
-        return set([])
+        return s
 
     if n == 3:
         s.add(sum_of_three_squares(k))
     elif n == 4:
         s.add(sum_of_four_squares(k))
     else:
-
-        m = n // 4
-        f = partition(k, m, True)
-
-        for j in range(limit):
-
-            soln = []
-            try:
-                l = next(f)
-            except StopIteration:
-                break
-
-            for n_i in l:
-                a, b, c, d = sum_of_four_squares(n_i)
-                soln = soln + [a, b, c, d]
-
-            soln = soln + [0] * (n % 4)
-
-            s.add(tuple(soln))
-
+        m, r = divmod(n, 4)
+        sum_x2 = Add(*[Dummy()**2 for i in range(r)])
+        took = 0
+        for l in partition(k, m + (1 if r else 0), True):
+            soln = ()
+            rem = k
+            for n_i in l[:m]:
+                soln += sum_of_four_squares(n_i)
+                rem -= n_i
+            if r:
+                eq = sum_x2 - rem
+                rem_sol = sorted(
+                    [_sorted_tuple(*i) for i in diop_solve(eq)])
+            else:
+                rem_sol = [()]
+            for sol in rem_sol:
+                s.add(_sorted_tuple(*(soln + sol)))
+                took += 1
+                if took >= limit:
+                    break
+            else:
+                continue
+            break
     return s
 
 
