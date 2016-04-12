@@ -1756,8 +1756,8 @@ def _diop_ternary_quadratic(_var, coeff):
             if X_0 is None:
                 return (None, None, None)
 
-            l = (S(B*y_0 + C*z_0)/(2*A)).q
-            x_0, y_0, z_0 = X_0*l - (S(B*y_0 + C*z_0)/(2*A)).p, y_0*l, z_0*l
+            p, q = _rational_pq(B*y_0 + C*z_0, 2*A)
+            x_0, y_0, z_0 = X_0*q - p, y_0*q, z_0*q
 
         elif coeff[z*y] != 0:
             if coeff[y**2] == 0:
@@ -1997,37 +1997,28 @@ def diop_ternary_quadratic_normal(eq):
     (4, 9, 1)
     """
     var, coeff, diop_type = classify_diop(eq)
-
-    if diop_type == "homogeneous_ternary_quadratic":
+    if diop_type == "homogeneous_ternary_quadratic_normal":
         return _diop_ternary_quadratic_normal(var, coeff)
 
 
 def _diop_ternary_quadratic_normal(var, coeff):
 
-    x, y, z = var[:3]
+    x, y, z = var
 
     a = coeff[x**2]
     b = coeff[y**2]
     c = coeff[z**2]
+    try:
+        assert len([k for k in coeff if coeff[k]]) == 3
+        assert all(coeff[i**2] for i in var)
+    except AssertionError:
+        raise ValueError(filldedent('''
+    coeff dict is not consistent with assumption of this routine:
+    coefficients should be those of an expression in the form
+    a*x**2 + b*y**2 + c*z**2 where a*b*c != 0.'''))
 
-    if a*b*c == 0:
-        raise ValueError("Try factoring out you equation or using diophantine()")
-
-    g = igcd(a, igcd(b, c))
-
-    a = a // g
-    b = b // g
-    c = c // g
-
-    a_0 = square_factor(a)
-    b_0 = square_factor(b)
-    c_0 = square_factor(c)
-
-    a_1 = a // a_0**2
-    b_1 = b // b_0**2
-    c_1 = c // c_0**2
-
-    a_2, b_2, c_2 = pairwise_prime(a_1, b_1, c_1)
+    (sqf_of_a, sqf_of_b, sqf_of_c), (a_1, b_1, c_1), (a_2, b_2, c_2) = \
+        sqf_normal(a, b, c, steps=True)
 
     A = -a_2*c_2
     B = -b_2*c_2
@@ -2036,20 +2027,19 @@ def _diop_ternary_quadratic_normal(var, coeff):
     if A < 0 and B < 0:
         return (None, None, None)
 
-    if (sqrt_mod(-b_2*c_2, a_2) == None or sqrt_mod(-c_2*a_2, b_2) == None or
-        sqrt_mod(-a_2*b_2, c_2) == None):
+    if (
+            sqrt_mod(-b_2*c_2, a_2) is None or
+            sqrt_mod(-c_2*a_2, b_2) is None or
+            sqrt_mod(-a_2*b_2, c_2) is None):
         return (None, None, None)
 
     z_0, x_0, y_0 = descent(A, B)
 
-    if divisible(z_0, c_2) == True:
-        z_0 = z_0 // abs(c_2)
-    else:
-        x_0 = x_0*(S(z_0)/c_2).q
-        y_0 = y_0*(S(z_0)/c_2).q
-        z_0 = (S(z_0)/c_2).p
+    z_0, q = _rational_pq(z_0, abs(c_2))
+    x_0 *= q
+    y_0 *= q
 
-    x_0, y_0, z_0 = simplified(x_0, y_0, z_0)
+    x_0, y_0, z_0 = _remove_gcd(x_0, y_0, z_0)
 
     # Holzer reduction
     if sign(a) == sign(b):
@@ -2063,13 +2053,13 @@ def _diop_ternary_quadratic_normal(var, coeff):
     y_0 = reconstruct(a_1, c_1, y_0)
     z_0 = reconstruct(a_1, b_1, z_0)
 
-    l = ilcm(a_0, ilcm(b_0, c_0))
+    sq_lcm = ilcm(sqf_of_a, sqf_of_b, sqf_of_c)
 
-    x_0 = abs(x_0*l//a_0)
-    y_0 = abs(y_0*l//b_0)
-    z_0 = abs(z_0*l//c_0)
+    x_0 = abs(x_0*sq_lcm//sqf_of_a)
+    y_0 = abs(y_0*sq_lcm//sqf_of_b)
+    z_0 = abs(z_0*sq_lcm//sqf_of_c)
 
-    return simplified(x_0, y_0, z_0)
+    return _remove_gcd(x_0, y_0, z_0)
 
 
 def square_factor(a):
