@@ -1288,6 +1288,8 @@ def clear_coefficients(expr, rhs=S.Zero):
     """
     was = None
     free = expr.free_symbols
+    if not free and expr.is_Rational:
+        return (S.Zero, rhs - expr)
     while was != expr:
         was = expr
         m, expr = (
