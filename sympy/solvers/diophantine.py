@@ -2119,38 +2119,31 @@ def sqf_normal(a, b, c, steps=False):
         return A, B, C
 
 
-def make_prime(a, b, c):
+def square_factor(a):
     """
-    Transform the equation `ax^2 + by^2 + cz^2 = 0` to an equivalent equation
-    `a'x^2 + b'y^2 + c'z^2 = 0` with `\gcd(a', b') = 1`.
-
-    Returns a tuple `(a', b', c')` which satisfies above conditions. Note that
-    in the returned tuple `\gcd(a', c')` and `\gcd(b', c')` can take any value.
+    Returns an integer `c` s.t. `a = c^2k, \ c,k \in Z`. Here `k` is square
+    free. `a` can be given as an integer or a dictionary of factors.
 
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import make_prime
-    >>> make_prime(4, 2, 7)
-    (2, 1, 14)
+    >>> from sympy.solvers.diophantine import square_factor
+    >>> square_factor(24)
+    2
+    >>> square_factor(-36*3)
+    6
+    >>> square_factor(1)
+    1
+    >>> square_factor({3: 2, 2: 1, -1: 1})  # -18
+    3
 
     See Also
     ========
-
-    pairwaise_prime(), reconstruct()
+    sympy.ntheory.factor_.core
     """
-    g = igcd(a, b)
+    f = a if isinstance(a, dict) else factorint(a)
+    return Mul(*[p**(e//2) for p, e in f.items()])
 
-    if g != 1:
-        f = factorint(g)
-        for p, e in f.items():
-            a = a // p**e
-            b = b // p**e
-
-            if e % 2 == 1:
-                c = p*c
-
-    return a, b, c
 
 
 def reconstruct(a, b, z):
