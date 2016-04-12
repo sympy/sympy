@@ -34,13 +34,39 @@ class Expectation(Expr):
     """
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
-        if condition is None:
-            obj = Expr.__new__(cls, expr)
-        else:
+        if not kwargs.pop('evaluate', global_evaluate[0]):
+            if condition is None:
+                obj = Expr.__new__(cls, expr)
+            else:
+                condition = _sympify(condition)
+                obj = Expr.__new__(cls, expr, condition)
+            obj._condition = condition
+            return obj
+
+        if not expr.has(RandomSymbol):
+            return expr
+
+        if condition is not None:
             condition = _sympify(condition)
-            obj = Expr.__new__(cls, expr, condition)
-        obj._condition = condition
-        return obj
+
+        if isinstance(expr, Add):
+            return Add(*[Expectation(a, condition=condition) for a in expr.args])
+        elif isinstance(expr, Mul):
+            rv = []
+            nonrv = []
+            for a in expr.args:
+                if isinstance(a, RandomSymbol) or a.has(RandomSymbol):
+                    rv.append(a)
+                else:
+                    nonrv.append(a)
+            return Mul(*nonrv)*Expectation(Mul(*rv), condition=condition, evaluate=False)
+        else:
+            if condition is None:
+                obj = Expr.__new__(cls, expr)
+            else:
+                obj = Expr.__new__(cls, expr, condition)
+            obj._condition = condition
+            return obj
 
     def doit(self, **kwargs):
         return expectation(self.args[0], condition=self._condition, **kwargs)
@@ -100,7 +126,9 @@ class Variance(Expr):
             obj._condition = condition
             return Mul(*nonrv)*obj
 
-        raise NotImplementedError
+        else:
+            # this expression contains a RandomSymbol somehow:
+            return Variance(arg, condition, evaluate=False)
 
     def doit(self, **kwargs):
         return variance(self.args[0], self._condition, **kwargs)
@@ -142,7 +170,8 @@ class Covariance(Expr):
         coeff_rv_list1 = cls._expand_single_argument(arg1.expand())
         coeff_rv_list2 = cls._expand_single_argument(arg2.expand())
 
-        addends = [a*b*Covariance(r1, r2) for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
+        addends = [a*b*Covariance(*sorted([r1, r2], key=default_sort_key), evaluate=False)
+                   for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
         return Add(*addends)
 
     @classmethod
@@ -161,6 +190,8 @@ class Covariance(Expr):
             return outval
         elif isinstance(expr, Mul):
             return [cls._get_mul_nonrv_rv_tuple(expr)]
+        elif expr.has(RandomSymbol):
+            return [(S.One, expr)]
 
     @classmethod
     def _get_mul_nonrv_rv_tuple(cls, m):
