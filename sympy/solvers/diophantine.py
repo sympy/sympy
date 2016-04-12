@@ -1,18 +1,30 @@
 from __future__ import print_function, division
 
-from sympy import (Add, ceiling, divisors, factor_list, factorint, floor, igcd,
-    ilcm, Integer, integer_nthroot, isprime, Matrix, Mul, nextprime,
-    perfect_power, Poly, S, sign, solve, sqrt, Subs, Symbol, symbols, sympify,
-    Wild)
+from sympy import (Add, ceiling, divisors, factor_list, factorint, floor,
+    Integer, Rational, isprime, Matrix, Mul, nextprime,
+    perfect_power, Poly, S, sign, solve, sqrt, Symbol, symbols, sympify,
+    Wild, signsimp, factor_terms, Dummy)
 
+from sympy.core.compatibility import as_int
 from sympy.core.function import _mexpand
-from sympy.simplify.radsimp import rad_rationalize
-from sympy.utilities import default_sort_key, numbered_symbols
-from sympy.core.numbers import igcdex
-from sympy.ntheory.residue_ntheory import sqrt_mod
+from sympy.core.power import integer_nthroot
+from sympy.core.numbers import igcdex, ilcm, igcd
+from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.core.relational import Eq
+from sympy.ntheory.factor_ import multiplicity
+from sympy.ntheory.primetest import is_square as square
+from sympy.ntheory.residue_ntheory import sqrt_mod
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.simplify.radsimp import rad_rationalize
 from sympy.solvers.solvers import check_assumptions
+from sympy.solvers.solveset import solveset_real
+from sympy.utilities import default_sort_key, numbered_symbols
+from sympy.utilities.misc import filldedent
+
+from collections import defaultdict
+
+
 
 __all__ = ['base_solution_linear', 'classify_diop', 'cornacchia', 'descent',
            'diop_bf_DN', 'diop_DN', 'diop_general_pythagorean',
@@ -20,6 +32,65 @@ __all__ = ['base_solution_linear', 'classify_diop', 'cornacchia', 'descent',
            'diop_solve', 'diop_ternary_quadratic', 'diophantine', 'find_DN',
            'partition', 'square_factor', 'sum_of_four_squares',
            'sum_of_three_squares', 'transformation_to_DN']
+
+
+# these types are known (but not necessarily handled)
+diop_known = {
+    "binary_quadratic",
+    "cubic_thue",
+    "general_pythagorean",
+    "general_sum_of_squares",
+    "homogeneous_general_quadratic",
+    "homogeneous_ternary_quadratic",
+    "homogeneous_ternary_quadratic_normal",
+    "inhomogeneous_general_quadratic",
+    "inhomogeneous_ternary_quadratic",
+    "linear",
+    "univariate"}
+
+
+def _is_int(i):
+    try:
+        as_int(i)
+        return True
+    except ValueError:
+        pass
+
+
+def _sorted_tuple(*i):
+    return tuple(sorted(i))
+
+
+def _remove_gcd(*x):
+    try:
+        g = igcd(*x)
+        return tuple([i//g for i in x])
+    except ValueError:
+        return x
+    except TypeError:
+        raise TypeError('_remove_gcd(a,b,c) or _remove_gcd(*container)')
+
+
+def _rational_pq(a, b):
+    # return `(numer, denom)` for a/b; sign in numer and gcd removed
+    return _remove_gcd(sign(b)*a, abs(b))
+
+
+def _nint_or_floor(p, q):
+    # return nearest int to p/q; in case of tie return floor(p/q)
+    w, r = divmod(p, q)
+    if abs(r) <= abs(q)//2:
+        return w
+    return w + 1
+
+
+def _odd(i):
+    return i % 2 != 0
+
+
+def _even(i):
+    return i % 2 == 0
+
 
 def diophantine(eq, param=symbols("t", integer=True)):
     """
