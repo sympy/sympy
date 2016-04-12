@@ -286,10 +286,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
-            '''))
+            '''))  # pragma: no cover
     else:
         raise NotImplementedError(
-            'equation recognized but not yet handled.')
+            'No solver has been written for %s.' % eq_type)
 
 def classify_diop(eq):
     # docstring supplied externally
@@ -355,10 +355,11 @@ def classify_diop(eq):
     # new diop type instructions
     # --------------------------
     # if this error raises and the equation *can* be classified,
-    # * it should be identified in the if-block above
-    # * the type should be added to the diop_known
-    # * a dedicated handler should be written (e.g. diop_linear)
-    # * it should be passed to that handler in diop_solve
+    #  * it should be identified in the if-block above
+    #  * the type should be added to the diop_known
+    # if a solver can be written for it,
+    #  * a dedicated handler should be written (e.g. diop_linear)
+    #  * it should be passed to that handler in diop_solve
     raise NotImplementedError("This equation is not yet recognized.")
 
 

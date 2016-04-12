@@ -40,6 +40,7 @@ def test_univariate():
 def test_classify_diop():
     raises(TypeError, lambda: classify_diop(x**2/3 - 1))
     raises(ValueError, lambda: classify_diop(1))
+    raises(NotImplementedError, lambda: classify_diop(w*x*y*z - 1))
     assert classify_diop(14*x**2 + 15*x - 42) == (
         [x], {1: -42, x: 15, x**2: 14}, 'univariate')
     assert classify_diop(x*y + z) == (
@@ -482,6 +483,8 @@ def test_diophantine():
         set([(49, 233, 127)])
     # this produces factors during reconstruction
     assert diophantine(x**2 + 3*y**2 - 12*z**2) == set([(0, 2, 1)])
+    # solvers have not been written for every type
+    raises(NotImplementedError, lambda: diophantine(x*y**2 + 1))
 
 
 def test_general_pythagorean():
