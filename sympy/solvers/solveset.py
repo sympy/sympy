@@ -281,25 +281,6 @@ def _domain_check(f, symbol, p):
                     for g in f.args])
 
 
-def _is_finite_with_finite_vars(f, domain=S.Complexes):
-    """
-    Return True if the given expression is finite. For symbols that
-    don't assign a value for `complex` and/or `real`, the domain will
-    be used to assign a value; symbols that don't assign a value
-    for `finite` will be made finite. All other assumptions are
-    left unmodified.
-    """
-    def assumptions(s):
-        A = s.assumptions0
-        if A.get('finite', None) is None:
-            A['finite'] = True
-        A.setdefault('complex', True)
-        A.setdefault('real', domain.is_subset(S.Reals))
-        return A
-
-    reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
-    return f.xreplace(reps).is_finite
-
 
 def _is_function_class_equation(func_class, f, symbol):
     """ Tests whether the equation is an equation of the given function class.
