@@ -260,7 +260,7 @@ hbar = planck / (2*pi)
 avogadro_number = Rational('6.022140857') * 10**23
 avogadro = avogadro_constant = avogadro_number / mol
 boltzmann = Rational('1.38064852') * ten**-23 * J / K
-atomic_mass_constant = Rational('1.660538921') * ten**-27 * kg
+atomic_mass_constant = Rational('1.660539040') * ten**-27 * kg
 
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
