@@ -548,6 +548,9 @@ def _solveset(f, symbol, domain, _check=False):
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
         f = a/m + h  # XXX condition `m != 0` should be added to soln
+    numer, denom = f.as_numer_denom()
+    if numer is S.One:
+        return S.EmptySet
     f = piecewise_fold(f)
 
     # assign the solvers to use
@@ -564,15 +567,11 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
     elif not f.has(symbol):
         return EmptySet()
-    elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
-            for m in f.args):
-        # if f(x) and g(x) are both finite we can say that the solution of
-        # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
-        # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we are not silently allowing any
-        # wrong solutions we are using this technique only if both f and g are
-        # finite for a finite input.
-        result = Union(*[solver(m, symbol) for m in f.args])
+    elif f.is_Mul:
+        if denom is not S.One:
+            result = solver(numer, symbol) - solver(denom, symbol)
+        else:
+            result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
