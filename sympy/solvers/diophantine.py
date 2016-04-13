@@ -96,8 +96,9 @@ def diophantine(eq, param=symbols("t", integer=True)):
     converting it into a product of terms which should equal zero.
 
     For example, when solving, `x^2 - y^2 = 0` this is treated as
-    `(x + y)(x - y) = 0` and `x+y = 0` and `x-y = 0` are solved independently
-    and combined. Each term is solved by calling ``diop_solve()``.
+    `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
+    independently and combined. Each term is solved by calling
+    ``diop_solve()``.
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
     tuple are the solutions for each variable in the the equation and
@@ -180,6 +181,10 @@ def diophantine(eq, param=symbols("t", integer=True)):
     # remove null merge results
     if () in sols:
         sols.remove(())
+    null = tuple([0]*len(var))
+    # if there is no solution, return trivial solution
+    if not sols and eq.subs(zip(var, null)) is S.Zero:
+        sols.add(null)
     return sols
 
 

@@ -19,8 +19,8 @@ from sympy.utilities import default_sort_key
 
 from sympy.utilities.pytest import slow, raises, XFAIL
 
-n1, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
-    "n1, p, q, x, y, z, w, t, u, v, X, Y, Z", integer=True)
+p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
+    "p, q, x, y, z, w, t, u, v, X, Y, Z", integer=True)
 t_0, t_1, t_2, t_3, t_4, t_5, t_6 = symbols("t_:7", integer=True)
 m1, m2, m3 = symbols('m1:4', integer=True)
 n1 = symbols('n1', integer=True)
@@ -751,3 +751,14 @@ def test_sum_of_squares():
     assert len(ans) == 153
     assert len([i for i in ans if all(j > 0 for j in i)]) == 115
     assert len([i for i in ans if 0 in i]) == 38
+
+
+def test_issue_9539():
+    assert diophantine(6*w + 9*y + 20*x - z) == \
+        set([(t_0, t_1, t_1 + t_2, 6*t_0 + 29*t_1 + 9*t_2)])
+
+
+def test_issue_8943():
+    assert diophantine(
+        (3*(x**2 + y**2 + z**2) - 14*(x*y + y*z + z*x))) == \
+        set([(0, 0, 0)])
