@@ -1309,7 +1309,7 @@ def multiset_partitions(multiset, m=None):
 
 
 def partitions(n, m=None, k=None, size=False):
-    """Generate all partitions of integer n (>= 0).
+    """Generate all partitions of positive integer, n.
 
     Parameters
     ==========
@@ -1342,7 +1342,8 @@ def partitions(n, m=None, k=None, size=False):
     {1: 6}
 
     The maximum number of parts in the partition (the sum of the values in
-    the returned dict) are limited with m:
+    the returned dict) are limited with m (default value, None, gives
+    partitions from 1 through n):
 
     >>> for p in partitions(6, m=2):  # doctest: +SKIP
     ...     print(p)
@@ -1377,19 +1378,23 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if n < 0:
-        raise ValueError("n must be >= 0")
-    if m == 0:
+    if n <= 0:
+        raise ValueError("n must be > 0")
+    if m is None:
+        m = n
+    elif m < 0:
         raise ValueError("m must be > 0")
+    else:
+        m = min(m, n)
     if n == 0:
         if size:
             yield 1, {0: 1}
         else:
             yield {0: 1}
         return
-    m = min(m or n, n)
     if m < 1:
-        raise ValueError("maximum numbers in partition, m, must be > 0")
+        raise ValueError(
+            "maximum number of parts in partition, m, must be > 0")
     k = min(k or n, n)
     if k < 1:
         raise ValueError("maximum value in partition, k, must be > 0")
