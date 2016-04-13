@@ -281,7 +281,6 @@ def _domain_check(f, symbol, p):
                     for g in f.args])
 
 
-
 def _is_function_class_equation(func_class, f, symbol):
     """ Tests whether the equation is an equation of the given function class.
 
@@ -709,7 +708,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
