@@ -152,6 +152,13 @@ class VectorLatexPrinter(LatexPrinter):
             base += '_' + base_split[1]
         return base
 
+    def parenthesize(self, item, level, strict=False):
+        item_latex = self._print(item)
+        if item_latex.startswith(r"\dot") or item_latex.startswith(r"\ddot") or item_latex.startswith("\dddot"):
+            return self._print(item)
+        else:
+            return LatexPrinter.parenthesize(self, item, level, strict)
+
 
 class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
