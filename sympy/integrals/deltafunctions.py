@@ -12,7 +12,7 @@ def change_mul(node, x):
        DiracDelta expression.
 
        If no simple DiracDelta expression was found, then all the DiracDelta
-       expressions are simplified (using DiracDelta.simplify).
+       expressions are simplified (using DiracDelta.expand(DiracDelta = True, wrt = x)).
 
        Return: (dirac, new node)
        Where:
@@ -40,6 +40,8 @@ def change_mul(node, x):
        sympy.functions.special.delta_functions.DiracDelta
        deltaintegrate
     """
+    from sympy.abc import x
+
     if not (node.is_Mul or node.is_Pow):
         return node
 
@@ -65,9 +67,9 @@ def change_mul(node, x):
         new_args = []
         for arg in sorted_args:
             if arg.func is DiracDelta:
-                new_args.append(arg.simplify(x))
+                new_args.append(arg.expand(DiracDelta = True, wrt = x))
             elif arg.is_Pow and arg.base.func is DiracDelta:
-                new_args.append(arg.func(arg.base.simplify(x), arg.exp))
+                new_args.append(arg.func(arg.base.expand(DiracDelta = True, wrt = x), arg.exp))
             else:
                 new_args.append(change_mul(arg, x))
         if new_args != sorted_args:
@@ -136,10 +138,11 @@ def deltaintegrate(f, x):
 
     from sympy.integrals import Integral, integrate
     from sympy.solvers import solve
+    from sympy.abc import x
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
-        h = f.simplify(x)
+        h = f.expand(DiracDelta = True, wrt = x)
         if h == f:  # can't simplify the expression
             #FIXME: the second term tells whether is DeltaDirac or Derivative
             #For integrating derivatives of DiracDelta we need the chain rule
@@ -167,7 +170,7 @@ def deltaintegrate(f, x):
                     fh = integrate(rest_mult, x)
                     return fh
             else:
-                dg = dg.simplify(x)
+                dg = dg.expand(DiracDelta = True, wrt = x)
                 if dg.is_Mul:  # Take out any extracted factors
                     dg, rest_mult_2 = change_mul(dg, x)
                     rest_mult = rest_mult*rest_mult_2
