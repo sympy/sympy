@@ -99,6 +99,7 @@ class DiracDelta(Function):
 
         """
         from sympy.polys.polyroots import roots
+        from sympy.abc import x
 
         wrt = hints.pop('wrt', x)
         if not self.args[0].has(wrt) or (len(self.args) > 1 and self.args[1] != 0 ):
