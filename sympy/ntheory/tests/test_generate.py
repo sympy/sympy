@@ -2,7 +2,7 @@ from sympy import Sieve, sieve
 from sympy.core.compatibility import range
 
 from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial
+    primerange, primepi, prime, primorial, composite, compositepi
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.utilities.pytest import raises
@@ -38,6 +38,38 @@ def test_primepi():
     assert primepi(10**8) == 5761455
     assert primepi(253425253) == 13856396
     assert primepi(8769575643) == 401464322
+
+
+def test_composite():
+    assert composite(1) == 4
+    assert composite(2) == 6
+    assert composite(5) == 10
+    assert composite(11) == 20
+    assert composite(57) == 80
+    assert composite(296) == 370
+    assert composite(559) == 684
+    assert composite(3000) == 3488
+    assert composite(4096) == 4736
+    assert composite(9096) == 10368
+    assert composite(25023) == 28088
+    raises(ValueError, lambda: composite(0))
+
+
+def test_compositepi():
+    assert compositepi(1) == 0
+    assert compositepi(2) == 0
+    assert compositepi(5) == 1
+    assert compositepi(11) == 5
+    assert compositepi(57) == 40
+    assert compositepi(296) == 233
+    assert compositepi(559) == 456
+    assert compositepi(3000) == 2569
+    assert compositepi(4096) == 3531
+    assert compositepi(9096) == 7967
+    assert compositepi(25023) == 22259
+    assert compositepi(10**8) == 94238544
+    assert compositepi(253425253) == 239568856
+    assert compositepi(8769575643) == 8368111320
 
 
 def test_generate():

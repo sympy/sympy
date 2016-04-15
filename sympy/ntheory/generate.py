@@ -741,3 +741,65 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
+
+def composite(nth):
+    """ Return the nth composite, with the composite indexed as composite(1) = 4,
+        composite(2) = 6, etc....
+
+        Examples
+        ========
+
+        >>> from sympy import composite
+        >>> composite(36)
+        52
+        >>> composite(1)
+        4
+        >>> composite(17737)
+        20000
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        primepi : Return the number of primes less than or equal to n
+        prime : Return the nth prime
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; composite(1) == 4")
+    composite_arr = [4, 6, 8, 9, 10, 12, 14]
+    if n <= 7:
+        return composite_arr[n - 1]
+
+    m, k = n, n + primepi(n) + 1
+    while m != k:
+        m, k = k, n + primepi(k) + 1
+    return m
+
+
+def compositepi(n):
+    """ Return the number of positive composite numbers less than or equal to n.
+
+        Examples
+        ========
+
+        >>> from sympy import compositepi
+        >>> compositepi(25)
+        15
+        >>> compositepi(1000)
+        831
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        prime : Return the nth prime
+        primepi : Return the number of primes less than or equal to n
+        composite : Return the nth composite number
+    """
+    n = int(n)
+    if n < 4:
+        return 0
+    return n - primepi(n) - 1
