@@ -200,7 +200,7 @@ def merge_solution(var, var_t, solution):
     original equation. This function converts `(t, t)` into `(t, t, n_{1})`
     where `n_{1}` is an integer parameter.
     """
-    l = []
+    sol = []
 
     if None in solution:
         return ()
@@ -209,15 +209,15 @@ def merge_solution(var, var_t, solution):
     params = numbered_symbols("n", integer=True, start=1)
     for v in var:
         if v in var_t:
-            l.append(next(solution))  # use _sympfiy?
+            sol.append(next(solution))  # use _sympfiy?
         else:
-            l.append(next(params))
+            sol.append(next(params))
 
-    for val, symb in zip(l, var):
+    for val, symb in zip(sol, var):
         if check_assumptions(val, **symb.assumptions0) is False:
             return tuple()
 
-    return tuple(l)
+    return tuple(sol)
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -757,17 +757,17 @@ def _diop_quadratic(var, coeff, t):
     # We consider two cases; DE - BF = 0 and DE - BF != 0
     # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
-    l = set([])
+    sol = set([])
     discr = B**2 - 4*A*C
     if A == 0 and C == 0 and B != 0:
 
         if D*E - B*F == 0:
             q, r = divmod(E, B)
             if not r:
-                l.add((-q, t))
+                sol.add((-q, t))
             q, r = divmod(D, B)
             if not r:
-                l.add((t, -q))
+                sol.add((t, -q))
         else:
             div = divisors(D*E - B*F)
             div = div + [-term for term in div]
@@ -778,7 +778,7 @@ def _diop_quadratic(var, coeff, t):
                     if not r:
                         y0, r = divmod(q - D, B)
                         if not r:
-                            l.add((x0, y0))
+                            sol.add((x0, y0))
 
     # (2) Parabolic case: B**2 - 4*A*C = 0
     # There are two subcases to be considered in this case.
@@ -790,7 +790,7 @@ def _diop_quadratic(var, coeff, t):
         if A == 0:
             s = _diop_quadratic([y, x], coeff, t)
             for soln in s:
-                l.add((soln[1], soln[0]))
+                sol.add((soln[1], soln[0]))
 
         else:
             g = sign(A)*igcd(A, C)
@@ -806,7 +806,7 @@ def _diop_quadratic(var, coeff, t):
                 roots = solveset_real(eq, z).intersect(S.Integers)
                 for root in roots:
                     ans = diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)
-                    l.add((ans[0], ans[1]))
+                    sol.add((ans[0], ans[1]))
 
             elif _is_int(e*sqrt(c)*D - sqrt(a)*E):
                 _c = e*sqrt(c)*D - sqrt(a)*E
@@ -820,7 +820,7 @@ def _diop_quadratic(var, coeff, t):
                     if divisible(
                             sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F,
                             e*sqrt(c)*D - sqrt(a)*E):
-                        l.add((solve_x(z0), solve_y(z0)))
+                        sol.add((solve_x(z0), solve_y(z0)))
 
     # (3) Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
     # by John P. Robertson.
@@ -834,11 +834,9 @@ def _diop_quadratic(var, coeff, t):
                 4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) +
                 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
 
-            sol = diop_solve(eq, t)
-            sol = list(sol)
+            solution = diop_solve(eq, t)
 
-            for solution in sol:
-                s0, t0 = solution
+            for s0, t0 in solution:
 
                 x_0 = S(B*t0 + r*s0 + r*t0 - B*s0)/(4*A*r)
                 y_0 = S(s0 - t0)/(2*r)
@@ -846,16 +844,16 @@ def _diop_quadratic(var, coeff, t):
                 if isinstance(s0, Symbol) or isinstance(t0, Symbol):
                     if check_param(x_0, y_0, 4*A*r, t) != (None, None):
                         ans = check_param(x_0, y_0, 4*A*r, t)
-                        l.add((ans[0], ans[1]))
+                        sol.add((ans[0], ans[1]))
 
                 elif divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
                     if divisible(s0 - t0, 2*r):
                         if is_solution_quad(var, coeff, x_0, y_0):
-                            l.add((x_0, y_0))
+                            sol.add((x_0, y_0))
         else:
             s = _diop_quadratic(var[::-1], coeff, t)  # Interchange x and y
             while s:                                  #         |
-                l.add(s.pop()[::-1])  # and solution <----------+
+                sol.add(s.pop()[::-1])  # and solution <--------+
 
 
     # (4) B**2 - 4*A*C > 0 and B**2 - 4*A*C not a square or B**2 - 4*A*C < 0
@@ -872,7 +870,7 @@ def _diop_quadratic(var, coeff, t):
                     for Y_i in [-solution[1], solution[1]]:
                         x_i, y_i = (P*Matrix([X_i, Y_i]) + Q)[0], (P*Matrix([X_i, Y_i]) + Q)[1]
                         try:
-                            l.add((as_int(x_i), as_int(y_i)))
+                            sol.add((as_int(x_i), as_int(y_i)))
                         except ValueError:
                             pass
 
@@ -889,10 +887,8 @@ def _diop_quadratic(var, coeff, t):
             U = a[0][1]
 
             if all(_is_int(_) for _ in P[:4] + Q[:2]):
-                for sol in solns_pell:
+                for r, s in solns_pell:
 
-                    r = sol[0]
-                    s = sol[1]
                     x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**t + (r - s*sqrt(D))*(T - U*sqrt(D))**t)/2
                     y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**t - (r - s*sqrt(D))*(T - U*sqrt(D))**t)/(2*sqrt(D))
 
@@ -900,7 +896,7 @@ def _diop_quadratic(var, coeff, t):
                     y_n = _mexpand(y_n)
                     x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
 
-                    l.add((x_n, y_n))
+                    sol.add((x_n, y_n))
 
             else:
                 L = ilcm(*[_.q for _ in P[:4] + Q[:2]])
@@ -927,14 +923,14 @@ def _diop_quadratic(var, coeff, t):
                             Yt = S((X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t -
                                   (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t)/ (2*sqrt(D))
                             Zt = P*Matrix([Xt, Yt]) + Q
-                            l.add((Zt[0], Zt[1]))
+                            sol.add((Zt[0], Zt[1]))
                         except ValueError:
                             pass
 
                         X, Y = X*T + D*U*Y, X*U + Y*T
 
 
-    return l
+    return sol
 
 
 def is_solution_quad(var, coeff, u, v):
@@ -2454,12 +2450,9 @@ def _diop_general_pythagorean(var, coeff, t):
 
     m = symbols('%s1:%i' % (t, n), integer=True)
     ith = sum(m_i**2 for m_i in m)
-    l = [ith - 2*m[n - 2]**2]
-
-    for i in range(n - 2):
-        l.append(2*m[i]*m[n-2])
-
-    sol = l[:index] + [ith] + l[index:]
+    L = [ith - 2*m[n - 2]**2]
+    L.extend([2*m[i]*m[n-2] for i in range(n - 2)])
+    sol = L[:index] + [ith] + L[index:]
 
     lcm = 1
     for i, v in enumerate(var):
@@ -2533,10 +2526,10 @@ def _diop_general_sum_of_squares(n, k, limit=1):
         m, r = divmod(n, 4)
         sum_x2 = Add(*[Dummy()**2 for i in range(r)])
         took = 0
-        for l in partition(k, m + (1 if r else 0), True):
+        for part in partition(k, m + (1 if r else 0), True):
             soln = ()
             rem = k
-            for n_i in l[:m]:
+            for n_i in part[:m]:
                 soln += sum_of_four_squares(n_i)
                 rem -= n_i
             if r:
@@ -2609,12 +2602,12 @@ def partition(n, k=None, zeros=False):
     for s, p in partitions(n, k, size=True):
         if k and not zeros and s != k:
             continue
-        rv = ()
+        sol = ()
         for e in p:
-            rv += (e,)*p[e]
+            sol += (e,)*p[e]
         if zeros:
-            rv += (0,)*(k - s)
-        yield _sorted_tuple(*rv)
+            sol += (0,)*(k - s)
+        yield _sorted_tuple(*sol)
 
 
 def prime_as_sum_of_two_squares(p):
@@ -2701,17 +2694,17 @@ def sum_of_three_squares(n):
         x, y, z = special[n]
         return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
 
-    l, _exact = integer_nthroot(n, 2)
+    s, _exact = integer_nthroot(n, 2)
 
     if _exact:
-        return (2**v*l, 0, 0)
+        return (2**v*s, 0, 0)
 
     x = None
 
     if n % 8 == 3:
-        l = l if _odd(l) else l - 1
+        s = s if _odd(s) else s - 1
 
-        for i in range(l, -1, -2):
+        for i in range(s, -1, -2):
             if isprime((n - i**2) // 2):
                 x = i
                 break
@@ -2720,11 +2713,11 @@ def sum_of_three_squares(n):
         return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
 
     if n % 8 == 2 or n % 8 == 6:
-        l = l if _odd(l) else l - 1
+        s = s if _odd(s) else s - 1
     else:
-        l = l - 1 if _odd(l) else l
+        s = s - 1 if _odd(s) else s
 
-    for i in range(l, -1, -2):
+    for i in range(s, -1, -2):
         if isprime(n - i**2):
             x = i
             break
@@ -2824,7 +2817,6 @@ def power_representation(n, p, k, zeros=False):
             yield t
 
     else:
-        l = []
         a = integer_nthroot(n, p)[0]
 
         for t in pow_rep_recursive(a, k, n, [], p):
