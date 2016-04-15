@@ -18,6 +18,7 @@ from sympy.utilities.pytest import raises
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
+t = Symbol("t", Dummy=True)
 
 
 def test_erf():
@@ -73,6 +74,11 @@ def test_erf():
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
+
+
+def test_erf_write_as_integral():
+    assert erf(z).rewrite('Integral') == \
+        2/sqrt(pi)*Integral(exp(-t**2), (t, 0, z))
 
 
 def test_erf_series():
@@ -147,6 +153,11 @@ def test_erfc_evalf():
     assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
 
 
+def test_erfc_write_as_integral():
+    assert erfc(z).rewrite('Integral') == \
+        2/sqrt(pi)*Integral(exp(-t**2), (t, z, oo))
+
+
 def test_erfi():
     assert erfi(nan) == nan
 
@@ -191,6 +202,11 @@ def test_erfi():
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
 
 
+def test_erfi_write_as_integral():
+    assert erfi(z).rewrite('Integral') == \
+        2/sqrt(pi)*Integral(exp(t**2), (t, 0, z))
+
+
 def test_erfi_series():
     assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
@@ -232,6 +248,11 @@ def test_erf2():
     assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
+
+
+def test_erf2_write_as_integral():
+    assert erf2(x, y).rewrite('Integral') == \
+        2/sqrt(pi)*Integral(exp(-t**2), (t, x, y))
 
 
 def test_erfinv():
@@ -339,6 +360,10 @@ def test_ei():
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
 
 
+def test_ei_write_as_integral():
+    assert Ei(z).rewrite('Integral') == Integral(exp(t)/t, (t, -oo, z))
+
+
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
                 y**(x - 1)*uppergamma(1 - x, y), x)
@@ -386,6 +411,16 @@ def test_expint():
     assert expint(4, z).series(z) == S(1)/3 - z/2 + z**2/2 + \
         z**3*(log(z)/6 - S(11)/36 + EulerGamma/6) - z**4/24 + \
         z**5/240 + O(z**6)
+
+
+def test_expint_write_as_integral():
+    assert E1(z).rewrite('Integral') == Integral(exp(-t*z)/z, (t, 1, oo))
+    assert expint(1, z).rewrite('Integral') == \
+        Integral(exp(-t*z)/z, (t, 1, oo))
+    assert expint(2, z).rewrite('Integral') == \
+        Integral(exp(-t*z)/(z**2), (t, 1, oo))
+    assert expint(n, z).rewrite('Integral') == \
+        Integral(exp(-t*z)/(z**n), (t, 1, oo))
 
 
 def test__eis():
@@ -473,6 +508,11 @@ def test_Li():
     assert Li(z).rewrite(li) == li(z) - li(2)
 
 
+def test_li_Li_write_as_integral():
+    assert li(z).rewrite('Integral') == Integral(1/log(t), (t, 0, z))
+    assert Li(z).rewrite('Integral') == Integral(1/log(t), (t, 2, z))
+
+
 def test_si():
     assert Si(I*x) == I*Shi(x)
     assert Shi(I*x) == I*Si(x)
@@ -515,7 +555,6 @@ def test_si():
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
-    t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
 
@@ -560,6 +599,13 @@ def test_ci():
     assert Chi(x).nseries(x, n=4) == \
         EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
+
+
+def test_trig_integral_write_as_integral():
+    assert Si(z).rewrite('Integral') == Integral(sin(t)/t, (t, 0, z))
+    assert Ci(z).rewrite('Integral') == Integral(cos(t)/t, (t, 0, z))
+    assert Shi(z).rewrite('Integral') == Integral(sinh(t)/t, (t, 0, z))
+    assert Chi(z).rewrite('Integral') == Integral(cosh(t)/t, (t, 0, z))
 
 
 def test_fresnel():
@@ -674,3 +720,10 @@ def test_fresnel():
     verify_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
     verify_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
     verify_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
+
+
+def test_fresnel_write_as_integral():
+    assert fresnels(z).rewrite('Integral') == \
+        Integral(sin(S.Half*pi*t**2), (t, 0, z))
+    assert fresnelc(z).rewrite('Integral') == \
+        Integral(cos(S.Half*pi*t**2), (t, 0, z))
