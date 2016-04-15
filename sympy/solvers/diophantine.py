@@ -140,16 +140,25 @@ def diophantine(eq, param=symbols("t", integer=True)):
         eq = eq.lhs - eq.rhs
 
     try:
-        eq = factor_terms(eq)
-        assert not eq.is_number
         var = list(eq.expand(force=True).free_symbols)
         var.sort(key=default_sort_key)
+        n, d = eq.as_numer_denom()
+        if not n.free_symbols:
+            return set()
+        if d.free_symbols:
+            dsol = diophantine(d)
+            good = diophantine(n) - dsol
+            return set([s for s in good if _mexpand(d.subs(zip(var, s)))])
+        else:
+            eq = n
+        eq = factor_terms(eq)
+        assert not eq.is_number
         eq = eq.as_independent(*var, as_Add=False)[1]
         p = Poly(eq)
         assert not any(g.is_number for g in p.gens)
         eq = p.as_expr()
         assert eq.is_polynomial()
-    except (GeneratorsNeeded, AssertionError):
+    except (GeneratorsNeeded, AssertionError, AttributeError):
         raise TypeError(filldedent('''
     Equation should be a polynomial with Rational coefficients.'''))
 

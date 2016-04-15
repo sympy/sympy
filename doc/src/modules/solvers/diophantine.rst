@@ -229,7 +229,7 @@ We can solve an equation of the form `X^2 - DY^2 = N` by passing `D` and `N` to
 >>> diop_DN(5, 920)
 []
 
-Unfortunately, our equation does not have solutions.
+Unfortunately, our equation has no solution.
 
 Now let's turn to homogeneous ternary quadratic equations. These equations are
 of the form `ax^2 + by^2 + cz^2 + dxy + eyz + fzx = 0`. These type of equations
@@ -281,7 +281,15 @@ level API.
 >>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
 set([(-10, -3, 0, 1, 1, 1)])
 
-If you want to get a more thorough understanding of the Diophantine module please
+Simple Eqyptian fractions can be found with the Diophantine module, too.
+For example, here are the ways that one might represent 1/2 as a sum of two
+unit fractions:
+
+>>> from sympy import Eq, S
+>>> diophantine(Eq(1/x + 1/y, S(1)/2))
+set([(-2, 1), (1, -2), (3, 6), (4, 4), (6, 3)])
+
+To get a more thorough understanding of the Diophantine module, please
 refer to the following blog.
 
 http://thilinaatsympy.wordpress.com/
