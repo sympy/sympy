@@ -74,9 +74,10 @@ class DiracDelta(Function):
            property number 4. Pass wrt as a hint to expand the expression 
            with respect to a particular variable.
 
-           wrt can be:
+           wrt is:
 
-           - a symbol
+           - a variable with respect to which a DiracDelta expression will 
+           get expanded.
 
            Examples
            ========
@@ -84,12 +85,12 @@ class DiracDelta(Function):
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
 
-           >>> DiracDelta(x*y).expand(DiracDelta = True, wrt = x)
+           >>> DiracDelta(x*y).expand(DiracDelta=True, wrt=x)
            DiracDelta(x)/Abs(y)
-           >>> DiracDelta(x*y).expand(DiracDelta = True, wrt = y)
+           >>> DiracDelta(x*y).expand(DiracDelta=True, wrt=y)
            DiracDelta(y)/Abs(x)
 
-           >>> DiracDelta(x**2 + x - 2).expand(DiracDelta = True, wrt = x)
+           >>> DiracDelta(x**2 + x - 2).expand(DiracDelta=True, wrt=x)
            DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
            See Also
@@ -99,9 +100,8 @@ class DiracDelta(Function):
 
         """
         from sympy.polys.polyroots import roots
-        from sympy.abc import x
 
-        wrt = hints.pop('wrt', x)
+        wrt = hints.pop('wrt')
         if not self.args[0].has(wrt) or (len(self.args) > 1 and self.args[1] != 0 ):
             return self
         try:
