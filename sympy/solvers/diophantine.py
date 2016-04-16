@@ -2689,6 +2689,9 @@ def prime_as_sum_of_two_squares(p):
     .. [1] Representing a number as a sum of four squares, [online],
         Available: http://www.schorn.ch/howto.html
     """
+    if not p % 4 == 1:
+        return
+
     if p % 8 == 5:
         b = 2
     else:
