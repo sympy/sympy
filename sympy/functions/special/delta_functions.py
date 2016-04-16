@@ -76,7 +76,7 @@ class DiracDelta(Function):
 
            wrt is:
 
-           - a variable with respect to which a DiracDelta expression will 
+           - a variable with respect to which a DiracDelta expression will
            get expanded.
 
            Examples
