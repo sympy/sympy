@@ -71,7 +71,7 @@ class DiracDelta(Function):
         """expand_DiracDelta(self, **hints)
 
            Compute a simplified representation of the function using
-           property number 4. Pass wrt as a hint to expand the expression 
+           property number 4. Pass wrt as a hint to expand the expression
            with respect to a particular variable.
 
            wrt is:
