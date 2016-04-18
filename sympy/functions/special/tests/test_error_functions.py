@@ -414,13 +414,13 @@ def test_expint():
 
 
 def test_expint_write_as_integral():
-    assert E1(z).rewrite('Integral') == Integral(exp(-t*z)/z, (t, 1, oo))
+    assert E1(z).rewrite('Integral') == Integral(exp(-t*z)/t, (t, 1, oo))
     assert expint(1, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/z, (t, 1, oo))
+        Integral(exp(-t*z)/t, (t, 1, oo))
     assert expint(2, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/(z**2), (t, 1, oo))
+        Integral(exp(-t*z)/(t**2), (t, 1, oo))
     assert expint(n, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/(z**n), (t, 1, oo))
+        Integral(exp(-t*z)/(t**n), (t, 1, oo))
 
 
 def test__eis():

@@ -1180,7 +1180,7 @@ class expint(Function):
     Hence for :math:`z` with positive real part we have
 
     .. math:: \operatorname{E}_\nu(z)
-              =   \int_1^\infty \frac{e^{-zt}}{z^\nu} \mathrm{d}t,
+              =   \int_1^\infty \frac{e^{-zt}}{t^\nu} \mathrm{d}t,
 
     which explains the name.
 
@@ -1338,7 +1338,7 @@ class expint(Function):
     def _as_integral(self, nu, x):
         from sympy import Integral
         t = Symbol('t', Dummy=True)
-        return Integral(exp(-x*t)/(x**nu), (t, 1, oo))
+        return Integral(exp(-x*t)/(t**nu), (t, 1, oo))
 
     def _eval_nseries(self, x, n, logx):
         if not self.args[0].has(x):
