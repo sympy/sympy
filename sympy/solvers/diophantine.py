@@ -2568,7 +2568,7 @@ def _diop_general_sum_of_squares(var, k, limit=1):
     negs = sign.count(-1) != 0
 
     took = 0
-    for t in sum_of_squares(k, n):
+    for t in sum_of_squares(k, n, zeros=True):
         if negs:
             s.add(tuple([sign[i]*j for i, j in enumerate(t)]))
         else:
@@ -2881,25 +2881,32 @@ def power_representation(n, p, k, zeros=False):
     `(n_{1}, n_{2}, . . . n_{k})`, such that
     `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`.
 
-    StopIteration exception is raised after all the solutions are
-    generated, so should always be used within a try-catch block.
-
     Usage
     =====
 
-    ``power_representation(n, p, k, zeros)``: Represent number ``n`` as a sum
-    of ``k`` ``p``th powers. If ``zeros`` is true, then the solutions may
-    contain zeros.
+    ``power_representation(n, p, k, zeros)``: Represent non-negative number
+    ``n`` as a sum of ``k`` ``p``th powers. If ``zeros`` is true, then the
+    solutions is allowed to contain zeros.
 
     Examples
     ========
 
     >>> from sympy.solvers.diophantine import power_representation
-    >>> f = power_representation(1729, 3, 2) # Represent 1729 as a sum of two cubes
+
+    Represent 1729 as a sum of two cubes:
+
+    >>> f = power_representation(1729, 3, 2)
     >>> next(f)
     (1, 12)
     >>> next(f)
     (9, 10)
+
+    If the flag `zeros` is True, the solution may contain tuples with
+    zeros; any such solutions will be generated after the solutions
+    without zeros:
+
+    >>> list(power_representation(125, 2, 3, zeros=True))
+    [(3, 4, 10), (5, 6, 8), (0, 2, 11), (0, 5, 10)]
 
     For even `p` the `permute_sign` function can be used to get all
     signed values:

@@ -274,13 +274,31 @@ also be solved using the Diophantine module.
 set([(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)])
 
 function :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
-also be called directly to solve the same equation. This is true about the
-general sum of squares too. Either you can call
+also be called directly to solve the same equation. Either you can call
 :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` or use the high
-level API.
+level API. For the general sum of squares, this is also true, but one advantage
+of calling :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` is that
+you can control how many solutions are returned.
 
->>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
-set([(1, 1, 1, 3, 6, 8), (1, 1, 2, 3, 4, 9), (1, 1, 3, 4, 6, 7), (1, 2, 3, 3, 5, 8), (1, 3, 4, 5, 5, 6), (2, 2, 4, 4, 6, 6), (2, 3, 3, 4, 5, 7)])
+>>> from sympy.solvers.diophantine import diop_general_sum_of_squares
+>>> eq = a**2 + b**2 + c**2 + d**2 - 18
+>>> diophantine(eq)
+set([(0, 0, 3, 3), (0, 1, 1, 4), (1, 2, 2, 3)])
+>>> diop_general_sum_of_squares(eq, 2)
+set([(0, 0, 3, 3), (1, 2, 2, 3)])
+
+The :py:meth:`~sympy.solvers.diophantine.sum_of_squares` routine will
+providean iterator that returns solutions and one may control whether
+the solutions contain zeros or not (and the solutions not containing
+zeros are returned first):
+
+>>> from sympy.solvers.diophantine import sum_of_squares
+>>> sos = sum_of_squares(18, 4, zeros=True)
+>>> next(sos)
+(1, 2, 2, 3)
+>>> next(sos)
+(0, 0, 3, 3)
+
 
 Simple Eqyptian fractions can be found with the Diophantine module, too.
 For example, here are the ways that one might represent 1/2 as a sum of two
