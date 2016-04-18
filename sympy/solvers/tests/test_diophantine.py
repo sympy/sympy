@@ -842,3 +842,9 @@ def test__can_do_sum_of_squares():
     assert _can_do_sum_of_squares(1, 2)
     assert _can_do_sum_of_squares(2, 2)
     assert _can_do_sum_of_squares(3, 2) is False
+
+
+def test_issue_9538():
+    eq = x - 3*y + 2
+    assert diophantine(eq, syms=[y,x]) == set([(t_0, 3*t_0 - 2)])
+    raises(TypeError, lambda: diophantine(eq, syms=set([y,x])))
