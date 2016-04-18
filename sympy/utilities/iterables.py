@@ -2095,3 +2095,38 @@ def kbins(l, k, ordered=None):
     else:
         raise ValueError(
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+
+
+def permute_signs(t):
+    """Return iterator in which the signs of non-zero elements
+    of t are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import permute_signs
+    >>> list(permute_signs((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
+    """
+    for signs in cartes(*[(1, -1)]*(len(t) - t.count(0))):
+        signs = list(signs)
+        yield type(t)([i*signs.pop() if i else i for i in t])
+
+
+def signed_permutations(t):
+    """Return iterator in which the signs of non-zero elements
+    of t and the order of the elements are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import signed_permutations
+    >>> list(signed_permutations((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2), (0, 2, 1),
+    (0, -2, 1), (0, 2, -1), (0, -2, -1), (1, 0, 2), (-1, 0, 2),
+    (1, 0, -2), (-1, 0, -2), (1, 2, 0), (-1, 2, 0), (1, -2, 0),
+    (-1, -2, 0), (2, 0, 1), (-2, 0, 1), (2, 0, -1), (-2, 0, -1),
+    (2, 1, 0), (-2, 1, 0), (2, -1, 0), (-2, -1, 0)]
+    """
+    return (type(t)(i) for j in permutations(t)
+        for i in permute_signs(j))

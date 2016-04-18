@@ -48,6 +48,7 @@ structured in the following manner.
     - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic_normal`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares`
+    - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_even_powers`
 
   - :py:meth:`~sympy.solvers.diophantine.merge_solution`
 
@@ -279,7 +280,7 @@ general sum of squares too. Either you can call
 level API.
 
 >>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
-set([(-10, -3, 0, 1, 1, 1)])
+set([(1, 1, 1, 3, 6, 8), (1, 1, 2, 3, 4, 9), (1, 1, 3, 4, 6, 7), (1, 2, 3, 3, 5, 8), (1, 3, 4, 5, 5, 6), (2, 2, 4, 4, 6, 6), (2, 3, 3, 4, 5, 7)])
 
 Simple Eqyptian fractions can be found with the Diophantine module, too.
 For example, here are the ways that one might represent 1/2 as a sum of two
@@ -377,6 +378,10 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_squares
 
+:func:`diop_general_sum_of_even_powers`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_even_powers
+
 :func:`partition`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.partition
@@ -389,9 +394,17 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
 
+:func:`sum_of_powers`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_powers
+
+:func:`sum_of_squares`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_squares
+
 Internal Functions
 ------------------
-These functions are intended for the internal use in Diophantine module.
+These functions are intended for internal use in the Diophantine module.
 
 :obj:`merge_solution`
 ^^^^^^^^^^^^^^^^^^^^^
@@ -430,11 +443,11 @@ These functions are intended for the internal use in Diophantine module.
 .. autofunction:: sympy.solvers.diophantine.holzer
 
 :obj:`prime_as_sum_of_two_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
 
 :obj:`sqf_normal`
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sqf_normal
 
 :obj:`reconstruct`
