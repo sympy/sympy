@@ -7,7 +7,8 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
+    homogeneous_order, infinitesimals, checkinfsol, checksysodesol,
+    numbered_constants_iter)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
@@ -2677,3 +2678,20 @@ def test_issue_10867():
     v = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
     ans = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
     assert dsolve(v, g(x)) == ans
+
+def test_issue_11024():
+    r = dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
+    ans = Eq(f(x), C1*sin(3*x) + C2*cos(3*x))
+    assert r == ans
+
+    r = dsolve(Derivative(f(x), x, x) + 9*f(x), f(x),
+            constants=numbered_constants_iter([], 0, prefix="D"))
+    D0, D1 = symbols("D0 D1")
+    ans = Eq(f(x), D0*sin(3*x) + D1*cos(3*x))
+    assert r == ans
+
+    A, B, C, D = symbols("A B C D")
+    r = dsolve(Derivative(f(x), x, x) + 9*f(x), f(x),
+            constants=[A, B, C, D])
+    ans = Eq(f(x), A*sin(3*x) + B*cos(3*x))
+    assert r == ans
