@@ -639,17 +639,10 @@ def _solveset(f, symbol, domain, _check=False):
                       or domain_check(fx, symbol, s)])
 
             if isinstance(result, FiniteSet) and \
-            not all(isinstance(x, (erf, erfinv, erfc, erfcinv)) for x in result.args):
+            not any(isinstance(x, (erf, erfinv, erfc, erfcinv)) for x in result.args):
                 for r in result:
                     if not checksol(f, symbol, r):
                         result = FiniteSet(*[x for x in result if x != r])
-                if result is EmptySet():
-                    return S.EmptySet
-                else:
-                    return result
-            if result is EmptySet():
-                return S.EmptySet
-
     return result
 
 
