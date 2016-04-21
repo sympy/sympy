@@ -7,7 +7,7 @@ from sympy.core.sympify import _sympify
 
 from sympy import S, Dict, flatten, SparseMatrix, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
-from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
 
 class SparseNDimArray(NDimArray):
@@ -107,7 +107,7 @@ class SparseNDimArray(NDimArray):
         return type(self)(*(newshape + (self._array,)))
 
 
-class ImmutableSparseNDimArray(SparseNDimArray, Basic):
+class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
     def __new__(cls, *args, **kwargs):
 

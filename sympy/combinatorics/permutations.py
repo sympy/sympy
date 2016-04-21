@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce, range
+from sympy.core.compatibility import is_sequence, reduce, range, as_int
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
@@ -235,7 +235,7 @@ class Cycle(dict):
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
     A cycle shows the rule to use to move subsets of elements to obtain
-    a permutation. The Cycle class is more flexible that Permutation in
+    a permutation. The Cycle class is more flexible than Permutation in
     that 1) all elements need not be present in order to investigate how
     multiple cycles act in sequence and 2) it can contain singletons:
 
@@ -305,6 +305,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
+        arg = as_int(arg)
         self[arg] = arg
         return arg
 
@@ -369,7 +370,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i] + [0])
             size = max(size, big + 1)
         else:
             size = self.size
@@ -443,7 +444,9 @@ class Cycle(dict):
                 for k, v in args[0].items():
                     self[k] = v
                 return
-        args = [int(a) for a in args]
+        args = [as_int(a) for a in args]
+        if any(i < 0 for i in args):
+            raise ValueError('negative integers are not allowed in a cycle.')
         if has_dups(args):
             raise ValueError('All elements must be unique in a cycle.')
         for i in range(-len(args), 0):
@@ -451,6 +454,8 @@ class Cycle(dict):
 
     @property
     def size(self):
+        if not self:
+            return 0
         return max(self.keys()) + 1
 
     def copy(self):
@@ -687,7 +692,7 @@ class Permutation(Basic):
     2
     >>> q(1) # the easy way
     2
-    >>> dict([(i, q(i)) for i in range(q.size)]) # showing the bijection
+    >>> {i: q(i) for i in range(q.size)} # showing the bijection
     {0: 5, 1: 2, 2: 3, 3: 4, 4: 1, 5: 0}
 
     The full cyclic form (including singletons) can be obtained:

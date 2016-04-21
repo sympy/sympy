@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
-from sympy.core.compatibility import ordered, reduce, iterable
+from sympy.core.compatibility import reduce, iterable
 from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -269,7 +269,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         gens = list(set(gens))
 
         # all the functions we can do anything with
-        allfuncs = set([sin, cos, tan, sinh, cosh, tanh])
+        allfuncs = {sin, cos, tan, sinh, cosh, tanh}
         # sin(3*x) -> ((3, x), sin)
         trigterms = [(g.args[0].as_coeff_mul(), g.func) for g in gens
                      if g.func in allfuncs]

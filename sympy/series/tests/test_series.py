@@ -153,3 +153,6 @@ def test_exp_product_positive_factors():
 
 def test_issue_8805():
     assert series(1, n=8) == 1
+
+def test_issue_10761():
+    assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)

@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, Dummy, Eq, Gt,
+    Abs, Dummy, Eq, Gt, Function, Mod,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.sets import (FiniteSet, ConditionSet)
+from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
@@ -39,13 +39,19 @@ n = Symbol('n', real=True)
 
 
 def test_invert_real():
-    x = Dummy(real=True)
+    x = Symbol('x', real=True)
+    y = Symbol('y')
     n = Symbol('n')
+    def ireal(x, s=S.Reals):
+        return Intersection(s, x)
 
     minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
     plus_n = Intersection(Interval(0, oo), FiniteSet(n))
     assert solveset(abs(x) - n, x, S.Reals) == Union(minus_n, plus_n)
 
+    assert invert_real(exp(x), y, x) == (x, ireal(FiniteSet(log(y))))
+
+    y = Symbol('y', positive=True)
     n = Symbol('n', real=True)
     assert invert_real(x + 3, y, x) == (x, FiniteSet(y - 3))
     assert invert_real(x*3, y, x) == (x, FiniteSet(y / 3))
@@ -54,7 +60,7 @@ def test_invert_real():
     assert invert_real(exp(3*x), y, x) == (x, FiniteSet(log(y) / 3))
     assert invert_real(exp(x + 3), y, x) == (x, FiniteSet(log(y) - 3))
 
-    assert invert_real(exp(x) + 3, y, x) == (x, FiniteSet(log(y - 3)))
+    assert invert_real(exp(x) + 3, y, x) == (x, ireal(FiniteSet(log(y - 3))))
     assert invert_real(exp(x)*3, y, x) == (x, FiniteSet(log(y / 3)))
 
     assert invert_real(log(x), y, x) == (x, FiniteSet(exp(y)))
@@ -66,7 +72,7 @@ def test_invert_real():
     assert invert_real(Abs(x), y, x) == (x, Union(minus_y, plus_y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
-    assert invert_real(2**exp(x), y, x) == (x, FiniteSet(log(log(y)/log(2))))
+    assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
 
     assert invert_real(x**2, y, x) == (x, FiniteSet(sqrt(y), -sqrt(y)))
     assert invert_real(x**Rational(1, 2), y, x) == (x, FiniteSet(y**2))
@@ -99,31 +105,31 @@ def test_invert_real():
                 imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
 
     assert invert_real(cos(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(acos(y), 2*pi))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi + Mod(-acos(y), 2*pi))), S.Integers)))
 
     assert invert_real(sec(x), y, x) == \
         (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
                 imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers)))
 
     assert invert_real(sec(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(asec(y), 2*pi))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi + Mod(-asec(y), 2*pi))), S.Integers)))
 
     assert invert_real(tan(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+        (x, imageset(Lambda(n, n*pi + atan(y) % pi), S.Integers))
 
     assert invert_real(tan(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + atan(y))), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + atan(y) % pi)), S.Integers))
 
     assert invert_real(cot(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers))
+        (x, imageset(Lambda(n, n*pi + acot(y) % pi), S.Integers))
 
     assert invert_real(cot(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + acot(y) % pi)), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+        (tan(x), imageset(Lambda(n, n*pi + atan(y) % pi), S.Integers))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -133,19 +139,13 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
-                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
-
-    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+    h1 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
                       imageset(Lambda(n, n - a - 3), Interval(0, oo)))
 
-    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+    h2 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
                       imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
 
-    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
-                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
-
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2, h3, h4))
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2))
 
 
 def test_invert_complex():
@@ -157,8 +157,9 @@ def test_invert_complex():
 
     assert invert_complex(log(x), y, x) == (x, FiniteSet(exp(y)))
 
-    raises(ValueError, lambda: invert_real(S.One, y, x))
+    raises(ValueError, lambda: invert_real(1, y, x))
     raises(ValueError, lambda: invert_complex(x, x, x))
+    raises(ValueError, lambda: invert_complex(x, x, 1))
 
 
 def test_domain_check():
@@ -189,6 +190,8 @@ def test_is_function_class_equation():
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x)**2 + sin(x) - 1, x) is True
     assert _is_function_class_equation(TrigonometricFunction,
+                                       tan(x) + x, x) is False
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2), x) is False
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2) + sin(x), x) is False
@@ -214,6 +217,8 @@ def test_is_function_class_equation():
                                        a*tanh(x) - 1, x) is True
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x)**2 + sinh(x) - 1, x) is True
+    assert _is_function_class_equation(HyperbolicFunction,
+                                       tanh(x) + x, x) is False
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x**2), x) is False
     assert _is_function_class_equation(HyperbolicFunction,
@@ -248,9 +253,7 @@ def test_solve_invert():
     assert solveset_real(3**(x + 2), x) == FiniteSet()
     assert solveset_real(3**(2 - x), x) == FiniteSet()
 
-    b = Symbol('b', positive=True)
-    y = Symbol('y', positive=True)
-    assert solveset_real(y - b*exp(a/x), x) == FiniteSet(a/log(y/b))
+    assert solveset_real(y - b*exp(a/x), x) == Intersection(S.Reals, FiniteSet(a/log(y/b)))
     # issue 4504
     assert solveset_real(2**x - 10, x) == FiniteSet(log(10)/log(2))
 
@@ -314,16 +317,15 @@ def test_return_root_of():
     assert solveset_complex(s, x) == \
         FiniteSet(*Poly(s*4, domain='ZZ').all_roots())
 
-    # XXX: this comparison should work without converting the FiniteSet to list
-    # See #7876
+    # Refer issue #7876
     eq = x*(x - 1)**2*(x + 1)*(x**6 - x + 1)
-    assert list(solveset_complex(eq, x)) == \
-        list(FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
+    assert solveset_complex(eq, x) == \
+        FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
                        CRootOf(x**6 - x + 1, 1),
                        CRootOf(x**6 - x + 1, 2),
                        CRootOf(x**6 - x + 1, 3),
                        CRootOf(x**6 - x + 1, 4),
-                       CRootOf(x**6 - x + 1, 5)))
+                       CRootOf(x**6 - x + 1, 5))
 
 
 def test__has_rational_power():
@@ -453,21 +455,13 @@ def test_solve_polynomial_symbolic_param():
         FiniteSet(sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
                   sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a)))
 
-    # By attempt to make Set.contains behave symbolically SetDifference on
-    # FiniteSet isn't working very well.
-    # Simple operations like `FiniteSet(a) - FiniteSet(-b)` raises `TypeError`
-    # The likely course of action will making such operations return
-    # SetDifference object. That will also change the expected output of
-    # the given tests. Till the SetDifference becomes well behaving again the
-    # following tests are kept as comments.
+    # issue 4507
+    assert solveset_complex(y - b/(1 + a*x), x) == \
+        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
 
-    # # issue 4508
-    # assert solveset_complex(y - b*x/(a + x), x) == \
-    #     FiniteSet(-a*y/(y - b))
-    #
-    # # issue 4507
-    # assert solveset_complex(y - b/(1 + a*x), x) == \
-    #     FiniteSet((b - y)/(a*y))
+    # issue 4508
+    assert solveset_complex(y - b*x/(a + x), x) == \
+        FiniteSet(-a*y/(y - b)) - FiniteSet(-a)
 
 
 def test_solve_rational():
@@ -495,6 +489,7 @@ def test_no_sol():
 
 def test_sol_zero_real():
     assert solveset_real(0, x) == S.Reals
+    assert solveset(0, x, Interval(1, 2)) == Interval(1, 2)
     assert solveset_real(-x**2 - 2*x + (x + 1)**2 - 1, x) == S.Reals
 
 
@@ -560,17 +555,16 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
-    # issue 9565. Note: solveset_real does not solve this as it is
-    # solveset's job to handle Relationals
-    assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
-        ) == Interval(-1, 2)
+    # issue 9565
+    assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
 
     # issue #10069
-    assert solveset_real(abs(1/(x - 1)) - 1 > 0, x) == \
-        ConditionSet(x, Eq((1 - Abs(x - 1))/Abs(x - 1) > 0, 0),
-            S.Reals)
-    assert solveset(abs(1/(x - 1)) - 1 > 0, x, domain=S.Reals
-        ) == Union(Interval.open(0, 1), Interval.open(1, 2))
+    eq = abs(1/(x - 1)) - 1 > 0
+    u = Union(Interval.open(0, 1), Interval.open(1, 2))
+    assert solveset_real(eq, x) == u
+    assert solveset(eq, x, domain=S.Reals) == u
+
+    raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
 @XFAIL
@@ -620,15 +614,19 @@ def test_atan2():
 
 def test_piecewise():
     eq = Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3
-    f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert set(solveset_real(eq, x)) == set(FiniteSet(-1, 5))
+
     absxm3 = Piecewise(
         (x - 3, S(0) <= x - 3),
-        (3 - x, S(0) > x - 3)
-    )
+        (3 - x, S(0) > x - 3))
     y = Symbol('y', positive=True)
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
+
+    f = Piecewise(((x - 2)**2, x >= 0), (0, True))
     assert solveset(f, x, domain=S.Reals) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
+
+    assert solveset(Piecewise((x + 1, x > 0), (I, True)) - I, x) == \
+        Interval(-oo, 0)
 
 
 def test_solveset_complex_polynomial():
@@ -726,6 +724,14 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
+    assert solveset_complex(cos(x) - S.Half, x) == \
+        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
+              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
+
+    y, a = symbols('y,a')
+    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
+        imageset(Lambda(n, 2*n*pi), S.Integers)
+
 
 @XFAIL
 def test_solve_trig_abs():
@@ -737,12 +743,6 @@ def test_solve_trig_abs():
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
-
-
-def test_solve_complex_unsolvable():
-    unsolved_object = ConditionSet(x, Eq(2*cos(x) - 1, 0), S.Complexes)
-    solution = solveset_complex(cos(x) - S.Half, x)
-    assert solution == unsolved_object
 
 
 @XFAIL
@@ -873,7 +873,7 @@ def test_solveset():
                                                   S.Integers)
 
 
-def test_conditonset():
+def test_conditionset():
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) == \
         ConditionSet(x, True, S.Reals)
 
@@ -1062,3 +1062,27 @@ def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
         FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
                 (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+
+
+def test_issue_10397():
+    assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
+
+
+def test_simplification():
+    eq = x + (a - b)/(-2*a + 2*b)
+    assert solveset(eq, x) == FiniteSet(S.Half)
+    assert solveset(eq, x, S.Reals) == FiniteSet(S.Half)
+
+
+def test_issue_10555():
+    f = Function('f')
+    assert solveset(f(x) - pi/2, x, S.Reals) == \
+        ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+
+
+def test_issue_8715():
+    eq = x + 1/x > -2 + 1/x
+    assert solveset(eq, x, S.Reals) == \
+        (Interval.open(-2, oo) - FiniteSet(0))
+    assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
+        Interval.open(exp(-2), oo) - FiniteSet(1)

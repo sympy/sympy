@@ -3,8 +3,9 @@ from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    oo, zoo, simplify, expand_func, Product, I, Piecewise, Mod, Eq, sqrt)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
+#Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -116,6 +117,8 @@ def test_factorial():
     assert factorial(-2) == zoo
     assert factorial(0) == 1
     assert factorial(7) == 5040
+    assert factorial(19) == 121645100408832000
+    assert factorial(31) == 8222838654177922817725562880000000
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
@@ -194,7 +197,9 @@ def test_factorial2():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
-
+    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+    raises (ValueError, lambda: factorial2(oo))
+    raises (ValueError, lambda: factorial2(S(5)/2))
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
