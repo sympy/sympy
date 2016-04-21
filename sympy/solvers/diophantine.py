@@ -2706,7 +2706,7 @@ def prime_as_sum_of_two_squares(p):
     =========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://www.schorn.ch/howto.html
+        Available: http://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -2756,7 +2756,7 @@ def sum_of_three_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of three squares, [online],
-        Available: http://www.schorn.ch/howto.html
+        Available: http://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -2838,7 +2838,7 @@ def sum_of_four_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://www.schorn.ch/howto.html
+        Available: http://schorn.ch/lagrange.html
 
     See Also
     ========
