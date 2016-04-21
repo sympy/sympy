@@ -9,7 +9,6 @@ from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.function import _mexpand
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcdex, ilcm, igcd
-from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.core.relational import Eq
 from sympy.ntheory.factor_ import multiplicity
@@ -210,7 +209,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)) is S.Zero:
         sols.add(null)
-    return sols
+    return set([S(i) for i in sols])
 
 
 def merge_solution(var, var_t, solution):
@@ -234,7 +233,7 @@ def merge_solution(var, var_t, solution):
     params = numbered_symbols("n", integer=True, start=1)
     for v in var:
         if v in var_t:
-            sol.append(next(solution))  # use _sympfiy?
+            sol.append(next(solution))
         else:
             sol.append(next(params))
 
@@ -326,6 +325,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     else:
         raise NotImplementedError(
             'No solver has been written for %s.' % eq_type)
+
 
 def classify_diop(eq):
     # docstring supplied externally
@@ -2969,7 +2969,9 @@ def power_representation(n, p, k, zeros=False):
             for t in pow_rep_recursive(a, i, n, [], p):
                 yield (0,) * (k - i) + t
 
+
 sum_of_powers = power_representation
+
 
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
 
