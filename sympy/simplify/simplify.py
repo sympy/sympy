@@ -1288,16 +1288,16 @@ def clear_coefficients(expr, rhs=S.Zero):
     """
     was = None
     free = expr.free_symbols
-    if not free and expr.is_Rational:
+    if expr.is_Rational:
         return (S.Zero, rhs - expr)
-    while was != expr:
+    while expr and was != expr:
         was = expr
         m, expr = (
             expr.as_content_primitive()
             if free else
-            factor_terms(expr).as_coeff_Mul())
+            factor_terms(expr).as_coeff_Mul(rational=True))
         rhs /= m
-        c, expr = expr.as_coeff_Add()
+        c, expr = expr.as_coeff_Add(rational=True)
         rhs -= c
     expr = signsimp(expr, evaluate = False)
     if _coeff_isneg(expr):

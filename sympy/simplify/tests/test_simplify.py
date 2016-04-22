@@ -645,3 +645,6 @@ def test_clear_coefficients():
     assert clear_coefficients(sqrt(2) - 2) == (sqrt(2), 2)
     assert clear_coefficients(4*sqrt(2) - 2) == (sqrt(2), S.Half)
     assert clear_coefficients(S(3), x) == (0, x - 3)
+    assert clear_coefficients(S.Infinity, x) == (S.Infinity, x)
+    assert clear_coefficients(-S.Pi, x) == (S.Pi, -x)
+    assert clear_coefficients(2 - S.Pi/3, x) == (pi, -3*x + 6)

@@ -549,9 +549,11 @@ class Number(AtomicExpr):
             return S.One, self
         return (self, S.One) if self else (S.One, self)
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
-        return self, S.Zero
+        if not rational:
+            return self, S.Zero
+        return S.Zero, self
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
@@ -1671,6 +1673,14 @@ class Rational(Number):
             return -self, S.NegativeOne
         return S.One, self
 
+    def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
+        return self, S.One
+
+    def as_coeff_Add(self, rational=False):
+        """Efficiently extract the coefficient of a summation. """
+        return self, S.Zero
+
 
 # int -> Integer
 _intcache = {}
@@ -2275,6 +2285,10 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         return False
 
     __bool__ = __nonzero__
+
+    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
+        """Efficiently extract the coefficient of a summation. """
+        return S.One, self
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
