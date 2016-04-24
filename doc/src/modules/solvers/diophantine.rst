@@ -329,20 +329,25 @@ References
 User Functions
 --------------
 
-These are functions that are imported into the global namespace with ``from
-sympy import *``. These functions are intended for use by ordinary users of SymPy.
+These functions are imported into the global namespace
+with ``from sympy import *``.
 
 :func:`diophantine`
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diophantine
 
-:func:`diop_solve`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_solve
-
 :func:`classify_diop`
 ^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.classify_diop
+
+Internal Functions
+------------------
+
+These functions are intended for internal use in the Diophantine module.
+
+:func:`diop_solve`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_solve
 
 :func:`diop_linear`
 ^^^^^^^^^^^^^^^^^^^
@@ -419,10 +424,6 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 :func:`sum_of_squares`
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_squares
-
-Internal Functions
-------------------
-These functions are intended for internal use in the Diophantine module.
 
 :obj:`merge_solution`
 ^^^^^^^^^^^^^^^^^^^^^
