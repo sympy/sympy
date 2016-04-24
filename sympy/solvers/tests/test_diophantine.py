@@ -484,6 +484,7 @@ def test_diophantine():
     assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
     assert diophantine(x**2 + y**2 + z**2 - 14) == set([(1, 2, 3)])
     assert diophantine(x**2 + 15*x/14 - 3) == set()
+    # test issue 11049
     eq = 92*x**2 - 99*y**2 - z**2
     coeff = eq.as_coefficients_dict()
     assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
