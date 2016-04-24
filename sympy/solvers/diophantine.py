@@ -2098,11 +2098,11 @@ def sqf_normal(a, b, c, steps=False):
     """
     Return `a', b', c'`, the coefficients of the square-free normal
     form of `ax^2 + by^2 + cz^2 = 0`, where `a', b', c'` are pairwise
-    prime and `\gcd(a', b', c')` is `1`.  If `steps` is True then
-    also return three tuples: `sq`, `sqf`, and `(a', b', c')` where
-    `sq` contains the square factors of `a`, `b` and `c` after removing
-    the `gcd(a, b, c)`; `sqf` contains the values of `a`, `b` and `c`
-    after removing both the `gcd(a, b, c)` and the square factors.
+    prime.  If `steps` is True then also return three tuples:
+    `sq`, `sqf`, and `(a', b', c')` where `sq` contains the square
+    factors of `a`, `b` and `c` after removing the `gcd(a, b, c)`;
+    `sqf` contains the values of `a`, `b` and `c` after removing
+    both the `gcd(a, b, c)` and the square factors.
 
     The solutions for `ax^2 + by^2 + cz^2 = 0` can be
     recovered from the solutions of `a'x^2 + b'y^2 + c'z^2 = 0`.
@@ -2235,6 +2235,9 @@ def ldescent(A, B):
 
     if B == 1:
         return (1, 0, 1)
+
+    if B == -1:  # and A == -1
+        return
 
     r = sqrt_mod(A, B)
 

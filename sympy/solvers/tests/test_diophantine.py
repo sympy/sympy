@@ -331,6 +331,7 @@ def test_ldescent():
     for a, b in u:
         w, x, y = ldescent(a, b)
         assert a*x**2 + b*y**2 == w**2
+    assert ldescent(-1, -1) is None
 
 
 def test_diop_ternary_quadratic_normal():
