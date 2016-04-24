@@ -180,7 +180,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     for term in terms:
 
         base, _ = term
-        var_t, _, eq_type = classify_diop(base)
+        var_t, _, eq_type = classify_diop(base, _dict=False)
         _, base = signsimp(base, evaluate=False).as_coeff_Mul()
         solution = diop_solve(base, param)
 
@@ -283,7 +283,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     diophantine()
     """
-    var, coeff, eq_type = classify_diop(eq)
+    var, coeff, eq_type = classify_diop(eq, _dict=False)
 
     if eq_type == "linear":
         return _diop_linear(var, coeff, param)
@@ -329,7 +329,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
             'No solver has been written for %s.' % eq_type)
 
 
-def classify_diop(eq):
+def classify_diop(eq, _dict=True):
     # docstring supplied externally
     try:
         var = list(eq.free_symbols)
@@ -393,7 +393,7 @@ def classify_diop(eq):
             diop_type = 'general_sum_of_even_powers'
 
     if diop_type is not None:
-        return var, coeff, diop_type
+        return var, dict(coeff) if _dict else coeff, diop_type
 
     # new diop type instructions
     # --------------------------
@@ -430,6 +430,8 @@ classify_diop.func_doc = '''
     =======
 
     ``eq`` should be an expression which is assumed to be zero.
+    ``_dict`` is for internal use: when True (default) a dict is returned,
+    otherwise a defaultdict which supplies 0 for missing keys is returned.
 
     Examples
     ========
@@ -486,7 +488,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     diop_general_sum_of_squares()
     """
     from sympy.core.function import count_ops
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "linear":
         return _diop_linear(var, coeff, param)
@@ -774,7 +776,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     diop_linear(), diop_ternary_quadratic(), diop_general_sum_of_squares(),
     diop_general_pythagorean()
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "binary_quadratic":
         return _diop_quadratic(var, coeff, param)
@@ -1536,7 +1538,7 @@ def transformation_to_DN(eq):
            http://www.jpr2718.org/ax2p.pdf
     """
 
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
     if diop_type == "binary_quadratic":
         return _transformation_to_DN(var, coeff)
 
@@ -1631,7 +1633,7 @@ def find_DN(eq):
            John P.Robertson, May 8, 2003, Page 7 - 11.
            http://www.jpr2718.org/ax2p.pdf
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
     if diop_type == "binary_quadratic":
         return _find_DN(var, coeff)
 
@@ -1715,7 +1717,7 @@ def diop_ternary_quadratic(eq):
     >>> diop_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y)
     (9, 1, 5)
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
             "homogeneous_ternary_quadratic",
@@ -1829,7 +1831,7 @@ def transformation_to_normal(eq):
     not used in solving ternary quadratics; it is only implemented for
     the sake of completeness.
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
             "homogeneous_ternary_quadratic",
@@ -1950,7 +1952,7 @@ def parametrize_ternary_quadratic(eq):
            Press, Cambridge, 1998.
 
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
             "homogeneous_ternary_quadratic",
@@ -2030,7 +2032,7 @@ def diop_ternary_quadratic_normal(eq):
     >>> diop_ternary_quadratic_normal(34*x**2 - 3*y**2 - 301*z**2)
     (4, 9, 1)
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
     if diop_type == "homogeneous_ternary_quadratic_normal":
         return _diop_ternary_quadratic_normal(var, coeff)
 
@@ -2468,7 +2470,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     >>> diop_general_pythagorean(9*a**2 - 4*b**2 + 16*c**2 + 25*d**2 + e**2)
     (10*m1**2  + 10*m2**2  + 10*m3**2 - 10*m4**2, 15*m1**2  + 15*m2**2  + 15*m3**2  + 15*m4**2, 15*m1*m4, 12*m2*m4, 60*m3*m4)
     """
-    var, coeff, diop_type  = classify_diop(eq)
+    var, coeff, diop_type  = classify_diop(eq, _dict=False)
 
     if diop_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
@@ -2541,7 +2543,7 @@ def diop_general_sum_of_squares(eq, limit=1):
         Available:
         http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "general_sum_of_squares":
         return _diop_general_sum_of_squares(var, -coeff[1], limit)
@@ -2599,7 +2601,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
     ========
     power_representation()
     """
-    var, coeff, diop_type = classify_diop(eq)
+    var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == "general_sum_of_even_powers":
         for k in coeff.keys():
