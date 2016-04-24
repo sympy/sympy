@@ -297,7 +297,9 @@ def diop_solve(eq, param=symbols("t", integer=True)):
             (x_0, y_0, z_0), var, coeff)
 
     elif eq_type == "homogeneous_ternary_quadratic_normal":
-        return _diop_ternary_quadratic_normal(var, coeff)
+        x_0, y_0, z_0 = _diop_ternary_quadratic_normal(var, coeff)
+        return _parametrize_ternary_quadratic(
+            (x_0, y_0, z_0), var, coeff)
 
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)

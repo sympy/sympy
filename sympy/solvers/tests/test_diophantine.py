@@ -484,14 +484,41 @@ def test_diophantine():
     assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
     assert diophantine(x**2 + y**2 + z**2 - 14) == set([(1, 2, 3)])
     assert diophantine(x**2 + 15*x/14 - 3) == set()
-    assert diophantine(92*x**2 - 99*y**2 - z**2) == set([(9, 7, 51)])
-    assert diophantine(2*x**2 + 2*y**2 - z**2) == set([(1, 1, 2)])
-    assert diophantine(411*x**2+57*y**2-221*z**2) == \
-        set([(2021, 2645, 3066)])
-    assert diophantine(573*x**2+267*y**2-984*z**2) == \
-        set([(49, 233, 127)])
+    eq = 92*x**2 - 99*y**2 - z**2
+    coeff = eq.as_coefficients_dict()
+    assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
+        (9, 7, 51)
+    assert diophantine(eq) == set([(
+        891*p**2 + 9*q**2, -693*p**2 - 102*p*q + 7*q**2,
+        5049*p**2 - 1386*p*q - 51*q**2)])
+    eq = 2*x**2 + 2*y**2 - z**2
+    coeff = eq.as_coefficients_dict()
+    assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
+        (1, 1, 2)
+    assert diophantine(eq) == set([(
+        2*p**2 - q**2, -2*p**2 + 4*p*q - q**2,
+        4*p**2 - 4*p*q + 2*q**2)])
+    eq = 411*x**2+57*y**2-221*z**2
+    coeff = eq.as_coefficients_dict()
+    assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
+        (2021, 2645, 3066)
+    assert diophantine(eq) == \
+        set([(115197*p**2 - 446641*q**2, -150765*p**2 + 1355172*p*q -
+        584545*q**2, 174762*p**2 - 301530*p*q + 677586*q**2)])
+    eq = 573*x**2+267*y**2-984*z**2
+    coeff = eq.as_coefficients_dict()
+    assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
+        (49, 233, 127)
+    assert diophantine(eq) == \
+        set([(4361*p**2 - 16072*q**2, -20737*p**2 + 83312*p*q - 76424*q**2,
+        11303*p**2 - 41474*p*q + 41656*q**2)])
     # this produces factors during reconstruction
-    assert diophantine(x**2 + 3*y**2 - 12*z**2) == set([(0, 2, 1)])
+    eq = x**2 + 3*y**2 - 12*z**2
+    coeff = eq.as_coefficients_dict()
+    assert _diop_ternary_quadratic_normal((x, y, z), coeff) == \
+        (0, 2, 1)
+    assert diophantine(eq) == \
+        set([(24*p*q, 2*p**2 - 24*q**2, p**2 + 12*q**2)])
     # solvers have not been written for every type
     raises(NotImplementedError, lambda: diophantine(x*y**2 + 1))
 
