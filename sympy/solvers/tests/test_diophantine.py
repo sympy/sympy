@@ -571,7 +571,7 @@ def test_diop_general_sum_of_squares_quick():
     raises(NotImplementedError, lambda: classify_diop(-eq))
 
 
-def test_partition():
+def test_diop_partition():
     for n in [8, 10]:
         for k in range(1, 8):
             for p in partition(n, k):
