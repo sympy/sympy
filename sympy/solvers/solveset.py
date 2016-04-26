@@ -201,7 +201,7 @@ def _invert_real(f, g_ys, symbol):
 
 def _invert_complex(f, g_ys, symbol):
     """Helper function for _invert."""
-
+    from sympy.simplify.fu import _osborne
     if f == symbol:
         return (f, g_ys)
 
@@ -235,7 +235,10 @@ def _invert_complex(f, g_ys, symbol):
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
 
-    if isinstance(f, TrigonometricFunction):
+
+    if isinstance(f, TrigonometricFunction) or isinstance(f, HyperbolicFunction):
+        d = Dummy()
+        f = _osborne(f, d) # if f is Hyperbolic convert that into Trig
         if isinstance(g_ys, FiniteSet):
             def inv(trig):
                 if isinstance(f, (sin, csc)):
@@ -254,7 +257,7 @@ def _invert_complex(f, g_ys, symbol):
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
-    #TODO similarly for HyperbolicFunction
+
     return (f, g_ys)
 
 

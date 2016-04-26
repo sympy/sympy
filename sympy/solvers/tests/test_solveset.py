@@ -738,8 +738,8 @@ def test_solve_trig():
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
     assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
+        Union(ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers),
+              ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers))
 
 
 
