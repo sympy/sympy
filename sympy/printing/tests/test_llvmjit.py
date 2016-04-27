@@ -105,6 +105,26 @@ def test_callback_cubature():
     assert isclose(out_array[0], res)
 
 
+def test_callback_cubature_v():
+    e = a + 1.2
+    f = g.llvm_callable([a], e, callback_type='cubature_v')
+    ndim = ctypes.c_int(1)
+    fdim = ctypes.c_int(1)
+    npts = ctypes.c_size_t(2)
+    array_type = ctypes.c_double * 2
+    inp = [2.2, 2.3]
+    array = array_type(inp[0], inp[1])
+    out_array = array_type(0.0, 0.0)
+    jit_ret = f(ndim, npts, array, None, fdim, out_array)
+
+    assert jit_ret == 0
+
+    res = [float(e.subs(a, x).evalf()) for x in inp]
+
+    assert isclose(out_array[0], res[0])
+    assert isclose(out_array[1], res[1])
+
+
 def test_callback_two():
     e = 3*a*b
     f = g.llvm_callable([a, b], e, callback_type='scipy.integrate.test')
@@ -213,6 +233,83 @@ def test_callback_cubature_multiple():
     assert isclose(out_array[0], res[0])
     assert isclose(out_array[1], res[1])
     assert isclose(out_array[2], res[2])
+
+
+def test_callback_cubature_v_multiple():
+    e1 = a*a
+    e2 = a*a + b*b
+    e3 = sympy.cse([e1, e2, 4*e2])
+    f = g.llvm_callable([a, b], e3, callback_type='cubature_v')
+
+    # Number of input variables
+    ndim = 2
+    # Number of output expression values
+    outdim = 3
+    inps = [(0.2, 1.5), (-0.3, 2.1)]
+    veclen = len(inps)
+
+    m = ctypes.c_int(ndim)
+    fdim = ctypes.c_int(outdim)
+    npts = ctypes.c_size_t(veclen)
+    array_type = ctypes.c_double * (ndim*veclen)
+    out_array_type = ctypes.c_double * (outdim*veclen)
+    array = array_type(inps[0][0], inps[0][1], inps[1][0], inps[1][1])
+    out_array = out_array_type()
+    jit_ret = f(m, npts, array, None, fdim, out_array)
+
+    assert jit_ret == 0
+
+    res = [eval_cse(e3, {a: inp[0], b: inp[1]}) for inp in inps]
+
+    assert isclose(out_array[0], res[0][0])
+    assert isclose(out_array[1], res[0][1])
+    assert isclose(out_array[2], res[0][2])
+    assert isclose(out_array[3], res[1][0])
+    assert isclose(out_array[4], res[1][1])
+    assert isclose(out_array[5], res[1][2])
+
+
+def test_callback_cuba():
+    e = a + 1.2
+    f = g.llvm_callable([a], e, callback_type='cuba')
+    ndim = ctypes.c_int(1)
+    ncomp = ctypes.c_int(1)
+    nvec = ctypes.c_int(1)
+    ncore = ctypes.c_int(1)
+    array_type = ctypes.c_double * 1
+    inp = {a: 2.2}
+    array = array_type(inp[a])
+    out_array = array_type(0.0)
+    jit_ret = f(ctypes.byref(ndim), array, ctypes.byref(ncomp), out_array,
+                None, ctypes.byref(nvec), ctypes.byref(ncore))
+
+    assert jit_ret == 0
+
+    res = float(e.subs(inp).evalf())
+
+    assert isclose(out_array[0], res)
+
+
+def test_callback_cuba_v():
+    e = a + 1.2
+    f = g.llvm_callable([a], e, callback_type='cuba_v')
+    ndim = ctypes.c_int(1)
+    ncomp = ctypes.c_int(1)
+    nvec = ctypes.c_int(2)
+    ncore = ctypes.c_int(1)
+    array_type = ctypes.c_double * 2
+    inp = [2.4, 2.6]
+    array = array_type(inp[0], inp[1])
+    out_array = array_type(0.0, 0.0)
+    jit_ret = f(ctypes.byref(ndim), array, ctypes.byref(ncomp), out_array,
+                None, ctypes.byref(nvec), ctypes.byref(ncore))
+
+    assert jit_ret == 0
+
+    res = [float(e.subs(a, x).evalf()) for x in inp]
+
+    assert isclose(out_array[0], res[0])
+    assert isclose(out_array[1], res[1])
 
 
 def test_symbol_not_found():
