@@ -1,4 +1,4 @@
-from sympy import (Add, factor_list, igcd, Integer, Matrix, Mul, S, simplify,
+from sympy import (Add, factor_list, igcd, Matrix, Mul, S, simplify,
     Symbol, symbols, Eq, pi, factorint, oo, powsimp)
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range
@@ -38,8 +38,8 @@ def test_input_format():
 
 
 def test_univariate():
-    assert diop_solve((x - 1)*(x - 2)**2) == set([(Integer(1),), (Integer(2),)])
-    assert diop_solve((x - 1)*(x - 2)) == set([(Integer(1),), (Integer(2),)])
+    assert diop_solve((x - 1)*(x - 2)**2) == set([(1,), (2,)])
+    assert diop_solve((x - 1)*(x - 2)) == set([(1,), (2,)])
 
 
 def test_classify_diop():
@@ -95,16 +95,16 @@ def test_linear():
 def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
-        set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
+        set([(-133, -11), (5, -57)])
     assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
-    assert diop_solve(-13*x*y + 2*x - 4*y - 54) == set([(Integer(27), Integer(0))])
-    assert diop_solve(-27*x*y - 30*x - 12*y - 54) == set([(-Integer(14), -Integer(1))])
-    assert diop_solve(2*x*y + 5*x + 56*y + 7) == set([(-Integer(161), -Integer(3)),\
-        (-Integer(47),-Integer(6)), (-Integer(35), -Integer(12)), (-Integer(29), -Integer(69)),\
-        (-Integer(27), Integer(64)), (-Integer(21), Integer(7)),(-Integer(9), Integer(1)),\
-        (Integer(105), -Integer(2))])
+    assert diop_solve(-13*x*y + 2*x - 4*y - 54) == set([(27, 0)])
+    assert diop_solve(-27*x*y - 30*x - 12*y - 54) == set([(-14, -1)])
+    assert diop_solve(2*x*y + 5*x + 56*y + 7) == set([(-161, -3),\
+        (-47,-6), (-35, -12), (-29, -69),\
+        (-27, 64), (-21, 7),(-9, 1),\
+        (105, -2)])
     assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
-    assert diop_solve(x*y + x + y + 1) == set([(-Integer(1), t), (t, -Integer(1))])
+    assert diop_solve(x*y + x + y + 1) == set([(-1, t), (t, -1)])
     assert diophantine(48*x*y)
 
 
@@ -113,12 +113,12 @@ def test_quadratic_elliptical_case():
     # Two test cases highlighted require lot of memory due to quadratic_congruence() method.
     # This above method should be replaced by Pernici's square_mod() method when his PR gets merged.
 
-    #assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
+    #assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-11, -1)])
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
-    assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-Integer(1), -Integer(1))])
-    #assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-Integer(15), Integer(6))])
+    assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-1, -1)])
+    #assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-15, 6)])
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
-        set([(Integer(1), -Integer(2)), (-Integer(1), -Integer(1)),(Integer(1), Integer(1)), (-Integer(1), Integer(2))])
+        set([(1, -2), (-1, -1),(1, 1), (-1, 2)])
 
 
 def test_quadratic_parabolic_case():
@@ -229,8 +229,8 @@ def test_DN():
 
     assert diop_DN(13, 27) == [(220, 61), (40, 11), (768, 213), (12, 3)]
     assert set(diop_DN(157, 12)) == \
-    set([(Integer(13), Integer(1)), (Integer(10663), Integer(851)), (Integer(579160), Integer(46222)), \
-        (Integer(483790960),Integer(38610722)), (Integer(26277068347), Integer(2097138361)), (Integer(21950079635497), Integer(1751807067011))])
+    set([(13, 1), (10663, 851), (579160, 46222), \
+        (483790960,38610722), (26277068347, 2097138361), (21950079635497, 1751807067011)])
     assert diop_DN(13, 25) == [(3245, 900)]
     assert diop_DN(192, 18) == []
     assert diop_DN(23, 13) == [(-6, 1), (6, 1)]
@@ -293,12 +293,13 @@ def is_pell_transformation_ok(eq):
         if term in coeff.keys():
             return False
 
-    for term in [X**2, Y**2, Integer(1)]:
+    for term in [X**2, Y**2, 1]:
         if term not in coeff.keys():
-            coeff[term] = Integer(0)
+            coeff[term] = 0
 
     if coeff[X**2] != 0:
-        return isinstance(S(coeff[Y**2])/coeff[X**2], Integer) and isinstance(S(coeff[Integer(1)])/coeff[X**2], Integer)
+        return divisible(coeff[Y**2], coeff[X**2]) and \
+        divisible(coeff[1], coeff[X**2])
 
     return True
 
@@ -578,7 +579,10 @@ def test_diop_partition():
                 assert len(p) == k
     assert [p for p in partition(3, 5)] == []
     assert [p for p in partition(3, 5, 1)] == [
-        (0, 0, 0, 0, 3), (0, 0, 0, 1, 2), (0, 0, 1, 1, 1)]
+        (3, 0, 0, 0, 0), (2, 1, 0, 0, 0), (1, 1, 1, 0, 0)]
+    raises(ValueError, lambda: list(partition(0)))
+    raises(ValueError, lambda: list(partition(1, 0)))
+    assert list(partition(3)) == [(1, 1, 1), (1, 2), (3,)]
 
 
 def test_prime_as_sum_of_two_squares():
