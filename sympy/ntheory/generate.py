@@ -770,7 +770,7 @@ def composite(nth):
         raise ValueError("nth must be a positive integer; composite(1) == 4")
     composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
     if n <= 10:
-        return composite_arr[n-1]
+        return composite_arr[n - 1]
 
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
@@ -785,7 +785,7 @@ def composite(nth):
         else:
             a = mid + 1
 
-    n_composites = a-primepi(a)-1
+    n_composites = a - primepi(a) - 1
     while n_composites > n:
         if not isprime(a):
             n_composites -= 1
