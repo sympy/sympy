@@ -176,7 +176,17 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
         raise TypeError(filldedent('''
     Equation should be a polynomial with Rational coefficients.'''))
 
-    terms = factor_list(eq)[1]
+    try:
+        # if we know that factoring should not be attempted, skip
+        # the factoring step
+        v, c, t = classify_diop(eq)
+        if t  == 'general_sum_of_squares':
+            # trying to factor such expressions will sometimes hang
+            terms = [(eq, 1)]
+        else:
+            raise TypeError
+    except (TypeError, NotImplementedError):
+        terms = factor_list(eq)[1]
 
     sols = set([])
 
