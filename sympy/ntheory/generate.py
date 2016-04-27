@@ -768,14 +768,31 @@ def composite(nth):
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; composite(1) == 4")
-    composite_arr = [4, 6, 8, 9, 10, 12, 14]
-    if n <= 7:
-        return composite_arr[n - 1]
+    composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
+    if n <= 10:
+        return composite_arr[n-1]
 
-    m, k = n, n + primepi(n) + 1
-    while m != k:
-        m, k = k, n + primepi(k) + 1
-    return m
+    from sympy.functions.special.error_functions import li
+    from sympy.functions.elementary.exponential import log
+
+    a = 4 # Lower bound for binary search
+    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+    while a < b:
+        mid = (a + b) >> 1
+        if mid - li(mid) - 1 > n:
+            b = mid
+        else:
+            a = mid + 1
+
+    n_composites = a-primepi(a)-1
+    while n_composites > n:
+        if not isprime(a):
+            n_composites -= 1
+        a -= 1
+    if isprime(a):
+        a -= 1
+    return a
 
 
 def compositepi(n):
