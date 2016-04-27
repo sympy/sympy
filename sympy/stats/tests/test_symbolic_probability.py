@@ -1,7 +1,7 @@
 from sympy import symbols, Mul, sin
 from sympy.stats import Normal, Poisson, variance
 from sympy.stats.rv import probability, expectation
-from sympy.stats.symbolic_probability import Covariance, Variance, Probability, Expectation
+from sympy.stats import Covariance, Variance, Probability, Expectation
 
 
 def test_literal_probability():
@@ -56,3 +56,22 @@ def test_literal_probability():
     assert Covariance(X, X**2) == Covariance(X, X**2, evaluate=False)
     assert Covariance(X, sin(X)) == Covariance(sin(X), X, evaluate=False)
     assert Covariance(X**2, sin(X)*Y) == Covariance(sin(X)*Y, X**2, evaluate=False)
+
+
+def test_probability_rewrite():
+    X = Normal('X', 2, 3)
+    Y = Normal('Y', 3, 4)
+    Z = Poisson('Z', 4)
+    W = Poisson('W', 3)
+    x, y, w, z = symbols('x, y, w, z')
+
+    assert Variance(w).rewrite(Expectation) == 0
+    assert Variance(X).rewrite(Expectation) == Expectation(X ** 2) - Expectation(X) ** 2
+    assert Variance(X, condition=Y).rewrite(Expectation) == Expectation(X ** 2, Y) - Expectation(X, Y) ** 2
+    assert Variance(X, Y) != Expectation(X**2) - Expectation(X)**2
+    assert Variance(X + z).rewrite(Expectation) == Expectation(X ** 2) - Expectation(X) ** 2
+    assert Variance(X * Y).rewrite(Expectation) == Expectation(X ** 2 * Y ** 2) - Expectation(X * Y) ** 2
+
+    assert Covariance(w, X).rewrite(Expectation) == 0
+    assert Covariance(X, Y).rewrite(Expectation) == Expectation(X*Y) - Expectation(X)*Expectation(Y)
+    assert Covariance(X, Y, condition=W).rewrite(Expectation) == Expectation(X * Y, W) - Expectation(X, W) * Expectation(Y, W)
