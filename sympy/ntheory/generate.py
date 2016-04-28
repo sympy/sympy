@@ -743,8 +743,8 @@ def cycle_length(f, x0, nmax=None, values=False):
         yield lam, mu
 
 def composite(nth):
-    """ Return the nth composite, with the composite indexed as composite(1) = 4,
-        composite(2) = 6, etc....
+    """ Return the nth composite number, with the composite numbers indexed as
+        composite(1) = 4, composite(2) = 6, etc....
 
         Examples
         ========
@@ -764,6 +764,7 @@ def composite(nth):
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
         prime : Return the nth prime
+        compositepi : Return the number of positive composite numbers less than or equal to n
     """
     n = as_int(nth)
     if n < 1:
@@ -797,6 +798,7 @@ def composite(nth):
 
 def compositepi(n):
     """ Return the number of positive composite numbers less than or equal to n.
+        The first positive composite is 4, i.e. compositepi(4) = 1.
 
         Examples
         ========
