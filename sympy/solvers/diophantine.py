@@ -2682,31 +2682,28 @@ def partition(n, k=None, zeros=False):
     >>> from sympy.solvers.diophantine import partition
     >>> f = partition(5)
     >>> next(f)
-    (5,)
+    (1, 1, 1, 1, 1)
     >>> next(f)
-    (1, 4)
+    (1, 1, 1, 2)
     >>> g = partition(5, 3)
     >>> next(g)
     (1, 1, 3)
     >>> next(g)
     (1, 2, 2)
+    >>> g = partition(5, 3, zeros=True)
+    >>> next(g)
+    (0, 0, 5)
 
-    Reference
-    =========
-
-    .. [1] Generating Integer Partitions, [online],
-        Available: http://jeromekelleher.net/partitions.php
     """
-    from sympy.utilities.iterables import partitions
-    for s, p in partitions(n, k, size=True):
-        if k and not zeros and s != k:
-            continue
-        sol = ()
-        for e in p:
-            sol += (e,)*p[e]
-        if zeros:
-            sol += (0,)*(k - s)
-        yield _sorted_tuple(*sol)
+    from sympy.utilities.iterables import ordered_partitions
+    if not zeros or k is None:
+        for i in ordered_partitions(n, k):
+            yield tuple(i)
+    else:
+        for m in range(1, k + 1):
+            for i in ordered_partitions(n, m):
+                i = tuple(i)
+                yield (0,)*(k - len(i)) + i
 
 
 def prime_as_sum_of_two_squares(p):

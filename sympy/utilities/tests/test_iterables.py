@@ -15,7 +15,7 @@ from sympy.utilities.iterables import (
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations)
+    unflatten, uniq, variations, ordered_partitions)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -709,3 +709,16 @@ def test__partition():
         ['b', 'e'], ['a', 'c'], ['d']]
     output = (3, [1, 0, 1, 2, 0])
     assert _partition('abcde', *output) == [['b', 'e'], ['a', 'c'], ['d']]
+
+
+def test_ordered_partitions():
+    from sympy.functions.combinatorial.numbers import nT
+    f = ordered_partitions
+    raises(ValueError, lambda: list(f(0, 1)))
+    raises(ValueError, lambda: list(f(1, 0)))
+    for i in range(1, 7):
+        for j in [None] + list(range(1, i)):
+            assert (
+                sum(1 for p in f(i, j, 1)) ==
+                sum(1 for p in f(i, j, 0)) ==
+                nT(i, j))
