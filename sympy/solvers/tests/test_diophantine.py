@@ -609,12 +609,16 @@ def test_sum_of_three_squares():
 def test_sum_of_four_squares():
     from random import randint
 
-    for i in range(10):
-        n = randint(1, 100000000000000)
-        a, b, c, d = sum_of_four_squares(n)
-        assert a**2 + b**2 + c**2 + d**2 == n
+    # this should never fail
+    n = randint(1, 100000000000000)
+    assert sum(i**2 for i in sum_of_four_squares(n)) == n
 
     assert sum_of_four_squares(0) == (0, 0, 0, 0)
+    assert sum_of_four_squares(14) == (0, 1, 2, 3)
+    assert sum_of_four_squares(15) == (1, 1, 2, 3)
+    assert sum_of_four_squares(18) == (1, 2, 2, 3)
+    assert sum_of_four_squares(19) == (0, 1, 3, 3)
+    assert sum_of_four_squares(48) == (0, 4, 4, 4)
 
 
 def test_power_representation():
