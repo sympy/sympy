@@ -329,12 +329,14 @@ References
 User Functions
 --------------
 
-These functions are imported into the global namespace
-with ``from sympy import *``.
+This functions is imported into the global namespace
+with ``from sympy import *``:
 
 :func:`diophantine`
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diophantine
+
+And this function is imported with ``from sympy.solvers.diophantine import *``:
 
 :func:`classify_diop`
 ^^^^^^^^^^^^^^^^^^^^^

@@ -1,36 +1,36 @@
 from __future__ import print_function, division
 
-from sympy import (Add, ceiling, divisors, factor_list, factorint, floor,
-    Integer, Rational, isprime, Matrix, Mul, nextprime,
-    perfect_power, Poly, S, sign, solve, sqrt, Symbol, symbols, sympify,
-    Wild, signsimp, factor_terms, Dummy)
-
-from sympy.core.compatibility import as_int, is_sequence
+from sympy.core.add import Add
+from sympy.core.compatibility import as_int, is_sequence, range
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
-from sympy.core.power import integer_nthroot
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
 from sympy.core.numbers import igcdex, ilcm, igcd
-from sympy.core.compatibility import range
+from sympy.core.power import integer_nthroot
 from sympy.core.relational import Eq
-from sympy.ntheory.factor_ import multiplicity
-from sympy.ntheory.primetest import is_square
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol, symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.ntheory.factor_ import (
+    divisors, factorint, multiplicity, perfect_power)
+from sympy.ntheory.generate import nextprime
+from sympy.ntheory.primetest import is_square, isprime
 from sympy.ntheory.residue_ntheory import sqrt_mod
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-from sympy.simplify.radsimp import rad_rationalize
+from sympy.polys.polyerrors import GeneratorsNeeded
+from sympy.polys.polytools import Poly, factor_list
+from sympy.simplify.simplify import signsimp
 from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 
-
-__all__ = ['base_solution_linear', 'classify_diop', 'cornacchia', 'descent',
-           'diop_bf_DN', 'diop_DN', 'diop_general_pythagorean',
-           'diop_general_sum_of_squares', 'diop_linear', 'diop_quadratic',
-           'diop_solve', 'diop_ternary_quadratic', 'diophantine', 'find_DN',
-           'partition', 'square_factor', 'sum_of_four_squares',
-           'sum_of_three_squares', 'transformation_to_DN',
-           'diop_general_sum_of_even_powers', 'sum_of_squares',
-           'sum_of_powers']
+# these are imported with 'from sympy.solvers.diophantine import *
+__all__ = ['diophantine', 'classify_diop']
 
 
 # these types are known (but not necessarily handled)
@@ -2416,7 +2416,6 @@ def holzer(x, y, z, a, b, c):
         k = 2*c
     else:
         k = c//2
-    k = Integer(k)
 
     small = a*b*c
     step = 0
@@ -2449,13 +2448,13 @@ def holzer(x, y, z, a, b, c):
 
         A = (a*u**2 + b*v**2 + c*w**2)
         B = (a*u*x_0 + b*v*y_0 + c*w*z_0)
-        x = (x_0*A - 2*u*B) / k
-        y = (y_0*A - 2*v*B) / k
-        z = (z_0*A - 2*w*B) / k
+        x = Rational(x_0*A - 2*u*B, k)
+        y = Rational(y_0*A - 2*v*B, k)
+        z = Rational(z_0*A - 2*w*B, k)
         assert all(i.is_Integer for i in (x, y, z))
         step += 1
 
-    return x_0, y_0, z_0
+    return tuple([int(i) for i in (x_0, y_0, z_0)])
 
 
 def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
