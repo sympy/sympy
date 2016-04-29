@@ -660,6 +660,10 @@ def test_power_representation():
     assert list(power_representation(0, 3, 2, False)) == []
     # when we are dealing with squares, do feasibility checks
     assert len(list(power_representation(4**10*(8*10 + 7), 2, 3))) == 0
+    # there will be a recursion error if these aren't recognized
+    big = 2**30
+    for i in [13, 10, 7, 5, 4, 2, 1]:
+        assert list(sum_of_powers(big, 2, big - i)) == []
 
 
 def test_assumptions():

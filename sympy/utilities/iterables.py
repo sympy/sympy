@@ -1378,29 +1378,33 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if n <= 0:
-        raise ValueError("n must be > 0")
+    if (
+            n <= 0 or
+            m is not None and m < 1 or
+            k is not None and k < 1 or
+            m and k and m*k < n):
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        if size:
+            yield 0, {}
+        else:
+            yield {}
+        return
+
     if m is None:
         m = n
-    elif m < 0:
-        raise ValueError("m must be > 0")
     else:
         m = min(m, n)
+
     if n == 0:
         if size:
             yield 1, {0: 1}
         else:
             yield {0: 1}
         return
-    if m < 1:
-        raise ValueError(
-            "maximum number of parts in partition, m, must be > 0")
-    k = min(k or n, n)
-    if k < 1:
-        raise ValueError("maximum value in partition, k, must be > 0")
 
-    if m*k < n:
-        return
+    k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
