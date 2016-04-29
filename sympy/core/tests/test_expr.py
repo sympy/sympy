@@ -1305,6 +1305,7 @@ def test_as_coeff_Add():
     assert (Integer(3) + x).as_coeff_Add() == (Integer(3), x)
     assert (Rational(3, 4) + x).as_coeff_Add() == (Rational(3, 4), x)
     assert (Float(5.0) + x).as_coeff_Add() == (Float(5.0), x)
+    assert (Float(5.0) + x).as_coeff_Add(rational=True) == (0, Float(5.0) + x)
 
     assert (Integer(3) + x + y).as_coeff_Add() == (Integer(3), x + y)
     assert (Rational(3, 4) + x + y).as_coeff_Add() == (Rational(3, 4), x + y)
