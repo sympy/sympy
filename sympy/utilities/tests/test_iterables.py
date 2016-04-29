@@ -718,8 +718,8 @@ def test__partition():
 def test_ordered_partitions():
     from sympy.functions.combinatorial.numbers import nT
     f = ordered_partitions
-    raises(ValueError, lambda: list(f(0, 1)))
-    raises(ValueError, lambda: list(f(1, 0)))
+    assert list(f(0, 1)) == [[]]
+    assert list(f(1, 0)) == [[]]
     for i in range(1, 7):
         for j in [None] + list(range(1, i)):
             assert (

@@ -1537,8 +1537,13 @@ def ordered_partitions(n, m=None, sort=True):
         Available: http://arxiv.org/pdf/0909.2331v2.pdf
     """
     if n < 1 or m is not None and m < 1:
-        raise ValueError('n and m must be positive')
-    elif m is None:
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        yield []
+        return
+
+    if m is None:
         # The list `a`'s leading elements contain the partition in which
         # y is the biggest element and x is either the same as y or the
         # 2nd largest element; v and w are adjacent element indices
