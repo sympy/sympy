@@ -353,6 +353,20 @@ class Heaviside(Function):
     .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
            but Maple uses ``H(0) = undefined``
 
+    To specify the value of Heaviside at x=0, a second argument
+    can be given, and Heaviside will that value.
+
+    >>> from sympy import Heaviside
+    >>> from sympy.abc import y
+    >>> Heaviside(9)
+    1
+    >>> Heaviside(-9)
+    0
+    >>> Heaviside(0)
+    Heaviside(0)
+    >>> Heaviside(0, y)
+    y
+
     See Also
     ========
 
@@ -394,7 +408,7 @@ class Heaviside(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg, H0=None):
         """
         Returns a simplified form or a value of Heaviside depending on the
         argument passed by the Heaviside object.
@@ -420,6 +434,9 @@ class Heaviside(Function):
         >>> Heaviside(0)
         Heaviside(0)
 
+        >>> Heaviside(0, 1)
+        Heaviside(1)
+
         >>> Heaviside(-5)
         0
 
@@ -436,6 +453,8 @@ class Heaviside(Function):
         1
 
         """
+        if H0 == None:
+            H0 = S.NaN
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
@@ -445,6 +464,8 @@ class Heaviside(Function):
             return S.Zero
         elif arg.is_positive:
             return S.One
+        elif arg.is_zero and H0 != S.NaN:
+            return H0
 
     def _eval_rewrite_as_Piecewise(self, arg):
         """Represents Heaviside in a Piecewise form
@@ -499,6 +520,24 @@ class Heaviside(Function):
         sign
 
         """
+=======
+    def _eval_rewrite_as_Piecewise(self, *args):
+        if len(args) == 2:
+            arg, H0 = args[0], args[1]
+        else:
+            arg, H0 = args[0], None
+        if arg.is_real:
+            if H0 == None:
+                return Piecewise((1, arg > 0), (0, arg < 0))
+            return Piecewise((1, arg > 0), (H0, Eq(arg, 0)), (0, True))
+
+    def _eval_rewrite_as_sign(self, *args):
+        if len(args) == 2:
+            arg, H0 = args[0], args[1]
+        else:
+            arg, H0 = args[0], None
+        # the value of H0 is ignored currently
+>>>>>>> Heaviside(0,h) can be used to specify value at 0
         if arg.is_real:
             return (sign(arg)+1)/2
 
