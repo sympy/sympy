@@ -136,7 +136,7 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
         return value
 
 
-class LoopCreator(object):
+class _LoopCreator(object):
     def __init__(self, builder, func):
         self.builder = builder
         self.func = func
@@ -437,7 +437,7 @@ class LLVMJitCodeCallbackVector(LLVMJitCode):
         bb_entry = self.fn.append_basic_block('entry')
         builder = ll.IRBuilder(bb_entry)
 
-        loop = LoopCreator(builder, self.fn)
+        loop = _LoopCreator(builder, self.fn)
 
         start = ll.Constant(ll.IntType(32), 0)
         step = ll.Constant(ll.IntType(32), 1)
