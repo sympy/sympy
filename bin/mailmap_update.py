@@ -60,10 +60,8 @@ exit1 = False
 
 print(blue(filldedent("""Read the text at the top of AUTHORS and the text at
 the top of .mailmap for information on how to fix the below errors.  If
-someone is missing from AUTHORS, add them where they would have been if they
-were added after their first pull request was merged (checkout the merge
-commit from the first pull request and see who is at the end of the AUTHORS
-file at that commit.)""")))
+someone is missing from AUTHORS, use the ./bin/update_authors.py script to add
+them.""")))
 
 print()
 print(yellow("People who are in AUTHORS but not in git:"))

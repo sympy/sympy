@@ -100,7 +100,7 @@ coordinates need to be provided to the class. In this case we'll use `q_2` and
   >>> KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
   ...                  u_dependent=[u1], configuration_constraints=f_c,
   ...                  velocity_constraints=f_v, kd_eqs=kde)
-  >>> (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+  >>> (fr, frstar) = KM.kanes_equations([pP],[(P, R)])
 
 For linearization, operating points can be specified on the call, or be
 substituted in afterwards. In this case we'll provide them in the call,

@@ -117,6 +117,8 @@ def test_factorial():
     assert factorial(-2) == zoo
     assert factorial(0) == 1
     assert factorial(7) == 5040
+    assert factorial(19) == 121645100408832000
+    assert factorial(31) == 8222838654177922817725562880000000
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 

@@ -123,16 +123,39 @@ def tensorcontraction(array, *contraction_axes):
         cum_shape[rank - i - 1] = _cumul
         _cumul *= int(array.shape[rank - i - 1])
 
+    # DEFINITION: by absolute position it is meant the position along the one
+    # dimensional array containing all the tensor components.
+
+    # Possible future work on this module: move computation of absolute
+    # positions to a class method.
+
+    # Determine absolute positions of the uncontracted indices:
     remaining_indices = [[cum_shape[i]*j for j in range(array.shape[i])]
                          for i in range(rank) if i not in taken_dims]
 
+    # Determine absolute positions of the contracted indices:
+    summed_deltas = []
+    for axes_group in contraction_axes:
+        lidx = []
+        for js in range(array.shape[axes_group[0]]):
+            lidx.append(sum([cum_shape[ig] * js for ig in axes_group]))
+        summed_deltas.append(lidx)
+
+    # Compute the contracted array:
+    #
+    # 1. external for loops on all uncontracted indices.
+    #    Uncontracted indices are determined by the combinatorial product of
+    #    the absolute positions of the remaining indices.
+    # 2. internal loop on all contracted indices.
+    #    It sum the values of the absolute contracted index and the absolute
+    #    uncontracted index for the external loop.
     contracted_array = []
     for icontrib in itertools.product(*remaining_indices):
-        i = sum(icontrib)
+        index_base_position = sum(icontrib)
         isum = S.Zero
-        for axes_group in contraction_axes:
-            for js in range(array.shape[axes_group[0]]):
-                isum += array[i + sum([cum_shape[ig]*js for ig in axes_group])]
+        for sum_to_index in itertools.product(*summed_deltas):
+            isum += array[index_base_position + sum(sum_to_index)]
+
         contracted_array.append(isum)
 
     if len(remaining_indices) == 0:

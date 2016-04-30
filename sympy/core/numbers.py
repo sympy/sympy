@@ -549,9 +549,11 @@ class Number(AtomicExpr):
             return S.One, self
         return (self, S.One) if self else (S.One, self)
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
-        return self, S.Zero
+        if not rational:
+            return self, S.Zero
+        return S.Zero, self
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
@@ -1225,7 +1227,7 @@ class Rational(Number):
     is_Rational = True
 
     @cacheit
-    def __new__(cls, p, q=None):
+    def __new__(cls, p, q=None, gcd=None):
         if q is None:
             if isinstance(p, Rational):
                 return p
@@ -1252,7 +1254,7 @@ class Rational(Number):
             else:
                 try:
                     if isinstance(p, fractions.Fraction):
-                        return Rational(p.numerator, p.denominator)
+                        return Rational(p.numerator, p.denominator, 1)
                 except NameError:
                     pass  # error will raise below
 
@@ -1262,6 +1264,7 @@ class Rational(Number):
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
             q = S.One
+            gcd = 1
         else:
             p = Rational(p)
             q = Rational(q)
@@ -1280,16 +1283,15 @@ class Rational(Number):
                     raise ValueError("Indeterminate 0/0")
                 else:
                     return S.NaN
-            if p < 0:
-                return S.NegativeInfinity
-            return S.Infinity
+            return S.ComplexInfinity
         if q < 0:
             q = -q
             p = -p
-        n = igcd(abs(p), q)
-        if n > 1:
-            p //= n
-            q //= n
+        if not gcd:
+            gcd = igcd(abs(p), q)
+        if gcd > 1:
+            p //= gcd
+            q //= gcd
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:
@@ -1370,16 +1372,22 @@ class Rational(Number):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
+            return Rational(self.p + self.q*other.p, self.q, 1)
+        elif isinstance(other, Rational):
+            #TODO: this can probably be optimized more
             return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
             return other + self
         else:
             return Number.__add__(self, other)
+    __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
+            return Rational(self.p - self.q*other.p, self.q, 1)
+        elif isinstance(other, Rational):
             return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
             return -other + self
@@ -1387,25 +1395,52 @@ class Rational(Number):
             return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        if isinstance(other, Integer):
+            return Rational(self.q*other.p - self.p, self.q, 1)
+        elif isinstance(other, Rational):
+            return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
+        elif isinstance(other, Float):
+            return -self + other
+        else:
+            return Number.__rsub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Rational):
-            return Rational(self.p*other.p, self.q*other.q)
+        if isinstance(other, Integer):
+            return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
         elif isinstance(other, Float):
             return other*self
         else:
             return Number.__mul__(self, other)
+    __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
             if self.p and other.p == S.Zero:
                 return S.ComplexInfinity
             else:
-                return Rational(self.p*other.q, self.q*other.p)
+                return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
         elif isinstance(other, Float):
             return self*(1/other)
         else:
             return Number.__div__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        if isinstance(other, Integer):
+            return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+        elif isinstance(other, Rational):
+            return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+        elif isinstance(other, Float):
+            return other*(1/self)
+        else:
+            return Number.__rdiv__(self, other)
 
     __truediv__ = __div__
 
@@ -1453,7 +1488,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p)
+                return Rational(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
@@ -1638,6 +1673,14 @@ class Rational(Number):
             return -self, S.NegativeOne
         return S.One, self
 
+    def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
+        return self, S.One
+
+    def as_coeff_Add(self, rational=False):
+        """Efficiently extract the coefficient of a summation. """
+        return self, S.Zero
+
 
 # int -> Integer
 _intcache = {}
@@ -1786,23 +1829,31 @@ class Integer(Rational):
             return Integer(self.p + other)
         elif isinstance(other, Integer):
             return Integer(self.p + other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q + other.p, other.q, 1)
         return Rational.__add__(self, other)
 
     def __radd__(self, other):
         if isinstance(other, integer_types):
             return Integer(other + self.p)
-        return Rational.__add__(self, other)
+        elif isinstance(other, Rational):
+            return Rational(other.p + self.p*other.q, other.q, 1)
+        return Rational.__radd__(self, other)
 
     def __sub__(self, other):
         if isinstance(other, integer_types):
             return Integer(self.p - other)
         elif isinstance(other, Integer):
             return Integer(self.p - other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q - other.p, other.q, 1)
         return Rational.__sub__(self, other)
 
     def __rsub__(self, other):
         if isinstance(other, integer_types):
             return Integer(other - self.p)
+        elif isinstance(other, Rational):
+            return Rational(other.p - self.p*other.q, other.q, 1)
         return Rational.__rsub__(self, other)
 
     def __mul__(self, other):
@@ -1810,12 +1861,16 @@ class Integer(Rational):
             return Integer(self.p*other)
         elif isinstance(other, Integer):
             return Integer(self.p*other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
         return Rational.__mul__(self, other)
 
     def __rmul__(self, other):
         if isinstance(other, integer_types):
             return Integer(other*self.p)
-        return Rational.__mul__(self, other)
+        elif isinstance(other, Rational):
+            return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+        return Rational.__rmul__(self, other)
 
     def __mod__(self, other):
         if isinstance(other, integer_types):
@@ -2230,6 +2285,10 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         return False
 
     __bool__ = __nonzero__
+
+    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
+        """Efficiently extract the coefficient of a summation. """
+        return S.One, self
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
@@ -3310,6 +3369,8 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     def _sage_(self):
         import sage.all as sage
         return sage.golden_ratio
+
+    _eval_rewrite_as_sqrt = _eval_expand_func
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):

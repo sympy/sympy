@@ -411,6 +411,8 @@ def test_asinh():
     x, y = symbols('x,y')
     assert asinh(x) == asinh(x)
     assert asinh(-x) == -asinh(x)
+
+    #at specific points
     assert asinh(nan) == nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
@@ -421,6 +423,7 @@ def test_asinh():
     assert asinh(I/2) == pi*I/6
     assert asinh(-I/2) == -pi*I/6
 
+    # at infinites
     assert asinh(oo) == oo
     assert asinh(-oo) == -oo
 
@@ -429,6 +432,7 @@ def test_asinh():
 
     assert asinh(zoo) == zoo
 
+    #properties
     assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
     assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
 
@@ -454,18 +458,23 @@ def test_asinh_series():
 
 
 def test_acosh():
-    # TODO please write more tests  -- see issue 3751
-    # From http://functions.wolfram.com/ElementaryFunctions/ArcCosh/03/01/
-    # at specific points
     x = Symbol('x')
 
     assert acosh(-x) == acosh(-x)
 
+    #at specific points
     assert acosh(1) == 0
     assert acosh(-1) == pi*I
     assert acosh(0) == I*pi/2
     assert acosh(Rational(1, 2)) == I*pi/3
     assert acosh(Rational(-1, 2)) == 2*pi*I/3
+
+    # at infinites
+    assert acosh(oo) == oo
+    assert acosh(-oo) == oo
+
+    assert acosh(I*oo) == oo
+    assert acosh(-I*oo) == oo
 
     assert acosh(zoo) == oo
 
@@ -490,13 +499,6 @@ def test_acosh():
     assert str(acosh(-5*I).n(6)) == '2.31244 - 1.5708*I'
 
 
-def test_acosh_infinities():
-    assert acosh(oo) == oo
-    assert acosh(-oo) == oo
-    assert acosh(I*oo) == oo
-    assert acosh(-I*oo) == oo
-
-
 def test_acosh_series():
     x = Symbol('x')
     assert acosh(x).series(x, 0, 8) == \
@@ -504,9 +506,6 @@ def test_acosh_series():
     t5 = acosh(x).taylor_term(5, x)
     assert t5 == - 3*I*x**5/40
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
-
-
-# TODO please write more tests -- see issue 3751
 
 
 def test_asech():
@@ -520,6 +519,11 @@ def test_asech():
     assert asech(0) == oo
     assert asech(2) == I*pi/3
     assert asech(-2) == 2*I*pi / 3
+
+    # at infinites
+    assert asech(oo) == I*pi/2
+    assert asech(-oo) == I*pi/2
+    assert asech(zoo) == nan
 
     assert asech(I) == log(1 + sqrt(2)) - I*pi/2
     assert asech(-I) == log(1 + sqrt(2)) + I*pi/2
@@ -539,8 +543,8 @@ def test_asech():
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
     assert asech(S(2)) == acosh(1/S(2))
 
-    # asech(x) == I*acos(x)
-    # (Note: the exact formula is asech(x) == +/- I*acos(x))
+    # asech(x) == I*acos(1/x)
+    # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
     assert asech(-2/sqrt(3)) == I*acos(-sqrt(3)/2)
     assert asech(-S(2)) == I*acos(-S.Half)
@@ -561,12 +565,6 @@ def test_asech():
     assert str(asech(-5*I).n(6)) == '0.19869 + 1.5708*I'
 
 
-def test_asech_infinities():
-    assert asech(oo) == I*pi/2
-    assert asech(-oo) == I*pi/2
-    assert asech(zoo) == nan
-
-
 def test_asech_series():
     x = Symbol('x')
     t6 = asech(x).expansion_term(6, x)
@@ -580,9 +578,6 @@ def test_asech_rewrite():
 
 
 def test_atanh():
-    # TODO please write more tests  -- see issue 3751
-    # From http://functions.wolfram.com/ElementaryFunctions/ArcTanh/03/01/
-    # at specific points
     x = Symbol('x')
 
     #at specific points
@@ -593,6 +588,9 @@ def test_atanh():
     assert atanh(-1) == -oo
 
     # at infinites
+    assert atanh(oo) == -I*pi/2
+    assert atanh(-oo) == I*pi/2
+
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
@@ -622,17 +620,7 @@ def test_atanh_series():
         x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
 
 
-def test_atanh_infinities():
-    assert atanh(oo) == -I*pi/2
-    assert atanh(-oo) == I*pi/2
-
-# TODO please write more tests -- see issue 3751
-
-
 def test_acoth():
-    # TODO please write more tests  -- see issue 3751
-    # From http://functions.wolfram.com/ElementaryFunctions/ArcCoth/03/01/
-    # at specific points
     x = Symbol('x')
 
     #at specific points

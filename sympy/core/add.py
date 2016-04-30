@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 
 from .basic import Basic
-from .compatibility import cmp_to_key, reduce, is_sequence, range
+from .compatibility import reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
@@ -332,17 +333,13 @@ class Add(Expr, AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number:
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.Zero, self
+        if coeff.is_Number and not rational or coeff.is_Rational:
+            return coeff, self._new_rawargs(*args)
+        return S.Zero, self
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
@@ -489,6 +486,10 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_zero(self):
+        if self.is_commutative is False:
+            # issue 10528: there is no way to know if a nc symbol
+            # is zero or not
+            return
         nz = []
         z = 0
         im_or_z = False

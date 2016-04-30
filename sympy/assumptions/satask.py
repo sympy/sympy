@@ -47,7 +47,7 @@ def get_relevant_facts(proposition, assumptions=(True,),
         if context:
             keys |= And(*context).atoms(AppliedPredicate)
 
-        exprs = set([key.args[0] for key in keys])
+        exprs = {key.args[0] for key in keys}
 
     if not relevant_facts:
         relevant_facts = set([])
