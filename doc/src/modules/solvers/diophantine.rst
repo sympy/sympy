@@ -45,8 +45,10 @@ structured in the following manner.
     - :py:meth:`~sympy.solvers.diophantine.diop_linear`
     - :py:meth:`~sympy.solvers.diophantine.diop_quadratic`
     - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic_normal`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
     - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares`
+    - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_even_powers`
 
   - :py:meth:`~sympy.solvers.diophantine.merge_solution`
 
@@ -135,7 +137,7 @@ For linear Diophantine equations, the customized parameter is the prefix used
 for each free variable in the solution. Consider the following example:
 
 >>> diop_solve(2*x + 3*y - 5*z + 7, m)
-(m_0, -9*m_0 - 5*m_1 - 14, -5*m_0 - 3*m_1 - 7)
+(m_0, m_0 + 5*m_1 - 14, m_0 + 3*m_1 - 7)
 
 In the solution above, m_0 and m_1 are independent free variables.
 
@@ -228,7 +230,7 @@ We can solve an equation of the form `X^2 - DY^2 = N` by passing `D` and `N` to
 >>> diop_DN(5, 920)
 []
 
-Unfortunately, our equation does not have solutions.
+Unfortunately, our equation has no solution.
 
 Now let's turn to homogeneous ternary quadratic equations. These equations are
 of the form `ax^2 + by^2 + cz^2 + dxy + eyz + fzx = 0`. These type of equations
@@ -236,11 +238,11 @@ either have infinitely many solutions or no solutions (except the obvious
 solution (0, 0, 0))
 
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y + 6*y*z + 7*z*x)
-set()
+set([(0, 0, 0)])
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y - 7*y*z + 7*z*x)
 set([(-16*p**2 + 28*p*q + 20*q**2, 3*p**2 + 38*p*q - 25*q**2, 4*p**2 - 24*p*q + 68*q**2)])
 
-If you are only interested about a base solution rather than the parameterized
+If you are only interested in a base solution rather than the parameterized
 general solution (to be more precise, one of the general solutions), you can
 use :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`.
 
@@ -272,15 +274,41 @@ also be solved using the Diophantine module.
 set([(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)])
 
 function :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
-also be called directly to solve the same equation. This is true about the
-general sum of squares too. Either you can call
+also be called directly to solve the same equation. Either you can call
 :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` or use the high
-level API.
+level API. For the general sum of squares, this is also true, but one advantage
+of calling :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` is that
+you can control how many solutions are returned.
 
->>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
-set([(8, 4, 4, 4, 0, 0)])
+>>> from sympy.solvers.diophantine import diop_general_sum_of_squares
+>>> eq = a**2 + b**2 + c**2 + d**2 - 18
+>>> diophantine(eq)
+set([(0, 0, 3, 3), (0, 1, 1, 4), (1, 2, 2, 3)])
+>>> diop_general_sum_of_squares(eq, 2)
+set([(0, 0, 3, 3), (1, 2, 2, 3)])
 
-If you want to get a more thorough idea about the the Diophantine module please
+The :py:meth:`~sympy.solvers.diophantine.sum_of_squares` routine will
+providean iterator that returns solutions and one may control whether
+the solutions contain zeros or not (and the solutions not containing
+zeros are returned first):
+
+>>> from sympy.solvers.diophantine import sum_of_squares
+>>> sos = sum_of_squares(18, 4, zeros=True)
+>>> next(sos)
+(1, 2, 2, 3)
+>>> next(sos)
+(0, 0, 3, 3)
+
+
+Simple Eqyptian fractions can be found with the Diophantine module, too.
+For example, here are the ways that one might represent 1/2 as a sum of two
+unit fractions:
+
+>>> from sympy import Eq, S
+>>> diophantine(Eq(1/x + 1/y, S(1)/2))
+set([(-2, 1), (1, -2), (3, 6), (4, 4), (6, 3)])
+
+To get a more thorough understanding of the Diophantine module, please
 refer to the following blog.
 
 http://thilinaatsympy.wordpress.com/
@@ -301,20 +329,27 @@ References
 User Functions
 --------------
 
-These are functions that are imported into the global namespace with ``from
-sympy import *``. These functions are intended for use by ordinary users of SymPy.
+This functions is imported into the global namespace
+with ``from sympy import *``:
 
 :func:`diophantine`
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diophantine
 
-:func:`diop_solve`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_solve
+And this function is imported with ``from sympy.solvers.diophantine import *``:
 
 :func:`classify_diop`
 ^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.classify_diop
+
+Internal Functions
+------------------
+
+These functions are intended for internal use in the Diophantine module.
+
+:func:`diop_solve`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_solve
 
 :func:`diop_linear`
 ^^^^^^^^^^^^^^^^^^^
@@ -368,6 +403,10 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_squares
 
+:func:`diop_general_sum_of_even_powers`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_even_powers
+
 :func:`partition`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.partition
@@ -380,9 +419,13 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
 
-Internal Functions
-------------------
-These functions are intended for the internal use in Diophantine module.
+:func:`sum_of_powers`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_powers
+
+:func:`sum_of_squares`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_squares
 
 :obj:`merge_solution`
 ^^^^^^^^^^^^^^^^^^^^^
@@ -392,10 +435,6 @@ These functions are intended for the internal use in Diophantine module.
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.divisible
 
-:obj:`extended_euclid`
-^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.extended_euclid
-
 :obj:`PQa`
 ^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.PQa
@@ -403,10 +442,6 @@ These functions are intended for the internal use in Diophantine module.
 :obj:`equivalent`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.equivalent
-
-:obj:`simplified`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.simplified
 
 :obj:`parametrize_ternary_quadratic`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -429,16 +464,12 @@ These functions are intended for the internal use in Diophantine module.
 .. autofunction:: sympy.solvers.diophantine.holzer
 
 :obj:`prime_as_sum_of_two_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
 
-:obj:`pairwise_prime`
-^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.pairwise_prime
-
-:obj:`make_prime`
+:obj:`sqf_normal`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.make_prime
+.. autofunction:: sympy.solvers.diophantine.sqf_normal
 
 :obj:`reconstruct`
 ^^^^^^^^^^^^^^^^^^

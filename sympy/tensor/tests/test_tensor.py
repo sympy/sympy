@@ -1703,3 +1703,77 @@ def test_valued_components_with_wrong_symmetry():
 
     A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
     A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+
+def test_issue_10972_TensMul_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
+    Lorentz.data = [-1, 1]
+
+    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                         Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    A2 = TensorType([Lorentz] * 2, tensorsymmetry([2]))
+
+    u = Vec('u')
+    u.data = [1, 0]
+
+    F = A2('F')
+    F.data = [[0, 1],
+              [-1, 0]]
+
+    mul_1 = F(mu, alpha) * u(-alpha) * F(nu, beta) * u(-beta)
+    assert (mul_1.data == numpy.array([[0, 0], [0, 1]])).all()
+
+    mul_2 = F(mu, alpha) * F(nu, beta) * u(-alpha) * u(-beta)
+    assert (mul_2.data == mul_1.data).all()
+
+    assert ((mul_1 + mul_1).data == 2 * mul_1.data).all()
+
+
+def test_TensMul_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
+    Lorentz.data = [-1, 1, 1, 1]
+
+    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                         Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    A2 = TensorType([Lorentz] * 2, tensorsymmetry([2]))
+
+    u = Vec('u')
+    u.data = [1, 0, 0, 0]
+
+    F = A2('F')
+    Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
+    F.data = [
+        [0, Ex, Ey, Ez],
+        [-Ex, 0, Bz, -By],
+        [-Ey, -Bz, 0, Bx],
+        [-Ez, By, -Bx, 0]]
+
+    E = F(mu, nu) * u(-nu)
+
+    assert ((E(mu) * E(nu)).data ==
+            numpy.array([[0, 0, 0, 0],
+                         [0, Ex ** 2, Ex * Ey, Ex * Ez],
+                         [0, Ex * Ey, Ey ** 2, Ey * Ez],
+                         [0, Ex * Ez, Ey * Ez, Ez ** 2]])
+            ).all()
+
+    assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data).all()
+
+    assert ((F(mu, alpha) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+            - (E(mu) * E(nu)).data
+            ).all()
+    assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+            (E(mu) * E(nu)).data
+            ).all()

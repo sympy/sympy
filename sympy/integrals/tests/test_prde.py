@@ -187,6 +187,12 @@ def test_is_deriv_k():
     assert is_deriv_k(Poly(1 + x, t0), Poly(1, t0), DE) == \
         ([(t0, S(1)/2)], t0/2, 1)
 
+    # Issue 10798
+    # DE = DifferentialExtension(log(1/x), x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-1/x, t)],
+        'L_K': [1], 'E_K': [], 'L_args': [1/x], 'E_args': []})
+    assert is_deriv_k(Poly(1, t), Poly(x, t), DE) == ([(t, 1)], t, 1)
+
 
 def test_is_log_deriv_k_t_radical_in_field():
     # NOTE: any potential constant factor in the second element of the result
@@ -212,3 +218,11 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
+
+
+def test_issue_10798():
+    from sympy import integrate, pi, I, log, polylog, exp_polar
+    from sympy.abc import x, y
+    assert integrate(1/(1-(x*y)**2), (x, 0, 1), y) == \
+        I*pi*log(y)/2 + polylog(2, exp_polar(I*pi)/y)/2 - \
+        polylog(2, exp_polar(2*I*pi)/y)/2

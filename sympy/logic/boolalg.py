@@ -1677,7 +1677,7 @@ def _find_predicates(expr):
 
     """
     if not isinstance(expr, BooleanFunction):
-        return set([expr])
+        return {expr}
     return set().union(*(_find_predicates(i) for i in expr.args))
 
 

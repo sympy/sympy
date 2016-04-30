@@ -2,19 +2,22 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import (_sympify, sympify, converter,
+    SympifyError)
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass, ordered, range
+from sympy.core.compatibility import (iterable, with_metaclass,
+    ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
+from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.contains import Contains
-from sympy.utilities.misc import func_name
+from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
@@ -940,7 +943,9 @@ class Interval(Set, EvalfMixin):
 
     @property
     def _boundary(self):
-        return FiniteSet(self.start, self.end)
+        finite_points = [p for p in (self.start, self.end)
+                         if abs(p) != S.Infinity]
+        return FiniteSet(*finite_points)
 
     def _contains(self, other):
         if not isinstance(other, Expr) or (
@@ -1313,7 +1318,10 @@ class Union(Set, EvalfMixin):
             "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
             # Recipe credited to George Sakkis
             pending = len(iterables)
-            nexts = itertools.cycle(iter(it).next for it in iterables)
+            if PY3:
+                nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+            else:
+                nexts = itertools.cycle(iter(it).next for it in iterables)
             while pending:
                 try:
                     for next in nexts:
@@ -1611,7 +1619,7 @@ class Complement(Set, EvalfMixin):
         Simplify a :class:`Complement`.
 
         """
-        if B == S.UniversalSet:
+        if B == S.UniversalSet or A.is_subset(B):
             return EmptySet()
 
         if isinstance(B, Union):
@@ -1969,6 +1977,10 @@ class FiniteSet(Set, EvalfMixin):
         return self.is_proper_subset(other)
 
 
+converter[set] = lambda x: FiniteSet(*x)
+converter[frozenset] = lambda x: FiniteSet(*x)
+
+
 class SymmetricDifference(Set):
     """Represents the set of elements which are in either of the
     sets and not in their intersection.
@@ -2010,7 +2022,7 @@ class SymmetricDifference(Set):
 
 def imageset(*args):
     r"""
-    Image of set under transformation ``f``.
+    Return an image of the set under transformation ``f``.
 
     If this function can't compute the image, it returns an
     unevaluated ImageSet object.
@@ -2021,8 +2033,8 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
-    >>> x = Symbol('x')
+    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
+    >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
     [0, 4]
@@ -2033,25 +2045,55 @@ def imageset(*args):
     >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
     ImageSet(Lambda(x, sin(x)), [-2, 1])
 
+    >>> imageset(sin, Interval(-2, 1))
+    ImageSet(Lambda(x, sin(x)), [-2, 1])
+    >>> imageset(lambda y: x + y, Interval(-2, 1))
+    ImageSet(Lambda(_x, _x + x), [-2, 1])
+
+    Expressions applied to the set of Integers are simplified
+    to show as few negatives as possible and linear expressions
+    are converted to a canonical form. If this is not desirable
+    then the unevaluated ImageSet should be used.
+
+    >>> imageset(x, -2*x + 5, S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers())
+
     See Also
     ========
 
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core import Dummy, Lambda
+    from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
+    from sympy.geometry.util import _uniquely_named_symbol
+
+    if len(args) not in (2, 3):
+        raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))
+
+    set = args[-1]
+    if not isinstance(set, Set):
+        name = func_name(set)
+        raise ValueError(
+            'last argument should be a set, not %s' % name)
+
     if len(args) == 3:
         f = Lambda(*args[:2])
-    else:
-        # var and expr are being defined this way to
-        # support Python lambda and not just sympy Lambda
+    elif len(args) == 2:
         f = args[0]
-        if not isinstance(f, Lambda):
-            var = Dummy()
-            expr = args[0](var)
+        if isinstance(f, Lambda):
+            pass
+        elif (
+                isinstance(f, FunctionClass) # like cos
+                or func_name(f) == '<lambda>'
+                ):
+            var = _uniquely_named_symbol(Symbol('x'), f(Dummy()))
+            expr = f(var)
             f = Lambda(var, expr)
-    set = args[-1]
+        else:
+            raise TypeError(filldedent('''
+        expecting lambda, Lambda, or FunctionClass, not \'%s\'''' %
+        func_name(f)))
 
     r = set._eval_imageset(f)
     if isinstance(r, ImageSet):

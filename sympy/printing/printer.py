@@ -73,7 +73,7 @@ from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 
-from sympy.core.compatibility import cmp_to_key
+from functools import cmp_to_key
 
 
 class Printer(object):

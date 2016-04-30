@@ -386,8 +386,8 @@ class TIDS(CantSympify):
         dum = TIDS._check_matrix_indices(f_free, g_free, nc1)
 
         # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in f_free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in g_free])
+        free_dict1 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in f_free}
+        free_dict2 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in g_free}
         free_names = set(free_dict1.keys()) & set(free_dict2.keys())
         # find the new `free` and `dum`
 
@@ -966,7 +966,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         numpy = import_module('numpy')
 
         def ikey(x):
-            return x[1:]
+            # sort by component number , then by position in component
+            return x[2], x[1]
 
         free1 = free1[:]
         free2 = free2[:]
@@ -2726,8 +2727,8 @@ class TensAdd(TensExpr):
     @staticmethod
     def _tensAdd_check(args):
         # check that all addends have the same free indices
-        indices0 = set([x[0] for x in get_tids(args[0]).free])
-        list_indices = [set([y[0] for y in get_tids(x).free]) for x in args[1:]]
+        indices0 = {x[0] for x in get_tids(args[0]).free}
+        list_indices = [{y[0] for y in get_tids(x).free} for x in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 

@@ -241,11 +241,11 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u('-1')) is S.NegativeOne
+    assert cls(u'-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u('10')))
+    assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(long(10)))
     assert _strictly_equal(i, cls(i))
 
@@ -288,8 +288,8 @@ def test_Rational_new():
     assert Rational(1, 3.0) == Rational(1, 3)
     assert Rational(Float(0.5)) == Rational(1, 2)
     assert Rational('1e2/1e-2') == Rational(10000)
-    assert Rational(-1, 0) == S.NegativeInfinity
-    assert Rational(1, 0) == S.Infinity
+    assert Rational(-1, 0) == S.ComplexInfinity
+    assert Rational(1, 0) == S.ComplexInfinity
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
 
@@ -1544,3 +1544,7 @@ def test_mod_inverse():
     raises(TypeError, lambda: mod_inverse(2, x))
     raises(ValueError, lambda: mod_inverse(2, S.Half))
     raises(ValueError, lambda: mod_inverse(2, cos(1)**2 + sin(1)**2))
+
+
+def test_golden_ratio_rewrite_as_sqrt():
+    assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half
