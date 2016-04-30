@@ -15,7 +15,7 @@ from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 
-
+from sympy.polys import Poly
 from sympy.polys.polyerrors import PolificationFailed
 from sympy.polys.polytools import groebner
 from sympy.polys.domains import ZZ
