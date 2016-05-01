@@ -221,6 +221,8 @@ def checksol(f, symbol, sol=None, **flags):
             if isinstance(val, Mul):
                 val = val.as_independent(Unit)[0]
             if val.atoms() & illegal:
+                if any(f.has(il) for il in illegal) and val is S.NaN:
+                    return True
                 return False
         elif attempt == 1:
             if val.free_symbols:

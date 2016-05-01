@@ -520,6 +520,7 @@ def _solveset(f, symbol, domain, _check=False):
     # _check controls whether the answer is checked or not
 
     from sympy.simplify.simplify import signsimp
+    from sympy.solvers.solvers import solve
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -529,12 +530,21 @@ def _solveset(f, symbol, domain, _check=False):
         m, h = h.as_independent(symbol, as_Add=False)
         f = a/m + h  # XXX condition `m != 0` should be added to soln
     numer, denom = f.as_numer_denom()
-    if numer is S.One:
-        return S.EmptySet
     f = piecewise_fold(f)
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
+    if numer is S.One:
+        try:
+            zero_sol = []
+            for inf in [S.NegativeInfinity, S.Infinity]:
+                zero_sol += solve(denom - inf, symbol, evaluate = False)
+            if zero_sol:
+                result = FiniteSet(*[s for s in zero_sol])
+                return Intersection(result, domain)
+        except:
+            pass
+        return S.EmptySet
     if domain.is_subset(S.Reals):
         inverter_func = invert_real
     else:
@@ -548,8 +558,10 @@ def _solveset(f, symbol, domain, _check=False):
     elif not f.has(symbol):
         return EmptySet()
     elif f.is_Mul:
-        if denom is not S.One:
-            result = solver(numer, symbol) - solver(denom, symbol)
+        if denom.has(symbol):
+            num_sol = solver(numer, symbol)
+            denom_sol = solver(denom, symbol)
+            result = num_sol - denom_sol
         else:
             result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
