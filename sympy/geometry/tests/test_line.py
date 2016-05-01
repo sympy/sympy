@@ -238,6 +238,13 @@ def test_line_geom():
     assert l.contains((0, 1)) is True
     assert l.contains((0, 0)) is False
 
+    # Line parameter
+    p1, p2, p3 = Point(0, 1), Point(2, 3), Point(3, 4)
+    l = Line(p1, p2)
+    assert l.parameter(p3) == Rational(3, 2)
+    p4 = Point(1, 1) # not collinear
+    raises(ValueError, lambda: l.parameter(p4))
+
     #Ray contains
     p1, p2 = Point(0, 0), Point(4, 4)
     r = Ray(p1, p2)
