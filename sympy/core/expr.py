@@ -706,8 +706,9 @@ class Expr(Basic, EvalfMixin):
             try:
                 # check to see that we can get a value
                 prec = 2
+                max_prec = 256
                 n2 = self._eval_evalf(prec)
-                while n2.is_infinite is True:
+                while n2.is_infinite is True and prec < max_prec:
                     prec *= 4
                     # precision is growing
                     n2 = self._eval_evalf(prec)
