@@ -107,6 +107,7 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
 
@@ -131,7 +132,9 @@ class Indexed(Expr):
 
     """
     is_commutative = True
+    is_Indexed = True
     is_Symbol = True
+    is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -159,7 +162,7 @@ class Indexed(Expr):
                 raise IndexException(msg)
             result = S.One
             for index1, index2 in zip(self.indices, wrt.indices):
-                result *= DeltaIndexedBase()[index1, index2]
+                result *= KroneckerDelta(index1, index2)
             return result
         else:
             return S.Zero
@@ -284,6 +287,10 @@ class Indexed(Expr):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
+    @property
+    def free_symbols(self):
+        return {self.base}
+
 
 class IndexedBase(Expr, NotIterable):
     """Represent the base or stem of an indexed object
@@ -338,6 +345,7 @@ class IndexedBase(Expr, NotIterable):
     """
     is_commutative = True
     is_Symbol = True
+    is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
         if isinstance(label, string_types):
@@ -482,6 +490,10 @@ class Idx(Expr):
     """
 
     is_integer = True
+    is_finite = True
+    is_Symbol = True
+    is_Atom = True
+    _diff_wrt = True
 
     def __new__(cls, label, range=None, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -584,3 +596,7 @@ class Idx(Expr):
 
     def _sympystr(self, p):
         return p.doprint(self.label)
+
+    @property
+    def free_symbols(self):
+        return {self}

@@ -531,16 +531,18 @@ def test_Sum_doit():
     s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
+    assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((1, And(-oo < n, n < oo)), (0, True))
+    assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((x, And(-oo < n, n < oo)), (0, True))
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
-        3*Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
-    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
-        f(1) + f(2) + f(3)
-    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
-        Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
+           3 * Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+    assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
+           f(1) + f(2) + f(3)
+    assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
+           Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
     l = Symbol('l', integer=True, positive=True)
-    assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
-        Sum(f(l), (l, 1, oo))
+    assert Sum(f(l) * Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
+           Sum(f(l), (l, 1, oo))
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)

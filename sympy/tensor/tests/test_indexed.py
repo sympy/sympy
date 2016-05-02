@@ -4,7 +4,7 @@ from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And
 
 
 def test_Idx_construction():
@@ -194,3 +194,35 @@ def test_Indexed_coeff():
     a = (1/y[i+1]*y[i]).coeff(y[i])
     b = (y[i]/y[i+1]).coeff(y[i])
     assert a == b
+
+
+def test_differentiation():
+    from sympy.functions.special.tensor_functions import KroneckerDelta
+    i, j, k, l = symbols('i j k l', cls=Idx)
+    a = symbols('a')
+    h, L = symbols('h L', cls=IndexedBase)
+    hi, hj = h[i], h[j]
+
+    expr = hi
+    assert expr.diff(hj) == KroneckerDelta(i, j)
+    assert expr.diff(hi) == KroneckerDelta(i, i)
+
+    expr = S(2) * hi
+    assert expr.diff(hj) == S(2) * KroneckerDelta(i, j)
+    assert expr.diff(hi) == S(2) * KroneckerDelta(i, i)
+    assert expr.diff(a) == S.Zero
+    assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == Piecewise((2, And(-oo < j, j < oo)), (0, True))  # S(2) * KroneckerDelta(i, j)
+    ss = Sum(expr, (i, -oo, oo))
+    assert ss.diff(hi) == Sum(S(2) * KroneckerDelta(i, i), i)
+
+    expr = a * hj * hj / S(2)
+    assert expr.diff(hi) == a * h[j] * KroneckerDelta(i, j)
+    assert expr.diff(a) == hj * hj / S(2)
+    assert expr.diff(a, 2) == S.Zero
+    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == Piecewise((a*h[j], And(-oo < j, j < oo)), (0, True))  # Sum(a * h[i])
+
+    expr = a * sin(hj * hj)
+    assert expr.diff(hi) == a * cos(hj * hj) * S(2) * hj * KroneckerDelta(i, j)
+
+    expr = a * L[i, j] * h[j]
+    assert Sum(expr, (j, -oo, oo)).diff(L[k, l]).doit() == a * KroneckerDelta(i, k) * h[l]

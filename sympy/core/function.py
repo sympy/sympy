@@ -1105,7 +1105,7 @@ class Derivative(Expr):
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate:
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
+            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
             if symbol_set.difference(expr.free_symbols):
                 return S.Zero
 
@@ -1156,7 +1156,15 @@ class Derivative(Expr):
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v
-                obj = expr._eval_derivative(v)
+                if v.is_Indexed and not v.indices[0].is_Dummy:
+                    from sympy import Indexed
+                    idx_v = v.indices
+                    idx_dummy = tuple(Dummy("xi_%i" % i) for i in range(len(v.indices)))
+                    v = Indexed(v.base, *idx_dummy)
+                    obj = expr._eval_derivative(v)
+                    obj = obj.doit().xreplace(dict(zip(idx_dummy, idx_v)))
+                else:
+                    obj = expr._eval_derivative(v)
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
