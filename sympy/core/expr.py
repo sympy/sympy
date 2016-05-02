@@ -704,13 +704,12 @@ class Expr(Basic, EvalfMixin):
                 return False
             # It is not infinity, so it can be calculated
             try:
-                # check to see that we can get a value
                 prec = 2
                 max_prec = 256
                 n2 = self._eval_evalf(prec)
                 while n2.is_infinite is True and prec < max_prec:
                     prec *= 4
-                    # precision is growing
+                    # precision is growing until max_prec
                     n2 = self._eval_evalf(prec)
                 if n2 is None:
                     raise AttributeError
