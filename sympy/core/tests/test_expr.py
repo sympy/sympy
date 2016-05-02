@@ -1714,6 +1714,11 @@ def test_issue_10161():
     assert x*abs(x)*abs(x) == x**3
 
 
+def test_issue_10073():
+    assert 1/(-log(35) + 2*sqrt(3)) < 0.1
+    assert 1/(-log(35) + 2*sqrt(4)) > 0.1
+
+
 def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))

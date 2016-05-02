@@ -689,44 +689,28 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
-        from sympy.polys.numberfields import minimal_polynomial
-        from sympy.polys.polyerrors import NotAlgebraic
-        if self.is_number:
-            if self.is_real is False:
-                return False
-            try:
-                # check to see that we can get a value
-                n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
-                return None
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
-                return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n > 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic and not self.has(Function):
-                try:
-                    if minimal_polynomial(self).is_Symbol:
-                        return False
-                except (NotAlgebraic, NotImplementedError):
-                    pass
+        positive = lambda x: x > 0
+        return self._eval_is_negative_or_positive(positive)
 
     def _eval_is_negative(self):
+        negative = lambda x: x < 0
+        return self._eval_is_negative_or_positive(negative)
+
+    def _eval_is_negative_or_positive(self, compare_sign):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False:
+            if self.is_real is False or self.is_infinite is True:
                 return False
+            # It is not infinity, so it can be calculated
             try:
                 # check to see that we can get a value
-                n2 = self._eval_evalf(2)
+                prec = 2
+                n2 = self._eval_evalf(prec)
+                while n2.is_infinite is True:
+                    prec *= 4
+                    # precision is growing
+                    n2 = self._eval_evalf(prec)
                 if n2 is None:
                     raise AttributeError
                 if n2._prec == 1:  # no significance
@@ -735,12 +719,12 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
             except (AttributeError, ValueError):
                 return None
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
+            real, imag = self.evalf(2).as_real_imag()
+            if not (imag.is_Number and real.is_Number):
                 return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n < 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
+            if real._prec != 1 and imag._prec != 1:
+                return bool(not imag and compare_sign(real))
+            elif real._prec == 1 and (not imag or imag._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
