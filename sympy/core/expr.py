@@ -700,7 +700,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False or self.is_infinite is True:
+            if self.is_real is False:
                 return False
             # It is not infinity, so it can be calculated
             try:
