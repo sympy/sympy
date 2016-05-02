@@ -1044,6 +1044,213 @@ def test_solve_decomposition():
     assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
 
 
+# non linear system of equations
+def test_nlinsolve_polysys():
+    assert set(solve([x**2 + 2/y - 2, x + y - 3], [x, y])) == \
+        set([(S(1), S(2)), (1 + sqrt(5), 2 - sqrt(5)),
+        (1 - sqrt(5), 2 + sqrt(5))])
+    assert solve([x**2 + y - 2, x**2 + y]) == []
+    # the ordering should be whatever the user requested
+    assert solve([x**2 + y - 3, x - y - 4], (x, y)) != solve([x**2 +
+                 y - 3, x - y - 4], (y, x))
+
+    assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
+
+def test_solve_nonlinear():
+    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
+
+
+def test_issue_5197():
+    x = Symbol('x', real=True)
+    assert solve(x**2 + 1, x) == []
+    n = Symbol('n', integer=True, positive=True)
+    assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
+    x = Symbol('x', positive=True)
+    y = Symbol('y')
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
+                 # not {x: -3, y: 1} b/c x is positive
+    # The solution following should not contain (-sqrt(2), sqrt(2))
+    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    y = Symbol('y', positive=True)
+    # The solution following should not contain {y: -x*exp(x/2)}
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    x, y, z = symbols('x y z', positive=True)
+    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
+
+
+def test_issue_5132():
+    r, t = symbols('r,t')
+    assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
+        set([(
+            -sqrt(r*cos(t)**2), -1*sqrt(r*cos(t)**2)*tan(t)),
+            (sqrt(r*cos(t)**2), sqrt(r*cos(t)**2)*tan(t))])
+    assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
+        [(log(sin(S(1)/3)), S(1)/3)]
+    assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
+        [(log(-sin(log(3))), -log(3))]
+    assert set(solve([exp(x) - sin(y), y**2 - 4], [x, y])) == \
+        set([(log(-sin(2)), -S(2)), (log(sin(2)), S(2))])
+    eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
+    assert solve(eqs, set=True) == \
+        ([x, y], set([
+        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
+        (log(sqrt(-z**2 - sin(log(3)))), -log(3))]))
+    assert solve(eqs, x, z, set=True) == \
+        ([x], set([
+        (log(-sqrt(-z**2 + sin(y))),),
+        (log(sqrt(-z**2 + sin(y))),)]))
+    assert set(solve(eqs, x, y)) == \
+        set([
+            (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
+        (log(sqrt(-z**2 - sin(log(3)))), -log(3))])
+    assert set(solve(eqs, y, z)) == \
+        set([
+            (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), sqrt(-exp(2*x) - sin(log(3))))])
+    eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
+    assert solve(eqs, set=True) == ([x, y], set(
+        [
+        (log(-sqrt(-z - sin(log(3)))), -log(3)),
+            (log(sqrt(-z - sin(log(3)))), -log(3))]))
+    assert solve(eqs, x, z, set=True) == ([x], set(
+        [
+        (log(-sqrt(-z + sin(y))),),
+            (log(sqrt(-z + sin(y))),)]))
+    assert set(solve(eqs, x, y)) == set(
+        [
+            (log(-sqrt(-z - sin(log(3)))), -log(3)),
+            (log(sqrt(-z - sin(log(3)))), -log(3))])
+    assert solve(eqs, z, y) == \
+        [(-exp(2*x) - sin(log(3)), -log(3))]
+    assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), set=True) == (
+        [x, y], set([(S(1), S(3)), (S(3), S(1))]))
+    assert set(solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), x, y)) == \
+        set([(S(1), S(3)), (S(3), S(1))])
+
+def test_issue_5335():
+    lam, a0, conc = symbols('lam a0 conc')
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
+           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+           x + y - conc]
+    sym = [x, y, a0]
+    # there are 4 solutions but only two are valid
+    assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
+
+
+@SKIP("Hangs")
+def _test_issue_5335_float():
+    # gives ZeroDivisionError: polynomial division
+    lam, a0, conc = symbols('lam a0 conc')
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
+           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+           x + y - conc]
+    sym = [x, y, a0]
+    assert len(
+        solve(eqs, sym, rational=False, check=False, simplify=False)) == 2
+
+
+def test_issue_5114():
+    a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
+
+    # there is no 'a' in the equation set but this is how the
+    # problem was originally posed
+    syms = a, b, c, f, h, k, n
+    eqs = [b + r/d - c/d,
+    c*(1/d + 1/e + 1/g) - f/g - r/d,
+        f*(1/g + 1/i + 1/j) - c/g - h/i,
+        h*(1/i + 1/l + 1/m) - f/i - k/m,
+        k*(1/m + 1/o + 1/p) - h/m - n/p,
+        n*(1/p + 1/q) - k/p]
+    assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
+
+
+def test_issue_5849():
+    I1, I2, I3, I4, I5, I6 = symbols('I1:7')
+    dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
+
+    e = (
+        I1 - I2 - I3,
+        I3 - I4 - I5,
+        I4 + I5 - I6,
+        -I1 + I2 + I6,
+        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+        -I4 + dQ4,
+        -I2 + dQ2,
+        2*I3 + 2*I5 + 3*I6 - Q2,
+        I4 - 2*I5 + 2*Q4 + dI4
+    )
+
+    ans = [{
+           dQ4: I3 - I5,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    I4: I3 - I5,
+    dQ2: I2,
+    Q2: 2*I3 + 2*I5 + 3*I6,
+    I1: I2 + I3,
+    Q4: -I3/2 + 3*I5/2 - dI4/2}]
+    v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
+    assert solve(e, *v, **dict(manual=True, check=False)) == ans
+    assert solve(e, *v, **dict(manual=True)) == []
+    # the matrix solver (tested below) doesn't like this because it produces
+    # a zero row in the matrix. Is this related to issue 4551?
+    assert [ei.subs(
+        ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
+
+
+def test_issue_6752():
+    assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
+    assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
+
+
+def test_issue_2777():
+    # the equations represent two circles
+    x, y = symbols('x y', real=True)
+    e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
+    a, b = 191/S(20), 3*sqrt(391)/20
+    ans = [(a, -b), (a, b)]
+    assert solve((e1, e2), (x, y)) == ans
+    assert solve((e1, e2/(x - a)), (x, y)) == []
+    # make the 2nd circle's radius be -3
+    e2 += 6
+    assert solve((e1, e2), (x, y)) == []
+    assert solve((e1, e2), (x, y), check=False) == ans
+
+
+@slow
+def test_issue_8828():
+    x1 = 0
+    y1 = -620
+    r1 = 920
+    x2 = 126
+    y2 = 276
+    x3 = 51
+    y3 = 205
+    r3 = 104
+    v = x, y, z
+
+    f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
+    f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    f3 = (x - x3)**2 + (y - y3)**2 - (r3 - z)**2
+    F = f1,f2,f3
+
+    g1 = sqrt((x - x1)**2 + (y - y1)**2) + z - r1
+    g2 = f2
+    g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
+    G = g1,g2,g3
+
+    A = solve(F, v)
+    B = solve(G, v)
+    C = solve(G, v, manual=True)
+
+    p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B, C]]
+    assert p == q == r
+
+# non linear system of equations end
+
+
 def test_issue_9556():
     x = Symbol('x')
     b = Symbol('b', positive=True)
