@@ -1,5 +1,5 @@
 from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
-                   atan, atan2)
+                   atan, atan2, nan, Symbol)
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -53,29 +53,36 @@ def test_pow():
 
 
 def test_exp():
-    assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
-    assert refine(exp(pi*I*2*(x + Rational(1, 2))), Q.integer(x)) == -1
-    assert refine(exp(pi*I*2*(x + Rational(1, 4))), Q.integer(x)) == I
-    assert refine(exp(pi*I*2*(x + Rational(3, 4))), Q.integer(x)) == -I
+    x = Symbol('x', integer=True)
+    assert refine(exp(pi*I*2*x)) == 1
+    assert refine(exp(pi*I*2*(x + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
+    assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 
 
 def test_Relational():
     assert not refine(x < 0, ~Q.is_true(x < 0))
     assert refine(x < 0, Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(0 > x)) == True
     assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
     assert not refine(x <= 0, ~Q.is_true(x <= 0))
     assert refine(x <= 0,  Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
     assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
     assert not refine(x > 0, ~Q.is_true(x > 0))
     assert refine(x > 0,  Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(0 < x)) == True
     assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
     assert not refine(x >= 0, ~Q.is_true(x >= 0))
     assert refine(x >= 0,  Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
     assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
     assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
     assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
     assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
     assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
     assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
     assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
 
@@ -99,7 +106,11 @@ def test_Piecewise():
         Piecewise((1, x >= 0), (3, True))
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(x, 0)))\
         == 1
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(0, x)))\
+        == 1
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(x, 0)))\
+        == 3
+    assert refine(Piecewise((1, Eq(x, 0)), (3, True)), ~Q.is_true(Eq(0, x)))\
         == 3
     assert refine(Piecewise((1, Eq(x, 0)), (3, True)), Q.is_true(Eq(y, 0)))\
         == Piecewise((1, Eq(x, 0)), (3, True))
@@ -116,6 +127,10 @@ def test_atan2():
     assert refine(atan2(y, x), Q.negative(y) & Q.positive(x)) == atan(y/x)
     assert refine(atan2(y, x), Q.negative(y) & Q.negative(x)) == atan(y/x) - pi
     assert refine(atan2(y, x), Q.positive(y) & Q.negative(x)) == atan(y/x) + pi
+    assert refine(atan2(y, x), Q.zero(y) & Q.negative(x)) == pi
+    assert refine(atan2(y, x), Q.positive(y) & Q.zero(x)) == pi/2
+    assert refine(atan2(y, x), Q.negative(y) & Q.zero(x)) == -pi/2
+    assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
 
 
 def test_func_args():
@@ -136,3 +151,13 @@ def test_func_args():
     x = MyClass()
     x.my_member = "A very important value"
     assert x.my_member == refine(x).my_member
+
+
+def test_eval_refine():
+    from sympy.core.expr import Expr
+    class MockExpr(Expr):
+        def _eval_refine(self, assumptions):
+            return True
+
+    mock_obj = MockExpr()
+    assert refine(mock_obj)

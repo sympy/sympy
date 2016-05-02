@@ -176,8 +176,11 @@ This work was started by Dimitar Vlahovski at the Technological School
 
 References
 ==========
-http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
-DESTIME2006/DES_contribs/Fu/simplification.pdf
+
+Fu, Hongguang, Xiuqin Zhong, and Zhenbing Zeng. "Automated and readable
+simplification of trigonometric expressions." Mathematical and computer
+modelling 44.11 (2006): 1169-1177.
+http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/DESTIME2006/DES_contribs/Fu/simplification.pdf
 
 http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
@@ -186,10 +189,8 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations
 
-from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
-    _mexpand, bottom_up)
+from sympy.simplify.simplify import bottom_up
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
@@ -199,13 +200,12 @@ from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.function import expand_mul, count_ops
+from sympy.core.function import expand_mul
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
-from sympy.core.rules import Transform
 from sympy.core.basic import S
-from sympy.core.numbers import Integer, pi, I
+from sympy.core.numbers import pi, I
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 from sympy.polys.polytools import factor
@@ -1692,6 +1692,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     -sqrt(3)
 
     Objective function example
+
     >>> fu(sin(x)/cos(x))  # default objective function
     tan(x)
     >>> fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) # maximize op count
@@ -1935,7 +1936,7 @@ def trig_split(a, b, two=False):
             if (ca and cb and sa and sb):
                 if not ((ca.func is sa.func) is (cb.func is sb.func)):
                     return
-                args = set([j.args for j in (ca, sa)])
+                args = {j.args for j in (ca, sa)}
                 if not all(i.args in args for i in (cb, sb)):
                     return
                 return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
@@ -2118,7 +2119,8 @@ def hyper_as_trig(rv):
 
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
-    from sympy.simplify.simplify import signsimp, collect
+    from sympy.simplify.simplify import signsimp
+    from sympy.simplify.radsimp import collect
 
     # mask off trig functions
     trigs = rv.atoms(TrigonometricFunction)

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
+from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -93,7 +94,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           is_simple, Directdelta
+           is_simple, Diracdelta
 
         """
         from sympy.polys.polyroots import roots
@@ -150,7 +151,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           simplify, Directdelta
+           simplify, Diracdelta
 
         """
         p = self.args[0].as_poly(x)
@@ -179,32 +180,11 @@ class Heaviside(Function):
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
-    2) ``Heaviside(x) = < ( 1/2 if x==0 [*]``
+    2) ``Heaviside(x) = < ( undefined if x==0 [*]``
                         ``( 1, if x > 0``
 
     .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
            but Maple uses ``H(0) = undefined``
-
-    I think is better to have H(0) = 1/2, due to the following::
-
-        integrate(DiracDelta(x), x) = Heaviside(x)
-        integrate(DiracDelta(x), (x, -oo, oo)) = 1
-
-    and since DiracDelta is a symmetric function,
-    ``integrate(DiracDelta(x), (x, 0, oo))`` should be 1/2 (which is what
-    Maple returns).
-
-    If we take ``Heaviside(0) = 1/2``, we would have
-    ``integrate(DiracDelta(x), (x, 0, oo)) = ``
-    ``Heaviside(oo) - Heaviside(0) = 1 - 1/2 = 1/2``
-    and
-    ``integrate(DiracDelta(x), (x, -oo, 0)) = ``
-    ``Heaviside(0) - Heaviside(-oo) = 1/2 - 0 = 1/2``
-
-    If we consider, instead ``Heaviside(0) = 1``, we would have
-    ``integrate(DiracDelta(x), (x, 0, oo)) = Heaviside(oo) - Heaviside(0) = 0``
-    and
-    ``integrate(DiracDelta(x), (x, -oo, 0)) = Heaviside(0) - Heaviside(-oo) = 1``
 
     See Also
     ========
@@ -232,12 +212,10 @@ class Heaviside(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
-        elif im(arg).is_nonzero:
+        elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
         elif arg.is_negative:
             return S.Zero
-        elif arg.is_zero:
-            return S.Half
         elif arg.is_positive:
             return S.One
 

@@ -3,9 +3,12 @@
 from __future__ import print_function, division
 
 from sympy import (
-    S, C, Rational, AlgebraicNumber,
+    S, Rational, AlgebraicNumber,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
+
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
@@ -19,7 +22,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
 from sympy.polys.specialpolys import cyclotomic_poly
 
@@ -41,7 +44,8 @@ from sympy.utilities import (
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
-from sympy.simplify.simplify import _is_sum_surds, _split_gcd
+from sympy.simplify.radsimp import _split_gcd
+from sympy.simplify.simplify import _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from mpmath import pslq, mp
@@ -418,7 +422,7 @@ def _minpoly_sin(ex, x):
                 res = _choose_factor(factors, x, ex)
                 return res
 
-            expr = ((1 - C.cos(2*c*pi))/2)**S.Half
+            expr = ((1 - cos(2*c*pi))/2)**S.Half
             res = _minpoly_compose(expr, x, QQ)
             return res
 
@@ -496,7 +500,7 @@ def _minpoly_exp(ex, x):
 
 def _minpoly_rootof(ex, x):
     """
-    Returns the minimal polynomial of a ``RootOf`` object.
+    Returns the minimal polynomial of a ``CRootOf`` object.
     """
     p = ex.expr
     p = p.subs({ex.poly.gens[0]:x})
@@ -562,13 +566,13 @@ def _minpoly_compose(ex, x, dom):
             res = _minpoly_mul(x, dom, *ex.args)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
-    elif ex.__class__ is C.sin:
+    elif ex.__class__ is sin:
         res = _minpoly_sin(ex, x)
-    elif ex.__class__ is C.cos:
+    elif ex.__class__ is cos:
         res = _minpoly_cos(ex, x)
-    elif ex.__class__ is C.exp:
+    elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
-    elif ex.__class__ is RootOf:
+    elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
     else:
         raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)

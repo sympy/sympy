@@ -13,8 +13,8 @@ from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
-
-
+from sympy.matrices import Matrix
+from sympy.tensor.indexed import Idx
 
 
 def _process_limits(*symbols):
@@ -26,12 +26,18 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, Symbol):
+        if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             limits.append(Tuple(V))
+            continue
+        elif isinstance(V, Idx):
+            if V.lower is None or V.upper is None:
+                limits.append(Tuple(V))
+            else:
+                limits.append(Tuple(V, V.lower, V.upper))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
-            if V[0].is_Symbol:
+            if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):
                     V[1:] = [V[1].start, V[1].end]
@@ -46,7 +52,12 @@ def _process_limits(*symbols):
                         nlim = []
                     else:
                         nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim ))
+                    limits.append(Tuple(newsymbol, *nlim))
+                    if isinstance(V[0], Idx):
+                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                            raise ValueError("Summation exceeds Idx lower range.")
+                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                            raise ValueError("Summation exceeds Idx upper range.")
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
@@ -58,6 +69,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, orientation
+
 
 class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
@@ -247,7 +259,7 @@ class ExprWithLimits(Expr):
         return self.func(f, *limits)
 
     def _eval_interval(self, x, a, b):
-        limits = [( i if i[0] != x else (x,a,b) ) for i in self.limits]
+        limits = [(i if i[0] != x else (x, a, b)) for i in self.limits]
         integrand = self.function
         return self.func(integrand, *limits)
 
@@ -261,13 +273,13 @@ class ExprWithLimits(Expr):
         ========
 
         >>> from sympy import Sum, oo
-        >>> from sympy.abc import s,n
+        >>> from sympy.abc import s, n
         >>> Sum(1/n**s, (n, 1, oo)).subs(s, 2)
         Sum(n**(-2), (n, 1, oo))
 
         >>> from sympy import Integral
-        >>> from sympy.abc import x,a
-        >>> Integral(a*x**2,x).subs(x,4)
+        >>> from sympy.abc import x, a
+        >>> Integral(a*x**2, x).subs(x, 4)
         Integral(a*x**2, (x, 4))
 
         See Also
@@ -327,6 +339,7 @@ class ExprWithLimits(Expr):
         limits.reverse()
 
         return self.func(func, *limits)
+
 
 class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.
@@ -397,7 +410,7 @@ class AddWithLimits(ExprWithLimits):
             summand = self.function.factor(**hints)
             if summand.is_Mul:
                 out = sift(summand.args, lambda w: w.is_commutative \
-                    and not w.has(*self.variables))
+                    and not set(self.variables) & w.free_symbols)
                 return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:
@@ -411,7 +424,10 @@ class AddWithLimits(ExprWithLimits):
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
-            return Add(*[ self.func(i, *self.limits) for i in summand.args ])
+            return Add(*[self.func(i, *self.limits) for i in summand.args])
+        elif summand.is_Matrix:
+            return Matrix._new(summand.rows, summand.cols,
+                [self.func(i, *self.limits) for i in summand._mat])
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

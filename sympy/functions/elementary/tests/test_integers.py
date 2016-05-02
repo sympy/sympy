@@ -1,15 +1,14 @@
-from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-    Float, I, sin, exp, log, factorial
+from sympy import AccumBounds, Symbol, floor, nan, oo, E, symbols, ceiling, pi, \
+        Rational, Float, I, sin, exp, log, factorial, frac
 
 from sympy.utilities.pytest import XFAIL
 
+x = Symbol('x')
+i = Symbol('i', imaginary=True)
+y = Symbol('y', real=True)
+k, n = symbols('k,n', integer=True)
 
 def test_floor():
-
-    x = Symbol('x')
-    i = Symbol('i', imaginary=True)
-    y = Symbol('y', real=True)
-    k, n = symbols('k,n', integer=True)
 
     assert floor(nan) == nan
 
@@ -114,11 +113,6 @@ def test_floor():
 
 def test_ceiling():
 
-    x = Symbol('x')
-    i = Symbol('i', imaginary=True)
-    y = Symbol('y', real=True)
-    k, n = symbols('k,n', integer=True)
-
     assert ceiling(nan) == nan
 
     assert ceiling(oo) == oo
@@ -218,6 +212,28 @@ def test_ceiling():
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
     assert (ceiling(x) < y).is_Relational
+
+
+def test_frac():
+    assert isinstance(frac(x), frac)
+    assert frac(oo) == AccumBounds(0, 1)
+    assert frac(-oo) == AccumBounds(0, 1)
+
+    assert frac(n) == 0
+    assert frac(nan) == nan
+    assert frac(Rational(4, 3)) == Rational(1, 3)
+    assert frac(-Rational(4, 3)) == Rational(2, 3)
+
+    r = Symbol('r', real=True)
+    assert frac(I*r) == I*frac(r)
+    assert frac(1 + I*r) == I*frac(r)
+    assert frac(0.5 + I*r) == 0.5 + I*frac(r)
+    assert frac(n + I*r) == I*frac(r)
+    assert frac(n + I*k) == 0
+    assert frac(x + I*x) == frac(x + I*x)
+    assert frac(x + I*n) == frac(x)
+
+    assert frac(x).rewrite(floor) == x - floor(x)
 
 
 def test_series():

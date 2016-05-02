@@ -92,3 +92,4 @@ Mechanics API
     api/linearize.rst
     api/expr_manip.rst
     api/printing.rst
+    api/body.rst

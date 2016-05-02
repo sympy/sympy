@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
@@ -27,6 +26,7 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
+        from sympy import Order
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
@@ -43,7 +43,7 @@ class AssocOp(Basic):
         obj = cls._from_args(c_part + nc_part, is_commutative)
 
         if order_symbols is not None:
-            return C.Order(obj, *order_symbols)
+            return Order(obj, *order_symbols)
         return obj
 
     @classmethod
@@ -163,7 +163,8 @@ class AssocOp(Basic):
 
         """
         # make sure expr is Expr if pattern is Expr
-        from .expr import Expr
+        from .expr import Add, Expr
+        from sympy import Mul
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
 
@@ -222,9 +223,9 @@ class AssocOp(Basic):
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
                         if expr.exp > 0:
-                            expr = C.Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
+                            expr = Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
-                            expr = C.Mul(*[1/expr.base, expr.base**(expr.exp + 1)], evaluate=False)
+                            expr = Mul(*[1/expr.base, expr.base**(expr.exp + 1)], evaluate=False)
                         i += 1
                         continue
 
@@ -233,14 +234,14 @@ class AssocOp(Basic):
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
                         if c > 0:
-                            expr = C.Add(*[e, (c - 1)*e], evaluate=False)
+                            expr = Add(*[e, (c - 1)*e], evaluate=False)
                         else:
-                            expr = C.Add(*[-e, (c + 1)*e], evaluate=False)
+                            expr = Add(*[-e, (c + 1)*e], evaluate=False)
                         i += 1
                         continue
 
                     # try collection on non-Wild symbols
-                    from sympy.simplify.simplify import collect
+                    from sympy.simplify.radsimp import collect
                     was = expr
                     did = set()
                     for w in reversed(wild_part):
@@ -303,27 +304,36 @@ class AssocOp(Basic):
         walks the args of the non-number part recursively (doing the same
         thing).
         """
-        x, tail = self.as_independent(C.Symbol, C.AppliedUndef)
-
-        if tail is not self.identity:
-            # here, we have a number so we just call to _evalf with prec;
-            # prec is not the same as n, it is the binary precision so
-            # that's why we don't call to evalf.
-            x = x._evalf(prec) if x is not self.identity else self.identity
-            args = []
-            for a in self.func.make_args(tail):
-                # here we call to _eval_evalf since we don't know what we
-                # are dealing with and all other _eval_evalf routines should
-                # be doing the same thing (i.e. taking binary prec and
-                # finding the evalf-able args)
-                newa = a._eval_evalf(prec)
-                if newa is None:
-                    args.append(a)
-                else:
-                    args.append(newa)
-            if not _aresame(tuple(args), self.func.make_args(tail)):
-                tail = self.func(*args)
-            return self.func(x, tail)
+        from .add import Add
+        from .mul import Mul
+        from .symbol import Symbol
+        from .function import AppliedUndef
+        if isinstance(self, (Mul, Add)):
+            x, tail = self.as_independent(Symbol, AppliedUndef)
+            # if x is an AssocOp Function then the _evalf below will
+            # call _eval_evalf (here) so we must break the recursion
+            if not (tail is self.identity or
+                    isinstance(x, AssocOp) and x.is_Function or
+                    x is self.identity and isinstance(tail, AssocOp)):
+                # here, we have a number so we just call to _evalf with prec;
+                # prec is not the same as n, it is the binary precision so
+                # that's why we don't call to evalf.
+                x = x._evalf(prec) if x is not self.identity else self.identity
+                args = []
+                tail_args = tuple(self.func.make_args(tail))
+                for a in tail_args:
+                    # here we call to _eval_evalf since we don't know what we
+                    # are dealing with and all other _eval_evalf routines should
+                    # be doing the same thing (i.e. taking binary prec and
+                    # finding the evalf-able args)
+                    newa = a._eval_evalf(prec)
+                    if newa is None:
+                        args.append(a)
+                    else:
+                        args.append(newa)
+                if not _aresame(tuple(args), tail_args):
+                    tail = self.func(*args)
+                return self.func(x, tail)
 
         # this is the same as above, but there were no pure-number args to
         # deal with
@@ -357,7 +367,7 @@ class AssocOp(Basic):
         if isinstance(expr, cls):
             return expr.args
         else:
-            return (expr,)
+            return (sympify(expr),)
 
 
 class ShortCircuit(Exception):
@@ -433,23 +443,12 @@ class LatticeOp(AssocOp):
     @classmethod
     def make_args(cls, expr):
         """
-        Return a sequence of elements `args` such that cls(*args) == expr
-
-        >>> from sympy import Symbol, Mul, Add
-        >>> x, y = map(Symbol, 'xy')
-
-        >>> Mul.make_args(x*y)
-        (x, y)
-        >>> Add.make_args(x*y)
-        (x*y,)
-        >>> set(Add.make_args(x*y + y)) == set([y, x*y])
-        True
-
+        Return a set of args such that cls(*arg_set) == expr.
         """
         if isinstance(expr, cls):
             return expr._argset
         else:
-            return frozenset([expr])
+            return frozenset([sympify(expr)])
 
     @property
     @cacheit

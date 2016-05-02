@@ -37,6 +37,9 @@ import glob
 
 mpmath_version = '0.19'
 
+# This directory
+dir_setup = os.path.dirname(os.path.realpath(__file__))
+
 try:
     from setuptools import setup, Command
 except ImportError:
@@ -55,8 +58,8 @@ except ImportError:
 PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 6):
-    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
+if sys.version_info[:2] < (2, 7):
+    print("SymPy requires Python 2.7 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -72,6 +75,7 @@ modules = [
     'sympy.core',
     'sympy.core.benchmarks',
     'sympy.crypto',
+    'sympy.deprecated',
     'sympy.diffgeom',
     'sympy.external',
     'sympy.functions',
@@ -80,7 +84,6 @@ modules = [
     'sympy.functions.elementary.benchmarks',
     'sympy.functions.special',
     'sympy.functions.special.benchmarks',
-    'sympy.galgebra',
     'sympy.geometry',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
@@ -88,7 +91,6 @@ modules = [
     'sympy.liealgebras',
     'sympy.logic',
     'sympy.logic.algorithms',
-    'sympy.logic.benchmarks',
     'sympy.logic.utilities',
     'sympy.matrices',
     'sympy.matrices.benchmarks',
@@ -112,6 +114,7 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.sandbox',
     'sympy.series',
     'sympy.series.benchmarks',
     'sympy.sets',
@@ -122,6 +125,7 @@ modules = [
     'sympy.strategies',
     'sympy.strategies.branch',
     'sympy.tensor',
+    'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
@@ -175,7 +179,6 @@ class clean(Command):
         pass
 
     def run(self):
-        dir_setup = os.path.dirname(os.path.realpath(__file__))
         curr_dir = os.getcwd()
         for root, dirs, files in os.walk(dir_setup):
             for file in files:
@@ -259,12 +262,12 @@ tests = [
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.crypto.tests',
+    'sympy.deprecated.tests',
     'sympy.diffgeom.tests',
     'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
-    'sympy.galgebra.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
@@ -289,6 +292,7 @@ tests = [
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
+    'sympy.sandbox.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
@@ -296,34 +300,23 @@ tests = [
     'sympy.stats.tests',
     'sympy.strategies.branch.tests',
     'sympy.strategies.tests',
+    'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
-    ]
-
-classifiers = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Mathematics',
-    'Topic :: Scientific/Engineering :: Physics',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
 ]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external libraries.'''
+SymPy is written entirely in Python.'''
 
-exec(open('sympy/release.py').read())
-with open('sympy/__init__.py') as f:
+with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
+    # Defines __version__
+    exec(f.read())
+
+with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
     long_description = f.read().split('"""')[1]
 
 setup(name='sympy',
@@ -361,6 +354,7 @@ setup(name='sympy',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         ],
       install_requires=['mpmath>=%s' % mpmath_version]
       )

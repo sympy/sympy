@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
-        sign, im, nan, Dummy, factorial, comp
+        sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
@@ -117,8 +117,6 @@ def test_pow():
     assert e == Rational(0)
     e = a**(b - b)
     assert e == Rational(1)
-    e = (a - a)**b
-    assert e == Rational(0)
     e = (a + Rational(1) - a)**b
     assert e == Rational(1)
 
@@ -171,8 +169,6 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (2*x)**k  # we choose not to auto expand this
-    assert (-2*x)**o == -(2*x)**o  # but we do handle coefficient sign
     assert (-1)**k == 1
 
 
@@ -264,7 +260,7 @@ def test_pow_im():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -292,7 +288,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
@@ -435,14 +431,48 @@ def test_Mul_is_even_odd():
     assert (x*x).is_even is None
     assert (x*(x + k)).is_even is True
     assert (x*(x + m)).is_even is None
-    assert (x*y*(y + k)).is_even is True
-    assert (x*y*(y + m)).is_even is None
 
     assert (x*y).is_odd is None
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+
+@XFAIL
+def test_evenness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
+    assert (x*y*(y + k)).is_even is True
+    assert (y*x*(x + k)).is_even is True
+
+
+def test_evenness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
+    assert (x*y*(y + m)).is_even is None
+
+
+@XFAIL
+def test_oddness_in_ternary_integer_product_with_odd():
+    # Tests that oddness inference is independent of term ordering.
+    # Term ordering at the point of testing depends on SymPy's symbol order, so
+    # we try to force a different order by modifying symbol names.
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    k = Symbol('k', odd=True)
     assert (x*y*(y + k)).is_odd is False
+    assert (y*x*(x + k)).is_odd is False
+
+
+def test_oddness_in_ternary_integer_product_with_even():
+    x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
+    m = Symbol('m', even=True)
     assert (x*y*(y + m)).is_odd is None
 
 
@@ -1149,7 +1179,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
-    assert ((-k)**n).is_nonnegative is None
+
     assert ((-k)**m).is_nonnegative is None
 
     assert (2**x).is_nonpositive is False
@@ -1163,7 +1193,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonpositive is None
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
-    assert ((-k)**m).is_nonpositive is None
+
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
@@ -1172,6 +1202,9 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (i**3).is_nonpositive is False
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
+
+    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**m).is_nonpositive is True
 
 
 def test_Mul_is_imaginary_real():
@@ -1469,6 +1502,9 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+    assert Mod(nan, 1) == nan
+    assert Mod(1, nan) == nan
+    assert Mod(nan, nan) == nan
 
     # Float handling
     point3 = Float(3.3) % 1
@@ -1519,7 +1555,14 @@ def test_Mod():
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(1.*x, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
+
+    a = Mod(.6*x + y, .3*y)
+    b = Mod(0.1*y + 0.6*x, 0.3*y)
+    # Test that a, b are equal, with 1e-14 accuracy in coefficients
+    eps = 1e-14
+    assert abs((a.args[0] - b.args[0]).subs({x: 1, y: 1})) < eps
+    assert abs((a.args[1] - b.args[1]).subs({x: 1, y: 1})) < eps
+
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
@@ -1530,7 +1573,7 @@ def test_Mod():
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
     assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
     assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi) % (.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi) % (.3*x*pi) == 0.3*pi*Mod(20, x)
     assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
     assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
     assert (12*x) % (2*y) == 2*Mod(6*x, y)
@@ -1553,6 +1596,9 @@ def test_Mod():
     assert Mod(n, 2) == 0
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
+
+    # issue 10963
+    assert (x**6000%400).args[1] == 400
 
 
 def test_Mod_is_integer():
@@ -1622,10 +1668,13 @@ def test_issue_6040():
 
 
 def test_issue_6082():
-    assert Basic.compare(Max(x, 1), Max(x, 2)) == -1
-    assert Basic.compare(Max(x, 2), Max(x, 1)) == 1
+    # Comparison is symmetric
+    assert Basic.compare(Max(x, 1), Max(x, 2)) == \
+      - Basic.compare(Max(x, 2), Max(x, 1))
+    # Equal expressions compare equal
     assert Basic.compare(Max(x, 1), Max(x, 1)) == 0
-    assert Basic.compare(Max(1, x), frozenset((1, x))) == -1
+    # Basic subtypes (such as Max) compare different than standard types
+    assert Basic.compare(Max(1, x), frozenset((1, x))) != 0
 
 
 def test_issue_6077():
@@ -1812,6 +1861,17 @@ def test_mul_zero_detection():
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
+def test_Mul_with_zero_infinite():
+    zer = Dummy(zero=True)
+    inf = Dummy(finite=False)
+
+    e = Mul(zer, inf, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
+
+    e = Mul(inf, zer, evaluate=False)
+    assert e.is_positive is None
+    assert e.is_hermitian is None
 
 def test_issue_8247_8354():
     from sympy import tan
@@ -1830,3 +1890,8 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+
+def test_Add_is_zero():
+    x, y = symbols('x y', zero=True)
+    assert (x + y).is_zero

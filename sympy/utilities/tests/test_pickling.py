@@ -4,7 +4,7 @@ import warnings
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicType, ClassRegistry
+from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
@@ -42,7 +42,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, BasicType):
+            if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
                 return
             b = protocol(a)
@@ -79,8 +79,6 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              # BasicType, BasicType("test", (), {}),
-              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 
@@ -591,12 +589,12 @@ def test_pickling_polys_options():
 #    ComplexInterval
 
 def test_pickling_polys_rootoftools():
-    from sympy.polys.rootoftools import RootOf, RootSum
+    from sympy.polys.rootoftools import CRootOf, RootSum
 
     x = Symbol('x')
     f = x**3 + x + 3
 
-    for c in (RootOf, RootOf(f, 0)):
+    for c in (CRootOf, CRootOf(f, 0)):
         check(c)
 
     for c in (RootSum, RootSum(f, exp)):

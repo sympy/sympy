@@ -207,19 +207,19 @@ class Dyadic(object):
                 mpp = printer if printer else VectorPrettyPrinter(settings)
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u("\N{CIRCLED TIMES}") if use_unicode else "|"
+                bar = u"\N{CIRCLED TIMES}" if use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.extend([u(" + "),
+                        ol.extend([u" + ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.extend([u(" - "),
+                        ol.extend([u" - ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
@@ -232,18 +232,18 @@ class Dyadic(object):
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith(u("-")):
+                        if arg_str.startswith(u"-"):
                             arg_str = arg_str[1:]
-                            str_start = u(" - ")
+                            str_start = u" - "
                         else:
-                            str_start = u(" + ")
-                        ol.extend([str_start, arg_str, u(" "),
+                            str_start = u" + "
+                        ol.extend([str_start, arg_str, u" ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
-                outstr = u("").join(ol)
-                if outstr.startswith(u(" + ")):
+                outstr = u"".join(ol)
+                if outstr.startswith(u" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -432,7 +432,7 @@ class Dyadic(object):
             The matrix that gives the 2D tensor form.
 
         Examples
-        --------
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame, Vector
@@ -518,6 +518,16 @@ class Dyadic(object):
 
         return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
                     for v in self.args], Dyadic(0))
+
+    def applyfunc(self, f):
+        """Apply a function to each component of a Dyadic."""
+        if not callable(f):
+            raise TypeError("`f` must be callable.")
+
+        out = Dyadic(0)
+        for a, b, c in self.args:
+            out += f(a) * (b|c)
+        return out
 
     dot = __and__
     cross = __xor__

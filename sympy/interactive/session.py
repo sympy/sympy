@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
+from distutils.version import LooseVersion as V
+
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
@@ -38,6 +39,9 @@ def _make_message(ipython=True, quiet=False, source=None):
     import sys
     import os
 
+    if quiet:
+        return ""
+
     python_version = "%d.%d.%d" % sys.version_info[:3]
 
     if ipython:
@@ -58,26 +62,25 @@ def _make_message(ipython=True, quiet=False, source=None):
     args = shell_name, sympy_version, python_version, ARCH, ', '.join(info)
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args
 
-    if not quiet:
-        if source is None:
-            source = preexec_source
+    if source is None:
+        source = preexec_source
 
-        _source = ""
+    _source = ""
 
-        for line in source.split('\n')[:-1]:
-            if not line:
-                _source += '\n'
-            else:
-                _source += '>>> ' + line + '\n'
-
-        doc_version = sympy_version
-        if doc_version.find('-git') >= 0:
-            doc_version = "dev"
+    for line in source.split('\n')[:-1]:
+        if not line:
+            _source += '\n'
         else:
-            doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
+            _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'source': _source,
-                                             'version': doc_version}
+    doc_version = sympy_version
+    if 'dev' in doc_version:
+        doc_version = "dev"
+    else:
+        doc_version = "%s/" % doc_version
+
+    message += '\n' + verbose_message % {'source': _source,
+                                         'version': doc_version}
 
     return message
 
@@ -90,8 +93,8 @@ def int_to_Integer(s):
     http://docs.python.org/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
-    Example
-    =======
+    Examples
+    ========
 
     >>> from __future__ import division
     >>> from sympy.interactive.session import int_to_Integer
@@ -245,12 +248,12 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
     """Construct new IPython session. """
     import IPython
 
-    if IPython.__version__ >= '0.11':
+    if V(IPython.__version__) >= '0.11':
         # use an app to parse the command line, and init config
         # IPython 1.0 deprecates the frontend module, so we import directly
         # from the terminal module to prevent a deprecation message from being
         # shown.
-        if IPython.__version__ >= '1.0':
+        if V(IPython.__version__) >= '1.0':
             from IPython.terminal import ipapp
         else:
             from IPython.frontend.terminal import ipapp
@@ -308,7 +311,8 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, argv=[]):
+        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
+        latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -350,6 +354,14 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if False, printing will initialize for a normal console;
         The default is None, which automatically determines whether we are in
         an ipython instance or not.
+    str_printer: function, optional, default=None
+        A custom string printer function. This should mimic
+        sympy.printing.sstrrepr().
+    pretty_printer: function, optional, default=None
+        A custom pretty printer. This should mimic sympy.printing.pretty().
+    latex_printer: function, optional, default=None
+        A custom LaTeX printer. This should mimic sympy.printing.latex()
+        This should mimic sympy.printing.latex().
     argv: list of arguments for IPython
         See sympy.bin.isympy for options that can be used to initialize IPython.
 
@@ -404,7 +416,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            if IPython.__version__ >= '0.11':
+            if V(IPython.__version__) >= '0.11':
                 try:
                     ip = get_ipython()
                 except NameError:
@@ -425,7 +437,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
             ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
                 auto_int_to_Integer=auto_int_to_Integer)
 
-        if IPython.__version__ >= '0.11':
+        if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
             # and False means don't add the line to IPython's history.
@@ -444,16 +456,18 @@ def init_session(ipython=None, pretty_print=True, order=None,
             mainloop = ip.mainloop
 
     readline = import_module("readline")
-    if auto_symbols and (not ipython or IPython.__version__ < '0.11' or not readline):
+    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11' or not readline):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
-    if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
+    if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
 
     ip.runsource(_preexec_source, symbol='exec')
     init_printing(pretty_print=pretty_print, order=order,
-        use_unicode=use_unicode, use_latex=use_latex, ip=ip)
+                  use_unicode=use_unicode, use_latex=use_latex, ip=ip,
+                  str_printer=str_printer, pretty_printer=pretty_printer,
+                  latex_printer=latex_printer)
 
     message = _make_message(ipython, quiet, _preexec_source)
 

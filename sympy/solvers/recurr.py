@@ -51,7 +51,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core.singleton import S
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, I
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.relational import Equality
 from sympy.core.add import Add
@@ -605,7 +605,10 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if not poly.is_zero:
                 degrees.append(polys[i].degree())
 
-        d, poly = max(degrees), S.Zero
+        if degrees:
+            d, poly = max(degrees), S.Zero
+        else:
+            return None
 
         for i in range(0, r + 1):
             coeff = polys[i].nth(d)
@@ -629,7 +632,9 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # start the product with the term y(n_root + 1).
                 n0 = 0
                 for n_root in roots(ratio.as_numer_denom()[1], n).keys():
-                    if (n0 < (n_root + 1)) == True:
+                    if n_root.has(I):
+                        return None
+                    elif (n0 < (n_root + 1)) == True:
                         n0 = n_root + 1
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
@@ -648,7 +653,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        symbols |= set([s for s, k in sk])
+        symbols |= {s for s, k in sk}
         return (result, list(symbols))
     else:
         return result
@@ -796,7 +801,7 @@ def rsolve(f, y, init=None):
 
     if symbols and init is not None:
         if type(init) is list:
-            init = dict([(i, init[i]) for i in range(len(init))])
+            init = {i: init[i] for i in range(len(init))}
 
         equations = []
 

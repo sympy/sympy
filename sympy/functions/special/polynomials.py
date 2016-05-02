@@ -8,7 +8,6 @@ combinatorial polynomials.
 
 from __future__ import print_function, division
 
-from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
@@ -163,13 +162,16 @@ class jacobi(OrthogonalPolynomial):
                 return RisingFactorial(a + 1, n) / factorial(n)
             elif x == S.Infinity:
                 if n.is_positive:
-                    # TODO: Make sure a+b+2*n \notin Z
+                    # Make sure a+b+2*n \notin Z
+                    if (a + b + 2*n).is_integer:
+                        raise ValueError("Error. a + b + 2*n should not be an integer.")
                     return RisingFactorial(a + b + n + 1, n) * S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
             return jacobi_poly(n, a, b, x)
 
     def fdiff(self, argindex=4):
+        from sympy import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -180,7 +182,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = ((a + b + 2*k + 1) * RisingFactorial(b + k + 1, n - k) /
                   ((n - k) * RisingFactorial(a + b + k + 1, n - k)))
-            return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
+            return Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
         elif argindex == 3:
             # Diff wrt b
             n, a, b, x = self.args
@@ -188,7 +190,7 @@ class jacobi(OrthogonalPolynomial):
             f1 = 1 / (a + b + n + k + 1)
             f2 = (-1)**(n - k) * ((a + b + 2*k + 1) * RisingFactorial(a + k + 1, n - k) /
                   ((n - k) * RisingFactorial(a + b + k + 1, n - k)))
-            return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
+            return Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
         elif argindex == 4:
             # Diff wrt x
             n, a, b, x = self.args
@@ -197,11 +199,14 @@ class jacobi(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, b, x):
-        # TODO: Make sure n \in N
+        from sympy import Sum
+        # Make sure n \in N
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = (RisingFactorial(-n, k) * RisingFactorial(a + b + n + 1, k) * RisingFactorial(a + k + 1, n - k) /
                 factorial(k) * ((1 - x)/2)**k)
-        return 1 / factorial(n) * C.Sum(kern, (k, 0, n))
+        return 1 / factorial(n) * Sum(kern, (k, 0, n))
 
     def _eval_conjugate(self):
         n, a, b, x = self.args
@@ -379,6 +384,7 @@ class gegenbauer(OrthogonalPolynomial):
             return gegenbauer_poly(n, a, x)
 
     def fdiff(self, argindex=3):
+        from sympy import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -391,7 +397,7 @@ class gegenbauer(OrthogonalPolynomial):
             factor2 = 2*(k + 1) / ((k + 2*a) * (2*k + 2*a + 1)) + \
                 2 / (k + n + 2*a)
             kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
-            return C.Sum(kern, (k, 0, n - 1))
+            return Sum(kern, (k, 0, n - 1))
         elif argindex == 3:
             # Diff wrt x
             n, a, x = self.args
@@ -400,10 +406,11 @@ class gegenbauer(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = ((-1)**k * RisingFactorial(a, n - k) * (2*x)**(n - 2*k) /
                 (factorial(k) * factorial(n - 2*k)))
-        return C.Sum(kern, (k, 0, floor(n/2)))
+        return Sum(kern, (k, 0, floor(n/2)))
 
     def _eval_conjugate(self):
         n, a, x = self.args
@@ -516,9 +523,10 @@ class chebyshevt(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
-        return C.Sum(kern, (k, 0, floor(n/2)))
+        return Sum(kern, (k, 0, floor(n/2)))
 
 
 class chebyshevu(OrthogonalPolynomial):
@@ -629,10 +637,11 @@ class chebyshevu(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = S.NegativeOne**k * factorial(
             n - k) * (2*x)**(n - 2*k) / (factorial(k) * factorial(n - 2*k))
-        return C.Sum(kern, (k, 0, floor(n/2)))
+        return Sum(kern, (k, 0, floor(n/2)))
 
 
 class chebyshevt_root(Function):
@@ -808,9 +817,10 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = (-1)**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
-        return C.Sum(kern, (k, 0, n))
+        return Sum(kern, (k, 0, n))
 
 
 class assoc_legendre(Function):
@@ -905,10 +915,11 @@ class assoc_legendre(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = factorial(2*n - 2*k)/(2**n*factorial(n - k)*factorial(
             k)*factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
-        return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, floor((n - m)*S.Half)))
+        return (1 - x**2)**(m/2) * Sum(kern, (k, 0, floor((n - m)*S.Half)))
 
     def _eval_conjugate(self):
         n, m, x = self.args
@@ -939,8 +950,6 @@ class hermite(OrthogonalPolynomial):
     4*x**2 - 2
     >>> hermite(n, x)
     hermite(n, x)
-    >>> diff(hermite(n,x), x)
-    2*n*hermite(n - 1, x)
     >>> diff(hermite(n,x), x)
     2*n*hermite(n - 1, x)
     >>> hermite(n, -x)
@@ -1003,9 +1012,10 @@ class hermite(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
+        from sympy import Sum
         k = Dummy("k")
         kern = (-1)**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
-        return factorial(n)*C.Sum(kern, (k, 0, floor(n/2)))
+        return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
 
 #----------------------------------------------------------------------------
 # Laguerre polynomials
@@ -1102,10 +1112,13 @@ class laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
-        # TODO: Should make sure n is in N_0
+        from sympy import Sum
+        # Make sure n \in N_0
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
-        return C.Sum(kern, (k, 0, n))
+        return Sum(kern, (k, 0, n))
 
 
 class assoc_laguerre(OrthogonalPolynomial):
@@ -1200,6 +1213,7 @@ class assoc_laguerre(OrthogonalPolynomial):
                 return laguerre_poly(n, x, alpha)
 
     def fdiff(self, argindex=3):
+        from sympy import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -1207,7 +1221,7 @@ class assoc_laguerre(OrthogonalPolynomial):
             # Diff wrt alpha
             n, alpha, x = self.args
             k = Dummy("k")
-            return C.Sum(assoc_laguerre(k, alpha, x) / (n - alpha), (k, 0, n - 1))
+            return Sum(assoc_laguerre(k, alpha, x) / (n - alpha), (k, 0, n - 1))
         elif argindex == 3:
             # Diff wrt x
             n, alpha, x = self.args
@@ -1216,11 +1230,14 @@ class assoc_laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x):
-        # TODO: Should make sure n is in N_0
+        from sympy import Sum
+        # Make sure n \in N_0
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(
             -n, k) / (gamma(k + alpha + 1) * factorial(k)) * x**k
-        return gamma(n + alpha + 1) / factorial(n) * C.Sum(kern, (k, 0, n))
+        return gamma(n + alpha + 1) / factorial(n) * Sum(kern, (k, 0, n))
 
     def _eval_conjugate(self):
         n, alpha, x = self.args

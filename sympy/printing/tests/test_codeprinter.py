@@ -1,5 +1,7 @@
 from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.core import C, symbols
+from sympy.core import symbols
+from sympy.core.symbol import Dummy
+from sympy.core.relational import Relational
 from sympy.matrices import MatrixSymbol, Matrix
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.pytest import raises
@@ -13,7 +15,7 @@ def setup_test_printer(**kwargs):
 
 
 def test_print_Dummy():
-    d = C.Dummy('d')
+    d = Dummy('d')
     p = setup_test_printer()
     assert p._print_Dummy(d) == "d_%i" % d.dummy_index
 
@@ -50,6 +52,7 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
+    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_print_Symbol():
 

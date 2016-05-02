@@ -1,16 +1,16 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 
-from .basic import C, Basic
-from .compatibility import cmp_to_key, reduce, is_sequence, range
+from .basic import Basic
+from .compatibility import reduce, is_sequence, range
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -90,6 +90,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -135,6 +136,10 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, AccumBounds):
+                coeff = o.__add__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -328,17 +333,13 @@ class Add(Expr, AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         coeff, args = self.args[0], self.args[1:]
 
-        if coeff.is_Number:
-            if len(args) == 1:
-                return coeff, args[0]
-            else:
-                return coeff, self._new_rawargs(*args)
-        else:
-            return S.Zero, self
+        if coeff.is_Number and not rational or coeff.is_Rational:
+            return coeff, self._new_rawargs(*args)
+        return S.Zero, self
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
@@ -463,14 +464,59 @@ class Add(Expr, AssocOp):
         a.is_commutative for a in self.args)
 
     def _eval_is_imaginary(self):
-        rv = _fuzzy_group(a.is_imaginary for a in self.args)
-        if rv is False:
-            return rv
-        iargs = [a*S.ImaginaryUnit for a in self.args]
-        r = _fuzzy_group(a.is_real for a in iargs)
-        if r:
-            s = self.func(*iargs, evaluate=False)
-            return fuzzy_not(s.is_zero)
+        nz = []
+        im_I = []
+        for a in self.args:
+            if a.is_real:
+                if a.is_zero:
+                    pass
+                elif a.is_zero is False:
+                    nz.append(a)
+                else:
+                    return
+            elif a.is_imaginary:
+                im_I.append(a*S.ImaginaryUnit)
+            elif (S.ImaginaryUnit*a).is_real:
+                im_I.append(a*S.ImaginaryUnit)
+            else:
+                return
+        if self.func(*nz).is_zero:
+            return fuzzy_not(self.func(*im_I).is_zero)
+        elif self.func(*nz).is_zero is False:
+            return False
+
+    def _eval_is_zero(self):
+        if self.is_commutative is False:
+            # issue 10528: there is no way to know if a nc symbol
+            # is zero or not
+            return
+        nz = []
+        z = 0
+        im_or_z = False
+        im = False
+        for a in self.args:
+            if a.is_real:
+                if a.is_zero:
+                    z += 1
+                elif a.is_zero is False:
+                    nz.append(a)
+                else:
+                    return
+            elif a.is_imaginary:
+                im = True
+            elif (S.ImaginaryUnit*a).is_real:
+                im_or_z = True
+            else:
+                return
+        if z == len(self.args):
+            return True
+        if self.func(*nz).is_zero:
+            if not im_or_z and not im:
+                return True
+            if im and not im_or_z:
+                return False
+        if self.func(*nz).is_zero is False:
+            return False
 
     def _eval_is_odd(self):
         l = [f for f in self.args if not (f.is_even is True)]
@@ -493,8 +539,20 @@ class Add(Expr, AssocOp):
         return False
 
     def _eval_is_positive(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_positive()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_positive and a.is_nonnegative:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_positive:
+                        return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
@@ -534,9 +592,51 @@ class Add(Expr, AssocOp):
         elif not pos and not nonneg:
             return False
 
+    def _eval_is_nonnegative(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonnegative:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonnegative:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonnegative:
+                            return True
+
+    def _eval_is_nonpositive(self):
+        from sympy.core.exprtools import _monotonic_sign
+        if not self.is_number:
+            c, a = self.as_coeff_Add()
+            if not c.is_zero and a.is_nonpositive:
+                v = _monotonic_sign(a)
+                if v is not None:
+                    s = v + c
+                    if s.is_nonpositive:
+                        return True
+                    if len(self.free_symbols) == 1:
+                        v = _monotonic_sign(self)
+                        if v is not None and v.is_nonpositive:
+                            return True
+
     def _eval_is_negative(self):
+        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super(Add, self)._eval_is_negative()
+        c, a = self.as_coeff_Add()
+        if not c.is_zero:
+            v = _monotonic_sign(a)
+            if v is not None:
+                s = v + c
+                if s.is_negative and a.is_nonpositive:
+                    return True
+                if len(self.free_symbols) == 1:
+                    v = _monotonic_sign(self)
+                    if v is not None and v.is_negative:
+                        return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
@@ -636,11 +736,12 @@ class Add(Expr, AssocOp):
         ((x, O(x)),)
 
         """
+        from sympy import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
         if not point:
             point = [0]*len(symbols)
-        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
+        seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:
@@ -809,7 +910,7 @@ class Add(Expr, AssocOp):
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
@@ -830,7 +931,14 @@ class Add(Expr, AssocOp):
         See docstring of Expr.as_content_primitive for more examples.
         """
         con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
-            radical=radical)) for a in self.args]).primitive()
+            radical=radical, clear=clear)) for a in self.args]).primitive()
+        if not clear and not con.is_Integer and prim.is_Add:
+            con, d = con.as_numer_denom()
+            _p = prim/d
+            if any(a.as_coeff_Mul()[0].is_Integer for a in _p.args):
+                prim = _p
+            else:
+                con /= d
         if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args
@@ -878,6 +986,10 @@ class Add(Expr, AssocOp):
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
         return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
+
+    def _eval_difference_delta(self, n, step):
+        from sympy.series.limitseq import difference_delta as dd
+        return self.func(*[dd(a, n, step) for a in self.args])
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

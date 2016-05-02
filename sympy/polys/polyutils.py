@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-from sympy.core.exprtools import decompose_power
+from sympy.core.exprtools import decompose_power, decompose_power_rat
 
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 
@@ -197,10 +197,13 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
                     coeff.append(factor)
                 else:
                     try:
-                        base, exp = decompose_power(factor)
+                        if opt.series is False:
+                            base, exp = decompose_power(factor)
 
-                        if exp < 0:
-                            exp, base = -exp, Pow(base, -S.One)
+                            if exp < 0:
+                                exp, base = -exp, Pow(base, -S.One)
+                        else:
+                            base, exp = decompose_power_rat(factor)
 
                         monom[indices[base]] = exp
                     except KeyError:
@@ -251,12 +254,15 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
                 if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
-                    base, exp = decompose_power(factor)
+                    if opt.series is False:
+                        base, exp = decompose_power(factor)
 
-                    if exp < 0:
-                        exp, base = -exp, Pow(base, -S.One)
+                        if exp < 0:
+                            exp, base = -exp, Pow(base, -S.One)
+                    else:
+                        base, exp = decompose_power_rat(factor)
 
-                    elements[base] = exp
+                    elements[base] = elements.setdefault(base, 0) + exp
                     gens.add(base)
 
             terms.append((coeff, elements))
@@ -350,7 +356,10 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        expr = expr.expand()
+        try:
+            expr = expr.expand()
+        except AttributeError:
+            raise PolynomialError('expression must support expand method')
         # TODO: Integrate this into expand() itself
         while any(_is_expandable_pow(i) or i.is_Mul and
             any(_is_expandable_pow(j) for j in i.args) for i in
@@ -422,7 +431,7 @@ class PicklableWithSlots(object):
     Mixin class that allows to pickle objects with ``__slots__``.
 
     Examples
-    --------
+    ========
 
     First define a class that mixes :class:`PicklableWithSlots` in::
 

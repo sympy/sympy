@@ -1032,6 +1032,7 @@ class FermionState(FockState):
         FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
+
         >>> FKet([]).up(i)
         0
 
@@ -1074,10 +1075,12 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         An annihilator acting on vacuum above fermi vanishes
+
         >>> FKet([]).down(a)
         0
 
         Also below fermi, it vanishes, unless we specify a fermi level > 0
+
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
@@ -2539,7 +2542,7 @@ def _get_ordered_dummies(mul, verbose=False):
             mask[d] = '1'
         else:
             mask[d] = '2'
-    dum_repr = dict([ (d, __kprint(d)) for d in all_dums ])
+    dum_repr = {d: __kprint(d) for d in all_dums}
 
     def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]

@@ -394,14 +394,13 @@ the simplification to take place, regardless of assumptions.
     (t⋅z)
 
 Note that in some instances, in particular, when the exponents are integers or
-rational numbers, and identity 2 holds, it will be applied automatically
+rational numbers, and identity 2 holds, it will be applied automatically.
 
    >>> (z*t)**2
      2  2
     t ⋅z
    >>> sqrt(x*y)
-      ___   ___
-    ╲╱ x ⋅╲╱ y
+    √x⋅√y
 
 This means that it will be impossible to undo this identity with
 ``powsimp()``, because even if ``powsimp()`` were to put the bases together,
@@ -411,8 +410,7 @@ they would be automatically split apart again.
      2  2
     t ⋅z
    >>> powsimp(sqrt(x)*sqrt(y))
-      ___   ___
-    ╲╱ x ⋅╲╱ y
+    √x⋅√y
 
 expand_power_exp / expand_power_base
 ------------------------------------
@@ -851,7 +849,7 @@ example
     >>> orig_frac = frac = cancel(list_to_frac(l))
     >>> del l
 
-Click on "Run code block in SymPy Live" on the definition of ``list_to_frac)``
+Click on "Run code block in SymPy Live" on the definition of ``list_to_frac()``
 above, and then on the above example, and try to reproduce ``l`` from
 ``frac``.  I have deleted ``l`` at the end to remove the temptation for
 peeking (you can check your answer at the end by calling

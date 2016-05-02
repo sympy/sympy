@@ -130,15 +130,15 @@ class Gate(UnitaryOperator):
         A list of the target qubits (as ints) that the gate will apply to.
 
     Examples
-    --------
+    ========
 
 
     """
 
     _label_separator = ','
 
-    gate_name = u('G')
-    gate_name_latex = u('G')
+    gate_name = u'G'
+    gate_name_latex = u'G'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -315,12 +315,12 @@ class CGate(Gate):
         instance that is the target operator.
 
     Examples
-    --------
+    ========
 
     """
 
-    gate_name = u('C')
-    gate_name_latex = u('C')
+    gate_name = u'C'
+    gate_name_latex = u'C'
 
     # The values this class controls for.
     control_value = Integer(1)
@@ -446,9 +446,9 @@ class CGate(Gate):
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
         if self.simplify_cgate:
-            if self.gate.gate_name == u('X'):
+            if self.gate.gate_name == u'X':
                 self.gate.plot_gate_plus(circ_plot, gate_idx)
-            elif self.gate.gate_name == u('Z'):
+            elif self.gate.gate_name == u'Z':
                 circ_plot.control_point(gate_idx, self.targets[0])
             else:
                 self.gate.plot_gate(circ_plot, gate_idx)
@@ -499,8 +499,8 @@ class UGate(Gate):
         target qubits and U is a unitary matrix with dimension of
         len(targets).
     """
-    gate_name = u('U')
-    gate_name_latex = u('U')
+    gate_name = u'U'
+    gate_name_latex = u'U'
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -615,11 +615,11 @@ class IdentityGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('1')
-    gate_name_latex = u('1')
+    gate_name = u'1'
+    gate_name_latex = u'1'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('eye2', format)
@@ -640,7 +640,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     >>> from sympy import sqrt
     >>> from sympy.physics.quantum.qubit import Qubit
@@ -654,8 +654,8 @@ class HadamardGate(HermitianOperator, OneQubitGate):
     sqrt(2)*|00>/2 + sqrt(2)*|11>/2
 
     """
-    gate_name = u('H')
-    gate_name_latex = u('H')
+    gate_name = u'H'
+    gate_name_latex = u'H'
 
     def get_target_matrix(self, format='sympy'):
         if _normalized:
@@ -691,11 +691,11 @@ class XGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('X')
-    gate_name_latex = u('X')
+    gate_name = u'X'
+    gate_name_latex = u'X'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('X', format)
@@ -730,11 +730,11 @@ class YGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('Y')
-    gate_name_latex = u('Y')
+    gate_name = u'Y'
+    gate_name_latex = u'Y'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Y', format)
@@ -758,11 +758,11 @@ class ZGate(HermitianOperator, OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('Z')
-    gate_name_latex = u('Z')
+    gate_name = u'Z'
+    gate_name_latex = u'Z'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Z', format)
@@ -786,11 +786,11 @@ class PhaseGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('S')
-    gate_name_latex = u('S')
+    gate_name = u'S'
+    gate_name_latex = u'S'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('S', format)
@@ -814,11 +814,11 @@ class TGate(OneQubitGate):
         The target qubit this gate will apply to.
 
     Examples
-    --------
+    ========
 
     """
-    gate_name = u('T')
-    gate_name_latex = u('T')
+    gate_name = u'T'
+    gate_name_latex = u'T'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('T', format)
@@ -856,7 +856,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
         A tuple of the form (control, target).
 
     Examples
-    --------
+    ========
 
     >>> from sympy.physics.quantum.gate import CNOT
     >>> from sympy.physics.quantum.qapply import qapply
@@ -867,7 +867,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = u('CNOT')
+    gate_name_latex = u'CNOT'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -969,11 +969,11 @@ class SwapGate(TwoQubitGate):
         A tuple of the form (target1, target2).
 
     Examples
-    --------
+    ========
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = u('SWAP')
+    gate_name_latex = u'SWAP'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)
@@ -1066,7 +1066,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         The format of the final matrix ('sympy', 'numpy', 'scipy.sparse').
 
     Examples
-    --------
+    ========
 
     References
     ----------

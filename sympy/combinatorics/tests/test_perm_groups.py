@@ -8,6 +8,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
+from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
 
@@ -59,6 +60,21 @@ def test_order():
     b = Permutation([2, 1, 3, 4, 5, 6, 7, 8, 9, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
+    assert PermutationGroup().order() == 1
+
+
+def test_equality():
+    p_1 = Permutation(0, 1, 3)
+    p_2 = Permutation(0, 2, 3)
+    p_3 = Permutation(0, 1, 2)
+    p_4 = Permutation(0, 1, 3)
+    g_1 = PermutationGroup(p_1, p_2)
+    g_2 = PermutationGroup(p_3, p_4)
+    g_3 = PermutationGroup(p_2, p_1)
+
+    assert g_1 == g_2
+    assert g_1.generators != g_2.generators
+    assert g_1 == g_3
 
 
 def test_stabilizer():
@@ -165,6 +181,7 @@ def test_centralizer():
             if gp.degree == gp2.degree:
                 assert _verify_centralizer(gp, gp2)
 
+
 def test_coset_rank():
     gens_cube = [[1, 3, 5, 7, 0, 2, 4, 6], [1, 3, 0, 2, 5, 7, 4, 6]]
     gens = [Permutation(p) for p in gens_cube]
@@ -179,6 +196,7 @@ def test_coset_rank():
     assert G.coset_unrank(48) == None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
+
 def test_coset_factor():
     a = Permutation([0, 2, 1])
     G = PermutationGroup([a])
@@ -186,14 +204,15 @@ def test_coset_factor():
     assert not G.coset_factor(c)
     assert G.coset_rank(c) is None
 
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1,0,2,3,4,5])
+    d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1,0,2,3,5,4])
+    assert Permutation(2) in G
+    c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, True)
     tr = g.basic_transversals
     p = Permutation.rmul(*[tr[i][v[i]] for i in range(len(g.base))])
@@ -202,16 +221,17 @@ def test_coset_factor():
     p = Permutation.rmul(*v)
     assert p == c
     assert g.contains(c)
-    G = PermutationGroup([Permutation([2,1,0])])
-    p = Permutation([1,0,2])
+    G = PermutationGroup([Permutation([2, 1, 0])])
+    p = Permutation([1, 0, 2])
     assert G.coset_factor(p) == []
+
 
 def test_orbits():
     a = Permutation([2, 0, 1])
     b = Permutation([2, 1, 0])
     g = PermutationGroup([a, b])
-    assert g.orbit(0) == set([0, 1, 2])
-    assert g.orbits() == [set([0, 1, 2])]
+    assert g.orbit(0) == {0, 1, 2}
+    assert g.orbits() == [{0, 1, 2}]
     assert g.is_transitive() and g.is_transitive(strict=False)
     assert g.orbit_transversal(0) == \
         [Permutation(
@@ -254,6 +274,10 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
+    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
+    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
+    assert s6.is_normal(s4, strict=False)
+    assert not s4.is_normal(s6, strict=False)
 
 
 def test_eq():
@@ -318,6 +342,7 @@ def test_rubik1():
 
     G = RubikGroup(2)
     assert G.order() == 3674160
+
 
 @XFAIL
 def test_rubik():
@@ -470,6 +495,7 @@ def test_schreier_sims_random():
                   Permutation([0, 2, 1])]
     assert D.schreier_sims_random([], D.generators, 2,
            _random_prec=_random_prec) == (base, strong_gens)
+
 
 def test_baseswap():
     S = SymmetricGroup(4)
@@ -686,3 +712,17 @@ def test_make_perm():
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
     assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])
+
+
+def test_elements():
+    p = Permutation(2, 3)
+    assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
+
+
+def test_is_group():
+    assert PermutationGroup(Permutation(1,2), Permutation(2,4)).is_group == True
+    assert SymmetricGroup(4).is_group == True
+
+
+def test_PermutationGroup():
+    assert PermutationGroup() == PermutationGroup(Permutation())

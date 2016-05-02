@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError, _mexpand
 from sympy.sets.sets import FiniteSet
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range
@@ -98,7 +98,7 @@ def test_diff_symbols():
 def test_Function():
     class myfunc(Function):
         @classmethod
-        def eval(cls, x):
+        def eval(cls, x):  # one arg
             return
 
     assert myfunc.nargs == FiniteSet(1)
@@ -107,11 +107,12 @@ def test_Function():
 
     class myfunc(Function):
         @classmethod
-        def eval(cls, *x):
+        def eval(cls, *x):  # star args
             return
 
     assert myfunc.nargs == S.Naturals0
     assert myfunc(x).nargs == S.Naturals0
+
 
 def test_nargs():
     f = Function('f')
@@ -124,6 +125,9 @@ def test_nargs():
     assert log(2).nargs == FiniteSet(1, 2)
     assert Function('f', nargs=2).nargs == FiniteSet(2)
     assert Function('f', nargs=0).nargs == FiniteSet(0)
+    assert Function('f', nargs=(0, 1)).nargs == FiniteSet(0, 1)
+    assert Function('f', nargs=None).nargs == S.Naturals0
+    raises(ValueError, lambda: Function('f', nargs=()))
 
 
 def test_Lambda():
@@ -153,7 +157,7 @@ def test_Lambda():
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
-    raises(ValueError, lambda: Lambda(1, x))
+    raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
 
@@ -165,7 +169,7 @@ def test_IdentityFunction():
 
 def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
-    assert Lambda(x, x*y).free_symbols == set([y])
+    assert Lambda(x, x*y).free_symbols == {y}
 
 
 def test_Lambda_arguments():
@@ -213,7 +217,7 @@ def test_Subs():
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
 
     assert Subs(f(x), x, 0).free_symbols == set([])
-    assert Subs(f(x, y), x, z).free_symbols == set([y, z])
+    assert Subs(f(x, y), x, z).free_symbols == {y, z}
 
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
     assert Subs(1 + f(x).diff(x), x, 0).doit(), 1 + Subs(f(x).diff(x), x, 0)
@@ -230,8 +234,9 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x + 1), x, 1) not in [ e1, e2 ]
-    assert Derivative(
-        f(x), x).subs(x, g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert Derivative(f(x), x).subs(x, g(x)) == Derivative(f(g(x)), g(x))
+    assert Derivative(f(x), x).subs(x, x + y) == Subs(Derivative(f(x), x),
+        (x,), (x + y))
     assert Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).n(2) == \
         Subs(f(x)*cos(y) + z, (x, y), (0, pi/3)).evalf(2) == \
         z + Rational('1/2').n(2)*f(0)
@@ -288,6 +293,12 @@ def test_deriv1():
             Tuple(3*x + 2))
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
+
+    # See issue 8510
+    assert f(x, x + z).diff(x) == Subs(Derivative(f(y, x + z), y), Tuple(y), Tuple(x)) \
+            + Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x + z))
+    assert f(x, x**2).diff(x) == Subs(Derivative(f(y, x**2), y), Tuple(y), Tuple(x)) \
+            + 2*x*Subs(Derivative(f(x, y), y), Tuple(y), Tuple(x**2))
 
 
 def test_deriv2():
@@ -595,7 +606,7 @@ def test_issue_4711():
 
 def test_nfloat():
     from sympy.core.basic import _aresame
-    from sympy.polys.rootoftools import RootOf
+    from sympy.polys.rootoftools import rootof
 
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
@@ -615,14 +626,14 @@ def test_nfloat():
 
     # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
-    assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
+    assert not any(a.free_symbols for a in solveset(f.subs(x, -0.139)))
 
     # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
 
     # issue 7122
-    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
 
@@ -686,3 +697,17 @@ def test_mexpand():
     assert _mexpand(None) is None
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+
+def test_issue_8469():
+    # This should not take forever to run
+    N = 40
+    def g(w, theta):
+        return 1/(1+exp(w-theta))
+
+    ws = symbols(['w%i'%i for i in range(N)])
+    import functools
+    expr = functools.reduce(g,ws)
+
+def test_should_evalf():
+    # This should not take forever to run (see #8506)
+    assert isinstance(sin((1.0 + 1.0*I)**10000 + 1), sin)

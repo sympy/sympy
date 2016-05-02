@@ -304,7 +304,7 @@ class Wigner6j(Expr):
     def doit(self, **hints):
         if self.is_symbolic:
             raise ValueError("Coefficients must be numerical")
-        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j3)
+        return wigner_6j(self.j1, self.j2, self.j12, self.j3, self.j, self.j23)
 
 
 class Wigner9j(Expr):

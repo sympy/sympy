@@ -45,7 +45,7 @@ def matrix_fglm(F, ring, O_to):
         if all(_lambda[i] == domain.zero for i in range(s, len(old_basis))):
             # there is a linear combination of v by V
             lt = ring.term_new(_incr_k(S[t[1]], t[0]), domain.one)
-            rest = ring.from_dict(dict([ (S[i], _lambda[i]) for i in range(s) ]))
+            rest = ring.from_dict({S[i]: _lambda[i] for i in range(s)})
 
             g = (lt - rest).set_ring(ring_to)
             if g:

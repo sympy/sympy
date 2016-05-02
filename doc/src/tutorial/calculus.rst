@@ -182,14 +182,11 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-                          ⎛  ___  ⎞
-        ___   ___         ⎜╲╱ 2 ⋅x⎟
-    3⋅╲╱ 2 ⋅╲╱ π ⋅fresnels⎜───────⎟⋅Γ(3/4)
-                          ⎜   ___ ⎟
-                          ⎝ ╲╱ π  ⎠
-    ──────────────────────────────────────
-                   8⋅Γ(7/4)
-
+                    ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅fresnels⎜────⎟⋅Γ(3/4)
+                    ⎝ √π ⎠
+    ─────────────────────────────
+               8⋅Γ(7/4)
 
     >>> integ = Integral(x**y*exp(-x), (x, 0, oo))
     >>> integ
@@ -244,9 +241,9 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
 
     >>> expr = Limit((cos(x) - 1)/x, x, 0)
     >>> expr
-         cos(x) - 1
-     lim ──────────
-    x─→0⁺    x
+         ⎛cos(x) - 1⎞
+     lim ⎜──────────⎟
+    x─→0⁺⎝    x     ⎠
     >>> expr.doit()
     0
 

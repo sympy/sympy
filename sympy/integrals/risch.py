@@ -25,7 +25,7 @@ from the names used in Bronstein's book.
 """
 from __future__ import print_function, division
 
-from sympy import real_roots
+from sympy import real_roots, default_sort_key
 from sympy.abc import z
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm, oo
@@ -160,7 +160,7 @@ class DifferentialExtension(object):
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts')
+        'ts',)
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
         """
@@ -247,7 +247,6 @@ class DifferentialExtension(object):
         symlogs = set()
 
         while True:
-            restart = False
             if self.newf.is_rational_function(*self.T):
                 break
 
@@ -327,6 +326,12 @@ class DifferentialExtension(object):
                         # ANSWER: Yes, otherwise we can't integrate x**x (or
                         # rather prove that it has no elementary integral)
                         # without first manually rewriting it as exp(x*log(x))
+                        self.newf = self.newf.xreplace({old: new})
+                        self.backsubs += [(new, old)]
+                        log_new_extension = self._log_part([log(i.base)],
+                            dummy=dummy)
+                        exps = update(exps, self.newf.atoms(exp), lambda i:
+                            i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
                         continue
                     ans, u, const = A
                     newterm = exp(i.exp*(log(const) + u))
@@ -377,7 +382,7 @@ class DifferentialExtension(object):
                 self.backsubs.append((new, i))
 
             # remove any duplicates
-            logs = list(set(logs))
+            logs = sorted(set(logs), key=default_sort_key)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps, dummy=dummy)
@@ -740,7 +745,7 @@ def as_poly_1t(p, t, z):
     Examples
     ========
 
-    >>> from sympy import Symbol, random_poly
+    >>> from sympy import random_poly
     >>> from sympy.integrals.risch import as_poly_1t
     >>> from sympy.abc import x, z
 
@@ -1528,8 +1533,8 @@ class NonElementaryIntegral(Integral):
     part, so that the result of integrate will be the sum of an elementary
     expression and a NonElementaryIntegral.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import integrate, exp, log, Integral
     >>> from sympy.abc import x
@@ -1647,11 +1652,11 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     >>> pprint(risch_integrate(x*x**x*log(x) + x**x + x*x**x, x))
        x
     x*x
-    >>> pprint(risch_integrate(x**x*log(x), x))
+    >>> pprint(risch_integrate(x**x, x))
       /
      |
      |  x
-     | x *log(x) dx
+     | x  dx
      |
     /
 

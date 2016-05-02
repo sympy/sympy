@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+import sys
+from distutils.version import LooseVersion as V
 from io import BytesIO
 
 from sympy import latex as default_latex
@@ -10,7 +12,7 @@ from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
-def _init_python_printing(stringify_func):
+def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
     from sympy.core.compatibility import builtins
@@ -25,7 +27,7 @@ def _init_python_printing(stringify_func):
         """
         if arg is not None:
             builtins._ = None
-            print(stringify_func(arg))
+            print(stringify_func(arg, **settings))
             builtins._ = arg
 
     sys.displayhook = _displayhook
@@ -33,7 +35,7 @@ def _init_python_printing(stringify_func):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer):
+                           latex_printer, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -85,7 +87,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         # replace them with suitable subs
         o = o.replace(r'\operatorname', '')
         o = o.replace(r'\overline', r'\bar')
-        return latex_to_png(o)
+        # mathtext can't render some LaTeX commands. For example, it can't
+        # render any LaTeX environments such as array or matrix. So here we
+        # ensure that if mathtext fails to render, we return None.
+        try:
+            return latex_to_png(o)
+        except ValueError as e:
+            debug('matplotlib exception caught:', repr(e))
+            return None
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -116,12 +125,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
-            s = latex(o, mode=latex_mode)
+            s = latex(o, mode=latex_mode, **settings)
             try:
                 return _preview_wrapper(s)
-            except RuntimeError:
+            except RuntimeError as e:
+                debug('preview failed with:', repr(e),
+                      ' Falling back to matplotlib backend')
                 if latex_mode != 'inline':
-                    s = latex(o, mode='inline')
+                    s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
 
     def _print_latex_matplotlib(o):
@@ -129,20 +140,15 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by mathtext
         """
         if _can_print_latex(o):
-            s = latex(o, mode='inline')
-            try:
-                return _matplotlib_wrapper(s)
-            except Exception:
-                # Matplotlib.mathtext cannot render some things (like
-                # matrices)
-                return None
+            s = latex(o, mode='inline', **settings)
+            return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
         """
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain')
+            s = latex(o, mode='plain', **settings)
             s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
@@ -166,7 +172,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             print(repr(arg))
 
     import IPython
-    if IPython.__version__ >= '0.11':
+    if V(IPython.__version__) >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
@@ -211,6 +217,23 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     else:
         ip.set_hook('result_display', _result_display)
 
+def _is_ipython(shell):
+    """Is a shell instance an IPython shell?"""
+    # shortcut, so we don't import IPython if we don't have to
+    if 'IPython' not in sys.modules:
+        return False
+    try:
+        from IPython.core.interactiveshell import InteractiveShell
+    except ImportError:
+        # IPython < 0.11
+        try:
+            from IPython.iplib import InteractiveShell
+        except ImportError:
+            # Reaching this points means IPython has changed in a backward-incompatible way
+            # that we don't know about. Warn?
+            return False
+    return isinstance(shell, InteractiveShell)
+
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
@@ -218,7 +241,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None):
+                  latex_printer=None, **settings):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -284,8 +307,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     pretty_printer: function, optional, default=None
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
-        A custom LaTeX printer. This should mimic sympy.printing.latex()
-        This should mimic sympy.printing.latex().
+        A custom LaTeX printer. This should mimic sympy.printing.latex().
 
     Examples
     ========
@@ -338,19 +360,25 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             from sympy.printing import sstrrepr as stringify_func
 
     # Even if ip is not passed, double check that not in IPython shell
+    in_ipython = False
     if ip is None:
         try:
             ip = get_ipython()
         except NameError:
             pass
+        else:
+            in_ipython = (ip is not None)
 
-    if ip and ip.__module__.startswith('IPython') and pretty_print:
+    if ip and not in_ipython:
+        in_ipython = _is_ipython(ip)
+
+    if in_ipython and pretty_print:
         try:
             import IPython
             # IPython 1.0 deprecates the frontend module, so we import directly
             # from the terminal module to prevent a deprecation message from being
             # shown.
-            if IPython.__version__ >= '1.0':
+            if V(IPython.__version__) >= '1.0':
                 from IPython.terminal.interactiveshell import TerminalInteractiveShell
             else:
                 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
@@ -383,9 +411,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
-    if ip is not None and ip.__module__.startswith('IPython'):
+    if in_ipython:
+        mode_in_settings = settings.pop("mode", None)
+        if mode_in_settings:
+            debug("init_printing: Mode is not able to be set due to internals"
+                  "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer)
+                               print_builtin, latex_printer, **settings)
     else:
-        _init_python_printing(stringify_func)
+        _init_python_printing(stringify_func, **settings)

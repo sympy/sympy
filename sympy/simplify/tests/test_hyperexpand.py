@@ -10,10 +10,9 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise
-from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
@@ -49,7 +48,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if not numerical:
         return True
     repl = {}
-    for n, a in enumerate(r.free_symbols - set([z])):
+    for n, a in enumerate(r.free_symbols - {z}):
         repl[a] = randcplx(n)/div
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
@@ -140,6 +139,7 @@ def randcplx(offset=-1):
     return _randrat() + I*_randrat() + I*(1 + offset)
 
 
+@slow
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
@@ -214,7 +214,7 @@ def test_plan():
         devise_plan(Hyper_Function([2], []), Hyper_Function([S("1/2")], []), z)
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     b1 += 2*I
     h = hyper([a1, a2], [b1], z)
 
@@ -247,7 +247,7 @@ def test_plan_derivatives():
 
 
 def test_reduction_operators():
-    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
+    a1, a2, b1 = (randcplx(n) for n in range(3))
     h = hyper([a1], [b1], z)
 
     assert ReduceOrder(2, 0) is None
@@ -273,7 +273,7 @@ def test_reduction_operators():
 
 
 def test_shift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: ShiftA(0))
@@ -287,7 +287,7 @@ def test_shift_operators():
 
 
 def test_ushift_operators():
-    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
+    a1, a2, b1, b2, b3 = (randcplx(n) for n in range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, lambda: UnShiftA((1,), (), 0, z))
@@ -333,11 +333,12 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
+    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
         repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 
+@slow
 def test_meijerg_expand():
     from sympy import combsimp, simplify
     # from mpmath docs
@@ -431,13 +432,14 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([S.Half], [], [-a, a], [0])
 
 
+@slow
 def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
     #       hit an inexplicable test failure here, please let me know the seed.
-    a1, a2 = map(lambda n: randcplx() - 5*I - n*I, range(2))
-    b1, b2 = map(lambda n: randcplx() + 5*I + n*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda n: randcplx(), range(6))
+    a1, a2 = (randcplx(n) - 5*I - n*I for n in range(2))
+    b1, b2 = (randcplx(n) + 5*I + n*I for n in range(2))
+    b3, b4, b5, a3, a4, a5 = (randcplx() for n in range(6))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert ReduceOrder.meijer_minus(3, 4) is None
@@ -463,16 +465,15 @@ def test_meijerg():
     bm = [b1, b2 + 1]
     niq, ops = reduce_order_meijer(G_Function(an, ap, bm, bq))
     assert niq.an == (a1,)
-    assert set(niq.ap) == set([a3, a4])
+    assert set(niq.ap) == {a3, a4}
     assert niq.bm == (b1,)
-    assert set(niq.bq) == set([b3, b4])
+    assert set(niq.bq) == {b3, b4}
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
 
 def test_meijerg_shift_operators():
     # carefully set up the parameters. XXX this still fails sometimes
-    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = \
-        map(lambda n: randcplx(n), range(10))
+    a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = (randcplx(n) for n in range(10))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert tn(MeijerShiftA(b1).apply(g, op),
@@ -501,6 +502,7 @@ def test_meijerg_shift_operators():
         s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
 
 
+@slow
 def test_meijerg_confluence():
     def t(m, a, b):
         from sympy import sympify, Piecewise
@@ -588,7 +590,7 @@ def test_lerchphi():
 
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
-    a, b, c, d, e = map(lambda _: randcplx(), range(5))
+    a, b, c, d, e = (randcplx() for _ in range(5))
     for func in [Hyper_Function([a, b, c], [d, e]),
             Hyper_Function([], [a, b, c, d, e])]:
         f = build_hypergeometric_formula(func)
@@ -820,7 +822,6 @@ def test_prudnikov_8():
                         assert can_do([a, b], [c, d])
 
 
-@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -854,7 +855,6 @@ def test_prudnikov_10():
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
 
-@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
@@ -888,6 +888,7 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+@slow
 def test_prudnikov_2F1():
     h = S.Half
     # Elliptic integrals

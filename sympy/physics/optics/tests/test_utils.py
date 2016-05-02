@@ -1,12 +1,13 @@
 from __future__ import division
 
 from sympy.physics.optics.utils import (refraction_angle, deviation,
-    lens_makers_formula, mirror_formula, lens_formula)
+    lens_makers_formula, mirror_formula, lens_formula,
+    hyperfocal_distance)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
 from sympy import symbols, sqrt, Matrix, oo
-from sympy.geometry.point3d import Point3D
+from sympy.geometry.point import Point3D
 from sympy.geometry.line3d import Ray3D
 from sympy.geometry.plane import Plane
 
@@ -104,3 +105,8 @@ def test_lens_formula():
     assert lens_formula(u=u, v=v) == u*v/(u - v)
     assert lens_formula(u=oo, v=v) == v
     assert lens_formula(u=oo, v=oo) == oo
+
+def test_hyperfocal_distance():
+    f, N, c = symbols('f, N, c')
+    assert hyperfocal_distance(f=f, N=N, c=c) == f**2/(N*c)
+    assert round(hyperfocal_distance(f=0.5, N=8, c=0.0033), 2) == 9.47

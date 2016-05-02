@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
     Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
-    Symbol, Dummy, Wild)
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -48,9 +48,9 @@ def test_Function():
     sT(sin, "sin")
 
 def test_Geometry():
-    sT(Point(0, 0), "Point(Integer(0), Integer(0))")
+    sT(Point(0, 0), "Point2D(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),
-       "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
+       "Ellipse(Point2D(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 
@@ -166,6 +166,11 @@ def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
 
+def test_AlgebraicNumber():
+    a = AlgebraicNumber(sqrt(2))
+    sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
+    a = AlgebraicNumber(root(-2, 3))
+    sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
 
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"

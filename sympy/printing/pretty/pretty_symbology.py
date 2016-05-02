@@ -53,6 +53,15 @@ def pretty_use_unicode(flag=None):
     if flag is None:
         return _use_unicode
 
+    # we know that some letters are not supported in Python 2.X so
+    # ignore those warnings. Remove this when 2.X support is dropped.
+    if unicode_warnings:
+        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
+        unicode_warnings = '\n'.join([
+            l for l in unicode_warnings.splitlines() if not any(
+            i in l for i in known)])
+    # ------------ end of 2.X warning filtering
+
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
         warnings.warn(unicode_warnings)
@@ -111,14 +120,14 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = {l: (g(l), G(l)) for l in greek_letters}
 greek_unicode = dict((L, g(L)) for L in greek_letters)
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u('\N{GREEK SMALL LETTER FINAL SIGMA}')
+greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -164,7 +173,7 @@ sub = {}    # symb -> subscript symbol
 sup = {}    # symb -> superscript symbol
 
 # latin subscripts
-for l in 'aeioruvx':
+for l in 'aeioruvxhklmnpst':
     sub[l] = LSUB(l)
 
 for l in 'in':
@@ -186,21 +195,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u('\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}'),
-    'dddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}'),
-    'ddot': lambda s: s+u('\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: s+u('\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: s+u('\N{COMBINING CARON}'),
-    'breve': lambda s: s+u('\N{COMBINING BREVE}'),
-    'acute': lambda s: s+u('\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: s+u('\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: s+u('\N{COMBINING TILDE}'),
-    'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
-    'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
-    'prm': lambda s: s+u(' \N{COMBINING VERTICAL LINE ABOVE}'),
+    'mathring': lambda s: s+u'\N{COMBINING RING ABOVE}',
+    'ddddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}',
+    'dddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}',
+    'ddot': lambda s: s+u'\N{COMBINING DIAERESIS}',
+    'dot': lambda s: s+u'\N{COMBINING DOT ABOVE}',
+    'check': lambda s: s+u'\N{COMBINING CARON}',
+    'breve': lambda s: s+u'\N{COMBINING BREVE}',
+    'acute': lambda s: s+u'\N{COMBINING ACUTE ACCENT}',
+    'grave': lambda s: s+u'\N{COMBINING GRAVE ACCENT}',
+    'tilde': lambda s: s+u'\N{COMBINING TILDE}',
+    'hat': lambda s: s+u'\N{COMBINING CIRCUMFLEX ACCENT}',
+    'bar': lambda s: s+u'\N{COMBINING OVERLINE}',
+    'vec': lambda s: s+u'\N{COMBINING RIGHT ARROW ABOVE}',
+    'prime': lambda s: s+u'\N{PRIME}',
+    'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -208,10 +217,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u('\N{DOUBLE VERTICAL LINE}')+s+u('\N{DOUBLE VERTICAL LINE}'),
-    'avg': lambda s: u('\N{MATHEMATICAL LEFT ANGLE BRACKET}')+s+u('\N{MATHEMATICAL RIGHT ANGLE BRACKET}'),
-    'abs': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
-    'mag': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
+    'norm': lambda s: u'\N{DOUBLE VERTICAL LINE}'+s+u'\N{DOUBLE VERTICAL LINE}',
+    'avg': lambda s: u'\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+u'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
+    'abs': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
+    'mag': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
 }
 
 # VERTICAL OBJECTS
@@ -422,6 +431,7 @@ _xsym = {
     '<=':  ('<=', U('LESS-THAN OR EQUAL TO')),
     '>=':  ('>=', U('GREATER-THAN OR EQUAL TO')),
     '!=':  ('!=', U('NOT EQUAL TO')),
+    ':=':  (':=', ':='),
     '*':   ('*', U('DOT OPERATOR')),
     '-->': ('-->', U('EM DASH') + U('EM DASH') +
             U('BLACK RIGHT-POINTING TRIANGLE') if U('EM DASH')
@@ -459,8 +469,12 @@ atoms_table = {
     'ImaginaryUnit':           U('DOUBLE-STRUCK ITALIC SMALL I'),
     'EmptySet':                U('EMPTY SET'),
     'Naturals':                U('DOUBLE-STRUCK CAPITAL N'),
+    'Naturals0':               (U('DOUBLE-STRUCK CAPITAL N') and
+                                (U('DOUBLE-STRUCK CAPITAL N') +
+                                 U('SUBSCRIPT ZERO'))),
     'Integers':                U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':                   U('DOUBLE-STRUCK CAPITAL R'),
+    'Complexes':               U('DOUBLE-STRUCK CAPITAL C'),
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
@@ -510,7 +524,7 @@ def pretty_symbol(symb_name):
             if pretty is None:
                 try:  # match by separate characters
                     pretty = ''.join([mapping[c] for c in s])
-                except KeyError:
+                except (TypeError, KeyError):
                     return None
             result.append(pretty)
         return result

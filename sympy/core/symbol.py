@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.core.assumptions import StdFactKB
 from sympy.core.compatibility import string_types, range
 from .basic import Basic
-from .core import C
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -157,10 +156,11 @@ class Symbol(AtomicExpr, Boolean):
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
-            return (C.re(self), C.im(self))
+            return (re(self), im(self))
 
     def _sage_(self):
         import sage.all as sage
@@ -173,7 +173,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class Dummy(Symbol):

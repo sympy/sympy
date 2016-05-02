@@ -1,14 +1,17 @@
+import itertools as it
+
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root,
-    Min, Max, real_root)
+from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
+                                                      Max, real_root)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.pytest import raises
+
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -20,6 +23,7 @@ def test_Min():
     p_ = Symbol('p_', positive=True)
     np = Symbol('np', nonpositive=True)
     np_ = Symbol('np_', nonpositive=True)
+    r = Symbol('r', real=True)
 
     assert Min(5, 4) == 4
     assert Min(-oo, -oo) == -oo
@@ -102,10 +106,6 @@ def test_Min():
     assert Min(0, -x, 1 - 2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
         - 2*Heaviside(2*x + Min(0, -x) - 1)
 
-    a, b = Symbol('a', real=True), Symbol('b', real=True)
-    # a and b are both real, Min(a, b) should be real
-    assert Min(a, b).is_real
-
     # issue 7619
     f = Function('f')
     assert Min(1, 2*Min(f(1), 2))  # doesn't fail
@@ -114,6 +114,27 @@ def test_Min():
     e = Min(0, x)
     assert e.evalf == e.n
     assert e.n().args == (0, x)
+
+    # issue 8643
+    m = Min(n, p_, n_, r)
+    assert m.is_positive is False
+    assert m.is_nonnegative is False
+    assert m.is_negative is True
+
+    m = Min(p, p_)
+    assert m.is_positive is True
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(p, nn_, p_)
+    assert m.is_positive is None
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Min(nn, p, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is None
+    assert m.is_negative is None
 
 
 def test_Max():
@@ -150,11 +171,8 @@ def test_Max():
     raises(ValueError, lambda: Max(I))
     raises(ValueError, lambda: Max(I, x))
     raises(ValueError, lambda: Max(S.ComplexInfinity, 1))
-    # interesting:
-    # Max(n, -oo, n_,  p, 2) == Max(p, 2)
-    # True
-    # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
-    # False
+    assert Max(n, -oo, n_,  p, 2) == Max(p, 2)
+    assert Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
 
     assert Max(1, x).diff(x) == Heaviside(x - 1)
     assert Max(x, 1).diff(x) == Heaviside(x - 1)
@@ -162,14 +180,98 @@ def test_Max():
         2*x*Heaviside(x**2 - Max(1, x + 1)) \
         + Heaviside(x - Max(1, x**2) + 1)
 
-    a, b = Symbol('a', real=True), Symbol('b', real=True)
-    # a and b are both real, Max(a, b) should be real
-    assert Max(a, b).is_real
-
-    # issue 7233
     e = Max(0, x)
     assert e.evalf == e.n
     assert e.n().args == (0, x)
+
+    # issue 8643
+    m = Max(p, p_, n, r)
+    assert m.is_positive is True
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+    m = Max(n, n_)
+    assert m.is_positive is False
+    assert m.is_nonnegative is False
+    assert m.is_negative is True
+
+    m = Max(n, n_, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is None
+    assert m.is_negative is None
+
+    m = Max(n, nn, r)
+    assert m.is_positive is None
+    assert m.is_nonnegative is True
+    assert m.is_negative is False
+
+
+def test_minmax_assumptions():
+    r = Symbol('r', real=True)
+    a = Symbol('a', real=True, algebraic=True)
+    t = Symbol('t', real=True, transcendental=True)
+    q = Symbol('q', rational=True)
+    p = Symbol('p', real=True, rational=False)
+    n = Symbol('n', rational=True, integer=False)
+    i = Symbol('i', integer=True)
+    o = Symbol('o', odd=True)
+    e = Symbol('e', even=True)
+    k = Symbol('k', prime=True)
+    reals = [r, a, t, q, p, n, i, o, e, k]
+
+    for ext in (Max, Min):
+        for x, y in it.product(reals, repeat=2):
+
+            # Must be real
+            assert ext(x, y).is_real
+
+            # Algebraic?
+            if x.is_algebraic and y.is_algebraic:
+                assert ext(x, y).is_algebraic
+            elif x.is_transcendental and y.is_transcendental:
+                assert ext(x, y).is_transcendental
+            else:
+                assert ext(x, y).is_algebraic is None
+
+            # Rational?
+            if x.is_rational and y.is_rational:
+                assert ext(x, y).is_rational
+            elif x.is_irrational and y.is_irrational:
+                assert ext(x, y).is_irrational
+            else:
+                assert ext(x, y).is_rational is None
+
+            # Integer?
+            if x.is_integer and y.is_integer:
+                assert ext(x, y).is_integer
+            elif x.is_noninteger and y.is_noninteger:
+                assert ext(x, y).is_noninteger
+            else:
+                assert ext(x, y).is_integer is None
+
+            # Odd?
+            if x.is_odd and y.is_odd:
+                assert ext(x, y).is_odd
+            elif x.is_odd is False and y.is_odd is False:
+                assert ext(x, y).is_odd is False
+            else:
+                assert ext(x, y).is_odd is None
+
+            # Even?
+            if x.is_even and y.is_even:
+                assert ext(x, y).is_even
+            elif x.is_even is False and y.is_even is False:
+                assert ext(x, y).is_even is False
+            else:
+                assert ext(x, y).is_even is None
+
+            # Prime?
+            if x.is_prime and y.is_prime:
+                assert ext(x, y).is_prime
+            elif x.is_prime is False and y.is_prime is False:
+                assert ext(x, y).is_prime is False
+            else:
+                assert ext(x, y).is_prime is None
 
 
 def test_issue_8413():
@@ -241,7 +343,6 @@ def test_rewrite_MaxMin_as_Heaviside():
     assert Max(0, x+2, 2*x).rewrite(Heaviside) == \
         2*x*Heaviside(2*x)*Heaviside(x - 2) + \
         (x + 2)*Heaviside(-x + 2)*Heaviside(x + 2)
-
 
     assert Min(0, x).rewrite(Heaviside) == x*Heaviside(-x)
     assert Min(3, x).rewrite(Heaviside) == x*Heaviside(-x + 3) + \

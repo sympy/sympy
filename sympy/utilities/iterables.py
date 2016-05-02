@@ -1,17 +1,18 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import combinations, permutations, product, product as cartes
+from itertools import (
+    combinations, combinations_with_replacement, permutations,
+    product, product as cartes
+)
 import random
 from operator import gt
 
-from sympy.core.decorators import deprecated
-from sympy.core import Basic, C
+from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered, range
+    as_int, default_sort_key, is_sequence, iterable, ordered, range
 )
 
 from sympy.utilities.enumerative import (
@@ -577,9 +578,10 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
     """
     exclude = set(exclude or [])
     if cls is None:
-        # We can't just make the default cls=C.Symbol because it isn't
+        # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        cls = C.Symbol
+        from sympy import Symbol
+        cls = Symbol
 
     while True:
         name = '%s%s' % (prefix, start)
@@ -1307,13 +1309,13 @@ def multiset_partitions(multiset, m=None):
 
 
 def partitions(n, m=None, k=None, size=False):
-    """Generate all partitions of integer n (>= 0).
+    """Generate all partitions of positive integer, n.
 
     Parameters
     ==========
 
     ``m`` : integer (default gives partitions of all sizes)
-        limits number of parts in parition (mnemonic: m, maximum parts)
+        limits number of parts in partition (mnemonic: m, maximum parts)
     ``k`` : integer (default gives partitions number from 1 through n)
         limits the numbers that are kept in the partition (mnemonic: k, keys)
     ``size`` : bool (default False, only partition is returned)
@@ -1339,8 +1341,9 @@ def partitions(n, m=None, k=None, size=False):
     {1: 4, 2: 1}
     {1: 6}
 
-    The maximum number of parts in the partion (the sum of the values in
-    the returned dict) are limited with m:
+    The maximum number of parts in the partition (the sum of the values in
+    the returned dict) are limited with m (default value, None, gives
+    partitions from 1 through n):
 
     >>> for p in partitions(6, m=2):  # doctest: +SKIP
     ...     print(p)
@@ -1375,19 +1378,33 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if n < 0:
-        raise ValueError("n must be >= 0")
-    if m == 0:
-        raise ValueError("m must be > 0")
-    m = min(m or n, n)
-    if m < 1:
-        raise ValueError("maximum numbers in partition, m, must be > 0")
-    k = min(k or n, n)
-    if k < 1:
-        raise ValueError("maximum value in partition, k, must be > 0")
-
-    if m*k < n:
+    if (
+            n <= 0 or
+            m is not None and m < 1 or
+            k is not None and k < 1 or
+            m and k and m*k < n):
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        if size:
+            yield 0, {}
+        else:
+            yield {}
         return
+
+    if m is None:
+        m = n
+    else:
+        m = min(m, n)
+
+    if n == 0:
+        if size:
+            yield 1, {0: 1}
+        else:
+            yield {0: 1}
+        return
+
+    k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)
     q, r = divmod(n, k)
@@ -1441,6 +1458,140 @@ def partitions(n, m=None, k=None, size=False):
             yield sum(ms.values()), ms
         else:
             yield ms
+
+
+def ordered_partitions(n, m=None, sort=True):
+    """Generates ordered partitions of integer ``n``.
+
+    Parameters
+    ==========
+
+    ``m`` : integer (default gives partitions of all sizes) else only
+        those with size m. In addition, if ``m`` is not None then
+        partitions are generated *in place* (see examples).
+    ``sort`` : bool (default True) controls whether partitions are
+        returned in sorted order when ``m`` is not None; when False,
+        the partitions are returned as fast as possible with elements
+        sorted, but when m|n the partitions will not be in
+        ascending lexicographical order.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import ordered_partitions
+
+    All partitions of 5 in ascending lexicographical:
+
+    >>> for p in ordered_partitions(5):
+    ...     print(p)
+    [1, 1, 1, 1, 1]
+    [1, 1, 1, 2]
+    [1, 1, 3]
+    [1, 2, 2]
+    [1, 4]
+    [2, 3]
+    [5]
+
+    Only partitions of 5 with two parts:
+
+    >>> for p in ordered_partitions(5, 2):
+    ...     print(p)
+    [1, 4]
+    [2, 3]
+
+    When ``m`` is given, a given list objects will be used more than
+    once for speed reasons so you will not see the correct partitions
+    unless you make a copy of each as it is generated:
+
+    >>> [p for p in ordered_partitions(7, 3)]
+    [[1, 1, 1], [1, 1, 1], [1, 1, 1], [2, 2, 2]]
+    >>> [list(p) for p in ordered_partitions(7, 3)]
+    [[1, 1, 5], [1, 2, 4], [1, 3, 3], [2, 2, 3]]
+
+    When ``n`` is a multiple of ``m``, the elements are still sorted
+    but the partitions themselves will be *unordered* if sort is False;
+    the default is to return them in ascending lexicographical order.
+
+    >>> for p in ordered_partitions(6, 2):
+    ...     print(p)
+    [1, 5]
+    [2, 4]
+    [3, 3]
+
+    But if speed is more important than ordering, sort can be set to
+    False:
+
+    >>> for p in ordered_partitions(6, 2, sort=False):
+    ...     print(p)
+    [1, 5]
+    [3, 3]
+    [2, 4]
+
+    References
+    ==========
+
+    .. [1] Generating Integer Partitions, [online],
+        Available: http://jeromekelleher.net/generating-integer-partitions.html
+    .. [2] Jerome Kelleher and Barry O'Sullivan, "Generating All
+        Partitions: A Comparison Of Two Encodings", [online],
+        Available: http://arxiv.org/pdf/0909.2331v2.pdf
+    """
+    if n < 1 or m is not None and m < 1:
+        # the empty set is the only way to handle these inputs
+        # and returning {} to represent it is consistent with
+        # the counting convention, e.g. nT(0) == 1.
+        yield []
+        return
+
+    if m is None:
+        # The list `a`'s leading elements contain the partition in which
+        # y is the biggest element and x is either the same as y or the
+        # 2nd largest element; v and w are adjacent element indices
+        # to which x and y are being assigned, respectively.
+        a = [1]*n
+        y = -1
+        v = n
+        while v > 0:
+            v -= 1
+            x = a[v] + 1
+            while y >= 2 * x:
+                a[v] = x
+                y -= x
+                v += 1
+            w = v + 1
+            while x <= y:
+                a[v] = x
+                a[w] = y
+                yield a[:w + 1]
+                x += 1
+                y -= 1
+            a[v] = x + y
+            y = a[v] - 1
+            yield a[:w]
+    elif m == 1:
+        yield [n]
+    elif n == m:
+        yield [1]*n
+    else:
+        # recursively generate partitions of size m
+        for b in range(1, n//m + 1):
+            a = [b]*m
+            x = n - b*m
+            if not x:
+                if sort:
+                    yield a
+            elif not sort and x <= m:
+                for ax in ordered_partitions(x, sort=False):
+                    mi = len(ax)
+                    a[-mi:] = [i + b for i in ax]
+                    yield a
+                    a[-mi:] = [b]*mi
+            else:
+                for mi in range(1, m):
+                    for ax in ordered_partitions(x, mi, sort=True):
+                        a[-mi:] = [i + b for i in ax]
+                        yield a
+                        a[-mi:] = [b]*mi
 
 
 def binary_partitions(n):
@@ -1513,7 +1664,9 @@ def has_dups(seq):
     >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
     True
     """
-    if isinstance(seq, (dict, set, C.Dict, C.Set)):
+    from sympy.core.containers import Dict
+    from sympy.sets.sets import Set
+    if isinstance(seq, (dict, set, Dict, Set)):
         return False
     uniq = set()
     return any(True for s in seq if s in uniq or uniq.add(s))
@@ -1748,13 +1901,6 @@ def generate_derangements(perm):
     for pi in p:
         if all(pi[i] != p0[i] for i in indices):
             yield pi
-
-
-@deprecated(
-    useinstead="bracelets", deprecated_since_version="0.7.3")
-def unrestricted_necklace(n, k):
-    """Wrapper to necklaces to return a free (unrestricted) necklace."""
-    return necklaces(n, k, free=True)
 
 
 def necklaces(n, k, free=False):
@@ -2087,3 +2233,38 @@ def kbins(l, k, ordered=None):
     else:
         raise ValueError(
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+
+
+def permute_signs(t):
+    """Return iterator in which the signs of non-zero elements
+    of t are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import permute_signs
+    >>> list(permute_signs((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
+    """
+    for signs in cartes(*[(1, -1)]*(len(t) - t.count(0))):
+        signs = list(signs)
+        yield type(t)([i*signs.pop() if i else i for i in t])
+
+
+def signed_permutations(t):
+    """Return iterator in which the signs of non-zero elements
+    of t and the order of the elements are permuted.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import signed_permutations
+    >>> list(signed_permutations((0, 1, 2)))
+    [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2), (0, 2, 1),
+    (0, -2, 1), (0, 2, -1), (0, -2, -1), (1, 0, 2), (-1, 0, 2),
+    (1, 0, -2), (-1, 0, -2), (1, 2, 0), (-1, 2, 0), (1, -2, 0),
+    (-1, -2, 0), (2, 0, 1), (-2, 0, 1), (2, 0, -1), (-2, 0, -1),
+    (2, 1, 0), (-2, 1, 0), (2, -1, 0), (-2, -1, 0)]
+    """
+    return (type(t)(i) for j in permutations(t)
+        for i in permute_signs(j))

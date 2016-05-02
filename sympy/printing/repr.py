@@ -50,6 +50,9 @@ class ReprPrinter(Printer):
         args = map(self._print, args)
         return "Add(%s)" % ", ".join(args)
 
+    def _print_Cycle(self, expr):
+        return expr.__repr__()
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
@@ -168,8 +171,8 @@ class ReprPrinter(Printer):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
 
     def _print_AlgebraicNumber(self, expr):
-        return "%s(%s, %s)" % (self.__class__.__name__,
-            self._print(self.coeffs()), self._print(expr.root))
+        return "%s(%s, %s)" % (expr.__class__.__name__,
+            self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
         return "%s(%s, %s, %s)" % (ring.__class__.__name__,

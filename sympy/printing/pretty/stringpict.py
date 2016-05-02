@@ -29,6 +29,7 @@ class stringPict(object):
         """Initialize from string.
         Multiline strings are centered.
         """
+        self.s = s
         #picture is a string that just can be printed
         self.picture = stringPict.equalLengths(s.splitlines())
         #baseline is the line number of the "base line"
@@ -471,15 +472,22 @@ class prettyForm(stringPict):
         """Make a pretty power.
         """
         a = self
-        if a.binding > prettyForm.FUNC:
-            a = stringPict(*a.parens())
+        use_inline_func_form = False
         if b.binding == prettyForm.POW:
             b = stringPict(*b.parens())
+        if a.binding > prettyForm.FUNC:
+            a = stringPict(*a.parens())
+        elif a.binding == prettyForm.FUNC:
+            # heuristic for when to use inline power
+            if b.height() > 1:
+                a = stringPict(*a.parens())
+            else:
+                use_inline_func_form = True
 
-        if a.binding == prettyForm.FUNC:
+        if use_inline_func_form:
             #         2
             #  sin  +   + (x)
-            b.baseline = a.prettyFunc.baseline + 1
+            b.baseline = a.prettyFunc.baseline + b.height()
             func = stringPict(*a.prettyFunc.right(b))
             return prettyForm(*func.right(a.prettyArgs))
         else:

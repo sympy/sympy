@@ -2,14 +2,15 @@
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
-                   root, exp, cos)
-from sympy.abc import a, b, t, x, y, z
+                   root, exp, cos, sin, oo, Dummy, log)
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc)
+                                  gcd_terms, factor_terms, factor_nc,
+                                  _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
-
 from sympy.utilities.pytest import raises
+
+from sympy.abc import a, b, t, x, y, z
 
 
 def test_decompose_power():
@@ -214,6 +215,15 @@ def test_gcd_terms():
 
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
+    eq = x/2/y + 1/x/y
+    assert gcd_terms(eq, fraction=True, clear=True) == \
+        (x**2 + 2)/(2*x*y)
+    assert gcd_terms(eq, fraction=True, clear=False) == \
+        (x**2/2 + 1)/(x*y)
+    assert gcd_terms(eq, fraction=False, clear=True) == \
+        (x + 2/x)/(2*y)
+    assert gcd_terms(eq, fraction=False, clear=False) == \
+        (x/2 + 1/x)/y
 
 
 def test_factor_terms():
@@ -236,6 +246,12 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    assert factor_terms(x/2 + y) == x/2 + y
+    # fraction doesn't apply to integer denominators
+    assert factor_terms(x/2 + y, fraction=True) == x/2 + y
+    # clear *does* apply to the integer denominators
+    assert factor_terms(x/2 + y, clear=True) == Mul(S.Half, x + 2*y, evaluate=False)
 
     # check radical extraction
     eq = sqrt(2) + sqrt(10)
@@ -354,3 +370,55 @@ def test_issue_7903():
     a = symbols(r'a', real=True)
     t = exp(I*cos(a)) + exp(-I*sin(a))
     assert t.simplify()
+
+
+def test_monotonic_sign():
+    F = _monotonic_sign
+    x = symbols('x')
+    assert F(x) is None
+    assert F(-x) is None
+    assert F(Dummy(prime=True)) == 2
+    assert F(Dummy(prime=True, odd=True)) == 3
+    assert F(Dummy(positive=True, integer=True)) == 1
+    assert F(Dummy(positive=True, even=True)) == 2
+    assert F(Dummy(negative=True, integer=True)) == -1
+    assert F(Dummy(negative=True, even=True)) == -2
+    assert F(Dummy(zero=True)) == 0
+    assert F(Dummy(nonnegative=True)) == 0
+    assert F(Dummy(nonpositive=True)) == 0
+
+    assert F(Dummy(positive=True) + 1).is_positive
+    assert F(Dummy(positive=True, integer=True) - 1).is_nonnegative
+    assert F(Dummy(positive=True) - 1) is None
+    assert F(Dummy(negative=True) + 1) is None
+    assert F(Dummy(negative=True, integer=True) - 1).is_nonpositive
+    assert F(Dummy(negative=True) - 1).is_negative
+    assert F(-Dummy(positive=True) + 1) is None
+    assert F(-Dummy(positive=True, integer=True) - 1).is_negative
+    assert F(-Dummy(positive=True) - 1).is_negative
+    assert F(-Dummy(negative=True) + 1).is_positive
+    assert F(-Dummy(negative=True, integer=True) - 1).is_nonnegative
+    assert F(-Dummy(negative=True) - 1) is None
+    x = Dummy(negative=True)
+    assert F(x**3).is_nonpositive
+    assert F(x**3 + log(2)*x - 1).is_negative
+    x = Dummy(positive=True)
+    assert F(-x**3).is_nonpositive
+
+    p = Dummy(positive=True)
+    assert F(1/p).is_positive
+    assert F(p/(p + 1)).is_positive
+    p = Dummy(nonnegative=True)
+    assert F(p/(p + 1)).is_nonnegative
+    p = Dummy(positive=True)
+    assert F(-1/p).is_negative
+    p = Dummy(nonpositive=True)
+    assert F(p/(-p + 1)).is_nonpositive
+
+    p = Dummy(positive=True, integer=True)
+    q = Dummy(positive=True, integer=True)
+    assert F(-2/p/q).is_negative
+    assert F(-2/(p - 1)/q) is None
+
+    assert F((p - 1)*q + 1).is_positive
+    assert F(-(p - 1)*q - 1).is_negative
