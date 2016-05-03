@@ -699,17 +699,19 @@ class Expr(Basic, EvalfMixin):
     def _eval_is_negative_or_positive(self, compare_sign):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
+        from sympy.core.evalf import DEFAULT_MAXPREC
         if self.is_number:
             if self.is_real is False:
                 return False
-            # It is not infinity, so it can be calculated
             try:
+                # check to see that we can get a value
                 prec = 2
-                max_prec = 256
                 n2 = self._eval_evalf(prec)
-                while n2.is_infinite is True and prec < max_prec:
-                    prec *= 4
-                    # precision is growing until max_prec
+                # It is not infinity usually, so it can be calculated
+                # But if n2 is, we can have calculating error,
+                # so, we will try to calculate with prec until DEFAULT_MAXPREC
+                while n2.is_infinite is True and prec < DEFAULT_MAXPREC:
+                    prec *= 8
                     n2 = self._eval_evalf(prec)
                 if n2 is None:
                     raise AttributeError
