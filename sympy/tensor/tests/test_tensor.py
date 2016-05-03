@@ -1800,6 +1800,10 @@ def test_TensMul_data():
 
 
 def test_issue_11020_TensAdd_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
 
