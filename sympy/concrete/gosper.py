@@ -4,7 +4,7 @@ from __future__ import print_function, division
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
-from sympy.solvers import solve
+from sympy.solvers.solveset import solveset, linsolve
 from sympy.simplify import hypersimp
 
 
@@ -103,6 +103,7 @@ def gosper_term(f, n):
     (-n - 1/2)/(n + 1/4)
 
     """
+    from sympy.sets import FiniteSet
     r = hypersimp(f, n)
 
     if r is None:
@@ -138,16 +139,27 @@ def gosper_term(f, n):
 
     x = Poly(coeffs, n, domain=domain)
     H = A*x.shift(1) - B*x - C
-
-    solution = solve(H.coeffs(), coeffs)
+    soln = linsolve(H.coeffs(), coeffs)
+    sol = []
+    if not soln is S.EmptySet:
+        sol = list(soln.args[0])
+    solution = []
+    coeffs_list = list(coeffs)
+    coeffs_len = len(coeffs)
+    try:
+        for i in range(0, coeffs_len):
+            if not coeffs_list[i] == sol[i]:
+                solution.append(dict(zip((coeffs_list[i], ), FiniteSet(sol[i])) ))
+    except:
+        pass
 
     if solution is None:
         return None    # 'f(n)' is *not* Gosper-summable
-
-    x = x.as_expr().subs(solution)
+    for s in solution:
+        x = x.as_expr().subs(s)
 
     for coeff in coeffs:
-        if coeff not in solution:
+        if all(coeff not in s for s in solution):
             x = x.subs(coeff, 0)
 
     if x is S.Zero:
