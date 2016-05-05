@@ -8038,18 +8038,25 @@ def sysode_nonlinear_3eq_order1(match_):
     func = match_['func']
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     if match_['type_of_equation'] == 'type1':
-        sol = _nonlinear_3eq_order1_type1(x, y, z, t, eq)
+        C1, C2 = get_numbered_constants(match_['constants_iter'], num=2)
+        constants = [C1, C2]
+        sol = _nonlinear_3eq_order1_type1(x, y, z, t, eq, constants)
     if match_['type_of_equation'] == 'type2':
-        sol = _nonlinear_3eq_order1_type2(x, y, z, t, eq)
+        C1, C2 = get_numbered_constants(match_['constants_iter'], num=2)
+        constants = [C1, C2]
+        sol = _nonlinear_3eq_order1_type2(x, y, z, t, eq, constants)
     if match_['type_of_equation'] == 'type3':
-        sol = _nonlinear_3eq_order1_type3(x, y, z, t, eq)
+        C1 = get_numbered_constants(match_['constants_iter'], num=1)
+        sol = _nonlinear_3eq_order1_type3(x, y, z, t, eq, C1)
     if match_['type_of_equation'] == 'type4':
-        sol = _nonlinear_3eq_order1_type4(x, y, z, t, eq)
+        C1 = get_numbered_constants(match_['constants_iter'], num=1)
+        sol = _nonlinear_3eq_order1_type4(x, y, z, t, eq, C1)
     if match_['type_of_equation'] == 'type5':
-        sol = _nonlinear_3eq_order1_type5(x, y, z, t, eq)
+        C1 = get_numbered_constants(match_['constants_iter'], num=1)
+        sol = _nonlinear_3eq_order1_type5(x, y, z, t, eq, C1)
     return sol
 
-def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
+def _nonlinear_3eq_order1_type1(x, y, z, t, eq, constants):
     r"""
     Equations:
 
@@ -8071,7 +8078,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
-    C1, C2 = get_numbered_constants(eq, num=2)
+    C1, C2 = constants
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8107,7 +8114,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
+def _nonlinear_3eq_order1_type2(x, y, z, t, eq, constants):
     r"""
     Equations:
 
@@ -8133,7 +8140,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
-    C1, C2 = get_numbered_constants(eq, num=2)
+    C1, C2 = constants
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8171,7 +8178,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
+def _nonlinear_3eq_order1_type3(x, y, z, t, eq, constant):
     r"""
     Equations:
 
@@ -8199,7 +8206,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
-    C1 = get_numbered_constants(eq, num=1)
+    C1 = constant
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8230,7 +8237,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
+def _nonlinear_3eq_order1_type4(x, y, z, t, eq, constant):
     r"""
     Equations:
 
@@ -8258,7 +8265,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
-    C1 = get_numbered_constants(eq, num=1)
+    C1 = constant
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8289,7 +8296,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _nonlinear_3eq_order1_type5(x, y, t, eq):
+def _nonlinear_3eq_order1_type5(x, y, t, eq, constant):
     r"""
     .. math:: x' = x (c F_2 - b F_3), \enspace y' = y (a F_3 - c F_1), \enspace z' = z (b F_1 - a F_2)
 
@@ -8308,7 +8315,7 @@ def _nonlinear_3eq_order1_type5(x, y, t, eq):
     -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
-    C1 = get_numbered_constants(eq, num=1)
+    C1 = constant
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
