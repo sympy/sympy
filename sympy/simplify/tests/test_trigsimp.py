@@ -315,6 +315,7 @@ def test_trigsimp_groebner():
     resdenom = (8*s - 6*c)
     results = [resnum/resdenom, (-resnum)/(-resdenom)]
     assert trigsimp_groebner(ex) in results
+    assert trigsimp_groebner(c*s) == c*s
     assert trigsimp_groebner(s/c, hints=[tan]) == tan(x)
 
     assert trigsimp((-s + 1)/c + c/(-s + 1),
@@ -331,6 +332,7 @@ def test_trigsimp_groebner():
     # test hyperbolic / sums
     assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
                              hints=[(tanh, x, y)]) == tanh(x + y)
+
 
 
 def test_issue_2827_trigsimp_methods():
