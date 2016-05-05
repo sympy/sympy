@@ -12,6 +12,8 @@ from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick
 
+from .diophantine import diophantine
+
 from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
 from .ode import checkodesol, classify_ode, dsolve, \

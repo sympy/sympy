@@ -24,7 +24,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, filldedent
 
 rnd = mlib.round_nearest
 
@@ -243,6 +243,73 @@ def igcdex(a, b):
     return (x*x_sign, y*y_sign, a)
 
 
+def mod_inverse(a, m):
+    """
+    Return the number c such that, ( a * c ) % m == 1 where
+    c has the same sign as a. If no such value exists, a
+    ValueError is raised.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.core.numbers import mod_inverse
+
+    Suppose we wish to find multiplicative inverse x of
+    3 modulo 11. This is the same as finding x such
+    that 3 * x = 1 (mod 11). One value of x that satisfies
+    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 mod(11).
+    This is the value return by mod_inverse:
+
+    >>> mod_inverse(3, 11)
+    4
+    >>> mod_inverse(-3, 11)
+    -4
+
+    When there is a commono factor between the numerators of
+    ``a`` and ``m`` the inverse does not exist:
+
+    >>> mod_inverse(2, 4)
+    Traceback (most recent call last):
+    ...
+    ValueError: inverse of 2 mod 4 does not exist
+
+    >>> mod_inverse(S(2)/7, S(5)/2)
+    7/2
+
+    References
+    ==========
+    - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+    - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+    """
+    c = None
+    try:
+        a, m = as_int(a), as_int(m)
+        if m > 1:
+            x, y, g = igcdex(a, m)
+            if g == 1:
+                c = x % m
+            if a < 0:
+                c -= m
+    except ValueError:
+        a, m = sympify(a), sympify(m)
+        if not (a.is_number and m.is_number):
+            raise TypeError(filldedent('''
+                Expected numbers for arguments; symbolic `mod_inverse`
+                is not implemented
+                but symbolic expressions can be handled with the
+                similar function,
+                sympy.polys.polytools.invert'''))
+        big = (m > 1)
+        if not (big is S.true or big is S.false):
+            raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
+        elif big:
+            c = 1/a
+    if c is None:
+        raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
+    return c
+
+
 class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
@@ -286,6 +353,12 @@ class Number(AtomicExpr):
                 return obj
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
+
+    def invert(self, other, *gens, **args):
+        from sympy.polys.polytools import invert
+        if getattr(other, 'is_number', True):
+            return mod_inverse(self, other)
+        return invert(self, other, *gens, **args)
 
     def __divmod__(self, other):
         from .containers import Tuple
@@ -474,11 +547,13 @@ class Number(AtomicExpr):
         """Efficiently extract the coefficient of a product. """
         if rational and not self.is_Rational:
             return S.One, self
-        return self, S.One
+        return (self, S.One) if self else (S.One, self)
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
-        return self, S.Zero
+        if not rational:
+            return self, S.Zero
+        return S.Zero, self
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
@@ -674,6 +749,10 @@ class Float(Number):
             num = '0'
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
+        elif num is S.Infinity:
+            num = '+inf'
+        elif num is S.NegativeInfinity:
+            num = '-inf'
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
 
@@ -1148,7 +1227,7 @@ class Rational(Number):
     is_Rational = True
 
     @cacheit
-    def __new__(cls, p, q=None):
+    def __new__(cls, p, q=None, gcd=None):
         if q is None:
             if isinstance(p, Rational):
                 return p
@@ -1175,7 +1254,7 @@ class Rational(Number):
             else:
                 try:
                     if isinstance(p, fractions.Fraction):
-                        return Rational(p.numerator, p.denominator)
+                        return Rational(p.numerator, p.denominator, 1)
                 except NameError:
                     pass  # error will raise below
 
@@ -1185,6 +1264,7 @@ class Rational(Number):
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
             q = S.One
+            gcd = 1
         else:
             p = Rational(p)
             q = Rational(q)
@@ -1203,16 +1283,15 @@ class Rational(Number):
                     raise ValueError("Indeterminate 0/0")
                 else:
                     return S.NaN
-            if p < 0:
-                return S.NegativeInfinity
-            return S.Infinity
+            return S.ComplexInfinity
         if q < 0:
             q = -q
             p = -p
-        n = igcd(abs(p), q)
-        if n > 1:
-            p //= n
-            q //= n
+        if not gcd:
+            gcd = igcd(abs(p), q)
+        if gcd > 1:
+            p //= gcd
+            q //= gcd
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:
@@ -1293,16 +1372,22 @@ class Rational(Number):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
+            return Rational(self.p + self.q*other.p, self.q, 1)
+        elif isinstance(other, Rational):
+            #TODO: this can probably be optimized more
             return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
             return other + self
         else:
             return Number.__add__(self, other)
+    __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
+            return Rational(self.p - self.q*other.p, self.q, 1)
+        elif isinstance(other, Rational):
             return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
             return -other + self
@@ -1310,25 +1395,52 @@ class Rational(Number):
             return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        if isinstance(other, Integer):
+            return Rational(self.q*other.p - self.p, self.q, 1)
+        elif isinstance(other, Rational):
+            return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
+        elif isinstance(other, Float):
+            return -self + other
+        else:
+            return Number.__rsub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Rational):
-            return Rational(self.p*other.p, self.q*other.q)
+        if isinstance(other, Integer):
+            return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
         elif isinstance(other, Float):
             return other*self
         else:
             return Number.__mul__(self, other)
+    __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Rational):
+        if isinstance(other, Integer):
             if self.p and other.p == S.Zero:
                 return S.ComplexInfinity
             else:
-                return Rational(self.p*other.q, self.q*other.p)
+                return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
         elif isinstance(other, Float):
             return self*(1/other)
         else:
             return Number.__div__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        if isinstance(other, Integer):
+            return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+        elif isinstance(other, Rational):
+            return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+        elif isinstance(other, Float):
+            return other*(1/self)
+        else:
+            return Number.__rdiv__(self, other)
 
     __truediv__ = __div__
 
@@ -1376,7 +1488,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p)
+                return Rational(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
@@ -1403,8 +1515,8 @@ class Rational(Number):
     def __int__(self):
         p, q = self.p, self.q
         if p < 0:
-            return -(-p//q)
-        return p//q
+            return -int(-p//q)
+        return int(p//q)
 
     __long__ = __int__
 
@@ -1510,34 +1622,11 @@ class Rational(Number):
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
-        from sympy.ntheory import factorint
+        from sympy.ntheory import factorrat
 
-        f = factorint(self.p, limit=limit, use_trial=use_trial,
+        return factorrat(self, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
                       verbose=verbose).copy()
-        f = defaultdict(int, f)
-        for p, e in factorint(self.q, limit=limit,
-                              use_trial=use_trial,
-                              use_rho=use_rho,
-                              use_pm1=use_pm1,
-                              verbose=verbose).items():
-            f[p] += -e
-
-        if len(f) > 1 and 1 in f:
-            del f[1]
-        if not f:
-            f = {1: 1}
-        if not visual:
-            return dict(f)
-        else:
-            if -1 in f:
-                f.pop(-1)
-                args = [S.NegativeOne]
-            else:
-                args = []
-            args.extend([Pow(*i, evaluate=False)
-                         for i in sorted(f.items())])
-            return Mul(*args, evaluate=False)
 
     @_sympifyit('other', NotImplemented)
     def gcd(self, other):
@@ -1564,7 +1653,7 @@ class Rational(Number):
         import sage.all as sage
         return sage.Integer(self.p)/sage.Integer(self.q)
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1583,6 +1672,14 @@ class Rational(Number):
                 return self, S.One
             return -self, S.NegativeOne
         return S.One, self
+
+    def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
+        return self, S.One
+
+    def as_coeff_Add(self, rational=False):
+        """Efficiently extract the coefficient of a summation. """
+        return self, S.Zero
 
 
 # int -> Integer
@@ -1732,23 +1829,31 @@ class Integer(Rational):
             return Integer(self.p + other)
         elif isinstance(other, Integer):
             return Integer(self.p + other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q + other.p, other.q, 1)
         return Rational.__add__(self, other)
 
     def __radd__(self, other):
         if isinstance(other, integer_types):
             return Integer(other + self.p)
-        return Rational.__add__(self, other)
+        elif isinstance(other, Rational):
+            return Rational(other.p + self.p*other.q, other.q, 1)
+        return Rational.__radd__(self, other)
 
     def __sub__(self, other):
         if isinstance(other, integer_types):
             return Integer(self.p - other)
         elif isinstance(other, Integer):
             return Integer(self.p - other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.q - other.p, other.q, 1)
         return Rational.__sub__(self, other)
 
     def __rsub__(self, other):
         if isinstance(other, integer_types):
             return Integer(other - self.p)
+        elif isinstance(other, Rational):
+            return Rational(other.p - self.p*other.q, other.q, 1)
         return Rational.__rsub__(self, other)
 
     def __mul__(self, other):
@@ -1756,12 +1861,16 @@ class Integer(Rational):
             return Integer(self.p*other)
         elif isinstance(other, Integer):
             return Integer(self.p*other.p)
+        elif isinstance(other, Rational):
+            return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
         return Rational.__mul__(self, other)
 
     def __rmul__(self, other):
         if isinstance(other, integer_types):
             return Integer(other*self.p)
-        return Rational.__mul__(self, other)
+        elif isinstance(other, Rational):
+            return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+        return Rational.__rmul__(self, other)
 
     def __mod__(self, other):
         if isinstance(other, integer_types):
@@ -2085,9 +2194,9 @@ class AlgebraicNumber(Expr):
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
     def _eval_simplify(self, ratio, measure):
-        from sympy.polys import RootOf, minpoly
+        from sympy.polys import CRootOf, minpoly
 
-        for r in [r for r in self.minpoly.all_roots() if r.func != RootOf]:
+        for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
                 # use the matching root if it's simpler
                 if measure(r) < ratio*measure(self.root):
@@ -2177,6 +2286,10 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
     __bool__ = __nonzero__
 
+    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
+        """Efficiently extract the coefficient of a summation. """
+        return S.One, self
+
 
 class One(with_metaclass(Singleton, IntegerConstant)):
     """The number one.
@@ -2221,7 +2334,8 @@ class One(with_metaclass(Singleton, IntegerConstant)):
                 verbose=False, visual=False):
         if visual:
             return S.One
-        return {1: 1}
+        else:
+            return {}
 
 
 class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
@@ -3255,6 +3369,8 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     def _sage_(self):
         import sage.all as sage
         return sage.golden_ratio
+
+    _eval_rewrite_as_sqrt = _eval_expand_func
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):

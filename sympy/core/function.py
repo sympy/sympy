@@ -49,6 +49,7 @@ from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, range
 from sympy.utilities import default_sort_key
+from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
@@ -123,10 +124,34 @@ class FunctionClass(ManagedProperties):
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
+            if not nargs:
+                raise ValueError(filldedent('''
+                    Incorrectly specified nargs as %s:
+                    if there are no arguments, it should be
+                    `nargs = 0`;
+                    if there are any number of arguments,
+                    it should be
+                    `nargs = None`''' % str(nargs)))
             nargs = tuple(ordered(set(nargs)))
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+    @property
+    def __signature__(self):
+        """
+        Allow Python 3's inspect.signature to give a useful signature for
+        Function subclasses.
+        """
+        # Python 3 only, but backports (like the one in IPython) still might
+        # call this.
+        try:
+            from inspect import signature
+        except ImportError:
+            return None
+
+        # TODO: Look at nargs
+        return signature(self.eval)
 
     @property
     def nargs(self):
@@ -209,20 +234,20 @@ class Application(with_metaclass(FunctionClass, Basic)):
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            # Canonicalize nargs here; change to set in nargs.
+            # Canonicalize nargs here
             if is_sequence(obj.nargs):
-                obj.nargs = tuple(ordered(set(obj.nargs)))
+                nargs = tuple(ordered(set(obj.nargs)))
             elif obj.nargs is not None:
-                obj.nargs = (as_int(obj.nargs),)
-
-            obj.nargs = FiniteSet(*obj.nargs) if obj.nargs is not None \
-                else Naturals0()
+                nargs = (as_int(obj.nargs),)
+            else:
+                nargs = None
         except AttributeError:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            obj.nargs = FiniteSet(*obj._nargs) if obj._nargs is not None \
-                else Naturals0()
+            nargs = obj._nargs  # note the underscore here
+        # convert to FiniteSet
+        obj.nargs = FiniteSet(*nargs) if nargs else Naturals0()
         return obj
 
     @classmethod
@@ -457,7 +482,7 @@ class Function(Application, Expr):
         except (AttributeError, KeyError):
             try:
                 return Float(self._imp_(*self.args), prec)
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError, ValueError):
                 return
 
         # Convert all args to mpf or mpc
@@ -718,7 +743,7 @@ class AppliedUndef(Function):
         import sage.all as sage
         fname = str(self.func)
         args = [arg._sage_() for arg in self.args]
-        func = sage.function(fname, *args)
+        func = sage.function(fname)(*args)
         return func
 
 class UndefinedFunction(FunctionClass):
@@ -1298,7 +1323,7 @@ class Derivative(Expr):
         return self.expr.free_symbols
 
     def _eval_subs(self, old, new):
-        if old in self.variables and not new.is_Symbol:
+        if old in self.variables and not new._diff_wrt:
             # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
@@ -1388,21 +1413,15 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         from sympy.sets.sets import FiniteSet
-        try:
-            for v in variables if iterable(variables) else [variables]:
-                if not v.is_Symbol:
-                    raise TypeError('variable is not a symbol: %s' % v)
-        except (AssertionError, AttributeError):
-            raise ValueError('variable is not a Symbol: %s' % v)
-        try:
-            variables = Tuple(*variables)
-        except TypeError:
-            variables = Tuple(variables)
-        if len(variables) == 1 and variables[0] == expr:
+        v = list(variables) if iterable(variables) else [variables]
+        for i in v:
+            if not getattr(i, 'is_Symbol', False):
+                raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
-        obj.nargs = FiniteSet(len(variables))
+        obj = Expr.__new__(cls, Tuple(*v), sympify(expr))
+        obj.nargs = FiniteSet(len(v))
         return obj
 
     @property
@@ -1540,7 +1559,7 @@ class Subs(Expr):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
+            s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -2476,14 +2495,14 @@ def nfloat(expr, n=15, exponent=False):
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
     # problems with evaluating at low precision (issue 6393)
-    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
+    rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
     rv = rv.n(n)
     if not exponent:
-        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
+        rv = rv.xreplace({d.exp: p.exp for p, d in reps})
     else:
         # Pow._eval_evalf special cases Integer exponents so if
         # exponent is suppose to be handled we have to do so here

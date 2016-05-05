@@ -604,7 +604,7 @@ die = DieDistribution(6)
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
-    assert _test_args(ContinuousDomain(set([x]), Interval(-oo, oo)))
+    assert _test_args(ContinuousDomain({x}, Interval(-oo, oo)))
 
 
 def test_sympy__stats__crv__SingleContinuousDomain():
@@ -713,6 +713,35 @@ def test_sympy__stats__rv__ProductDomain():
     assert _test_args(ProductDomain(D, E))
 
 
+def test_sympy__stats__symbolic_probability__Probability():
+    from sympy.stats.symbolic_probability import Probability
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Probability(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Expectation():
+    from sympy.stats.symbolic_probability import Expectation
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Expectation(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Covariance():
+    from sympy.stats.symbolic_probability import Covariance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 3)
+    assert _test_args(Covariance(X, Y))
+
+
+def test_sympy__stats__symbolic_probability__Variance():
+    from sympy.stats.symbolic_probability import Variance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Variance(X))
+
+
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
     from sympy.stats.frv_types import DiscreteUniformDistribution
     from sympy.core.containers import Tuple
@@ -746,32 +775,32 @@ def test_sympy__stats__frv_types__RademacherDistribution():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
+    assert _test_args(FiniteDomain({(x, 1), (x, 2)}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, set([1, 2])))  # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, {1, 2}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
-    yd = SingleFiniteDomain(y, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
+    yd = SingleFiniteDomain(y, {1, 2})
     assert _test_args(ProductFiniteDomain(xd, yd))
 
 
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(ConditionalFiniteDomain(xd, x > 1))
 
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2, 3, 4, 5, 6]))
+    xd = SingleFiniteDomain(x, {1, 2, 3, 4, 5, 6})
     p = 1.0/6
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(FinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 
@@ -2142,6 +2171,14 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+
+def test_sympy__matrices__expressions__dotproduct__DotProduct():
+    from sympy.matrices.expressions.dotproduct import DotProduct
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('X', x, 1)
+    Y = MatrixSymbol('Y', x, 1)
+    assert _test_args(DotProduct(X, Y))
+
 def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
     from sympy.matrices.expressions.diagonal import DiagonalMatrix
     from sympy.matrices.expressions import MatrixSymbol
@@ -3114,9 +3151,14 @@ def test_sympy__polys__polytools__PurePoly():
     assert _test_args(PurePoly(2, x, y))
 
 
+@SKIP('abstract class')
 def test_sympy__polys__rootoftools__RootOf():
-    from sympy.polys.rootoftools import RootOf
-    assert _test_args(RootOf(x**3 + x + 1, 0))
+    pass
+
+
+def test_sympy__polys__rootoftools__ComplexRootOf():
+    from sympy.polys.rootoftools import ComplexRootOf
+    assert _test_args(ComplexRootOf(x**3 + x + 1, 0))
 
 
 def test_sympy__polys__rootoftools__RootSum():
@@ -3203,6 +3245,11 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
+
+
+@SKIP("abstract class")
+def test_sympy__tensor__array__ndim_array__ImmutableNDimArray():
+    pass
 
 
 def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():

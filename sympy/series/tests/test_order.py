@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function)
+    Function, Add)
 from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
@@ -15,10 +15,10 @@ def test_caching_bug():
 
 def test_free_symbols():
     assert Order(1).free_symbols == set()
-    assert Order(x).free_symbols == set([x])
-    assert Order(1, x).free_symbols == set([x])
-    assert Order(x*y).free_symbols == set([x, y])
-    assert Order(x, x, y).free_symbols == set([x, y])
+    assert Order(x).free_symbols == {x}
+    assert Order(1, x).free_symbols == {x}
+    assert Order(x*y).free_symbols == {x, y}
+    assert Order(x, x, y).free_symbols == {x, y}
 
 
 def test_simple_1():
@@ -410,3 +410,8 @@ def test_order_subs_limits():
 def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
+
+def test_performance_of_adding_order():
+    l = list(x**i for i in range(1000))
+    l.append(O(x**1001))
+    assert Add(*l).subs(x,1) == O(1)

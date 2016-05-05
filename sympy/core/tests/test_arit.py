@@ -260,7 +260,7 @@ def test_pow_im():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -288,7 +288,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
@@ -1597,6 +1597,9 @@ def test_Mod():
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
 
+    # issue 10963
+    assert (x**6000%400).args[1] == 400
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
@@ -1887,3 +1890,8 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+
+def test_Add_is_zero():
+    x, y = symbols('x y', zero=True)
+    assert (x + y).is_zero

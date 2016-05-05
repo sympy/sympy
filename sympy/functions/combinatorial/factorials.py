@@ -1,10 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Dummy
+from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, pi
+from sympy.core.relational import Eq
+
 from sympy.ntheory import sieve
+
 from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce, range
@@ -43,7 +46,7 @@ class factorial(CombinatorialFunction):
        kind is very useful in case of combinatorial simplification.
 
        Computation of the factorial is done using two algorithms. For
-       small arguments naive product is evaluated. However for bigger
+       small arguments a precomputed look up table is used. However for bigger
        input algorithm Prime-Swing is used. It is the fastest algorithm
        known and computes n! via prime factorization of special class
        of numbers, called here the 'Swing Numbers'.
@@ -90,6 +93,8 @@ class factorial(CombinatorialFunction):
         12155, 230945, 46189, 969969, 88179, 2028117, 676039, 16900975, 1300075,
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
+
+    _small_factorials = []
 
     @classmethod
     def _swing(cls, n):
@@ -147,20 +152,18 @@ class factorial(CombinatorialFunction):
                 if n.is_negative:
                     return S.ComplexInfinity
                 else:
-                    n, result = n.p, 1
+                    n = n.p
 
                     if n < 20:
-                        for i in range(2, n + 1):
-                            result *= i
+                        if not cls._small_factorials:
+                            result = 1
+                            for i in range(1, 20):
+                                result *= i
+                                cls._small_factorials.append(result)
+                        result = cls._small_factorials[n-1]
+
                     else:
-                        N, bits = n, 0
-
-                        while N != 0:
-                            if N & 1 == 1:
-                                bits += 1
-
-                            N = N >> 1
-
+                        bits = bin(n).count('1')
                         result = cls._recursive(n)*2**(n - bits)
 
                     return Integer(result)
@@ -325,9 +328,10 @@ class factorial2(CombinatorialFunction):
     @classmethod
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
+
         if arg.is_Number:
-            if arg.is_infinite:
-                return
+            if not arg.is_Integer:
+                raise ValueError("argument must be nonnegative integer or negative odd integer")
 
             # This implementation is faster than the recursive one
             # It also avoids "maximum recursion depth exceeded" runtime error
@@ -335,13 +339,13 @@ class factorial2(CombinatorialFunction):
                 if arg.is_even:
                     k = arg / 2
                     return 2 ** k * factorial(k)
-
                 return factorial(arg) / factorial2(arg - 1)
 
-            if arg.is_even:
-                raise ValueError("argument must be nonnegative or odd")
 
-            return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+            if arg.is_odd:
+                return arg * (S.NegativeOne) ** ((1 - arg) / 2) / factorial2(-arg)
+            raise ValueError("argument must be nonnegative integer or negative odd integer")
+
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
@@ -387,6 +391,10 @@ class factorial2(CombinatorialFunction):
                 return True
             if n.is_odd:
                 return ((n + 1) / 2).is_even
+
+    def _eval_rewrite_as_gamma(self, n):
+        from sympy import gamma, Piecewise, sqrt
+        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2/pi), Eq(Mod(n, 2), 1)))
 
 
 ###############################################################################
@@ -844,6 +852,9 @@ class binomial(CombinatorialFunction):
     def _eval_rewrite_as_gamma(self, n, k):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+
+    def _eval_rewrite_as_tractable(self, n, k):
+        return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
 
     def _eval_rewrite_as_FallingFactorial(self, n, k):
         if k.is_integer:

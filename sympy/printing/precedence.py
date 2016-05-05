@@ -14,6 +14,7 @@ PRECEDENCE = {
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
+    "Func": 70,
     "Not": 100,
     "Atom": 1000
 }
@@ -32,8 +33,7 @@ PRECEDENCE_VALUES = {
     "Relational": PRECEDENCE["Relational"],
     "Sub": PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
-    "factorial": PRECEDENCE["Pow"],
-    "factorial2": PRECEDENCE["Pow"],
+    "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatMul": PRECEDENCE["Mul"],
@@ -118,3 +118,18 @@ def precedence(item):
         elif n in PRECEDENCE_VALUES:
             return PRECEDENCE_VALUES[n]
     return PRECEDENCE["Atom"]
+
+
+def precedence_traditional(item):
+    """
+    Returns the precedence of a given object according to the traditional rules
+    of mathematics. This is the precedence for the LaTeX and pretty printer.
+    """
+    # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
+    # the precedence of Atom for other printers:
+    from sympy import Integral, Sum, Product, Limit, Derivative
+
+    if isinstance(item, (Integral, Sum, Product, Limit, Derivative)):
+        return PRECEDENCE["Mul"]
+    else:
+        return precedence(item)

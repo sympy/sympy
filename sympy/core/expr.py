@@ -192,6 +192,8 @@ class Expr(Basic, EvalfMixin):
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
         from sympy import Dummy
+        if not self.is_number:
+            raise TypeError("can't convert symbols to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
@@ -569,7 +571,7 @@ class Expr(Basic, EvalfMixin):
             if simplify:
                 deriv = deriv.simplify()
             if deriv != 0:
-                if not (deriv.is_Number or pure_complex(deriv)):
+                if not (pure_complex(deriv, or_real=True)):
                     if flags.get('failing_number', False):
                         return failing_number
                     elif deriv.free_symbols:
@@ -594,7 +596,6 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvers.solvers import solve
         from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -909,8 +910,9 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from sympy.core import Add, Mul, S
-        from sympy.core.exprtools import decompose_power
+        from .add import Add
+        from .mul import Mul
+        from .exprtools import decompose_power
 
         gens, terms = set([]), []
 
@@ -1456,16 +1458,17 @@ class Expr(Basic, EvalfMixin):
         * .expand(log=True) to change log expr into an Add
 
         The only non-naive thing that is done here is to respect noncommutative
-        ordering of variables.
+        ordering of variables and to always return (0, 0) for `self` of zero
+        regardless of hints.
 
-        The returned tuple (i, d) has the following interpretation:
+        For nonzero `self`, the returned tuple (i, d) has the
+        following interpretation:
 
         * i will has no variable that appears in deps
         * d will be 1 or else have terms that contain variables that are in deps
         * if self is an Add then self = i + d
         * if self is a Mul then self = i*d
-        * if self is anything else, either tuple (self, S.One) or (S.One, self)
-          is returned.
+        * otherwise (self, S.One) or (S.One, self) is returned.
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
@@ -1568,13 +1571,27 @@ class Expr(Basic, EvalfMixin):
         >>> (log(a*b).expand(log=True)).as_independent(b)
         (log(a), log(b))
 
-        See also: .separatevars(), .expand(log=True),
-                  .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+        See Also
+        ========
+        .separatevars(), .expand(log=True), Add.as_two_terms(),
+        Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
         """
-        from sympy import Symbol
+        from .symbol import Symbol
+        from .add import _unevaluated_Add
+        from .mul import _unevaluated_Mul
         from sympy.utilities.iterables import sift
 
+        if self.is_zero:
+            return S.Zero, S.Zero
+
         func = self.func
+        if hint.get('as_Add', func is Add):
+            want = Add
+        else:
+            want = Mul
+        if func is not want and (func is Add or func is Mul):
+            return (want.identity, self)
+
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
         sym = set()
@@ -1593,10 +1610,6 @@ class Expr(Basic, EvalfMixin):
                 return has_other
             return has_other or e.has(*(e.free_symbols & sym))
 
-        if hint.get('as_Add', func is Add):
-            want = Add
-        else:
-            want = Mul
         if (want is not func or
                 func is not Add and func is not Mul):
             if has(self):
@@ -1613,15 +1626,16 @@ class Expr(Basic, EvalfMixin):
         depend = d[True]
         indep = d[False]
         if func is Add:  # all terms were treated as commutative
-            return (Add(*indep),
-                    Add(*depend))
+            return (Add(*indep), _unevaluated_Add(*depend))
         else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return Mul(*indep), Mul(*depend)
+            return Mul(*indep), (
+                Mul(*depend, evaluate=False) if nc else
+                _unevaluated_Mul(*depend))
 
     def as_real_imag(self, deep=True, **hints):
         """Performs complex expansion on 'self' and returns a tuple
@@ -1790,7 +1804,7 @@ class Expr(Basic, EvalfMixin):
             c, r = -c, -r
         return c, r
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and ``Mul(*foo.as_content_primitive()) == foo``.
@@ -1836,6 +1850,14 @@ class Expr(Basic, EvalfMixin):
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
 
+        If clear=False (default is True) then content will not be removed
+        from an Add if it can be distributed to leave one or more
+        terms with integer coefficients.
+
+        >>> (x/2 + y).as_content_primitive()
+        (1/2, x + 2*y)
+        >>> (x/2 + y).as_content_primitive(clear=False)
+        (1, x/2 + y)
         """
         return S.One, self
 
@@ -2602,7 +2624,7 @@ class Expr(Basic, EvalfMixin):
                 yield series.removeO()
             else:
                 yield series
-            raise StopIteration
+            return
 
         while series.is_Order:
             n += 1
@@ -2810,7 +2832,7 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 
@@ -3057,10 +3079,19 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import cancel
         return cancel(self, *gens, **args)
 
-    def invert(self, g):
-        """See the invert function in sympy.polys"""
-        from sympy.polys import invert
-        return invert(self, g)
+    def invert(self, g, *gens, **args):
+        """Return the multiplicative inverse of ``self`` mod ``g``
+        where ``self`` (and ``g``) may be symbolic expressions).
+
+        See Also
+        ========
+        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        """
+        from sympy.polys.polytools import invert
+        from sympy.core.numbers import mod_inverse
+        if self.is_number and getattr(g, 'is_number', True):
+            return mod_inverse(self, g)
+        return invert(self, g, *gens, **args)
 
     def round(self, p=0):
         """Return x rounded to the given decimal place.
@@ -3111,8 +3142,13 @@ class Expr(Basic, EvalfMixin):
         from sympy import Float
         x = self
         if not x.is_number:
-            raise TypeError('%s is not a number' % type(x))
-        if x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            raise TypeError("can't round symbolic expression")
+        if not x.is_Atom:
+            xn = x.n(2)
+            if not pure_complex(xn, or_real=True):
+                raise TypeError('Expected a number but got %s:' %
+                    getattr(getattr(x,'func', x), '__name__', type(x)))
+        elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()

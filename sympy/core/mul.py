@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -9,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import cmp_to_key, reduce, range
+from .compatibility import reduce, range
 from .expr import Expr
 
 # internal marker to indicate:
@@ -1572,7 +1573,7 @@ class Mul(Expr, AssocOp):
             s *= x._sage_()
         return s
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1589,7 +1590,7 @@ class Mul(Expr, AssocOp):
         coef = S.One
         args = []
         for i, a in enumerate(self.args):
-            c, p = a.as_content_primitive(radical=radical)
+            c, p = a.as_content_primitive(radical=radical, clear=clear)
             coef *= c
             if p is not S.One:
                 args.append(p)

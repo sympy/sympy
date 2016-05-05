@@ -5,7 +5,7 @@ from sympy import (
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
+    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
@@ -27,6 +27,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.quantum import Commutator, Operator
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -140,6 +141,8 @@ def test_latex_permutation():
     assert latex(Permutation(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
     assert latex(Permutation(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
     assert latex(Permutation()) == r"\left( \right)"
+    assert latex(Permutation(2, 4)*Permutation(5)) == r"\left( 2\; 4\right)\left( 5\right)"
+    assert latex(Permutation(5)) == r"\left( 5\right)"
 
 
 def test_latex_Float():
@@ -261,10 +264,11 @@ def test_latex_functions():
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow\infty\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow\left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow \infty\right)"
+    assert latex(Order(x - y, (x, y))) == r"\mathcal{O}\left(x - y; x\rightarrow y\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -463,6 +467,13 @@ def test_latex_derivatives():
     assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
         r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
 
+    # Derivative wrapped in power:
+    assert latex(diff(x, x, evaluate=False)**2) == \
+        r"\left(\frac{d}{d x} x\right)^{2}"
+
+    assert latex(diff(f(x), x)**2) == \
+        r"\left(\frac{d}{d x} f{\left (x \right )}\right)^{2}"
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
@@ -489,6 +500,12 @@ def test_latex_integrals():
     assert latex(Integral(x, x, y, (z, 0, 1))) == \
         r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
+    # fix issue #10806
+    assert latex(Integral(z, z)**2) == r"\left(\int z\, dz\right)^{2}"
+    assert latex(Integral(x + z, z)) == r"\int \left(x + z\right)\, dz"
+    assert latex(Integral(x+z/2, z)) == r"\int \left(x + \frac{z}{2}\right)\, dz"
+    assert latex(Integral(x**y, z)) == r"\int x^{y}\, dz"
+
 
 def test_latex_sets():
     for s in (frozenset, set):
@@ -508,6 +525,18 @@ def test_latex_Range():
     assert latex(Range(1, 51)) == \
         r'\left\{1, 2, \ldots, 50\right\}'
     assert latex(Range(1, 4)) == r'\left\{1, 2, 3\right\}'
+
+    assert latex(Range(0, 3, 1)) == r'\left\{0, 1, 2\right\}'
+
+    assert latex(Range(0, 30, 1)) == r'\left\{0, 1, \ldots, 29\right\}'
+
+    assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
+
+    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots, \infty\right\}'
+
+    assert latex(Range(oo, -2, -2)) == r'\left\{\infty, \ldots, 2, 0\right\}'
+
+    assert latex(Range(-2, -oo, -1)) == r'\left\{-2, -3, \ldots, -\infty\right\}'
 
 
 def test_latex_sequences():
@@ -587,6 +616,12 @@ def test_latex_AccumuBounds():
 def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
 
+def test_latex_commutator():
+    A = Operator('A')
+    B = Operator('B')
+    comm = Commutator(B, A)
+    assert latex(comm.doit()) == r"- (A B - B A)"
+
 
 def test_latex_union():
     assert latex(Union(Interval(0, 1), Interval(2, 3))) == \
@@ -661,6 +696,9 @@ def test_latex_sum():
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
 
+    assert latex(Sum(x**2 + y, (x, -2, 2))**2) == \
+        r"\left(\sum_{x=-2}^{2} \left(x^{2} + y\right)\right)^{2}"
+
 
 def test_latex_product():
     assert latex(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
@@ -670,6 +708,9 @@ def test_latex_product():
     assert latex(Product(x**2 + y, (x, -2, 2))) == \
         r"\prod_{x=-2}^{2} \left(x^{2} + y\right)"
 
+    assert latex(Product(x, (x, -2, 2))**2) == \
+        r"\left(\prod_{x=-2}^{2} x\right)^{2}"
+
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
@@ -678,6 +719,9 @@ def test_latex_limits():
     f = Function('f')
     assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left (x \right )}"
     assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left (x \right )}"
+
+    # issue #10806
+    assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
 
 
 def test_issue_3568():
@@ -949,9 +993,9 @@ def test_latex_Poly():
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 
-def test_latex_RootOf():
-    assert latex(RootOf(x**5 + x + 3, 0)) == \
-        r"\operatorname{RootOf} {\left(x^{5} + x + 3, 0\right)}"
+def test_latex_ComplexRootOf():
+    assert latex(rootof(x**5 + x + 3, 0)) == \
+        r"\operatorname{CRootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 
 def test_latex_RootSum():
@@ -1459,3 +1503,10 @@ def test_issue_7117():
 
 def test_issue_2934():
     assert latex(Symbol(r'\frac{a_1}{b_1}')) == '\\frac{a_1}{b_1}'
+
+
+def test_issue_10489():
+    latexSymbolWithBrace = 'C_{x_{0}}'
+    s = Symbol(latexSymbolWithBrace)
+    assert latex(s) == latexSymbolWithBrace
+    assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'

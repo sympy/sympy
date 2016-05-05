@@ -653,7 +653,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        symbols |= set([s for s, k in sk])
+        symbols |= {s for s, k in sk}
         return (result, list(symbols))
     else:
         return result
@@ -801,7 +801,7 @@ def rsolve(f, y, init=None):
 
     if symbols and init is not None:
         if type(init) is list:
-            init = dict([(i, init[i]) for i in range(len(init))])
+            init = {i: init[i] for i in range(len(init))}
 
         equations = []
 

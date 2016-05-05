@@ -1,5 +1,5 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, ImmutableMatrix as Matrix)
+                   eye, symbols, Dummy, ImmutableMatrix as Matrix)
 from sympy.core.compatibility import string_types, u, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -45,7 +45,11 @@ class CoordinateSym(Symbol):
     """
 
     def __new__(cls, name, frame, index):
-        obj = super(CoordinateSym, cls).__new__(cls, name)
+        # We can't use the cached Symbol.__new__ because this class depends on
+        # frame and index, which are not passed to Symbol.__xnew__.
+        assumptions = {}
+        super(CoordinateSym, cls)._sanitize(assumptions, cls)
+        obj = super(CoordinateSym, cls).__xnew__(cls, name, **assumptions)
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
@@ -137,9 +141,9 @@ class ReferenceFrame(object):
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(name.lower() + u("_") + indices[0]),
-                                (name.lower() + u("_") + indices[1]),
-                                (name.lower() + u("_") + indices[2])]
+            self.pretty_vecs = [(name.lower() + u"_" + indices[0]),
+                                (name.lower() + u"_" + indices[1]),
+                                (name.lower() + u"_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -149,9 +153,9 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [name.lower() + u("_x"),
-                                name.lower() + u("_y"),
-                                name.lower() + u("_z")]
+            self.pretty_vecs = [name.lower() + u"_x",
+                                name.lower() + u"_y",
+                                name.lower() + u"_z"]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
@@ -586,7 +590,7 @@ class ReferenceFrame(object):
                 from sympy.polys.polyerrors import CoercionFailed
                 from sympy.physics.vector.functions import kinematic_equations
                 q1, q2, q3 = amounts
-                u1, u2, u3 = dynamicsymbols('u1, u2, u3')
+                u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
                 templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                                rot_type, rot_order)
                 templist = [expand(i) for i in templist]
@@ -728,6 +732,46 @@ class ReferenceFrame(object):
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
+
+    def partial_velocity(self, frame, *gen_speeds):
+        """Returns the partial angular velocities of this frame in the given
+        frame with respect to one or more provided generalized speeds.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame with which the angular velocity is defined in.
+        gen_speeds : functions of time
+            The generalized speeds.
+
+        Returns
+        =======
+        partial_velocities : tuple of Vector
+            The partial angular velocity vectors corresponding to the provided
+            generalized speeds.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> A.set_ang_vel(N, u1 * A.x + u2 * N.y)
+        >>> A.partial_velocity(N, u1)
+        A.x
+        >>> A.partial_velocity(N, u1, u2)
+        (A.x, N.y)
+
+        """
+
+        partials = [self.ang_vel_in(frame).diff(speed, frame, var_in_dcm=False)
+                    for speed in gen_speeds]
+
+        if len(partials) == 1:
+            return partials[0]
+        else:
+            return tuple(partials)
 
 
 def _check_frame(other):

@@ -1,4 +1,4 @@
-# -*- encoding: utf8 -*-
+# -*- encoding: utf-8 -*-
 from __future__ import print_function, division
 
 __all__ = ['RigidBody']
@@ -80,7 +80,7 @@ class RigidBody(object):
                     "RigidBody.get_frame(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.frame",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.frame
 
     def set_frame(self, F):
@@ -89,7 +89,7 @@ class RigidBody(object):
                     "RigidBody.set_frame(self, F)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.frame",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.frame = F
 
     @property
@@ -108,7 +108,7 @@ class RigidBody(object):
                     "RigidBody.get_masscenter(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.masscenter",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.masscenter
 
     def set_masscenter(self, p):
@@ -117,7 +117,7 @@ class RigidBody(object):
                     "RigidBody.set_masscenter(self, p)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.masscenter",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.masscenter = p
 
     @property
@@ -133,7 +133,7 @@ class RigidBody(object):
                 feature="Method sympy.physics.mechanics." +
                     "RigidBody.get_mass(self)",
                 useinstead="property sympy.physics.mechanics.RigidBody.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.mass
 
     def set_mass(self, m):
@@ -141,7 +141,7 @@ class RigidBody(object):
                 feature="Method sympy.physics.mechanics." +
                     "RigidBody.set_mass(self, m)",
                 useinstead="property sympy.physics.mechanics.RigidBody.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.mass = m
 
     @property
@@ -171,7 +171,7 @@ class RigidBody(object):
                     "RigidBody.get_inertia(self)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.inertia",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.inertia
 
     def set_inertia(self, I):
@@ -180,7 +180,7 @@ class RigidBody(object):
                     "RigidBody.set_inertia(self, I)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.inertia",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.inertia = I
 
     @property
@@ -374,5 +374,5 @@ class RigidBody(object):
                     "RigidBody.set_potential_energy(self, scalar)",
                 useinstead="property sympy.physics.mechanics." +
                     "RigidBody.potential_energy",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.potential_energy = scalar
