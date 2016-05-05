@@ -46,7 +46,7 @@ class factorial(CombinatorialFunction):
        kind is very useful in case of combinatorial simplification.
 
        Computation of the factorial is done using two algorithms. For
-       small arguments naive product is evaluated. However for bigger
+       small arguments a precomputed look up table is used. However for bigger
        input algorithm Prime-Swing is used. It is the fastest algorithm
        known and computes n! via prime factorization of special class
        of numbers, called here the 'Swing Numbers'.
@@ -93,6 +93,8 @@ class factorial(CombinatorialFunction):
         12155, 230945, 46189, 969969, 88179, 2028117, 676039, 16900975, 1300075,
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
+
+    _small_factorials = []
 
     @classmethod
     def _swing(cls, n):
@@ -150,20 +152,18 @@ class factorial(CombinatorialFunction):
                 if n.is_negative:
                     return S.ComplexInfinity
                 else:
-                    n, result = n.p, 1
+                    n = n.p
 
                     if n < 20:
-                        for i in range(2, n + 1):
-                            result *= i
+                        if not cls._small_factorials:
+                            result = 1
+                            for i in range(1, 20):
+                                result *= i
+                                cls._small_factorials.append(result)
+                        result = cls._small_factorials[n-1]
+
                     else:
-                        N, bits = n, 0
-
-                        while N != 0:
-                            if N & 1 == 1:
-                                bits += 1
-
-                            N = N >> 1
-
+                        bits = bin(n).count('1')
                         result = cls._recursive(n)*2**(n - bits)
 
                     return Integer(result)

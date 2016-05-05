@@ -7,7 +7,7 @@ x_1, x_2, x, y, z = symbols("x_1 x_2 x y z")
 
 
 def test_change_mul():
-    assert change_mul(x, x) == x
+    assert change_mul(x, x) == (None, None)
     assert change_mul(x*y, x) == (None, None)
     assert change_mul(x*y*DiracDelta(x), x) == (DiracDelta(x), x*y)
     assert change_mul(x*y*DiracDelta(x)*DiracDelta(y), x) == \
@@ -35,8 +35,11 @@ def test_deltaintegrate():
     assert deltaintegrate(DiracDelta(x)**2, x) == DiracDelta(0)*Heaviside(x)
     assert deltaintegrate(y*DiracDelta(x)**2, x) == \
         y*DiracDelta(0)*Heaviside(x)
-    assert deltaintegrate(DiracDelta(x, 1)**2, x) is None
-    assert deltaintegrate(y*DiracDelta(x, 1)**2, x) is None
+    assert deltaintegrate(DiracDelta(x, 1), x) == DiracDelta(x, 0)
+    assert deltaintegrate(y*DiracDelta(x, 1), x) == y*DiracDelta(x, 0)
+    assert deltaintegrate(DiracDelta(x, 1)**2, x) == -DiracDelta(0, 2)*Heaviside(x)
+    assert deltaintegrate(y*DiracDelta(x, 1)**2, x) == -y*DiracDelta(0, 2)*Heaviside(x)
+
 
     assert deltaintegrate(DiracDelta(x) * f(x), x) == f(0) * Heaviside(x)
     assert deltaintegrate(DiracDelta(-x) * f(x), x) == f(0) * Heaviside(x)

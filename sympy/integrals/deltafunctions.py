@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Mul
 from sympy.functions import DiracDelta, Heaviside
 from sympy.core.compatibility import default_sort_key
+from sympy.core.singleton import S
 
 
 def change_mul(node, x):
@@ -41,9 +42,6 @@ def change_mul(node, x):
        deltaintegrate
     """
 
-    if not (node.is_Mul or node.is_Pow):
-        return node
-
     new_args = []
     dirac = None
 
@@ -57,8 +55,7 @@ def change_mul(node, x):
         if arg.is_Pow and arg.base.func is DiracDelta:
             new_args.append(arg.func(arg.base, arg.exp - 1))
             arg = arg.base
-        if dirac is None and (arg.func is DiracDelta and arg.is_simple(x)
-                and (len(arg.args) <= 1 or arg.args[1] == 0)):
+        if dirac is None and (arg.func is DiracDelta and arg.is_simple(x)):
             dirac = arg
         else:
             new_args.append(arg)
@@ -70,7 +67,7 @@ def change_mul(node, x):
             elif arg.is_Pow and arg.base.func is DiracDelta:
                 new_args.append(arg.func(arg.base.expand(DiracDelta=True, wrt=x), arg.exp))
             else:
-                new_args.append(change_mul(arg, x))
+                new_args.append(arg)
         if new_args != sorted_args:
             nnode = Mul(*new_args).expand()
         else:  # if the node didn't change there is nothing to do
@@ -161,17 +158,41 @@ def deltaintegrate(f, x):
                 return fh
         else:
             # no expansion performed, try to extract a simple DiracDelta term
-            dg, rest_mult = change_mul(f, x)
+            deltaterm, rest_mult = change_mul(f, x)
 
-            if not dg:
+            if not deltaterm:
                 if rest_mult:
                     fh = integrate(rest_mult, x)
                     return fh
             else:
-                dg = dg.expand(DiracDelta=True, wrt=x)
-                if dg.is_Mul:  # Take out any extracted factors
-                    dg, rest_mult_2 = change_mul(dg, x)
+                deltaterm = deltaterm.expand(DiracDelta=True, wrt=x)
+                if deltaterm.is_Mul:  # Take out any extracted factors
+                    deltaterm, rest_mult_2 = change_mul(deltaterm, x)
                     rest_mult = rest_mult*rest_mult_2
-                point = solve(dg.args[0], x)[0]
-                return (rest_mult.subs(x, point)*Heaviside(x - point))
+                point = solve(deltaterm.args[0], x)[0]
+
+                # Return the largest hyperreal term left after
+                # repeated integration by parts.  For example,
+                #
+                #   integrate(y*DiracDelta(x, 1),x) == y*DiracDelta(x,0),  not 0
+                #
+                # This is so Integral(y*DiracDelta(x).diff(x),x).doit()
+                # will return y*DiracDelta(x) instead of 0 or DiracDelta(x),
+                # both of which are correct everywhere the value is defined
+                # but give wrong answers for nested integration.
+                n = (0 if len(deltaterm.args)==1 else deltaterm.args[1])
+                m = 0
+                while n >= 0:
+                    r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
+                    if r is S.Zero:
+                        n -= 1
+                        m += 1
+                    else:
+                        if m == 0:
+                            return r*Heaviside(x - point)
+                        else:
+                            return r*DiracDelta(x,m-1)
+                # In some very weak sense, x=0 is still a singularity,
+                # but we hope will not be of any practial consequence.
+                return S.Zero
     return None

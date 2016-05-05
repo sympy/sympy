@@ -13,6 +13,7 @@ from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
+from sympy.printing.precedence import precedence_traditional
 from .printer import Printer
 from .conventions import split_super_sub, requires_partial
 from .precedence import precedence, PRECEDENCE
@@ -145,16 +146,7 @@ class LatexPrinter(Printer):
         self._delim_dict = {'(': ')', '[': ']'}
 
     def parenthesize(self, item, level, strict=False):
-        # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
-        # the precedence of Atom for other printers:
-        from sympy import Integral, Sum, Product, Limit, Derivative
-        if isinstance(item, (Integral, Sum, Product, Limit)):
-            prec_val = PRECEDENCE["Mul"]
-        elif isinstance(item, Derivative) and not isinstance(item.doit(), Derivative):
-            prec_val = PRECEDENCE["Mul"]
-        else:
-            prec_val = precedence(item)
-
+        prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left(%s\right)" % self._print(item)
         else:

@@ -828,8 +828,16 @@ class _TensorDataLazyEvaluator(CantSympify):
             if any([i is None for i in data_list]):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
-            for i in data_list:
-                sumvar += i
+
+            free_args_list = [[x[0] for x in arg.free] for arg in key.args]
+            numpy = import_module("numpy")
+            for data, free_args in zip(data_list, free_args_list):
+                if len(free_args) < 2:
+                    sumvar += data
+                else:
+                    free_args_pos = {y: x for x, y in enumerate(free_args)}
+                    axes = [free_args_pos[arg] for arg in key.free_args]
+                    sumvar += numpy.transpose(data, axes)
             return sumvar
 
         return None
@@ -966,7 +974,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         numpy = import_module('numpy')
 
         def ikey(x):
-            return x[1:]
+            # sort by component number , then by position in component
+            return x[2], x[1]
 
         free1 = free1[:]
         free2 = free2[:]
