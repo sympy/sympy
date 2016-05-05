@@ -16,6 +16,7 @@ from sympy.core.compatibility import long, iterable, u, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
+from sympy.assumptions import Q
 
 from sympy.abc import a, b, c, d, x, y, z
 
@@ -430,8 +431,13 @@ def test_det_LU_decomposition():
 def test_berkowitz_minors():
     B = Matrix(2, 2, [1, 2, 2, 1])
 
-    assert B.berkowitz_minors() == (1, -3)
-
+    assert B.berkowitz_minors() == (1, 1, -3)
+    E = Matrix([])
+    assert E.berkowitz() == ((1,),)
+    assert E.berkowitz_minors() == (1,)
+    assert E.berkowitz_eigenvals() == {}
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert A.berkowitz() == ((1,), (1, -1), (1, -6, -3), (1, -15, -18, 0))
 
 def test_slicing():
     m0 = eye(4)
@@ -516,6 +522,18 @@ def test_expand():
         [0, 1, -1],
         [0, 0, 1]]
     )
+
+def test_refine():
+    m0 = Matrix([[Abs(x)**2, sqrt(x**2)],
+                [sqrt(x**2)*Abs(y)**2, sqrt(y**2)*Abs(x)**2]])
+    m1 = m0.refine(Q.real(x) & Q.real(y))
+    assert m1 == Matrix([[x**2, Abs(x)], [y**2*Abs(x), x**2*Abs(y)]])
+
+    m1 = m0.refine(Q.positive(x) & Q.positive(y))
+    assert m1 == Matrix([[x**2, x], [x*y**2, x**2*y]])
+
+    m1 = m0.refine(Q.negative(x) & Q.negative(y))
+    assert m1 == Matrix([[x**2, -x], [-x*y**2, -x**2*y]])
 
 def test_random():
     M = randMatrix(3, 3)

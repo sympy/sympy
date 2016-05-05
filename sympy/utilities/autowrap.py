@@ -215,8 +215,12 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = (
-        "from distutils.core import setup\n"
-        "from distutils.extension import Extension\n"
+        "try:\n"
+        "    from setuptools import setup\n"
+        "    from setuptools import Extension\n"
+        "except ImportError:\n"
+        "    from distutils.core import setup\n"
+        "    from distutils.extension import Extension\n"
         "from Cython.Distutils import build_ext\n"
         "{np_import}"
         "\n"

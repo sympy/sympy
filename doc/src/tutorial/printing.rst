@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the
@@ -228,6 +228,27 @@ The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
 format, which can be rendered with Graphviz.  See the
 :ref:`tutorial-manipulation` section for some examples of the output of this
 printer.
+
+    >>> from sympy.printing.dot import dotprint
+    >>> from sympy.abc import x
+    >>> print(dotprint(x+2)) 
+    digraph{
+    # Graph style
+    "ordering"="out"
+    "rankdir"="TD"
+    #########
+    # Nodes #
+    #########
+    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
+    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    #########
+    # Edges #
+    #########
+    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    }
+
 
 .. rubric:: Footnotes
 

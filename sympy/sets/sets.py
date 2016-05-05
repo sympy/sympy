@@ -10,7 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range)
+    ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
@@ -1318,7 +1318,10 @@ class Union(Set, EvalfMixin):
             "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
             # Recipe credited to George Sakkis
             pending = len(iterables)
-            nexts = itertools.cycle(iter(it).next for it in iterables)
+            if PY3:
+                nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+            else:
+                nexts = itertools.cycle(iter(it).next for it in iterables)
             while pending:
                 try:
                     for next in nexts:
@@ -2030,7 +2033,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
+    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
     >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
@@ -2046,6 +2049,14 @@ def imageset(*args):
     ImageSet(Lambda(x, sin(x)), [-2, 1])
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(_x, _x + x), [-2, 1])
+
+    Expressions applied to the set of Integers are simplified
+    to show as few negatives as possible and linear expressions
+    are converted to a canonical form. If this is not desirable
+    then the unevaluated ImageSet should be used.
+
+    >>> imageset(x, -2*x + 5, S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers())
 
     See Also
     ========

@@ -490,6 +490,10 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_zero(self):
+        if self.is_commutative is False:
+            # issue 10528: there is no way to know if a nc symbol
+            # is zero or not
+            return
         nz = []
         z = 0
         im_or_z = False

@@ -3157,3 +3157,9 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None
+
+
+def test_factor_terms():
+    # issue 7067
+    assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])

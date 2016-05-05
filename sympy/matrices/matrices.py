@@ -20,6 +20,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
+from sympy.assumptions.refine import refine
 
 from types import FunctionType
 
@@ -997,6 +998,7 @@ class MatrixBase(object):
 
         For a list of possible inversion methods, see the .inv() docstring.
         """
+
         if not self.is_square:
             if self.rows < self.cols:
                 raise ValueError('Under-determined system. '
@@ -1241,6 +1243,26 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
     _eval_simplify = simplify
+
+    def refine(self, assumptions=True):
+        """Apply refine to each element of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
+        >>> x = Symbol('x')
+        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
+        Matrix([
+        [ Abs(x)**2, sqrt(x**2)],
+        [sqrt(x**2),  Abs(x)**2]])
+        >>> _.refine(Q.real(x))
+        Matrix([
+        [  x**2, Abs(x)],
+        [Abs(x),   x**2]])
+
+        """
+        return self.applyfunc(lambda x: refine(x, assumptions))
 
     def doit(self, **kwargs):
         return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
@@ -2896,15 +2918,18 @@ class MatrixBase(object):
 
            >>> M = Matrix([[x, y, z], [1, 0, 0], [y, z, x]])
 
-           >>> p, q, r = M.berkowitz()
+           >>> p, q, r, s = M.berkowitz()
 
-           >>> p # 1 x 1 M's sub-matrix
+           >>> p # 0 x 0 M's sub-matrix
+           (1,)
+
+           >>> q # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> q # 2 x 2 M's sub-matrix
+           >>> r # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> r # 3 x 3 M's sub-matrix
+           >>> s # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2926,6 +2951,9 @@ class MatrixBase(object):
         berkowitz_eigenvals
         """
         from sympy.matrices import zeros
+        berk = ((1,),)
+        if not self:
+            return berk
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -2959,7 +2987,8 @@ class MatrixBase(object):
         for i, T in enumerate(transforms):
             polys.append(T*polys[i])
 
-        return tuple(map(tuple, polys))
+        return berk + tuple(map(tuple, polys))
+
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
@@ -2986,7 +3015,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        sign, minors = S.NegativeOne, []
+        sign, minors = S.One, []
 
         for poly in self.berkowitz():
             minors.append(sign*poly[-1])
