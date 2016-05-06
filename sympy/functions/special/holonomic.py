@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, collect, S, Mul
+from sympy import symbols, Symbol, diff, S, Mul
 from sympy.polys.polytools import lcm, gcd
 from sympy.core.expr import Expr
 from sympy.printing import sstr
@@ -41,17 +41,6 @@ class DifferentialOperator(Expr):
     Represents a Differential Operator whose base ring is the polynomial ring, and supports
     addition and multiplication.
 
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.functions.special.holonomic import DifferentialOperator, HoloFunc
-    >>> Dx, x = symbols('Dx, x', commutative=False)
-    >>> DifferentialOperator(Dx*x)*DifferentialOperator(Dx+1)
-    DifferentialOperator(1 + Dx + x*Dx + x*Dx**2)
-    >>> DifferentialOperator(Dx-1)*DifferentialOperator(Dx*x**2+1)
-    DifferentialOperator(1 + Dx - 2*x + 4*x*Dx - x**2*Dx + x**2*Dx**2)
-
     """
 
     _op_priority = 30
@@ -78,6 +67,10 @@ class DifferentialOperator(Expr):
                         (self.parent_ring).base_ring).from_sympy(j)
 
             self.listofpoly = list_of_poly
+
+    def args(self):
+
+        return self.gen_symbol
 
     def __mul__(self, other):
         """
@@ -283,34 +276,6 @@ class HoloFunc(object):
     for the function, initial conditions are optional.
 
     Addition is implemented and works for some cases.
-
-    Examples
-    ========
-    >>> from sympy import symbols
-    >>> from sympy.functions.special.holonomic import DifferentialOperator, HoloFunc
-    >>> Dx, x = symbols('Dx, x', commutative=False)
-    >>> p = DifferentialOperator(x*Dx+1)
-    >>> HoloFunc(p,x)
-    Holonomic((1) + (x)Dx, x)
-
-
-    >>> p = DifferentialOperator(Dx-1)
-    >>> q = DifferentialOperator(Dx**2+1)
-    >>> HoloFunc(p,x) + HoloFunc(q,x)
-    Holonomic((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x)
-
-
-    >>> p = DifferentialOperator(Dx+1)
-    >>> q = DifferentialOperator(Dx**2-1)
-    >>> HoloFunc(p,x) + HoloFunc(q,x)
-    Holonomic((-1) + (1)Dx**2, x)
-
-
-    >>> p = DifferentialOperator(x*Dx+1)
-    >>> q = DifferentialOperator(Dx+5)
-    >>> HoloFunc(p,x) + HoloFunc(q,x)
-    Holonomic((10 - 25*x) + (2 - 25*x**2)Dx + (x - 5*x**2)Dx**2, x)
-
 
     For details see ore_algebra package in Sage
     """
