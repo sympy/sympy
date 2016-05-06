@@ -39,14 +39,24 @@ class DifferentialOperatorAlgebra:
     def __init__(self, base, generator):
 
         self.base = base
+
         self.diff_operator = DifferentialOperator(
             [base.zero, base.one], self, generator)
-        self.gen_str = generator
+
+        if generator is None:
+            self.gen_symbol = symbols('Dx', commutative=False)
+        else:
+            if isinstance(generator, str):
+                self.gen_symbol = symbols(generator, commutative=False)
+            elif isinstance(generator, Symbol):
+                self.gen_symbol = generator
+
+
 
     def __str__(self):
 
         string = 'Univariate Differential Operator Algebra in intermediate '\
-            + self.gen_str + ' over the base ring ' + \
+            + sstr(self.gen_symbol) + ' over the base ring ' + \
             (self.base).__str__()
 
         return string
@@ -83,16 +93,11 @@ class DifferentialOperator(Expr):
 
     def __init__(self, list_of_poly, parent, generator=None, variable=None):
 
-        if generator is None:
-            self.gen_symbol = symbols('Dx', commutative=False)
-        else:
-            if isinstance(generator, str):
-                self.gen_symbol = symbols(generator, commutative=False)
-            elif isinstance(generator, Symbol):
-                self.gen_symbol = generator
-
         self.parent = parent
-        self.variable = variable
+        if variable is None:
+            self.variable = symbols('x')
+        else:
+            self.variable = variable
 
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
@@ -123,7 +128,7 @@ class DifferentialOperator(Expr):
                 for i in self.listofpoly:
                     sol.append(i)
 
-                return DifferentialOperator(sol, self.parent, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent)
 
         gen = self.parent.diff_operator
         listofpoly = self.listofpoly
@@ -153,7 +158,7 @@ class DifferentialOperator(Expr):
             for j in self.listofpoly:
                 sol.append(other * j)
 
-            return DifferentialOperator(sol, self.parent, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent)
 
     def __add__(self, other):
 
@@ -162,22 +167,18 @@ class DifferentialOperator(Expr):
             list_self = self.listofpoly
             list_other = other.listofpoly
 
-            if min(len(list_self), len(list_other)) is len(list_self):
-                minimum = 0
-            else:
-                minimum = 1
-
-            if minimum is 0:
+            if len(list_self) <= len(list_other):
                 sol = [
                     a + b for a, b in zip(list_self, list_other)] + list_other[len(list_self):]
-                return DifferentialOperator(sol, self.parent, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent)
 
             else:
                 sol = [
                     a + b for a, b in zip(list_self, list_other)] + list_self[len(list_other):]
-                return DifferentialOperator(sol, self.parent, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent)
 
         else:
+
             if isinstance(other, int):
                 other = S(other)
             list_self = self.listofpoly
@@ -189,7 +190,7 @@ class DifferentialOperator(Expr):
             sol.append(list_self[0] + list_other[0])
             sol += list_self[1:]
 
-            return DifferentialOperator(sol, self.parent, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent)
 
     __radd__ = __add__
 
@@ -205,7 +206,7 @@ class DifferentialOperator(Expr):
         if n == 1:
             return self
         if n == 0:
-            return DifferentialOperator([1], self.parent, self.gen_symbol)
+            return DifferentialOperator([1], self.parent)
 
         if self.listofpoly == self.parent.diff_operator.listofpoly:
             sol = []
@@ -213,7 +214,7 @@ class DifferentialOperator(Expr):
                 sol.append(self.parent.base.zero)
             sol.append(self.parent.base.one)
 
-            return DifferentialOperator(sol, self.parent, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent)
 
         else:
             if n % 2 == 1:
@@ -255,7 +256,7 @@ class DifferentialOperator(Expr):
         sol = []
         for i in listofpoly:
             sol.append(i.diff())
-        return DifferentialOperator(sol, self.parent, self.gen_symbol)
+        return DifferentialOperator(sol, self.parent)
 
 def _normalize(list_of_coeff, x):
     """
@@ -400,7 +401,7 @@ class HoloFunc(object):
         sol = _normalize(sol, self.var)
         # construct expression from the coefficients
         sol1 = DifferentialOperator(
-            sol, self.annihilator.parent, self.annihilator.gen_symbol, self.var)
+            sol, self.annihilator.parent, self.var)
 
         sol = sol1 * (self.annihilator)
 
