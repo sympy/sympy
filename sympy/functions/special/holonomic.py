@@ -20,27 +20,28 @@ def DiffOperatorAlgebra(base, generator):
 
     Examples
     =======
-    from sympy.polys.domains import ZZ
-    R, Dx = DiffOperatorAlgebra
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import symbols
+    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
     """
 
     ring = DifferentialOperatorAlgebra(base, generator)
-    return (ring, ring.diff_operator)
+    return (ring, ring.derivative_operator)
 
 
 class DifferentialOperatorAlgebra:
     """ The class representing Differential Operator Algebra.
     Defined by the base polynomial ring and the generator.
 
-    The attribute diff_operator is the operator `Dx` which when acted
+    The attribute derivative_operator is the operator `Dx` which when acted
     on a function does differentiation.
     """
 
     def __init__(self, base, generator):
-
+        # the base ring for the algebra
         self.base = base
-
-        self.diff_operator = DifferentialOperator(
+        # the operator representing differentiation i.e. `Dx`
+        self.derivative_operator = DifferentialOperator(
             [base.zero, base.one], self, generator)
 
         if generator is None:
@@ -92,13 +93,17 @@ class DifferentialOperator(Expr):
     _op_priority = 30
 
     def __init__(self, list_of_poly, parent, generator=None, variable=None):
-
+        # the parent ring for this operator
+        # must be an DifferentialOperatorAlgebra object
         self.parent = parent
+        # the variable (or generator) of the base polynomial ring
         if variable is None:
             self.variable = symbols('x')
         else:
             self.variable = variable
-
+        # sequence of polynomials in x for each power of Dx
+        # represents the operator
+        # convert the expressions into ring elements using from_sympy
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
                 if isinstance(j, int):
@@ -122,7 +127,8 @@ class DifferentialOperator(Expr):
         """
 
         if isinstance(other, DifferentialOperator):
-            if other.listofpoly == other.parent.diff_operator.listofpoly:
+            # if other is `Dx`
+            if other.listofpoly == other.parent.derivative_operator.listofpoly:
                 sol = []
                 sol.append(other.parent.base.zero)
                 for i in self.listofpoly:
@@ -130,10 +136,10 @@ class DifferentialOperator(Expr):
 
                 return DifferentialOperator(sol, self.parent)
 
-        gen = self.parent.diff_operator
+        gen = self.parent.derivative_operator
         listofpoly = self.listofpoly
         sol = (listofpoly[0] * other)
-
+        # using the commutation rule gen*b = b*gen + b'
         def _diff_n_times(b):
             expr = b * gen + b.diff()
             return expr
@@ -206,9 +212,9 @@ class DifferentialOperator(Expr):
         if n == 1:
             return self
         if n == 0:
-            return DifferentialOperator([1], self.parent)
-
-        if self.listofpoly == self.parent.diff_operator.listofpoly:
+            return DifferentialOperator([self.parent.base.one], self.parent)
+        # if self is `Dx`
+        if self.listofpoly == self.parent.derivative_operator.listofpoly:
             sol = []
             for i in range(0, n):
                 sol.append(self.parent.base.zero)
@@ -230,7 +236,7 @@ class DifferentialOperator(Expr):
         print_str = ''
 
         for i, j in enumerate(listofpoly):
-            if j == 0:
+            if j == self.parent.base.zero:
                 continue
 
             if i == 0:
@@ -251,7 +257,8 @@ class DifferentialOperator(Expr):
     __repr__ = __str__
 
     def diff(self):
-
+        # partial derivative of the operator
+        # with respect to variable of the base ring i.e. `x`
         listofpoly = self.listofpoly
         sol = []
         for i in listofpoly:
@@ -268,10 +275,7 @@ def _normalize(list_of_coeff, x):
     for i in list_of_coeff:
         lcm_denom = lcm(lcm_denom, i.as_numer_denom()[1])
 
-    if isinstance(list_of_coeff[-1], Mul) and (list_of_coeff[-1].args[0]).is_negative:
-        lcm_denom = -lcm_denom
-    elif list_of_coeff[-1].is_negative:
-        lcm_denom = -lcm_denom
+    lcm_denom = -lcm_denom
 
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = (j * lcm_denom).simplify()
@@ -304,6 +308,7 @@ class HoloFunc(object):
         elif len(args) is 1:
             self.cond = args[0]
             self.cond_point = 0
+        # differential operator L such that L.f = 0
         self.annihilator = annihilator
         self.var = x
 
@@ -319,7 +324,7 @@ class HoloFunc(object):
 
         rowsself = [self.annihilator]
         rowsother = [other.annihilator]
-        gen = self.annihilator.parent.diff_operator
+        gen = self.annihilator.parent.derivative_operator
 
         # constructing annihilators up to order dim
         for i in range(dim - deg1):
@@ -341,9 +346,9 @@ class HoloFunc(object):
                 if i >= len(expr.listofpoly):
                     p.append(0)
                 else:
-                    temp = self.annihilator.parent.base.to_sympy(
+                    ring_to_expr = self.annihilator.parent.base.to_sympy(
                         expr.listofpoly[i])
-                    p.append(temp)
+                    p.append(ring_to_expr)
             r.append(p)
 
         r = Matrix(r).transpose()
@@ -376,9 +381,9 @@ class HoloFunc(object):
                     if i >= len(expr.listofpoly):
                         p.append(0)
                     else:
-                        temp = self.annihilator.parent.base.to_sympy(
+                        ring_to_expr = self.annihilator.parent.base.to_sympy(
                             expr.listofpoly[i])
-                        p.append(temp)
+                        p.append(ring_to_expr)
                 r.append(p)
 
             r = Matrix(r).transpose()
@@ -399,15 +404,15 @@ class HoloFunc(object):
         # `other`
         sol = sol[:dim + 1 - deg1]
         sol = _normalize(sol, self.var)
-        # construct expression from the coefficients
+        # construct operator from list of coefficients
         sol1 = DifferentialOperator(
             sol, self.annihilator.parent, self.var)
-
+        # annihilator of the solution
         sol = sol1 * (self.annihilator)
 
         return HoloFunc(sol, self.var)
 
     def integrate(self):
-
-        D = DifferentialOperator(self.ann.gen)
-        return HoloFunc(self.ann * D, self.var)
+        # just multiply by Dx from right
+        D = self.annihilator.parent.derivative_operator
+        return HoloFunc(self.annihilator * D, self.var)
