@@ -236,7 +236,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # limits
         # XXX remove this test for free_symbols when the default _eval_derivative is in
         if x.is_Indexed:
-            if x.base not in self.free_symbols:
+            from sympy import IndexedBase
+            if x.base not in self.atoms(IndexedBase):
                 return S.Zero
         elif x not in self.free_symbols:
             return S.Zero

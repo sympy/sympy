@@ -235,10 +235,11 @@ def get_indices(expr):
         return inds, {}
     elif expr is None:
         return set(), {}
-    elif expr.is_Atom:
-        return set(), {}
     elif isinstance(expr, Idx):
         return {expr}, {}
+    elif expr.is_Atom:
+        return set(), {}
+
 
     # recurse via specialized functions
     else:

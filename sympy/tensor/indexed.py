@@ -287,9 +287,9 @@ class Indexed(Expr):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
-    @property
-    def free_symbols(self):
-        return {self.base}
+    # @property
+    # def free_symbols(self):
+    #     return {self.base}
 
 
 class IndexedBase(Expr, NotIterable):
@@ -491,6 +491,7 @@ class Idx(Expr):
 
     is_integer = True
     is_finite = True
+    is_real = True
     is_Symbol = True
     is_Atom = True
     _diff_wrt = True
@@ -530,6 +531,8 @@ class Idx(Expr):
             args = label,
 
         obj = Expr.__new__(cls, *args, **kw_args)
+        obj._assumptions["finite"] = True
+        obj._assumptions["real"] = True
         return obj
 
     @property

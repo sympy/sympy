@@ -528,7 +528,7 @@ def test_jl_tensor_loops_multiple_contractions():
         '        for j = 1:n\n'
         '            for k = 1:o\n'
         '                for l = 1:p\n'
-        '                    y[i] = y[i] + B[j,k,l].*A[i,j,k,l]\n'
+        '                    y[i] = A[i,j,k,l].*B[j,k,l] + y[i]\n'
         '                end\n'
         '            end\n'
         '        end\n'
