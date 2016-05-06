@@ -11,7 +11,7 @@ from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
 
 
-def DiffOperatorAlgebra(base_ring, generator):
+def DiffOperatorAlgebra(base, generator):
     """ A function to create a Differential Operator Algebra.
     The first arguments need to be the base polynomial ring for the algebra
     and the second argument must be a generator.
@@ -24,7 +24,7 @@ def DiffOperatorAlgebra(base_ring, generator):
     R, Dx = DiffOperatorAlgebra
     """
 
-    ring = DifferentialOperatorAlgebra(base_ring, generator)
+    ring = DifferentialOperatorAlgebra(base, generator)
     return (ring, ring.diff_operator)
 
 
@@ -36,17 +36,17 @@ class DifferentialOperatorAlgebra:
     on a function does differentiation.
     """
 
-    def __init__(self, base_ring, generator):
+    def __init__(self, base, generator):
 
-        self.base_ring = base_ring
-        self.diff_operator = DifferentialOperator([0, 1], self, generator)
+        self.base = base
+        self.diff_operator = DifferentialOperator([base.zero, base.one], self, generator)
         self.gen_str = generator
 
     def __str__(self):
 
         string = 'Univariate Differential Operator Algebra in intermediate '\
             + self.gen_str + ' over the base ring ' + \
-            (self.base_ring).__str__()
+            (self.base).__str__()
 
         return string
 
@@ -80,7 +80,7 @@ class DifferentialOperator(Expr):
 
     _op_priority = 30
 
-    def __init__(self, list_of_poly, parent_ring, generator=None, var=None):
+    def __init__(self, list_of_poly, parent, generator=None, var=None):
 
         if generator is None:
             self.gen_symbol = symbols('Dx', commutative=False)
@@ -90,16 +90,16 @@ class DifferentialOperator(Expr):
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
 
-        self.parent_ring = parent_ring
+        self.parent = parent
 
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
                 if isinstance(j, int):
                     list_of_poly[i] = (
-                        (self.parent_ring).base_ring).from_sympy(S(j))
-                elif not isinstance(j, DMP):
+                        (self.parent).base).from_sympy(S(j))
+                elif not isinstance(j, self.parent.base.dtype):
                     list_of_poly[i] = (
-                        (self.parent_ring).base_ring).from_sympy(j)
+                        (self.parent).base).from_sympy(j)
 
             self.listofpoly = list_of_poly
 
@@ -114,8 +114,8 @@ class DifferentialOperator(Expr):
         Dx*a = a*Dx + a'
         """
 
-        ring_0 = self.parent_ring.base_ring.from_sympy(S(0))
-        ring_1 = self.parent_ring.base_ring.from_sympy(S(1))
+        ring_0 = self.parent.base.zero
+        ring_1 = self.parent.base.one
 
         if isinstance(other, DifferentialOperator):
             if other.listofpoly == [ring_0, ring_1]:
@@ -124,9 +124,9 @@ class DifferentialOperator(Expr):
                 for i in self.listofpoly:
                     sol.append(i)
 
-                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
-        gen = DifferentialOperator([0, 1], self.parent_ring, self.gen_symbol)
+        gen = DifferentialOperator([ring_0, ring_1], self.parent, self.gen_symbol)
         listofpoly = self.listofpoly
         sol = (listofpoly[0] * other)
 
@@ -147,14 +147,14 @@ class DifferentialOperator(Expr):
             if isinstance(other, int):
                 other = S(other)
 
-            if not isinstance(other, DMP):
-                other = (self.parent_ring.base_ring).from_sympy(other)
+            if not isinstance(other, self.parent.base.dtype):
+                other = (self.parent.base).from_sympy(other)
 
             sol = []
             for j in self.listofpoly:
                 sol.append(other * j)
 
-            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
     def __add__(self, other):
 
@@ -171,26 +171,26 @@ class DifferentialOperator(Expr):
             if minimum is 0:
                 sol = [
                     a + b for a, b in zip(list_self, list_other)] + list_other[len(list_self):]
-                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
             else:
                 sol = [
                     a + b for a, b in zip(list_self, list_other)] + list_self[len(list_other):]
-                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+                return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
         else:
             if isinstance(other, int):
                 other = S(other)
             list_self = self.listofpoly
-            if not isinstance(other, DMP):
-                list_other = [((self.parent_ring).base_ring).from_sympy(other)]
+            if not isinstance(other, self.parent.base.dtype):
+                list_other = [((self.parent).base).from_sympy(other)]
             else:
                 list_other = [other]
             sol = []
             sol.append(list_self[0] + list_other[0])
             sol += list_self[1:]
 
-            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
     __radd__ = __add__
 
@@ -203,21 +203,20 @@ class DifferentialOperator(Expr):
 
     def __pow__(self, n):
 
-        ring_0 = self.parent_ring.base_ring.from_sympy(S(0))
-        ring_1 = self.parent_ring.base_ring.from_sympy(S(1))
-
+        ring_0 = self.parent.base.zero
+        ring_1 = self.parent.base.one
         if n == 1:
             return self
         if n == 0:
-            return DifferentialOperator([1], self.parent_ring, self.gen_symbol)
+            return DifferentialOperator([1], self.parent, self.gen_symbol)
 
         if self.listofpoly == [ring_0, ring_1]:
             sol = []
             for i in range(0, n):
-                sol.append(self.parent_ring.base_ring.from_sympy(S(0)))
-            sol.append(self.parent_ring.base_ring.from_sympy(S(1)))
+                sol.append(self.parent.base.from_sympy(S(0)))
+            sol.append(self.parent.base.from_sympy(S(1)))
 
-            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+            return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
         else:
             if n % 2 == 1:
@@ -301,7 +300,7 @@ class DifferentialOperator(Expr):
         sol = []
         for i in listofpoly:
             sol.append(i.diff())
-        return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+        return DifferentialOperator(sol, self.parent, self.gen_symbol)
 
 
 class HoloFunc(object):
