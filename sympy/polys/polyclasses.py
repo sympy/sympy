@@ -1335,7 +1335,6 @@ class DMF(PicklableWithSlots, CantSympify):
     def __neg__(f):
         return f.neg()
 
-    @call_highest_priority('__radd__')
     def __add__(f, g):
         if isinstance(g, (DMP, DMF)):
             return f.add(g)
