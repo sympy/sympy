@@ -1,7 +1,7 @@
 from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
-from sympy.physics.vector import ReferenceFrame, Vector, \
-     dynamicsymbols, dot
+from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
+from sympy.utilities.pytest import raises
 
 
 Vector.simp = True
@@ -53,6 +53,7 @@ def test_Vector():
     assert Vector(0).separate() == {}
     assert v1.separate() == {A: v1}
     assert v5.separate() == {A: x*A.x + y*A.y, B: z*B.z}
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -119,6 +120,25 @@ def test_Vector_diffs():
     assert v4.diff(q1d, B) == 0
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
+
+
+def test_vector_var_in_dcm():
+
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
+
+    v = u1 * u2 * A.x + u3 * N.y + u4**2 * N.z
+
+    assert v.diff(u1, N, var_in_dcm=False) == u2 * A.x
+    assert v.diff(u1, A, var_in_dcm=False) == u2 * A.x
+    assert v.diff(u3, N, var_in_dcm=False) == N.y
+    assert v.diff(u3, A, var_in_dcm=False) == N.y
+    assert v.diff(u3, B, var_in_dcm=False) == N.y
+    assert v.diff(u4, N, var_in_dcm=False) == 2 * u4 * N.z
+
+    raises(ValueError, lambda: v.diff(u1, N))
 
 
 def test_vector_simplify():

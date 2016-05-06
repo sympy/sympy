@@ -304,49 +304,49 @@ def test_as_leading_term_stub():
 
 
 def test_atoms():
-    assert x.atoms() == set([x])
-    assert (1 + x).atoms() == set([x, S(1)])
+    assert x.atoms() == {x}
+    assert (1 + x).atoms() == {x, S(1)}
 
-    assert (1 + 2*cos(x)).atoms(Symbol) == set([x])
-    assert (1 + 2*cos(x)).atoms(Symbol, Number) == set([S(1), S(2), x])
+    assert (1 + 2*cos(x)).atoms(Symbol) == {x}
+    assert (1 + 2*cos(x)).atoms(Symbol, Number) == {S(1), S(2), x}
 
-    assert (2*(x**(y**x))).atoms() == set([S(2), x, y])
+    assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
-    assert Rational(1, 2).atoms() == set([S.Half])
+    assert Rational(1, 2).atoms() == {S.Half}
     assert Rational(1, 2).atoms(Symbol) == set([])
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == set([S.Zero])
-    assert Poly(1, x).atoms() == set([S.One])
+    assert Poly(0, x).atoms() == {S.Zero}
+    assert Poly(1, x).atoms() == {S.One}
 
-    assert Poly(x, x).atoms() == set([x])
-    assert Poly(x, x, y).atoms() == set([x])
-    assert Poly(x + y, x, y).atoms() == set([x, y])
-    assert Poly(x + y, x, y, z).atoms() == set([x, y])
-    assert Poly(x + y*t, x, y, z).atoms() == set([t, x, y])
+    assert Poly(x, x).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x + y, x, y).atoms() == {x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
 
-    assert (I*pi).atoms(NumberSymbol) == set([pi])
+    assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \
-        (I*pi).atoms(I, NumberSymbol) == set([pi, I])
+        (I*pi).atoms(I, NumberSymbol) == {pi, I}
 
-    assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
+    assert exp(exp(x)).atoms(exp) == {exp(exp(x)), exp(x)}
     assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
-        set([1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
+        {1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z}
 
     # issue 6132
     f = Function('f')
     e = (f(x) + sin(x) + 2)
     assert e.atoms(AppliedUndef) == \
-        set([f(x)])
+        {f(x)}
     assert e.atoms(AppliedUndef, Function) == \
-        set([f(x), sin(x)])
+        {f(x), sin(x)}
     assert e.atoms(Function) == \
-        set([f(x), sin(x)])
+        {f(x), sin(x)}
     assert e.atoms(AppliedUndef, Number) == \
-        set([f(x), S(2)])
+        {f(x), S(2)}
     assert e.atoms(Function, Number) == \
-        set([S(2), sin(x), f(x)])
+        {S(2), sin(x), f(x)}
 
 
 def test_is_polynomial():
@@ -441,6 +441,7 @@ def test_is_algebraic_expr():
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x) is True
     assert (cos(y)/sqrt(x)).is_algebraic_expr(y) is False
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
+
 
 def test_SAGE1():
     #see https://github.com/sympy/sympy/issues/3346
@@ -688,14 +689,14 @@ def test_replace():
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 
-    assert expr.find(lambda u: u.is_Integer) == set([S(2), S(3)])
-    assert expr.find(lambda u: u.is_Symbol) == set([x, y])
+    assert expr.find(lambda u: u.is_Integer) == {S(2), S(3)}
+    assert expr.find(lambda u: u.is_Symbol) == {x, y}
 
     assert expr.find(lambda u: u.is_Integer, group=True) == {S(2): 1, S(3): 1}
     assert expr.find(lambda u: u.is_Symbol, group=True) == {x: 2, y: 1}
 
-    assert expr.find(Integer) == set([S(2), S(3)])
-    assert expr.find(Symbol) == set([x, y])
+    assert expr.find(Integer) == {S(2), S(3)}
+    assert expr.find(Symbol) == {x, y}
 
     assert expr.find(Integer, group=True) == {S(2): 1, S(3): 1}
     assert expr.find(Symbol, group=True) == {x: 2, y: 1}
@@ -704,14 +705,14 @@ def test_find():
 
     expr = sin(sin(x)) + sin(x) + cos(x) + x
 
-    assert expr.find(lambda u: type(u) is sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(lambda u: type(u) is sin) == {sin(x), sin(sin(x))}
     assert expr.find(
         lambda u: type(u) is sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
 
-    assert expr.find(sin(a)) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin(a)) == {sin(x), sin(sin(x))}
     assert expr.find(sin(a), group=True) == {sin(x): 2, sin(sin(x)): 1}
 
-    assert expr.find(sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin) == {sin(x), sin(sin(x))}
     assert expr.find(sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
 
 
@@ -1224,11 +1225,11 @@ def test_args_cnc():
     assert (x*a).args_cnc() == \
         [[a, x], []]
     assert (x*y*A*(A + 1)).args_cnc(cset=True) == \
-        [set([x, y]), [A, 1 + A]]
+        [{x, y}, [A, 1 + A]]
     assert Mul(x, x, evaluate=False).args_cnc(cset=True, warn=False) == \
-        [set([x]), []]
+        [{x}, []]
     assert Mul(x, x**2, evaluate=False).args_cnc(cset=True, warn=False) == \
-        [set([x, x**2]), []]
+        [{x, x**2}, []]
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
@@ -1265,11 +1266,11 @@ def test_issue_5226():
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
     assert S(1).free_symbols == set()
-    assert (x).free_symbols == set([x])
-    assert Integral(x, (x, 1, y)).free_symbols == set([y])
-    assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
+    assert (x).free_symbols == {x}
+    assert Integral(x, (x, 1, y)).free_symbols == {y}
+    assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
-    assert (meter**x).free_symbols == set([x])
+    assert (meter**x).free_symbols == {x}
 
 
 def test_issue_5300():
@@ -1304,6 +1305,7 @@ def test_as_coeff_Add():
     assert (Integer(3) + x).as_coeff_Add() == (Integer(3), x)
     assert (Rational(3, 4) + x).as_coeff_Add() == (Rational(3, 4), x)
     assert (Float(5.0) + x).as_coeff_Add() == (Float(5.0), x)
+    assert (Float(5.0) + x).as_coeff_Add(rational=True) == (0, Float(5.0) + x)
 
     assert (Integer(3) + x + y).as_coeff_Add() == (Integer(3), x + y)
     assert (Rational(3, 4) + x + y).as_coeff_Add() == (Rational(3, 4), x + y)
@@ -1350,7 +1352,7 @@ def test_expr_sorting():
     exprs = [{x: -y}, {x: y}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
-    exprs = [set([1]), set([1, 2])]
+    exprs = [{1}, {1, 2}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
     a, b = exprs = [Dummy('x'), Dummy('x')]
@@ -1426,9 +1428,11 @@ def test_issue_4199():
     assert a._eval_interval(x, -oo, oo) == -y
     assert a._eval_interval(x, oo, -oo) == y
 
+
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
     assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
+
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1657,6 +1661,7 @@ def test_round():
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
+
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
     # it's too slow
@@ -1668,6 +1673,7 @@ def test_round_exception_nostr():
     else:
         # Did not raise
         raise AssertionError("Did not raise")
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
@@ -1706,3 +1712,9 @@ def test_issue_7426():
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
+
+
+def test_issue_10755():
+    x = symbols('x')
+    raises(TypeError, lambda: int(log(x)))
+    raises(TypeError, lambda: log(x).round(2))

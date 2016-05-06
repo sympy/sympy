@@ -176,8 +176,11 @@ This work was started by Dimitar Vlahovski at the Technological School
 
 References
 ==========
-http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
-DESTIME2006/DES_contribs/Fu/simplification.pdf
+
+Fu, Hongguang, Xiuqin Zhong, and Zhenbing Zeng. "Automated and readable
+simplification of trigonometric expressions." Mathematical and computer
+modelling 44.11 (2006): 1169-1177.
+http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/DESTIME2006/DES_contribs/Fu/simplification.pdf
 
 http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
@@ -1933,7 +1936,7 @@ def trig_split(a, b, two=False):
             if (ca and cb and sa and sb):
                 if not ((ca.func is sa.func) is (cb.func is sb.func)):
                     return
-                args = set([j.args for j in (ca, sa)])
+                args = {j.args for j in (ca, sa)}
                 if not all(i.args in args for i in (cb, sb)):
                     return
                 return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
