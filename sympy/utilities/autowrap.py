@@ -73,11 +73,11 @@ import sys
 import os
 import shutil
 import tempfile
-from subprocess import STDOUT, CalledProcessError
+from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import check_output, range, iterable
+from sympy.core.compatibility import range, iterable
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
@@ -215,8 +215,12 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = (
-        "from distutils.core import setup\n"
-        "from distutils.extension import Extension\n"
+        "try:\n"
+        "    from setuptools import setup\n"
+        "    from setuptools import Extension\n"
+        "except ImportError:\n"
+        "    from distutils.core import setup\n"
+        "    from distutils.extension import Extension\n"
         "from Cython.Distutils import build_ext\n"
         "{np_import}"
         "\n"

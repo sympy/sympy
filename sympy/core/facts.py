@@ -183,7 +183,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                 raise TypeError("Cond is not And")
             bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.items():
-                x_all = ximpls | set([x])
+                x_all = ximpls | {x}
                 # A: ... -> a   B: &(...) -> a  is non-informative
                 if bimpl not in x_all and bargs.issubset(x_all):
                     ximpls.add(bimpl)
@@ -199,7 +199,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
         for x, (ximpls, bb) in x_impl.items():
-            x_all = ximpls | set([x])
+            x_all = ximpls | {x}
             # A: ... -> a   B: &(...) -> a      (non-informative)
             if bimpl in x_all:
                 continue
