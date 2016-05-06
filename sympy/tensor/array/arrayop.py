@@ -2,7 +2,7 @@ import itertools
 
 import collections
 
-from sympy import S, Tuple, MatrixBase
+from sympy import S, Tuple, MatrixBase, transpose
 from sympy import S, Tuple, diff, MatrixBase
 
 from sympy.tensor.array import ImmutableDenseNDimArray
@@ -208,3 +208,41 @@ def derive_by_array(expr, dx):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
         else:
             return diff(expr, dx)
+
+
+def _array_transpose(expr, order=None):
+    """
+    Evaluates the transpose of an array.
+
+    Optional parameter to specify an index permutation.
+    """
+    if not isinstance(expr, NDimArray):
+        return transpose(expr)
+
+    rank = expr.rank()
+
+    if order is None:
+        # order is reversed indices order:
+        order = tuple(reversed(range(expr.rank())))
+    elif len(order) < rank:
+        # order is incomplete, fill it:
+        order = tuple(order) + tuple(range(len(order), rank))
+
+    reverse = [order.index(i) for i in range(rank)]
+
+    def permute_array(arr):
+        new_arr = [None]*len(arr)
+        for i, el in enumerate(arr):
+            new_arr[reverse[i]] = el
+        return new_arr
+
+    indices_span = permute_array([range(i) for i in expr.shape])
+
+    new_array = [None]*len(expr)
+    for i, idx in enumerate(itertools.product(*indices_span)):
+        t = permute_array(idx)
+        new_array[i] = expr[t]
+
+    new_shape = permute_array(expr.shape)
+
+    return expr.func(new_array, new_shape)

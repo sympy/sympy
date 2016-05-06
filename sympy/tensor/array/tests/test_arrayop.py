@@ -1,7 +1,7 @@
-from sympy import symbols, sin, exp, log, cos
+from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate
 from sympy.tensor.array import Array
 
-from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array
+from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, _array_transpose
 
 
 def test_tensorproduct():
@@ -84,3 +84,133 @@ def test_issue_emerged_while_discussing_10972():
                                                              sa[140] + sa[143] + sa[32] + sa[35]]])
     assert tensorcontraction(po, (0, 1), (2, 3)) == Array([[sa[0] + sa[108] + sa[124] + sa[140] + sa[16] + sa[32], sa[1] + sa[109] + sa[125] + sa[141] + sa[17] + sa[33]],
                                                            [sa[110] + sa[126] + sa[142] + sa[18] + sa[2] + sa[34], sa[111] + sa[127] + sa[143] + sa[19] + sa[3] + sa[35]]])
+
+
+def test_array_transpose():
+    sa = symbols('a0:144')
+
+    m1 = Array(sa[:6], (2, 3))
+    assert _array_transpose(m1) == transpose(m1)
+    assert m1.tomatrix().T == _array_transpose(m1).tomatrix()
+
+    assert m1.tomatrix().T == transpose(m1).tomatrix()
+    assert m1.tomatrix().C == conjugate(m1).tomatrix()
+    assert m1.tomatrix().H == adjoint(m1).tomatrix()
+
+    assert m1.tomatrix().T == m1.transpose().tomatrix()
+    assert m1.tomatrix().C == m1.conjugate().tomatrix()
+    assert m1.tomatrix().H == m1.adjoint().tomatrix()
+
+    po = Array(sa, [2, 2, 3, 3, 2, 2])
+
+    assert _array_transpose(po) == Array(
+        [[[[[[sa[0], sa[72]], [sa[36], sa[108]]], [[sa[12], sa[84]], [sa[48], sa[120]]], [[sa[24],
+                                                                                           sa[96]], [sa[60], sa[132]]]],
+           [[[sa[4], sa[76]], [sa[40], sa[112]]], [[sa[16],
+                                                    sa[88]], [sa[52], sa[124]]],
+            [[sa[28], sa[100]], [sa[64], sa[136]]]],
+           [[[sa[8],
+              sa[80]], [sa[44], sa[116]]], [[sa[20], sa[92]], [sa[56], sa[128]]], [[sa[32],
+                                                                                    sa[104]], [sa[68], sa[140]]]]],
+          [[[[sa[2], sa[74]], [sa[38], sa[110]]], [[sa[14],
+                                                    sa[86]], [sa[50], sa[122]]], [[sa[26], sa[98]], [sa[62], sa[134]]]],
+           [[[sa[6],
+              sa[78]], [sa[42], sa[114]]], [[sa[18], sa[90]], [sa[54], sa[126]]], [[sa[30],
+                                                                                    sa[102]], [sa[66], sa[138]]]],
+           [[[sa[10], sa[82]], [sa[46], sa[118]]], [[sa[22],
+                                                     sa[94]], [sa[58], sa[130]]],
+            [[sa[34], sa[106]], [sa[70], sa[142]]]]]],
+         [[[[[sa[1],
+              sa[73]], [sa[37], sa[109]]], [[sa[13], sa[85]], [sa[49], sa[121]]], [[sa[25],
+                                                                                    sa[97]], [sa[61], sa[133]]]],
+           [[[sa[5], sa[77]], [sa[41], sa[113]]], [[sa[17],
+                                                    sa[89]], [sa[53], sa[125]]],
+            [[sa[29], sa[101]], [sa[65], sa[137]]]],
+           [[[sa[9],
+              sa[81]], [sa[45], sa[117]]], [[sa[21], sa[93]], [sa[57], sa[129]]], [[sa[33],
+                                                                                    sa[105]], [sa[69], sa[141]]]]],
+          [[[[sa[3], sa[75]], [sa[39], sa[111]]], [[sa[15],
+                                                    sa[87]], [sa[51], sa[123]]], [[sa[27], sa[99]], [sa[63], sa[135]]]],
+           [[[sa[7],
+              sa[79]], [sa[43], sa[115]]], [[sa[19], sa[91]], [sa[55], sa[127]]], [[sa[31],
+                                                                                    sa[103]], [sa[67], sa[139]]]],
+           [[[sa[11], sa[83]], [sa[47], sa[119]]], [[sa[23],
+                                                     sa[95]], [sa[59], sa[131]]],
+            [[sa[35], sa[107]], [sa[71], sa[143]]]]]]])
+
+    assert _array_transpose(po, (1, 0)) == Array(
+        [[[[[[sa[0], sa[1]], [sa[2], sa[3]]], [[sa[4], sa[5]], [sa[6], sa[7]]], [[sa[8], sa[9]], [sa[10],
+                                                                                                  sa[11]]]],
+           [[[sa[12], sa[13]], [sa[14], sa[15]]], [[sa[16], sa[17]], [sa[18],
+                                                                      sa[19]]], [[sa[20], sa[21]], [sa[22], sa[23]]]],
+           [[[sa[24], sa[25]], [sa[26],
+                                sa[27]]], [[sa[28], sa[29]], [sa[30], sa[31]]], [[sa[32], sa[33]], [sa[34],
+                                                                                                    sa[35]]]]],
+          [[[[sa[72], sa[73]], [sa[74], sa[75]]], [[sa[76], sa[77]], [sa[78],
+                                                                      sa[79]]], [[sa[80], sa[81]], [sa[82], sa[83]]]],
+           [[[sa[84], sa[85]], [sa[86],
+                                sa[87]]], [[sa[88], sa[89]], [sa[90], sa[91]]], [[sa[92], sa[93]], [sa[94],
+                                                                                                    sa[95]]]],
+           [[[sa[96], sa[97]], [sa[98], sa[99]]], [[sa[100], sa[101]], [sa[102],
+                                                                        sa[103]]],
+            [[sa[104], sa[105]], [sa[106], sa[107]]]]]], [[[[[sa[36], sa[37]], [sa[38],
+                                                                                sa[39]]],
+                                                            [[sa[40], sa[41]], [sa[42], sa[43]]],
+                                                            [[sa[44], sa[45]], [sa[46],
+                                                                                sa[47]]]],
+                                                           [[[sa[48], sa[49]], [sa[50], sa[51]]],
+                                                            [[sa[52], sa[53]], [sa[54],
+                                                                                sa[55]]],
+                                                            [[sa[56], sa[57]], [sa[58], sa[59]]]],
+                                                           [[[sa[60], sa[61]], [sa[62],
+                                                                                sa[63]]],
+                                                            [[sa[64], sa[65]], [sa[66], sa[67]]],
+                                                            [[sa[68], sa[69]], [sa[70],
+                                                                                sa[71]]]]], [
+                                                              [[[sa[108], sa[109]], [sa[110], sa[111]]],
+                                                               [[sa[112], sa[113]], [sa[114],
+                                                                                     sa[115]]],
+                                                               [[sa[116], sa[117]], [sa[118], sa[119]]]],
+                                                              [[[sa[120], sa[121]], [sa[122],
+                                                                                     sa[123]]],
+                                                               [[sa[124], sa[125]], [sa[126], sa[127]]],
+                                                               [[sa[128], sa[129]], [sa[130],
+                                                                                     sa[131]]]],
+                                                              [[[sa[132], sa[133]], [sa[134], sa[135]]],
+                                                               [[sa[136], sa[137]], [sa[138],
+                                                                                     sa[139]]],
+                                                               [[sa[140], sa[141]], [sa[142], sa[143]]]]]]])
+
+    assert _array_transpose(po, (0, 2, 1, 4, 3)) == Array(
+        [[[[[[sa[0], sa[1]], [sa[4], sa[5]], [sa[8], sa[9]]], [[sa[2], sa[3]], [sa[6], sa[7]], [sa[10],
+                                                                                                sa[11]]]],
+           [[[sa[36], sa[37]], [sa[40], sa[41]], [sa[44], sa[45]]], [[sa[38],
+                                                                      sa[39]], [sa[42], sa[43]], [sa[46], sa[47]]]]],
+          [[[[sa[12], sa[13]], [sa[16],
+                                sa[17]], [sa[20], sa[21]]], [[sa[14], sa[15]], [sa[18], sa[19]], [sa[22],
+                                                                                                  sa[23]]]],
+           [[[sa[48], sa[49]], [sa[52], sa[53]], [sa[56], sa[57]]], [[sa[50],
+                                                                      sa[51]], [sa[54], sa[55]], [sa[58], sa[59]]]]],
+          [[[[sa[24], sa[25]], [sa[28],
+                                sa[29]], [sa[32], sa[33]]], [[sa[26], sa[27]], [sa[30], sa[31]], [sa[34],
+                                                                                                  sa[35]]]],
+           [[[sa[60], sa[61]], [sa[64], sa[65]], [sa[68], sa[69]]], [[sa[62],
+                                                                      sa[63]], [sa[66], sa[67]], [sa[70], sa[71]]]]]],
+         [[[[[sa[72], sa[73]], [sa[76],
+                                sa[77]], [sa[80], sa[81]]], [[sa[74], sa[75]], [sa[78], sa[79]], [sa[82],
+                                                                                                  sa[83]]]],
+           [[[sa[108], sa[109]], [sa[112], sa[113]], [sa[116], sa[117]]], [[sa[110],
+                                                                            sa[111]], [sa[114], sa[115]],
+                                                                           [sa[118], sa[119]]]]],
+          [[[[sa[84], sa[85]], [sa[88],
+                                sa[89]], [sa[92], sa[93]]], [[sa[86], sa[87]], [sa[90], sa[91]], [sa[94],
+                                                                                                  sa[95]]]],
+           [[[sa[120], sa[121]], [sa[124], sa[125]], [sa[128], sa[129]]], [[sa[122],
+                                                                            sa[123]], [sa[126], sa[127]],
+                                                                           [sa[130], sa[131]]]]],
+          [[[[sa[96], sa[97]], [sa[100],
+                                sa[101]], [sa[104], sa[105]]], [[sa[98], sa[99]], [sa[102], sa[103]], [sa[106],
+                                                                                                       sa[107]]]],
+           [[[sa[132], sa[133]], [sa[136], sa[137]], [sa[140], sa[141]]], [[sa[134],
+                                                                            sa[135]], [sa[138], sa[139]],
+                                                                           [sa[142], sa[143]]]]]]])

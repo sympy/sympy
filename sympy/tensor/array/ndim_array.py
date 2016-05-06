@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify, Basic, Derivative
+from sympy import Matrix, Integer, sympify, Basic, Derivative, conjugate
 
 
 class NDimArray(object):
@@ -366,6 +366,25 @@ class NDimArray(object):
             return self.diff(*args)
         else:
             return Derivative(self, *args, **kwargs)
+
+    def _eval_transpose(self):
+        from .arrayop import _array_transpose
+        return _array_transpose(self)
+
+    def transpose(self):
+        return self._eval_transpose()
+
+    def _eval_conjugate(self):
+        return self.func([i.conjugate() for i in self], self.shape)
+
+    def conjugate(self):
+        return self._eval_conjugate()
+
+    def _eval_adjoint(self):
+        return self.transpose().conjugate()
+
+    def adjoint(self):
+        return self._eval_adjoint()
 
 
 class ImmutableNDimArray(NDimArray, Basic):
