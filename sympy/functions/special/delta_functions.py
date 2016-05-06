@@ -101,10 +101,16 @@ class DiracDelta(Function):
         """
         from sympy.polys.polyroots import roots
 
-        if 'wrt' not in hints:
-          raise TypeError("The 'wrt' keyword is required for the DiracDelta hint.")
-
-        wrt = hints.pop('wrt')
+        wrt = hints.get('wrt', None)
+        if wrt is None:
+            free = self.free_symbols
+            if len(free) == 1:
+                wrt = free.pop()
+            else:
+                raise TypeError(filldedent('''
+            When there is more than 1 free symbol or variable in the expression,
+            the 'wrt' keyword is required as a hint to expand when using the
+            DiracDelta hint.'''))
 
         if not self.args[0].has(wrt) or (len(self.args) > 1 and self.args[1] != 0 ):
             return self
