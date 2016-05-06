@@ -6,6 +6,7 @@ from sympy.core.sympify import CantSympify
 
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
+from sympy.core.decorators import call_highest_priority
 
 from sympy import oo
 
@@ -145,6 +146,7 @@ class DMP(PicklableWithSlots, CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
     __slots__ = ['rep', 'lev', 'dom', 'ring']
+    _op_priority = 10
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
@@ -871,6 +873,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def __neg__(f):
         return f.neg()
 
+    @call_highest_priority('__radd__')
     def __add__(f, g):
         if not isinstance(g, DMP):
             try:
@@ -886,9 +889,11 @@ class DMP(PicklableWithSlots, CantSympify):
 
         return f.add(g)
 
+    @call_highest_priority('__add__')
     def __radd__(f, g):
         return f.__add__(g)
 
+    @call_highest_priority('__rsub__')
     def __sub__(f, g):
         if not isinstance(g, DMP):
             try:
@@ -904,9 +909,11 @@ class DMP(PicklableWithSlots, CantSympify):
 
         return f.sub(g)
 
+    @call_highest_priority('__sub__')
     def __rsub__(f, g):
         return (-f).__add__(g)
 
+    @call_highest_priority('__rmul__')
     def __mul__(f, g):
         if isinstance(g, DMP):
             return f.mul(g)
@@ -1328,6 +1335,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def __neg__(f):
         return f.neg()
 
+    @call_highest_priority('__radd__')
     def __add__(f, g):
         if isinstance(g, (DMP, DMF)):
             return f.add(g)

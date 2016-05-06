@@ -2,25 +2,38 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, poly, diff, lcm, sstr, Function, Expr, collect, S, Mul, gcd
+from sympy import symbols, Symbol, diff, collect, S, Mul
+from sympy.polys.polytools import lcm, gcd
+from sympy.core.expr import Expr
+from sympy.printing import sstr
 from sympy.matrices import Matrix
 from sympy.core.compatibility import range
+from sympy.polys.polytools import DMP
 
 
-def _list_to_ann(alist, gen=None):
-    """
-    A function to convert a list of coefficient polynomials
-    to the Operator
-    """
+def DiffOperatorAlgebra(base_ring, generator):
 
-    if gen is None:
-        gen = symbols('Dx', commutative=False)
+    ring = DifferentialOperatorAlgebra(base_ring, generator)
+    return (ring, ring.gen)
 
-    expr = 0
-    for i, j in enumerate(alist):
-        expr += j * gen**i
 
-    return expr
+class DifferentialOperatorAlgebra:
+
+    def __init__(self, base_ring, generator):
+
+        self.base_ring = base_ring
+        self.gen = DifferentialOperator([0, 1], self, generator)
+        self.gen_str = generator
+
+    def __str__(self):
+
+        string = 'Univariate Differential Operator Algebra in intermediate '\
+            + self.gen_str + ' over the base ring ' + \
+            (self.base_ring).__str__()
+
+        return string
+
+    __repr__ = __str__
 
 
 class DifferentialOperator(Expr):
@@ -41,16 +54,30 @@ class DifferentialOperator(Expr):
 
     """
 
-    def __init__(self, expr, generator=None, var=None):
+    _op_priority = 30
+
+    def __init__(self, list_of_poly, parent_ring, generator=None, var=None):
+
         if generator is None:
-            generator = symbols('Dx', commutative=False)
-        if var is None:
-            var = symbols('x', commutative=False)
-        self.gen = generator
-        self.var = var
-        self.expr = expr
-        self.expr = self._shift_right()
-        self.listofpoly = self._list_of_poly()
+            self.gen_symbol = symbols('Dx', commutative=False)
+        else:
+            if isinstance(generator, str):
+                self.gen_symbol = symbols(generator, commutative=False)
+            elif isinstance(generator, Symbol):
+                self.gen_symbol = generator
+
+        self.parent_ring = parent_ring
+
+        if isinstance(list_of_poly, list):
+            for i, j in enumerate(list_of_poly):
+                if isinstance(j, int):
+                    list_of_poly[i] = (
+                        (self.parent_ring).base_ring).from_sympy(S(j))
+                elif not isinstance(j, DMP):
+                    list_of_poly[i] = (
+                        (self.parent_ring).base_ring).from_sympy(j)
+
+            self.listofpoly = list_of_poly
 
     def __mul__(self, other):
         """
@@ -59,51 +86,118 @@ class DifferentialOperator(Expr):
         Dx*a = a*Dx + a'
         """
 
-        listofpoly = self.listofpoly
+        ring_0 = self.parent_ring.base_ring.from_sympy(S(0))
+        ring_1 = self.parent_ring.base_ring.from_sympy(S(1))
 
         if isinstance(other, DifferentialOperator):
-            other = other.expr
+            if other.listofpoly == [ring_0, ring_1]:
+                sol = []
+                sol.append(ring_0)
+                for i in self.listofpoly:
+                    sol.append(i)
 
-        gen = self.gen
-        var = self.var
+                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
 
-        if len(listofpoly) == 1:
-            y = symbols('y')
-            sol = (listofpoly[0] * other).subs(var, y).simplify
-            sol = sol.subs(y, self.var)
-        else:
-            sol = sol = (listofpoly[0] * other).expand()
+        gen = DifferentialOperator([0, 1], self.parent_ring, self.gen_symbol)
+        listofpoly = self.listofpoly
+        sol = (listofpoly[0] * other)
 
         def _diff_n_times(b):
-            expr = b * gen + b.diff(self.var)
+            expr = b * gen + b.diff()
             return expr
 
         for i in range(1, len(listofpoly)):
             other = _diff_n_times(other)
-            sol += (listofpoly[i] * other).expand()
+            sol += (listofpoly[i] * other)
 
-        return DifferentialOperator(sol.expand())
+        return sol
+
+    def __rmul__(self, other):
+
+        if not isinstance(other, DifferentialOperator):
+
+            if isinstance(other, int):
+                other = S(other)
+
+            if not isinstance(other, DMP):
+                other = (self.parent_ring.base_ring).from_sympy(other)
+
+            sol = []
+            for j in self.listofpoly:
+                sol.append(other * j)
+
+            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
 
     def __add__(self, other):
-        expr = self.expr + other.expr
-        return DifferentialOperator(expr.expand())
 
-    def _shift_right(self):
-        """
-        Substitutes Dx*x --> x*Dx + 1 until all the generators
-        comes to right.
-        """
+        if isinstance(other, DifferentialOperator):
 
-        expr = self.expr
-        generator = self.gen
-        var = self.var
-        toright = None
+            list_self = self.listofpoly
+            list_other = other.listofpoly
 
-        while not toright is expr:
-            toright = expr
-            expr = expr.subs(generator * var, var * generator + 1).expand()
+            if min(len(list_self), len(list_other)) is len(list_self):
+                minimum = 0
+            else:
+                minimum = 1
 
-        return expr
+            if minimum is 0:
+                sol = [
+                    a + b for a, b in zip(list_self, list_other)] + list_other[len(list_self):]
+                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+
+            else:
+                sol = [
+                    a + b for a, b in zip(list_self, list_other)] + list_self[len(list_other):]
+                return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+
+        else:
+            if isinstance(other, int):
+                other = S(other)
+            list_self = self.listofpoly
+            if not isinstance(other, DMP):
+                list_other = [((self.parent_ring).base_ring).from_sympy(other)]
+            else:
+                list_other = [other]
+            sol = []
+            sol.append(list_self[0] + list_other[0])
+            sol += list_self[1:]
+
+            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+
+    __radd__ = __add__
+
+    def __sub__(self, other):
+
+        return self + (-1) * other
+
+    def __rsub__(self, other):
+        return (-1) * self + other
+
+    def __pow__(self, n):
+
+        ring_0 = self.parent_ring.base_ring.from_sympy(S(0))
+        ring_1 = self.parent_ring.base_ring.from_sympy(S(1))
+
+        if n == 1:
+            return self
+        if n == 0:
+            return DifferentialOperator([1], self.parent_ring, self.gen_symbol)
+
+        if self.listofpoly == [ring_0, ring_1]:
+            sol = []
+            for i in range(0, n):
+                sol.append(self.parent_ring.base_ring.from_sympy(S(0)))
+            sol.append(self.parent_ring.base_ring.from_sympy(S(1)))
+
+            return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
+
+        else:
+            if n % 2 == 1:
+                powreduce = self**(n - 1)
+                return powreduce * self
+            elif n % 2 == 0:
+                powreduce = self**(n / 2)
+                return powreduce * powreduce
 
     def __str__(self):
 
@@ -130,27 +224,6 @@ class DifferentialOperator(Expr):
         return print_str
 
     __repr__ = __str__
-
-    def _list_of_poly(self):
-        """
-        Converts the noncommutative annihilator expression
-        into a list of polynomial for each power of Dx
-        """
-
-        gen = self.gen
-        dict_coeff = collect(self.expr, gen, evaluate=False)
-        listofpoly = []
-        r = S(1)
-
-        while not len(dict_coeff) == 0:
-            if r in dict_coeff.keys():
-                listofpoly.append(dict_coeff[r])
-                dict_coeff.pop(r)
-            else:
-                listofpoly.append(S(0))
-            r = r * gen
-
-        return listofpoly
 
     def _normalize(ann):
         """
@@ -193,6 +266,14 @@ class DifferentialOperator(Expr):
             list_of_coeff[i] = list_of_coeff[i].subs(y, x)
 
         return _list_to_ann(list_of_coeff)
+
+    def diff(self):
+
+        listofpoly = self.listofpoly
+        sol = []
+        for i in listofpoly:
+            sol.append(i.diff())
+        return DifferentialOperator(sol, self.parent_ring, self.gen_symbol)
 
 
 class HoloFunc(object):
@@ -245,6 +326,7 @@ class HoloFunc(object):
             self.ann = ann  # ann is an instance of DifferentialOperator
         else:
             self.ann = DifferentialOperator(ann)
+        self.var = x
 
     def __repr__(self):
 
@@ -340,3 +422,8 @@ class HoloFunc(object):
         sol = DifferentialOperator(sol) * (self.ann)
 
         return HoloFunc(sol._normalize(), (self.ann).var)
+
+    def integrate(self):
+
+        D = DifferentialOperator(self.ann.gen)
+        return HoloFunc(self.ann * D, self.var)
