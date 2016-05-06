@@ -640,9 +640,13 @@ def _solveset(f, symbol, domain, _check=False):
 
             if isinstance(result, FiniteSet) and \
             not any(isinstance(x, (erf, erfinv, erfc, erfcinv)) for x in result.args):
+                valid = []
                 for r in result:
-                    if not checksol(f, symbol, r):
-                        result = FiniteSet(*[x for x in result if x != r])
+                    if checksol(f, symbol, r):
+                        valid.append(r)
+                if valid is None:
+                    return ConditionSet(symbol, f, domain)
+                result = FiniteSet(*valid)
     return result
 
 
