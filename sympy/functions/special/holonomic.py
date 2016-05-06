@@ -12,17 +12,34 @@ from sympy.polys.polytools import DMP
 
 
 def DiffOperatorAlgebra(base_ring, generator):
+    """ A function to create a Differential Operator Algebra.
+    The first arguments need to be the base polynomial ring for the algebra
+    and the second argument must be a generator.
+    Returns the class representing the operator algebra and
+    the standard operator for differentiation i.e. the `Dx` operator.
+
+    Examples
+    =======
+    from sympy.polys.domains import ZZ
+    R, Dx = DiffOperatorAlgebra
+    """
 
     ring = DifferentialOperatorAlgebra(base_ring, generator)
-    return (ring, ring.gen)
+    return (ring, ring.diff_operator)
 
 
 class DifferentialOperatorAlgebra:
+    """ The class representing Differential Operator Algebra.
+    Defined by the base polynomial ring and the generator.
+
+    The attribute diff_operator is the operator `Dx` which when acted
+    on a function does differentiation.
+    """
 
     def __init__(self, base_ring, generator):
 
         self.base_ring = base_ring
-        self.gen = DifferentialOperator([0, 1], self, generator)
+        self.diff_operator = DifferentialOperator([0, 1], self, generator)
         self.gen_str = generator
 
     def __str__(self):
@@ -38,8 +55,26 @@ class DifferentialOperatorAlgebra:
 
 class DifferentialOperator(Expr):
     """
-    Represents a Differential Operator whose base ring is the polynomial ring, and supports
-    addition and multiplication.
+    The operator can be created by providing a list of polynomials for each power of Dx
+    and the parent ring which must be an instance of DifferentialOperatorAlgebra.
+
+    An Operator can also be created easily using the operator `Dx`. See examples below.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.special.holonomic import DifferentialOperator, DiffOperatorAlgebra
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy import symbols
+    >>> x = symbols('x')
+    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x),'Dx')
+
+    >>> DifferentialOperator([0,1,x**2], R)
+    (0) + (1)Dx + (x**2)Dx**2
+
+    One can use the `Dx` and represent differential operators more conveniently this way also.
+    >>> (x*Dx*x + 1 - Dx**2)**2
+    (2*x**2 + 2*x + 1) + (4*x**3 + 2*x**2 - 4)Dx + (x**4 - 6*x - 2)Dx**2 + (-2*x**2)Dx**3 + (1)Dx**4
 
     """
 
