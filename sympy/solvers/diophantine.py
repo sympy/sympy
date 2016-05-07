@@ -29,6 +29,7 @@ from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 
+
 # these are imported with 'from sympy.solvers.diophantine import *
 __all__ = ['diophantine', 'classify_diop']
 

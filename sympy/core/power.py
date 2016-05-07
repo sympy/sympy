@@ -12,9 +12,19 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
-from sympy.utilities.iterables import sift
+
+from math import sqrt as _sqrt
+
+
+
+def isqrt(n):
+    """Return the largest integer lass than or equal to sqrt(n)."""
+    if n < 17984395633462800708566937239552:
+        return int(_sqrt(n))
+    return integer_nthroot(int(n), 2)[0]
 
 
 def integer_nthroot(y, n):
@@ -86,7 +96,7 @@ def integer_nthroot(y, n):
     while t > y:
         x -= 1
         t = x**n
-    return x, t == y
+    return int(x), t == y  # int converts long to int if possible
 
 
 class Pow(Expr):
