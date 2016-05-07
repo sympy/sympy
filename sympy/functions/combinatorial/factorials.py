@@ -16,11 +16,6 @@ from sympy.core.cache import cacheit
 from sympy.polys.polytools import poly_from_expr
 from sympy.polys.polyerrors import PolificationFailed
 
-if HAS_GMPY == 1:
-    from gmpy import fac as gmpy_factorial
-elif HAS_GMPY == 2:
-    from gmpy2 import fac as gmpy2_factorial
-
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
@@ -168,11 +163,9 @@ class factorial(CombinatorialFunction):
                         result = cls._small_factorials[n-1]
 
                     # GMPY factorial is faster, use it when available
-                    elif HAS_GMPY == 1:
-                        result = gmpy_factorial(n)
-
-                    elif HAS_GMPY == 2:
-                        result = gmpy2_factorial(n)
+                    elif HAS_GMPY:
+                        from sympy.core.compatibility import gmpy
+                        result = gmpy.fac(n)
 
                     else:
                         bits = bin(n).count('1')
