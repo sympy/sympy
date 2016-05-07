@@ -99,8 +99,8 @@ class DiracDelta(Function):
         """
         from sympy.polys.polyroots import roots
 
-        wrt = hints.get('wrt', False)
-        if wrt:
+        wrt = hints.get('wrt', None)
+        if wrt is None:
             free = self.free_symbols
             if len(free) == 1:
                 wrt = free.pop()
