@@ -1092,7 +1092,7 @@ def test_issue_10876():
     assert solveset(1/sqrt(x), x, S.Reals) == S.EmptySet
     assert solveset(1/sqrt(x), x) == S.EmptySet
 
-def teswt_issue_11047():
+def test_issue_11047():
     assert ln(0) == S.NegativeInfinity
     assert 1/ln(0) == S.Zero
     assert solveset(1/ln(x), x, S.Reals) == S.Zero
