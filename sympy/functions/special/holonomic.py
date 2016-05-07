@@ -23,6 +23,8 @@ def DiffOperatorAlgebra(base, generator):
     =======
     >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
+    >>> from sympy.functions.special.holonomic import DiffOperatorAlgebra
+    >>> x = symbols('x')
     >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
     """
 
@@ -83,7 +85,7 @@ class DifferentialOperator(Expr):
     >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x),'Dx')
 
     >>> DifferentialOperator([0,1,x**2], R)
-    (0) + (1)Dx + (x**2)Dx**2
+    (1)Dx + (x**2)Dx**2
 
     One can use the `Dx` and represent differential operators more conveniently this way also.
     >>> (x*Dx*x + 1 - Dx**2)**2
