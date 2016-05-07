@@ -9,6 +9,7 @@ from sympy.printing import sstr
 from sympy.matrices import Matrix
 from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
+from sympy.core.function import Function
 
 
 def DiffOperatorAlgebra(base, generator):
@@ -42,7 +43,7 @@ class DifferentialOperatorAlgebra:
         self.base = base
         # the operator representing differentiation i.e. `Dx`
         self.derivative_operator = DifferentialOperator(
-            [base.zero, base.one], self, generator)
+            [base.zero, base.one], self)
 
         if generator is None:
             self.gen_symbol = symbols('Dx', commutative=False)
@@ -256,6 +257,23 @@ class DifferentialOperator(Expr):
 
     __repr__ = __str__
 
+    def __eq__(self, other):
+
+        if isinstance(other, DifferentialOperator):
+            if self.listofpoly == other.listofpoly and self.parent == other.parent:
+                return True
+            else:
+                return False
+        else:
+            if self.listofpoly[0]==other:
+                for i in listofpoly[1:]:
+                    if i is not self.parent.base.zero:
+                        return False
+                return True
+            else:
+                return False
+
+
     def diff(self):
         # partial derivative of the operator
         # with respect to variable of the base ring i.e. `x`
@@ -416,3 +434,13 @@ class HoloFunc(object):
         # just multiply by Dx from right
         D = self.annihilator.parent.derivative_operator
         return HoloFunc(self.annihilator * D, self.var)
+
+    def __eq__(self, other):
+
+        if self.annihilator == other.annihilator:
+            if self.var == other.var:
+                return True
+            else:
+                return False
+        else:
+            return False
