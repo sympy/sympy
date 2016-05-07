@@ -233,7 +233,7 @@ class DifferentialOperator(Expr):
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
 
-    def __str__(self):
+    def str(self):
 
         listofpoly = self.listofpoly
         print_str = ''
@@ -257,7 +257,7 @@ class DifferentialOperator(Expr):
 
         return print_str
 
-    __repr__ = __str__
+    repr = str
 
     def __eq__(self, other):
 
