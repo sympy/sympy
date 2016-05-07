@@ -67,7 +67,7 @@ class DiracDelta(Function):
         if arg.is_positive or arg.is_negative:
             return S.Zero
 
-    def _eval_expand_DiracDelta(self, **hints):
+    def _eval_expand_diracdelta(self, **hints):
         """Compute a simplified representation of the function using
            property number 4. Pass wrt as a hint to expand the expression
            with respect to a particular variable.
@@ -83,12 +83,12 @@ class DiracDelta(Function):
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
 
-           >>> DiracDelta(x*y).expand(DiracDelta=True, wrt=x)
+           >>> DiracDelta(x*y).expand(diracdelta=True, wrt=x)
            DiracDelta(x)/Abs(y)
-           >>> DiracDelta(x*y).expand(DiracDelta=True, wrt=y)
+           >>> DiracDelta(x*y).expand(diracdelta=True, wrt=y)
            DiracDelta(y)/Abs(x)
 
-           >>> DiracDelta(x**2 + x - 2).expand(DiracDelta=True, wrt=x)
+           >>> DiracDelta(x**2 + x - 2).expand(diracdelta=True, wrt=x)
            DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
            See Also

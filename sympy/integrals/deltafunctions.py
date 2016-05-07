@@ -13,7 +13,7 @@ def change_mul(node, x):
        DiracDelta expression.
 
        If no simple DiracDelta expression was found, then all the DiracDelta
-       expressions are simplified (using DiracDelta.expand(DiracDelta=True, wrt=x)).
+       expressions are simplified (using DiracDelta.expand(diracdelta=True, wrt=x)).
 
        Return: (dirac, new node)
        Where:
@@ -63,9 +63,9 @@ def change_mul(node, x):
         new_args = []
         for arg in sorted_args:
             if arg.func is DiracDelta:
-                new_args.append(arg.expand(DiracDelta=True, wrt=x))
+                new_args.append(arg.expand(diracdelta=True, wrt=x))
             elif arg.is_Pow and arg.base.func is DiracDelta:
-                new_args.append(arg.func(arg.base.expand(DiracDelta=True, wrt=x), arg.exp))
+                new_args.append(arg.func(arg.base.expand(diracdelta=True, wrt=x), arg.exp))
             else:
                 new_args.append(arg)
         if new_args != sorted_args:
@@ -137,7 +137,7 @@ def deltaintegrate(f, x):
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
-        h = f.expand(DiracDelta=True, wrt=x)
+        h = f.expand(diracdelta=True, wrt=x)
         if h == f:  # can't simplify the expression
             #FIXME: the second term tells whether is DeltaDirac or Derivative
             #For integrating derivatives of DiracDelta we need the chain rule
@@ -165,7 +165,7 @@ def deltaintegrate(f, x):
                     fh = integrate(rest_mult, x)
                     return fh
             else:
-                deltaterm = deltaterm.expand(DiracDelta=True, wrt=x)
+                deltaterm = deltaterm.expand(diracdelta=True, wrt=x)
                 if deltaterm.is_Mul:  # Take out any extracted factors
                     deltaterm, rest_mult_2 = change_mul(deltaterm, x)
                     rest_mult = rest_mult*rest_mult_2

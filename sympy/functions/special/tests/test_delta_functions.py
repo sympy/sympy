@@ -39,11 +39,11 @@ def test_DiracDelta():
     assert DiracDelta(sqrt(x)).is_simple(x) is False
     assert DiracDelta(x).is_simple(y) is False
 
-    assert DiracDelta(x*y).expand(DiracDelta=True, wrt=x) == DiracDelta(x)/abs(y)
-    assert DiracDelta(x*y).expand(DiracDelta=True, wrt=y) == DiracDelta(y)/abs(x)
-    assert DiracDelta(x**2*y).expand(DiracDelta=True, wrt=x) == DiracDelta(x**2*y)
-    assert DiracDelta(y).expand(DiracDelta=True, wrt=x) == DiracDelta(y)
-    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(DiracDelta=True, wrt=x) == \
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=x) == DiracDelta(x)/abs(y)
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=y) == DiracDelta(y)/abs(x)
+    assert DiracDelta(x**2*y).expand(diracdelta=True, wrt=x) == DiracDelta(x**2*y)
+    assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == \
         DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
