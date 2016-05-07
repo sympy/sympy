@@ -68,9 +68,7 @@ class DiracDelta(Function):
             return S.Zero
 
     def _eval_expand_DiracDelta(self, **hints):
-        """expand_DiracDelta(self, **hints)
-
-           Compute a simplified representation of the function using
+        """Compute a simplified representation of the function using
            property number 4. Pass wrt as a hint to expand the expression
            with respect to a particular variable.
 
@@ -101,8 +99,8 @@ class DiracDelta(Function):
         """
         from sympy.polys.polyroots import roots
 
-        wrt = hints.get('wrt', None)
-        if wrt is None:
+        wrt = hints.get('wrt', False)
+        if wrt:
             free = self.free_symbols
             if len(free) == 1:
                 wrt = free.pop()
