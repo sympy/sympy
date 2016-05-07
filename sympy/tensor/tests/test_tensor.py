@@ -1777,3 +1777,60 @@ def test_TensMul_data():
     assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
             (E(mu) * E(nu)).data
             ).all()
+
+    S2 = TensorType([Lorentz] * 2, tensorsymmetry([1] * 2))
+    g = S2('g')
+    g.data = Lorentz.data
+
+    # tensor 'perp' is orthogonal to vector 'u'
+    perp = u(mu) * u(nu) + g(mu, nu)
+
+    mul_1 = u(-mu) * perp(mu, nu)
+    assert (mul_1.data == numpy.array([0, 0, 0, 0])).all()
+
+    mul_2 = u(-mu) * perp(mu, alpha) * perp(nu, beta)
+    assert (mul_2.data == numpy.zeros(shape=(4, 4, 4))).all()
+
+    Fperp = perp(mu, alpha) * perp(nu, beta) * F(-alpha, -beta)
+    assert (Fperp.data[0, :] == numpy.array([0, 0, 0, 0])).all()
+    assert (Fperp.data[:, 0] == numpy.array([0, 0, 0, 0])).all()
+
+    mul_3 = u(-mu) * Fperp(mu, nu)
+    assert (mul_3.data == numpy.array([0, 0, 0, 0])).all()
+
+
+def test_issue_11020_TensAdd_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
+    Lorentz.data = [-1, 1]
+
+    a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
+    i0, i1 = tensor_indices('i_0:2', Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    S2 = TensorType([Lorentz] * 2, tensorsymmetry([1] * 2))
+
+    # metric tensor
+    g = S2('g')
+    g.data = Lorentz.data
+
+    u = Vec('u')
+    u.data = [1, 0]
+
+    add_1 = g(b, c) * g(d, i0) * u(-i0) - g(b, c) * u(d)
+    assert (add_1.data == numpy.zeros(shape=(2, 2, 2))).all()
+    # Now let us replace index `d` with `a`:
+    add_2 = g(b, c) * g(a, i0) * u(-i0) - g(b, c) * u(a)
+    assert (add_2.data == numpy.zeros(shape=(2, 2, 2))).all()
+
+    # some more tests
+    # perp is tensor orthogonal to u^\mu
+    perp = u(a) * u(b) + g(a, b)
+    mul_1 = u(-a) * perp(a, b)
+    assert (mul_1.data == numpy.array([0, 0])).all()
+
+    mul_2 = u(-c) * perp(c, a) * perp(d, b)
+    assert (mul_2.data == numpy.zeros(shape=(2, 2, 2))).all()

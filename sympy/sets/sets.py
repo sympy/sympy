@@ -911,6 +911,8 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        if other.is_UniversalSet:
+            return S.UniversalSet
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -1619,7 +1621,7 @@ class Complement(Set, EvalfMixin):
         Simplify a :class:`Complement`.
 
         """
-        if B == S.UniversalSet:
+        if B == S.UniversalSet or A.is_subset(B):
             return EmptySet()
 
         if isinstance(B, Union):
