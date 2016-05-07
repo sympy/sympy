@@ -316,7 +316,7 @@ def test_trigsimp_groebner():
     results = [resnum/resdenom, (-resnum)/(-resdenom)]
     assert trigsimp_groebner(ex) in results
     assert trigsimp_groebner(s/c, hints=[tan]) == tan(x)
-
+    assert trigsimp_groebner(c*s) == c*s
     assert trigsimp((-s + 1)/c + c/(-s + 1),
                     method='groebner') == 2/c
     assert trigsimp((-s + 1)/c + c/(-s + 1),
