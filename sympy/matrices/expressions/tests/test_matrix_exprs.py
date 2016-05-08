@@ -204,6 +204,8 @@ def test_single_indexing():
     B = MatrixSymbol('B', n, m)
     raises(IndexError, lambda: B[1])
 
+def test_MatrixElement_commutative():
+    assert A[0, 1]*A[1, 0] == A[1, 0]*A[0, 1]
 
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
