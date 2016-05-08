@@ -58,6 +58,7 @@ from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.simplify import simplify
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
@@ -2880,8 +2881,8 @@ def test_cancel():
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
-    expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
-    assert cancel(expr) == expr
+    expr = (sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+    assert simplify(cancel(expr)) == expr
 
 
 def test_reduced():
