@@ -2881,7 +2881,7 @@ def test_cancel():
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
-    expr = (sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+    expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert simplify(cancel(expr)) == expr
 
 
