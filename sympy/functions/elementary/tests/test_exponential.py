@@ -146,7 +146,7 @@ def test_log_values():
     assert log(zoo) == zoo
     assert log(-zoo) == zoo
 
-    assert log(0) == zoo
+    assert log(0) == S.NegativeInfinity
 
     assert log(1) == 0
     assert log(-1) == I*pi

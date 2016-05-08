@@ -4,7 +4,7 @@ from sympy import (
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
+    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection, ln,
     oo)
 
 from sympy.core.function import nfloat
