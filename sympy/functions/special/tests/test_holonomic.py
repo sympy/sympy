@@ -20,7 +20,7 @@ def test_DifferentialOperator():
     assert p == q
 
 
-def test_HoloFunc():
+def test_HoloFunc_addition():
     x = symbols('x')
     R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
     p = HoloFunc(Dx**2 * x, x)
@@ -32,9 +32,9 @@ def test_HoloFunc():
     assert p + q == r
     p = HoloFunc(x * Dx + Dx**2 * (x**2 + 2), x)
     q = HoloFunc(Dx - 3, x)
-    r = HoloFunc((-54 * x**2 - 126 * x - 150) + (-135 * x**3 - 252 * x**2 - 270 * x + 140) * Dx +
-                 (-27 * x**4 - 24 * x**2 + 14 * x - 150) * Dx**2 + (9 * x**4 + 15 * x**3 + 38 * x**2 + 30 * x +
-                                                                    40) * Dx**3, x)
+    r = HoloFunc((-54 * x**2 - 126 * x - 150) + (-135 * x**3 - 252 * x**2 - 270 * x + 140) * Dx +\
+                 (-27 * x**4 - 24 * x**2 + 14 * x - 150) * Dx**2 + \
+                 (9 * x**4 + 15 * x**3 + 38 * x**2 + 30 * x +40) * Dx**3, x)
     assert p + q == r
     p = HoloFunc(Dx**5 - 1, x)
     q = HoloFunc(x**3 + Dx, x)
@@ -43,3 +43,28 @@ def test_HoloFunc():
         1575*x**6 + x**3 + 630*x**2)*Dx**5 + (x**15 - 30*x**11 + 195*x**7 - 210*x**3 + \
         1)*Dx**6, x)
     assert p+q == r
+
+def test_HoloFunc_multiplication():
+    x = symbols('x')
+    R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    p = HoloFunc(Dx+x+x*Dx**2,x)
+    q = HoloFunc(x*Dx+Dx*x+Dx**2,x)
+    r = HoloFunc((8*x**6 + 4*x**4 + 6*x**2 + 3) + (24*x**5 - 4*x**3 + 24*x)*Dx + \
+        (8*x**6 + 20*x**4 + 12*x**2 + 2)*Dx**2 + (8*x**5 + 4*x**3 + 4*x)*Dx**3 + \
+        (2*x**4 + x**2)*Dx**4, x)
+    assert p*q == r
+    p = HoloFunc(Dx**2+1,x)
+    q = HoloFunc(Dx-1,x)
+    r = HoloFunc((2) + (-2)*Dx + (1)*Dx**2, x)
+    assert p*q == r
+    p = HoloFunc(Dx**2+1+x+Dx,x)
+    q = HoloFunc((Dx*x-1)**2,x)
+    r = HoloFunc((4*x**7 + 11*x**6 + 16*x**5 + 4*x**4 - 6*x**3 - 7*x**2 - 8*x - 2) + \
+        (8*x**6 + 26*x**5 + 24*x**4 - 3*x**3 - 11*x**2 - 6*x - 2)*Dx + \
+        (8*x**6 + 18*x**5 + 15*x**4 - 3*x**3 - 6*x**2 - 6*x - 2)*Dx**2 + (8*x**5 + \
+            10*x**4 + 6*x**3 - 2*x**2 - 4*x)*Dx**3 + (4*x**5 + 3*x**4 - x**2)*Dx**4, x)
+    assert p*q == r
+    p = HoloFunc(x*Dx**2-1,x)
+    q = HoloFunc(Dx*x-x,x)
+    r = HoloFunc((x - 3) + (-2*x + 2)*Dx + (x)*Dx**2, x)
+    assert p*q == r

@@ -55,8 +55,6 @@ class DifferentialOperatorAlgebra:
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
 
-
-
     def __str__(self):
 
         string = 'Univariate Differential Operator Algebra in intermediate '\
@@ -117,6 +115,7 @@ class DifferentialOperator(Expr):
                         (self.parent).base).from_sympy(j)
 
             self.listofpoly = list_of_poly
+        self.order = len(self.listofpoly) - 1
 
     def args(self):
 
@@ -143,6 +142,7 @@ class DifferentialOperator(Expr):
         listofpoly = self.listofpoly
         sol = (listofpoly[0] * other)
         # using the commutation rule gen*b = b*gen + b'
+
         def _diff_n_times(b):
             expr = b * gen + b.diff()
             return expr
@@ -267,14 +267,13 @@ class DifferentialOperator(Expr):
             else:
                 return False
         else:
-            if self.listofpoly[0]==other:
+            if self.listofpoly[0] == other:
                 for i in listofpoly[1:]:
                     if i is not self.parent.base.zero:
                         return False
                 return True
             else:
                 return False
-
 
     def diff(self):
         # partial derivative of the operator
@@ -285,7 +284,8 @@ class DifferentialOperator(Expr):
             sol.append(i.diff())
         return DifferentialOperator(sol, self.parent)
 
-def _normalize(list_of_coeff, x):
+
+def _normalize(list_of_coeff, x, negative=True):
     """
     Normalize a given annihilator
     """
@@ -295,7 +295,8 @@ def _normalize(list_of_coeff, x):
     for i in list_of_coeff:
         lcm_denom = lcm(lcm_denom, i.as_numer_denom()[1])
 
-    lcm_denom = -lcm_denom
+    if negative is True:
+        lcm_denom = -lcm_denom
 
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = (j * lcm_denom).simplify()
@@ -309,6 +310,7 @@ def _normalize(list_of_coeff, x):
         list_of_coeff[i] = (j / gcd_numer).simplify()
 
     return list_of_coeff
+
 
 class HoloFunc(object):
     """Represents a Holonomic Function,
@@ -446,3 +448,73 @@ class HoloFunc(object):
                 return False
         else:
             return False
+
+    def __mul__(self, other):
+
+        ann_self = self.annihilator
+        ann_other = other.annihilator
+        list_self = ann_self.listofpoly
+        list_other = ann_other.listofpoly
+        a = ann_self.order
+        b = ann_other.order
+
+        for i, j in enumerate(list_self):
+            if isinstance(j, ann_self.parent.base.dtype):
+                list_self[i] = ann_self.parent.base.to_sympy(j)
+
+        for i, j in enumerate(list_other):
+            if isinstance(j, ann_other.parent.base.dtype):
+                list_other[i] = ann_other.parent.base.to_sympy(j)
+        # will be used to reduce the degree
+        self_red = [-list_self[i] / list_self[a]
+                    for i in range(a)]
+
+        other_red = [-list_other[i] / list_other[b]
+                     for i in range(b)]
+        # coeff_mull[i][j] is the coefficient of Dx^i(f).Dx^j(g)
+        coeff_mul = [[S(0) for i in range(b + 1)]
+                     for j in range(a + 1)]
+        coeff_mul[0][0] = S(1)
+        # making the ansatz
+        lin_sys = [[coeff_mul[i][j]
+                    for i in range(a) for j in range(b)]]
+
+        homo_sys = [[0 for q in range(a * b)]]
+        homo_sys = Matrix(homo_sys).transpose()
+
+        sol = (Matrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+        # until a non trivial solution is found
+        while sol[0].is_zero:
+            # updating the coefficents Dx^i(f).Dx^j(g) for next degree
+            for i in range(a - 1, -1, -1):
+                for j in range(b - 1, -1, -1):
+                    coeff_mul[i][j + 1] += coeff_mul[i][j]
+                    coeff_mul[i + 1][j] += coeff_mul[i][j]
+                    coeff_mul[i][j] = coeff_mul[i][j].diff()
+            # reduce the terms to lower power using annihilators of f, g
+            for i in range(a + 1):
+                if not coeff_mul[i][b] == S(0):
+                    for j in range(b):
+                        coeff_mul[i][j] += other_red[j] * \
+                            coeff_mul[i][b]
+                    coeff_mul[i][b] = S(0)
+
+            # not d2 + 1, as that is already covered in previous loop
+            for j in range(b):
+                if not coeff_mul[a][j] == 0:
+                    for i in range(a):
+                        coeff_mul[i][j] += self_red[i] * \
+                            coeff_mul[a][j]
+                    coeff_mul[a][j] = S(0)
+
+            lin_sys.append([coeff_mul[i][j] for i in range(a)
+                            for j in range(b)])
+
+            sol = (Matrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+
+        sol = sol[0] / sol[1]
+
+        sol_ann = DifferentialOperator(_normalize(
+            sol[0:], self.var, negative=False), ann_self.parent)
+
+        return HoloFunc(sol_ann, self.var)
