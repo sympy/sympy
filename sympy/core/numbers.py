@@ -160,8 +160,7 @@ def igcd(*args):
         try:
             a = _gcdcache[(a, b)]
         except KeyError:
-            a, b = as_int(a), as_int(b)
-
+            t = a, b = as_int(a), as_int(b)
             if a and b:
                 if b < 0:
                     b = -b
@@ -171,7 +170,7 @@ def igcd(*args):
             else:
                 a = abs(a or b)
 
-            _gcdcache[(a, b)] = a
+            _gcdcache[t] = a
         if a == 1 or b == 1:
             return 1
     return a
