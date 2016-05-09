@@ -1802,13 +1802,13 @@ def _diop_ternary_quadratic(_var, coeff):
             _coeff[x*y] = 0
             _coeff[x*z] = 0
 
-            X_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
+            x_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
 
-            if X_0 is None:
+            if x_0 is None:
                 return (None, None, None)
 
             p, q = _rational_pq(B*y_0 + C*z_0, 2*A)
-            x_0, y_0, z_0 = X_0*q - p, y_0*q, z_0*q
+            x_0, y_0, z_0 = x_0*q - p, y_0*q, z_0*q
 
         elif coeff[z*y] != 0:
             if coeff[y**2] == 0:
