@@ -140,6 +140,9 @@ class DifferentialOperator(Expr):
 
         gen = self.parent.derivative_operator
         listofpoly = self.listofpoly
+        for i, j in enumerate(listofpoly):
+            if isinstance(j, self.parent.base.dtype):
+                listofpoly[i] = self.parent.base.to_sympy(j)
         sol = (listofpoly[0] * other)
         # using the commutation rule gen*b = b*gen + b'
 
