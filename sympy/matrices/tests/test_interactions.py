@@ -14,6 +14,7 @@ from sympy.matrices.matrices import classof
 from sympy.utilities.pytest import raises
 
 SM = MatrixSymbol('X', 3, 3)
+SV = MatrixSymbol('v', 3, 1)
 MM = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 IM = ImmutableMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 meye = eye(3)
@@ -48,6 +49,14 @@ def test_matrix_symbol_MM():
     Y = eye(3) + X
     assert Y[1, 1] == 1 + X[1, 1]
 
+def test_matrix_symbol_vector_matrix_multiplication():
+    A = MM * SV
+    B = IM * SV
+    assert A == B
+    C = (SV.T * MM.T).T
+    assert B == C
+    D = (SV.T * IM.T).T
+    assert C == D
 
 def test_indexing_interactions():
     assert (a * IM)[1, 1] == 5*a
