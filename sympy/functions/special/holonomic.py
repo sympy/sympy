@@ -93,15 +93,10 @@ class DifferentialOperator(Expr):
 
     _op_priority = 30
 
-    def __init__(self, list_of_poly, parent, generator=None, variable=None):
+    def __init__(self, list_of_poly, parent):
         # the parent ring for this operator
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
-        # the variable (or generator) of the base polynomial ring
-        if variable is None:
-            self.variable = symbols('x')
-        else:
-            self.variable = variable
         # sequence of polynomials in x for each power of Dx
         # represents the operator
         # convert the expressions into ring elements using from_sympy
@@ -431,7 +426,7 @@ class HoloFunc(object):
         sol = _normalize(sol, self.var)
         # construct operator from list of coefficients
         sol1 = DifferentialOperator(
-            sol, self.annihilator.parent, self.var)
+            sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
 
