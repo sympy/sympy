@@ -66,6 +66,16 @@ class DifferentialOperatorAlgebra:
     __repr__ = __str__
 
 
+def _add_lists(list1, list2):
+            if len(list1) <= len(list2):
+                sol = [
+                    a + b for a, b in zip(list1, list2)] + list2[len(list1):]
+            else:
+                sol = [
+                    a + b for a, b in zip(list1, list2)] + list1[len(list2):]
+            return sol
+
+
 class DifferentialOperator(Expr):
     """
     The operator can be created by providing a list of polynomials for each power of Dx
@@ -112,10 +122,6 @@ class DifferentialOperator(Expr):
             self.listofpoly = list_of_poly
         self.order = len(self.listofpoly) - 1
 
-    def args(self):
-
-        return self.gen_symbol
-
     def __mul__(self, other):
         """
         Multiplies two DifferentialOperator and returns another
@@ -145,15 +151,6 @@ class DifferentialOperator(Expr):
                 return [b * listofother]
 
         sol = _mul_dmp_diffop(listofself[0], listofother)
-
-        def _add_lists(list1, list2):
-            if len(list1) <= len(list2):
-                sol = [
-                    a + b for a, b in zip(list1, list2)] + list2[len(list1):]
-            else:
-                sol = [
-                    a + b for a, b in zip(list1, list2)] + list1[len(list2):]
-            return sol
 
         # compute Dx^i * b
         def _mul_Dxi_b(b):
@@ -199,18 +196,8 @@ class DifferentialOperator(Expr):
 
         if isinstance(other, DifferentialOperator):
 
-            list_self = self.listofpoly
-            list_other = other.listofpoly
-
-            if len(list_self) <= len(list_other):
-                sol = [
-                    a + b for a, b in zip(list_self, list_other)] + list_other[len(list_self):]
-                return DifferentialOperator(sol, self.parent)
-
-            else:
-                sol = [
-                    a + b for a, b in zip(list_self, list_other)] + list_self[len(list_other):]
-                return DifferentialOperator(sol, self.parent)
+            sol = _add_lists(self.listofpoly, other.listofpoly)
+            return DifferentialOperator(sol, self.parent)
 
         else:
 
