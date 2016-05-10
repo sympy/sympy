@@ -1,4 +1,4 @@
-from sympy.functions.special.holonomic import DifferentialOperator, HoloFunc, DiffOperatorAlgebra
+from sympy.holonomic.holonomic import DifferentialOperator, HoloFunc, DiffOperatorAlgebra
 from sympy import symbols
 from sympy import ZZ, QQ, RR
 

@@ -23,7 +23,7 @@ def DiffOperatorAlgebra(base, generator):
     =======
     >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
-    >>> from sympy.functions.special.holonomic import DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import DiffOperatorAlgebra
     >>> x = symbols('x')
     >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
     """
@@ -87,7 +87,7 @@ class DifferentialOperator(object):
     Examples
     ========
 
-    >>> from sympy.functions.special.holonomic import DifferentialOperator, DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import DifferentialOperator, DiffOperatorAlgebra
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy import symbols
     >>> x = symbols('x')
