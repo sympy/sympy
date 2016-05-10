@@ -184,6 +184,7 @@ def test_divmod():
 
 
 def test_igcd():
+    assert igcd() == 0
     assert igcd(0, 0) == 0
     assert igcd(0, 1) == 1
     assert igcd(1, 0) == 1
@@ -205,6 +206,9 @@ def test_igcd():
     assert igcd(*[10, 20, 30]) == 10
     raises(ValueError, lambda: igcd(45.1, 30))
     raises(ValueError, lambda: igcd(45, 30.1))
+    raises(ValueError, lambda: igcd(0, None))
+    raises(ValueError, lambda: igcd(1, 2, None))
+    raises(ValueError, lambda: igcd(None, 1, 2))
 
 
 def test_ilcm():
