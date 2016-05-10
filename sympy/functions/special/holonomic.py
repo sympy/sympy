@@ -32,7 +32,7 @@ def DiffOperatorAlgebra(base, generator):
     return (ring, ring.derivative_operator)
 
 
-class DifferentialOperatorAlgebra:
+class DifferentialOperatorAlgebra(object):
     """ The class representing Differential Operator Algebra.
     Defined by the base polynomial ring and the generator.
 
@@ -76,9 +76,10 @@ def _add_lists(list1, list2):
             return sol
 
 
-class DifferentialOperator(Expr):
+class DifferentialOperator(object):
     """
-    The operator can be created by providing a list of polynomials for each power of Dx
+    This class represents a differential operator created by providing
+     a list of polynomials for each power of Dx
     and the parent ring which must be an instance of DifferentialOperatorAlgebra.
 
     An Operator can also be created easily using the operator `Dx`. See examples below.
@@ -246,7 +247,7 @@ class DifferentialOperator(Expr):
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
 
-    def str(self):
+    def __str__(self):
 
         listofpoly = self.listofpoly
         print_str = ''
@@ -270,7 +271,7 @@ class DifferentialOperator(Expr):
 
         return print_str
 
-    repr = str
+    __repr__ = __str__
 
     def __eq__(self, other):
 
@@ -341,6 +342,8 @@ class HoloFunc(object):
     def __repr__(self):
 
         return 'Holonomic(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.var))
+
+    __str__ = __repr__
 
     def __add__(self, other):
 
