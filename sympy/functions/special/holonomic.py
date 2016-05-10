@@ -135,10 +135,18 @@ class DifferentialOperator(Expr):
 
         gen = self.parent.derivative_operator
         listofpoly = self.listofpoly
-        for i, j in enumerate(listofpoly):
-            if isinstance(j, self.parent.base.dtype):
-                listofpoly[i] = self.parent.base.to_sympy(j)
-        sol = (listofpoly[0] * other)
+
+        def _mul_dmp_diffop(self, other):
+
+            if isinstance(other, DifferentialOperator):
+                sol = []
+                for i in other.listofpoly:
+                    sol.append(i*self)
+                return DifferentialOperator(sol, other.parent)
+            else:
+                return self*other
+
+        sol = _mul_dmp_diffop(listofpoly[0], other)
         # using the commutation rule gen*b = b*gen + b'
 
         def _diff_n_times(b):
@@ -147,7 +155,7 @@ class DifferentialOperator(Expr):
 
         for i in range(1, len(listofpoly)):
             other = _diff_n_times(other)
-            sol += (listofpoly[i] * other)
+            sol += _mul_dmp_diffop(listofpoly[i], other)
 
         return sol
 
