@@ -49,6 +49,7 @@ def test_matrix_symbol_MM():
     Y = eye(3) + X
     assert Y[1, 1] == 1 + X[1, 1]
 
+
 def test_matrix_symbol_vector_matrix_multiplication():
     A = MM * SV
     B = IM * SV
@@ -57,6 +58,7 @@ def test_matrix_symbol_vector_matrix_multiplication():
     assert B == C
     D = (SV.T * IM.T).T
     assert C == D
+
 
 def test_indexing_interactions():
     assert (a * IM)[1, 1] == 5*a
