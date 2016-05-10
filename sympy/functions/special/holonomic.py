@@ -91,7 +91,7 @@ class DifferentialOperator(Expr):
 
     """
 
-    _op_priority = 30
+    _op_priority = 20
 
     def __init__(self, list_of_poly, parent):
         # the parent ring for this operator
@@ -123,41 +123,61 @@ class DifferentialOperator(Expr):
         Dx*a = a*Dx + a'
         """
 
-        if isinstance(other, DifferentialOperator):
-            # if other is `Dx`
-            if other.listofpoly == other.parent.derivative_operator.listofpoly:
-                sol = []
-                sol.append(other.parent.base.zero)
-                for i in self.listofpoly:
-                    sol.append(i)
+        listofself = self.listofpoly
 
-                return DifferentialOperator(sol, self.parent)
+        if not isinstance(other, DifferentialOperator):
+            if not isinstance(other, self.parent.base.dtype):
+                listofother = [self.parent.base.from_sympy(other)]
 
-        gen = self.parent.derivative_operator
-        listofpoly = self.listofpoly
-
-        def _mul_dmp_diffop(self, other):
-
-            if isinstance(other, DifferentialOperator):
-                sol = []
-                for i in other.listofpoly:
-                    sol.append(i*self)
-                return DifferentialOperator(sol, other.parent)
             else:
-                return self*other
+                listofother = [other]
+        else:
+            listofother = other.listofpoly
+        # multiply a polynomial `b` with a list of polynomials
+        def _mul_dmp_diffop(b, listofother):
 
-        sol = _mul_dmp_diffop(listofpoly[0], other)
-        # using the commutation rule gen*b = b*gen + b'
+            if isinstance(listofother, list):
+                sol = []
+                for i in listofother:
+                    sol.append(i * b)
+                return sol
+            else:
+                return [b * listofother]
 
-        def _diff_n_times(b):
-            expr = b * gen + b.diff()
-            return expr
+        sol = _mul_dmp_diffop(listofself[0], listofother)
 
-        for i in range(1, len(listofpoly)):
-            other = _diff_n_times(other)
-            sol += _mul_dmp_diffop(listofpoly[i], other)
+        def _add_lists(list1, list2):
+            if len(list1) <= len(list2):
+                sol = [
+                    a + b for a, b in zip(list1, list2)] + list2[len(list1):]
+            else:
+                sol = [
+                    a + b for a, b in zip(list1, list2)] + list1[len(list2):]
+            return sol
 
-        return sol
+        # compute Dx^i * b
+        def _mul_Dxi_b(b):
+
+            sol1 = [self.parent.base.zero]
+            sol2 = []
+
+            if isinstance(b, list):
+                for i in b:
+                    sol1.append(i)
+                    sol2.append(i.diff())
+            else:
+                sol1.append(self.parent.base.from_sympy(b))
+                sol2.append(self.parent.base.from_sympy(b).diff())
+
+            return _add_lists(sol1, sol2)
+
+        for i in range(1, len(listofself)):
+            # find Dx^i * b in ith iteration
+            listofother = _mul_Dxi_b(listofother)
+            # solution = solution + listofself[i] * (Dx^i * b)
+            sol = _add_lists(sol, _mul_dmp_diffop(listofself[i], listofother))
+
+        return DifferentialOperator(sol, self.parent)
 
     def __rmul__(self, other):
 
@@ -280,15 +300,6 @@ class DifferentialOperator(Expr):
                 return True
             else:
                 return False
-
-    def diff(self):
-        # partial derivative of the operator
-        # with respect to variable of the base ring i.e. `x`
-        listofpoly = self.listofpoly
-        sol = []
-        for i in listofpoly:
-            sol.append(i.diff())
-        return DifferentialOperator(sol, self.parent)
 
 
 def _normalize(list_of_coeff, x, negative=True):
