@@ -505,7 +505,11 @@ class MatrixBase(object):
                 raise ShapeError("Matrices size mismatch.")
             if A.cols == 0:
                 return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
-            blst = B.T.tolist()
+            try:
+                blst = B.T.tolist()
+            except AttributeError:
+                # If B is a MatrixSymbol, B.T.tolist does not exist
+                return NotImplemented
             alst = A.tolist()
             return classof(A, B)._new(A.rows, B.cols, lambda i, j:
                 reduce(lambda k, l: k + l,
