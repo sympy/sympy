@@ -89,6 +89,7 @@ class FreeGroup(Basic):
         elif args[0] is S.Infinity:
             pass
 
+        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
         return obj
 
     @property
@@ -142,8 +143,6 @@ class FreeGroup(Basic):
             gens = self.generators
             str_form += str(gens) + ">"
         return str_form
-
-    __repr__ = __str__
 
     def __eq__(self, other):
         """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
@@ -215,6 +214,9 @@ class FreeGroup(Basic):
         else:
             return False
 
+    def identity(self):
+        return self.dtype()
+
     def contains(self, g):
         """Test if Free Group element ``g`` belong to self, ``G``.
 
@@ -272,15 +274,15 @@ class FreeGroupElm(Basic):
     is_Identity = None
     is_AssocWord = True
 
-    def __new__(cls, free_group, array_form, str_expr=""):
-        obj = Basic.__new__(cls, free_group, array_form, str_expr)
-
-        # `array_form` is used internally by the methods
-        # of `FreeGroupElm`
-        obj._group = free_group
-        obj._array_form = array_form
-        obj._str_expr = str_expr
-        return obj
+#    def __new__(cls, free_group, array_form, str_expr=""):
+#        obj = Basic.__new__(cls, free_group, array_form, str_expr)
+#
+#        # `array_form` is used internally by the methods
+#        # of `FreeGroupElm`
+#        obj._group = free_group
+#        obj._array_form = array_form
+#        obj._str_expr = str_expr
+#        return obj
 
     @property
     def group(self):
@@ -904,7 +906,7 @@ def letter_form_to_array_form(array_form):
 def zero_simp(array_form):
     for i in range(len(array_form) - 1, -1, -1):
         if array_form[i][1] == 0:
-            array_form[i: i + 1] = []
+            del array_form[i]
 
 
 def mult_simp(array_form):
@@ -912,4 +914,4 @@ def mult_simp(array_form):
         if array_form[i][0] == array_form[i - 1][0]:
             array_form[i] = (array_form[i][0],
                     array_form[i][1] + array_form[i - 1][1])
-            array_form[i - 1: i] = []
+            del array_form[i - 1]
