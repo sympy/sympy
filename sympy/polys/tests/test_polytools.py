@@ -2882,8 +2882,7 @@ def test_cancel():
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
-    assert simplify(cancel(expr)) == expr
-
+    assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
