@@ -349,23 +349,27 @@ class Heaviside(Function):
                         ``( 0, if x < 0``
     2) ``Heaviside(x) = < ( undefined if x==0 [*]``
                         ``( 1, if x > 0``
+    3) ``Max(0,x).diff(x) = Heaviside(x)``
 
     .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
-           but Maple uses ``H(0) = undefined``
+           but Maple uses ``H(0) = undefined``.  Different application areas
+           may have specific convensions.  For example, in control theory, it
+           is common practice to assume ``H(0) == 0`` to match the Laplace
+           transform of a DiracDelta distribution.
 
     To specify the value of Heaviside at x=0, a second argument
-    can be given, and Heaviside will that value.
+    can be given.  Omit this 2nd argument or pass NaN to recover the default
+    behavior.
 
-    >>> from sympy import Heaviside
-    >>> from sympy.abc import y
+    >>> from sympy import Heaviside, S
     >>> Heaviside(9)
     1
     >>> Heaviside(-9)
     0
     >>> Heaviside(0)
     Heaviside(0)
-    >>> Heaviside(0, y)
-    y
+    >>> Heaviside(0, S.Half)
+    1/2
 
     See Also
     ========
@@ -376,6 +380,7 @@ class Heaviside(Function):
     ==========
 
     .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [2] http://dlmf.nist.gov/1.16#iv
 
     """
 
@@ -456,16 +461,19 @@ class Heaviside(Function):
         if H0 == None:
             H0 = S.NaN
         arg = sympify(arg)
-        if arg is S.NaN:
-            return S.NaN
-        elif fuzzy_not(im(arg).is_zero):
-            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
-        elif arg.is_negative:
+        if arg.is_negative:
             return S.Zero
         elif arg.is_positive:
             return S.One
-        elif arg.is_zero and H0 != S.NaN:
-            return H0
+        elif arg.is_zero:
+            if H0 == S.NaN:
+                return cls(arg)
+            elif H0 != None:
+                return H0
+        elif arg is S.NaN:
+            return S.NaN
+        elif fuzzy_not(im(arg).is_zero):
+            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
     def _eval_rewrite_as_Piecewise(self, arg):
         """Represents Heaviside in a Piecewise form
@@ -529,6 +537,10 @@ class Heaviside(Function):
         if arg.is_real:
             if H0 == None:
                 return Piecewise((1, arg > 0), (0, arg < 0))
+            if H0 == 0:
+                return Piecewise((1, arg > 0), (0, True))
+            if H0 == 1:
+                return Piecewise((1, arg >= 0), (0, True))
             return Piecewise((1, arg > 0), (H0, Eq(arg, 0)), (0, True))
 
     def _eval_rewrite_as_sign(self, *args):
