@@ -294,10 +294,6 @@ class FreeGroupElm(CantSympify, list):
     is_AssocWord = True
 
     @property
-    def expt(self):
-        return self._expt
-
-    @property
     def is_identity(self):
         if self.array_form == list():
             return True
@@ -443,7 +439,8 @@ class FreeGroupElm(CantSympify, list):
                     "be multiplied")
         if self.is_identity:
             return other
-
+        if other.is_identity:
+            return self
         if self.array_form[-1][0] == other.array_form[0][0]:
             r.extend(self.array_form[:-1])
             r.append((self.array_form[-1][0], self.array_form[-1][1] +
@@ -451,7 +448,7 @@ class FreeGroupElm(CantSympify, list):
             r.extend(other.array_form[1:])
         else:
             r.extend(self.array_form + other.array_form)
-
+        zero_mul_simp(r)
         return r
 
     def __div__(self, other):
@@ -545,9 +542,7 @@ class FreeGroupElm(CantSympify, list):
 
             if len(app) > 0:
                 l.append(tuple(app))
-        zero_simp(l)
-        mult_simp(l)
-        zero_simp(l)
+        zero_mul_simp(l)
         return FreeGroupElm(self.group, l, self.str_expr)
 
     def __eq__(self, other):
@@ -865,15 +860,13 @@ def letter_form_to_array_form(array_form):
             n = 1
 
 
-def zero_simp(array_form):
+def zero_mul_simp(array_form):
     for i in range(len(array_form) - 1, -1, -1):
         if array_form[i][1] == 0:
             del array_form[i]
-
-
-def mult_simp(array_form):
-    for i in range(len(array_form) - 1, 0, -1):
-        if array_form[i][0] == array_form[i - 1][0]:
-            array_form[i] = (array_form[i][0],
-                    array_form[i][1] + array_form[i - 1][1])
-            del array_form[i - 1]
+            if array_form[i][0] == array_form[i - 1][0]:
+                new_exp = array_form[i - 1][1] + array_form[i][1]
+                array_form[i -1] = (array_form[i - 1][0], new_exp)
+                del array_form[i]
+                # call the function again to see the presence of zero exp
+                zero_mul_simp(array_form)
