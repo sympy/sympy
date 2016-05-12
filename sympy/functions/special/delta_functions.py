@@ -165,7 +165,7 @@ class DiracDelta(Function):
            Examples
            ========
 
-           >>> from sympy import DiracDelta, Piecewise, Symbol 
+           >>> from sympy import DiracDelta, Piecewise, Symbol
            >>> from sympy.abc import x, y
            >>> x = Symbol('x', real=True)
 
