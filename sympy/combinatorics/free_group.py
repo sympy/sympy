@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int
+from sympy.core.sympify import CantSympify
+from collections.abc import Sequence
 from sympy.core import S
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
@@ -102,10 +104,13 @@ class FreeGroup(Basic):
         >>> f = FreeGroup( 3, "swapnil" )
         >>> f.generators
         [swapnil0, swapnil1, swapnil2]
-
         """
-        return [FreeGroupElm(self, [(i, 1)], self.as_str) for i in
-                range(self.rank)]
+        _gens = []
+        for i in range(self.rank):
+            elm = self.identity
+            elm.append((i, 1))
+            _gens.append(elm)
+        return _gens
 
     def __getitem__(self, i):
         return self.generators[i]
@@ -214,6 +219,7 @@ class FreeGroup(Basic):
         else:
             return False
 
+    @property
     def identity(self):
         return self.dtype()
 
@@ -262,7 +268,7 @@ class FreeGroup(Basic):
 ############################################################################
 
 
-class FreeGroupElm(Basic):
+class FreeGroupElm(CantSympify, list):
     """
     ``FreeGroupElm`` is actually not usable as public import, since it is
     always associated with a ``FreeGroup``. It is always called only by the
@@ -274,38 +280,9 @@ class FreeGroupElm(Basic):
     is_Identity = None
     is_AssocWord = True
 
-#    def __new__(cls, free_group, array_form, str_expr=""):
-#        obj = Basic.__new__(cls, free_group, array_form, str_expr)
-#
-#        # `array_form` is used internally by the methods
-#        # of `FreeGroupElm`
-#        obj._group = free_group
-#        obj._array_form = array_form
-#        obj._str_expr = str_expr
-#        return obj
-
-    @property
-    def group(self):
-        """
-        Returns the `FreeGroup` on which the element itself is defined.
-
-        Examples
-        ========
-
-        >>> f = FreeGroup( 4 )
-        >>> g = FreeGroup( 4, "swapnil" )
-        >>> (f[0]**2*f[2]).group
-        <free group on the generators [f0, f1, f2, f3]>
-
-        >>> (g[1]**2*g[3]*g[1]).group
-        <free group on the generators [swapnil0, swapnil1, swapnil2, swapnil3]>
-
-        """
-        return self._group
-
     @property
     def str_expr(self):
-        return self._str_expr
+        return "f"
 
     @property
     def expt(self):
@@ -356,7 +333,7 @@ class FreeGroupElm(Basic):
         letter_repr
 
         """
-        return self._array_form
+        return list([i for i in self])
 
     @property
     def letter_form(self):
@@ -417,8 +394,6 @@ class FreeGroupElm(Basic):
                             "**" + str(array_form[i][1]) + "*"
         return str_form
 
-    __repr__ = __str__
-
     def __pow__(self, other):
         if not isinstance(other, int):
             raise TypeError("exponent of type: int expected not "
@@ -474,29 +449,6 @@ class FreeGroupElm(Basic):
 
     def __div__(self, other):
         return self*(other.inverse())
-
-    def __len__(self):
-        """
-        For a FreeGroup element self, `len()` returns the number of
-        letters in self.
-
-        Examples
-        ========
-
-        >>> from sympy import FreeGroup
-        >>> f = FreeGroup( 2 ); gens = f.generators
-        >>> a, b = gens[0], gens[1]; w = a**5*b*a**2*b**-4*a;
-        >>> w
-        a**5*b*a**2*b**-4*a
-        >>> len( w )
-        13
-        >>> len( a**17 )
-        17
-        >>> len( w**0 )
-        0
-
-        """
-        return sum([abs(syllable[1]) for syllable in self.array_form])
 
     def inverse(self):
         """
