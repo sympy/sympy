@@ -5,8 +5,14 @@ from sympy.core.compatibility import as_int
 from sympy.core.sympify import CantSympify
 from collections.abc import Sequence
 from sympy.core import S
+from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
+
+@public
+def free_group(rank, str_expr="f"):
+    _free_group = FreeGroup(rank, str_expr)
+    return (_free_group,) + tuple(_free_group.generators)
 
 
 ##############################################################################
@@ -91,7 +97,8 @@ class FreeGroup(Basic):
         elif args[0] is S.Infinity:
             pass
 
-        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
+        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj,
+                        "str_expr": obj._str})
         return obj
 
     @property
@@ -148,6 +155,8 @@ class FreeGroup(Basic):
             gens = self.generators
             str_form += str(gens) + ">"
         return str_form
+
+    __repr__ = __str__
 
     def __eq__(self, other):
         """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
@@ -277,19 +286,15 @@ class FreeGroupElm(CantSympify, list):
     the third argument is a string representation for the element.
 
     """
-    is_Identity = None
+    is_identity = None
     is_AssocWord = True
-
-    @property
-    def str_expr(self):
-        return "f"
 
     @property
     def expt(self):
         return self._expt
 
     @property
-    def is_Identity(self):
+    def is_identity(self):
         if self.array_form == list():
             return True
         else:
@@ -374,8 +379,8 @@ class FreeGroupElm(CantSympify, list):
         return flatten(self.array_form)
 
     def __str__(self):
-        if self.is_Identity:
-            return "<identity ...>"
+        if self.is_identity:
+            return "<identity>"
 
         str_form = ""
         array_form = self.array_form
@@ -394,19 +399,20 @@ class FreeGroupElm(CantSympify, list):
                             "**" + str(array_form[i][1]) + "*"
         return str_form
 
-    def __pow__(self, other):
-        if not isinstance(other, int):
-            raise TypeError("exponent of type: int expected not "
-                             "of type: %s" % type(other))
-        if other == 0:
-            return FreeGroupElm(self.group, [])
+    __repr__ = __str__
 
-        if other < 0:
-            other = -other
-            return (self.inverse())**other
+    def __pow__(self, n):
+        n = as_int(n)
+        group = self.group
+        if n == 0:
+            return group.identity
+
+        if n < 0:
+            n = -n
+            return (self.inverse())**n
 
         result = self
-        for i in range(other - 1):
+        for i in range(n - 1):
             result = result*self
         return result
 
@@ -423,29 +429,26 @@ class FreeGroupElm(CantSympify, list):
         >>> f[2]*f[1]**-2
         swapnil2*swapnil1**-2
         >>> (f[0]**2*f[1]*f[1]**-1*f[0]**-2)
-        <identity ...>
+        <identity>
 
         """
-        if not isinstance(other, FreeGroupElm) or self.group != other.group:
+        group = self.group
+        r = group.identity
+        if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
-        if self.is_Identity:
+        if self.is_identity:
             return other
 
-        new_array = self.array_form[:-1]
         if self.array_form[-1][0] == other.array_form[0][0]:
-            new_array.append((self.array_form[-1][0], self.array_form[-1][1] +
+            r.extend(self.array_form[:-1])
+            r.append((self.array_form[-1][0], self.array_form[-1][1] +
                 other.array_form[0][1]))
-            new_array += other.array_form[1:]
+            r.extend(other.array_form[1:])
         else:
-            new_array.append(self.array_form[-1])
-            new_array += other.array_form[:]
+            r.extend(self.array_form + other.array_form)
 
-        a = new_array
-        zero_simp(a)
-        mult_simp(a)
-        zero_simp(a)
-        return FreeGroupElm(self.group, new_array, str_expr=self.str_expr)
+        return r
 
     def __div__(self, other):
         return self*(other.inverse())
@@ -465,8 +468,10 @@ class FreeGroupElm(CantSympify, list):
         swapnil1**-1*swapnil0**-1
 
         """
-        new_array = [(i, -j) for i, j in self.array_form[::-1]]
-        return FreeGroupElm(self.group, new_array, self.str_expr)
+        group = self.group
+        r = group.identity
+        r.extend([(i, -j) for i, j in self.array_form])
+        return r
 
     def order(self):
         """Find the order of a `FreeGroupElm`.
@@ -480,7 +485,7 @@ class FreeGroupElm(CantSympify, list):
         1
 
         """
-        if self.is_Identity:
+        if self.is_identity:
             return 1
         else:
             return S.Infinity
@@ -488,7 +493,8 @@ class FreeGroupElm(CantSympify, list):
     def commutator(self, other):
         """Returns the commutator of self and x: ``~x*~self*x*self``
         """
-        if not isinstance(other, FreeGroupElm) or self.group != other.group:
+        group = self.group
+        if not isinstance(other, group.dtype):
             raise ValueError("commutator of only `FreeGroupElm` of the same "
                     "`FreeGroup` exists")
         else:
@@ -571,12 +577,10 @@ class FreeGroupElm(CantSympify, list):
         False
 
         """
-        if not isinstance(other, FreeGroupElm):
+        group = self.group
+        if not isinstance(other, group.dtype):
             return False
-        if self.group != other.group or self.array_form != other.array_form:
-            return False
-        else:
-            return True
+        return list.__eq__(self, other)
 
     def __lt__(self, other):
         """
@@ -599,7 +603,8 @@ class FreeGroupElm(CantSympify, list):
         >>> a[0] < a[0].inverse()
         False
         """
-        if not isinstance(other, FreeGroupElm) or self.group != other.group:
+        group = self.group
+        if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                              "be compared")
         a = self.letter_form
@@ -643,7 +648,8 @@ class FreeGroupElm(CantSympify, list):
         True
 
         """
-        if not isinstance(other, FreeGroupElm) or self.group != other.group:
+        group = self.group
+        if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                              "be compared")
         return not self <= other
