@@ -80,3 +80,6 @@ def test_rewrite():
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
+
+    assert DiracDelta(x-5).rewrite(Piecewise) == \
+        Piecewise(('undefined', Eq(x-5, 0)), (0, True))

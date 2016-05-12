@@ -159,6 +159,26 @@ class DiracDelta(Function):
             return p.degree() == 1
         return False
 
+    def _eval_rewrite_as_Piecewise(self, arg):
+        """Represents DiracDelta in a Piecewise form
+
+           Examples
+           ========
+
+           >>> from sympy import DiracDelta
+           >>> from sympy.abc import x, y
+           >>> x = Symbol('x', real=True)
+
+           >>> DiracDelta(x).rewrite(Piecewise)
+           Piecewise((undefined, Eq(x, 0)), (0, True))
+
+           >>> DiracDelta(x - 5).rewrite(Piecewise)
+           Piecewise((undefined, Eq(x - 5, 0)), (0, True))
+
+        """
+        if arg.is_real:
+            return Piecewise(('undefined', Eq(arg, 0)), (0, True))
+
     @staticmethod
     def _latex_no_arg(printer):
         return r'\delta'
