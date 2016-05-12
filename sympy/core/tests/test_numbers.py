@@ -8,9 +8,13 @@ from sympy.core.power import integer_nthroot
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     mpf_norm, comp, mod_inverse)
-from mpmath import mpf
+from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
+
+from mpmath import mpf
 import mpmath
+
+
 
 t = Symbol('t', real=False)
 
@@ -185,6 +189,7 @@ def test_divmod():
 
 def test_igcd():
     assert igcd() == 0
+    assert igcd(-2) == 2
     assert igcd(0, 0) == 0
     assert igcd(0, 1) == 1
     assert igcd(1, 0) == 1
@@ -204,11 +209,11 @@ def test_igcd():
     assert igcd(-7, 3) == 1
     assert igcd(-7, -3) == 1
     assert igcd(*[10, 20, 30]) == 10
-    raises(ValueError, lambda: igcd(45.1, 30))
-    raises(ValueError, lambda: igcd(45, 30.1))
     raises(ValueError, lambda: igcd(0, None))
-    raises(ValueError, lambda: igcd(1, 2, None))
-    raises(ValueError, lambda: igcd(None, 1, 2))
+    for args in permutations((45.1, 1, 30)):
+        raises(ValueError, lambda: igcd(*args))
+    for args in permutations((1, 2, None)):
+        raises(ValueError, lambda: igcd(*args))
 
 
 def test_ilcm():

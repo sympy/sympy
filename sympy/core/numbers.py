@@ -155,34 +155,31 @@ def igcd(*args):
     5
 
     """
-    a = 0
-    args = list(args)
-    while args:
-        a = args.pop()
-        if a == 0:
-            continue
-        break
-    if a not in (0, 1):
-        a = abs(as_int(a))
-        while args:
-            b = args.pop()
-            if b == 0:
-                continue
-            if b == 1:
-                a = 1
-                break
-            b = abs(as_int(b))
-            t = a, b
+    a = abs(as_int(args[0])) if args else 0
+    k = 1
+    if a != 1:
+        while k < len(args):
+            b = args[k]
+            k += 1
             try:
-                a = _gcdcache[t]
+                a = _gcdcache[(a, b)]
             except KeyError:
+                b = as_int(b)
+                if not b:
+                    continue
+                if b == 1:
+                    a = 1
+                    break
+                if b < 0:
+                    b = -b
+                t = a, b
                 while b:
                     a, b = b, a % b
-                _gcdcache[t] = a
-                if a == 1:
-                    break
-    test_others = [as_int(arg) for arg in args]
-    return int(a)  # convert long to int if possible for py 2.7
+                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
+    while k < len(args):
+        ok = as_int(args[k])
+        k += 1
+    return a
 
 
 def ilcm(*args):
