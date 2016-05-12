@@ -22,3 +22,9 @@ def test_freegroupelm():
     assert (f[0]**3).letter_form == list([1, 1, 1])
     assert (f[0]**-2*f[1]**3*f[3]).letter_form == list([-1, -1, 2, 2, 2, 4])
     assert ((f[1])**0).order() == 1
+
+
+def test_is_abelian():
+    g = FreeGroup(0)
+    assert g.is_abelian == True
+    assert f.is_abelian == False

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int
 from sympy.core.sympify import CantSympify
+from mpmath import isint
 from collections.abc import Sequence
 from sympy.core import S
 from sympy.utilities import public
@@ -28,25 +29,25 @@ class FreeGroup(Basic):
     concatenation of the string `name` and an integer from `0` to `range-1`.
     The default for `name` is the string "f".
 
-    ``FreeGroup( rank )``     ..........................................  (1)
+    ``FreeGroup(rank)``                                      ............ (1)
 
     Called in the second form, ``FreeGroup`` returns a free group on as many
     generators as arguments, printed as `name0`, `name1` etc.
 
-    ``FreeGroup( rank, "name" )`` ......................................  (2)
+    ``FreeGroup(rank, "name")``                              ............ (2)
 
     Called in the third form, ``FreeGroup`` returns a free group on as many
     generators as the length of the list `names`, the i-th generator being
     printed as `names[i]`.
 
-    ``FreeGroup( "string0", "string1", "string2", ... )`` ..............  (3)
+    ``FreeGroup("string0", "string1", "string2", .. , "string_n-1" )`` ... (3)
 
     Called in the fourth form, ``FreeGroup`` returns a free group on
     infinitely many generators, where the first generators are printed by the
     names in the list `init`, and the other generators by `name` and an appended
     number. Like ``FreeGroup( S.Infinity )``.
 
-    ```FreeGroup( S.Infinity, name, init )```   ........................  (4)
+    ``FreeGroup( S.Infinity, name, init )``                   ............ (4)
 
     References
     ==========
@@ -69,7 +70,8 @@ class FreeGroup(Basic):
 
         obj = Basic.__new__(cls, *args, **kwargs)
 
-        if as_int(args[0]) and args[0] >= 0:
+        if isint(args[0]) and args[0] >= 0:
+            rank = as_int(args[0])
 
             # (1) form of the API used here
             if len(args) == 1:
@@ -85,7 +87,7 @@ class FreeGroup(Basic):
             else:
                 raise ValueError("Invalid arguments")
 
-            obj._rank = args[0]
+            obj._rank = rank
 
         # (3) form of API, where all the generators of `FreeGroup`
         # given as strings.
@@ -790,7 +792,7 @@ class FreeGroupElm(CantSympify, list):
         Examples
         ========
 
-        >>> from symp.combinatorics.free_group import FreeGroup
+        >>> from sympy.combinatorics.free_group import FreeGroup
         >>> f = FreeGroup( 4 )
         >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
         >>> w.sub_syllables(1, 2)
