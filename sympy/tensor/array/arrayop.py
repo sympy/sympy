@@ -210,25 +210,22 @@ def derive_by_array(expr, dx):
             return diff(expr, dx)
 
 
-def _array_transpose(expr, order=None):
+def permutedims(expr, perm):
     """
-    Evaluates the transpose of an array.
+    Permutes the indices of an array.
 
-    Optional parameter to specify an index permutation.
+    Parameter specifies the permutation of the indices.
     """
     if not isinstance(expr, NDimArray):
-        return transpose(expr)
+        raise TypeError("expression has to be an N-dim array")
 
+    perm = tuple(perm)
     rank = expr.rank()
 
-    if order is None:
-        # order is reversed indices order:
-        order = tuple(reversed(range(expr.rank())))
-    elif len(order) < rank:
-        # order is incomplete, fill it:
-        order = tuple(order) + tuple(range(len(order), rank))
+    if tuple(sorted(perm)) != tuple(range(rank)):
+        raise ValueError("not a permutation")
 
-    reverse = [order.index(i) for i in range(rank)]
+    reverse = [perm.index(i) for i in range(rank)]
 
     def permute_array(arr):
         new_arr = [None]*len(arr)

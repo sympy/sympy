@@ -368,8 +368,10 @@ class NDimArray(object):
             return Derivative(self, *args, **kwargs)
 
     def _eval_transpose(self):
-        from .arrayop import _array_transpose
-        return _array_transpose(self)
+        if self.rank() != 2:
+            raise ValueError("array rank not 2")
+        from .arrayop import permutedims
+        return permutedims(self, (1, 0))
 
     def transpose(self):
         return self._eval_transpose()

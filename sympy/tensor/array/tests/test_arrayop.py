@@ -1,7 +1,9 @@
+from sympy.utilities.pytest import raises
+
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate
 from sympy.tensor.array import Array
 
-from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, _array_transpose
+from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
 
 
 def test_tensorproduct():
@@ -86,12 +88,12 @@ def test_issue_emerged_while_discussing_10972():
                                                            [sa[110] + sa[126] + sa[142] + sa[18] + sa[2] + sa[34], sa[111] + sa[127] + sa[143] + sa[19] + sa[3] + sa[35]]])
 
 
-def test_array_transpose():
+def test_array_permutedims():
     sa = symbols('a0:144')
 
     m1 = Array(sa[:6], (2, 3))
-    assert _array_transpose(m1) == transpose(m1)
-    assert m1.tomatrix().T == _array_transpose(m1).tomatrix()
+    assert permutedims(m1, (1, 0)) == transpose(m1)
+    assert m1.tomatrix().T == permutedims(m1, (1, 0)).tomatrix()
 
     assert m1.tomatrix().T == transpose(m1).tomatrix()
     assert m1.tomatrix().C == conjugate(m1).tomatrix()
@@ -103,7 +105,11 @@ def test_array_transpose():
 
     po = Array(sa, [2, 2, 3, 3, 2, 2])
 
-    assert _array_transpose(po) == Array(
+    raises(ValueError, lambda: permutedims(po, (1, 1)))
+    raises(ValueError, lambda: po.transpose())
+    raises(ValueError, lambda: po.adjoint())
+
+    assert permutedims(po, reversed(range(po.rank()))) == Array(
         [[[[[[sa[0], sa[72]], [sa[36], sa[108]]], [[sa[12], sa[84]], [sa[48], sa[120]]], [[sa[24],
                                                                                            sa[96]], [sa[60], sa[132]]]],
            [[[sa[4], sa[76]], [sa[40], sa[112]]], [[sa[16],
@@ -138,7 +144,7 @@ def test_array_transpose():
                                                      sa[95]], [sa[59], sa[131]]],
             [[sa[35], sa[107]], [sa[71], sa[143]]]]]]])
 
-    assert _array_transpose(po, (1, 0)) == Array(
+    assert permutedims(po, (1, 0, 2, 3, 4, 5)) == Array(
         [[[[[[sa[0], sa[1]], [sa[2], sa[3]]], [[sa[4], sa[5]], [sa[6], sa[7]]], [[sa[8], sa[9]], [sa[10],
                                                                                                   sa[11]]]],
            [[[sa[12], sa[13]], [sa[14], sa[15]]], [[sa[16], sa[17]], [sa[18],
@@ -181,7 +187,7 @@ def test_array_transpose():
                                                                                      sa[139]]],
                                                                [[sa[140], sa[141]], [sa[142], sa[143]]]]]]])
 
-    assert _array_transpose(po, (0, 2, 1, 4, 3)) == Array(
+    assert permutedims(po, (0, 2, 1, 4, 3, 5)) == Array(
         [[[[[[sa[0], sa[1]], [sa[4], sa[5]], [sa[8], sa[9]]], [[sa[2], sa[3]], [sa[6], sa[7]], [sa[10],
                                                                                                 sa[11]]]],
            [[[sa[36], sa[37]], [sa[40], sa[41]], [sa[44], sa[45]]], [[sa[38],
