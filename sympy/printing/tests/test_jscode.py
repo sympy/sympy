@@ -361,6 +361,6 @@ def test_Matrix_printing():
         "M[3] = q[1] + q[2];\n"
         "M[4] = q[3];\n"
         "M[5] = 5;\n"
-        "M[6] = 2*q[4]*1/q[1];\n"
-        "M[7] = 4 + Math.sqrt(q[0]);\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
