@@ -68,7 +68,7 @@ class DiracDelta(Function):
         if arg.is_positive or arg.is_negative:
             return S.Zero
 
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0")
+    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
     def simplify(self, x):
         return self.expand(diracdelta=True, wrt=x)
 
