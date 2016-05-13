@@ -524,6 +524,11 @@ def test_solveset_real_log():
         FiniteSet(sqrt(2), -sqrt(2))
 
 
+def test_solveset_real_transcendental():
+    assert solveset_real((-2)**x - 4, x) == \
+        FiniteSet(log(4)/log(2))
+
+
 def test_poly_gens():
     assert solveset_real(4**(2*(x**2) + 2*x) - 8, x) == \
         FiniteSet(-Rational(3, 2), S.Half)

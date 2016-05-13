@@ -170,7 +170,7 @@ def _invert_real(f, g_ys, symbol):
 
         if not base_has_sym:
             return _invert_real(expo,
-                imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+                imageset(Lambda(n, log(n)/log(abs(base))), g_ys), symbol)
 
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):

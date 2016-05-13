@@ -2546,13 +2546,8 @@ def _tsolve(eq, sym, **flags):
                 return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
             elif (rhs is not S.Zero and
-                        lhs.base.is_positive and
                         lhs.exp.is_real):
-                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
-            elif (rhs is not S.Zero and
-                        lhs.base.is_negative and
-                        lhs.exp.is_real):
-                return _solve(lhs.exp*log(-1*(lhs.base)) - log(rhs), sym, **flags)
+                return _solve(lhs.exp*log(abs(lhs.base)) - log(rhs), sym, **flags)
             elif lhs.base == 0 and rhs == 1:
                 return _solve(lhs.exp, sym, **flags)
 
