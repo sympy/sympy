@@ -110,11 +110,11 @@ class FreeGroup(Basic):
         [swapnil0, swapnil1, swapnil2]
 
         """
+        group = self
         gens = []
         for i in range(self.rank):
-            elm = self.identity
-            elm.append((i, 1))
-            gens.append(elm)
+            elm = ((i, 1),)
+            gens.append(group.dtype(elm))
         return gens
 
     def __getitem__(self, i):
@@ -154,7 +154,7 @@ class FreeGroup(Basic):
             str_form += str(gens) + ">"
         return str_form
 
-    #__repr__ = __str__
+    __repr__ = __str__
 
     def __eq__(self, other):
         """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
@@ -271,7 +271,7 @@ class FreeGroup(Basic):
 ############################################################################
 
 
-class FreeGroupElm(CantSympify, list):
+class FreeGroupElm(CantSympify, tuple):
     """
     ``FreeGroupElm`` is actually not usable as public import, since it is
     always associated with a ``FreeGroup``. It is always called only by the
@@ -285,7 +285,7 @@ class FreeGroupElm(CantSympify, list):
 
     @property
     def is_identity(self):
-        if self.array_form == list():
+        if self.array_form == tuple():
             return True
         else:
             return False
@@ -328,7 +328,7 @@ class FreeGroupElm(CantSympify, list):
         letter_repr
 
         """
-        return list([i for i in self])
+        return tuple(self)
 
     @property
     def letter_form(self):
@@ -423,7 +423,6 @@ class FreeGroupElm(CantSympify, list):
 
         """
         group = self.group
-        r = group.identity
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
@@ -432,14 +431,14 @@ class FreeGroupElm(CantSympify, list):
         if other.is_identity:
             return self
         if self.array_form[-1][0] == other.array_form[0][0]:
-            r.extend(self.array_form[:-1])
-            r.append((self.array_form[-1][0], self.array_form[-1][1] +
-                other.array_form[0][1]))
-            r.extend(other.array_form[1:])
+            r = tuple()
+            updated_exp = self.array_form[-1][1] + other.array_form[0][1]
+            updated_base = self.array_form[-1][0]
+            r += self.array_form[:-1] + ((updated_base, updated_exp),) + other.array_form[1:]
         else:
-            r.extend(self.array_form + other.array_form)
-        zero_mul_simp(r)
-        return r
+            r = tuple(self.array_form + other.array_form)
+        r = zero_mul_simp(r)
+        return group.dtype(r)
 
     def __div__(self, other):
         return self*(other.inverse())
@@ -460,9 +459,8 @@ class FreeGroupElm(CantSympify, list):
 
         """
         group = self.group
-        r = group.identity
-        r.extend([(i, -j) for i, j in self.array_form])
-        return r
+        r = tuple([(i, -j) for i, j in self.array_form])
+        return group.dtype(r)
 
     def order(self):
         """Find the order of a `FreeGroupElm`.
@@ -510,6 +508,7 @@ class FreeGroupElm(CantSympify, list):
         f1**-11
 
         """
+        group = self.group
         e = self.ext_rep()
         gen = gen.generator_syllable(0)
         l = []
@@ -532,8 +531,8 @@ class FreeGroupElm(CantSympify, list):
 
             if len(app) > 0:
                 l.append(tuple(app))
-        zero_mul_simp(l)
-        return FreeGroupElm(self.group, l, self.str_expr)
+        l = zero_mul_simp(l)
+        return group.dtype(l)
 
     def __eq__(self, other):
         """
@@ -569,7 +568,7 @@ class FreeGroupElm(CantSympify, list):
         group = self.group
         if not isinstance(other, group.dtype):
             return False
-        return list.__eq__(self, other)
+        return tuple.__eq__(self, other)
 
     def __lt__(self, other):
         """
@@ -703,15 +702,16 @@ class FreeGroupElm(CantSympify, list):
         f0**3*f1
 
         """
+        group = self.group
         if from_i < 0 or to_j >= len(self):
             raise ValueError("`from_i`, `to_j` must be positive and less than "
                     "the length of associative word")
         if to_j <= from_i:
-            return FreeGroupElm(self.group, [])
+            return group.identity
         else:
             letter_form = self.letter_form[from_i: to_j]
             array_form = letter_form_to_array_form(letter_form)
-            return FreeGroupElm(self.group, array_form, self.str_expr)
+            return group.dtype(array_form)
 
     def AssocWordByLetterRep(self, lrep):
         """
@@ -788,11 +788,12 @@ class FreeGroupElm(CantSympify, list):
         """
         if not isinstance(from_i, int) or not isinstance(to_j, int):
             raise ValueError("both arguments should be integers")
+        group = self.group
         if to_j <= from_i:
-            return FreeGroupElm(self.group, [])
+            return self.identity
         else:
-            return FreeGroupElm(self.group, self.array_form[from_i: to_j],
-                    self.str_expr)
+            r = tuple(self.array_form[from_i: to_j])
+            return group.dtype(r)
 
     def substitute_word(self, from_i, to_j, by):
         """
@@ -830,7 +831,7 @@ def letter_form_to_array_form(array_form):
     [(0, 3), (-1, 2), (4, 1), (0, 3), (3, 4)]
 
     """
-    a = array_form[:]
+    a = list(array_form[:])
     new_array = []
     n = 1
     for i in range(len(a)):
@@ -851,6 +852,8 @@ def letter_form_to_array_form(array_form):
 
 
 def zero_mul_simp(array_form):
+    # bug evaluating f[0]*f[1]*f[1]**-1*f[2]**3
+    array_form = list(array_form)
     for i in range(len(array_form) - 1, -1, -1):
         if array_form[i][1] == 0:
             del array_form[i]
@@ -859,4 +862,5 @@ def zero_mul_simp(array_form):
                 array_form[i -1] = (array_form[i - 1][0], new_exp)
                 del array_form[i]
                 # call the function again to see the presence of zero exp
-                zero_mul_simp(array_form)
+                return zero_mul_simp(array_form)
+    return tuple(array_form)
