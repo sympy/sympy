@@ -166,7 +166,6 @@ class DiracDelta(Function):
            ========
 
            >>> from sympy import DiracDelta, Piecewise, Symbol, oo
-           >>> from sympy.abc import x, y
            >>> x = Symbol('x', real=True)
 
            >>> DiracDelta(x).rewrite(Piecewise)
