@@ -68,3 +68,26 @@ def test_HolonomicFunction_multiplication():
     q = HolonomicFunction(Dx*x-x, x)
     r = HolonomicFunction((x - 3) + (-2*x + 2)*Dx + (x)*Dx**2, x)
     assert p*q == r
+
+def test_addition_initial_condition():
+    x = symbols('x')
+    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    p = HolonomicFunction(Dx-1, x, 0, 3)
+    q = HolonomicFunction(Dx**2+1, x, 0, [1, 0])
+    r = HolonomicFunction(-1 + Dx - Dx**2 + Dx**3, x, 0, [4, 3, 2])
+    assert p + q == r
+    p = HolonomicFunction(Dx - x + Dx**2, x, 0, [1, 2])
+    q = HolonomicFunction(Dx**2 + x, x, 0, [1, 0])
+    r = HolonomicFunction((-4*x**4 - x**3 - 4*x**2 + 1) + (4*x**3 + x**2 + 3*x + 4)*Dx + \
+        (-6*x + 7)*Dx**2 + (4*x**2 - 7*x + 1)*Dx**3 + (4*x**2 + x + 2)*Dx**4, x, 0, [2, 2, -2, 2])
+    assert p + q == r
+    p = HolonomicFunction(Dx**2 + 4*x*Dx + x**2, x, 0, [3, 4])
+    q = HolonomicFunction(Dx**2 + 1, x, 0, [1, 1])
+    r = HolonomicFunction((x**6 + 2*x**4 - 5*x**2 - 6) + (4*x**5 + 36*x**3 - 32*x)*Dx + \
+         (x**6 + 3*x**4 + 5*x**2 - 9)*Dx**2 + (4*x**5 + 36*x**3 - 32*x)*Dx**3 + (x**4 + \
+            10*x**2 - 3)*Dx**4, x, 0, [4, 5, -1, -17])
+    q = HolonomicFunction(Dx**3 + x, x, 2, [3, 0, 1])
+    p = HolonomicFunction(Dx - 1, x, 2, [1])
+    r = HolonomicFunction((-x**2 - x + 1) + (x**2 + x)*Dx + (-x - 2)*Dx**3 + \
+        (x + 1)*Dx**4, x, 2, [4, 1, 2, -5 ])
+    assert p + q == r

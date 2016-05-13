@@ -351,6 +351,26 @@ def _normalize(list_of_coeff, x, negative=True):
     return list_of_coeff
 
 
+def _derivate_diff_eq(listofpoly):
+    """
+    Let a differential equation a0(x)y(x) + a1(x)y'(x) + ... = 0
+    where a0, a1,... are polynomials or rational functions. The function
+    returns b0, b1, b2... such that the differential equation
+    b0(x)y(x) + b1(x)y'(x) +... = 0 is formed after differentiating the
+    former equation.
+    """
+
+    sol = []
+    a = len(listofpoly) - 1
+    sol.append(listofpoly[0].diff())
+
+    for i, j in enumerate(listofpoly[1:]):
+        sol.append(j.diff() + listofpoly[i])
+
+    sol.append(listofpoly[a])
+    return sol
+
+
 class HolonomicFunction(object):
     """
     A Holonomic Function is a solution to a linear homogeneous ordinary
@@ -372,38 +392,61 @@ class HolonomicFunction(object):
     >>> x = symbols('x')
     >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
 
-    >>> p = HolonomicFunction(Dx - 1, x) # e^x
-    >>> q = HolonomicFunction(Dx**2 + 1, x) # sin(x) or cos(x)
+    >>> p = HolonomicFunction(Dx - 1, x, 0, [1]) # e^x
+    >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]) # sin(x)
 
-    >>> p + q # annihilator of e^x + sin(x) or e^x + cos(x)
-    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x)
+    >>> p + q # annihilator of e^x + sin(x)
+    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x) f(0) = 1 f'(0) = 2 
+    f''(0) = 1
 
-    >>> p * q # annihilator of e^x * sin(x) or e^x * cos(x)
+    >>> p * q # annihilator of e^x * sin(x)
     HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x)
 
     """
 
-    def __init__(self, annihilator, x, *args):
-        if len(args) is 2:
-            self.cond = args[0]
-            self.cond_point = args[1]
-        elif len(args) is 1:
-            self.cond = args[0]
-            self.cond_point = 0
+    def __init__(self, annihilator, x, x0=0, y0=[]):
+        """
+        Takes the annihilator and variable of the function.
+        x0 is the point for which initial conditions are given and
+        y0 is a vector of initial values y0 = [f(x0), f'(x0), f''(x0) ...]
+        """
+
+        if not isinstance(y0, list):
+            self.y0 = [y0]
+        else:
+            self.y0 = y0
+
+        if len(self.y0) == 0:
+            self._have_init_cond = False
+        else:
+            self._have_init_cond = True
+
+        self.x0 = x0
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
-        self.var = x
+        self.x = x
 
     def __repr__(self):
 
-        return 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.var))
+        str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
+        if not self._have_init_cond:
+            return str_sol
+        else:
+            cond_str = ' '
+            diff_str = ''
+            for i in self.y0:
+                cond_str += 'f%s(%d) = %d ' %(diff_str, self.x0, i)
+                diff_str += "'"
+
+            sol = str_sol + cond_str
+            return sol
 
     __str__ = __repr__
 
     def __add__(self, other):
 
-        deg1 = len((self.annihilator).listofpoly) - 1
-        deg2 = len((other.annihilator).listofpoly) - 1
+        deg1 = self.annihilator.order
+        deg2 = other.annihilator.order
         dim = max(deg1, deg2)
 
         rowsself = [self.annihilator]
@@ -430,9 +473,12 @@ class HolonomicFunction(object):
                 if i >= len(expr.listofpoly):
                     p.append(0)
                 else:
-                    ring_to_expr = self.annihilator.parent.base.to_sympy(
-                        expr.listofpoly[i])
-                    p.append(ring_to_expr)
+                    if isinstance(expr.listofpoly[i], self.annihilator.parent.base.dtype):
+                        ring_to_expr = self.annihilator.parent.base.to_sympy(
+                            expr.listofpoly[i])
+                        p.append(ring_to_expr)
+                    else:
+                        p.append(expr.listofpoly[i])
             r.append(p)
 
         r = Matrix(r).transpose()
@@ -465,9 +511,12 @@ class HolonomicFunction(object):
                     if i >= len(expr.listofpoly):
                         p.append(0)
                     else:
-                        ring_to_expr = self.annihilator.parent.base.to_sympy(
-                            expr.listofpoly[i])
-                        p.append(ring_to_expr)
+                        if isinstance(expr.listofpoly[i], self.annihilator.parent.base.dtype):
+                            ring_to_expr = self.annihilator.parent.base.to_sympy(
+                                expr.listofpoly[i])
+                            p.append(ring_to_expr)
+                        else:
+                            p.append(expr.listofpoly[i])
                 r.append(p)
 
             r = Matrix(r).transpose()
@@ -487,25 +536,43 @@ class HolonomicFunction(object):
         # can be also be done the other way by taking R.H.S and multiply with
         # `other`
         sol = sol[:dim + 1 - deg1]
-        sol = _normalize(sol, self.var)
+        sol = _normalize(sol, self.x)
         # construct operator from list of coefficients
         sol1 = DifferentialOperator(
             sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
 
-        return HolonomicFunction(sol, self.var)
+        # solving initial conditions
+        if self._have_init_cond and other._have_init_cond:
+            if self.x0 == other.x0:
+                # try to extended the initial conditions
+                # using the annihilator
+                y0_self = _extend_y0(self, sol.order)
+                y0_other = _extend_y0(other, sol.order)
+                y0 = [a + b for a, b in zip(y0_self, y0_other)]
+                return HolonomicFunction(sol, self.x, self.x0, y0)
+            else:
+                raise NotImplementedError
+
+        return HolonomicFunction(sol, self.x)
 
     def integrate(self):
         # just multiply by Dx from right
         D = self.annihilator.parent.derivative_operator
-        return HolonomicFunction(self.annihilator * D, self.var)
+        return HolonomicFunction(self.annihilator * D, self.x)
 
     def __eq__(self, other):
 
         if self.annihilator == other.annihilator:
-            if self.var == other.var:
-                return True
+            if self.x == other.x:
+                if self._have_init_cond and other._have_init_cond:
+                    if self.x0 == other.x0 and self.y0 == other.y0:
+                        return True
+                    else:
+                        return False
+                else:
+                    return True
             else:
                 return False
         else:
@@ -577,6 +644,39 @@ class HolonomicFunction(object):
         sol = sol[0] / sol[1]
 
         sol_ann = DifferentialOperator(_normalize(
-            sol[0:], self.var, negative=False), ann_self.parent)
+            sol[0:], self.x, negative=False), ann_self.parent)
 
-        return HolonomicFunction(sol_ann, self.var)
+        return HolonomicFunction(sol_ann, self.x)
+
+
+def _extend_y0(Holonomic, n):
+    """
+    Tries to find more initial conditions by substituting the inital
+    value point in the differential equation.
+    """
+
+    annihilator = Holonomic.annihilator
+    a = annihilator.order
+    x = Holonomic.x
+    listofpoly = annihilator.listofpoly
+    y0 = Holonomic.y0
+    for i, j in enumerate(listofpoly):
+            if isinstance(j, annihilator.parent.base.dtype):
+                listofpoly[i] = annihilator.parent.base.to_sympy(j)
+
+    if len(y0) < a or n <= len(y0):
+        return y0
+    else:
+        list_red = [-listofpoly[i] / listofpoly[a]
+                    for i in range(a)]
+        y1 = y0
+        for i in range(n - a):
+            sol = 0
+            for a, b in zip(y1, list_red):
+                if not b.subs(x, Holonomic.x0).is_finite:
+                    return y0
+                sol += a * b.subs(x, Holonomic.x0)
+            y1.append(sol)
+            list_red = _derivate_diff_eq(list_red)
+
+        return y0 + y1[len(y0):]
