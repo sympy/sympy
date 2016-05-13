@@ -340,6 +340,8 @@ def test_solve_transcendental():
 
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
+    # issue 11096
+    assert solve((2)**x-4,x) == [2]
     assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
     assert solve(2*cos(x) - y, x) == [-acos(y/2) + 2*pi, acos(y/2)]
     assert solve(Eq(cos(x), sin(x)), x) == [-3*pi/4, pi/4]
