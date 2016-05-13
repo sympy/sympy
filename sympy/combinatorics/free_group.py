@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, string_types
+from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from mpmath import isint
 from collections.abc import Sequence
@@ -10,10 +11,25 @@ from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
 
+
 @public
-def free_group(rank, str_expr="f"):
-    _free_group = FreeGroup(rank, str_expr)
+def free_group(string_gens):
+    symbols = tuple(_parse_symbols(string_gens))
+    _free_group = FreeGroup(symbols)
     return (_free_group,) + tuple(_free_group.generators)
+
+
+def _parse_symbols(symbols):
+    if isinstance(symbols, string_types):
+        return _symbols(symbols, seq=True)
+    elif isinstance(symbols, Expr):
+        return (symbols,)
+    elif is_sequence(symbols):
+        if all(isinstance(s, string_types) for s in symbols):
+            return _symbols(symbols)
+        elif all(isinstance(s, Expr) for s in symbols):
+            return symbols
+    raise ValueError("")
 
 
 ##############################################################################
@@ -62,49 +78,27 @@ class FreeGroup(Basic):
     is_FreeGroup = True
     is_PermutationGroup = False
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, symbols):
         """
         Since any number of arguments can be passed in the form of string,
         hence `rank` is "not" used as argument.
         """
 
-        obj = Basic.__new__(cls, *args, **kwargs)
-
-        if isint(args[0]) and args[0] >= 0:
-            rank = as_int(args[0])
-
-            # (1) form of the API used here
-            if len(args) == 1:
-                obj._str = "f"
-
-            # (2) form of the API used here
-            elif len(args) == 2:
-                if not isinstance(args[1], str):
-                    raise ValueError("second argument should be of type `str`, "
-                            "not of type %s" % type(args[1]))
-                obj._str = args[1]
-
-            else:
-                raise ValueError("Invalid arguments")
-
-            obj._rank = rank
-
-        # (3) form of API, where all the generators of `FreeGroup`
-        # given as strings.
-        elif all([isinstance(i, str) for i in args]):
-            pass
-
-        # (4) form of API, not sure how this should be implemented
-        # right now.
-        elif args[0] is S.Infinity:
-            pass
-
-        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj,
-                        "str_expr": obj._str})
+        obj = Basic.__new__(cls, symbols)
+        rank = len(symbols)
+        obj._rank = rank
+        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
+        obj.symbols = symbols
+        obj.generators = obj._generators()
+        #obj._gens_set = set(obj.generators)
+        for symbol, generator in zip(obj.symbols, obj.generators):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
+                if hasattr(obj, name):
+                    setattr(obj, name, generator)
         return obj
 
-    @property
-    def generators(self):
+    def _generators(self):
         """Returns the generators of the FreeGroup
 
         Examples
@@ -160,7 +154,7 @@ class FreeGroup(Basic):
             str_form += str(gens) + ">"
         return str_form
 
-    __repr__ = __str__
+    #__repr__ = __str__
 
     def __eq__(self, other):
         """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
@@ -178,10 +172,6 @@ class FreeGroup(Basic):
 
         """
         return self is other
-
-    @property
-    def as_str(self):
-        return self._str
 
     def order(self):
         if self.rank == 0:
@@ -399,7 +389,7 @@ class FreeGroupElm(CantSympify, list):
                             "**" + str(array_form[i][1]) + "*"
         return str_form
 
-    __repr__ = __str__
+    #__repr__ = __str__
 
     def __pow__(self, n):
         n = as_int(n)
