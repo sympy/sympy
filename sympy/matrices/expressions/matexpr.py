@@ -338,6 +338,7 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_commutative = True
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)

@@ -741,3 +741,84 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
+
+def composite(nth):
+    """ Return the nth composite number, with the composite numbers indexed as
+        composite(1) = 4, composite(2) = 6, etc....
+
+        Examples
+        ========
+
+        >>> from sympy import composite
+        >>> composite(36)
+        52
+        >>> composite(1)
+        4
+        >>> composite(17737)
+        20000
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        primepi : Return the number of primes less than or equal to n
+        prime : Return the nth prime
+        compositepi : Return the number of positive composite numbers less than or equal to n
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; composite(1) == 4")
+    composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
+    if n <= 10:
+        return composite_arr[n - 1]
+
+    from sympy.functions.special.error_functions import li
+    from sympy.functions.elementary.exponential import log
+
+    a = 4 # Lower bound for binary search
+    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+    while a < b:
+        mid = (a + b) >> 1
+        if mid - li(mid) - 1 > n:
+            b = mid
+        else:
+            a = mid + 1
+
+    n_composites = a - primepi(a) - 1
+    while n_composites > n:
+        if not isprime(a):
+            n_composites -= 1
+        a -= 1
+    if isprime(a):
+        a -= 1
+    return a
+
+
+def compositepi(n):
+    """ Return the number of positive composite numbers less than or equal to n.
+        The first positive composite is 4, i.e. compositepi(4) = 1.
+
+        Examples
+        ========
+
+        >>> from sympy import compositepi
+        >>> compositepi(25)
+        15
+        >>> compositepi(1000)
+        831
+
+        See Also
+        ========
+
+        sympy.ntheory.primetest.isprime : Test if n is prime
+        primerange : Generate all primes in a given range
+        prime : Return the nth prime
+        primepi : Return the number of primes less than or equal to n
+        composite : Return the nth composite number
+    """
+    n = int(n)
+    if n < 4:
+        return 0
+    return n - primepi(n) - 1
