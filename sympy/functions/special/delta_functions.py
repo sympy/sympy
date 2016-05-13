@@ -165,19 +165,25 @@ class DiracDelta(Function):
            Examples
            ========
 
-           >>> from sympy import DiracDelta, Piecewise, Symbol
+           >>> from sympy import DiracDelta, Piecewise, Symbol, oo
            >>> from sympy.abc import x, y
            >>> x = Symbol('x', real=True)
 
            >>> DiracDelta(x).rewrite(Piecewise)
-           Piecewise((undefined, Eq(x, 0)), (0, True))
+           Piecewise((oo, Eq(x, 0)), (0, True))
 
            >>> DiracDelta(x - 5).rewrite(Piecewise)
-           Piecewise((undefined, Eq(x - 5, 0)), (0, True))
+           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+
+           >>> y = Symbol('y')
+
+           >>> DiracDelta(y).rewrite(Piecewise)
+           DiracDelta(y)
 
         """
+        from sympy import oo
         if arg.is_real:
-            return Piecewise(('undefined', Eq(arg, 0)), (0, True))
+            return Piecewise((oo, Eq(arg, 0)), (0, True))
 
     @staticmethod
     def _latex_no_arg(printer):
