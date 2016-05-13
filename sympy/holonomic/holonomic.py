@@ -9,18 +9,19 @@ from sympy.printing import sstr
 from sympy.matrices import Matrix
 from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
-from sympy.core.function import Function
 
 
 def DiffOperatorAlgebra(base, generator):
-    """ A function to create a Differential Operator Algebra.
-    The first arguments need to be the base polynomial ring for the algebra
-    and the second argument must be a generator.
-    Returns the class representing the operator algebra and
-    the standard operator for differentiation i.e. the `Dx` operator.
+    """
+    Returns an Algebra of Differential Operators and the operator for
+    differentiation i.e. the `Dx` operator.
+    The first argument needs to be the base polynomial ring for the algebra
+    and the second argument must be a generator which can be either a
+    noncommutative Symbol or a string.
 
     Examples
     =======
+
     >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
     >>> from sympy.holonomic.holonomic import DiffOperatorAlgebra
@@ -33,11 +34,38 @@ def DiffOperatorAlgebra(base, generator):
 
 
 class DifferentialOperatorAlgebra(object):
-    """ The class representing Differential Operator Algebra.
-    Defined by the base polynomial ring and the generator.
+    """
+    An Ore Algebra is a set of noncommutative polynomials in the
+    intermediate `Dx` and coefficients in a base ring A. It follows the
+    commutation rule:
+    Dx * a = sigma(a) * Dx + delta(a)
 
-    The attribute derivative_operator is the operator `Dx` which when acted
-    on a function does differentiation.
+    Where sigma: A --> A is an endomorphism and delta: A --> A is a
+    skew-derivation i.e. delta(ab) = delta(a) * b + sigma(a) * delta(b)
+
+    If one takes the sigma as identity map and delta as the standard derivation
+    then it becomes the algebra of Differential Operators also called
+    a Weyl Algebra i.e. an algebra whose elements are Differential Operators.
+
+    This class represents a Weyl Algebra and serves as the parent ring for
+    Differential Operators.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import symbols
+    >>> from sympy.holonomic.holonomic import DiffOperatorAlgebra
+    >>> x = symbols('x')
+    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    >>> R
+    Univariate Differential Operator Algebra in intermediate Dx over the base ring
+    ZZ[x]
+
+    See Also
+    ========
+
+    DifferentialOperator
     """
 
     def __init__(self, base, generator):
@@ -67,22 +95,24 @@ class DifferentialOperatorAlgebra(object):
 
 
 def _add_lists(list1, list2):
-            if len(list1) <= len(list2):
-                sol = [
-                    a + b for a, b in zip(list1, list2)] + list2[len(list1):]
-            else:
-                sol = [
-                    a + b for a, b in zip(list1, list2)] + list1[len(list2):]
-            return sol
+    if len(list1) <= len(list2):
+        sol = [a + b for a, b in zip(list1, list2)] + list2[len(list1):]
+    else:
+        sol = [a + b for a, b in zip(list1, list2)] + list1[len(list2):]
+    return sol
 
 
 class DifferentialOperator(object):
     """
-    This class represents a differential operator created by providing
-     a list of polynomials for each power of Dx
-    and the parent ring which must be an instance of DifferentialOperatorAlgebra.
+    Differential Operators are elements of Weyl Algebra. The Operators
+    are defined by a list of polynomials in the base ring and the
+    parent ring of the Operator.
 
-    An Operator can also be created easily using the operator `Dx`. See examples below.
+    Takes a list of polynomials for each power of Dx and the
+    parent ring which must be an instance of DifferentialOperatorAlgebra.
+
+    A Differential Operator can be created easily using
+    the operator `Dx`. See examples below.
 
     Examples
     ========
@@ -93,13 +123,16 @@ class DifferentialOperator(object):
     >>> x = symbols('x')
     >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x),'Dx')
 
-    >>> DifferentialOperator([0,1,x**2], R)
+    >>> DifferentialOperator([0, 1, x**2], R)
     (1)Dx + (x**2)Dx**2
 
-    One can use the `Dx` and represent differential operators more conveniently this way also.
     >>> (x*Dx*x + 1 - Dx**2)**2
     (2*x**2 + 2*x + 1) + (4*x**3 + 2*x**2 - 4)Dx + (x**4 - 6*x - 2)Dx**2 + (-2*x**2)Dx**3 + (1)Dx**4
 
+    See Also
+    ========
+
+    DifferentialOperatorAlgebra
     """
 
     _op_priority = 20
@@ -126,7 +159,7 @@ class DifferentialOperator(object):
     def __mul__(self, other):
         """
         Multiplies two DifferentialOperator and returns another
-        DifferentialOperator isinstance using the commutation rule
+        DifferentialOperator instance using the commutation rule
         Dx*a = a*Dx + a'
         """
 
@@ -141,6 +174,7 @@ class DifferentialOperator(object):
         else:
             listofother = other.listofpoly
         # multiply a polynomial `b` with a list of polynomials
+
         def _mul_dmp_diffop(b, listofother):
 
             if isinstance(listofother, list):
@@ -317,15 +351,36 @@ def _normalize(list_of_coeff, x, negative=True):
     return list_of_coeff
 
 
-class HoloFunc(object):
-    """Represents a Holonomic Function,
-    first parameter is the annihilator of the holonomic function, which
-    is an instance of DifferentialOperator, second is the variable
-    for the function, initial conditions are optional.
+class HolonomicFunction(object):
+    """
+    A Holonomic Function is a solution to a linear homogeneous ordinary
+    differential equation with polynomial coefficients. This differential
+    equation can also be represented by an annihilator i.e. a Differential
+    Operator L such that L.f = 0. For uniqueness of these functions,
+    initial conditions can also be provided along with the annihilator.
 
-    Addition is implemented and works for some cases.
+    Holonomic functions have closure properties and thus forms a ring.
+    Given two Holonomic Functions f and g, their sum, product,
+    integral and derivative is also a Holonomic Function.
 
-    For details see ore_algebra package in Sage
+    Examples
+    ========
+
+    >>> from sympy.holonomic.holonomic import HolonomicFunction, DiffOperatorAlgebra
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy import symbols
+    >>> x = symbols('x')
+    >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+
+    >>> p = HolonomicFunction(Dx - 1, x) # e^x
+    >>> q = HolonomicFunction(Dx**2 + 1, x) # sin(x) or cos(x)
+
+    >>> p + q # annihilator of e^x + sin(x) or e^x + cos(x)
+    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x)
+
+    >>> p * q # annihilator of e^x * sin(x) or e^x * cos(x)
+    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x)
+
     """
 
     def __init__(self, annihilator, x, *args):
@@ -341,7 +396,7 @@ class HoloFunc(object):
 
     def __repr__(self):
 
-        return 'Holonomic(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.var))
+        return 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.var))
 
     __str__ = __repr__
 
@@ -439,12 +494,12 @@ class HoloFunc(object):
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
 
-        return HoloFunc(sol, self.var)
+        return HolonomicFunction(sol, self.var)
 
     def integrate(self):
         # just multiply by Dx from right
         D = self.annihilator.parent.derivative_operator
-        return HoloFunc(self.annihilator * D, self.var)
+        return HolonomicFunction(self.annihilator * D, self.var)
 
     def __eq__(self, other):
 
@@ -524,4 +579,4 @@ class HoloFunc(object):
         sol_ann = DifferentialOperator(_normalize(
             sol[0:], self.var, negative=False), ann_self.parent)
 
-        return HoloFunc(sol_ann, self.var)
+        return HolonomicFunction(sol_ann, self.var)
