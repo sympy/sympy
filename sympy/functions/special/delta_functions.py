@@ -7,6 +7,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.decorators import deprecated
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -66,6 +67,10 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
+
+    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0")
+    def simplify(self, x):
+        return self.expand(diracdelta=True, wrt=x)
 
     def _eval_expand_diracdelta(self, **hints):
         """Compute a simplified representation of the function using
