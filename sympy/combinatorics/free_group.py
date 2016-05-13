@@ -430,14 +430,8 @@ class FreeGroupElm(CantSympify, tuple):
             return other
         if other.is_identity:
             return self
-        if self.array_form[-1][0] == other.array_form[0][0]:
-            r = tuple()
-            updated_exp = self.array_form[-1][1] + other.array_form[0][1]
-            updated_base = self.array_form[-1][0]
-            r += self.array_form[:-1] + ((updated_base, updated_exp),) + other.array_form[1:]
-        else:
-            r = tuple(self.array_form + other.array_form)
-        r = zero_mul_simp(r)
+        r = tuple(zero_mul_simp(list(self.array_form + other.array_form),
+                        len(self.array_form) - 1))
         return group.dtype(r)
 
     def __div__(self, other):
@@ -851,16 +845,15 @@ def letter_form_to_array_form(array_form):
             n = 1
 
 
-def zero_mul_simp(array_form):
-    # bug evaluating f[0]*f[1]*f[1]**-1*f[2]**3
-    array_form = list(array_form)
-    for i in range(len(array_form) - 1, -1, -1):
-        if array_form[i][1] == 0:
-            del array_form[i]
-            if array_form[i][0] == array_form[i - 1][0]:
-                new_exp = array_form[i - 1][1] + array_form[i][1]
-                array_form[i -1] = (array_form[i - 1][0], new_exp)
-                del array_form[i]
-                # call the function again to see the presence of zero exp
-                return zero_mul_simp(array_form)
-    return tuple(array_form)
+def zero_mul_simp(array_form, index):
+    while index >= 0 and index < len(array_form) - 1:
+        if array_form[index][0] == array_form[index + 1][0]:
+            updated_exp = array_form[index][1] + array_form[index + 1][1]
+            updated_base = array_form[index][0]
+            if updated_exp == 0:
+                del array_form[index], array_form[index]
+                return zero_mul_simp(array_form, index - 1)
+            else:
+                array_form[index] = (updated_base, updated_exp)
+                del array_form[index + 1]
+    return array_form
