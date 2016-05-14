@@ -58,6 +58,7 @@ from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.simplify import simplify
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
@@ -2881,8 +2882,7 @@ def test_cancel():
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
-    assert cancel(expr) == expr
-
+    assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3157,3 +3157,9 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None
+
+
+def test_factor_terms():
+    # issue 7067
+    assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])

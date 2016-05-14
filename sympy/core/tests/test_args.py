@@ -713,6 +713,35 @@ def test_sympy__stats__rv__ProductDomain():
     assert _test_args(ProductDomain(D, E))
 
 
+def test_sympy__stats__symbolic_probability__Probability():
+    from sympy.stats.symbolic_probability import Probability
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Probability(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Expectation():
+    from sympy.stats.symbolic_probability import Expectation
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Expectation(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Covariance():
+    from sympy.stats.symbolic_probability import Covariance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 3)
+    assert _test_args(Covariance(X, Y))
+
+
+def test_sympy__stats__symbolic_probability__Variance():
+    from sympy.stats.symbolic_probability import Variance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Variance(X))
+
+
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
     from sympy.stats.frv_types import DiscreteUniformDistribution
     from sympy.core.containers import Tuple

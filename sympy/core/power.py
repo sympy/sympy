@@ -12,9 +12,19 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
-from sympy.utilities.iterables import sift
+
+from math import sqrt as _sqrt
+
+
+
+def isqrt(n):
+    """Return the largest integer less than or equal to sqrt(n)."""
+    if n < 17984395633462800708566937239552:
+        return int(_sqrt(n))
+    return integer_nthroot(int(n), 2)[0]
 
 
 def integer_nthroot(y, n):
@@ -23,14 +33,27 @@ def integer_nthroot(y, n):
     and a boolean indicating whether the result is exact (that is,
     whether x**n == y).
 
+    Examples
+    ========
+
     >>> from sympy import integer_nthroot
-    >>> integer_nthroot(16,2)
+    >>> integer_nthroot(16, 2)
     (4, True)
-    >>> integer_nthroot(26,2)
+    >>> integer_nthroot(26, 2)
     (5, False)
 
+    To simply determine if a number is a perfect square, the is_square
+    function should be used:
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(26)
+    False
+
+    See Also
+    ========
+    sympy.ntheory.primetest.is_square
     """
-    y, n = int(y), int(n)
+    y, n = as_int(y), as_int(n)
     if y < 0:
         raise ValueError("y must be nonnegative")
     if n < 1:
@@ -73,7 +96,7 @@ def integer_nthroot(y, n):
     while t > y:
         x -= 1
         t = x**n
-    return x, t == y
+    return int(x), t == y  # int converts long to int if possible
 
 
 class Pow(Expr):

@@ -1729,7 +1729,7 @@ def core(n, t=2):
     See Also
     ========
 
-    factorint
+    factorint, sympy.solvers.diophantine.square_factor
     """
 
     n = as_int(n)

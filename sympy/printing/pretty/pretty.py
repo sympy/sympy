@@ -1230,6 +1230,16 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left(name))
         return pform
 
+    def _print_GoldenRatio(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('phi'))
+        return self._print(Symbol("GoldenRatio"))
+
+    def _print_EulerGamma(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('gamma'))
+        return self._print(Symbol("EulerGamma"))
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)

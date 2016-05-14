@@ -18,6 +18,10 @@ def test_DiracDelta():
     assert DiracDelta(nan) == nan
     assert DiracDelta(0).func is DiracDelta
     assert DiracDelta(x).func is DiracDelta
+    # FIXME: this is generally undefined @ x=0
+    #         But then limit(Delta(c)*Heaviside(x),x,-oo)
+    #         need's to be implemented.
+    #assert 0*DiracDelta(x) == 0
 
     assert adjoint(DiracDelta(x)) == DiracDelta(x)
     assert adjoint(DiracDelta(x - y)) == DiracDelta(x - y)

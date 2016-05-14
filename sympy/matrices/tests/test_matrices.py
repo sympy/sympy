@@ -434,6 +434,10 @@ def test_berkowitz_minors():
     assert B.berkowitz_minors() == (1, 1, -3)
     E = Matrix([])
     assert E.berkowitz() == ((1,),)
+    assert E.berkowitz_minors() == (1,)
+    assert E.berkowitz_eigenvals() == {}
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert A.berkowitz() == ((1,), (1, -1), (1, -6, -3), (1, -15, -18, 0))
 
 def test_slicing():
     m0 = eye(4)
