@@ -151,7 +151,8 @@ class FreeGroup(Basic):
 
         """
         if not isinstance(i, FreeGroupElm):
-            raise TypeError("FreeGroup contains elements of type FreeGroupElm")
+            raise TypeError("FreeGroup contains only FreeGroupElm as elements "
+                        ", not elements of type %s" % type(i))
         group = i.group
         return self == group
 
@@ -542,6 +543,27 @@ class FreeGroupElm(CantSympify, tuple):
         l = zero_mul_simp(l)
         return group.dtype(l)
 
+    def __len__(self):
+        """
+        For an associative word `self`, this returns the number of letters in it.
+
+        Examples
+        ========
+
+        >>> from sympy import free_group
+        >>> f = free_group("x y")
+        >>> a, b = f[0][0], f[0][1]
+        >>> w = a**5*b*a**2*b**-4*a
+        >>> len(w)
+        13
+        >>> len(a**17)
+        17
+        >>> len(w**0)
+        0
+
+        """
+        return sum([abs(j) for (i, j) in self])
+
     def __eq__(self, other):
         """
         Two  associative words are equal if they are words over the
@@ -598,6 +620,7 @@ class FreeGroupElm(CantSympify, tuple):
         False
         >>> a[0] < a[0].inverse()
         False
+
         """
         group = self.group
         if not isinstance(other, group.dtype):
@@ -655,23 +678,23 @@ class FreeGroupElm(CantSympify, tuple):
 
     def exponent_sum_word(self, gen):
         """
-        For an associative word `w` and a generator `gen`, ``exponent_sum_word``
-        returns the number of times `gen` appears in `w` minus the number of
-        times its inverse appears in `w`. If both `gen` and its inverse do not
-        occur in `w` then 0 is returned. `gen` may also be the inverse of a
-        generator.
+        For an associative word `self` and a generator `gen`, ``exponent_sum_word``
+        returns the number of times `gen` appears in `self` minus the number of
+        times its inverse appears in `self`. If both `gen` and its inverse do
+        not occur in `self` then 0 is returned. `gen` may also be the inverse of
+        a generator.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> a, b = f[0], f[1]
+        >>> from sympy import free_group
+        >>> f = freegroup("x y")
+        >>> a, b = f[0][0], f[0][1]
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.exponent_sum_word(a)
         8
         >>> w.exponent_sum_word(b)
-        3
+        -3
         >>> ((a*b*a**-1)**3).exponent_sum_word(a)
         0
         >>> w.exponent_sum_word(b**-1)
@@ -681,7 +704,7 @@ class FreeGroupElm(CantSympify, tuple):
         w = self.letter_form
         gen = gen.letter_form
         if len(gen) != 1:
-            raise ValueError("<gen> must be a generator")
+            raise ValueError("gen must be a generator or inverse of a generator")
         n = 0
         g = abs(gen[0])
         for i in w:
@@ -702,12 +725,13 @@ class FreeGroupElm(CantSympify, tuple):
 
         Examples
         ========
-
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
+        
+        >>> from sympy import free_group
+        >>> f = free_group("x y")
+        >>> a, b = f[0][0], f[0][1]
+        >>> w = a**5*b*a**2*b**-4*a
         >>> w.subword(2, 6)
-        f0**3*f1
+        x**3*y
 
         """
         group = self.group
@@ -721,21 +745,22 @@ class FreeGroupElm(CantSympify, tuple):
             array_form = letter_form_to_array_form(letter_form)
             return group.dtype(array_form)
 
-    def AssocWordByLetterRep(self, lrep):
+    def assoc_word_by_letter_rep(self, lrep):
         """
         """
         pass
 
 
     def number_syllables(self):
-        """Returns the number of syllables of the associative word w.
+        """Returns the number of syllables of the associative word `self`.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4, "swapnil" )
-        >>> (f[1]**3*f[0]*f[1]**-1).number_syllables()
+        >>> from sympy import free_group
+        >>> f = free_group("swapnil0 swapnil1")
+        >>> swapnil0, swapnil1 = f[0][0], f[0][1]
+        >>> (swapnil1**3*swapnil0*swapnil1**-1).number_syllables()
         3
 
         """
@@ -749,9 +774,10 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4, "swap" )
-        >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
+        >>> from sympy import free_group
+        >>> f = free_group("x y")
+        >>> a, b = f[0][0], f[0][1]
+        >>> w = a**5*b*a**2*b**-4*a
         >>> w.exponent_syllable( 2 )
         2
 
@@ -761,14 +787,15 @@ class FreeGroupElm(CantSympify, tuple):
     def generator_syllable(self, i):
         """
         Returns the number of the generator that is involved in the
-        i-th syllable of the associative word w.
+        i-th syllable of the associative word `self`.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 2 )
-        >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
+        >>> from sympy import free_group
+        >>> f = free_group("x y")
+        >>> a, b = f[0][0], f[0][1]
+        >>> w = a**5*b*a**2*b**-4*a
         >>> w.generator_syllable( 3 )
         1
 
@@ -785,20 +812,21 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
+        >>> from sympy import free_group
+        >>> f = free_group("x y")
+        >>> a, b = f[0][0], f[0][1]
+        >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
         f1
         >>> w.sub_syllables(3, 3)
-        <identity ...>
+        <identity>
 
         """
         if not isinstance(from_i, int) or not isinstance(to_j, int):
             raise ValueError("both arguments should be integers")
         group = self.group
         if to_j <= from_i:
-            return self.identity
+            return group.identity
         else:
             r = tuple(self.array_form[from_i: to_j])
             return group.dtype(r)
@@ -812,7 +840,7 @@ class FreeGroupElm(CantSympify, tuple):
 
         # otherwise there are four possibilities
 
-        # first if from=1 and to=Length(w) then
+        # first if from=1 and to=lw then
         if from_i == 0 and to_j == lw - 1:
             return by
         elif from_i == 0:  # second if from_i=1 (and to_j < lw) then
