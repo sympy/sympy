@@ -5,7 +5,6 @@ from sympy.core.compatibility import as_int, string_types
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from mpmath import isint
-from collections.abc import Sequence
 from sympy.core import S
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
@@ -125,8 +124,8 @@ class FreeGroup(Basic):
 
         """
         gens = []
-        for i in range(group.rank):
-            elm = ((group.symbols[i], 1),)
+        for sym in group.symbols:
+            elm = ((sym, 1),)
             gens.append(group.dtype(elm))
         return gens
 
