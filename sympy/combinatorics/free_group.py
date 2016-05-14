@@ -118,15 +118,15 @@ class FreeGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 3, "swapnil" )
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x, y, z")
         >>> f.generators
-        [swapnil0, swapnil1, swapnil2]
+        [x, y, z]
 
         """
         gens = []
         for i in range(group.rank):
-            elm = ((i, 1),)
+            elm = ((group.symbols[i], 1),)
             gens.append(group.dtype(elm))
         return gens
 
@@ -139,15 +139,6 @@ class FreeGroup(Basic):
 
         Examples
         ========
-
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4, "swap" )
-        >>> g = FreeGroup( 4, "swapnil" )
-
-        >>> f[0]**2*f[3] in f
-        True
-        >>> f[0]**2*f[3] in g
-        False
 
         """
         if not isinstance(i, FreeGroupElm):
@@ -175,14 +166,6 @@ class FreeGroup(Basic):
 
         Examples
         ========
-
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4, "swapnil" )
-        >>> g = FreeGroup( 4, "swapnil" )
-        >>> f == g
-        False
-        >>> f == f
-        True
 
         """
         return self is other
@@ -221,16 +204,13 @@ class FreeGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
         >>> f.is_abelian
         False
 
-        >>> g = FreeGroup( 0 )
-        >>> g.is_abelian
-        True
-
         """
+        # this needs to be tested
         if self.rank == 0 or self.rank == 1:
             return True
         else:
@@ -249,15 +229,15 @@ class FreeGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> f.contains(f[0]**3*f[1]**2)
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
+        >>> f.contains(x**3*y**2)
         True
 
         """
-        if not isinstance(i, FreeGroupElm):
+        if not isinstance(g, FreeGroupElm):
             return False
-        elif self != i.group:
+        elif self != g.group:
             return False
         else:
             return True
@@ -329,11 +309,11 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> (f[0]*f[2]).array_form
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
+        >>> (x*z).array_form
         [(0, 1), (2, 1)]
-        >>> (f[0]**2*f[2]*f[1]*f[0]**2).array_form
+        >>> (x**2*z*y*x**2).array_form
         [(0, 2), (2, 1), (1, 1), (0, 2)]
 
         See Also
@@ -355,13 +335,13 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> (f[0]**3).letter_form
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b, c, d = free_group("a b c d")
+        >>> (a**3).letter_form
         [1, 1, 1]
-        >>> (f[0]**2*f[3]**-2*f[0]*f[1]**-4).letter_form
+        >>> (a**2*d**-2*a*b**-4).letter_form
         [1, 1, -4, -4, 1, -2, -2, -2, -2]
-        >>> (f[0]**-2*f[1]**3*f[3]).letter_form
+        >>> (a**-2*b**3*d).letter_form
         [-1, -1, 2, 2, 2, 4]
 
         See Also
@@ -392,15 +372,15 @@ class FreeGroupElm(CantSympify, tuple):
         for i in range(len(array_form)):
             if i == len(array_form) - 1:
                 if array_form[i][1] == 1:
-                    str_form += str(symbols[array_form[i][0]])
+                    str_form += str(array_form[i][0])
                 else:
-                    str_form += str(symbols[array_form[i][0]]) + \
+                    str_form += str(array_form[i][0]) + \
                                     "**" + str(array_form[i][1])
             else:
                 if array_form[i][1] == 1:
-                    str_form += str(symbols[array_form[i][0]]) + "*"
+                    str_form += str(array_form[i][0]) + "*"
                 else:
-                    str_form += str(symbols[array_form[i][0]]) + \
+                    str_form += str(array_form[i][0]) + \
                                     "**" + str(array_form[i][1]) + "*"
         return str_form
 
@@ -427,13 +407,13 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4, "swapnil" )
-        >>> f[0]*f[1]**2*f[1]**-4
-        swapnil0*swapnil1**-2
-        >>> f[2]*f[1]**-2
-        swapnil2*swapnil1**-2
-        >>> (f[0]**2*f[1]*f[1]**-1*f[0]**-2)
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
+        >>> x*y**2*y**-4
+        x*y**-2
+        >>> z*y**-2
+        z*y**-2
+        >>> x**2*y*y**-1*x**-2
         <identity>
 
         """
@@ -452,6 +432,9 @@ class FreeGroupElm(CantSympify, tuple):
     def __div__(self, other):
         return self*(other.inverse())
 
+    def __rdiv__(self, other):
+        return other*(self.inverse())
+
     def inverse(self):
         """
         Returns the inverse of a `FreeGroupElm` element
@@ -459,12 +442,12 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 2, "swapnil" )
-        >>> f[0].inverse()
-        swapnil0**-1
-        >>> (f[0]*f[1]).inverse()
-        swapnil1**-1*swapnil0**-1
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
+        >>> x.inverse()
+        x**-1
+        >>> (x*y).inverse()
+        y**-1*x**-1
 
         """
         group = self.group
@@ -477,9 +460,9 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> (f[0]**2*f[1]*f[1]**-1*f[0]**-2).order()
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y = free_group("x y")
+        >>> (x**2*y*y**-1*x**-2).order()
         1
 
         """
@@ -507,14 +490,13 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 4 )
-        >>> w = f[0]**5*f[1]*f[0]**2*f[1]**-4*f[0]
-        >>> w.eliminate_word( f[0], f[0]**2 )
-        f0**10*f1*f0**4*f1**-4*f0**2
-
-        >>> w.eliminate_word( f[0], f[1]**-1 )
-        f1**-11
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y = free_group("x y")
+        >>> w = x**5*y*x**2*y**-4*x
+        >>> w.eliminate_word( x, x**2 )
+        x**10*y*x**4*y**-4*x**2
+        >>> w.eliminate_word( x, y**-1 )
+        y**-5*y*y**-2*y**-4*y**-1
 
         """
         group = self.group
@@ -540,7 +522,7 @@ class FreeGroupElm(CantSympify, tuple):
 
             if len(app) > 0:
                 l.append(tuple(app))
-        l = zero_mul_simp(l)
+        # zero_mul_simp to be used
         return group.dtype(l)
 
     def __len__(self):
@@ -550,9 +532,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
-        >>> f = free_group("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> len(w)
         13
@@ -576,22 +557,22 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> f = FreeGroup( 2, "swapnil" )
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
         >>> f
         <free group on the generators [swapnil0, swapnil1]>
-        >>> g = FreeGroup( 2 , "swapnil" )
+        >>> g, swap0, swap1 = free_group("swap0 swap1")
         >>> g
-        <free group on the generators [swapnil0, swapnil1]>
+        <free group on the generators [swapl0, swap1]>
 
-        >>> f[0] == f[1]
+        >>> swapnil0 == swapnil1
         False
-        >>> f[0]*f[1] == f[1]/f[1]*f[0]*f[1]
+        >>> swapnil0*swapnil1 == swapnil1/swapnil1*swapnil0*swapnil1
         True
-        >>> f[0]*f[1] == f[1]*f[0]
+        >>> swapnil0*swapnil1 == swapnil1*swapnil0
         False
 
-        >>> f[1]**0 == g[0]**0
+        >>> swapnil1**0 == swap0**0
         False
 
         """
@@ -614,11 +595,11 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> a = FreeGroup( 4, "swapnil" )
-        >>> a[1] < a[0]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
+        >>> b < a
         False
-        >>> a[0] < a[0].inverse()
+        >>> a < a.inverse()
         False
 
         """
@@ -657,13 +638,13 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import FreeGroup
-        >>> b = FreeGroup( 3, "swapnil" )
-        >>> b[1]**2 > b[0]**2
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, x, y, z = free_group("x y z")
+        >>> y**2 > x**2
         True
-        >>> b[1]*b[2] > b[2]*b[1]
+        >>> y*z > z*y
         False
-        >>> b[0] > b[0].inverse()
+        >>> x > x.inverse()
         True
 
         """
@@ -687,9 +668,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
-        >>> f = freegroup("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.exponent_sum_word(a)
         8
@@ -726,9 +706,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
         
-        >>> from sympy import free_group
-        >>> f = free_group("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.subword(2, 6)
         x**3*y
@@ -757,7 +736,7 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
+        >>> from sympy.combinatorics.free_group import free_group
         >>> f = free_group("swapnil0 swapnil1")
         >>> swapnil0, swapnil1 = f[0][0], f[0][1]
         >>> (swapnil1**3*swapnil0*swapnil1**-1).number_syllables()
@@ -774,9 +753,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
-        >>> f = free_group("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.exponent_syllable( 2 )
         2
@@ -792,9 +770,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
-        >>> f = free_group("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.generator_syllable( 3 )
         1
@@ -812,9 +789,8 @@ class FreeGroupElm(CantSympify, tuple):
         Examples
         ========
 
-        >>> from sympy import free_group
-        >>> f = free_group("x y")
-        >>> a, b = f[0][0], f[0][1]
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
         f1
