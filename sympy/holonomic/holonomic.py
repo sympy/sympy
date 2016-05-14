@@ -9,6 +9,7 @@ from sympy.printing import sstr
 from sympy.matrices import Matrix
 from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
+from sympy.functions.combinatorial.factorials import binomial
 
 
 def DiffOperatorAlgebra(base, generator):
@@ -396,12 +397,10 @@ class HolonomicFunction(object):
     >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]) # sin(x)
 
     >>> p + q # annihilator of e^x + sin(x)
-    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x) f(0) = 1 f'(0) = 2 
-    f''(0) = 1
+    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1 , f'(0) = 2 , f''(0) = 1
 
     >>> p * q # annihilator of e^x * sin(x)
-    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x)
-
+    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1 , f''(0) = 2
     """
 
     def __init__(self, annihilator, x, x0=0, y0=[]):
@@ -432,10 +431,10 @@ class HolonomicFunction(object):
         if not self._have_init_cond:
             return str_sol
         else:
-            cond_str = ' '
+            cond_str = ''
             diff_str = ''
             for i in self.y0:
-                cond_str += 'f%s(%d) = %d ' %(diff_str, self.x0, i)
+                cond_str += ', f%s(%d) = %d ' %(diff_str, self.x0, i)
                 diff_str += "'"
 
             sol = str_sol + cond_str
@@ -646,12 +645,39 @@ class HolonomicFunction(object):
         sol_ann = DifferentialOperator(_normalize(
             sol[0:], self.x, negative=False), ann_self.parent)
 
+        if self._have_init_cond and other._have_init_cond:
+            if self.x0 == other.x0:
+
+                # try to find more inital conditions
+                y0_self = _extend_y0(self, sol_ann.order)
+                y0_other = _extend_y0(other, sol_ann.order)
+                # h(x0) = f(x0) * g(x0)
+                y0 = [y0_self[0] * y0_other[0]]
+
+                # coefficient of Dx^j(f)*Dx^i(g) in Dx^i(fg)
+                for i in range(1, min(len(y0_self), len(y0_other))):
+                    coeff = [[0 for i in range(i + 1)] for j in range(i + 1)]
+                    for j in range(i + 1):
+                        for k in range(i + 1):
+                            if j + k == i:
+                                coeff[j][k] = binomial(i, j)
+
+                    sol = 0
+                    for j in range(i + 1):
+                        for k in range(i + 1):
+                            sol += coeff[j][k]* y0_self[j] * y0_other[k]
+
+                    y0.append(sol)
+                return HolonomicFunction(sol_ann, self.x, self.x0, y0)
+            else:
+                raise NotImplementedError
+
         return HolonomicFunction(sol_ann, self.x)
 
 
 def _extend_y0(Holonomic, n):
     """
-    Tries to find more initial conditions by substituting the inital
+    Tries to find more initial conditions by substituting the initial
     value point in the differential equation.
     """
 
