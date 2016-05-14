@@ -655,7 +655,7 @@ def test_solveset_complex_rational():
     assert solveset_complex((x - y**3)/((y**2)*sqrt(1 - y**2)), x) == \
         FiniteSet(y**3)
     assert solveset_complex(-x**2 - I, x) == \
-        FiniteSet(-sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2)
+        FiniteSet(-sqrt(-I), sqrt(-I))
 
 
 def test_solve_quintics():
@@ -687,7 +687,7 @@ def test_solveset_complex_exp():
 def test_solve_complex_log():
     assert solveset_complex(log(x), x) == FiniteSet(1)
     assert solveset_complex(1 - log(a + 4*x**2), x) == \
-        FiniteSet(-sqrt(-a/4 + E/4), sqrt(-a/4 + E/4))
+        FiniteSet(-sqrt(-a + E)/2, sqrt(-a + E)/2)
 
 
 def test_solve_complex_sqrt():
@@ -1087,6 +1087,13 @@ def test_issue_8715():
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
 
+
+def test_issue_11096():
+    assert solveset((-2)**x-4, x) == FiniteSet(log(4)/(log(2) + I*pi))
+
+@XFAIL
+def test_issue_11096_fail():
+    assert solveset((-2)**x-4, x, S.Reals) == FiniteSet(2)
 
 def test_issue_10864():
     x =symbols('x' , positive = True)

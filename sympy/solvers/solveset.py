@@ -90,6 +90,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     invert_real, invert_complex
     """
     x = sympify(x)
+    x_orig = x
     if not x.is_Symbol:
         raise ValueError("x must be a symbol")
     f_x = sympify(f_x)
@@ -109,40 +110,16 @@ def _invert(f_x, y, x, domain=S.Complexes):
 invert_complex = _invert
 
 
-def invert_real(f_x, y, x, domain=S.Reals):
-    return _invert(f_x, y, x, domain)
-
-
-def _invert_real(f, g_ys, symbol):
-    """Helper function for _invert."""
-
-    if f == symbol:
-        return (f, g_ys)
-
+def similar_invert_real_complex(f, g_ys, symbol, domain):
+    # invert for "Add", "Pow" is similar for both real and complex domain
     n = Dummy('n', real=True)
-
-    if hasattr(f, 'inverse') and not isinstance(f, (
-            TrigonometricFunction,
-            HyperbolicFunction,
-            )):
-        if len(f.args) > 1:
-            raise ValueError("Only functions with one argument are supported.")
-        return _invert_real(f.args[0],
-                            imageset(Lambda(n, f.inverse()(n)), g_ys),
-                            symbol)
-
-    if isinstance(f, Abs):
-        pos = Interval(0, S.Infinity)
-        neg = Interval(S.NegativeInfinity, 0)
-        return _invert_real(f.args[0],
-                    Union(imageset(Lambda(n, n), g_ys).intersect(pos),
-                          imageset(Lambda(n, -n), g_ys).intersect(neg)), symbol)
-
     if f.is_Add:
         # f = g + h
         g, h = f.as_independent(symbol)
         if g is not S.Zero:
-            return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol)
+            return _invert_real(h, imageset(Lambda(n, n - g), g_ys), symbol) \
+            if domain.is_subset(S.Reals) else \
+            _invert_complex(h, imageset(Lambda(n, n - g), g_ys), symbol)
         else:
             if len(f.args) == 2 and g_ys == FiniteSet(0) and \
             not f.is_polynomial(symbol):
@@ -176,14 +153,9 @@ def _invert_real(f, g_ys, symbol):
                             # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
                             raise NotImplementedError('equal function with more than 1 argument')
                 if lhs is not f:
-                    return _invert_real(lhs - rhs, imageset(Lambda(n, n ), g_ys), symbol)
-
-    if f.is_Mul:
-        # f = g*h
-        g, h = f.as_independent(symbol)
-
-        if g is not S.One:
-            return _invert_real(h, imageset(Lambda(n, n/g), g_ys), symbol)
+                    return _invert_real(lhs - rhs, imageset(Lambda(n, n ), g_ys), symbol) \
+                    if domain.is_subset(S.Reals) else \
+                    _invert_complex(lhs - rhs, imageset(Lambda(n, n ), g_ys), symbol)
 
     if f.is_Pow:
         base, expo = f.args
@@ -195,23 +167,66 @@ def _invert_real(f, g_ys, symbol):
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if numer == S.One or numer == - S.One:
-                    return _invert_real(base, res, symbol)
+                    return _invert_real(base, res, symbol) if domain.is_subset(S.Reals) else \
+                    _invert_complex(base, res, symbol)
                 else:
                     if numer % 2 == 0:
-                        n = Dummy('n')
                         neg_res = imageset(Lambda(n, -n), res)
-                        return _invert_real(base, res + neg_res, symbol)
+                        return _invert_real(base, res + neg_res, symbol) \
+                        if domain.is_subset(S.Reals) else \
+                        _invert_complex(base, res + neg_res, symbol)
                     else:
-                        return _invert_real(base, res, symbol)
+                        return _invert_real(base, res, symbol) if domain.is_subset(S.Reals) else \
+                        _invert_complex(base, res, symbol)
             else:
                 if not base.is_positive:
                     raise ValueError("x**w where w is irrational is not "
                                      "defined for negative x")
-                return _invert_real(base, res, symbol)
+                return _invert_real(base, res, symbol) if domain.is_subset(S.Reals) else \
+                _invert_complex(base, res, symbol)
 
         if not base_has_sym:
-            return _invert_real(expo,
-                imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+            return _invert_real(expo, imageset(Lambda(n, log(n)/log(base)), g_ys), symbol) if\
+             domain.is_subset(S.Reals) else \
+             _invert_complex(expo, imageset(Lambda(n, log(n)/log(base)), g_ys), symbol)
+    return (f, g_ys)
+
+
+def invert_real(f_x, y, x, domain=S.Reals):
+    return _invert(f_x, y, x, domain)
+
+
+def _invert_real(f, g_ys, symbol):
+    """Helper function for _invert."""
+
+    if f == symbol:
+        return (f, g_ys)
+
+    n = Dummy('n', real=True)
+
+    if hasattr(f, 'inverse') and not isinstance(f, (
+            TrigonometricFunction,
+            HyperbolicFunction,
+            )):
+        if len(f.args) > 1:
+            raise ValueError("Only functions with one argument are supported.")
+        return _invert_real(f.args[0],
+                            imageset(Lambda(n, f.inverse()(n)), g_ys),
+                            symbol)
+
+    if isinstance(f, Abs):
+        pos = Interval(0, S.Infinity)
+        neg = Interval(S.NegativeInfinity, 0)
+        return _invert_real(f.args[0],
+                    Union(imageset(Lambda(n, n), g_ys).intersect(pos),
+                          imageset(Lambda(n, -n), g_ys).intersect(neg)), symbol)
+
+    if f.is_Mul:
+        # f = g*h
+        g, h = f.as_independent(symbol)
+
+        if g is not S.One:
+            return _invert_real(h, imageset(Lambda(n, n/g), g_ys), symbol)
 
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
@@ -232,8 +247,8 @@ def _invert_real(f, g_ys, symbol):
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
             return _invert_real(f.args[0], invs, symbol)
-
-    return (f, g_ys)
+    # for similar types of code eg. Add, Pow
+    return similar_invert_real_complex(f, g_ys, symbol, S.Reals)
 
 
 def _invert_complex(f, g_ys, symbol):
@@ -243,12 +258,6 @@ def _invert_complex(f, g_ys, symbol):
         return (f, g_ys)
 
     n = Dummy('n')
-
-    if f.is_Add:
-        # f = g + h
-        g, h = f.as_independent(symbol)
-        if g is not S.Zero:
-            return _invert_complex(h, imageset(Lambda(n, n - g), g_ys), symbol)
 
     if f.is_Mul:
         # f = g*h
@@ -271,9 +280,8 @@ def _invert_complex(f, g_ys, symbol):
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
             return _invert_complex(f.args[0], exp_invs, symbol)
-
-    return (f, g_ys)
-
+    # for similar types of code eg. Add, Pow
+    return similar_invert_real_complex(f, g_ys, symbol, S.Complexes)
 
 def domain_check(f, symbol, p):
     """Returns False if point p is infinite or any subexpression of f
