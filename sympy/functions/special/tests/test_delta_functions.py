@@ -7,6 +7,10 @@ from sympy.utilities.pytest import raises
 
 from sympy.core.function import ArgumentIndexError
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+from sympy.utilities.misc import filldedent
+
 x, y = symbols('x y')
 
 
@@ -45,6 +49,14 @@ def test_DiracDelta():
     assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
     assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == \
         DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
+
+    with raises(SymPyDeprecationWarning):
+        assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
+        assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
+        assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
+        assert DiracDelta(y).simplify(x) == DiracDelta(y)
+        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == \
+            DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
