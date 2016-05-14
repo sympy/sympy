@@ -10,6 +10,7 @@ from sympy.core import S
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
+from sympy.utilities.magic import pollute
 
 
 @public
@@ -17,6 +18,19 @@ def free_group(string_gens):
     symbols = tuple(_parse_symbols(string_gens))
     _free_group = FreeGroup(symbols)
     return (_free_group,) + tuple(_free_group.generators)
+
+@public
+def xfree_group(string_gens):
+    symbols = tuple(_parse_symbols(string_gens))
+    _free_group = FreeGroup(symbols)
+    return (_free_group, _free_group.generators)
+
+@public
+def vfree_group(string_gens):
+    symbols = tuple(_parse_symbols(string_gens))
+    _free_group = FreeGroup(symbols)
+    pollute([sym.name for sym in _free_group.symbols], _free_group.generators)
+    return _free_group
 
 
 def _parse_symbols(symbols):
@@ -98,7 +112,7 @@ class FreeGroup(Basic):
                     setattr(obj, name, generator)
         return obj
 
-    def _generators(self):
+    def _generators(group):
         """Returns the generators of the FreeGroup
 
         Examples
@@ -110,9 +124,8 @@ class FreeGroup(Basic):
         [swapnil0, swapnil1, swapnil2]
 
         """
-        group = self
         gens = []
-        for i in range(self.rank):
+        for i in range(group.rank):
             elm = ((i, 1),)
             gens.append(group.dtype(elm))
         return gens
@@ -372,24 +385,25 @@ class FreeGroupElm(CantSympify, tuple):
         if self.is_identity:
             return "<identity>"
 
+        symbols = self.group.symbols
         str_form = ""
         array_form = self.array_form
         for i in range(len(array_form)):
             if i == len(array_form) - 1:
                 if array_form[i][1] == 1:
-                    str_form += self.str_expr + str(array_form[i][0])
+                    str_form += str(symbols[array_form[i][0]])
                 else:
-                    str_form += self.str_expr + str(array_form[i][0]) + \
-                            "**" + str(array_form[i][1])
+                    str_form += str(symbols[array_form[i][0]]) + \
+                                    "**" + str(array_form[i][1])
             else:
                 if array_form[i][1] == 1:
-                    str_form += self.str_expr + str(array_form[i][0]) + "*"
+                    str_form += str(symbols[array_form[i][0]]) + "*"
                 else:
-                    str_form += self.str_expr + str(array_form[i][0]) + \
-                            "**" + str(array_form[i][1]) + "*"
+                    str_form += str(symbols[array_form[i][0]]) + \
+                                    "**" + str(array_form[i][1]) + "*"
         return str_form
 
-    #__repr__ = __str__
+    __repr__ = __str__
 
     def __pow__(self, n):
         n = as_int(n)
@@ -856,4 +870,6 @@ def zero_mul_simp(array_form, index):
             else:
                 array_form[index] = (updated_base, updated_exp)
                 del array_form[index + 1]
+        else:
+            return array_form
     return array_form
