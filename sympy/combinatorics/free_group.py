@@ -311,9 +311,9 @@ class FreeGroupElm(CantSympify, tuple):
         >>> from sympy.combinatorics.free_group import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> (x*z).array_form
-        [(0, 1), (2, 1)]
+        ((x, 1), (z, 1))
         >>> (x**2*z*y*x**2).array_form
-        [(0, 2), (2, 1), (1, 1), (0, 2)]
+        ((x, 2), (z, 1), (y, 1), (x, 2))
 
         See Also
         ========
@@ -337,11 +337,11 @@ class FreeGroupElm(CantSympify, tuple):
         >>> from sympy.combinatorics.free_group import free_group
         >>> f, a, b, c, d = free_group("a b c d")
         >>> (a**3).letter_form
-        [1, 1, 1]
+        [a, a, a]
         >>> (a**2*d**-2*a*b**-4).letter_form
-        [1, 1, -4, -4, 1, -2, -2, -2, -2]
+        [a, a, -d, -d, a, -b, -b, -b, -b]
         >>> (a**-2*b**3*d).letter_form
-        [-1, -1, 2, 2, 2, 4]
+        [-a, -a, b, b, b, d]
 
         See Also
         ========
@@ -353,7 +353,8 @@ class FreeGroupElm(CantSympify, tuple):
         # Note here that the representation adds 1 or -1 to make it represent
         # since 0 removes the `-` sign from it, hence it making it non-usable,
         # a non-pythonic way. But no other option is there.
-        return flatten([[i + 1]*j if j > 0 else [-i - 1]*(-j)
+        symbols = self.group.symbols
+        return flatten([(i,)*j if j > 0 else (-i,)*(-j)
                         for i, j in self.array_form])
 
     def ext_rep(self):
@@ -434,6 +435,8 @@ class FreeGroupElm(CantSympify, tuple):
     def __rdiv__(self, other):
         return other*(self.inverse())
 
+    __truediv__ = __div__
+
     def inverse(self):
         """
         Returns the inverse of a `FreeGroupElm` element
@@ -450,7 +453,7 @@ class FreeGroupElm(CantSympify, tuple):
 
         """
         group = self.group
-        r = tuple([(i, -j) for i, j in self.array_form])
+        r = tuple([(i, -j) for i, j in self.array_form[::-1]])
         return group.dtype(r)
 
     def order(self):
@@ -521,6 +524,7 @@ class FreeGroupElm(CantSympify, tuple):
 
             if len(app) > 0:
                 l.append(tuple(app))
+        # NOTE
         # zero_mul_simp to be used
         return group.dtype(l)
 
@@ -773,7 +777,7 @@ class FreeGroupElm(CantSympify, tuple):
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.generator_syllable( 3 )
-        1
+        b
 
         """
         return self.array_form[i][0]
@@ -792,7 +796,7 @@ class FreeGroupElm(CantSympify, tuple):
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
-        f1
+        b
         >>> w.sub_syllables(3, 3)
         <identity>
 
