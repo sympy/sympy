@@ -159,7 +159,7 @@ class DiracDelta(Function):
             return p.degree() == 1
         return False
 
-    def _eval_rewrite_as_Piecewise(self, arg):
+    def _eval_rewrite_as_Piecewise(self, *args):
         """Represents DiracDelta in a Piecewise form
 
            Examples
@@ -174,14 +174,20 @@ class DiracDelta(Function):
            >>> DiracDelta(x - 5).rewrite(Piecewise)
            Piecewise((oo, Eq(x - 5, 0)), (0, True))
 
+           >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
+           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+
            >>> y = Symbol('y')
 
            >>> DiracDelta(y).rewrite(Piecewise)
            DiracDelta(y)
 
+           >>> DiracDelta(y, 1).rewrite(Piecewise)
+           DiracDelta(y, 1)
+
         """
-        if arg.is_real:
-            return Piecewise((oo, Eq(arg, 0)), (0, True))
+        if self.args[0].is_real:
+            return Piecewise((oo, Eq(args[0], 0)), (0, True))
 
     @staticmethod
     def _latex_no_arg(printer):

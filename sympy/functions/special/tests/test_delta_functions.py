@@ -82,5 +82,8 @@ def test_rewrite():
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
 
     assert DiracDelta(y).rewrite(Piecewise) == DiracDelta(y)
+    assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
     assert DiracDelta(x-5).rewrite(Piecewise) == \
+        Piecewise((oo, Eq(x-5, 0)), (0, True))
+    assert DiracDelta(x-5, 1).rewrite(Piecewise) == \
         Piecewise((oo, Eq(x-5, 0)), (0, True))
