@@ -6,6 +6,7 @@ from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from mpmath import isint
 from sympy.core import S
+from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.core.power import Pow
@@ -49,8 +50,9 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
+_free_group_cache = {}
 
-class FreeGroup(Basic):
+class FreeGroup(DefaultPrinting):
     """
     Called with a positive integer `rank`, ``FreeGroup`` returns a free group
     on `rank` generators. If the optional argument `name` is given then the
@@ -96,19 +98,25 @@ class FreeGroup(Basic):
         Since any number of arguments can be passed in the form of string,
         hence `rank` is "not" used as argument.
         """
-
-        obj = Basic.__new__(cls, symbols)
         rank = len(symbols)
-        obj._rank = rank
-        obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
-        obj.symbols = symbols
-        obj.generators = obj._generators()
-        #obj._gens_set = set(obj.generators)
-        for symbol, generator in zip(obj.symbols, obj.generators):
-            if isinstance(symbol, Symbol):
-                name = symbol.name
-                if hasattr(obj, name):
-                    setattr(obj, name, generator)
+        _hash = hash((cls.__name__, symbols, rank))
+        obj = _free_group_cache.get(_hash)
+
+        if obj is None:
+            obj = object.__new__(cls)
+            obj._rank = rank
+            obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
+            obj.symbols = symbols
+            obj.generators = obj._generators()
+            #obj._gens_set = set(obj.generators)
+            for symbol, generator in zip(obj.symbols, obj.generators):
+                if isinstance(symbol, Symbol):
+                    name = symbol.name
+                    if hasattr(obj, name):
+                        setattr(obj, name, generator)
+
+            _free_group_cache[_hash] = obj
+
         return obj
 
     def _generators(group):
@@ -248,6 +256,9 @@ class FreeGroup(Basic):
         ========
         """
         return F.is_group and all([self.contains(gen) for gen in F.generators])
+
+    def center(self):
+        return self.identity
 
     def assign_variables(self):
         """
