@@ -740,8 +740,7 @@ class FreeGroupElm(CantSympify, tuple):
         ========
 
         >>> from sympy.combinatorics.free_group import free_group
-        >>> f = free_group("swapnil0 swapnil1")
-        >>> swapnil0, swapnil1 = f[0][0], f[0][1]
+        >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
         >>> (swapnil1**3*swapnil0*swapnil1**-1).number_syllables()
         3
 
@@ -868,7 +867,7 @@ def letter_form_to_array_form(array_form):
 
 def zero_mul_simp(array_form, index):
     while index >= 0 and index < len(array_form) - 1:
-        if array_form[index][0] == array_form[index + 1][0]:
+        if array_form[index][0] is array_form[index + 1][0]:
             updated_exp = array_form[index][1] + array_form[index + 1][1]
             updated_base = array_form[index][0]
             if updated_exp == 0:
