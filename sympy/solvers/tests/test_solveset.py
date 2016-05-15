@@ -1046,51 +1046,40 @@ def test_solve_decomposition():
 
 # non linear system of equations
 def test_nlinsolve_polysys():
-    assert set(solve([x**2 + 2/y - 2, x + y - 3], [x, y])) == \
-        set([(S(1), S(2)), (1 + sqrt(5), 2 - sqrt(5)),
-        (1 - sqrt(5), 2 + sqrt(5))])
-    assert solve([x**2 + y - 2, x**2 + y]) == []
+    assert nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y]) == \
+        {(S(1), S(2)), (S(1) + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + S(1), 2 + sqrt(5))}
+    assert nlinsolve([x**2 + y - 2, x**2 + y]) == S.EmptySet
     # the ordering should be whatever the user requested
-    assert solve([x**2 + y - 3, x - y - 4], (x, y)) != solve([x**2 +
+    assert nlinsolve([x**2 + y - 3, x - y - 4], (x, y)) != nlinsolve([x**2 +
                  y - 3, x - y - 4], (y, x))
+    assert nlinsolve([(x + y)**2 - 4, x + y - 2],[x, y]) == S.EmptySet
+    assert nlinsolve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}] #fail
 
-    assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
-
+@XFAIL
 def test_solve_nonlinear():
-    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
-    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
-    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
-
-
-def test_issue_5197():
-    x = Symbol('x', real=True)
-    assert solve(x**2 + 1, x) == []
-    n = Symbol('n', integer=True, positive=True)
-    assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
+    assert nlinsolve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert nlinsolve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert nlinsolve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
     x = Symbol('x', positive=True)
     y = Symbol('y')
-    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
-                 # not {x: -3, y: 1} b/c x is positive
-    # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    assert nlinsolve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
-    # The solution following should not contain {y: -x*exp(x/2)}
-    assert solve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
-    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert nlinsolve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
+    assert nlinsolve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     x, y, z = symbols('x y z', positive=True)
-    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
-
+    assert nlinsolve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
+    assert nlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
+        [(log(sin(S(1)/3)), S(1)/3)]
+    assert nlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
+        [(log(-sin(log(3))), -log(3))]
 
 def test_issue_5132():
     r, t = symbols('r,t')
-    assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
-        set([(
-            -sqrt(r*cos(t)**2), -1*sqrt(r*cos(t)**2)*tan(t)),
-            (sqrt(r*cos(t)**2), sqrt(r*cos(t)**2)*tan(t))])
-    assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
-        [(log(sin(S(1)/3)), S(1)/3)]
-    assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
-        [(log(-sin(log(3))), -log(3))]
+    assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
+        {(-sqrt(r/(tan(t)**2 + 1)), -sqrt(r/(tan(t)**2 + 1))*tan(t)),\
+         (sqrt(r/(tan(t)**2 + 1)), sqrt(r/(tan(t)**2 + 1))*tan(t))
+
+
     assert set(solve([exp(x) - sin(y), y**2 - 4], [x, y])) == \
         set([(log(-sin(2)), -S(2)), (log(sin(2)), S(2))])
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
@@ -1201,8 +1190,8 @@ def test_issue_5849():
 
 
 def test_issue_6752():
-    assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
-    assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
+    assert nlinsolve([a**2 + a, a - b], [a, b]) == {(-1, -1), (0, 0)}
+    assert nlinsolve([a**2 + a*c, a - b], [a, b]) == {(0, 0), (-c, -c)}
 
 
 def test_issue_2777():
@@ -1210,13 +1199,12 @@ def test_issue_2777():
     x, y = symbols('x y', real=True)
     e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
     a, b = 191/S(20), 3*sqrt(391)/20
-    ans = [(a, -b), (a, b)]
-    assert solve((e1, e2), (x, y)) == ans
-    assert solve((e1, e2/(x - a)), (x, y)) == []
+    ans = {(a, -b), (a, b)}
+    assert nlinsolve((e1, e2), (x, y)) == ans
+    assert nlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
     # make the 2nd circle's radius be -3
     e2 += 6
-    assert solve((e1, e2), (x, y)) == []
-    assert solve((e1, e2), (x, y), check=False) == ans
+    assert nlinsolve((e1, e2), (x, y)) == S.EmptySet
 
 
 @slow
@@ -1241,12 +1229,11 @@ def test_issue_8828():
     g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
     G = g1,g2,g3
 
-    A = solve(F, v)
-    B = solve(G, v)
-    C = solve(G, v, manual=True)
+    A = nlinsolve(F, v)
+    B = nlinsolve(G, v)#failss
 
-    p, q, r = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B, C]]
-    assert p == q == r
+    p, q = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B]]
+    assert p == q
 
 # non linear system of equations end
 

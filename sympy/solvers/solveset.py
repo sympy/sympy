@@ -26,6 +26,7 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms, unrad
+from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 
@@ -1192,3 +1193,62 @@ def linsolve(system, *symbols):
     # Return solutions
     solution = FiniteSet(tuple(solution))
     return solution
+
+
+
+###############################################################################
+################################ NLINSOLVE #####################################
+###############################################################################
+
+
+def nlinsolve(system, symbols):
+    r"""
+    Converts a given Non Linear System of Equations into Polynomial form, then solve using 
+    _solve_poly_system defined at polysys.py 
+    For example:
+
+    >>> sqrt(x**2 + y**2) - 10 = 0
+    >>> sqrt(y**2 + (-x + 10)**2) - 3 = 0
+    >>> nlinsolve((e1, e2), (x, y))
+    >>> {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
+
+    """
+    from sympy.solvers.solvers import _invert as _invert_solver
+    if not system:
+        return S.EmptySet
+
+    if not symbols:
+        raise ValueError('Symbols must be given, for which solution of the '
+                         'system is to be found.')
+    polys = []
+    failed = []
+    for j, g in enumerate(system):
+        # TODO : solveset `_invert` improve for more than one symbols 
+        # move all the terms, having any `symbols` in lhs and make it 'g'. scurrently using old solver's _invert
+        i, d = _invert_solver(g, *symbols)
+        g = d - i
+        g = g.as_numer_denom()[0]
+
+        poly = g.as_poly(*symbols, extension=True)
+        if poly is not None:
+            polys.append(poly)
+        else:
+            failed.append(g)
+
+    if not polys:
+        solved_syms = []
+
+    result = []
+    try:
+        result = solve_poly_system(polys, *symbols)
+        solved_syms = symbols
+    except NotImplementedError:
+        failed.extend([g.as_expr() for g in polys])
+        solved_syms = []
+
+    # TODO part =>if failed expr is there then use substitution method
+    if result:
+        result = FiniteSet(*[s for s in result])
+    else:
+        return S.EmptySet
+    return result
