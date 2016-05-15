@@ -155,8 +155,15 @@ def igcd(*args):
     5
 
     """
-    a = abs(as_int(args[0])) if args else 0
-    k = 1
+    if len(args) < 2:
+        raise TypeError(
+            'igcd() takes at least 2 arguments (%s given)' % len(args))
+    if 1 in args:
+        a = 1
+        k = 0
+    else:
+        a = abs(as_int(args[0]))
+        k = 1
     if a != 1:
         while k < len(args):
             b = args[k]
@@ -197,6 +204,9 @@ def ilcm(*args):
     30
 
     """
+    if len(args) < 2:
+        raise TypeError(
+            'ilcm() takes at least 2 arguments (%s given)' % len(args))
     if 0 in args:
         return 0
     a = args[0]
