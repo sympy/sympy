@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, diff
+from sympy.core import S, sympify, diff, oo
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.core.logic import fuzzy_not
@@ -180,7 +180,6 @@ class DiracDelta(Function):
            DiracDelta(y)
 
         """
-        from sympy import oo
         if arg.is_real:
             return Piecewise((oo, Eq(arg, 0)), (0, True))
 
