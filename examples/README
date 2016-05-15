@@ -18,6 +18,9 @@ intermediate :
 advanced :
   Larger demonstrations of advanced mathematical topics.
 
+notebooks :
+  Examples as Jupyter notebooks.
+
 -------------------------------------------------------------------------------
 RUNNING EXAMPLES
 
