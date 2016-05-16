@@ -10,6 +10,7 @@ from sympy.matrices import Matrix
 from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
 from sympy.functions.combinatorial.factorials import binomial
+from sympy.core.sympify import sympify
 
 
 def DiffOperatorAlgebra(base, generator):
@@ -325,31 +326,44 @@ class DifferentialOperator(object):
                 return False
 
 
-def _normalize(list_of_coeff, x, negative=True):
+def _normalize(list_of_coeff, parent, negative=True):
     """
     Normalize a given annihilator
     """
 
-    lcm_denom = S(1)
+    num = []
+    denom = []
+    base = parent.base
+    lcm_denom = base.from_sympy(S(1))
+    K = base.get_field()
 
-    for i in list_of_coeff:
-        lcm_denom = lcm(lcm_denom, i.as_numer_denom()[1])
+    for i, j in enumerate(list_of_coeff):
+        list_of_coeff[i] = K.from_sympy(sympify(j))
+        num.append(base(list_of_coeff[i].num))
+        denom.append(base(list_of_coeff[i].den))
+
+
+    for i in denom:
+        lcm_denom = i.lcm(lcm_denom)
 
     if negative is True:
         lcm_denom = -lcm_denom
 
     for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = (j * lcm_denom).simplify()
+        list_of_coeff[i] = j * K.new(lcm_denom.rep)
 
-    gcd_numer = list_of_coeff[-1]
+    if len(list_of_coeff[-1].den) == 1 and list_of_coeff[-1].den[0] != 1:
+        for i, j in enumerate(list_of_coeff):
+            list_of_coeff[i] = j * list_of_coeff[-1].den[0]
+    gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
 
-    for i in list_of_coeff:
-        gcd_numer = gcd(gcd_numer, i.as_numer_denom()[0])
+    for i in num:
+        gcd_numer = i.gcd(gcd_numer)
 
     for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = (j / gcd_numer).simplify()
+        list_of_coeff[i] = base.from_FractionField(j / K.new(gcd_numer.rep), K)
 
-    return list_of_coeff
+    return DifferentialOperator(list_of_coeff, parent)
 
 
 def _derivate_diff_eq(listofpoly):
@@ -535,10 +549,7 @@ class HolonomicFunction(object):
         # can be also be done the other way by taking R.H.S and multiply with
         # `other`
         sol = sol[:dim + 1 - deg1]
-        sol = _normalize(sol, self.x)
-        # construct operator from list of coefficients
-        sol1 = DifferentialOperator(
-            sol, self.annihilator.parent)
+        sol1 = _normalize(sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
 
@@ -642,8 +653,7 @@ class HolonomicFunction(object):
 
         sol = sol[0] / sol[1]
 
-        sol_ann = DifferentialOperator(_normalize(
-            sol[0:], self.x, negative=False), ann_self.parent)
+        sol_ann = _normalize(sol[0:], self.annihilator.parent, negative=False)
 
         if self._have_init_cond and other._have_init_cond:
             if self.x0 == other.x0:
