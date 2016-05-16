@@ -32,6 +32,8 @@ def vfree_group(symbols):
 
 
 def _parse_symbols(symbols):
+    if not symbols:
+        return tuple()
     if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr):
@@ -135,7 +137,7 @@ class FreeGroup(DefaultPrinting):
         for sym in group.symbols:
             elm = ((sym, 1),)
             gens.append(group.dtype(elm))
-        return gens
+        return tuple(gens)
 
     def __getitem__(self, i):
         return self.generators[i]
@@ -173,6 +175,11 @@ class FreeGroup(DefaultPrinting):
         return str_form
 
     __repr__ = __str__
+
+    def __getitem__(self, index):
+        symbols = self.symbols[index]
+
+        return self.clone(symbols=symbols)
 
     def __eq__(self, other):
         """No ``FreeGroup`` is equal to any "other" ``FreeGroup``.
@@ -264,16 +271,7 @@ class FreeGroup(DefaultPrinting):
         return F.is_group and all([self.contains(gen) for gen in F.generators])
 
     def center(self):
-        return self.identity
-
-    def assign_variables(self):
-        """
-        If  self is a group, whose generators are represented by symbols
-        (for example a free group, a finitely presented group or a pc group)
-        this function assigns these generators to global variables with the
-        same names.
-        """
-        pass
+        return set([self.identity])
 
 
 ############################################################################
@@ -291,7 +289,10 @@ class FreeGroupElm(CantSympify, tuple):
 
     """
     is_identity = None
-    is_AssocWord = True
+    is_assoc_word = True
+
+    def new(self, init):
+        return self.__class__(init)
 
     _hash = None
 
@@ -300,6 +301,9 @@ class FreeGroupElm(CantSympify, tuple):
         if _hash is None:
             self._hash = _hash = hash((self.group, frozenset(tuple(self))))
         return _hash
+
+    def copy(self):
+        return self.new(self)
 
     @property
     def is_identity(self):
