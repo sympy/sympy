@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int, string_types
+from sympy.core.compatibility import is_sequence, as_int, string_types
+from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from mpmath import isint
@@ -14,20 +15,17 @@ from sympy.utilities.magic import pollute
 
 
 @public
-def free_group(string_gens):
-    symbols = tuple(_parse_symbols(string_gens))
+def free_group(symbols):
     _free_group = FreeGroup(symbols)
     return (_free_group,) + tuple(_free_group.generators)
 
 @public
-def xfree_group(string_gens):
-    symbols = tuple(_parse_symbols(string_gens))
+def xfree_group(symbols):
     _free_group = FreeGroup(symbols)
     return (_free_group, _free_group.generators)
 
 @public
-def vfree_group(string_gens):
-    symbols = tuple(_parse_symbols(string_gens))
+def vfree_group(symbols):
     _free_group = FreeGroup(symbols)
     pollute([sym.name for sym in _free_group.symbols], _free_group.generators)
     return _free_group
@@ -98,17 +96,19 @@ class FreeGroup(DefaultPrinting):
         Since any number of arguments can be passed in the form of string,
         hence `rank` is "not" used as argument.
         """
+        symbols = tuple(_parse_symbols(symbols))
         rank = len(symbols)
         _hash = hash((cls.__name__, symbols, rank))
         obj = _free_group_cache.get(_hash)
 
         if obj is None:
             obj = object.__new__(cls)
+            obj._hash = _hash
             obj._rank = rank
             obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
-            #obj._gens_set = set(obj.generators)
+            obj._gens_set = set(obj.generators)
             for symbol, generator in zip(obj.symbols, obj.generators):
                 if isinstance(symbol, Symbol):
                     name = symbol.name
@@ -140,6 +140,9 @@ class FreeGroup(DefaultPrinting):
     def __getitem__(self, i):
         return self.generators[i]
 
+    def clone(self, symbols=None):
+        return self.__class__(symbols or self.symbols)
+
     def __contains__(self, i):
         """
         Return True if `i` is contained in FreeGroup.
@@ -153,6 +156,9 @@ class FreeGroup(DefaultPrinting):
                         ", not elements of type %s" % type(i))
         group = i.group
         return self == group
+
+    def __hash__(self):
+        return self._hash
 
     def __len__(self):
         return self.rank
@@ -286,6 +292,14 @@ class FreeGroupElm(CantSympify, tuple):
     """
     is_identity = None
     is_AssocWord = True
+
+    _hash = None
+
+    def __hash__(self):
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.group, frozenset(tuple(self))))
+        return _hash
 
     @property
     def is_identity(self):
