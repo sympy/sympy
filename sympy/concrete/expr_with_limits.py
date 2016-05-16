@@ -185,7 +185,7 @@ class ExprWithLimits(Expr):
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
         >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
+        {y}
         """
         # don't test for any special values -- nominal free symbols
         # should be returned, e.g. don't return set() if the

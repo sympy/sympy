@@ -130,12 +130,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     >>> from sympy.solvers.diophantine import diophantine
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
-    set([(t_0, -t_0), (t_0, t_0)])
+    {(t_0, -t_0), (t_0, t_0)}
 
     >>> diophantine(x*(2*x + 3*y - z))
-    set([(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)])
+    {(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)}
     >>> diophantine(x**2 + 3*x*y + 4*x)
-    set([(0, n1), (3*t_0 - 4, -t_0)])
+    {(0, n1), (3*t_0 - 4, -t_0)}
 
     See Also
     ========
@@ -155,15 +155,15 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
             syms = [i for i in syms if i in var]
             if syms != var:
                 map = dict(zip(syms, range(len(syms))))
-                return set([tuple([t[map[i]] for i in var])
-                    for t in diophantine(eq, param)])
+                return {tuple([t[map[i]] for i in var])
+                    for t in diophantine(eq, param)}
         n, d = eq.as_numer_denom()
         if not n.free_symbols:
             return set()
         if d.free_symbols:
             dsol = diophantine(d)
             good = diophantine(n) - dsol
-            return set([s for s in good if _mexpand(d.subs(zip(var, s)))])
+            return {s for s in good if _mexpand(d.subs(zip(var, s)))}
         else:
             eq = n
         eq = factor_terms(eq)
@@ -223,7 +223,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)) is S.Zero:
         sols.add(null)
-    return set([S(i) for i in sols])
+    return {S(i) for i in sols}
 
 
 def merge_solution(var, var_t, solution):
@@ -290,7 +290,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-1, -2), (-1, 2), (1, -2), (1, 2)])
+    {(-1, -2), (-1, 2), (1, -2), (1, 2)}
 
     See Also
     ========
@@ -774,7 +774,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     >>> from sympy.abc import x, y, t
     >>> from sympy.solvers.diophantine import diop_quadratic
     >>> diop_quadratic(x**2 + y**2 + 2*x + 2*y + 2, t)
-    set([(-1, -1)])
+    {(-1, -1)}
 
     References
     ==========
@@ -1199,9 +1199,9 @@ def cornacchia(a, b, m):
 
     >>> from sympy.solvers.diophantine import cornacchia
     >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
-    set([(2, 3), (4, 1)])
+    {(2, 3), (4, 1)}
     >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
-    set([(3, 4)])
+    {(3, 4)}
 
     References
     ===========
@@ -2548,7 +2548,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
     >>> from sympy.abc import a, b, c, d, e, f
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
-    set([(15, 22, 22, 24, 24)])
+    {(15, 22, 22, 24, 24)}
 
     Reference
     =========
@@ -2609,7 +2609,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
     >>> from sympy.solvers.diophantine import diop_general_sum_of_even_powers
     >>> from sympy.abc import a, b
     >>> diop_general_sum_of_even_powers(a**4 + b**4 - (2**4 + 3**4))
-    set([(2, 3)])
+    {(2, 3)}
 
     See Also
     ========

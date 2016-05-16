@@ -364,7 +364,7 @@ def closest_points(*args):
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 0))])
+    {(Point2D(0, 0), Point2D(3, 0))}
 
     """
     from collections import deque
@@ -443,7 +443,7 @@ def farthest_points(*args):
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 4))])
+    {(Point2D(0, 0), Point2D(3, 4))}
 
     """
     from math import hypot, sqrt as _sqrt

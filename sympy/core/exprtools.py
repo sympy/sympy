@@ -299,7 +299,7 @@ class Factors(object):
         >>> f.factors  # underlying dictionary
         {2: 1, x: 3}
         >>> f.gens  # base of each factor
-        frozenset([2, x])
+        frozenset({2, x})
         >>> Factors(0)
         Factors({0: 1})
         >>> Factors(I)

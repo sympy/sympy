@@ -410,7 +410,7 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, I, pi, x, y])
+           {1, 2, I, pi, x, y}
 
            If one or more types are given, the results will contain only
            those types of atoms.
@@ -420,16 +420,16 @@ class Basic(with_metaclass(ManagedProperties)):
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
-           set([x, y])
+           {x, y}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
-           set([1, 2])
+           {1, 2}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
-           set([1, 2, pi])
+           {1, 2, pi}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, I, pi])
+           {1, 2, I, pi}
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
@@ -437,7 +437,7 @@ class Basic(with_metaclass(ManagedProperties)):
            The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
-           set([x, y])
+           {x, y}
 
            Be careful to check your assumptions when using the implicit option
            since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
@@ -446,10 +446,10 @@ class Basic(with_metaclass(ManagedProperties)):
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
-           set([1])
+           {1}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
-           set([1, 2])
+           {1, 2}
 
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
@@ -460,12 +460,12 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> from sympy.core.function import AppliedUndef
            >>> f = Function('f')
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
-           set([f(x), sin(y + I*pi)])
+           {f(x), sin(y + I*pi)}
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
-           set([f(x)])
+           {f(x)}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([I*pi, 2*sin(y + I*pi)])
+           {I*pi, 2*sin(y + I*pi)}
 
         """
         if types:
@@ -1703,11 +1703,11 @@ def _atomic(e):
     >>> from sympy.core.basic import _atomic
     >>> f = Function('f')
     >>> _atomic(x + y)
-    set([x, y])
+    {x, y}
     >>> _atomic(x + f(y))
-    set([x, f(y)])
+    {x, f(y)}
     >>> _atomic(Derivative(f(x), x) + cos(x) + y)
-    set([y, cos(x), Derivative(f(x), x)])
+    {y, cos(x), Derivative(f(x), x)}
 
     """
     from sympy import Derivative, Function, Symbol

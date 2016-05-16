@@ -1150,7 +1150,7 @@ class MatrixBase(object):
         >>> Matrix([[x]])
         Matrix([[x]])
         >>> _.atoms()
-        set([x])
+        {x}
         """
 
         if types:
@@ -1173,7 +1173,7 @@ class MatrixBase(object):
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x], [1]]).free_symbols
-        set([x])
+        {x}
         """
 
         return set().union(*[i.free_symbols for i in self])

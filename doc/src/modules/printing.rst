@@ -203,11 +203,11 @@ be defined as 'Fortran parameters', (ii) a list functions that can not be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), set([gamma(x)]), '      -gamma(x)**2 + 1')
+    (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
-    (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
+    ({(pi, '3.14159265358979d0')}, set(), '      x - pi**2')
 
 Mathematica code printing
 -------------------------

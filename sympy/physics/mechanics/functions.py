@@ -402,13 +402,13 @@ def find_dynamicsymbols(expression, exclude=None):
     >>> x, y = dynamicsymbols('x, y')
     >>> expr = x + x.diff()*y
     >>> find_dynamicsymbols(expr)
-    set([x(t), y(t), Derivative(x(t), t)])
+    {x(t), y(t), Derivative(x(t), t)}
 
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
 
     >>> find_dynamicsymbols(expr, [x, y])
-    set([Derivative(x(t), t)])
+    {Derivative(x(t), t)}
     """
     t_set = {dynamicsymbols._t}
     if exclude:
