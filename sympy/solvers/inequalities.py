@@ -496,7 +496,7 @@ def _inequalities_without_roots(expr, gen):
     e = expr.gts - expr.lts
     if e.is_Add:
         for subexpr in e.args:
-            n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational = False))
+            n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
 
     return n_sol_sets
 
