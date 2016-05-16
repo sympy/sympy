@@ -417,6 +417,8 @@ class HolonomicFunction(object):
     HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1 , f''(0) = 2
     """
 
+    _op_priority = 20
+
     def __init__(self, annihilator, x, x0=0, y0=[]):
         """
         Takes the annihilator and variable of the function.
@@ -448,7 +450,10 @@ class HolonomicFunction(object):
             cond_str = ''
             diff_str = ''
             for i in self.y0:
-                cond_str += ', f%s(%d) = %d ' %(diff_str, self.x0, i)
+                if isinstance(i, float):
+                    cond_str += ', f%s(%d) = %.2f' %(diff_str, self.x0, i)
+                else:
+                    cond_str += ', f%s(%d) = %d ' %(diff_str, self.x0, i)
                 diff_str += "'"
 
             sol = str_sol + cond_str
@@ -591,6 +596,17 @@ class HolonomicFunction(object):
     def __mul__(self, other):
 
         ann_self = self.annihilator
+
+        if not isinstance(other, HolonomicFunction):
+            if not self._have_init_cond:
+                return self
+            else:
+                y0 = _extend_y0(self, ann_self.order)
+                y1 = []
+                for j in y0:
+                    y1.append(j * other)
+                return HolonomicFunction(ann_self, self.x, self.x0, y1)
+
         ann_other = other.annihilator
         list_self = ann_self.listofpoly
         list_other = ann_other.listofpoly
@@ -683,6 +699,28 @@ class HolonomicFunction(object):
                 raise NotImplementedError
 
         return HolonomicFunction(sol_ann, self.x)
+
+    __rmul__ = __mul__
+
+    def __sub__(self, other):
+        return self + other * -1
+
+    def __rsub__(self, other):
+        return self * -1 + other
+
+    def __pow__(self, n):
+
+        if n == 0:
+            return S(1)
+        if n == 1:
+            return self
+        else:
+            if n % 2 == 1:
+                powreduce = self**(n - 1)
+                return powreduce * self
+            elif n % 2 == 0:
+                powreduce = self**(n / 2)
+                return powreduce * powreduce
 
 
 def _extend_y0(Holonomic, n):
