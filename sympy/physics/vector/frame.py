@@ -624,7 +624,6 @@ class ReferenceFrame(object):
         rot_order : str
             If applicable, the order of a series of rotations.
 
-
         Examples
         ========
 
@@ -634,17 +633,12 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
 
-
-        .orient() documentation:\n
-        ========================
-
         """
 
         newframe = self.__class__(newname, variables, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
-    orientnew.__doc__ += orient.__doc__
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.
