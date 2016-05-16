@@ -1075,10 +1075,9 @@ def test_solve_nonlinear():
 
 def test_issue_5132():
     r, t = symbols('r,t')
-    assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
+    assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
         {(-sqrt(r/(tan(t)**2 + 1)), -sqrt(r/(tan(t)**2 + 1))*tan(t)),\
          (sqrt(r/(tan(t)**2 + 1)), sqrt(r/(tan(t)**2 + 1))*tan(t))
-
 
     assert set(solve([exp(x) - sin(y), y**2 - 4], [x, y])) == \
         set([(log(-sin(2)), -S(2)), (log(sin(2)), S(2))])

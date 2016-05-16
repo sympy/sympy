@@ -1201,16 +1201,154 @@ def linsolve(system, *symbols):
 ###############################################################################
 
 
+def nlinsolve_matrix(system, symbols):
+    r"""
+    Solve system of 2 non linear polynomial equations with 2 variables
+
+    For the given set of Equations, the respective input types
+    are given below:
+
+    .. math:: x*y - 1 = 0
+    .. math:: 4*x**2 + y**2 - 5 = 0
+
+    Reference : 
+    http://people.math.gatech.edu/~aleykin3/math4803spr13/BOOK/chapter1.pdf
+    page :9 example = 2.2
+    currently for 2 equations
+
+    Examples
+    >>> from sympy.solvers.solveset import nlinsolve_matrix
+    >>> nlinsolve_matrix([x*y - 1, 4*x**2 + y**2 - 5],[x,y])
+    >>> {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
+
+    This method will help in this type of cases(nlinsolve calling this method when 
+    solve_poly_system cannot solve non zero dimensional nonlinear system of equations) 
+
+    >>> nlinsolve([(x + y)**2 - 4, x + y - 2],[x,y])
+    >>> {-y + 2}
+
+    currently it is supporting 2 variables 2 nonlinear equation.
+
+    """
+    deg = []
+    # finding degree
+    for eq in system:
+        deg.append(Poly(eq).total_degree())
+    temp = str(symbols[0]) + "_%i"
+    length = -1
+    for i in deg:
+        length += i
+ 
+    # no of col = d1 + d2 + .... + dn - 1
+    params = [temp % i for i in range(length)]
+    M = Matrix([params])
+    # initialise Matrix with symbols + 1 columns
+    M = M.col_insert(length, Matrix([1]))
+    row_no = 1
+
+    for equation in system:
+        f = equation.expand(force=True)
+        for i1 in range(0,deg[row_no%2 ]):
+            f = f*(symbols[0]**i1)
+            f = f.expand(force=True)
+            # Extract coeff of symbols
+            coeff_list = []
+            i2 = length
+            while i2 != 0:
+                coeff_list.append(f.coeff(symbols[0]**(i2)))
+                i2 = i2 -1
+
+            # append constant term (term free from symbols)
+            coeff_list.append(f.as_coeff_add(symbols[0])[0])
+
+            # insert equations coeff's into rows
+            M = M.row_insert(row_no, Matrix([coeff_list]))
+            row_no += 1
+
+    # delete the initialised (Ist) trivial row
+    M.row_del(0)
+    y_eq = M.det()
+    y_soln = solveset_real(y_eq, symbols[1])
+    result = []
+    if y_soln is S.Reals:
+        sol = solveset(system[0], symbols[0])
+        for s in sol:
+            if system[1].subs(symbols[0], s) is S.Zero:
+                result.append(s)
+    elif isinstance(y_soln, ConditionSet):
+        return S.EmptySet
+    else:
+        for y_s in y_soln:
+            eq = system[0]
+            eq = eq.subs(symbols[1], y_s)
+            result.append(tuple([tuple(_invert_real(eq, FiniteSet(0), symbols[0])[1])[0], y_s]))
+
+    result = FiniteSet(*[r for r in result])
+    return result
+
+
 def nlinsolve(system, symbols):
     r"""
-    Converts a given Non Linear System of Equations into Polynomial form, then solve using 
-    _solve_poly_system defined at polysys.py 
-    For example:
+    Solve system of N non linear equations with M variables, which
+    means both under - and overdetermined systems are supported.
+    The possible number of solutions is zero, one or infinite.
+    solutions are represented parametrically in terms of given
+    symbols. For unique solution a FiniteSet of ordered tuple
+    is returned.
 
-    >>> sqrt(x**2 + y**2) - 10 = 0
-    >>> sqrt(y**2 + (-x + 10)**2) - 3 = 0
+    For the given set of Equations, the respective input types
+    are given below:
+
+    .. math:: x*y - 1 = 0
+    .. math:: 4*x**2 + y**2 - 5 = 0
+
+    `system  =  [x*y - 1, 4*x**2 + y**2 - 5]`
+    `symbols = [x,y]`
+
+    >>> nlinsolve([x*y - 1, 4*x**2 + y**2 - 5],[x,y])
+    >>> {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
+
+    Parameters
+    ==========
+
+    system : list of equations 
+        The target system of equations
+    symbols : list of Symbol
+
+    * Note : List of symbol is used here.
+
+    Returns
+    =======
+
+    A FiniteSet of ordered tuple of values of `symbols` for which
+    the `system` has solution.
+
+    Please note that general FiniteSet is unordered, the solution
+    returned here is not simply a FiniteSet of solutions, rather
+    it is a FiniteSet of ordered tuple, i.e. the first & only
+    argument to FiniteSet is a tuple of solutions, which is ordered,
+    & hence the returned solution is ordered.
+
+    Also note that solution could also have been returned as an
+    ordered tuple, FiniteSet is just a wrapper `{}` around
+    the tuple. It has no other significance except for
+    the fact it is just used to maintain a consistent output
+    format throughout the solveset.
+
+    
+
+    More examples:
+    # poly system of equations
+    >>> e1 = sqrt(x**2 + y**2) - 10
+    >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
     >>> nlinsolve((e1, e2), (x, y))
     >>> {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
+    >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
+    >>> {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
+    >>> r, t = symbols('r, t')
+    >>> nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y])
+    >>> {(-sqrt(r/(tan(t)**2 + 1)), -sqrt(r/(tan(t)**2 + 1))*tan(t)), \
+    (sqrt(r/(tan(t)**2 + 1)), sqrt(r/(tan(t)**2 + 1))*tan(t))}
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
@@ -1223,8 +1361,8 @@ def nlinsolve(system, symbols):
     polys = []
     failed = []
     for j, g in enumerate(system):
-        # TODO : solveset `_invert` improve for more than one symbols 
-        # move all the terms, having any `symbols` in lhs and make it 'g'. scurrently using old solver's _invert
+        # TODO : solveset `_invert, improve for more than one symbols 
+        # move all the terms, having any `symbols` in lhs and make it 'g'. currently using old solver's _invert
         i, d = _invert_solver(g, *symbols)
         g = d - i
         g = g.as_numer_denom()[0]
@@ -1235,18 +1373,67 @@ def nlinsolve(system, symbols):
         else:
             failed.append(g)
 
+    # If none of the equation is Poly
     if not polys:
         solved_syms = []
 
     result = []
-    try:
-        result = solve_poly_system(polys, *symbols)
-        solved_syms = symbols
-    except NotImplementedError:
-        failed.extend([g.as_expr() for g in polys])
-        solved_syms = []
+    known_values = []
+    if len(symbols) == len(polys):
+        try:
+            # try to solve, when all the equation is poly
+            result = solve_poly_system(polys, *symbols)
+            solved_syms = symbols
+            known_values = FiniteSet(dict(list(zip(solved_syms, r))) for r in result)
+        except NotImplementedError:
+            # If polys is not zero dimensional, try to solve them
+            # using matrix method => nlinsolve_matrix .
+            # another way is using PUR polynomial univarate representation
+            # to get solution for positive dimensioanl non linear system
+            # reference : 
+            # http://www.m-hikari.com/imf-2010/5-8-2010/ayadIMF5-8-2010.pdf
+            # http://research.cs.tamu.edu/keyser/Papers/AMSDimacs2005.pdf
+            # http://www.maplesoft.com/support/help/Maple/view.aspx?path=Groebner/RationalUnivariateRepresentation
+            # A better method is needed nlinsolve_matrix is not helping much.
+            return nlinsolve_matrix([g.as_expr() for g in polys], symbols)
 
-    # TODO part =>if failed expr is there then use substitution method
+    else:
+        # all the equations are not Polynomial
+        # first solve the polynomial equations if present
+        if polys:
+            combinations = FiniteSet((symbols)**len(polys))
+            for new_symbols in combinations:
+                        try:
+                            # solution for new_symbols in terms of other symbols
+                            res = solve_poly_system(polys, *new_symbols)
+                            for r in res:
+                                skip = False
+                                for r1 in r:
+                                    if got_s and any([ss in r1.free_symbols
+                                        for ss in got_s]):
+                                        # sol depends on previously
+                                        # solved symbols: discard it
+                                        skip = True
+                                if not skip:
+                                    got_s.update(syms)
+                                    result.extend([dict(list(zip(syms, r)))])
+                        except NotImplementedError:
+                            pass
+                    if got_s:
+                        solved_syms = list(got_s)
+                    else:
+                        raise NotImplementedError('no valid subset found')
+    # if failed expr is there then use substitution method..
+    if failed:
+        
+
+        new_system = []
+        new_symbols = []
+        for failed_eq in failed:
+            for kv in known_values:
+                failed_eq.subs(kv)
+            # for sym in failed_eq.free_symbols:
+            #     if (e.free_symbols - solved_syms) & set(symbols)
     if result:
         result = FiniteSet(*[s for s in result])
     else:
