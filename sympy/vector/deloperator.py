@@ -3,6 +3,7 @@ from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsyssph import CoordSysSpherical
 from sympy.vector.scalar import BaseScalar
 from sympy.core import S
 
@@ -14,13 +15,24 @@ class Del(Basic):
     """
 
     def __new__(cls, system):
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
-        obj = super(Del, cls).__new__(cls, system)
-        obj._x, obj._y, obj._z = system.x, system.y, system.z
-        obj._i, obj._j, obj._k = system.i, system.j, system.k
-        obj._system = system
-        obj._name = system.__str__() + ".delop"
+        if not isinstance(system, CoordSysCartesian) \
+            and not isinstance(system, CoordSysSpherical):
+            raise TypeError("system should be a CoordSysCartesian or CoordSysSpherical")
+
+        if isinstance(system,CoordSysCartesian):
+            obj = super(Del, cls).__new__(cls, system)
+            obj._x, obj._y, obj._z = system.x, system.y, system.z
+            obj._i, obj._j, obj._k = system.i, system.j, system.k
+            obj._system = system
+            obj._name = system.__str__() + ".delop"
+
+        elif isinstance(system,CoordSysSpherical):
+            obj = super(Del, cls).__new__(cls, system)
+            obj._r, obj._θ, obj._φ = system.r, system.θ, system.φ
+            obj._rˆ, obj._θˆ, obj._φˆ = system.rˆ, system.θˆ, system.φˆ
+            obj._system = system
+            obj._name = system.__str__() + ".delop"
+
         return obj
 
     @property

@@ -4,6 +4,7 @@ from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsyssph import CoordSysSpherical
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
@@ -45,6 +46,7 @@ class Vector(BasisDependent):
         """
         Returns the magnitude of this vector.
         """
+        print(self)
         return sqrt(self & self)
 
     def normalize(self):
@@ -354,8 +356,10 @@ class BaseVector(Vector, AtomicExpr):
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
+        if not isinstance(system, CoordSysCartesian) \
+            and not isinstance(system,CoordSysSpherical):
+            print('in here')
+            raise TypeError("system should be a CoordSysCartesian or CoordSysSpherical")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
                                              system, Symbol(pretty_str),
