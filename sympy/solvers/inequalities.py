@@ -417,7 +417,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
             solns = solve(n, gen, check=False)
             singularities = solve(d, gen, check=False)
         else:
-            solns = solve(e, gen, check=False)
+            solns = solve(e, gen, check=True)
             singularities = []
             for d in denoms(e):
                 singularities.extend(solve(d, gen))
@@ -483,15 +483,14 @@ def solve_univariate_inequality(expr, gen, relational=True):
             sol_sets.append(Interval(start, end, True, True))
 
         elif solns == []: # if no solutions for equation e
-            nsol_sets = _inequalities_without_roots(expr,gen)
-
+            nsol_sets = _real_conditions(expr,gen)
         cv = Intersection(*nsol_sets).subs(gen,_gen)
         rv = Union(*sol_sets).subs(gen, _gen)
         rv = Union(rv, cv)
     return rv if not relational else rv.as_relational(_gen)
 
 
-def _inequalities_without_roots(expr, gen):
+def _real_conditions(expr, gen):
     n_sol_sets = []
     e = expr.gts - expr.lts
     if e.is_Add:
