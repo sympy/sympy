@@ -173,7 +173,7 @@ def rewriter(condition, rewrite):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
                 substep = integral_steps(rewritten, symbol)
-                if not isinstance(substep, DontKnowRule):
+                if not isinstance(substep, DontKnowRule) and substep:
                     return RewriteRule(
                         rewritten,
                         substep,
