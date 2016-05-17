@@ -60,8 +60,6 @@ def test_FreeGroup__getitem__():
     assert F[0:] == FreeGroup("x, y, z")
     assert F[1:] == FreeGroup("y, z")
     assert F[2:] == FreeGroup("z")
-    # modify
-    #assert F[3:] == FreeGroup("")
 
 
 def test_FreeGroupElm__hash__():
@@ -93,7 +91,8 @@ def test_FreeGroupElm_methods():
 
 
 def test_FreeGroupElm_eliminate_word():
-    pass
+    w = x**5*y*x**2*y**-4*x
+    assert w.eliminate_word( x, x**2 ) == x**10*y*x**4*y**-4*x**2
 
 
 def test_FreeGroupElm_array_form():

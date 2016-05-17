@@ -131,10 +131,6 @@ class FreeGroup(DefaultPrinting):
     is_PermutationGroup = False
 
     def __new__(cls, symbols):
-        """
-        Since any number of arguments can be passed in the form of string,
-        hence `rank` is "not" used as argument.
-        """
         symbols = tuple(_parse_symbols(symbols))
         rank = len(symbols)
         _hash = hash((cls.__name__, symbols, rank))
@@ -495,7 +491,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         if other.is_identity:
             return self
         r = tuple(zero_mul_simp(list(self.array_form + other.array_form),
-                        len(self.array_form) - 1))
+                                            len(self.array_form) - 1))
         return group.dtype(r)
 
     def __div__(self, other):
@@ -922,17 +918,17 @@ def letter_form_to_array_form(array_form, group):
 
 
 def zero_mul_simp(array_form, index):
-    lw = len(array_form)
-    if index >= 0 and index < lw - 1:
+    while len(array_form) > 1 and index < len(array_form) - 1:
         if array_form[index][0] is array_form[index + 1][0]:
             updated_exp = array_form[index][1] + array_form[index + 1][1]
             updated_base = array_form[index][0]
             if updated_exp == 0:
                 del array_form[index], array_form[index]
-                return zero_mul_simp(array_form, index - 1)
+                index = index - 1
             else:
                 array_form[index] = (updated_base, updated_exp)
                 del array_form[index + 1]
+                return array_form
         else:
             return array_form
     return array_form
