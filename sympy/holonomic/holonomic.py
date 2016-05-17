@@ -723,6 +723,26 @@ class HolonomicFunction(object):
                 return powreduce * powreduce
 
     def composition(self, expr):
+        """
+        Returns the Holonomic Function after composition with
+        an algebraic function.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DiffOperatorAlgebra
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(Dx - 1, x).composition(x**2) # e^(x**2)
+        HolonomicFunction((-2*x) + (1)Dx, x)
+
+        See Also
+        ========
+        From_Hyper
+        """
         R = self.annihilator.parent
         a = self.annihilator.order
         diff = expr.diff()
@@ -757,11 +777,24 @@ class HolonomicFunction(object):
 
 
 def From_Hyper(hyper):
+    """
+    Converts Hypergeometric Function to Holonomic.
+
+    Examples
+    =======
+
+    >>> from sympy.holonomic.holonomic import From_Hyper, DiffOperatorAlgebra
+    >>> from sympy import symbols, hyper, S
+    >>> x = symbols('x')
+    >>> From_Hyper(hyper([], [S(3)/2], x**2/4))
+    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x)
+
+    """
     a = hyper.ap
     b = hyper.bq
     z = hyper.args[2]
     x = z.atoms(Symbol).pop()
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
     r1 = 1
     for i in range(len(a)):
         r1 = r1 * (x * Dx + a[i])
