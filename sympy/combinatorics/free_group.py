@@ -490,9 +490,9 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
             return other
         if other.is_identity:
             return self
-        r = tuple(zero_mul_simp(list(self.array_form + other.array_form),
-                                            len(self.array_form) - 1))
-        return group.dtype(r)
+        r = list(self.array_form + other.array_form)
+        zero_mul_simp(r, len(self.array_form) - 1)
+        return group.dtype(tuple(r))
 
     def __div__(self, other):
         return self*(other.inverse())
@@ -916,19 +916,12 @@ def letter_form_to_array_form(array_form, group):
                 new_array.append((a[i], n))
             n = 1
 
-
-def zero_mul_simp(array_form, index):
-    while len(array_form) > 1 and index < len(array_form) - 1:
-        if array_form[index][0] is array_form[index + 1][0]:
-            updated_exp = array_form[index][1] + array_form[index + 1][1]
-            updated_base = array_form[index][0]
-            if updated_exp == 0:
-                del array_form[index], array_form[index]
-                index = index - 1
-            else:
-                array_form[index] = (updated_base, updated_exp)
-                del array_form[index + 1]
-                return array_form
-        else:
-            return array_form
-    return array_form
+def zero_mul_simp(l, index):
+    while len(l) > 1 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:
+        exp = l[index][1] + l[index + 1][1]
+        base = l[index][0]
+        l[index] = (base, exp)
+        del l[index + 1]
+        if l[index][1] == 0:
+            del l[index]
+            index -= 1
