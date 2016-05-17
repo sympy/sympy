@@ -58,9 +58,9 @@ PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
-SOverXBLtZeroRule = Rule("SOverXBLtZeroRule", "a b")
-SOverXAXGtZeroRule = Rule("SOverAXGtZeroRule", "a b")
-SOverXAXLtZeroRule = Rule("SOverXAXLtZeroRule", "a b")
+SOverXBLtZeroRule = Rule("SOverXBLtZeroRule", "a b c")
+SOverXAXGtZeroRule = Rule("SOverAXGtZeroRule", "a b c")
+SOverXAXLtZeroRule = Rule("SOverXAXLtZeroRule", "a b c")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
 
@@ -519,6 +519,22 @@ def trig_product_rule(integral):
 
         return rule
 
+def quadratic_denom_rule(integral):
+    integrand, symbol = integral
+    a = sympy.Wild('a', exclude=[symbol])
+    b = sympy.Wild('b', exclude=[symbol])
+    c = sympy.Wild('c', exclude=[symbol])
+    match = integrand.match(a / (b * symbol ** 2 + c))
+
+    if not match:
+        return
+
+    a, b, c = match[a], match[b], match[c]
+    return PiecewiseRule([(SOverXBLtZeroRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                          (SOverXAXGtZeroRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                          (SOverXAXLtZeroRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+    ], integrand, symbol)
+
 def s_over_x_rule(integral):
     integrand, symbol = integral
     q = integrand * symbol
@@ -529,11 +545,11 @@ def s_over_x_rule(integral):
     if not match:
         return
 
-    a, b = match[a], match[b]
-    return PiecewiseRule([(SOverXBLtZeroRule(a, b, integrand, symbol), sympy.Lt(b, 0)),
-                          (SOverXAXGtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Gt(a * symbol, 0), sympy.Gt(b, 0))),
-                          (SOverXAXLtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Lt(a * symbol, 0), sympy.Gt(b, 0))),
-    ], integrand, symbol)
+    # a, b = match[a], match[b]
+    # return PiecewiseRule([(SOverXBLtZeroRule(a, b, integrand, symbol), sympy.Lt(b, 0)),
+    #                       (SOverXAXGtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Gt(a * symbol, 0), sympy.Gt(b, 0))),
+    #                       (SOverXAXLtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Lt(a * symbol, 0), sympy.Gt(b, 0))),
+    # ], integrand, symbol)
 
 @sympy.cacheit
 def make_wilds(symbol):
@@ -935,12 +951,13 @@ def integral_steps(integrand, symbol, **options):
 
     result = do_one(
         null_safe(switch(key, {
-            sympy.Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule)),
+            sympy.Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule), \
+                              null_safe(quadratic_denom_rule)),
             sympy.Symbol: power_rule,
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
-                              null_safe(heaviside_rule), null_safe(s_over_x_rule)),
+                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             sympy.Heaviside: heaviside_rule,
@@ -1026,16 +1043,19 @@ def eval_trig(func, arg, integrand, symbol):
         return -sympy.cot(arg)
 
 @evaluates(SOverXBLtZeroRule)
-def eval_s_over_x_b_lt_zero(a, b, integrand, symbol):
-    return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(-b) * sympy.atan(sympy.sqrt(a * symbol + b) / sympy.sqrt(-b)))
+def eval_s_over_x_b_lt_zero(a, b, c, integrand, symbol):
+    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(-b) * sympy.atan(sympy.sqrt(a * symbol + b) / sympy.sqrt(-b)))
+    return a / b * 1 / sympy.sqrt(c / b) * sympy.atan(symbol / sympy.sqrt(c / b))
 
 @evaluates(SOverXAXGtZeroRule)
-def eval_s_over_x_ax_gt_zero(a, b, integrand, symbol):
-    return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.acoth(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+def eval_s_over_x_ax_gt_zero(a, b, c, integrand, symbol):
+    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.acoth(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+    return - a / b * 1 / sympy.sqrt(-c / b) * sympy.acoth(symbol / sympy.sqrt(-c / b))
 
 @evaluates(SOverXAXLtZeroRule)
-def eval_s_over_x_ax_lt_zero(a, b, integrand, symbol):
-    return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.atanh(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+def eval_s_over_x_ax_lt_zero(a, b, c, integrand, symbol):
+    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.atanh(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+    return - a / b * 1 / sympy.sqrt(-c / b) * sympy.atanh(symbol / sympy.sqrt(-c / b))
 
 @evaluates(ReciprocalRule)
 def eval_reciprocal(func, integrand, symbol):
