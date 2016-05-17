@@ -172,10 +172,10 @@ class DiracDelta(Function):
            Piecewise((oo, Eq(x, 0)), (0, True))
 
            >>> DiracDelta(x - 5).rewrite(Piecewise)
-           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+           Piecewise((oo, Eq(x, 5)), (0, True))
 
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
-           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+           Piecewise((oo, Eq(x, 5)), (0, True))
 
            >>> y = Symbol('y')
 
@@ -186,7 +186,15 @@ class DiracDelta(Function):
            DiracDelta(y, 1)
 
         """
-        if self.args[0].is_real:
+        from sympy import solve
+
+        free = self.free_symbols
+        if len(free) == 1:
+            wrt = free.pop()
+            sol = solve(Eq(args[0], 0))
+            if self.args[0].is_real:
+                return Piecewise((oo, Eq(wrt, sol[0])), (0, True))
+        else:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
 
     @staticmethod
