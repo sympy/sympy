@@ -193,6 +193,9 @@ class DiracDelta(Function):
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
            Piecewise((oo, Eq(x, 5)), (0, True))
 
+           >>> DiracDelta((x-3)*(x-4)*(x-5)).rewrite(Piecewise)
+           Piecewise((oo, Eq(x, 3)), (0, True))/2 + Piecewise((oo, Eq(x, 4)), (0, True)) + Piecewise((oo, Eq(x, 5)), (0, True))/2
+
            >>> y = Symbol('y')
 
            >>> DiracDelta(y).rewrite(Piecewise)
@@ -201,15 +204,21 @@ class DiracDelta(Function):
            >>> DiracDelta(y, 1).rewrite(Piecewise)
            DiracDelta(y, 1)
 
+           >>> DiracDelta(x*y+10).rewrite(Piecewise)
+           Piecewise((oo, Eq(x*y + 10, 0)), (0, True))
+
         """
         from sympy import solve
 
         free = self.free_symbols
         if len(free) == 1:
-            wrt = free.pop()
+            variable = free.pop()
+            if not self.is_simple(variable):
+                f = self.expand(diracdelta=True, wrt=variable)
+                return f.rewrite(Piecewise)
             sol = solve(Eq(args[0], 0))
             if self.args[0].is_real:
-                return Piecewise((oo, Eq(wrt, sol[0])), (0, True))
+                return Piecewise((oo, Eq(variable, sol[0])), (0, True))
         else:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
 
