@@ -215,31 +215,62 @@ def permutedims(expr, perm):
     Permutes the indices of an array.
 
     Parameter specifies the permutation of the indices.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z, t
+    >>> from sympy import sin
+    >>> from sympy.tensor.array import Array, permutedims
+    >>> a = Array([[x, y, z], [t, sin(x), 0]])
+    >>> a
+    [[x, y, z], [t, sin(x), 0]]
+    >>> permutedims(a, (1, 0))
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    If the array is of second order, ``transpose`` can be used:
+
+    >>> from sympy import transpose
+    >>> transpose(a)
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    Examples on higher dimensions:
+
+    >>> b = Array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    >>> permutedims(b, (2, 1, 0))
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, (1, 2, 0))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    ``Permutation`` objects are also allowed:
+
+    >>> from sympy.combinatorics import Permutation
+    >>> permutedims(b, Permutation([1, 2, 0]))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
     """
     if not isinstance(expr, NDimArray):
         raise TypeError("expression has to be an N-dim array")
 
-    perm = tuple(perm)
+    from sympy.combinatorics import Permutation
+    if not isinstance(perm, Permutation):
+        perm = Permutation(list(perm))
+
+    # Get the inverse permutation:
+    iperm = perm**-1
+    # Rank abbreviation:
     rank = expr.rank()
 
-    if tuple(sorted(perm)) != tuple(range(rank)):
+    if tuple(sorted(perm.array_form)) != tuple(range(rank)):
         raise ValueError("not a permutation")
 
-    reverse = [perm.index(i) for i in range(rank)]
-
-    def permute_array(arr):
-        new_arr = [None]*len(arr)
-        for i, el in enumerate(arr):
-            new_arr[reverse[i]] = el
-        return new_arr
-
-    indices_span = permute_array([range(i) for i in expr.shape])
+    indices_span = perm([range(i) for i in expr.shape])
 
     new_array = [None]*len(expr)
     for i, idx in enumerate(itertools.product(*indices_span)):
-        t = permute_array(idx)
+        t = iperm(idx)
         new_array[i] = expr[t]
 
-    new_shape = permute_array(expr.shape)
+    new_shape = perm(expr.shape)
 
     return expr.func(new_array, new_shape)
