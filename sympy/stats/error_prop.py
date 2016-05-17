@@ -2,12 +2,12 @@
 from __future__ import print_function, division
 from itertools import repeat
 
-from sympy import Symbol, symbols, Add, Mul, simplify, Pow, exp
+from sympy import Symbol, Add, Mul, simplify, Pow, exp
 from sympy.stats.symbolic_probability import RandomSymbol, Variance
 
 
 def variance_prop(expr, consts=()):
-    """Symbolically propagates variance (sigma^2) for expressions.
+    """Symbolically propagates variance (`\sigma^2`) for expressions.
     This is computed as as seen in [1]_.
 
     Parameters
