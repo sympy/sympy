@@ -190,6 +190,15 @@ class FreeGroup(DefaultPrinting):
         """
         return self is other
 
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            try:
+                return self.generators.index(gen)
+            except:
+                raise ValueError("invalid generator: %s" % gen)
+        else:
+            raise ValueError("expected a generator Free Group %s, got %s" % (self, gen))
+
     def order(self):
         if self.rank == 0:
             return 1
@@ -216,6 +225,12 @@ class FreeGroup(DefaultPrinting):
 
         """
         return self._rank
+
+    def _symbol_index(self, symbol):
+        try:
+            return self.symbols.index(symbol)
+        except ValueError:
+            return -self.symbols.index(-symbol)
 
     @property
     def is_abelian(self):
@@ -383,13 +398,14 @@ class FreeGroupElm(CantSympify, tuple):
         # since 0 removes the `-` sign from it, hence it making it non-usable,
         # a non-pythonic way. But no other option is there.
         symbols = self.group.symbols
-        return flatten([(i,)*j if j > 0 else (-i,)*(-j)
-                        for i, j in self.array_form])
+        return tuple(flatten([(i,)*j if j > 0 else (-i,)*(-j)
+                        for i, j in self.array_form]))
 
+    @property
     def ext_rep(self):
         """This is called the External Representation of `FreeGroupElm`
         """
-        return flatten(self.array_form)
+        return tuple(flatten(self.array_form))
 
     def __str__(self):
         if self.is_identity:
@@ -639,8 +655,6 @@ class FreeGroupElm(CantSympify, tuple):
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                              "be compared")
-        a = self.letter_form
-        b = other.letter_form
         l = len(self)
         m = len(other)
         # implement lenlex order
@@ -648,16 +662,18 @@ class FreeGroupElm(CantSympify, tuple):
             return True
         elif l > m:
             return False
+        a = self.letter_form
+        b = other.letter_form
         for i in range(l):
-            p = abs(a[i])
-            q = abs(b[i])
-            if p < q:
+            p = group._symbol_index(a[i])
+            q = group._symbol_index(b[i])
+            if abs(p) < abs(q):
+                return True
+            elif abs(p) > abs(q):
+                return False
+            elif p < q:
                 return True
             elif p > q:
-                return False
-            elif a[i] < b[i]:
-                return True
-            elif a[i] > b[i]:
                 return False
         return False
 
