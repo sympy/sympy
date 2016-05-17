@@ -109,8 +109,8 @@ def _parse_symbols(symbols):
 _free_group_cache = {}
 
 class FreeGroup(DefaultPrinting):
-    """Free group with finite of infinite number of generators. Its input API
-    is that of a str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty).
+    """Free group with finite or infinite number of generators. Its input API
+    is that of an str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty).
 
     References
     ==========
@@ -767,7 +767,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
 
         Examples
         ========
-        
+
         >>> from sympy.combinatorics.free_group import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
@@ -922,7 +922,8 @@ def letter_form_to_array_form(array_form, group):
 
 
 def zero_mul_simp(array_form, index):
-    while index >= 0 and index < len(array_form) - 1:
+    lw = len(array_form)
+    if index >= 0 and index < lw - 1:
         if array_form[index][0] is array_form[index + 1][0]:
             updated_exp = array_form[index][1] + array_form[index + 1][1]
             updated_base = array_form[index][0]
