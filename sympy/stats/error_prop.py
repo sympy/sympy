@@ -8,6 +8,7 @@ from sympy.stats.symbolic_probability import RandomSymbol, Variance
 
 def variance_prop(expr, consts=()):
     """Symbolically propagates variance (sigma^2) for expressions.
+    This is computed as as seen in [1]_.
 
     Parameters
     ==========
@@ -21,8 +22,8 @@ def variance_prop(expr, consts=()):
     =======
     var_expr : Expr
         An expression for the total variance of the expr.
-        The variance for the original symbols (e.g. x) have a 'var_'
-        prepended to their name ('var_x').
+        The variance for the original symbols (e.g. x) are represented
+        via instance of the Variance symbol (e.g. Variance(x)).
 
     Examples
     ========
@@ -32,13 +33,17 @@ def variance_prop(expr, consts=()):
     >>> x, y = symbols('x y')
 
     >>> variance_prop(x + y)
-    var_x + var_y
+    Variance(x) + Variance(y)
 
     >>> variance_prop(x * y)
-    var_x*y**2 + var_y*x**2
+    Variance(x)*y**2 + Variance(y)*x**2
 
     >>> variance_prop(exp(2*x))
-    4*var_x*exp(4*x)
+    4*Variance(x)*exp(4*x)
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Propagation_of_uncertainty
 
     """
     args = expr.args
@@ -65,4 +70,4 @@ def variance_prop(expr, consts=()):
         return simplify(var_args[0] * expr**2)
     else:
         # unknown how to proceed, return variance of whole expr.
-        return Variance(RandomSymbol(expr))
+        return Variance(expr)
