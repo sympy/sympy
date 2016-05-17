@@ -11,7 +11,11 @@ from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.core.sympify import sympify
-from sympy.polys.domains import QQ
+from sympy.polys.domains import QQ, ZZ
+from sympy.polys.domains.pythonrational import PythonRational
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.functions.special.hyper import hyper
+from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 
 def DiffOperatorAlgebra(base, generator):
     """
@@ -94,6 +98,12 @@ class DifferentialOperatorAlgebra(object):
         return string
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        if self.base == other.base and self.gen_symbol == other.gen_symbol:
+            return True
+        else:
+            return False
 
 
 def _add_lists(list1, list2):
@@ -334,14 +344,18 @@ def _normalize(list_of_coeff, parent, negative=True):
     num = []
     denom = []
     base = parent.base
-    lcm_denom = base.from_sympy(S(1))
+    R = ZZ.old_poly_ring(base.gens[0])
+    lcm_denom = R.from_sympy(S(1))
     K = base.get_field()
 
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = K.from_sympy(sympify(j))
         num.append(base(list_of_coeff[i].num))
-        denom.append(base(list_of_coeff[i].den))
-
+        den = list_of_coeff[i].den
+        if isinstance(den[0], PythonRational):
+            for i, j in enumerate(den):
+                den[i] = j.p
+        denom.append(R(den))
 
     for i in denom:
         lcm_denom = i.lcm(lcm_denom)
@@ -352,11 +366,7 @@ def _normalize(list_of_coeff, parent, negative=True):
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = j * K.new(lcm_denom.rep)
 
-    if len(list_of_coeff[-1].den) == 1 and list_of_coeff[-1].den[0] != 1:
-        for i, j in enumerate(list_of_coeff):
-            list_of_coeff[i] = j * list_of_coeff[-1].den[0]
     gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
-
     for i in num:
         gcd_numer = i.gcd(gcd_numer)
 
@@ -450,10 +460,7 @@ class HolonomicFunction(object):
             cond_str = ''
             diff_str = ''
             for i in self.y0:
-                if isinstance(i, float):
-                    cond_str += ', f%s(%d) = %.2f' %(diff_str, self.x0, i)
-                else:
-                    cond_str += ', f%s(%d) = %d ' %(diff_str, self.x0, i)
+                cond_str += ', f%s(%s) = %s ' %(diff_str, sstr(self.x0), sstr(i))
                 diff_str += "'"
 
             sol = str_sol + cond_str
@@ -773,10 +780,12 @@ class HolonomicFunction(object):
 
         sol = sol / sol_tuple[1]
         sol = _normalize(sol[0:], R, negative=False)
+        if self._have_init_cond:
+            return HolonomicFunction(sol, self.x, self.x0, self.y0)
         return HolonomicFunction(sol, self.x)
 
 
-def From_Hyper(hyper):
+def From_Hyper(func):
     """
     Converts Hypergeometric Function to Holonomic.
 
@@ -787,12 +796,12 @@ def From_Hyper(hyper):
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> From_Hyper(hyper([], [S(3)/2], x**2/4))
-    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x)
+    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1) , f'(1) = -sinh(1) + cosh(1)
 
     """
-    a = hyper.ap
-    b = hyper.bq
-    z = hyper.args[2]
+    a = func.ap
+    b = func.bq
+    z = func.args[2]
     x = z.atoms(Symbol).pop()
     R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
     r1 = 1
@@ -801,8 +810,33 @@ def From_Hyper(hyper):
     r2 = Dx
     for i in range(len(b)):
         r2 = r2 * (x * Dx + b[i] - 1)
-    sol = HolonomicFunction(r1 - r2, x)
-    return sol.composition(z)
+    sol = r1 - r2
+
+    simp = hyperexpand(func)
+
+    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+        return HolonomicFunction(sol, x).composition(z)
+
+    def _find_conditons(simp, x, x0, order):
+        y0 = []
+        for i in range(order):
+            val = simp.subs(x, x0)
+            if isinstance(val, Infinity) or isinstance(val, NaN):
+                return None
+            y0.append(val)
+            simp = simp.diff()
+        return y0
+
+    if not isinstance(simp, hyper):
+        x0 = 0
+        y0 = _find_conditons(simp, x, x0, sol.order)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditons(simp, x, x0, sol.order)
+
+        return HolonomicFunction(sol, x, x0, y0).composition(z)
+
+    return HolonomicFunction(sol, x).composition(z)
 
 
 def _extend_y0(Holonomic, n):
