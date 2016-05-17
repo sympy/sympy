@@ -7,6 +7,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.decorators import deprecated
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -67,15 +68,19 @@ class DiracDelta(Function):
         if arg.is_positive or arg.is_negative:
             return S.Zero
 
+    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
     def simplify(self, x):
-        """simplify(self, x)
+        return self.expand(diracdelta=True, wrt=x)
 
-           Compute a simplified representation of the function using
-           property number 4.
+    def _eval_expand_diracdelta(self, **hints):
+        """Compute a simplified representation of the function using
+           property number 4. Pass wrt as a hint to expand the expression
+           with respect to a particular variable.
 
-           x can be:
+           wrt is:
 
-           - a symbol
+           - a variable with respect to which a DiracDelta expression will
+           get expanded.
 
            Examples
            ========
@@ -83,32 +88,43 @@ class DiracDelta(Function):
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
 
-           >>> DiracDelta(x*y).simplify(x)
+           >>> DiracDelta(x*y).expand(diracdelta=True, wrt=x)
            DiracDelta(x)/Abs(y)
-           >>> DiracDelta(x*y).simplify(y)
+           >>> DiracDelta(x*y).expand(diracdelta=True, wrt=y)
            DiracDelta(y)/Abs(x)
 
-           >>> DiracDelta(x**2 + x - 2).simplify(x)
+           >>> DiracDelta(x**2 + x - 2).expand(diracdelta=True, wrt=x)
            DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
            See Also
            ========
 
-           is_simple, Directdelta
+           is_simple, Diracdelta
 
         """
         from sympy.polys.polyroots import roots
 
-        if not self.args[0].has(x) or (len(self.args) > 1 and self.args[1] != 0 ):
+        wrt = hints.get('wrt', None)
+        if wrt is None:
+            free = self.free_symbols
+            if len(free) == 1:
+                wrt = free.pop()
+            else:
+                raise TypeError(filldedent('''
+            When there is more than 1 free symbol or variable in the expression,
+            the 'wrt' keyword is required as a hint to expand when using the
+            DiracDelta hint.'''))
+
+        if not self.args[0].has(wrt) or (len(self.args) > 1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = roots(self.args[0], x)
+            argroots = roots(self.args[0], wrt)
             result = 0
             valid = True
-            darg = abs(diff(self.args[0], x))
+            darg = abs(diff(self.args[0], wrt))
             for r, m in argroots.items():
                 if r.is_real is not False and m == 1:
-                    result += self.func(x - r)/darg.subs(x, r)
+                    result += self.func(wrt - r)/darg.subs(wrt, r)
                 else:
                     # don't handle non-real and if m != 1 then
                     # a polynomial will have a zero in the derivative (darg)
@@ -151,7 +167,7 @@ class DiracDelta(Function):
            See Also
            ========
 
-           simplify, Directdelta
+           simplify, Diracdelta
 
         """
         p = self.args[0].as_poly(x)

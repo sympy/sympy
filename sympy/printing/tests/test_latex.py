@@ -471,6 +471,9 @@ def test_latex_derivatives():
     assert latex(diff(x, x, evaluate=False)**2) == \
         r"\left(\frac{d}{d x} x\right)^{2}"
 
+    assert latex(diff(f(x), x)**2) == \
+        r"\left(\frac{d}{d x} f{\left (x \right )}\right)^{2}"
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (

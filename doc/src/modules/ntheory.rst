@@ -27,6 +27,10 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
+.. autofunction:: composite
+
+.. autofunction:: compositepi
+
 .. module:: sympy.ntheory.factor_
 
 .. autofunction:: smoothness

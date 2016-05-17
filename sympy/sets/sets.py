@@ -911,6 +911,8 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        if other.is_UniversalSet:
+            return S.UniversalSet
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -1619,7 +1621,7 @@ class Complement(Set, EvalfMixin):
         Simplify a :class:`Complement`.
 
         """
-        if B == S.UniversalSet:
+        if B == S.UniversalSet or A.is_subset(B):
             return EmptySet()
 
         if isinstance(B, Union):
@@ -2033,7 +2035,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
+    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
     >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
@@ -2049,6 +2051,14 @@ def imageset(*args):
     ImageSet(Lambda(x, sin(x)), [-2, 1])
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(_x, _x + x), [-2, 1])
+
+    Expressions applied to the set of Integers are simplified
+    to show as few negatives as possible and linear expressions
+    are converted to a canonical form. If this is not desirable
+    then the unevaluated ImageSet should be used.
+
+    >>> imageset(x, -2*x + 5, S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers())
 
     See Also
     ========

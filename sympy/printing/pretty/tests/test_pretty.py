@@ -6,8 +6,8 @@ from sympy import (
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, Interval, Union, fourier_series, fps,
-    Complement, FiniteSet, Interval, Intersection, Union)
+    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps,
+    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -972,6 +972,13 @@ x - ── + ─── + O⎝x ⎠\n\
     assert pretty(expr, order='rev-lex') == ascii_str
     assert upretty(expr, order='rev-lex') == ucode_str
 
+def test_EulerGamma():
+    assert pretty(EulerGamma) == str(EulerGamma) == "EulerGamma"
+    assert upretty(EulerGamma) == u"γ"
+
+def test_GoldenRatio():
+    assert pretty(GoldenRatio) == str(GoldenRatio) == "GoldenRatio"
+    assert upretty(GoldenRatio) == u"φ"
 
 def test_pretty_relational():
     expr = Eq(x, y)
