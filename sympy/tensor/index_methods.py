@@ -337,7 +337,7 @@ def get_contraction_structure(expr):
     >>> sorted(d.keys(), key=default_sort_key)
     [(x[j]*A[i, j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    {(x[j]*A[i, j] + y[i}*x[i]])
+    {(x[j]*A[i, j] + y[i])*x[i]}
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
     [{None: {y[i]}, (j,): {x[j]*A[i, j]}}]
 
