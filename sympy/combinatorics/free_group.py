@@ -762,14 +762,14 @@ class FreeGroupElm(CantSympify, tuple):
 
         """
         group = self.group
-        if from_i < 0 or to_j >= len(self):
+        if from_i < 0 or to_j > len(self):
             raise ValueError("`from_i`, `to_j` must be positive and less than "
                     "the length of associative word")
         if to_j <= from_i:
             return group.identity
         else:
             letter_form = self.letter_form[from_i: to_j]
-            array_form = letter_form_to_array_form(letter_form)
+            array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
     def assoc_word_by_letter_rep(self, lrep):
@@ -854,7 +854,7 @@ class FreeGroupElm(CantSympify, tuple):
             r = tuple(self.array_form[from_i: to_j])
             return group.dtype(r)
 
-    def substitute_word(self, from_i, to_j, by):
+    def substituted_word(self, from_i, to_j, by):
         """
         """
         lw = len(self)
@@ -874,7 +874,7 @@ class FreeGroupElm(CantSympify, tuple):
             return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
 
 
-def letter_form_to_array_form(array_form):
+def letter_form_to_array_form(array_form, group):
     """
     This method converts a list given with possible repetitions of elements in
     it. It returns a new list such that repetitions of consecutive elements is
@@ -893,20 +893,30 @@ def letter_form_to_array_form(array_form):
     a = list(array_form[:])
     new_array = []
     n = 1
+    symbols = group.symbols
     for i in range(len(a)):
         if i == len(a) - 1:
             if a[i] == a[i - 1]:
                 # 1 has been subtracted in accordance with the meaning that in
                 # letter-form `-ve` sign indicates presence of inverse which is
                 # not possi
-                new_array.append((a[i] -1, n))
+                if (-a[i]) in symbols:
+                    new_array.append((-a[i], -n))
+                else:
+                    new_array.append((a[i], n))
             else:
-                new_array.append((a[i] - 1, 1))
+                if (-a[i]) in symbols:
+                    new_array.append((-a[i], -1))
+                else:
+                    new_array.append((a[i], 1))
             return new_array
         elif a[i] == a[i + 1]:
             n += 1
         else:
-            new_array.append((a[i] - 1, n))
+            if (-a[i]) in symbols:
+                new_array.append((-a[i], -n))
+            else:
+                new_array.append((a[i], n))
             n = 1
 
 
