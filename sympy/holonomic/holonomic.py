@@ -11,7 +11,7 @@ from sympy.core.compatibility import range
 from sympy.polys.polytools import DMP
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.core.sympify import sympify
-
+from sympy.polys.domains import QQ
 
 def DiffOperatorAlgebra(base, generator):
     """
@@ -721,6 +721,55 @@ class HolonomicFunction(object):
             elif n % 2 == 0:
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
+
+    def composition(self, expr):
+        R = self.annihilator.parent
+        a = self.annihilator.order
+        diff = expr.diff()
+        listofpoly = self.annihilator.listofpoly
+        for i, j in enumerate(listofpoly):
+            if isinstance(j, self.annihilator.parent.base.dtype):
+                listofpoly[i] = self.annihilator.parent.base.to_sympy(j)
+        r = listofpoly[a].subs({self.x:expr})
+        subs = [-listofpoly[i].subs({self.x:expr}) / r for i in range (a)]
+        coeffs = [S(0) for i in range(a)] # Dkfa[i] == coeff of (D^i f)(a) in D^k (f(a))
+        coeffs[0] = S(1)
+        system = [coeffs]
+        homogeneous = Matrix([[S(0) for i in range(a)]]).transpose()
+        sol = Matrix([[]])
+        while sol.is_zero:
+            coeffs_next = [p.diff() for p in coeffs]
+            for i in range(a - 1):
+                coeffs_next[i + 1] += (coeffs[i] * diff)
+
+            for i in range(a):
+                coeffs_next[i] += (coeffs[-1] * subs[i] * diff)
+            coeffs = coeffs_next
+
+            # check for linear relations
+            system.append(coeffs)
+            sol_tuple = Matrix(system).transpose().gauss_jordan_solve(homogeneous)
+            sol = sol_tuple[0]
+
+        sol = sol / sol_tuple[1]
+        sol = _normalize(sol[0:], R, negative=False)
+        return HolonomicFunction(sol, self.x)
+
+
+def From_Hyper(hyper):
+    a = hyper.ap
+    b = hyper.bq
+    z = hyper.args[2]
+    x = z.atoms(Symbol).pop()
+    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+    r1 = 1
+    for i in range(len(a)):
+        r1 = r1 * (x * Dx + a[i])
+    r2 = Dx
+    for i in range(len(b)):
+        r2 = r2 * (x * Dx + b[i] - 1)
+    sol = HolonomicFunction(r1 - r2, x)
+    return sol.composition(z)
 
 
 def _extend_y0(Holonomic, n):
