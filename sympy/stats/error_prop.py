@@ -1,7 +1,9 @@
 """Tools for arithmetic error propogation."""
 from __future__ import print_function, division
 from itertools import repeat
+
 from sympy import Symbol, symbols, Add, Mul, simplify, Pow, exp
+from sympy.stats.symbolic_probability import RandomSymbol, Variance
 
 
 def variance_prop(expr, consts=()):
@@ -41,9 +43,12 @@ def variance_prop(expr, consts=()):
     """
     args = expr.args
     if len(args) == 0:
-        if isinstance(expr, Symbol) and expr not in consts:
-            signame = 'var_' + expr.name
-            return symbols(signame)
+        if expr in consts:
+            return 0
+        elif isinstance(expr, RandomSymbol):
+            return Variance(expr)
+        elif isinstance(expr, Symbol):
+            return Variance(RandomSymbol(expr))
         else:
             return 0
     var_args = list(map(variance_prop, args, repeat(consts)))
@@ -59,4 +64,5 @@ def variance_prop(expr, consts=()):
     elif isinstance(expr, exp):
         return simplify(var_args[0] * expr**2)
     else:
-        raise RuntimeError("unknown operator")
+        # unknown how to proceed, return variance of whole expr.
+        return Variance(RandomSymbol(expr))
