@@ -20,7 +20,7 @@ from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-
+from sympy import Derivative
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
