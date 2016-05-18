@@ -15,6 +15,8 @@ from sympy.polys import lcm
 from sympy.sets.sets import Interval, Intersection
 from sympy.utilities.iterables import flatten
 from sympy.tensor.indexed import Idx
+from sympy.simplify import simplify
+from sympy import expand
 
 
 ###############################################################################
@@ -291,6 +293,56 @@ class SeqBase(Basic):
             return [self.coeff(self._ith_point(i)) for i in
                     range(start, stop, index.step or 1)]
 
+    def find_linear_recurrence(self,n,d=None):
+        """
+        Finds the shortest linear recurrence that satisfies the first n
+        terms of sequence of order `\leq` n/2 if possible.
+        If d is specified, find shortest linear recurrence of order
+        `\leq` min(d, n/2) if possible.
+        Returns list of coefficients or ``[]`` if no recurrence was found.
+
+        Examples
+        ========
+
+        >>> from sympy import sequence, sqrt, oo
+        >>> from sympy.abc import n, x, y
+        >>> sequence(n**2).find_linear_recurrence(10, 2)
+        []
+        >>> sequence(n**2).find_linear_recurrence(10)
+        [3, -3, 1]
+        >>> sequence(2**n).find_linear_recurrence(10)
+        [2]
+        >>> sequence(23*n**4+91*n**2).find_linear_recurrence(10)
+        [5, -10, 10, -5, 1]
+        >>> sequence(sqrt(5)*(((1 + sqrt(5))/2)**n - (-(1 + sqrt(5))/2)**(-n))/5).find_linear_recurrence(10)
+        [1, 1]
+        >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
+        [1/2, 1/2]
+        """
+        from sympy.matrices import Matrix
+        x = [simplify(expand(t)) for t in self[:n]]
+        lx = len(x)
+        if d == None:
+            r = lx//2
+        else:
+            r = min(d,lx//2)
+        for l in range(1, r+1):
+            l2 = 2*l
+            mlist = []
+            for k in range(l):
+                mlist.append(x[k:k+l])
+            m = Matrix(mlist)
+            if m.det() != 0:
+                y = simplify(m.LUsolve(Matrix(x[l:l2])))
+                if lx == l2:
+                    return flatten(y[::-1])
+                mlist = []
+                for k in range(l,lx-l):
+                    mlist.append(x[k:k+l])
+                m = Matrix(mlist)
+                if m*y == Matrix(x[l2:]):
+                    return flatten(y[::-1])
+        return []
 
 class EmptySequence(with_metaclass(Singleton, SeqBase)):
     """Represents an empty sequence.
