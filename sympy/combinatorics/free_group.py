@@ -11,7 +11,6 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
-from collections.abc import Sequence, Container
 
 
 @public
