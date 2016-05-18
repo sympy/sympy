@@ -641,6 +641,29 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def check_noninverts(f, symbol):
+    """substitute the non invertable terms Derivative, f(x) etc.
+
+    Parameters
+    ==========
+
+    f : Expression
+        The target equation
+    symbol : Symbol
+        The variable for which the equation is solved
+
+    Returns
+    =======
+
+    f, symbol, non_inverts
+
+    * `f` is equation after the substitution of temporary symbols 
+    in place of Derivative, Integrals , etc.
+
+    * `symbol` is symbol for which equation `f` will be solved after the substitution
+
+    * `non_inverts` dict of swapped functions eg. {Derivative : D_0} 
+
+    """
     from sympy import Derivative, Integral
     from sympy.core.function import AppliedUndef
     non_inverts = {}
@@ -666,6 +689,24 @@ def check_noninverts(f, symbol):
 
 
 def swap_back(result, swapped_symbol, non_inverts):
+    """Replace temporary variable(if it is there) with original terms
+
+    Parameters
+    ==========
+
+    result : solution of the equation 
+
+    swapped_symbol : Symbols to be swapped
+
+    non_inverts : dict of non invertable terms and corresponding replaced symbol
+
+    Returns
+    =======
+
+    result : result is final solution after  replacing temporary variables.
+
+ 
+    """
     new_result = FiniteSet()
     if non_inverts:
         # invert the dict
