@@ -640,6 +640,52 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
+def check_noninverts(f, symbol):
+    from sympy import Derivative, Integral
+    from sympy.core.function import AppliedUndef
+    non_inverts = {}
+    if f.atoms(Derivative):
+        temp = "D"+ "_%i"
+        for i, d in enumerate(f.atoms(Derivative)):
+            s_new = temp % i
+            non_inverts[d] = s_new
+    elif f.atoms(AppliedUndef):
+        temp = "F"+ "_%i"
+        for i, func in enumerate(f.atoms(AppliedUndef)):
+            s_new = temp % i
+            non_inverts[func] = s_new
+    elif f.atoms(Integral):
+        temp = "I"+ "_%i"
+        for i, ig in enumerate(f.atoms(Integrals)):
+            s_new = temp % i
+            non_inverts[ig] = s_new
+    # other new non_inverts will be added here
+    f = f.subs(non_inverts)
+    symbol = symbol.subs(non_inverts)
+    return f, symbol, non_inverts
+
+
+def swap_back(result, swapped_symbol, non_inverts):
+    new_result = FiniteSet()
+    if non_inverts:
+        # invert the dict
+        non_inverts = dict([(v, k) for k, v in non_inverts.iteritems()])
+        for s in result:
+            s = s.subs(non_inverts)
+            new_result = new_result + FiniteSet(s)
+            result = new_result
+    if swapped_symbol:
+        # invert dict
+        swapped_symbol = dict([(v, k) for k, v in swapped_symbol.iteritems()])
+        for s in result:
+            s = s.subs(non_inverts)
+            # if symbol is inside Dervative use replace
+            s = s.xreplace(non_inverts)
+            new_result = new_result + FiniteSet(s)
+            result = new_result
+    return result
+
+
 def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
@@ -737,6 +783,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> solveset(exp(x) > 1, x, R)
     (0, oo)
 
+    * If Non-symbol is passed : 
+
+    >>> solveset(f(x) + f(x).diff(x), f(x))
+    {-Derivative(f(x), x)}
+    >>>solveset((3 - 5*x/f(x))*f(x), f(x))
+    {5*x/3}
+
     """
     f = sympify(f)
 
@@ -759,7 +812,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
             return S.EmptySet
         else:
             raise NotImplementedError(filldedent('''
-                relationship between value and 0 is unknown: %s''' % b))
+               relationship between value and 0 is unknown: %s''' % b))
+
+    # now check for Derivative, Integrals,etc in the equation f
+    # can't put this line after swapping of non symbols because if user defined variable is inside 
+    # Derivative(Dummy,x) or other function then replace/subs not working for Dummy at the end.
+    f, symbol, non_inverts = check_noninverts(f, symbol)
 
     if symbol is None:
         if len(free_symbols) == 1:
@@ -768,9 +826,24 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
-    elif not getattr(symbol, 'is_Symbol', False):
-        raise ValueError('A Symbol must be given, not type %s: %s' %
-            (type(symbol), symbol))
+    else:
+        swapped_symbol = {}
+        new_symbols = []
+        temp = "X" + "_%i"
+        # when we use list to write symbols.
+        # then need enumerate and s_new = temp % i
+        # eg. solveset(solveset((3 - 5*x/f(x))*f(x), [f(x)]))
+        s_new = symbol
+        if not (getattr(symbol, 'is_Symbol', False) or symbol.is_Symbol):
+            # substitute the non symbol
+            t = Symbol(temp % 0)
+            s_new = t 
+            swapped_symbol[symbol] = s_new
+        new_symbols.append(s_new)
+
+        f = f.subs(swapped_symbol)
+        # right now only one symbol
+        symbol = new_symbols[0]
 
     if isinstance(f, Eq):
         from sympy.core import Add
@@ -789,7 +862,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    result = _solveset(f, symbol, domain, _check=True)
+
+    # replace Dummy variables with original
+    result = swap_back(result, swapped_symbol, non_inverts)
+    return result
 
 
 def _invalid_solutions(f, symbol, domain):
