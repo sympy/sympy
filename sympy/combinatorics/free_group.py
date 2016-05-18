@@ -11,6 +11,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
+from collections.abc import Sequence, Container
 
 
 @public
@@ -226,7 +227,7 @@ class FreeGroup(DefaultPrinting):
             raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
-        """Returns the order of the free group
+        """Returns the order of the free group.
         """
         if self.rank == 0:
             return 1
@@ -495,14 +496,26 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         return group.dtype(tuple(r))
 
     def __div__(self, other):
+        group = self.group
+        if not isinstance(other, group.dtype):
+            raise TypeError("only FreeGroup elements of same FreeGroup can "
+                    "be multiplied")
         return self*(other.inverse())
 
     def __rdiv__(self, other):
+        group = self.group
+        if not isinstance(other, group.dtype):
+            raise TypeError("only FreeGroup elements of same FreeGroup can "
+                    "be multiplied")
         return other*(self.inverse())
 
     __truediv__ = __div__
 
     __rtruediv__ = __rdiv__
+
+    def __add__(self, other):
+        raise TypeError("unsupported operand type(s) for + or add: '%s' and '%s'"
+                    % (self.__class__.__name__, other.__class__.__name__))
 
     def inverse(self):
         """
@@ -894,9 +907,6 @@ def letter_form_to_array_form(array_form, group):
     for i in range(len(a)):
         if i == len(a) - 1:
             if a[i] == a[i - 1]:
-                # 1 has been subtracted in accordance with the meaning that in
-                # letter-form `-ve` sign indicates presence of inverse which is
-                # not possi
                 if (-a[i]) in symbols:
                     new_array.append((-a[i], -n))
                 else:
@@ -915,6 +925,7 @@ def letter_form_to_array_form(array_form, group):
             else:
                 new_array.append((a[i], n))
             n = 1
+
 
 def zero_mul_simp(l, index):
     while len(l) > 1 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:

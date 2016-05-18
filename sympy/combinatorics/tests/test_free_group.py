@@ -82,6 +82,12 @@ def test_FreeGroupElm_inverse():
     assert (y**2*x**-1).inverse() == x*y**-2
 
 
+def test_FreeGroupElm_type_error():
+    raises(TypeError, lambda: 2/x)
+    raises(TypeError, lambda: x**2 + y**2)
+    raises(TypeError, lambda: x/2)
+
+
 def test_FreeGroupElm_methods():
     assert (x**0).order() == 1
     assert (y**2).order() == oo
