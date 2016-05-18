@@ -927,7 +927,8 @@ def letter_form_to_array_form(array_form, group):
 
 
 def zero_mul_simp(l, index):
-    while len(l) > 1 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:
+    """Used to combine two reduced words."""
+    while index >=0 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:
         exp = l[index][1] + l[index + 1][1]
         base = l[index][0]
         l[index] = (base, exp)

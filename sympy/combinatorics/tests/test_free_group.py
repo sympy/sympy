@@ -121,7 +121,7 @@ def test_FreeGroupElm_ext_rep():
     assert (x*z).ext_rep == (Symbol('x'), 1, Symbol('z'), 1)
 
 
-def test_FreeGroupElm__pow__():
+def test_FreeGroupElm__mul__pow__():
     assert (x**2*y*x**-2)**4 == x**2*y**4*x**-2
     assert (x**2)**2 == x**4
     assert (x**-1)**-1 == x
@@ -136,6 +136,9 @@ def test_FreeGroupElm__pow__():
     assert x/x**2 == x**-1
     assert (x**2*y)/(x**2*y**-1) == x**2*y**2*x**-2
     assert (x**2*y)/(y**-1*x**2) == x**2*y*x**-2*y
+
+    assert x*(x**-1*y*z*y**-1) == y*z*y**-1
+    assert x**2*(x**-2*y**-1*z**2*y) == y**-1*z**2*y
 
 
 def test_FreeGroupElm__len__():
