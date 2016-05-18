@@ -1,4 +1,5 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsyssph import CoordSysSpherical
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
