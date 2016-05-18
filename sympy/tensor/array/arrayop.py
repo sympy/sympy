@@ -256,13 +256,11 @@ def permutedims(expr, perm):
     if not isinstance(perm, Permutation):
         perm = Permutation(list(perm))
 
-    # Get the inverse permutation:
-    iperm = perm**-1
-    # Rank abbreviation:
-    rank = expr.rank()
+    if perm.size != expr.rank():
+        raise ValueError("wrong permutation size")
 
-    if tuple(sorted(perm.array_form)) != tuple(range(rank)):
-        raise ValueError("not a permutation")
+    # Get the inverse permutation:
+    iperm = ~perm
 
     indices_span = perm([range(i) for i in expr.shape])
 
