@@ -338,6 +338,14 @@ def test__has_rational_power():
     assert _has_rational_power(sqrt(x)*x**(S(1)/3), x) == (True, 6)
 
 
+def test_nonsymbol():
+    f = Function('f')
+    assert solveset((3 - 5*x/f(x))*f(x), f(x)) == FiniteSet(5*x/3)
+    assert solveset(f(x) + f(x).diff(x), f(x)) == FiniteSet(-Derivative(f(x), x))
+    assert solveset(f(x) - 3*f(x).diff(x), f(x)) == FiniteSet(3*Derivative(f(x), x))
+    assert solveset(x + exp(x)**2, exp(x)) == FiniteSet(-sqrt(-x), sqrt(-x))
+
+
 def test_solveset_sqrt_1():
     assert solveset_real(sqrt(5*x + 6) - 2 - x, x) == \
         FiniteSet(-S(1), S(2))
