@@ -18,8 +18,8 @@ def test_func_args():
     assert A.r.func(*A.r.args) == A.r
     expr = 3*A.r + 4*A.r
     assert expr.func(*expr.args) == expr
-    assert A.rˆ.func(*A.rˆ.args) == A.rˆ
-    v = A.r*A.rˆ + A.θ*A.θˆ + A.φ*A.φˆ
+    assert A.e_r.func(*A.e_r.args) == A.e_r
+    v = A.r*A.e_r + A.theta*A.e_theta + A.phi*A.e_phi
     assert v.func(*v.args) == v
     assert A.origin.func(*A.origin.args) == A.origin
 

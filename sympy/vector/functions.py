@@ -3,8 +3,8 @@ from sympy.vector.coordsyssph import CoordSysSpherical
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
-from sympy import sympify, diff, integrate, S, simplify
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy import sympify, diff, integrate, S, simplify, sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, atan
 
 
 def express(expr, system, system2=None, variables=False):
@@ -64,9 +64,11 @@ def express(expr, system, system2=None, variables=False):
                 CoordSysSpherical instance")
 
     if isinstance(expr, Vector):
-        if system2 is not None:
-            raise ValueError("system2 should not be provided for \
-                                Vectors")
+        if system2 is not None \
+            and not isinstance(system2,CoordSysSpherical) \
+            and not isinstance(system2,CoordSysCartesian) :
+            raise ValueError("system2 can be CoordSysSpherical or \
+                             CoordSysCartesian only")
         # Given expr is a Vector
         if variables:
             # If variables attribute is True, substitute
@@ -83,21 +85,33 @@ def express(expr, system, system2=None, variables=False):
         # Re-express in this coordinate system
         outvec = Vector.zero
         parts = expr.separate()
-        for x in parts:
-            if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
+        for i in parts:
+            if i != system:
+                temp = system.rotation_matrix(i) * parts[i].to_matrix(i)
                 outvec += matrix_to_vector(temp, system)
             else:
                 if isinstance(system, CoordSysCartesian):
-                    outvec += parts[x]
+                    if isinstance(system2, CoordSysSpherical):
+                        x = parts[i].components[system.i]
+                        y = parts[i].components[system.j]
+                        z = parts[i].components[system.k]
+                        test = CoordSysSpherical(system2)
+                        outvec = sqrt(x**2 + y**2 + z**2)*test.e_r + \
+                                 atan(y/x)*test.e_theta + \
+                                 atan(sqrt(x**2 + y**2) / z)*test.e_phi
+                    else:
+                        outvec += parts[i]
                 elif isinstance(system, CoordSysSpherical):
-                    r = parts[x].components[system.e_r]
-                    theta = parts[x].components[system.e_theta]
-                    phi = parts[x].components[system.e_phi]
-                    test = CoordSysCartesian(system)
-                    outvec = r* cos(phi)* sin(theta)* test.i \
-                            + r* sin(phi)* sin(theta)* test.j \
-                            + r* cos(theta)* test.k
+                    if isinstance(system2, CoordSysSpherical):
+                        outvec += parts[i]
+                    else:
+                        r = parts[i].components[system.e_r]
+                        theta = parts[i].components[system.e_theta]
+                        phi = parts[i].components[system.e_phi]
+                        test = CoordSysCartesian(system)
+                        outvec = r* cos(phi)* sin(theta)* test.i \
+                                + r* sin(phi)* sin(theta)* test.j \
+                                + r* cos(theta)* test.k
         return outvec
 
     elif isinstance(expr, Dyadic):
@@ -132,7 +146,6 @@ def express(expr, system, system2=None, variables=False):
                 subs_dict.update(f.scalar_map(system))
             return expr.subs(subs_dict)
         return expr
-
 
 def curl(vect, coord_sys):
     """
