@@ -68,7 +68,7 @@ class CoordSysSpherical(Basic):
         if parent is not None:
             if not isinstance(parent, CoordSysSpherical):
                 raise TypeError("parent should be a " +
-                                "CoordSysCartesian/None")
+                                "CoordSysSpherical/None")
             if location is None:
                 location = Vector.zero
             else:

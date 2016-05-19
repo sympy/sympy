@@ -30,7 +30,7 @@ def express(expr, system, system2=None, variables=False):
 
     system2: CoordSysCartesian
         The other coordinate system required for re-expression
-        (only for a Dyadic Expr)
+        For vectors, default system2 is CoordSysCartesian
 
     variables : boolean
         Specifies whether to substitute the coordinate variables present
