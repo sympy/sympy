@@ -4,6 +4,7 @@ from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
 from sympy import sympify, diff, integrate, S, simplify
+from sympy.functions.elementary.trigonometric import sin, cos
 
 
 def express(expr, system, system2=None, variables=False):
@@ -57,9 +58,10 @@ def express(expr, system, system2=None, variables=False):
     if expr == 0 or expr == Vector.zero:
         return expr
 
-    if not isinstance(system, CoordSysCartesian):
-        raise TypeError("system should be a CoordSysCartesian \
-                        instance")
+    if not isinstance(system, CoordSysCartesian) \
+        and not isinstance(system, CoordSysSpherical):
+        raise TypeError("system should be a CoordSysCartesian or \
+                CoordSysSpherical instance")
 
     if isinstance(expr, Vector):
         if system2 is not None:
@@ -86,7 +88,16 @@ def express(expr, system, system2=None, variables=False):
                 temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
-                outvec += parts[x]
+                if isinstance(system, CoordSysCartesian):
+                    outvec += parts[x]
+                elif isinstance(system, CoordSysSpherical):
+                    r = parts[x].components[system.rˆ]
+                    θ = parts[x].components[system.θˆ]
+                    φ = parts[x].components[system.φˆ]
+                    test = CoordSysCartesian(system)
+                    outvec = r* cos(φ)* sin(θ)* test.i \
+                            + r* sin(φ)* sin(θ)* test.j \
+                            + r* cos(θ)* test.k
         return outvec
 
     elif isinstance(expr, Dyadic):

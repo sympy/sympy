@@ -126,8 +126,10 @@ class Vector(BasisDependent):
 
         v1 = express(self, other._sys)
         v2 = express(other, other._sys)
+        print(v1)
+        print(v2)
         dotproduct = S(0)
-        for x in other._sys.base_vectors():
+        for x in v2._sys.base_vectors():
             dotproduct += (v1.components.get(x, 0) *
                            v2.components.get(x, 0))
 
@@ -358,7 +360,6 @@ class BaseVector(Vector, AtomicExpr):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(system, CoordSysCartesian) \
             and not isinstance(system,CoordSysSpherical):
-            print('in here')
             raise TypeError("system should be a CoordSysCartesian or CoordSysSpherical")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
