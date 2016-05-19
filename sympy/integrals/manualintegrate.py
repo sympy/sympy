@@ -289,12 +289,12 @@ def inverse_trig_rule(integral):
 
         substep = RuleClass(current_base ** base_exp, current_symbol)
         if u_func is not None:
-            if u_constant != 1:
+            if u_constant != 1 and substep is not None:
                 substep = ConstantTimesRule(
                     u_constant, current_base ** base_exp, substep,
                     u_constant * current_base ** base_exp, symbol)
             substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
-        if constant is not None:
+        if constant is not None and substep is not None:
             substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
         return substep
 
@@ -334,7 +334,7 @@ def mul_rule(integral):
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
 
-    if coeff != 1:
+    if coeff != 1 and integral_steps(f, symbol) is not None:
         return ConstantTimesRule(
             coeff, f,
             integral_steps(f, symbol),
@@ -422,7 +422,7 @@ def parts_rule(integral):
                     (-1) ** len(steps) * coefficient,
                     integrand, symbol
                 )
-                if constant != 1:
+                if (constant != 1) and rule:
                     rule = ConstantTimesRule(constant, integrand, rule,
                                              constant * integrand, symbol)
                 return rule
@@ -442,6 +442,10 @@ def parts_rule(integral):
                              make_second_step(steps[1:], v * du),
                              integrand, symbol)
         else:
+            # if integral_steps(integrand, symbol):
+            #     return integral_steps(integrand, symbol)
+            # else:
+            #     return DontKnowRule(integrand, symbol)
             return integral_steps(integrand, symbol)
 
     if steps:
@@ -449,7 +453,7 @@ def parts_rule(integral):
         rule = PartsRule(u, dv, v_step,
                          make_second_step(steps[1:], v * du),
                          integrand, symbol)
-        if constant != 1:
+        if (constant != 1) and rule:
             rule = ConstantTimesRule(constant, integrand, rule,
                                      constant * integrand, symbol)
         return rule
@@ -504,7 +508,7 @@ def trig_product_rule(integral):
 
     if symbol not in q.free_symbols:
         rule = TrigRule('sec*tan', symbol, sectan, symbol)
-        if q != 1:
+        if q != 1 and rule:
             rule = ConstantTimesRule(q, sectan, rule, integrand, symbol)
 
         return rule
@@ -514,7 +518,7 @@ def trig_product_rule(integral):
 
     if symbol not in q.free_symbols:
         rule = TrigRule('csc*cot', symbol, csccot, symbol)
-        if q != 1:
+        if q != 1 and rule:
             rule = ConstantTimesRule(q, csccot, rule, integrand, symbol)
 
         return rule
@@ -798,7 +802,8 @@ def substitution_rule(integral):
 
             if sympy.simplify(c - 1) != 0:
                 _, denom = c.as_numer_denom()
-                subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+                if subrule:
+                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
 
                 if denom.free_symbols:
                     piecewise = []
@@ -1013,6 +1018,7 @@ def eval_u(u_var, u_func, constant, substep, integrand, symbol):
 @evaluates(PartsRule)
 def eval_parts(u, dv, v_step, second_step, integrand, symbol):
     v = _manualintegrate(v_step)
+
     return u * v - _manualintegrate(second_step)
 
 @evaluates(CyclicPartsRule)
@@ -1146,6 +1152,7 @@ def eval_dontknowrule(integrand, symbol):
 def _manualintegrate(rule):
     evaluator = evaluators.get(rule.__class__)
     if not evaluator:
+
         raise ValueError("Cannot evaluate rule %s" % repr(rule))
     return evaluator(*rule)
 
