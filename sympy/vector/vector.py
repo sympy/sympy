@@ -126,8 +126,6 @@ class Vector(BasisDependent):
 
         v1 = express(self, other._sys)
         v2 = express(other, other._sys)
-        print(v1)
-        print(v2)
         dotproduct = S(0)
         for x in v2._sys.base_vectors():
             dotproduct += (v1.components.get(x, 0) *
