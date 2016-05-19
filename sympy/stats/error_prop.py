@@ -41,10 +41,10 @@ def variance_prop(expr, consts=(), include_covar=False):
     Variance(x) + Variance(y)
 
     >>> variance_prop(x * y)
-    Variance(x)*y**2 + Variance(y)*x**2
+    x**2*Variance(y) + y**2*Variance(x)
 
     >>> variance_prop(exp(2*x))
-    4*Variance(x)*exp(4*x)
+    4*exp(4*x)*Variance(x)
 
     References
     ==========
