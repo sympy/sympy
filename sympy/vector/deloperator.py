@@ -19,17 +19,17 @@ class Del(Basic):
             and not isinstance(system, CoordSysSpherical):
             raise TypeError("system should be a CoordSysCartesian or CoordSysSpherical")
 
-        if isinstance(system,CoordSysCartesian):
-            obj = super(Del, cls).__new__(cls, system)
+        obj = super(Del, cls).__new__(cls, system)
+
+        if isinstance(system, CoordSysCartesian):
             obj._x, obj._y, obj._z = system.x, system.y, system.z
             obj._i, obj._j, obj._k = system.i, system.j, system.k
             obj._system = system
             obj._name = system.__str__() + ".delop"
 
-        elif isinstance(system,CoordSysSpherical):
-            obj = super(Del, cls).__new__(cls, system)
-            obj._r, obj._θ, obj._φ = system.r, system.θ, system.φ
-            obj._rˆ, obj._θˆ, obj._φˆ = system.rˆ, system.θˆ, system.φˆ
+        elif isinstance(system, CoordSysSpherical):
+            obj._r, obj._theta, obj._phi = system.r, system.theta, system.phi
+            obj._e_r, obj._e_theta, obj._e_phi = system.e_r, system.e_theta, system.e_phi
             obj._system = system
             obj._name = system.__str__() + ".delop"
 

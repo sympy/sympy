@@ -91,13 +91,13 @@ def express(expr, system, system2=None, variables=False):
                 if isinstance(system, CoordSysCartesian):
                     outvec += parts[x]
                 elif isinstance(system, CoordSysSpherical):
-                    r = parts[x].components[system.rˆ]
-                    θ = parts[x].components[system.θˆ]
-                    φ = parts[x].components[system.φˆ]
+                    r = parts[x].components[system.e_r]
+                    theta = parts[x].components[system.e_theta]
+                    phi = parts[x].components[system.e_phi]
                     test = CoordSysCartesian(system)
-                    outvec = r* cos(φ)* sin(θ)* test.i \
-                            + r* sin(φ)* sin(θ)* test.j \
-                            + r* cos(θ)* test.k
+                    outvec = r* cos(phi)* sin(theta)* test.i \
+                            + r* sin(phi)* sin(theta)* test.j \
+                            + r* cos(theta)* test.k
         return outvec
 
     elif isinstance(expr, Dyadic):

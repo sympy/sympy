@@ -105,11 +105,11 @@ class CoordSysSpherical(Basic):
 
         # Initialize the base vectors
         if vector_names is None:
-            vector_names = (name + '.rˆ', name + '.θˆ', name + '.φˆ')
-            latex_vects = [(r'\mathbf{\hat{rˆ}_{%s}}' % name),
-                           (r'\mathbf{\hat{θˆ}_{%s}}' % name),
-                           (r'\mathbf{\hat{φˆ}_{%s}}' % name)]
-            pretty_vects = (name + '_rˆ', name + '_θˆ', name + '_φˆ')
+            vector_names = (name + '.e_r', name + '.e_theta', name + '.e_phi')
+            latex_vects = [(r'\mathbf{\hat{e_r}_{%s}}' % name),
+                           (r'\mathbf{\hat{e_theta}_{%s}}' % name),
+                           (r'\mathbf{\hat{e_phi}_{%s}}' % name)]
+            pretty_vects = (name + '_e_r', name + '_e_theta', name + '_e_phi')
         else:
             _check_strings('vector_names', vector_names)
             vector_names = list(vector_names)
@@ -117,20 +117,20 @@ class CoordSysSpherical(Basic):
                            x in vector_names]
             pretty_vects = [(name + '_' + x) for x in vector_names]
 
-        obj._rˆ = BaseVector(vector_names[0], 0, obj,
+        obj._e_r = BaseVector(vector_names[0], 0, obj,
                             pretty_vects[0], latex_vects[0])
-        obj._θˆ = BaseVector(vector_names[1], 1, obj,
+        obj._e_theta = BaseVector(vector_names[1], 1, obj,
                             pretty_vects[1], latex_vects[1])
-        obj._φˆ = BaseVector(vector_names[2], 2, obj,
+        obj._e_phi = BaseVector(vector_names[2], 2, obj,
                             pretty_vects[2], latex_vects[2])
 
         # Initialize the base scalars
         if variable_names is None:
-            variable_names = (name + '.r', name + '.θ', name + '.φ')
+            variable_names = (name + '.r', name + '.theta', name + '.phi')
             latex_scalars = [(r"\mathbf{{r}_{%s}}" % name),
-                             (r"\mathbf{{θ}_{%s}}" % name),
-                             (r"\mathbf{{φ}_{%s}}" % name)]
-            pretty_scalars = (name + '_r', name + '_θ', name + '_φ')
+                             (r"\mathbf{{theta}_{%s}}" % name),
+                             (r"\mathbf{{phi}_{%s}}" % name)]
+            pretty_scalars = (name + '_r', name + '_theta', name + '_phi')
         else:
             _check_strings('variable_names', vector_names)
             variable_names = list(variable_names)
@@ -140,9 +140,9 @@ class CoordSysSpherical(Basic):
 
         obj._r = BaseScalar(variable_names[0], 0, obj,
                             pretty_scalars[0], latex_scalars[0])
-        obj._θ = BaseScalar(variable_names[1], 1, obj,
+        obj._theta = BaseScalar(variable_names[1], 1, obj,
                             pretty_scalars[1], latex_scalars[1])
-        obj._φ = BaseScalar(variable_names[2], 2, obj,
+        obj._phi = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
 
@@ -181,31 +181,31 @@ class CoordSysSpherical(Basic):
         return self._delop
 
     @property
-    def rˆ(self):
-        return self._rˆ
+    def e_r(self):
+        return self._e_r
 
     @property
-    def θˆ(self):
-        return self._θˆ
+    def e_theta(self):
+        return self._e_theta
 
     @property
-    def φˆ(self):
-        return self._φˆ
+    def e_phi(self):
+        return self._e_phi
 
     @property
     def r(self):
         return self._r
 
     @property
-    def θ(self):
-        return self._θ
+    def theta(self):
+        return self._theta
 
     @property
-    def φ(self):
-        return self._φ
+    def phi(self):
+        return self._phi
 
     def base_vectors(self):
-        return self._rˆ, self._θˆ, self._φˆ
+        return self._e_r, self._e_theta, self._e_phi
 
     def base_scalars(self):
-        return self._r, self._θ, self._φ
+        return self._r, self._theta, self._phi
