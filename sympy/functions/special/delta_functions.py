@@ -47,6 +47,28 @@ class DiracDelta(Function):
     is_real = True
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of a DiracDelta Function.
+
+        Examples
+        ========
+
+        >>> from sympy import DiracDelta, diff
+        >>> from sympy.abc import x
+
+        >>> DiracDelta(x).fdiff()
+        DiracDelta(x, 1)
+
+        >>> DiracDelta(x,1).fdiff()
+        DiracDelta(x, 2)
+
+        >>> DiracDelta(x**2 - 1).fdiff()
+        DiracDelta(x**2 - 1, 1)
+
+        >>> diff(DiracDelta(x,1)).fdiff()
+        DiracDelta(x, 3)
+
+        """
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
             k = 0
@@ -259,6 +281,25 @@ class Heaviside(Function):
     is_real = True
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of a Heaviside Function.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, diff
+        >>> from sympy.abc import x
+
+        >>> Heaviside(x).fdiff()
+        DiracDelta(x)
+
+        >>> Heaviside(x**2 - 1).fdiff()
+        DiracDelta(x**2 - 1)
+
+        >>> diff(Heaviside(x)).fdiff()
+        DiracDelta(x, 1)
+
+        """
         if argindex == 1:
             # property number 1
             return DiracDelta(self.args[0])
