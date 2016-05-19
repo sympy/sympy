@@ -1,4 +1,9 @@
+import random
+
+import itertools
+
 from sympy.combinatorics import Permutation
+from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate
@@ -103,6 +108,23 @@ def test_array_permutedims():
     assert m1.tomatrix().T == m1.transpose().tomatrix()
     assert m1.tomatrix().C == m1.conjugate().tomatrix()
     assert m1.tomatrix().H == m1.adjoint().tomatrix()
+
+    raises(ValueError, lambda: permutedims(m1, (0,)))
+    raises(ValueError, lambda: permutedims(m1, (0, 0)))
+    raises(ValueError, lambda: permutedims(m1, (1, 2, 0)))
+
+    # Some tests with random arrays:
+    dims = 6
+    shape = [random.randint(1,5) for i in range(dims)]
+    elems = [random.random() for i in range(tensorproduct(*shape))]
+    ra = Array(elems, shape)
+    perm = list(range(dims))
+    # Randomize the permutation:
+    random.shuffle(perm)
+    # Test inverse permutation:
+    assert permutedims(permutedims(ra, perm), _af_invert(perm)) == ra
+    # Test that permuted shape corresponds to action by `Permutation`:
+    assert permutedims(ra, perm).shape == tuple(Permutation(perm)(shape))
 
     z = NDimArray.zeros(4,5,6,7)
 
