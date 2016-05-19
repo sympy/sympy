@@ -495,7 +495,15 @@ def _real_conditions(expr, gen):
     e = expr.gts - expr.lts
     if e.is_Add:
         for subexpr in e.args:
-            n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
+            if (S.NegativeOne*subexpr).is_Pow:
+                if ((S.NegativeOne*subexpr).exp) == 1/2:
+                    n_sol_sets.append(solve_univariate_inequality(((S.NegativeOne*subexpr).base) > 0, \
+                    gen, relational=False))
+                else:
+                    n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
+                print((S.NegativeOne*subexpr).exp)
+            else:
+                n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
 
     return n_sol_sets
 
