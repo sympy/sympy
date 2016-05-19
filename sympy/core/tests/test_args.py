@@ -3661,6 +3661,9 @@ def test_sympy__vector__coordsysrect__CoordSysCartesian():
     from sympy.vector.coordsysrect import CoordSysCartesian
     assert _test_args(CoordSysCartesian('C'))
 
+def test_sympy__vector__coordsyssph__CoordSysSpherical():
+    from sympy.vector.coordsyssph import CoordSysSpherical
+    assert _test_args(CoordSysSpherical('C'))
 
 def test_sympy__vector__point__Point():
     from sympy.vector.point import Point
