@@ -58,6 +58,48 @@ class DiracDelta(Function):
 
     @classmethod
     def eval(cls, arg, k=0):
+        """
+        Returns a simplified form or a value of DiracDelta depending on the
+        argument passed by the DiracDelta object or the argument `arg` passed
+        by the method `eval()`.
+
+        The `eval()` method is automatically called when the `DiracDelta` class
+        is about to be instantiated and it returns either some simplified instance
+        or the unevaluated instance depending on the argument passed. In other words,
+        `eval()` method is not needed to be called explicitly, it is being called
+        and evaluated once the object is called.
+
+        Examples
+        ========
+
+        >>> from sympy import DiracDelta, S
+        >>> from sympy.abc import x
+
+        >>> DiracDelta(x)
+        DiracDelta(x)
+
+        >>> DiracDelta(x,1)
+        DiracDelta(x, 1)
+
+        >>> DiracDelta(1)
+        0
+
+        >>> DiracDelta(5,1)
+        0
+
+        >>> DiracDelta(0)
+        DiracDelta(0)
+
+        >>> DiracDelta(-1)
+        0
+
+        >>> DiracDelta(S.NaN)
+        nan
+
+        >>> DiracDelta(x).eval(1)
+        0
+
+        """
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
@@ -225,6 +267,42 @@ class Heaviside(Function):
 
     @classmethod
     def eval(cls, arg):
+        """
+        Returns a simplified form or a value of Heaviside depending on the
+        argument passed by the Heaviside object or the argument `arg` passed
+        by the method `eval()`.
+
+        The `eval()` method is automatically called when the `Heaviside` class
+        is about to be instantiated and it returns either some simplified instance
+        or the unevaluated instance depending on the argument passed. In other words,
+        `eval()` method is not needed to be called explicitly, it is being called
+        and evaluated once the object is called.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, S
+        >>> from sympy.abc import x
+
+        >>> Heaviside(x)
+        Heaviside(x)
+
+        >>> Heaviside(19)
+        1
+
+        >>> Heaviside(0)
+        Heaviside(0)
+
+        >>> Heaviside(-5)
+        0
+
+        >>> Heaviside(S.NaN)
+        nan
+
+        >>> Heaviside(x).eval(100)
+        1
+
+        """
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
@@ -240,6 +318,37 @@ class Heaviside(Function):
             return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
 
     def _eval_rewrite_as_sign(self, arg):
+        """Represents the Heaviside function in the form of sign function.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, Symbol, sign
+        >>> x = Symbol('x', real=True)
+
+        >>> Heaviside(x).rewrite(sign)
+        sign(x)/2 + 1/2
+
+        >>> Heaviside(x-2).rewrite(sign)
+        sign(x - 2)/2 + 1/2
+
+        >>> Heaviside(x**2-2*x +1).rewrite(sign)
+        sign(x**2 - 2*x + 1)/2 + 1/2
+
+        >>> y = Symbol('y')
+
+        >>> Heaviside(y).rewrite(sign)
+        Heaviside(y)
+
+        >>> Heaviside(y**2-2*y +1).rewrite(sign)
+        Heaviside(y**2 - 2*y + 1)
+
+        See Also
+        ========
+
+        sign
+
+        """
         if arg.is_real:
             return (sign(arg)+1)/2
 
