@@ -61,8 +61,9 @@ def variance_prop(expr, consts=(), include_covar=False):
             return Variance(RandomSymbol(expr))
         else:
             return S(0)
-    var_args = list(map(variance_prop, args, repeat(consts),
-                        repeat(include_covar)))
+    nargs = len(args)
+    var_args = list(map(variance_prop, args, repeat(consts, nargs),
+                        repeat(include_covar, nargs)))
     if isinstance(expr, Add):
         var_expr = Add(*var_args)
         if include_covar:
