@@ -2,13 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Mul
+from sympy import symbols, Symbol, diff, S
 from sympy.polys.polytools import lcm, gcd
-from sympy.core.expr import Expr
 from sympy.printing import sstr
 from sympy.matrices import Matrix
 from sympy.core.compatibility import range
-from sympy.polys.polytools import DMP
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.core.sympify import sympify
 from sympy.polys.domains import QQ, ZZ
