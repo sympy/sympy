@@ -188,13 +188,10 @@ class DiracDelta(Function):
            Piecewise((oo, Eq(x, 0)), (0, True))
 
            >>> DiracDelta(x - 5).rewrite(Piecewise)
-           Piecewise((oo, Eq(x, 5)), (0, True))
+           Piecewise((oo, Eq(x - 5, 0)), (0, True))
 
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
-           Piecewise((oo, Eq(x, 5)), (0, True))
-
-           >>> DiracDelta((x-3)*(x-4)*(x-5)).rewrite(Piecewise)
-           Piecewise((oo, Eq(x, 3)), (0, True))/2 + Piecewise((oo, Eq(x, 4)), (0, True)) + Piecewise((oo, Eq(x, 5)), (0, True))/2
+           Piecewise((oo, Eq(x - 5, 0)), (0, True))
 
            >>> y = Symbol('y')
 
@@ -204,22 +201,8 @@ class DiracDelta(Function):
            >>> DiracDelta(y, 1).rewrite(Piecewise)
            DiracDelta(y, 1)
 
-           >>> DiracDelta(x*y+10).rewrite(Piecewise)
-           Piecewise((oo, Eq(x*y + 10, 0)), (0, True))
-
         """
-        from sympy import solve
-
-        free = self.free_symbols
-        if len(free) == 1:
-            variable = free.pop()
-            if not self.is_simple(variable):
-                f = self.expand(diracdelta=True, wrt=variable)
-                return f.rewrite(Piecewise)
-            sol = solve(Eq(args[0], 0))
-            if self.args[0].is_real:
-                return Piecewise((oo, Eq(variable, sol[0])), (0, True))
-        else:
+        if self.args[0].is_real:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
 
     @staticmethod
@@ -283,6 +266,26 @@ class Heaviside(Function):
             return S.One
 
     def _eval_rewrite_as_Piecewise(self, arg):
+        """Represents Heaviside in a Piecewise form
+
+           Examples
+           ========
+
+           >>> from sympy import Heaviside, Piecewise, Symbol
+           >>> x = Symbol('x', real=True)
+
+           >>> Heaviside(x).rewrite(Piecewise)
+           Piecewise((1, x > 0), (1/2, Eq(x, 0)), (0, True))
+
+           >>> Heaviside(x - 5).rewrite(Piecewise)
+           Piecewise((1, x - 5 > 0), (1/2, Eq(x - 5, 0)), (0, True))
+
+           >>> y = Symbol('y')
+
+           >>> Heaviside(y).rewrite(Piecewise)
+           Heaviside(y)
+
+        """
         if arg.is_real:
             return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
 

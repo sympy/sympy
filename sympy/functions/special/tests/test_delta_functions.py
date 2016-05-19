@@ -96,14 +96,6 @@ def test_rewrite():
     assert DiracDelta(y).rewrite(Piecewise) == DiracDelta(y)
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
     assert DiracDelta(x-5).rewrite(Piecewise) == \
-        Piecewise((oo, Eq(x, 5)), (0, True))
+        Piecewise((oo, Eq(x - 5, 0)), (0, True))
     assert DiracDelta(x-5, 1).rewrite(Piecewise) == \
-        Piecewise((oo, Eq(x, 5)), (0, True))
-
-    assert DiracDelta((x-3)*(x-4)*(x-5)).rewrite(Piecewise) == \
-        Piecewise((oo, Eq(x, 3)), (0, True))/2 \
-        + Piecewise((oo, Eq(x, 4)), (0, True)) \
-        + Piecewise((oo, Eq(x, 5)), (0, True))/2
-
-    assert DiracDelta(x*y+10).rewrite(Piecewise) == \
-        Piecewise((oo, Eq(x*y + 10, 0)), (0, True))
+        Piecewise((oo, Eq(x - 5, 0)), (0, True))
