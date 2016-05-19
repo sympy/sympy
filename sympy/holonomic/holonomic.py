@@ -17,6 +17,7 @@ from sympy.simplify.hyperexpand import hyperexpand
 from sympy.functions.special.hyper import hyper
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 
+
 def DiffOperatorAlgebra(base, generator):
     """
     Returns an Algebra of Differential Operators and the operator for
@@ -748,15 +749,19 @@ class HolonomicFunction(object):
 
         See Also
         ========
+
         From_Hyper
         """
+
         R = self.annihilator.parent
         a = self.annihilator.order
         diff = expr.diff()
         listofpoly = self.annihilator.listofpoly
+
         for i, j in enumerate(listofpoly):
             if isinstance(j, self.annihilator.parent.base.dtype):
                 listofpoly[i] = self.annihilator.parent.base.to_sympy(j)
+
         r = listofpoly[a].subs({self.x:expr})
         subs = [-listofpoly[i].subs({self.x:expr}) / r for i in range (a)]
         coeffs = [S(0) for i in range(a)] # Dkfa[i] == coeff of (D^i f)(a) in D^k (f(a))
@@ -764,6 +769,7 @@ class HolonomicFunction(object):
         system = [coeffs]
         homogeneous = Matrix([[S(0) for i in range(a)]]).transpose()
         sol = Matrix([[]])
+
         while sol.is_zero:
             coeffs_next = [p.diff() for p in coeffs]
             for i in range(a - 1):
@@ -780,15 +786,17 @@ class HolonomicFunction(object):
 
         sol = sol / sol_tuple[1]
         sol = _normalize(sol[0:], R, negative=False)
+
         if self._have_init_cond:
             return HolonomicFunction(sol, self.x, self.x0, self.y0)
         return HolonomicFunction(sol, self.x)
 
 
-def From_Hyper(func):
+def From_Hyper(func, x0=0, evalf=False):
     """
     Converts Hypergeometric Function to Holonomic.
-
+    func is the Hypergeometric Function and x0 be the point at
+    which initial conditions are required.
     Examples
     =======
 
@@ -799,6 +807,7 @@ def From_Hyper(func):
     HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1) , f'(1) = -sinh(1) + cosh(1)
 
     """
+
     a = func.ap
     b = func.bq
     z = func.args[2]
@@ -817,10 +826,13 @@ def From_Hyper(func):
     if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
-    def _find_conditons(simp, x, x0, order):
+    def _find_conditions(simp, x, x0, order, evalf=False):
         y0 = []
         for i in range(order):
-            val = simp.subs(x, x0)
+            if evalf:
+                val = simp.subs(x, x0).evalf()
+            else:
+                val = simp.subs(x, x0)
             if isinstance(val, Infinity) or isinstance(val, NaN):
                 return None
             y0.append(val)
@@ -828,12 +840,18 @@ def From_Hyper(func):
         return y0
 
     if not isinstance(simp, hyper):
-        x0 = 0
-        y0 = _find_conditons(simp, x, x0, sol.order)
+        y0 = _find_conditions(simp, x, x0, sol.order)
         while not y0:
             x0 += 1
-            y0 = _find_conditons(simp, x, x0, sol.order)
+            y0 = _find_conditions(simp, x, x0, sol.order)
 
+        return HolonomicFunction(sol, x, x0, y0).composition(z)
+    if isinstance(simp, hyper):
+        x0 = 1
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         return HolonomicFunction(sol, x, x0, y0).composition(z)
 
     return HolonomicFunction(sol, x).composition(z)
