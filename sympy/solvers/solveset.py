@@ -1352,6 +1352,7 @@ def nlinsolve(system, symbols):
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
+    from sympy.utilities.iterables import subsets
     if not system:
         return S.EmptySet
 
@@ -1359,7 +1360,7 @@ def nlinsolve(system, symbols):
         raise ValueError('Symbols must be given, for which solution of the '
                          'system is to be found.')
     polys = []
-    failed = []
+    nonpolys = []
     for j, g in enumerate(system):
         # TODO : solveset `_invert, improve for more than one symbols 
         # move all the terms, having any `symbols` in lhs and make it 'g'. currently using old solver's _invert
@@ -1371,7 +1372,7 @@ def nlinsolve(system, symbols):
         if poly is not None:
             polys.append(poly)
         else:
-            failed.append(g)
+            nonpolys.append(g)
 
     # If none of the equation is Poly
     if not polys:
@@ -1384,7 +1385,6 @@ def nlinsolve(system, symbols):
             # try to solve, when all the equation is poly
             result = solve_poly_system(polys, *symbols)
             solved_syms = symbols
-            known_values = FiniteSet(dict(list(zip(solved_syms, r))) for r in result)
         except NotImplementedError:
             # If polys is not zero dimensional, try to solve them
             # using matrix method => nlinsolve_matrix .
@@ -1399,41 +1399,63 @@ def nlinsolve(system, symbols):
 
     else:
         # all the equations are not Polynomial
+        depend_soln = {}
         # first solve the polynomial equations if present
         if polys:
-            combinations = FiniteSet((symbols)**len(polys))
+            combinations = list(subsets(symbols, len(polys)))
             for new_symbols in combinations:
-                        try:
-                            # solution for new_symbols in terms of other symbols
-                            res = solve_poly_system(polys, *new_symbols)
-                            for r in res:
-                                skip = False
+                try:
+                    # solution for new_symbols in terms of other symbols
+                    res = solve_poly_system(polys, new_symbols)
+                    for r in res:
+                        skip = False
+                        # check tuples of res
+                        for r1 in r:
+                            if depend_soln and any([k in r1.free_symbols
+                                for k, v in depend_soln.items()]):
+                                # sol depends on previously
+                                # solved symbols: discard it
+                                # eg : depend_soln=> {x : -y} and
+                                # r1 is function of x like r1 = -x for y
+                                skip = True
+                        if not skip:
+                            for ns in new_symbols:
                                 for r1 in r:
-                                    if got_s and any([ss in r1.free_symbols
-                                        for ss in got_s]):
-                                        # sol depends on previously
-                                        # solved symbols: discard it
-                                        skip = True
-                                if not skip:
-                                    got_s.update(syms)
-                                    result.extend([dict(list(zip(syms, r)))])
-                        except NotImplementedError:
-                            pass
-                    if got_s:
-                        solved_syms = list(got_s)
-                    else:
-                        raise NotImplementedError('no valid subset found')
-    # if failed expr is there then use substitution method..
-    if failed:
-        
+                                    depend_soln[ns] = r1
+                            # need to maintain dict symbol : value
+                            result.extend([dict(list(zip(new_symbols, r)))])
+                except NotImplementedError:
+                    # Means polys are/is positive dimensional system of equations
+                    # TODO solve using RUR
+                    # Reference :
+                    # http://www.maplesoft.com/support/hel
+                    # p/Maple/view.aspx?path=Groebner/RationalUnivariateRepresentation
+                    pass
+            if depend_soln:
+                solved_syms = list(depend_soln)
+        # Polynomail is done. Now use substition method to get the solution
+        # for unsolved symbols if nonpolys list is not None.
+        if nonpolys:
+            # if non polynomail equation is present
+            unsolved_syms = list(filter(lambda x : x not in solved_syms, symbols))
+            # one by one solve for unsolved after substitution of solved symbols values.
+            new_result = []
+            for np in nonpolys:
+                for r in result:
+                    np_subs = np.subs(r)
+                    for us in unsolved_syms:
+                        sol_real = solveset_real(np_subs, us)
+                        sol_complex = solveset_complex(np_subs, us)
+                        if sol_real or sol_complex:
+                            if sol_complex is sol_real:
+                                # sometimes solveset returns same ans
+                                temp_res = {}
+                                new_result.append(tuple(r, {us : sol_real}))
+                            elif sol_real:
+                                new_result.append(tuple(r, {us : sol_real}))
+                            elif sol_complex:
+                                new_result.append(tuple(list(zip(r, {us : sol_complex}))))
 
-        new_system = []
-        new_symbols = []
-        for failed_eq in failed:
-            for kv in known_values:
-                failed_eq.subs(kv)
-            # for sym in failed_eq.free_symbols:
-            #     if (e.free_symbols - solved_syms) & set(symbols)
     if result:
         result = FiniteSet(*[s for s in result])
     else:
