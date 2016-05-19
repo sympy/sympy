@@ -21,7 +21,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet)
+                        Union, ConditionSet, ImageSet)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -535,6 +535,72 @@ def _solve_abs(f, symbol, domain):
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
 
+
+def solve_decomposition(f, symbol, domain):
+    """
+    Function to solve equations via the principle of "Decomposition
+    and Rewriting".
+
+    Examples
+    ========
+    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy.solvers.solveset import solve_decomposition as sd
+    >>> x = Symbol('x')
+
+    >>> f1 = exp(2*x) - 3*exp(x) + 2
+    >>> sd(f1, x, S.Reals)
+    {0, log(2)}
+    >>> pprint(sd(f1, x, S.Complexes), use_unicode=False)
+    {2*n*I*pi | n in Integers()} U {2*n*I*pi + Mod(log(2), 2*I*pi) | n in Integers()}
+
+    >>> f2 = sin(x)**2 + 2*sin(x) + 1
+    >>> pprint(sd(f1, x, S.Reals), use_unicode=False)
+              3*pi
+    {2*n*pi + ---- | n in Integers()}
+               2
+
+    >>> f3 = sin(x + 2)
+    >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
+    {2*n*pi = -2 | n in Integers()} U {2*n*pi + pi = -2 | n in Integers()}
+
+    """
+    from sympy.solvers.decompogen import decompogen
+    # decompose the given function
+    g_s = decompogen(f, symbol)
+    # solving the equation: f = 0
+    y_s = FiniteSet(0)
+    for g in g_s:
+        result = S.EmptySet
+        if isinstance(y_s, FiniteSet):
+            for y in y_s:
+                Y_s = solveset(Eq(g, y), symbol, domain)
+                if isinstance(Y_s, ConditionSet):
+                    return ConditionSet(symbol, Eq(f, 0), domain)
+                else:
+                    result += Y_s
+        Y_s = solveset(g, symbol, domain)
+        if isinstance(Y_s, ConditionSet):
+            return ConditionSet(symbol, Eq(f, 0), domain)
+        elif isinstance(Y_s, FiniteSet):
+            if isinstance(y_s, ImageSet):
+                for Y in Y_s:
+                    new_expr = y_s.lamda.expr - Y
+                    dummy_var = tuple(y_s.lamda.expr.free_symbols)[0]
+                    base_set = y_s.base_set
+                    result += ImageSet(Lambda(dummy_var, new_expr), base_set)
+            elif isinstance(y_s, Union):
+                for Y in Y_s:
+                    for iset in y_s.args:
+                        new_expr = iset.lamda.expr- Y
+                        dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
+                        base_set = iset.base_set
+                        result += ImageSet(Lambda(dummy_var, new_expr), base_set)
+        elif isinstance(Y_s, ImageSet):
+            pass #TODO
+        elif isinstance(Y_s, Union):
+            pass #TODO
+        y_s = result
+    return y_s
 
 
 def _solveset(f, symbol, domain, _check=False):
