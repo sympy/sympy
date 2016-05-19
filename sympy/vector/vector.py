@@ -46,7 +46,6 @@ class Vector(BasisDependent):
         """
         Returns the magnitude of this vector.
         """
-        print(self)
         return sqrt(self & self)
 
     def normalize(self):
