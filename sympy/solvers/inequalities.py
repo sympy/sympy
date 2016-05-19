@@ -14,6 +14,7 @@ from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.utilities.misc import filldedent
+from sympy.simplify.radsimp import fraction, denom
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
@@ -496,12 +497,11 @@ def _real_conditions(expr, gen):
     if e.is_Add:
         for subexpr in e.args:
             if (S.NegativeOne*subexpr).is_Pow:
-                if ((S.NegativeOne*subexpr).exp) == 1/2:
+                if denom((S.NegativeOne*subexpr).exp) == 2:
                     n_sol_sets.append(solve_univariate_inequality(((S.NegativeOne*subexpr).base) > 0, \
                     gen, relational=False))
                 else:
                     n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
-                print((S.NegativeOne*subexpr).exp)
             else:
                 n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen, relational=False))
 
