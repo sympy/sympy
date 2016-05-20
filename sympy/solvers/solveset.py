@@ -581,27 +581,30 @@ def solve_decomposition(f, symbol, domain):
                     return ConditionSet(symbol, Eq(f, 0), domain)
                 else:
                     result += solutions
-        solutions = solveset(g, symbol, domain)
-        if isinstance(solutions, ConditionSet):
-            return ConditionSet(symbol, Eq(f, 0), domain)
-        elif isinstance(solutions, FiniteSet):
-            if isinstance(y_s, ImageSet):
-                for solution in solutions:
-                    new_expr = y_s.lamda.expr - solutions
-                    dummy_var = tuple(y_s.lamda.expr.free_symbols)[0]
-                    base_set = y_s.base_set
-                    result += ImageSet(Lambda(dummy_var, new_expr), base_set)
-            elif isinstance(y_s, Union):
-                for solution in solutions:
-                    for iset in y_s.args:
-                        new_expr = iset.lamda.expr- solution
-                        dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                        base_set = iset.base_set
+        else:
+            solutions = solveset(g, symbol, domain)
+            if isinstance(solutions, ConditionSet) or solutions is S.EmptySet:
+                return ConditionSet(symbol, Eq(f, 0), domain)
+            elif isinstance(solutions, FiniteSet):
+                if isinstance(y_s, ImageSet):
+                    for solution in solutions:
+                        new_expr = y_s.lamda.expr - solutions
+                        dummy_var = tuple(y_s.lamda.expr.free_symbols)[0]
+                        base_set = y_s.base_set
                         result += ImageSet(Lambda(dummy_var, new_expr), base_set)
-        elif isinstance(solutions, ImageSet):
-            pass #TODO
-        elif isinstance(solutions, Union):
-            pass #TODO
+                elif isinstance(y_s, Union):
+                    for solution in solutions:
+                        for iset in y_s.args:
+                            new_expr = iset.lamda.expr- solution
+                            dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
+                            base_set = iset.base_set
+                            result += ImageSet(Lambda(dummy_var, new_expr), base_set)
+            elif isinstance(solutions, ImageSet):
+                pass #TODO
+            elif isinstance(solutions, Union):
+                pass #TODO
+        if result is S.EmptySet:
+            return ConditionSet(symbol, Eq(f, 0), domain)
         y_s = result
     return y_s
 

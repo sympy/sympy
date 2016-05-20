@@ -1028,6 +1028,7 @@ def test_solve_decomposition():
     f3 = sin(x)**2 - sin(x)
     f4 = sin(x + 1)
     f5 = exp(x + 2) - 1
+    f6 = 1/log(x)
 
     s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
     s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
@@ -1041,6 +1042,7 @@ def test_solve_decomposition():
     assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, s3)
     assert solve_decomposition(f4, x, S.Reals) == Union(s4, s5)
     assert solve_decomposition(f5, x, S.Complexes) == s6
+    assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
 
 
 def test_issue_9556():
