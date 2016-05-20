@@ -546,58 +546,61 @@ def solve_decomposition(f, symbol, domain):
     >>> from sympy import exp, sin, Symbol, pprint, S
     >>> from sympy.solvers.solveset import solve_decomposition as sd
     >>> x = Symbol('x')
-
     >>> f1 = exp(2*x) - 3*exp(x) + 2
     >>> sd(f1, x, S.Reals)
     {0, log(2)}
     >>> pprint(sd(f1, x, S.Complexes), use_unicode=False)
-    {2*n*I*pi | n in Integers()} U {2*n*I*pi + Mod(log(2), 2*I*pi) | n in Integers()}
-
+    {2*n*I*pi | n in Integers()} U {2*n*I*pi + Mod(log(2), 2*I*pi) | n in Integers
+    ()}
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
-    >>> pprint(sd(f1, x, S.Reals), use_unicode=False)
+    >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
     {2*n*pi + ---- | n in Integers()}
                2
-
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi = -2 | n in Integers()} U {2*n*pi + pi = -2 | n in Integers()}
+    {2*n*pi + 2 | n in Integers()} U {2*n*pi + 2 + pi | n in Integers()}
 
     """
     from sympy.solvers.decompogen import decompogen
     # decompose the given function
     g_s = decompogen(f, symbol)
-    # solving the equation: f = 0
+    # `y_s` represents the set of values for which the function `g` is to be
+    # solved.
+    # `solutions` represent the solutions of the equations `g = y_s` or
+    # `g = 0` depending on the type of `y_s`.
+    # As we are interested in solving the equation: f = 0
     y_s = FiniteSet(0)
     for g in g_s:
+        # initialise `results` as an empty set at the beginning of iteration
         result = S.EmptySet
         if isinstance(y_s, FiniteSet):
             for y in y_s:
-                Y_s = solveset(Eq(g, y), symbol, domain)
-                if isinstance(Y_s, ConditionSet):
+                solutions = solveset(Eq(g, y), symbol, domain)
+                if isinstance(solutions, ConditionSet):
                     return ConditionSet(symbol, Eq(f, 0), domain)
                 else:
-                    result += Y_s
-        Y_s = solveset(g, symbol, domain)
-        if isinstance(Y_s, ConditionSet):
+                    result += solutions
+        solutions = solveset(g, symbol, domain)
+        if isinstance(solutions, ConditionSet):
             return ConditionSet(symbol, Eq(f, 0), domain)
-        elif isinstance(Y_s, FiniteSet):
+        elif isinstance(solutions, FiniteSet):
             if isinstance(y_s, ImageSet):
-                for Y in Y_s:
-                    new_expr = y_s.lamda.expr - Y
+                for solution in solutions:
+                    new_expr = y_s.lamda.expr - solutions
                     dummy_var = tuple(y_s.lamda.expr.free_symbols)[0]
                     base_set = y_s.base_set
                     result += ImageSet(Lambda(dummy_var, new_expr), base_set)
             elif isinstance(y_s, Union):
-                for Y in Y_s:
+                for solution in solutions:
                     for iset in y_s.args:
-                        new_expr = iset.lamda.expr- Y
+                        new_expr = iset.lamda.expr- solution
                         dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
                         base_set = iset.base_set
                         result += ImageSet(Lambda(dummy_var, new_expr), base_set)
-        elif isinstance(Y_s, ImageSet):
+        elif isinstance(solutions, ImageSet):
             pass #TODO
-        elif isinstance(Y_s, Union):
+        elif isinstance(solutions, Union):
             pass #TODO
         y_s = result
     return y_s
