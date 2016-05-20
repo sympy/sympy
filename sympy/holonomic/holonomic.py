@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import symbols, Symbol, diff, S, Dummy
-from sympy.polys.polytools import lcm, gcd
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from sympy.core.compatibility import range
