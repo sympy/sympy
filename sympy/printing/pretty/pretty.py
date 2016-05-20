@@ -1149,6 +1149,15 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_DiracDelta(self, e):
+        if self._use_unicode:
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek_unicode['delta']))
+            return pform
+        else:
+            return self._print_Function(e)
+
     def _print_uppergamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
