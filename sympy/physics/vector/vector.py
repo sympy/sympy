@@ -287,12 +287,12 @@ class Vector(object):
                             else:
                                 pform = vp._print(
                                     ar[i][0][j])
-                            pform = prettyForm(*pform.right(" ", 
+                            pform = prettyForm(*pform.right(" ",
                                                 ar[i][1].pretty_vecs[j]))
                         else:
                             continue
                         pforms.append(pform)
-                
+
                 pform = prettyForm.__add__(*pforms)
                 kwargs["wrap_line"] = kwargs.get("wrap_line")
                 kwargs["num_columns"] = kwargs.get("num_columns")
