@@ -50,6 +50,14 @@ class DiracDelta(Function):
         """
         Returns the first derivative of a DiracDelta Function.
 
+        The difference between `diff()` and `fdiff()` is:-
+        `diff()` is the user-level function and `fdiff()` is an object method.
+        `fdiff()` is a convenience. It let the user write the derivative without
+        concern for the chain rule.
+        `diff(expr, x)` calls `expr._eval_derivative(x)` internally,
+        if `expr` is a subclass of `Function`, then the `Function._eval_derivative`
+        calls `expr.fdiff`.
+
         Examples
         ========
 
