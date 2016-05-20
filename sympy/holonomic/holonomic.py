@@ -2,10 +2,10 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S
+from sympy import symbols, Symbol, diff, S, Dummy
 from sympy.polys.polytools import lcm, gcd
 from sympy.printing import sstr
-from sympy.matrices import Matrix
+from .linearsolver import NewMatrix
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.core.sympify import sympify
@@ -14,6 +14,8 @@ from sympy.polys.domains.pythonrational import PythonRational
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.functions.special.hyper import hyper
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
+from sympy.matrices import Matrix
+from sympy.polys.polyclasses import DMF
 
 
 def DiffOperatorAlgebra(base, generator):
@@ -335,7 +337,7 @@ class DifferentialOperator(object):
                 return False
 
 
-def _normalize(list_of_coeff, parent, negative=True):
+def _normalize(list_of, parent, negative=True):
     """
     Normalize a given annihilator
     """
@@ -343,12 +345,16 @@ def _normalize(list_of_coeff, parent, negative=True):
     num = []
     denom = []
     base = parent.base
+    K = base.get_field()
     R = ZZ.old_poly_ring(base.gens[0])
     lcm_denom = R.from_sympy(S(1))
-    K = base.get_field()
+    list_of_coeff = []
 
-    for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = K.from_sympy(sympify(j))
+    for i, j in enumerate(list_of):
+        if not isinstance(list_of[i], K.dtype):
+            list_of_coeff.append(K.from_sympy(sympify(list_of[i])))
+        else:
+            list_of_coeff.append(j)
         num.append(base(list_of_coeff[i].num))
         den = list_of_coeff[i].den
         if isinstance(den[0], PythonRational):
@@ -386,10 +392,10 @@ def _derivate_diff_eq(listofpoly):
 
     sol = []
     a = len(listofpoly) - 1
-    sol.append(listofpoly[0].diff())
+    sol.append(DMFdiff(listofpoly[0]))
 
     for i, j in enumerate(listofpoly[1:]):
-        sol.append(j.diff() + listofpoly[i])
+        sol.append(DMFdiff(j) + listofpoly[i])
 
     sol.append(listofpoly[a])
     return sol
@@ -472,6 +478,8 @@ class HolonomicFunction(object):
         deg1 = self.annihilator.order
         deg2 = other.annihilator.order
         dim = max(deg1, deg2)
+        R = self.annihilator.parent.base
+        K = R.get_field()
 
         rowsself = [self.annihilator]
         rowsother = [other.annihilator]
@@ -497,18 +505,13 @@ class HolonomicFunction(object):
                 if i >= len(expr.listofpoly):
                     p.append(0)
                 else:
-                    if isinstance(expr.listofpoly[i], self.annihilator.parent.base.dtype):
-                        ring_to_expr = self.annihilator.parent.base.to_sympy(
-                            expr.listofpoly[i])
-                        p.append(ring_to_expr)
-                    else:
-                        p.append(expr.listofpoly[i])
+                    p.append(K.new(expr.listofpoly[i].rep))
             r.append(p)
 
-        r = Matrix(r).transpose()
+        r = NewMatrix(r).transpose()
 
-        homosys = [[0 for q in range(dim + 1)]]
-        homosys = Matrix(homosys).transpose()
+        homosys = [[S(0) for q in range(dim + 1)]]
+        homosys = NewMatrix(homosys).transpose()
 
         # solving the linear system using gauss jordan solver
         solcomp = r.gauss_jordan_solve(homosys)
@@ -533,28 +536,22 @@ class HolonomicFunction(object):
                 p = []
                 for i in range(dim + 1):
                     if i >= len(expr.listofpoly):
-                        p.append(0)
+                        p.append(S(0))
                     else:
-                        if isinstance(expr.listofpoly[i], self.annihilator.parent.base.dtype):
-                            ring_to_expr = self.annihilator.parent.base.to_sympy(
-                                expr.listofpoly[i])
-                            p.append(ring_to_expr)
-                        else:
-                            p.append(expr.listofpoly[i])
+
+                        p.append(K.new(expr.listofpoly[i].rep))
                 r.append(p)
 
-            r = Matrix(r).transpose()
+            r = NewMatrix(r).transpose()
 
-            homosys = [[0 for q in range(dim + 1)]]
-            homosys = Matrix(homosys).transpose()
+            homosys = [[S(0) for q in range(dim + 1)]]
+            homosys = NewMatrix(homosys).transpose()
 
             solcomp = r.gauss_jordan_solve(homosys)
 
             sol = r.gauss_jordan_solve(homosys)[0]
 
         # removing the symbol if any from the solution
-        if sol.is_symbolic():
-            sol = solcomp[0] / solcomp[1]
 
         # taking only the coefficients needed to multiply with `self`
         # can be also be done the other way by taking R.H.S and multiply with
@@ -563,7 +560,6 @@ class HolonomicFunction(object):
         sol1 = _normalize(sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
-
         # solving initial conditions
         if self._have_init_cond and other._have_init_cond:
             if self.x0 == other.x0:
@@ -614,18 +610,19 @@ class HolonomicFunction(object):
                 return HolonomicFunction(ann_self, self.x, self.x0, y1)
 
         ann_other = other.annihilator
-        list_self = ann_self.listofpoly
-        list_other = ann_other.listofpoly
+        list_self = []
+        list_other = []
         a = ann_self.order
         b = ann_other.order
 
-        for i, j in enumerate(list_self):
-            if isinstance(j, ann_self.parent.base.dtype):
-                list_self[i] = ann_self.parent.base.to_sympy(j)
+        R = ann_self.parent.base
+        K = R.get_field()
 
-        for i, j in enumerate(list_other):
-            if isinstance(j, ann_other.parent.base.dtype):
-                list_other[i] = ann_other.parent.base.to_sympy(j)
+        for i, j in enumerate(ann_self.listofpoly):
+            list_self.append(K.new(j.rep))
+
+        for i, j in enumerate(ann_other.listofpoly):
+            list_other.append(K.new(j.rep))
         # will be used to reduce the degree
         self_red = [-list_self[i] / list_self[a]
                     for i in range(a)]
@@ -640,10 +637,10 @@ class HolonomicFunction(object):
         lin_sys = [[coeff_mul[i][j]
                     for i in range(a) for j in range(b)]]
 
-        homo_sys = [[0 for q in range(a * b)]]
-        homo_sys = Matrix(homo_sys).transpose()
+        homo_sys = [[S(0) for q in range(a * b)]]
+        homo_sys = NewMatrix(homo_sys).transpose()
 
-        sol = (Matrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+        sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
         # until a non trivial solution is found
         while sol[0].is_zero:
             # updating the coefficents Dx^i(f).Dx^j(g) for next degree
@@ -651,7 +648,10 @@ class HolonomicFunction(object):
                 for j in range(b - 1, -1, -1):
                     coeff_mul[i][j + 1] += coeff_mul[i][j]
                     coeff_mul[i + 1][j] += coeff_mul[i][j]
-                    coeff_mul[i][j] = coeff_mul[i][j].diff()
+                    if isinstance(coeff_mul[i][j] , K.dtype):
+                        coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
+                    else:
+                        coeff_mul[i][j] = coeff_mul[i][j].diff()
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
                 if not coeff_mul[i][b] == S(0):
@@ -671,11 +671,10 @@ class HolonomicFunction(object):
             lin_sys.append([coeff_mul[i][j] for i in range(a)
                             for j in range(b)])
 
-            sol = (Matrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+            sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
 
-        sol = sol[0] / sol[1]
 
-        sol_ann = _normalize(sol[0:], self.annihilator.parent, negative=False)
+        sol_ann = _normalize(sol[0][0:], self.annihilator.parent, negative=False)
 
         if self._have_init_cond and other._have_init_cond:
             if self.x0 == other.x0:
@@ -766,7 +765,7 @@ class HolonomicFunction(object):
         coeffs[0] = S(1)
         system = [coeffs]
         homogeneous = Matrix([[S(0) for i in range(a)]]).transpose()
-        sol = Matrix([[]])
+        sol = S(0)
 
         while sol.is_zero:
             coeffs_next = [p.diff() for p in coeffs]
@@ -779,10 +778,11 @@ class HolonomicFunction(object):
 
             # check for linear relations
             system.append(coeffs)
-            sol_tuple = Matrix(system).transpose().gauss_jordan_solve(homogeneous)
+            sol_tuple = (Matrix(system).transpose()).gauss_jordan_solve(homogeneous)
             sol = sol_tuple[0]
 
-        sol = sol / sol_tuple[1]
+        tau = sol.atoms(Dummy).pop()
+        sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
         if self._have_init_cond:
@@ -864,11 +864,13 @@ def _extend_y0(Holonomic, n):
     annihilator = Holonomic.annihilator
     a = annihilator.order
     x = Holonomic.x
-    listofpoly = annihilator.listofpoly
+    listofpoly = []
     y0 = Holonomic.y0
-    for i, j in enumerate(listofpoly):
+    R = annihilator.parent.base
+    K = R.get_field()
+    for i, j in enumerate(annihilator.listofpoly):
             if isinstance(j, annihilator.parent.base.dtype):
-                listofpoly[i] = annihilator.parent.base.to_sympy(j)
+                listofpoly.append(K.new(j.rep))
 
     if len(y0) < a or n <= len(y0):
         return y0
@@ -879,10 +881,39 @@ def _extend_y0(Holonomic, n):
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):
-                if not b.subs(x, Holonomic.x0).is_finite:
+                r = DMFsubs(b, Holonomic.x0)
+                if not r.is_finite:
                     return y0
-                sol += a * b.subs(x, Holonomic.x0)
+                sol += a * r
             y1.append(sol)
             list_red = _derivate_diff_eq(list_red)
 
         return y0 + y1[len(y0):]
+
+
+def DMFdiff(frac):
+    if not isinstance(frac, DMF):
+        return frac.diff()
+    K = frac.ring
+    R = K.dom.old_poly_ring(K.gens[0])
+    p = R(frac.num)
+    q = R(frac.den)
+    sol_num = - p * q.diff() + q * p.diff()
+    sol_denom = q**2
+    return K((sol_num.rep, sol_denom.rep))
+
+
+def DMFsubs(frac, x0):
+    if not isinstance(frac, DMF):
+        return frac
+    K = frac.ring
+    R = K.dom.old_poly_ring(K.gens[0])
+    p = frac.num
+    q = frac.den
+    sol_p = S(0)
+    sol_q = S(0)
+    for i, j in enumerate(reversed(p)):
+        sol_p += j * x0**i
+    for i, j in enumerate(reversed(q)):
+        sol_q += j * x0**i
+    return sol_p / sol_q
