@@ -274,7 +274,7 @@ class Variable(object):
             Controls the precision of floating point constants.
 
         """
-        if not isinstance(name, (Symbol, MatrixSymbol)):
+        if not isinstance(name, (Symbol, MatrixSymbol, Idx)):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
@@ -358,6 +358,7 @@ class ResultBase(object):
 
     __repr__ = __str__
 
+
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
 
@@ -404,6 +405,7 @@ class OutputArgument(Argument, ResultBase):
 
     __repr__ = __str__
 
+
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
 
@@ -420,6 +422,7 @@ class InOutArgument(Argument, ResultBase):
             self.result_var)
 
     __repr__ = __str__
+
 
 class Result(Variable, ResultBase):
     """An expression for a return value.
@@ -541,6 +544,9 @@ class CodeGen(object):
                 if isinstance(out_arg, Indexed):
                     dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
                     symbol = out_arg.base.label
+                elif isinstance(out_arg, Idx):
+                    dims = []
+                    symbol = out_arg
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
@@ -574,7 +580,7 @@ class CodeGen(object):
         # setup input argument list
         array_symbols = {}
         for array in expressions.atoms(Indexed):
-            array_symbols[array.base.label] = array
+            array_symbols[array.base] = array
         for array in expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
