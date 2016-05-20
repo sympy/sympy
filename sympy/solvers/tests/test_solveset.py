@@ -1093,3 +1093,6 @@ def test_issue_11064():
         Interval.open(sqrt(5), oo)
     assert solveset(eq < 0, x, S.Reals) == \
         Interval.open(-oo, -sqrt(5))
+    eq = 2 + sqrt(x - 4) #PR 11109
+    assert solveset(eq > 0, x, S.Reals) == \
+        Interval.open(4, oo)

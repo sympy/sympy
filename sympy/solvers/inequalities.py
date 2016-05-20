@@ -418,7 +418,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
             solns = solve(n, gen, check=False)
             singularities = solve(d, gen, check=False)
         else:
-            solns = solve(e, gen, check=False)
+            solns = solve(e, gen, check=True)
             singularities = []
             for d in denoms(e):
                 singularities.extend(solve(d, gen))
