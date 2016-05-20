@@ -1716,6 +1716,7 @@ def test_issue_10161():
 def test_issue_1112():
     x = Symbol('x', positive=False)
     assert (x > 0) is S.false
+    assert (I > 0) is False
 
 def test_issue_10755():
     x = symbols('x')
