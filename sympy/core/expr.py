@@ -279,7 +279,7 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):
-                raise TypeError("Invalid comparison of complex %s" % me)
+                return me.is_real
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         if self.is_real or other.is_real:
@@ -298,7 +298,7 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if (me.is_complex and me.is_real is False) or \
                     me.has(S.ComplexInfinity):
-                raise TypeError("Invalid comparison of complex %s" % me)
+                return me.is_real
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         if self.is_real or other.is_real:
