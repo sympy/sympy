@@ -859,8 +859,8 @@ def test_indexed_idx_sum():
     assert Product(r, (i, 0, 3)).doit() == prod([r.xreplace({i: j}) for j in range(4)])
 
     j = symbols('j', integer=True)
-    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: Idx(j+k)}) for k in range(3)])
-    assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: Idx(j+k)}) for k in range(3)])
+    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: j+k}) for k in range(3)])
+    assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: j+k}) for k in range(3)])
 
     k = Idx('k', range=(1, 3))
     A = IndexedBase('A')
