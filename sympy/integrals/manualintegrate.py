@@ -443,11 +443,10 @@ def parts_rule(integral):
                              make_second_step(steps[1:], v * du),
                              integrand, symbol)
         else:
-            # if integral_steps(integrand, symbol):
-            #     return integral_steps(integrand, symbol)
-            # else:
-            #     return DontKnowRule(integrand, symbol)
-            return integral_steps(integrand, symbol)
+            if integral_steps(integrand, symbol):
+                return integral_steps(integrand, symbol)
+            else:
+                return DontKnowRule(integrand, symbol)
 
     if steps:
         u, dv, v, du, v_step = steps[0]
