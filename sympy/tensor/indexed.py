@@ -42,7 +42,7 @@ matrix element ``M[i, j]`` as in the following diagram::
 
     >>> x = IndexedBase('x')
     >>> M[i, j]*x[j]
-    x[j]*M[i, j]
+    M[i, j]*x[j]
 
     If the indexed objects will be converted to component based arrays, e.g.
     with the code printers or the autowrap framework, you also need to provide
@@ -479,13 +479,6 @@ class Idx(Expr):
     (0, 3)
     >>> idx = Idx(i, oo); idx.lower, idx.upper
     (0, oo)
-
-    The label can be a literal integer instead of a string/``Symbol``:
-
-    >>> idx = Idx(2, n); idx.lower, idx.upper
-    (0, n - 1)
-    >>> idx.label
-    2
 
     """
 

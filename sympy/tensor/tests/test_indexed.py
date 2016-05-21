@@ -214,9 +214,6 @@ def test_differentiation():
     assert expr.diff(hi) == S(2) * KroneckerDelta(i, i)
     assert expr.diff(a) == S.Zero
 
-    ss = Sum(expr, (i, -oo, oo))
-    print ss.diff(hj)
-
     assert Sum(expr, (i, -oo, oo)).diff(hj) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2

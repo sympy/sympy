@@ -174,6 +174,8 @@ class Routine(object):
                 raise ValueError("Unknown Routine result: %s" % r)
             symbols.update(r.expr.free_symbols)
 
+        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
+
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
@@ -274,7 +276,7 @@ class Variable(object):
             Controls the precision of floating point constants.
 
         """
-        if not isinstance(name, (Symbol, MatrixSymbol, Idx)):
+        if not isinstance(name, (Symbol, MatrixSymbol)):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
@@ -534,6 +536,15 @@ class CodeGen(object):
 
         # symbols that should be arguments
         symbols = expressions.free_symbols - local_vars - global_vars
+        new_symbols = set([])
+        new_symbols.update(symbols)
+
+        for symbol in symbols:
+            if isinstance(symbol, Idx):
+                new_symbols.remove(symbol)
+                new_symbols.update(symbol.args[1].free_symbols)
+        symbols = new_symbols
+
         # Decide whether to use output argument or return value
         return_val = []
         output_args = []
@@ -544,9 +555,6 @@ class CodeGen(object):
                 if isinstance(out_arg, Indexed):
                     dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
                     symbol = out_arg.base.label
-                elif isinstance(out_arg, Idx):
-                    dims = []
-                    symbol = out_arg
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
@@ -580,7 +588,7 @@ class CodeGen(object):
         # setup input argument list
         array_symbols = {}
         for array in expressions.atoms(Indexed):
-            array_symbols[array.base] = array
+            array_symbols[array.base.label] = array
         for array in expressions.atoms(MatrixSymbol):
             array_symbols[array] = array
 
@@ -1162,7 +1170,13 @@ class JuliaCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Julia supports multiple return values
         return_vals = []
@@ -1369,7 +1383,13 @@ class OctaveCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Octave supports multiple return values
         return_vals = []
