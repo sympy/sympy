@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, symbols,
-                   And, Heaviside, S, asinh, acosh)
+                   And, Heaviside, S, asinh, acosh, atanh, acoth)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     _parts_rule
 
@@ -99,11 +99,11 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
     assert manualintegrate(1/(a + b*x**2), x) == \
-        Piecewise(((sqrt(a/b)*atan(x*sqrt(b/a))/a), And(a > 0, b > 0)))
+        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
     assert manualintegrate(1/(4 + b*x**2), x) == \
-        Piecewise((sqrt(1/b)*atan(sqrt(b)*x/2)/2, b > 0))
+        Piecewise((atan(x/(2*sqrt(1/b)))/(2*b*sqrt(1/b)), 4/b > 0), (-acoth(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 > -4/b)), (-atanh(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 < -4/b)))
     assert manualintegrate(1/(a + 4*x**2), x) == \
-        Piecewise((atan(2*x*sqrt(1/a))/(2*sqrt(a)), a > 0))
+        Piecewise((atan(2*x/sqrt(a))/(2*sqrt(a)), a/4 > 0), (-acoth(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 > -a/4)), (-atanh(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 < -a/4)))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
 
     # asin
@@ -165,8 +165,8 @@ def test_manualintegrate_trig_substitution():
 
 
 def test_manualintegrate_rational():
-    assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
-    assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
+    assert manualintegrate(1/(4 - x**2), x) == Piecewise((acoth(x/2)/2, x**2 > 4), (atanh(x/2)/2, x**2 < 4))
+    assert manualintegrate(1/(-1 + x**2), x) == Piecewise((-acoth(x), x**2 > 1), (-atanh(x), x**2 < 1))
 
 
 def test_manualintegrate_derivative():
@@ -247,7 +247,10 @@ def test_issue_6746():
         (y + 1)**(n*x)/(n*log(y + 1))
     a = Symbol('a', negative=True)
     assert manualintegrate(1 / (a + b*x**2), x) == \
-        Integral(1/(a + b*x**2), x)
+        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
+	(-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
+	(-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
+
 
 
 def test_issue_2850():

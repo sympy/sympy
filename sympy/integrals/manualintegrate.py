@@ -304,7 +304,8 @@ def inverse_trig_rule(integral):
     possibilities = []
 
     if sympy.simplify(exp + 1) == 0 and not (negative(a) or negative(b)):
-        possibilities.append((ArctanRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
+        pass
+        # possibilities.append((ArctanRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
     elif sympy.simplify(2*exp + 1) == 0:
         possibilities.append((ArcsinRule, exp, a, 1, -b, -1, sympy.And(a > 0, b < 0)))
         possibilities.append((ArcsinhRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
