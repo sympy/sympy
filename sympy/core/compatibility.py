@@ -17,7 +17,6 @@ String and Unicode compatible changes:
       compatible function
     * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
       function
-    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
     * `string_types` gives str in Python 3, unicode and str in Python 2,
       equivalent to basestring
@@ -73,8 +72,6 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
     def u_decode(x):
         return x
 
@@ -105,8 +102,6 @@ else:
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
     def u_decode(x):
         return x.decode('utf-8')
 

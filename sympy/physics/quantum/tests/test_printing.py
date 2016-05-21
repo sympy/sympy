@@ -216,10 +216,10 @@ def test_dagger():
 x \
 """
     ucode_str = \
-u("""\
+u"""\
  †\n\
 x \
-""")
+"""
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     assert latex(expr) == r'x^{\dag}'
@@ -254,10 +254,10 @@ def test_gate():
  2        \
 """
     ucode_str = \
-u("""\
+u"""\
 1 ⋅❘10101⟩\n\
  2        \
-""")
+"""
     assert pretty(g1*q) == ascii_str
     assert upretty(g1*q) == ucode_str
     assert latex(g1*q) == r'1_{2} {\left|10101\right\rangle }'

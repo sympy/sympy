@@ -7,7 +7,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
-from sympy.core.compatibility import u
+from sympy.core.compatibility import unicode
 
 
 class Vector(BasisDependent):
@@ -365,7 +365,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
-        obj._pretty_form = u(pretty_str)
+        obj._pretty_form = unicode(pretty_str)
         obj._latex_form = latex_str
         obj._system = system
 
