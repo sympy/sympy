@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
+from sympy.core.compatibility import unicode
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -165,28 +165,43 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
                                              for p in actual_packages])
 
-        preamble = r"""\documentclass[12pt]{article}
-\pagestyle{empty}
+        preamble = u"""\\documentclass[12pt]{article}
+\\pagestyle{empty}
 %s
 
-\begin{document}
+\\begin{document}
 """ % (package_includes)
     else:
         if len(packages) > 0:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
+    latex_main = preamble + u'\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
+        # TODO: remove when Python 2 is dropped
+        from sympy.core.compatibility import PY3
+        if not PY3:
+            # Here is a serious Python 2 string/unicode annoyance, we may get
+            # what _should_ be a `unicode` object but is in fact a `str` (e.g.
+            # if expr is 'incorrectly' set as a Symbol with a unicode character
+            # in a str name, c.f. the `test_preview_unicode_symbol` test).  In
+            # order to get the right thing we have to `.decode()` the string to
+            # get a unicode.  This kind of makes sense in the backwards Python
+            # 2 way, where the string is really some bytes that have to be
+            # decoded into a unicode object.  In Python 3, this is handled
+            # correctly, since using the string implicitly is utf-8, but we
+            # can't type to `.decode()` a string, we can only `.decode()`
+            # bytes, so we can't try to fake it.
+            latex_string = latex_string.decode("utf-8")
 
     try:
         workdir = tempfile.mkdtemp()
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            fh.write(unicode(latex_main) % u_decode(latex_string))
+            fh.write(latex_main % latex_string)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)

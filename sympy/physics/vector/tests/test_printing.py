@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, sin, cos, sqrt, Function
-from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint)
 
@@ -43,16 +42,16 @@ def test_vector_pretty_print():
  2
 a  n_x + b n_y + c*sin(alpha) n_z\
 """
-    uexpected = u("""\
+    uexpected = u"""\
  2
 a  n_x + b n_y + c⋅sin(α) n_z\
-""")
+"""
 
     assert ascii_vpretty(v) == expected
     assert unicode_vpretty(v) == uexpected
 
-    expected = u('alpha n_x + sin(omega) n_y + alpha*beta n_z')
-    uexpected = u('α n_x + sin(ω) n_y + α⋅β n_z')
+    expected = u'alpha n_x + sin(omega) n_y + alpha*beta n_z'
+    uexpected = u'α n_x + sin(ω) n_y + α⋅β n_z'
 
     assert ascii_vpretty(w) == expected
     assert unicode_vpretty(w) == uexpected
@@ -63,12 +62,12 @@ a       b + c       c
 - n_x + ----- n_y + -- n_z
 b         a         b\
 """
-    uexpected = u("""\
+    uexpected = u"""\
                      2
 a       b + c       c
 ─ n_x + ───── n_y + ── n_z
 b         a         b\
-""")
+"""
 
     assert ascii_vpretty(o) == expected
     assert unicode_vpretty(o) == uexpected
@@ -157,15 +156,15 @@ def test_dyadic_pretty_print():
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
-    uexpected = u("""\
+    uexpected = u"""\
  2
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
-""")
+"""
     assert ascii_vpretty(y) == expected
     assert unicode_vpretty(y) == uexpected
 
-    expected = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x')
-    uexpected = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x')
+    expected = u'alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x'
+    uexpected = u'α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x'
     assert ascii_vpretty(x) == expected
     assert unicode_vpretty(x) == uexpected
 
