@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.core.symbol import Symbol, Dummy, symbols
+from sympy import S
 
 
 class NewMatrix(MutableDenseMatrix):
@@ -196,7 +197,7 @@ class NewMatrix(MutableDenseMatrix):
         free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
-        tau = NewMatrix([1 for k in range(col - rank)]).reshape(col - rank, 1)
+        tau = NewMatrix([S(1) for k in range(col - rank)]).reshape(col - rank, 1)
 
         # Full parametric solution
         V = A[:rank, rank:]

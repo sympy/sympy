@@ -159,11 +159,9 @@ class DifferentialOperator(object):
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
                 if isinstance(j, int):
-                    list_of_poly[i] = (
-                        (self.parent).base).from_sympy(S(j))
+                    list_of_poly[i] = self.parent.base.from_sympy(S(j))
                 elif not isinstance(j, self.parent.base.dtype):
-                    list_of_poly[i] = (
-                        (self.parent).base).from_sympy(j)
+                    list_of_poly[i] = self.parent.base.from_sympy(j)
 
             self.listofpoly = list_of_poly
         self.order = len(self.listofpoly) - 1
@@ -179,7 +177,7 @@ class DifferentialOperator(object):
 
         if not isinstance(other, DifferentialOperator):
             if not isinstance(other, self.parent.base.dtype):
-                listofother = [self.parent.base.from_sympy(other)]
+                listofother = [self.parent.base.from_sympy(sympify(other))]
 
             else:
                 listofother = [other]
@@ -350,8 +348,8 @@ def _normalize(list_of, parent, negative=True):
     list_of_coeff = []
 
     for i, j in enumerate(list_of):
-        if not isinstance(list_of[i], K.dtype):
-            list_of_coeff.append(K.from_sympy(sympify(list_of[i])))
+        if not isinstance(j, K.dtype):
+            list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
             list_of_coeff.append(j)
         num.append(base(list_of_coeff[i].num))
