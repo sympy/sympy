@@ -31,6 +31,20 @@ class DiracDelta(Function):
 
     5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
 
+    Examples
+    ========
+
+    >>> from sympy import DiracDelta, diff
+    >>> from sympy.abc import x
+
+    >>> diff(DiracDelta(x))
+    DiracDelta(x, 1)
+    >>> DiracDelta(x).fdiff()
+    DiracDelta(x, 1)
+    >>> diff(DiracDelta(x),x,2)
+    DiracDelta(x, 2)
+
+
     See Also
     ========
 
