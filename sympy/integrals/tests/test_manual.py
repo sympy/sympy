@@ -5,7 +5,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     _parts_rule
 
-x, y, u, n, a, b = symbols('x y u n a b')
+x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 
 
 def test_find_substitutions():
@@ -99,11 +99,17 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
     assert manualintegrate(1/(a + b*x**2), x) == \
-        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
+        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
+                  (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
+                  (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
     assert manualintegrate(1/(4 + b*x**2), x) == \
-        Piecewise((atan(x/(2*sqrt(1/b)))/(2*b*sqrt(1/b)), 4/b > 0), (-acoth(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 > -4/b)), (-atanh(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 < -4/b)))
+        Piecewise((atan(x/(2*sqrt(1/b)))/(2*b*sqrt(1/b)), 4/b > 0), \
+                  (-acoth(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 > -4/b)), \
+                  (-atanh(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 < -4/b)))
     assert manualintegrate(1/(a + 4*x**2), x) == \
-        Piecewise((atan(2*x/sqrt(a))/(2*sqrt(a)), a/4 > 0), (-acoth(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 > -a/4)), (-atanh(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 < -a/4)))
+        Piecewise((atan(2*x/sqrt(a))/(2*sqrt(a)), a/4 > 0), \
+                  (-acoth(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 > -a/4)), \
+                  (-atanh(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 < -a/4)))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
 
     # asin
@@ -267,6 +273,18 @@ def test_issue_9462():
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
+
+def test_issue_10847():
+    assert manualintegrate(x**2 / (x**2 - c), x) == c*Piecewise((atan(x/sqrt(-c))/sqrt(-c), -c > 0), \
+                                                                (-acoth(x/sqrt(c))/sqrt(c), And(-c < 0, x**2 > c)), \
+                                                                (-atanh(x/sqrt(c))/sqrt(c), And(-c < 0, x**2 < c))) + x
+    # assert manualintegrate(sqrt(x - y) * log(z / x), x) ==
+    assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(3/2)*log(x)/3 - 4*x**(3/2)/9
+    # assert manualintegrate(sqrt(a*x + b), x) ==
+    # assert manualintegrate(sqrt(a*x + b) / (x + c), x) ==
+    assert manualintegrate((4*x**4 + 4*x**3 + 16*x**2 + 12*x + 8) \
+                           / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
+                           2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
