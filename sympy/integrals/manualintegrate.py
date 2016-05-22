@@ -541,13 +541,23 @@ def quadratic_denom_rule(integral):
 
 def s_over_x_rule(integral):
     integrand, symbol = integral
-    q = integrand * symbol
     a = sympy.Wild('a', exclude=[symbol])
     b = sympy.Wild('b', exclude=[symbol])
-    match = q.match(sympy.sqrt(a * symbol + b))
+    c = sympy.Wild('c')
+    match = integrand.match(sympy.sqrt(a * symbol + b) * c)
 
     if not match:
         return
+
+    a, b, c = match[a], match[b], match[c]
+    u = sympy.Dummy('u')
+    u_func = sympy.sqrt(a * symbol + b)
+    integrand = integrand.subs(u_func, u)
+    integrand = integrand.subs(symbol, (u**2 - b) / a)
+    integrand = integrand * 2 * u / a
+    next_step = integral_steps(integrand, u)
+    if next_step:
+        return URule(u, u_func, None, next_step, integrand, symbol)
 
     # a, b = match[a], match[b]
     # return PiecewiseRule([(SOverXBLtZeroRule(a, b, integrand, symbol), sympy.Lt(b, 0)),
@@ -962,7 +972,8 @@ def integral_steps(integrand, symbol, **options):
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
-                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule)),
+                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
+                              null_safe(s_over_x_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             sympy.Heaviside: heaviside_rule,

@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, symbols,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth)
+                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     _parts_rule
 
@@ -278,10 +278,21 @@ def test_issue_10847():
     assert manualintegrate(x**2 / (x**2 - c), x) == c*Piecewise((atan(x/sqrt(-c))/sqrt(-c), -c > 0), \
                                                                 (-acoth(x/sqrt(c))/sqrt(c), And(-c < 0, x**2 > c)), \
                                                                 (-atanh(x/sqrt(c))/sqrt(c), And(-c < 0, x**2 < c))) + x
-    # assert manualintegrate(sqrt(x - y) * log(z / x), x) ==
+    assert manualintegrate(sqrt(x - y) * log(z / x), x) == 4*y**2*Piecewise((atan(sqrt(x - y)/sqrt(y))/sqrt(y), y > 0), \
+                                                                            (-acoth(sqrt(x - y)/sqrt(-y))/sqrt(-y), \
+                                                                             And(x - y > -y, y < 0)), \
+                                                                            (-atanh(sqrt(x - y)/sqrt(-y))/sqrt(-y), \
+                                                                             And(x - y < -y, y < 0)))/3 \
+                                                                             - 4*y*sqrt(x - y)/3 + 2*(x - y)**(3/2)*log(z/x)/3 \
+                                                                             + 4*(x - y)**(3/2)/9
+
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**(3/2)*log(x)/3 - 4*x**(3/2)/9
-    # assert manualintegrate(sqrt(a*x + b), x) ==
-    # assert manualintegrate(sqrt(a*x + b) / (x + c), x) ==
+    assert manualintegrate(sqrt(a*x + b) / x, x) == -2*b*Piecewise((-atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b), -b > 0), \
+                                                               (acoth(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b > b)), \
+                                                               (atanh(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b < b))) \
+                                                               + 2*sqrt(a*x + b)
+
+    assert expand(manualintegrate(sqrt(a*x + b) / (x + c), x)) == -2*a*c*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), a*c - b > 0), (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) + 2*b*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), a*c - b > 0), (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) + 2*sqrt(a*x + b)
     assert manualintegrate((4*x**4 + 4*x**3 + 16*x**2 + 12*x + 8) \
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
