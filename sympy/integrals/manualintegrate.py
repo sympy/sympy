@@ -47,7 +47,6 @@ CyclicPartsRule = Rule("CyclicPartsRule", "parts_rules coefficient")
 TrigRule = Rule("TrigRule", "func arg")
 ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
-ArctanRule = Rule("ArctanRule")
 ArcsinRule = Rule("ArcsinRule")
 InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
@@ -58,9 +57,9 @@ PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
-QD1Rule = Rule("QD1Rule", "a b c")
-QD2Rule = Rule("QD2Rule", "a b c")
-QD3Rule = Rule("QD3Rule", "a b c")
+ArctanRule = Rule("ArctanRule", "a b c")
+ArccothRule = Rule("ArccothRule", "a b c")
+ArctanhRule = Rule("ArctanhRule", "a b c")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
 
@@ -531,9 +530,9 @@ def quadratic_denom_rule(integral):
         return
 
     a, b, c = match[a], match[b], match[c]
-    return PiecewiseRule([(QD1Rule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                          (QD2Rule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                          (QD3Rule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+    return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                          (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                          (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
     ], integrand, symbol)
 
 def root_mul_rule(integral):
@@ -898,8 +897,10 @@ def integral_steps(integrand, symbol, **options):
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     URule(u_var=_u, u_func=exp(x), constant=1,
-        substep=ArctanRule(context=1/(_u**2 + 1), symbol=_u),
-        context=exp(x)/(exp(2*x) + 1), symbol=x)
+    substep=PiecewiseRule(subfunctions=[(ArctanRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), True),
+        (ArccothRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), False),
+        (ArctanhRule(a=1, b=1, c=1, context=1/(_u**2 + 1), symbol=_u), False)],
+    context=1/(_u**2 + 1), symbol=_u), context=exp(x)/(exp(2*x) + 1), symbol=x)
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
@@ -1050,25 +1051,21 @@ def eval_trig(func, arg, integrand, symbol):
     elif func == 'csc**2':
         return -sympy.cot(arg)
 
-@evaluates(QD1Rule)
-def eval_qd1(a, b, c, integrand, symbol):
+@evaluates(ArctanRule)
+def eval_arctan(a, b, c, integrand, symbol):
     return a / b * 1 / sympy.sqrt(c / b) * sympy.atan(symbol / sympy.sqrt(c / b))
 
-@evaluates(QD2Rule)
-def eval_qd2(a, b, c, integrand, symbol):
+@evaluates(ArccothRule)
+def eval_arccoth(a, b, c, integrand, symbol):
     return - a / b * 1 / sympy.sqrt(-c / b) * sympy.acoth(symbol / sympy.sqrt(-c / b))
 
-@evaluates(QD3Rule)
-def eval_qd3(a, b, c, integrand, symbol):
+@evaluates(ArctanhRule)
+def eval_arctanh(a, b, c, integrand, symbol):
     return - a / b * 1 / sympy.sqrt(-c / b) * sympy.atanh(symbol / sympy.sqrt(-c / b))
 
 @evaluates(ReciprocalRule)
 def eval_reciprocal(func, integrand, symbol):
     return sympy.ln(func)
-
-@evaluates(ArctanRule)
-def eval_arctan(integrand, symbol):
-    return sympy.atan(symbol)
 
 @evaluates(ArcsinRule)
 def eval_arcsin(integrand, symbol):
