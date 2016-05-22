@@ -609,11 +609,11 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    from sympy.core.compatibility import StringIO
+    import io
     import sys
 
     stdout = sys.stdout
-    sys.stdout = file = StringIO()
+    sys.stdout = file = io.StringIO()
     try:
         func()
     finally:

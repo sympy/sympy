@@ -14,6 +14,7 @@ Goals:
 
 from __future__ import print_function, division
 
+import io
 import os
 import sys
 import platform
@@ -1230,8 +1231,6 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        from sympy.core.compatibility import StringIO
-
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
@@ -1284,7 +1283,7 @@ class SymPyDocTests(object):
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
-            new = StringIO()
+            new = io.StringIO()
             sys.stdout = new
             # If the testing is normal, the doctests get importing magic to
             # provide the global namespace. If not normal (the default) then

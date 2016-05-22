@@ -36,8 +36,8 @@ def test_exhaust():
     assert set(brl(5)) == {0, 10}
 
 def test_debug():
-    from sympy.core.compatibility import StringIO
-    file = StringIO()
+    import io
+    file = io.StringIO()
     rl = debug(posdec, file)
     list(rl(5))
     log = file.getvalue()

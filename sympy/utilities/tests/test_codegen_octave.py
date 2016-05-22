@@ -1,6 +1,7 @@
+import io
+
 from sympy.core import (S, symbols, Eq, pi, Catalan, EulerGamma, Lambda,
                         Dummy, Function)
-from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
@@ -17,7 +18,7 @@ x, y, z = symbols('x,y,z')
 
 def test_empty_m_code():
     code_gen = OctaveCodeGen()
-    output = StringIO()
+    output = io.StringIO()
     code_gen.dump_m([], output, "file", header=False, empty=False)
     source = output.getvalue()
     assert source == ""
@@ -102,7 +103,7 @@ def test_m_code_argument_order():
     expr = x + y
     routine = make_routine("test", expr, argument_sequence=[z, x, y], language="octave")
     code_gen = OctaveCodeGen()
-    output = StringIO()
+    output = io.StringIO()
     code_gen.dump_m([routine], output, "test", header=False, empty=False)
     source = output.getvalue()
     expected = (

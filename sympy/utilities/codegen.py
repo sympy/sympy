@@ -80,12 +80,13 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 from __future__ import print_function, division
 
+import io
 import os
 import textwrap
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
-from sympy.core.compatibility import is_sequence, StringIO, string_types
+from sympy.core.compatibility import is_sequence, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -659,7 +660,7 @@ class CodeGen(object):
             result = []
             for dump_fn in self.dump_fns:
                 filename = "%s.%s" % (prefix, dump_fn.extension)
-                contents = StringIO()
+                contents = io.StringIO()
                 dump_fn(self, routines, contents, prefix, header, empty)
                 result.append((filename, contents.getvalue()))
             return result

@@ -38,12 +38,12 @@ Renamed function attributes:
 
 Moved modules:
     * `reduce()`
-    * `StringIO()`
-    * `cStringIO()` (same as `StingIO()` in Python 3)
+    * `cStringIO()` (uses `StringIO.cStringIO` in Python 2, same as `StingIO()`
+      in Python 3, use `io.StringIO` for normal `StringIO`)
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
-    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
+    * `xrange` removed in Python 3, import `range` for Python 2/3 compatible
       iterator version of range
 
 exec:

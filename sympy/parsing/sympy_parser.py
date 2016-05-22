@@ -9,11 +9,12 @@ from .sympy_tokenize import \
 from keyword import iskeyword
 
 import ast
+import io
 import re
 import unicodedata
 
 import sympy
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_
 from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
@@ -787,7 +788,7 @@ def stringify_expr(s, local_dict, global_dict, transformations):
     """
 
     tokens = []
-    input_code = StringIO(s.strip())
+    input_code = io.StringIO(s.strip())
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
         tokens.append((toknum, tokval))
 

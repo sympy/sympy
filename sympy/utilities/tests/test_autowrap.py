@@ -1,6 +1,7 @@
 # Tests that require installed backends go into
 # sympy/test_external/test_autowrap
 
+import io
 import os
 import tempfile
 import shutil
@@ -11,7 +12,6 @@ from sympy.utilities.codegen import (CCodeGen, CodeGenArgumentListError,
                                      make_routine)
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
-from sympy.core.compatibility import StringIO
 
 
 def get_string(dump_fn, routines, prefix="file"):
@@ -22,7 +22,7 @@ def get_string(dump_fn, routines, prefix="file"):
        The header and the empty lines are not generator to facilitate the
        testing of the output.
     """
-    output = StringIO()
+    output = io.StringIO()
     dump_fn(routines, output, prefix)
     source = output.getvalue()
     output.close()

@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
+from io import StringIO
 
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
@@ -111,7 +112,6 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from sympy.core.compatibility import StringIO
 
     def _is_int(num):
         """
