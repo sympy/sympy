@@ -1202,7 +1202,30 @@ def linsolve(system, *symbols):
 
 
 def substitution(system, symbols, result, known_symbols, all_symbols):
+    r"""
+    Solves the `system` using substitution method.
+
+    Parameters
+    ==========
+
+    system : list of equations
+
+    symbols : list of unsolved symbols.
+
+    result : If non of the symbols are solved then it is empty list, otherwise list of already solved_syms
+    symbols( dict symbol : value )
+
+    known_symbols : list of symbols already solved (might be in terms of other symbols,that will be solved).
+
+    all_symbols : known_symbols + unsolved symbols. 
+
+    Returns
+    =======
+    Returns list of final result.
+
+    """
     from sympy.core.compatibility import ordered, default_sort_key
+    from sympy import Complement
     # sort so equation with the fewest potential symbols is first
     def _ok_syms(e, sort=False):
             rv = (e.free_symbols - set(known_symbols)) & set(all_symbols)
@@ -1217,6 +1240,7 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
         bad_results = []
         got_s = set()
         hit = False
+        complements = [[]]
         for r in result:
             # update eq with everything that is known so far
             eq2 = eq.subs(r)
@@ -1250,6 +1274,14 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                 # put each solution in r and append the now-expanded
                 # result in the new result list; use copy since the
                 # solution for s in being added in-place
+                if isinstance(soln, ConditionSet):
+                    soln = FiniteSet()
+                if isinstance(soln, Complement):
+                    # extract solution and complement
+                    comp = {}
+                    comp[s] = list(soln.args[1])[0]
+                    complements.append(comp)
+                    soln = soln.args[0]
                 for sol in soln:
                     if got_s and any([ss in sol.free_symbols for ss in got_s]):
                         # sol depends on previously solved symbols: discard it
@@ -1269,6 +1301,18 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
             for b in bad_results:
                 if b in result:
                     result.remove(b)
+
+    for r in result:
+        # If length < len(all_symbols) means infinite soln.\
+        # Some or all the soln is dependent on 1 symbol
+        if len(r) < len(all_symbols):
+            unsolved = None
+            for k, v in r.items():
+                if _ok_syms(v):
+                    unsolved = list(_ok_syms(v))[0]
+            r[unsolved] = unsolved
+            result = r
+
     return result
 
 
@@ -1293,6 +1337,23 @@ def nlinsolve(system, symbols):
 
     >>> nlinsolve([x*y - 1, 4*x**2 + y**2 - 5],[x,y])
     >>> {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
+
+    Positive dimensional system is also can be solved.
+
+    Examples
+    ========
+
+    >>> a,b,c,d = symbols('a,b,c,d', real = true)
+    >>> foo =  a+b+c+d
+    >>> bar = a*b + b*c + c*d + d*a
+    >>> foo_bar = a*b*c+ b*c*d+ c*d*a + d*a*b 
+    >>> bar_foo = a*b*c*d- 1
+    >>> system = [foo, bar, foo_bar, bar_foo]
+    >>> is_zero_dimensional(system)
+    False
+    >>> nlinsolve(system,[a,b,c,d])
+    {a: -1/d, c: 1/d, b: -d, d: d}
+
 
     Parameters
     ==========
@@ -1323,6 +1384,7 @@ def nlinsolve(system, symbols):
 
 
     More examples:
+    =============
     # poly system of equations
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
@@ -1379,7 +1441,7 @@ def nlinsolve(system, symbols):
             # Do substitution method with groebner basis of the system
             basis = groebner(polys, symbols, polys=True)
             new_system = []
-            for p in polys:
+            for p in basis:
                 new_system.append(p.as_expr())
             # solved_symbols = [] 
             result = substitution(new_system, symbols, result, [], symbols)
