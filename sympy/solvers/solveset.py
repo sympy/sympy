@@ -1201,90 +1201,76 @@ def linsolve(system, *symbols):
 ###############################################################################
 
 
-def nlinsolve_matrix(system, symbols):
-    r"""
-    Solve system of 2 non linear polynomial equations with 2 variables
+def substitution(system, symbols, result, known_symbols, all_symbols):
+    from sympy.core.compatibility import ordered, default_sort_key
+    # sort so equation with the fewest potential symbols is first
+    def _ok_syms(e, sort=False):
+            rv = (e.free_symbols - set(known_symbols)) & set(all_symbols)
+            if sort:
+                rv = list(rv)
+                rv.sort(key=default_sort_key)
+            return rv
 
-    For the given set of Equations, the respective input types
-    are given below:
-
-    .. math:: x*y - 1 = 0
-    .. math:: 4*x**2 + y**2 - 5 = 0
-
-    Reference : 
-    http://people.math.gatech.edu/~aleykin3/math4803spr13/BOOK/chapter1.pdf
-    page :9 example = 2.2
-    currently for 2 equations
-
-    Examples
-    >>> from sympy.solvers.solveset import nlinsolve_matrix
-    >>> nlinsolve_matrix([x*y - 1, 4*x**2 + y**2 - 5],[x,y])
-    >>> {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
-
-    This method will help in this type of cases(nlinsolve calling this method when 
-    solve_poly_system cannot solve non zero dimensional nonlinear system of equations) 
-
-    >>> nlinsolve([(x + y)**2 - 4, x + y - 2],[x,y])
-    >>> {-y + 2}
-
-    currently it is supporting 2 variables 2 nonlinear equation.
-
-    """
-    deg = []
-    # finding degree
-    for eq in system:
-        deg.append(Poly(eq).total_degree())
-    temp = str(symbols[0]) + "_%i"
-    length = -1
-    for i in deg:
-        length += i
- 
-    # no of col = d1 + d2 + .... + dn - 1
-    params = [temp % i for i in range(length)]
-    M = Matrix([params])
-    # initialise Matrix with symbols + 1 columns
-    M = M.col_insert(length, Matrix([1]))
-    row_no = 1
-
-    for equation in system:
-        f = equation.expand(force=True)
-        for i1 in range(0,deg[row_no%2 ]):
-            f = f*(symbols[0]**i1)
-            f = f.expand(force=True)
-            # Extract coeff of symbols
-            coeff_list = []
-            i2 = length
-            while i2 != 0:
-                coeff_list.append(f.coeff(symbols[0]**(i2)))
-                i2 = i2 -1
-
-            # append constant term (term free from symbols)
-            coeff_list.append(f.as_coeff_add(symbols[0])[0])
-
-            # insert equations coeff's into rows
-            M = M.row_insert(row_no, Matrix([coeff_list]))
-            row_no += 1
-
-    # delete the initialised (Ist) trivial row
-    M.row_del(0)
-    y_eq = M.det()
-    y_soln = solveset_real(y_eq, symbols[1])
-    result = []
-    if y_soln is S.Reals:
-        sol = solveset(system[0], symbols[0])
-        for s in sol:
-            if system[1].subs(symbols[0], s) is S.Zero:
-                result.append(s)
-    elif isinstance(y_soln, ConditionSet):
-        return S.EmptySet
-    else:
-        for y_s in y_soln:
-            eq = system[0]
-            eq = eq.subs(symbols[1], y_s)
-            result.append(tuple([tuple(_invert_real(eq, FiniteSet(0), symbols[0])[1])[0], y_s]))
-
-    result = FiniteSet(*[r for r in result])
+    for eq in ordered(system, lambda _: len(_ok_syms(_))):
+        u = Dummy()  # used in solution checking
+        newresult = []
+        bad_results = []
+        got_s = set()
+        hit = False
+        for r in result:
+            # update eq with everything that is known so far
+            eq2 = eq.subs(r)
+            # if check is True then we see if it satisfies this
+            # equation, otherwise we just accept it
+            if r:
+                b = checksol(u, u, eq2, minimal=True)
+                if b is not None:
+                    # this solution is sufficient to know whether
+                    # it is valid or not so we either accept or
+                    # reject it, then continue
+                    if b:
+                        newresult.append(r)
+                    else:
+                        bad_results.append(r)
+                    continue
+            # search for a symbol amongst those available that
+            # can be solved for
+            ok_syms = _ok_syms(eq2, sort=True)
+            if not ok_syms:
+                if r:
+                    newresult.append(r)
+                break  # skip as it's independent of desired symbols
+            for s in ok_syms:
+                try:
+                    soln = solveset_real(eq2, s)
+                    # Not sure to add the complex solution or not
+                    # soln = soln + solveset_complex(eq2, s)
+                except NotImplementedError:
+                    continue
+                # put each solution in r and append the now-expanded
+                # result in the new result list; use copy since the
+                # solution for s in being added in-place
+                for sol in soln:
+                    if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                        # sol depends on previously solved symbols: discard it
+                        continue
+                    rnew = r.copy()
+                    for k, v in r.items():
+                        rnew[k] = v.subs(s, sol)
+                    # and add this new solution
+                    rnew[s] = sol
+                    newresult.append(rnew)
+                hit = True
+                got_s.add(s)
+            if not hit:
+                raise NotImplementedError('could not solve %s' % eq2)
+        else:
+            result = newresult
+            for b in bad_results:
+                if b in result:
+                    result.remove(b)
     return result
+
 
 
 def nlinsolve(system, symbols):
@@ -1311,7 +1297,7 @@ def nlinsolve(system, symbols):
     Parameters
     ==========
 
-    system : list of equations 
+    system : list of equations
         The target system of equations
     symbols : list of Symbol
 
@@ -1335,7 +1321,6 @@ def nlinsolve(system, symbols):
     the fact it is just used to maintain a consistent output
     format throughout the solveset.
 
-    
 
     More examples:
     # poly system of equations
@@ -1353,6 +1338,7 @@ def nlinsolve(system, symbols):
     """
     from sympy.solvers.solvers import _invert as _invert_solver
     from sympy.utilities.iterables import subsets
+    from sympy.polys.polytools import is_zero_dimensional, groebner
     if not system:
         return S.EmptySet
 
@@ -1362,7 +1348,7 @@ def nlinsolve(system, symbols):
     polys = []
     nonpolys = []
     for j, g in enumerate(system):
-        # TODO : solveset `_invert, improve for more than one symbols 
+        # TODO : solveset `_invert, improve for more than one symbols
         # move all the terms, having any `symbols` in lhs and make it 'g'. currently using old solver's _invert
         i, d = _invert_solver(g, *symbols)
         g = d - i
@@ -1378,28 +1364,30 @@ def nlinsolve(system, symbols):
     if not polys:
         solved_syms = []
 
-    result = []
-    known_values = []
+    result = [{}]
     if len(symbols) == len(polys):
-        try:
-            # try to solve, when all the equation is poly
-            result = solve_poly_system(polys, *symbols)
-            solved_syms = symbols
-        except NotImplementedError:
-            # If polys is not zero dimensional, try to solve them
-            # using matrix method => nlinsolve_matrix .
-            # another way is using PUR polynomial univarate representation
-            # to get solution for positive dimensioanl non linear system
-            # reference : 
-            # http://www.m-hikari.com/imf-2010/5-8-2010/ayadIMF5-8-2010.pdf
-            # http://research.cs.tamu.edu/keyser/Papers/AMSDimacs2005.pdf
-            # http://www.maplesoft.com/support/help/Maple/view.aspx?path=Groebner/RationalUnivariateRepresentation
-            # A better method is needed nlinsolve_matrix is not helping much.
-            return nlinsolve_matrix([g.as_expr() for g in polys], symbols)
+        if is_zero_dimensional(system):
+            try:
+                # try to solve, when all the equations are poly
+                result = solve_poly_system(polys, *symbols)
+                return FiniteSet(*[s for s in result])
+            except NotImplementedError:
+                # Right now We don't know the failed case
+                pass
+        else:
+            # positive dimensional system
+            # Do substitution method with groebner basis of the system
+            basis = groebner(polys, symbols, polys=True)
+            new_system = []
+            for p in polys:
+                new_system.append(p.as_expr())
+            # solved_symbols = [] 
+            result = substitution(new_system, symbols, result, [], symbols)
 
     else:
         # all the equations are not Polynomial
         depend_soln = {}
+        solved_syms = []
         # first solve the polynomial equations if present
         if polys:
             combinations = list(subsets(symbols, len(polys)))
@@ -1439,25 +1427,11 @@ def nlinsolve(system, symbols):
             # if non polynomail equation is present
             unsolved_syms = list(filter(lambda x : x not in solved_syms, symbols))
             # one by one solve for unsolved after substitution of solved symbols values.
-            new_result = []
-            for np in nonpolys:
-                for r in result:
-                    np_subs = np.subs(r)
-                    for us in unsolved_syms:
-                        sol_real = solveset_real(np_subs, us)
-                        sol_complex = solveset_complex(np_subs, us)
-                        if sol_real or sol_complex:
-                            if sol_complex is sol_real:
-                                # sometimes solveset returns same ans
-                                temp_res = {}
-                                new_result.append(tuple(r, {us : sol_real}))
-                            elif sol_real:
-                                new_result.append(tuple(r, {us : sol_real}))
-                            elif sol_complex:
-                                new_result.append(tuple(list(zip(r, {us : sol_complex}))))
+            result = substitution(nonpolys, unsolved_syms, result, solved_syms, symbols)
 
     if result:
-        result = FiniteSet(*[s for s in result])
+        # TODO dict list to finiteset
+        return result
     else:
         return S.EmptySet
     return result

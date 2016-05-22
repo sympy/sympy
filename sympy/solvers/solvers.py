@@ -1763,7 +1763,7 @@ def _solve_system(exprs, symbols, **flags):
                 # if check is True then we see if it satisfies this
                 # equation, otherwise we just accept it
                 if check and r:
-                    # b = checksol(u, u, eq2, minimal=True)
+                    b = checksol(u, u, eq2, minimal=True)
                     if b is not None:
                         # this solution is sufficient to know whether
                         # it is valid or not so we either accept or
