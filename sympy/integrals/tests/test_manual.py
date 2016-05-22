@@ -292,10 +292,18 @@ def test_issue_10847():
                                                                (atanh(sqrt(a*x + b)/sqrt(b))/sqrt(b), And(-b < 0, a*x + b < b))) \
                                                                + 2*sqrt(a*x + b)
 
-    assert expand(manualintegrate(sqrt(a*x + b) / (x + c), x)) == -2*a*c*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), a*c - b > 0), (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) + 2*b*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), a*c - b > 0), (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) + 2*sqrt(a*x + b)
+    assert expand(manualintegrate(sqrt(a*x + b) / (x + c), x)) == -2*a*c*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), \
+        a*c - b > 0), (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), \
+        (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) \
+        + 2*b*Piecewise((atan(sqrt(a*x + b)/sqrt(a*c - b))/sqrt(a*c - b), a*c - b > 0), \
+        (-acoth(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b > -a*c + b)), \
+        (-atanh(sqrt(a*x + b)/sqrt(-a*c + b))/sqrt(-a*c + b), And(a*c - b < 0, a*x + b < -a*c + b))) + 2*sqrt(a*x + b)
+
     assert manualintegrate((4*x**4 + 4*x**3 + 16*x**2 + 12*x + 8) \
                            / (x**6 + 2*x**5 + 3*x**4 + 4*x**3 + 3*x**2 + 2*x + 1), x) == \
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
+    assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
+    assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))

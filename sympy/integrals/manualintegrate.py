@@ -58,9 +58,9 @@ PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
-SOverXBLtZeroRule = Rule("SOverXBLtZeroRule", "a b c")
-SOverXAXGtZeroRule = Rule("SOverAXGtZeroRule", "a b c")
-SOverXAXLtZeroRule = Rule("SOverXAXLtZeroRule", "a b c")
+QD1Rule = Rule("QD1Rule", "a b c")
+QD2Rule = Rule("QD2Rule", "a b c")
+QD3Rule = Rule("QD3Rule", "a b c")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
 
@@ -303,10 +303,7 @@ def inverse_trig_rule(integral):
     # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
     possibilities = []
 
-    if sympy.simplify(exp + 1) == 0 and not (negative(a) or negative(b)):
-        pass
-        # possibilities.append((ArctanRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
-    elif sympy.simplify(2*exp + 1) == 0:
+    if sympy.simplify(2*exp + 1) == 0:
         possibilities.append((ArcsinRule, exp, a, 1, -b, -1, sympy.And(a > 0, b < 0)))
         possibilities.append((ArcsinhRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
         possibilities.append((ArccoshRule, exp, -a, -1, b, 1, sympy.And(a < 0, b > 0)))
@@ -534,12 +531,12 @@ def quadratic_denom_rule(integral):
         return
 
     a, b, c = match[a], match[b], match[c]
-    return PiecewiseRule([(SOverXBLtZeroRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
-                          (SOverXAXGtZeroRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
-                          (SOverXAXLtZeroRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+    return PiecewiseRule([(QD1Rule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
+                          (QD2Rule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
+                          (QD3Rule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
     ], integrand, symbol)
 
-def s_over_x_rule(integral):
+def root_mul_rule(integral):
     integrand, symbol = integral
     a = sympy.Wild('a', exclude=[symbol])
     b = sympy.Wild('b', exclude=[symbol])
@@ -558,12 +555,6 @@ def s_over_x_rule(integral):
     next_step = integral_steps(integrand, u)
     if next_step:
         return URule(u, u_func, None, next_step, integrand, symbol)
-
-    # a, b = match[a], match[b]
-    # return PiecewiseRule([(SOverXBLtZeroRule(a, b, integrand, symbol), sympy.Lt(b, 0)),
-    #                       (SOverXAXGtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Gt(a * symbol, 0), sympy.Gt(b, 0))),
-    #                       (SOverXAXLtZeroRule(a, b, integrand, symbol), sympy.And(sympy.Lt(a * symbol, 0), sympy.Gt(b, 0))),
-    # ], integrand, symbol)
 
 @sympy.cacheit
 def make_wilds(symbol):
@@ -973,7 +964,7 @@ def integral_steps(integrand, symbol, **options):
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
                               null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
-                              null_safe(s_over_x_rule)),
+                              null_safe(root_mul_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             sympy.Heaviside: heaviside_rule,
@@ -1059,19 +1050,16 @@ def eval_trig(func, arg, integrand, symbol):
     elif func == 'csc**2':
         return -sympy.cot(arg)
 
-@evaluates(SOverXBLtZeroRule)
-def eval_s_over_x_b_lt_zero(a, b, c, integrand, symbol):
-    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(-b) * sympy.atan(sympy.sqrt(a * symbol + b) / sympy.sqrt(-b)))
+@evaluates(QD1Rule)
+def eval_qd1(a, b, c, integrand, symbol):
     return a / b * 1 / sympy.sqrt(c / b) * sympy.atan(symbol / sympy.sqrt(c / b))
 
-@evaluates(SOverXAXGtZeroRule)
-def eval_s_over_x_ax_gt_zero(a, b, c, integrand, symbol):
-    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.acoth(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+@evaluates(QD2Rule)
+def eval_qd2(a, b, c, integrand, symbol):
     return - a / b * 1 / sympy.sqrt(-c / b) * sympy.acoth(symbol / sympy.sqrt(-c / b))
 
-@evaluates(SOverXAXLtZeroRule)
-def eval_s_over_x_ax_lt_zero(a, b, c, integrand, symbol):
-    # return 2 * (sympy.sqrt(a * symbol + b) - sympy.sqrt(b) * sympy.atanh(sympy.sqrt(a * symbol + b) / sympy.sqrt(b)))
+@evaluates(QD3Rule)
+def eval_qd3(a, b, c, integrand, symbol):
     return - a / b * 1 / sympy.sqrt(-c / b) * sympy.atanh(symbol / sympy.sqrt(-c / b))
 
 @evaluates(ReciprocalRule)
