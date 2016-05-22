@@ -82,8 +82,10 @@ class bernoulli_sequence(Function):
     @classmethod
     def eval(cls, size):
         s = sympify(size)
-        if not s.is_Integer or s <= Integer(0):
-            return []
+        if not s.is_Integer:
+            return None
+        if s <= Integer(0):
+            return sympify([])
 
         h, p, q, s, b = 1, 1, 1, -2, True
         D = [0] * (size + 2)
@@ -103,7 +105,7 @@ class bernoulli_sequence(Function):
                     D[k] += D[k - 1]
                 R.append(Rational(D[h - 1], q))
             b = not b
-        return R
+        return sympify(R)
 
 
 class andre_sequence(Function):
@@ -175,8 +177,10 @@ class andre_sequence(Function):
     @classmethod
     def eval(cls, size):
         s = sympify(size)
-        if not s.is_Integer or s <= Integer(0):
-            return []
+        if not s.is_Integer:
+            return None
+        if s <= Integer(0):
+            return sympify([])
 
         k, e, R = 0, 1, []
         A = {-1: 0, 0: 1}
@@ -189,7 +193,7 @@ class andre_sequence(Function):
                 A[k] = ak
                 k += e
             R.append(ak)
-        return R
+        return sympify(R)
 
 
 class euler_sequence(Function):
@@ -244,8 +248,10 @@ class euler_sequence(Function):
     @classmethod
     def eval(cls, size):
         s = sympify(size)
-        if not s.is_Integer or s <= Integer(0):
-            return []
+        if not s.is_Integer:
+            return None
+        if s <= Integer(0):
+            return sympify([])
 
         S = [0] * size
         S[0] = 1
@@ -254,7 +260,7 @@ class euler_sequence(Function):
         for k in range(1, size - 1):
             for j in range(k, size):
                 S[j] = (j - k) * S[j - 1] + (j - k + 1) * S[j]
-        return S
+        return sympify(S)
 
 
 class tangent_sequence(Function):
@@ -310,8 +316,10 @@ class tangent_sequence(Function):
     @classmethod
     def eval(cls, size):
         s = sympify(size)
-        if not s.is_Integer or s <= Integer(0):
-            return []
+        if not s.is_Integer:
+            return None
+        if s <= Integer(0):
+            return sympify([])
 
         T = [0] * (size + 3)
         T[1] = 1
@@ -320,7 +328,7 @@ class tangent_sequence(Function):
         for k in range(2, size + 1):
             for j in range(k, size + 2):
                 T[j] = (j - k) * T[j - 1] + (j - k + 2) * T[j]
-        return T[1:-2]
+        return sympify(T[1:-2])
 
 
 class bell_sequence(Function):
@@ -361,8 +369,10 @@ class bell_sequence(Function):
     @classmethod
     def eval(cls, size):
         s = sympify(size)
-        if not s.is_Integer or s <= Integer(0):
-            return []
+        if not s.is_Integer:
+            return None
+        if s <= Integer(0):
+            return sympify([])
 
         A = [0] * size
         A[0] = 1
@@ -372,4 +382,4 @@ class bell_sequence(Function):
             for k in range(n, 0, -1):
                 A[k - 1] += A[k]
             R.append(A[0])
-        return R
+        return sympify(R)

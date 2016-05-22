@@ -1114,6 +1114,31 @@ def test_sympy__functions__combinatorial__numbers__lucas():
     assert _test_args(lucas(x))
 
 
+def test_sympy__functions__combinatorial__sequences__andre_sequence():
+    from sympy.functions.combinatorial.sequences import andre_sequence
+    assert _test_args(andre_sequence(x))
+
+
+def test_sympy__functions__combinatorial__sequences__bell_sequence():
+    from sympy.functions.combinatorial.sequences import bell_sequence
+    assert _test_args(bell_sequence(x))
+
+
+def test_sympy__functions__combinatorial__sequences__bernoulli_sequence():
+    from sympy.functions.combinatorial.sequences import bernoulli_sequence
+    assert _test_args(bernoulli_sequence(x))
+
+
+def test_sympy__functions__combinatorial__sequences__euler_sequence():
+    from sympy.functions.combinatorial.sequences import euler_sequence
+    assert _test_args(euler_sequence(x))
+
+
+def test_sympy__functions__combinatorial__sequences__tangent_sequence():
+    from sympy.functions.combinatorial.sequences import tangent_sequence
+    assert _test_args(tangent_sequence(x))
+
+
 def test_sympy__functions__elementary__complexes__Abs():
     from sympy.functions.elementary.complexes import Abs
     assert _test_args(Abs(x))
