@@ -4,6 +4,8 @@ This module contains functions to:
     - solve a single equation for a single variable, in any domain either real or complex.
 
     - solve a system of linear equations with N variables and M equations.
+
+    - solve a system of Non Linear Equations with N variables and M equations
 """
 from __future__ import print_function, division
 
@@ -1195,9 +1197,8 @@ def linsolve(system, *symbols):
     return solution
 
 
-
 ###############################################################################
-################################ NLINSOLVE #####################################
+################################ NLINSOLVE ####################################
 ###############################################################################
 
 
@@ -1212,21 +1213,34 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
 
     symbols : list of unsolved symbols.
 
-    result : If non of the symbols are solved then it is empty list, otherwise list of already solved_syms
-    symbols( dict symbol : value )
+    result : If non of the symbols are solved then it is empty list, otherwise
+    list of already solved_syms symbols( dict symbol : value )
 
-    known_symbols : list of symbols already solved (might be in terms of other symbols,that will be solved).
+    known_symbols : list of symbols already solved (might be in terms of other
+    symbols,that will be solved).
 
-    all_symbols : known_symbols + unsolved symbols. 
+    all_symbols : known_symbols + unsolved symbols.
 
     Returns
     =======
-    Returns list of final result.
+    Returns result of final result.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> x, y = symbols('x, y', real = True)
+    >>> from sympy.solvers.solveset import substitution
+    >>> substitution([x +y], [x], [{y : 1}], [y], [x, y])
+    [{x: -1, y: 1}]
 
     """
+    # TODO: known_symbol is not needed, remove this variable.
+    # It is equal to keys of result.
     from sympy.core.compatibility import ordered, default_sort_key
     from sympy import Complement
     # sort so equation with the fewest potential symbols is first
+
     def _ok_syms(e, sort=False):
             rv = (e.free_symbols - set(known_symbols)) & set(all_symbols)
             if sort:
@@ -1265,35 +1279,50 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                     newresult.append(r)
                 break  # skip as it's independent of desired symbols
             for s in ok_syms:
+                not_solvable = False
+                soln_imageset = None
                 try:
                     soln = solveset_real(eq2, s)
                     # Not sure to add the complex solution or not
                     # soln = soln + solveset_complex(eq2, s)
+                    if not soln:
+                        soln = solveset_complex(eq2, s)
                 except NotImplementedError:
                     continue
                 # put each solution in r and append the now-expanded
                 # result in the new result list; use copy since the
                 # solution for s in being added in-place
-                if isinstance(soln, ConditionSet):
+                if isinstance(soln, ImageSet):
+                    soln_imageset = soln
+                    soln = FiniteSet(soln.lamda.expr)
+                elif isinstance(soln, ConditionSet):
                     soln = FiniteSet()
-                if isinstance(soln, Complement):
+                    not_solvable = True
+                elif isinstance(soln, Complement):
                     # extract solution and complement
                     comp = {}
                     comp[s] = list(soln.args[1])[0]
                     complements.append(comp)
                     soln = soln.args[0]
+                elif isinstance(soln, Intersection):
+                    # sometimes solveset returns Intersection with S.Real
+                    soln = soln.args[1]
                 for sol in soln:
                     if got_s and any([ss in sol.free_symbols for ss in got_s]):
                         # sol depends on previously solved symbols: discard it
                         continue
                     rnew = r.copy()
                     for k, v in r.items():
-                        rnew[k] = v.subs(s, sol)
+                        if isinstance(v, Expr):
+                            # if any unsolved symbol is present
+                            # Then subs known value
+                            rnew[k] = v.subs(s, sol)
                     # and add this new solution
-                    rnew[s] = sol
+                    rnew[s] = sol if not soln_imageset else soln_imageset
                     newresult.append(rnew)
                 hit = True
-                got_s.add(s)
+                if not not_solvable:
+                    got_s.add(s)
             if not hit:
                 raise NotImplementedError('could not solve %s' % eq2)
         else:
@@ -1303,18 +1332,27 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                     result.remove(b)
 
     for r in result:
-        # If length < len(all_symbols) means infinite soln.\
-        # Some or all the soln is dependent on 1 symbol
+        # If length < len(all_symbols) means infinite soln.
+        # Some or all the soln is dependent on 1 symbol.
+        # eg. {x: y+2} then final soln is {x: y+2, y: y}
         if len(r) < len(all_symbols):
-            unsolved = None
+            unsolved = []
+            rcopy = r.copy()
             for k, v in r.items():
-                if _ok_syms(v):
-                    unsolved = list(_ok_syms(v))[0]
-            r[unsolved] = unsolved
-            result = r
+                sym_list = [k]
+                if isinstance(v, Expr):
+                    unsolved = list(filter(lambda x: x not in sym_list,
+                                           all_symbols))
+            for us in unsolved:
+                r[us] = us
+            # if symbol is not in `v` , means it can take any value.
+            # eg. if k, v => y, exp(x) then above lines will add {x: x}
+            # if we have another symbol `z` then add {z: z} using below line.
+        if not r:
+            # if {None : None} is present
+            return []
 
     return result
-
 
 
 def nlinsolve(system, symbols):
@@ -1332,28 +1370,66 @@ def nlinsolve(system, symbols):
     .. math:: x*y - 1 = 0
     .. math:: 4*x**2 + y**2 - 5 = 0
 
-    `system  =  [x*y - 1, 4*x**2 + y**2 - 5]`
-    `symbols = [x,y]`
+    `system  = [x*y - 1, 4*x**2 + y**2 - 5]`
+    `symbols = [x, y]`
 
-    >>> nlinsolve([x*y - 1, 4*x**2 + y**2 - 5],[x,y])
-    >>> {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import nlinsolve
+    >>> x, y = symbols('x, y', real = True)
+    >>> nlinsolve([x*y - 1, 4*x**2 + y**2 - 5],[x, y])
+    {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
 
     Positive dimensional system is also can be solved.
 
     Examples
     ========
 
-    >>> a,b,c,d = symbols('a,b,c,d', real = true)
-    >>> foo =  a+b+c+d
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.polys.polytools import is_zero_dimensional
+    >>> from sympy.solvers.solveset import nlinsolve
+    >>> a, b, c, d = symbols('a, b, c, d', real = True)
+    >>> foo =  a + b + c + d
     >>> bar = a*b + b*c + c*d + d*a
-    >>> foo_bar = a*b*c+ b*c*d+ c*d*a + d*a*b 
-    >>> bar_foo = a*b*c*d- 1
+    >>> foo_bar = a*b*c + b*c*d + c*d*a + d*a*b
+    >>> bar_foo = a*b*c*d -1
     >>> system = [foo, bar, foo_bar, bar_foo]
     >>> is_zero_dimensional(system)
     False
-    >>> nlinsolve(system,[a,b,c,d])
+    >>> nlinsolve(system,[a, b, c, d])
     {a: -1/d, c: 1/d, b: -d, d: d}
 
+    >>> x, y = symbols('x, y', real = True)
+    >>> nlinsolve([(x+y)**2 - 4, x + y - 2],[x,y])
+    {x: -y + 2, y: y}
+
+    Note: You have to take assumption `real = True`, otherwise solveset returns
+    solution with Intersection S.Reals
+
+    * If there is complex solution for particular symbol, `nlinsolve`
+    can give general solution for this.
+
+    Example
+    =======
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import nlinsolve
+    >>> x, y = symbols('x, y', real = True)
+    >>> _n = symbols('_n')
+    >>> nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
+    [{y: -2, x: ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers())}, {y: 2, x: log(sin(2))}]
+
+
+    * If system is linear positive dimensional system, `nlinsolve` can
+    solve this system also.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import nlinsolve
+    >>> x, y, z = symbols('x, y, z', real = True)
+    >>> nlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4],[x,y,z])
+    {x: 3*z - 5, y: -z + 4, z: z}
 
     Parameters
     ==========
@@ -1386,16 +1462,15 @@ def nlinsolve(system, symbols):
     More examples:
     =============
     # poly system of equations
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import nlinsolve
+    >>> x, y, z = symbols('x, y, z', real = True)
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
     >>> nlinsolve((e1, e2), (x, y))
     >>> {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
     >>> {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
-    >>> r, t = symbols('r, t')
-    >>> nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y])
-    >>> {(-sqrt(r/(tan(t)**2 + 1)), -sqrt(r/(tan(t)**2 + 1))*tan(t)), \
-    (sqrt(r/(tan(t)**2 + 1)), sqrt(r/(tan(t)**2 + 1))*tan(t))}
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
@@ -1411,7 +1486,8 @@ def nlinsolve(system, symbols):
     nonpolys = []
     for j, g in enumerate(system):
         # TODO : solveset `_invert, improve for more than one symbols
-        # move all the terms, having any `symbols` in lhs and make it 'g'. currently using old solver's _invert
+        # move all the terms, having any `symbols` in lhs and make it 'g',
+        # currently using old solver's _invert
         i, d = _invert_solver(g, *symbols)
         g = d - i
         g = g.as_numer_denom()[0]
@@ -1426,7 +1502,7 @@ def nlinsolve(system, symbols):
     if not polys:
         solved_syms = []
 
-    result = [{}]
+    result = None
     if len(symbols) == len(polys):
         if is_zero_dimensional(system):
             try:
@@ -1443,10 +1519,12 @@ def nlinsolve(system, symbols):
             new_system = []
             for p in basis:
                 new_system.append(p.as_expr())
-            # solved_symbols = [] 
+            # solved_symbols = []
+            result = [{}]
             result = substitution(new_system, symbols, result, [], symbols)
 
     else:
+        result = []
         # all the equations are not Polynomial
         depend_soln = {}
         solved_syms = []
@@ -1474,26 +1552,44 @@ def nlinsolve(system, symbols):
                                     depend_soln[ns] = r1
                             # need to maintain dict symbol : value
                             result.extend([dict(list(zip(new_symbols, r)))])
+                    new_result = []
+                    for r in result:
+                        # If length < len(symbols) means infinite soln.
+                        # Some or all the soln is dependent on 1 symbol
+                        if len(r) < len(symbols):
+                            unsolved = None
+                            for k, v in r.items():
+                                if isinstance(v, Expr):
+                                    unsolved = list(filter(lambda x: x in
+                                                           v.free_symbols,
+                                                           symbols))
+                                    # there will be only one symbol in v if
+                                    # unsolved in not Empty
+                                    if unsolved:
+                                        unsolved = unsolved[0]
+                            if unsolved:
+                                r[unsolved] = unsolved
+                            new_result.append(r)
+                        else:
+                            new_result.append(r)
+                    result = new_result
                 except NotImplementedError:
-                    # Means polys are/is positive dimensional system of equations
-                    # TODO solve using RUR
-                    # Reference :
-                    # http://www.maplesoft.com/support/hel
-                    # p/Maple/view.aspx?path=Groebner/RationalUnivariateRepresentation
                     pass
             if depend_soln:
+                # TODO non need of solved_syms. Remove it from entire method
                 solved_syms = list(depend_soln)
         # Polynomail is done. Now use substition method to get the solution
         # for unsolved symbols if nonpolys list is not None.
         if nonpolys:
+            if not result:
+                result = [{}]
             # if non polynomail equation is present
-            unsolved_syms = list(filter(lambda x : x not in solved_syms, symbols))
+            unsolved_syms = list(filter(lambda x: x not in solved_syms, symbols))
             # one by one solve for unsolved after substitution of solved symbols values.
             result = substitution(nonpolys, unsolved_syms, result, solved_syms, symbols)
 
     if result:
-        # TODO dict list to finiteset
+        # TODO list (contains dict) to finiteset
         return result
     else:
         return S.EmptySet
-    return result
