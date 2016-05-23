@@ -304,6 +304,8 @@ def test_issue_10847():
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
+    assert manualintegrate(x**(3/2) * log(x), x) == 0.4*x**2.5*log(x) - 0.16*x**2.5
+    assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
