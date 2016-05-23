@@ -546,6 +546,13 @@ def root_mul_rule(integral):
         return
 
     a, b, c = match[a], match[b], match[c]
+    d = sympy.Wild('d', exclude=[symbol])
+    e = sympy.Wild('e', exclude=[symbol])
+    f = sympy.Wild('f')
+    recursion_test = c.match(sympy.sqrt(d * symbol + e) * f)
+    if recursion_test:
+        return
+
     u = sympy.Dummy('u')
     u_func = sympy.sqrt(a * symbol + b)
     integrand = integrand.subs(u_func, u)

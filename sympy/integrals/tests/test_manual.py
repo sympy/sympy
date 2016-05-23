@@ -254,8 +254,8 @@ def test_issue_6746():
     a = Symbol('a', negative=True)
     assert manualintegrate(1 / (a + b*x**2), x) == \
         Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
-	(-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
-	(-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
+        (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
+        (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
 
 
 
