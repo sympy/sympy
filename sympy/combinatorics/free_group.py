@@ -936,3 +936,129 @@ def zero_mul_simp(l, index):
         if l[index][1] == 0:
             del l[index]
             index -= 1
+
+
+##############################################################################
+#                          FREE ABELIAN GROUP                                #
+##############################################################################
+
+_free_abelian_group_cache = {}
+
+class FreeAbelianGroup(DefaultPrinting):
+    def __new__(cls, symbols):
+        symbols = tuple(_parse_symbols(symbols))
+        rank = len(symbols)
+        _hash = hash((cls.__name__, symbols, rank))
+        obj = _free_abelian_group_cache.get(_hash)
+
+        if obj is None:
+            obj = object.__new__(cls)
+            obj._hash = _hash
+            obj._rank = rank
+            obj.dtype = type("FreeAbelianGroupElement", (FreeAbelianGroupElement,), {"group": obj})
+            obj.symbols = symbols
+            obj.generators = obj._generators()
+            for symbol, generator in zip(obj.symbols, obj.generators):
+                if isinstance(symbol, Symbol):
+                    name = symbol.name
+                    if hasattr(obj, name):
+                        setattr(obj, name, generator)
+            _free_abelian_group_cache[_hash] = obj
+
+        return obj
+
+    @property
+    def zero(self):
+        return self.dtype()
+
+    def _generators(group):
+        _gens = []
+        for sym in group.symbols:
+            pol = group.zero
+            pol[sym] = 1
+            _gens.append(pol)
+        return tuple(_gens)
+
+    def __str__(self):
+        if self.rank > 30:
+            str_form = "<free group with %s generators>" % self.rank
+        else:
+            str_form = "<free group on the generators "
+            gens = self.generators
+            str_form += str(gens) + ">"
+        return str_form
+
+    __repr__ = __str__
+
+    @property
+    def rank(self):
+        return self._rank
+
+
+class FreeAbelianGroupElement(DefaultPrinting, CantSympify, dict):
+    def new(self, init):
+        return self.__class__(init)
+
+    def __getnewargs__(self):
+        return (self.group, list(self.iterterms()))
+
+    _hash = None
+
+    def __hash__(self):
+        # XXX: This computes a hash of a dictionary, but currently we don't
+        # protect dictionary from being changed so any use site modifications
+        # will make hashing go wrong. Use this feature with caution until we
+        # figure out how to make a safe API without compromising speed of this
+        # low-level class.
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.group, frozenset(self.items())))
+        return _hash
+
+    def copy(self):
+        """
+        Examples
+        ========
+
+        """
+        return self.new(self)
+
+    def to_dict(self):
+        return dict(self)
+
+    @property
+    def is_identity(self):
+        if dict(self) == dict():
+            return True
+        return False
+
+    def __str__(self):
+        if self.is_identity:
+            return "<identity>"
+
+        symbols = self.group.symbols
+        str_form = ""
+        to_dict_form = self.to_dict()
+        for i, j in self.items():
+            if j == 1:
+                str_form += str(i) + "*"
+            else:
+                str_form += str(i) + "**" + str(j) + "*"
+        return str_form[:-1]
+
+    __repr__ = __str__
+
+    def __mul__(self, other):
+        group = self.group
+        new_dict = dict(self)
+        for i in other:
+            if i in new_dict:
+                new_dict[i] += other[i]
+            else:
+                new_dict[i] = other[i]
+        return group.dtype(new_dict)
+
+    def __pow__(self, other):
+        group = self.group
+        new_dict = {key: other*val for key, val in self.items()}
+        return group.dtype(new_dict)
