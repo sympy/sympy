@@ -419,13 +419,13 @@ class HolonomicFunction(object):
     >>> x = symbols('x')
     >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
 
-    >>> p = HolonomicFunction(Dx - 1, x, 0, [1]) # e^x
-    >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]) # sin(x)
+    >>> p = HolonomicFunction(Dx - 1, x, 0, [1])  # e^x
+    >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])  # sin(x)
 
-    >>> p + q # annihilator of e^x + sin(x)
+    >>> p + q  # annihilator of e^x + sin(x)
     HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1 , f'(0) = 2 , f''(0) = 1
 
-    >>> p * q # annihilator of e^x * sin(x)
+    >>> p * q  # annihilator of e^x * sin(x)
     HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1 , f''(0) = 2
     """
 
@@ -645,7 +645,7 @@ class HolonomicFunction(object):
                 for j in range(b - 1, -1, -1):
                     coeff_mul[i][j + 1] += coeff_mul[i][j]
                     coeff_mul[i + 1][j] += coeff_mul[i][j]
-                    if isinstance(coeff_mul[i][j] , K.dtype):
+                    if isinstance(coeff_mul[i][j], K.dtype):
                         coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
                     else:
                         coeff_mul[i][j] = coeff_mul[i][j].diff()
@@ -738,7 +738,7 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
 
-        >>> HolonomicFunction(Dx - 1, x).composition(x**2) # e^(x**2)
+        >>> HolonomicFunction(Dx - 1, x).composition(x**2)  # e^(x**2)
         HolonomicFunction((-2*x) + (1)Dx, x)
 
         See Also
@@ -758,7 +758,7 @@ class HolonomicFunction(object):
 
         r = listofpoly[a].subs({self.x:expr})
         subs = [-listofpoly[i].subs({self.x:expr}) / r for i in range (a)]
-        coeffs = [S(0) for i in range(a)] # Dkfa[i] == coeff of (D^i f)(a) in D^k (f(a))
+        coeffs = [S(0) for i in range(a)]  # coeffs[i] == coeff of (D^i f)(a) in D^k (f(a))
         coeffs[0] = S(1)
         system = [coeffs]
         homogeneous = Matrix([[S(0) for i in range(a)]]).transpose()
