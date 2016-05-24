@@ -60,6 +60,26 @@ class FpGroup(Basic):
         """Returns the generators of the associated free group."""
         return self.free_group.generators
 
+    def defining_scanning(C, alpha, x):
+
+        # defining part
+        if alpha[x] is defined:
+            return
+        if n == M:
+            abort
+        n += 1
+        beta = n
+        p[beta] = beta
+        alpha[x] = beta
+        beta[-x] = alpha
+        pass
+
+    def coset_enumeration_c(G, Y):
+        Y_copy = []
+        for relator in Y:
+            Y_copy.append(relator.identity_cyclic_reduction())
+        Y = Y_copy
+
     def coset_table(self):
         pass
 

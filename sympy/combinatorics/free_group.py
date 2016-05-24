@@ -11,6 +11,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
+from sympy import sign
 
 
 @public
@@ -889,6 +890,47 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
             return self.subword(0, from_i - 1)*by;
         else:              # finally
             return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
+
+    def is_cyclically_reduced(self):
+        """Returns whether the word is cyclically reduced or not.
+        A word is cyclically reduced if by forming the cycle of the
+        word, the word is not reduced.
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**-1*x**-1).is_cyclically_reduced()
+        False
+        >>> (y*x**2*y**2).is_cyclically_reduced()
+        True
+
+        """
+        if self.number_syllables() <= 2:
+            return True
+        return sign(self.exponent_syllable(0)) == sign(self.exponent_syllable(-1))
+
+    def identity_cyclic_reduction(self):
+        """Return a unique cyclically reduced version of the word.
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**2*x**-1).identity_cyclic_reduction()
+        x**3*y**2
+        >>> (x**-3*y**-1*x**2).identity_cyclic_reduction()
+        y**-1*x**5
+
+        """
+        if self.is_cyclically_reduced():
+            return self.copy()
+        group = self.group
+        exp1 = self.exponent_syllable(0)
+        exp2 = self.exponent_syllable(-1)
+        if exp1 > 0:
+            rep = ((self.generator_syllable(0), exp1 - exp2),) + \
+                    self.array_form[1: self.number_syllables() - 1]
+        else:
+            rep = self.array_form[1: self.number_syllables() - 1] + \
+                    ((self.generator_syllable(0), -exp1 + exp2),)
+        return group.dtype(rep)
 
 
 def letter_form_to_array_form(array_form, group):
