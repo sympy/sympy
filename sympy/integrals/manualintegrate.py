@@ -343,9 +343,14 @@ def _parts_rule(integrand, symbol):
     def pull_out_polys(integrand):
         integrand = integrand.together()
         polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
-                                                   (isinstance(arg, sympy.Pow) and \
-                                                    (symbol in arg.as_base_exp()[0].free_symbols) and \
-                                                    arg.as_base_exp()[1] is not sympy.sympify(-1)))]
+                                                   arg.is_algebraic_expr(symbol))]
+        # polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
+        #                                            (isinstance(arg, sympy.Pow) and \
+        #                                             (symbol in arg.as_base_exp()[0].free_symbols)))]
+        # polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
+        #                                            (isinstance(arg, sympy.Pow) and \
+        #                                             (symbol in arg.as_base_exp()[0].free_symbols) and \
+        #                                             arg.as_base_exp()[1] is not sympy.sympify(-1)))]
         if polys:
             u = sympy.Mul(*polys)
             dv = integrand / u
