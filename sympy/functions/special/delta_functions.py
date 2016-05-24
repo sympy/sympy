@@ -191,7 +191,7 @@ class DiracDelta(Function):
            Piecewise((oo, Eq(x - 5, 0)), (0, True))
 
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
-           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+           DiracDelta(x - 5, 4)
 
            >>> y = Symbol('y')
 
@@ -202,8 +202,9 @@ class DiracDelta(Function):
            DiracDelta(y, 1)
 
         """
-        if self.args[0].is_real:
+        if self.args[0].is_real and len(args) == 1:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
+        return self
 
     @staticmethod
     def _latex_no_arg(printer):
