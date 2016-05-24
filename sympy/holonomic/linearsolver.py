@@ -11,32 +11,15 @@ from sympy import S
 class NewMatrix(MutableDenseMatrix):
     """
     Supports elements which can't be Sympified.
+    See docstrings in sympy/matrices/matrices.py
     """
+
     @staticmethod
     def _sympify(a):
         return a
 
     def row_join(self, rhs):
-        """Concatenates two matrices along self's last and rhs's first column
 
-        Examples
-        ========
-
-        >>> from sympy import zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(3, 1)
-        >>> M.row_join(V)
-        Matrix([
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1]])
-
-        See Also
-        ========
-
-        row
-        col_join
-        """
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -51,27 +34,7 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def col_join(self, bott):
-        """Concatenates two matrices along self's last and bott's first row
 
-        Examples
-        ========
-
-        >>> from sympy import zeros, ones
-        >>> M = zeros(3)
-        >>> V = ones(1, 3)
-        >>> M.col_join(V)
-        Matrix([
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0],
-        [1, 1, 1]])
-
-        See Also
-        ========
-
-        col
-        row_join
-        """
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -86,88 +49,7 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def gauss_jordan_solve(self, b, freevar=False):
-        """
-        Solves Ax = b using Gauss Jordan elimination.
 
-        There may be zero, one, or infinite solutions.  If one solution
-        exists, it will be returned. If infinite solutions exist, it will
-        be returned parametrically. If no solutions exist, It will throw
-        ValueError.
-
-        Parameters
-        ==========
-
-        b : Matrix
-            The right hand side of the equation to be solved for.  Must have
-            the same number of rows as matrix A.
-
-        freevar : List
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of an arbitrary
-            values of free variables. Then the index of the free variables
-            in the solutions (column Matrix) will be returned by freevar, if
-            the flag `freevar` is set to `True`.
-
-        Returns
-        =======
-
-        x : Matrix
-            The matrix that will satisfy Ax = B.  Will have as many rows as
-            matrix A has columns, and as many columns as matrix B.
-
-        params : Matrix
-            If the system is underdetermined (e.g. A has more columns than
-            rows), infinite solutions are possible, in terms of an arbitrary
-            parameters. These arbitrary parameters are returned as params
-            Matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
-        >>> b = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(b)
-        >>> sol
-        Matrix([
-        [-2*_tau0 - 3*_tau1 + 2],
-        [                 _tau0],
-        [           2*_tau1 + 5],
-        [                 _tau1]])
-        >>> params
-        Matrix([
-        [_tau0],
-        [_tau1]])
-
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
-        >>> b = Matrix([3, 6, 9])
-        >>> sol, params = A.gauss_jordan_solve(b)
-        >>> sol
-        Matrix([
-        [-1],
-        [ 2],
-        [ 0]])
-        >>> params
-        Matrix(0, 1, [])
-
-        See Also
-        ========
-
-        lower_triangular_solve
-        upper_triangular_solve
-        cholesky_solve
-        diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
-        pinv
-
-        References
-        ==========
-
-        .. [1] http://en.wikipedia.org/wiki/Gaussian_elimination
-
-        """
         from sympy.matrices import Matrix, zeros
 
         aug = self.hstack(self.copy(), b.copy())
