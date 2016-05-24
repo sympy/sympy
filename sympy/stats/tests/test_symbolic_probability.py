@@ -1,4 +1,4 @@
-from sympy import symbols, Mul, sin
+from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
 from sympy.stats import Normal, Poisson, variance
 from sympy.stats.rv import probability, expectation
 from sympy.stats import Covariance, Variance, Probability, Expectation
@@ -13,8 +13,11 @@ def test_literal_probability():
 
     assert Probability(X > 0).doit() == probability(X > 0)
     assert Probability(X > x).doit() == probability(X > x)
+    assert Probability(X > 0).rewrite(Integral).doit() == probability(X > 0)
+    assert Probability(X > x).rewrite(Integral).doit() == probability(X > x)
 
     assert Expectation(X).doit() == expectation(X)
+    assert Expectation(X).rewrite(Integral).doit() == expectation(X)
     assert Expectation(X**2).doit() == expectation(X**2)
     assert Expectation(x*X) == x*Expectation(X)
     assert Expectation(2*X + 3*Y + z*X*Y) == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
@@ -23,7 +26,7 @@ def test_literal_probability():
     assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y) == 2*x*Expectation(sin(X)*Y) + y*Expectation(X**2) + z*Expectation(X*Y)
 
     assert Variance(w) == 0
-    assert Variance(X).doit() == variance(X)
+    assert Variance(X).doit() == Variance(X).rewrite(Integral).doit() == variance(X)
     assert Variance(X + z) == Variance(X)
     assert Variance(X*Y).args == (Mul(X, Y),)
     assert type(Variance(X*Y)) == Variance
@@ -75,3 +78,15 @@ def test_probability_rewrite():
     assert Covariance(w, X).rewrite(Expectation) == 0
     assert Covariance(X, Y).rewrite(Expectation) == Expectation(X*Y) - Expectation(X)*Expectation(Y)
     assert Covariance(X, Y, condition=W).rewrite(Expectation) == Expectation(X * Y, W) - Expectation(X, W) * Expectation(Y, W)
+
+    w, x, z = symbols("W, x, z")
+    px = Probability(Eq(X, x))
+    pz = Probability(Eq(Z, z))
+
+    assert Expectation(X).rewrite(Probability) == Integral(x*px, (x, -oo, oo))
+    assert Expectation(Z).rewrite(Probability) == Sum(z*pz, (z, 0, oo))
+    assert Variance(X).rewrite(Probability) == Integral(x**2*px, (x, -oo, oo)) - Integral(x*px, (x, -oo, oo))**2
+    assert Variance(Z).rewrite(Probability) == Sum(z**2*pz, (z, 0, oo)) - Sum(z*pz, (z, 0, oo))**2
+
+    assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
+                                                            Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2

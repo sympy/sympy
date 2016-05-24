@@ -4,7 +4,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.core.compatibility import default_sort_key
 
-from sympy import Expr, Add, Mul, S
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, Dummy, Basic
 from sympy.core.evaluate import global_evaluate
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
@@ -20,12 +20,18 @@ class Probability(Expr):
     ========
 
     >>> from sympy.stats import Probability, Normal
+    >>> from sympy import Integral
     >>> X = Normal("X", 0, 1)
     >>> prob = Probability(X > 1)
     >>> prob
     Probability(X > 1)
     >>> prob.doit()
     sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
+
+    Integral representation:
+
+    >>> prob.rewrite(Integral)
+    Integral(sqrt(2)*exp(-_z**2/2)/(2*sqrt(pi)), (_z, 1, oo))
 
     """
     def __new__(cls, prob, condition=None, **kwargs):
@@ -38,8 +44,17 @@ class Probability(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **kwargs):
-        return probability(self.args[0], given_condition=self._condition, **kwargs)
+    def _eval_rewrite_as_Integral(self, arg, condition=None):
+        return probability(arg, condition, evaluate=False)
+
+    def _eval_rewrite_as_Sum(self, arg, condition=None):
+        return self.rewrite(Integral)
+
+    def doit(self, **hints):
+        try:
+            return self.rewrite(Integral).doit(**hints)
+        except:
+            return super(Basic, self).doit(**hints)
 
 
 class Expectation(Expr):
@@ -49,8 +64,8 @@ class Expectation(Expr):
     Examples
     ========
 
-    >>> from sympy.stats import Expectation, Normal
-    >>> from sympy import symbols
+    >>> from sympy.stats import Expectation, Normal, Probability
+    >>> from sympy import symbols, Integral
     >>> mu = symbols("mu")
     >>> sigma = symbols("sigma", positive=True)
     >>> X = Normal("X", mu, sigma)
@@ -58,8 +73,16 @@ class Expectation(Expr):
     Expectation(X)
     >>> Expectation(X).doit().simplify()
     mu
-    >>> Expectation(X).doit(evaluate=False)
+
+    To get the integral expression of the expectation:
+
+    >>> Expectation(X).rewrite(Integral)
     Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
+    The same integral expression, in more abstract terms:
+
+    >>> Expectation(X).rewrite(Probability)
+    Integral(x*Probability(Eq(X, x)), (x, -oo, oo))
 
     This class is aware of some properties of the expectation:
 
@@ -113,8 +136,42 @@ class Expectation(Expr):
             obj._condition = condition
             return obj
 
-    def doit(self, **kwargs):
-        return expectation(self.args[0], condition=self._condition, **kwargs)
+    def _eval_rewrite_as_Probability(self, arg, condition=None):
+        rvs = arg.atoms(RandomSymbol)
+        if len(rvs) > 1:
+            raise NotImplementedError()
+        if len(rvs) == 0:
+            return arg
+
+        rv = rvs.pop()
+        if rv.pspace is None:
+            raise ValueError("Probability space not known")
+
+        symbol = rv.symbol
+        if symbol.name[0].isupper():
+            symbol = Symbol(symbol.name.lower())
+        else :
+            symbol = Symbol(symbol.name + "_1")
+
+        if rv.pspace.is_Continuous:
+            return Integral(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.domain.set.sup))
+        else:
+            if rv.pspace.is_Finite:
+                raise NotImplemented
+            else:
+                return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
+
+    def _eval_rewrite_as_Integral(self, arg, condition=None):
+        return expectation(arg, condition=condition, evaluate=False)
+
+    def _eval_rewrite_as_Sum(self, arg, condition=None):
+        return self.rewrite(Integral)
+
+    def doit(self, **hints):
+        try:
+            return self.rewrite(Integral).doit(**hints)
+        except:
+            return super(Basic, self).doit(**hints)
 
 
 class Variance(Expr):
@@ -124,8 +181,8 @@ class Variance(Expr):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.stats import Normal, Expectation, Variance
+    >>> from sympy import symbols, Integral
+    >>> from sympy.stats import Normal, Expectation, Variance, Probability
     >>> mu = symbols("mu", positive=True)
     >>> sigma = symbols("sigma", positive=True)
     >>> X = Normal("X", mu, sigma)
@@ -133,6 +190,16 @@ class Variance(Expr):
     Variance(X)
     >>> Variance(X).doit()
     sigma**2
+
+    Integral representation of the underlying calculations:
+
+    >>> Variance(X).rewrite(Integral)
+    Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**2*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
+    Integral representation, without expanding the PDF:
+
+    >>> Variance(X).rewrite(Probability)
+    -Integral(x*Probability(Eq(X, x)), (x, -oo, oo))**2 + Integral(x**2*Probability(Eq(X, x)), (x, -oo, oo))
 
     Rewrite the variance in terms of the expectation
 
@@ -213,9 +280,20 @@ class Variance(Expr):
             e2 = Expectation(arg, condition)**2
             return e1 - e2
 
-    def doit(self, **kwargs):
-        return variance(self.args[0], self._condition, **kwargs)
+    def _eval_rewrite_as_Probability(self, arg, condition=None):
+        return self.rewrite(Expectation).rewrite(Probability)
 
+    def _eval_rewrite_as_Integral(self, arg, condition=None):
+        return variance(self.args[0], self._condition, evaluate=False)
+
+    def _eval_rewrite_as_Sum(self, arg, condition=None):
+        return self.rewrite(Integral)
+
+    def doit(self, **hints):
+        try:
+            return self.rewrite(Integral).doit(**hints)
+        except:
+            return super(Basic, self).doit(**hints)
 
 class Covariance(Expr):
     """
@@ -335,5 +413,17 @@ class Covariance(Expr):
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2
 
-    def doit(self, **kwargs):
-        return covariance(self.args[0], self.args[1], self._condition, **kwargs)
+    def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None):
+        return self.rewrite(Expectation).rewrite(Probability)
+
+    def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None):
+        return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
+
+    def _eval_rewrite_as_Sum(self, arg1, arg2, condition=None):
+        return self.rewrite(Integral)
+
+    def doit(self, **hints):
+        try:
+            return self.rewrite(Integral).doit(**hints)
+        except:
+            return super(Basic, self).doit(**hints)
