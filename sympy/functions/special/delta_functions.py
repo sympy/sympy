@@ -39,10 +39,12 @@ class DiracDelta(Function):
 
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
-    >>> DiracDelta(x).fdiff()
-    DiracDelta(x, 1)
-    >>> diff(DiracDelta(x),x,2)
-    DiracDelta(x, 2)
+    >>> DiracDelta(x**2 - 1).fdiff()
+    DiracDelta(x**2 - 1, 1)
+    >>> diff(DiracDelta(x - 1),x,2)
+    DiracDelta(x - 1, 2)
+    >>> diff(DiracDelta(x**2 - 1),x,2)
+    2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
 
 
     See Also
@@ -66,7 +68,7 @@ class DiracDelta(Function):
 
         The difference between `diff()` and `fdiff()` is:-
         `diff()` is the user-level function and `fdiff()` is an object method.
-        `fdiff()` is a convenience. It let the user write the derivative without
+        `fdiff()` is a convenience. It lets the user write the derivative without
         concern for the chain rule.
         `diff(expr, x)` calls `expr._eval_derivative(x)` internally,
         if `expr` is a subclass of `Function`, then the `Function._eval_derivative`
@@ -81,13 +83,13 @@ class DiracDelta(Function):
         >>> DiracDelta(x).fdiff()
         DiracDelta(x, 1)
 
-        >>> DiracDelta(x,1).fdiff()
+        >>> DiracDelta(x, 1).fdiff()
         DiracDelta(x, 2)
 
         >>> DiracDelta(x**2 - 1).fdiff()
         DiracDelta(x**2 - 1, 1)
 
-        >>> diff(DiracDelta(x,1)).fdiff()
+        >>> diff(DiracDelta(x, 1)).fdiff()
         DiracDelta(x, 3)
 
         """
@@ -116,7 +118,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, S
+        >>> from sympy import DiracDelta, S, Subs
         >>> from sympy.abc import x
 
         >>> DiracDelta(x)
@@ -142,6 +144,12 @@ class DiracDelta(Function):
 
         >>> DiracDelta(x).eval(1)
         0
+
+        >>> DiracDelta(x -100).subs(x, 5)
+        0
+
+        >>> DiracDelta(x -100).subs(x, 100)
+        DiracDelta(0)
 
         """
         k = sympify(k)
@@ -363,6 +371,12 @@ class Heaviside(Function):
         nan
 
         >>> Heaviside(x).eval(100)
+        1
+
+        >>> Heaviside(x -100).subs(x, 5)
+        0
+
+        >>> Heaviside(x -100).subs(x, 105)
         1
 
         """
