@@ -513,8 +513,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
     __rtruediv__ = __rdiv__
 
     def __add__(self, other):
-        raise TypeError("unsupported operand type(s) for + or add: '%s' and '%s'"
-                    % (self.__class__.__name__, other.__class__.__name__))
+        raise NotImplementedError("")
 
     def inverse(self):
         """
@@ -937,6 +936,29 @@ def zero_mul_simp(l, index):
             del l[index]
             index -= 1
 
+@public
+def free_abelian_group(symbols):
+    """Construct a free abelian group returning ``(FreeAbelianGroup, (f_0, f_1, ..., f_(n-1))``.
+
+    Parameters
+    ----------
+    symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty)
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.free_group import free_abelian_group
+    >>> F, x, y, z = free_abelian_group("x, y, z")
+    >>> F
+    <free abelian group on the generators (x, y, z)>
+    >>> x**2*y**-1
+    x**2*y**-1
+    >>> type(_)
+    <class 'sympy.combinatorics.free_group.FreeAbelianGroupElement'>
+
+    """
+    _free_abelian_group = FreeAbelianGroup(symbols)
+    return (_free_abelian_group,) + tuple(_free_abelian_group.generators)
 
 ##############################################################################
 #                          FREE ABELIAN GROUP                                #
@@ -945,6 +967,9 @@ def zero_mul_simp(l, index):
 _free_abelian_group_cache = {}
 
 class FreeAbelianGroup(DefaultPrinting):
+    """
+
+    """
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
         rank = len(symbols)
@@ -974,16 +999,16 @@ class FreeAbelianGroup(DefaultPrinting):
     def _generators(group):
         _gens = []
         for sym in group.symbols:
-            pol = group.zero
-            pol[sym] = 1
-            _gens.append(pol)
+            abel_elm = dict()
+            abel_elm[sym] = 1
+            _gens.append(group.dtype(abel_elm))
         return tuple(_gens)
 
     def __str__(self):
         if self.rank > 30:
-            str_form = "<free group with %s generators>" % self.rank
+            str_form = "<free abelian group with %s generators>" % self.rank
         else:
-            str_form = "<free group on the generators "
+            str_form = "<free abelian group on the generators "
             gens = self.generators
             str_form += str(gens) + ">"
         return str_form
@@ -996,6 +1021,10 @@ class FreeAbelianGroup(DefaultPrinting):
 
 
 class FreeAbelianGroupElement(DefaultPrinting, CantSympify, dict):
+    """
+    """
+    is_assoc_word = True
+
     def new(self, init):
         return self.__class__(init)
 
@@ -1005,11 +1034,6 @@ class FreeAbelianGroupElement(DefaultPrinting, CantSympify, dict):
     _hash = None
 
     def __hash__(self):
-        # XXX: This computes a hash of a dictionary, but currently we don't
-        # protect dictionary from being changed so any use site modifications
-        # will make hashing go wrong. Use this feature with caution until we
-        # figure out how to make a safe API without compromising speed of this
-        # low-level class.
         _hash = self._hash
         if _hash is None:
             self._hash = _hash = hash((self.group, frozenset(self.items())))
@@ -1062,3 +1086,29 @@ class FreeAbelianGroupElement(DefaultPrinting, CantSympify, dict):
         group = self.group
         new_dict = {key: other*val for key, val in self.items()}
         return group.dtype(new_dict)
+
+    def __div__(self, other):
+        group = self.group
+        if not isinstance(other, group.dtype):
+            raise TypeError("only FreeAbelianGroup elements of same FreeGroup can "
+                    "be multiplied")
+        return self*(other.inverse())
+
+    def __rdiv__(self, other):
+        group = self.group
+        if not isinstance(other, group.dtype):
+            raise TypeError("only FreeGroup elements of same FreeGroup can "
+                    "be multiplied")
+        return other*(self.inverse())
+
+    __truediv__ = __div__
+
+    __rtruediv__ = __rdiv__
+
+    def inverse(self):
+        group = self.group
+        r = {i: -j for i, j in self.items()}
+        return group.dtype(r)
+
+    def __len__(self):
+        return sum([abs(j) for j in self.values()])
