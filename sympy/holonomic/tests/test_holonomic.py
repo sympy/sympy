@@ -1,4 +1,4 @@
-from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, From_Hyper
+from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_Hyper
 from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr
 from sympy import ZZ, QQ
 
@@ -151,9 +151,9 @@ def test_From_Hyper():
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = hyper([1, 1], [S(3)/2], x**2/4)
     q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + 4/3])
-    r = From_Hyper(p)
+    r = from_Hyper(p)
     assert r == q
-    p = From_Hyper(hyper([1], [S(3)/2], x**2/4))
+    p = from_Hyper(hyper([1], [S(3)/2], x**2/4))
     q = HolonomicFunction(-2*x + (-x**2 + 4)*Dx + 2*x*Dx**2, x)
     x0 = 1
     y0 = '[sqrt(pi)*exp(1/4)*erf(1/2), -sqrt(pi)*exp(1/4)*erf(1/2)/2 + 1]'
