@@ -247,6 +247,8 @@ def prime(nth):
     prime_arr = [2, 3, 5, 7, 11, 13, 17]
     if n <= 7:
         return prime_arr[n - 1]
+    if n <= len(sieve._list):
+        return sieve[n]
 
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
@@ -337,6 +339,8 @@ def primepi(n):
     n = int(n)
     if n < 2:
         return 0
+    if n <= sieve._list[-1]:
+        return sieve.search(n)[0]
     lim = int(n ** 0.5)
     lim -= 1
     lim = max(lim,0)
@@ -405,6 +409,12 @@ def nextprime(n, ith=1):
         return 2
     if n < 7:
         return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
+    if n <= sieve._list[-2]:
+        l, u = sieve.search(n)
+        if l == u:
+            return sieve[u+1]
+        else:
+            return sieve[u]
     nn = 6*(n//6)
     if nn == n:
         n += 1
@@ -455,6 +465,12 @@ def prevprime(n):
         raise ValueError("no preceding primes")
     if n < 8:
         return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
+    if n <= sieve._list[-1]:
+        l, u = sieve.search(n)
+        if l == u:
+            return sieve[l-1]
+        else:
+            return sieve[l]
     nn = 6*(n//6)
     if n - nn <= 1:
         n = nn - 1
@@ -772,6 +788,18 @@ def composite(nth):
     composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
     if n <= 10:
         return composite_arr[n - 1]
+
+    a, b = 4, sieve._list[-1]
+    if n <= b - primepi(b) - 1:
+        while a < b - 1:
+            mid = (a + b) >> 1
+            if mid - primepi(mid) - 1 > n:
+                b = mid
+            else:
+                a = mid
+        if isprime(a):
+            a -= 1
+        return a
 
     from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log

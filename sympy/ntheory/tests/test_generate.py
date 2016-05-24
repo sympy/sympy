@@ -21,6 +21,8 @@ def test_prime():
     assert prime(9096) == 94321
     assert prime(25023) == 287341
     raises(ValueError, lambda: prime(0))
+    sieve.extend(3000)
+    assert prime(401) == 2749
 
 
 def test_primepi():
@@ -38,6 +40,8 @@ def test_primepi():
     assert primepi(10**8) == 5761455
     assert primepi(253425253) == 13856396
     assert primepi(8769575643) == 401464322
+    sieve.extend(3000)
+    assert primepi(2000) == 303
 
 
 def test_composite():
@@ -52,6 +56,9 @@ def test_composite():
     assert composite(4096) == 4736
     assert composite(9096) == 10368
     assert composite(25023) == 28088
+    sieve.extend(3000)
+    assert composite(1957) == 2300
+    assert composite(2568) == 2998
     raises(ValueError, lambda: composite(0))
 
 
@@ -70,6 +77,8 @@ def test_compositepi():
     assert compositepi(10**8) == 94238544
     assert compositepi(253425253) == 239568856
     assert compositepi(8769575643) == 8368111320
+    sieve.extend(3000)
+    assert compositepi(2321) == 1976
 
 
 def test_generate():
@@ -114,6 +123,9 @@ def test_generate():
     assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
         [17, 35, 2, 5, 26]
+    sieve.extend(3000)
+    assert nextprime(2968) == 2969
+    assert prevprime(2930) == 2927
 
 
 def test_randprime():
