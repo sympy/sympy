@@ -17,7 +17,7 @@ from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
 
 
-def DiffOperatorAlgebra(base, generator):
+def DifferentialOperators(base, generator):
     """
     Returns an Algebra of Differential Operators and the operator for
     differentiation i.e. the `Dx` operator.
@@ -30,9 +30,9 @@ def DiffOperatorAlgebra(base, generator):
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
-    >>> from sympy.holonomic.holonomic import DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import DifferentialOperators
     >>> x = symbols('x')
-    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     """
 
     ring = DifferentialOperatorAlgebra(base, generator)
@@ -61,9 +61,9 @@ class DifferentialOperatorAlgebra(object):
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
-    >>> from sympy.holonomic.holonomic import DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import DifferentialOperators
     >>> x = symbols('x')
-    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     >>> R
     Univariate Differential Operator Algebra in intermediate Dx over the base ring
     ZZ[x]
@@ -129,11 +129,11 @@ class DifferentialOperator(object):
     Examples
     ========
 
-    >>> from sympy.holonomic.holonomic import DifferentialOperator, DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import DifferentialOperator, DifferentialOperators
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy import symbols
     >>> x = symbols('x')
-    >>> R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x),'Dx')
+    >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
     >>> DifferentialOperator([0, 1, x**2], R)
     (1)Dx + (x**2)Dx**2
@@ -413,11 +413,11 @@ class HolonomicFunction(object):
     Examples
     ========
 
-    >>> from sympy.holonomic.holonomic import HolonomicFunction, DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy import symbols
     >>> x = symbols('x')
-    >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+    >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
     >>> p = HolonomicFunction(Dx - 1, x, 0, [1])  # e^x
     >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])  # sin(x)
@@ -462,7 +462,7 @@ class HolonomicFunction(object):
             cond_str = ''
             diff_str = ''
             for i in self.y0:
-                cond_str += ', f%s(%s) = %s ' %(diff_str, sstr(self.x0), sstr(i))
+                cond_str += ', f%s(%s) = %s ' % (diff_str, sstr(self.x0), sstr(i))
                 diff_str += "'"
 
             sol = str_sol + cond_str
@@ -732,11 +732,11 @@ class HolonomicFunction(object):
         Examples
         ========
 
-        >>> from sympy.holonomic.holonomic import HolonomicFunction, DiffOperatorAlgebra
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
         >>> from sympy.polys.domains import ZZ, QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
-        >>> R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x),'Dx')
+        >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
         >>> HolonomicFunction(Dx - 1, x).composition(x**2)  # e^(x**2)
         HolonomicFunction((-2*x) + (1)Dx, x)
@@ -795,7 +795,7 @@ def From_Hyper(func, x0=0, evalf=False):
     Examples
     =======
 
-    >>> from sympy.holonomic.holonomic import From_Hyper, DiffOperatorAlgebra
+    >>> from sympy.holonomic.holonomic import From_Hyper, DifferentialOperators
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> From_Hyper(hyper([], [S(3)/2], x**2/4))
@@ -807,7 +807,7 @@ def From_Hyper(func, x0=0, evalf=False):
     b = func.bq
     z = func.args[2]
     x = z.atoms(Symbol).pop()
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     r1 = 1
     for i in range(len(a)):
         r1 = r1 * (x * Dx + a[i])

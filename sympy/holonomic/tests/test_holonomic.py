@@ -1,11 +1,11 @@
-from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DiffOperatorAlgebra, From_Hyper
+from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, From_Hyper
 from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr
 from sympy import ZZ, QQ
 
 
 def test_DifferentialOperator():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     assert Dx == R.derivative_operator
     assert Dx == DifferentialOperator([R.base.zero, R.base.one], R)
     assert x * Dx + x**2 * Dx**2 == DifferentialOperator([0, x, x**2], R)
@@ -22,7 +22,7 @@ def test_DifferentialOperator():
 
 def test_HolonomicFunction_addition():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(Dx**2 * x, x)
     q = HolonomicFunction((2) * Dx + (x) * Dx**2, x)
     assert p == q
@@ -46,7 +46,7 @@ def test_HolonomicFunction_addition():
 
 def test_HolonomicFunction_multiplication():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(Dx+x+x*Dx**2, x)
     q = HolonomicFunction(x*Dx+Dx*x+Dx**2, x)
     r = HolonomicFunction((8*x**6 + 4*x**4 + 6*x**2 + 3) + (24*x**5 - 4*x**3 + 24*x)*Dx + \
@@ -71,7 +71,7 @@ def test_HolonomicFunction_multiplication():
 
 def test_addition_initial_condition():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(Dx-1, x, 0, 3)
     q = HolonomicFunction(Dx**2+1, x, 0, [1, 0])
     r = HolonomicFunction(-1 + Dx - Dx**2 + Dx**3, x, 0, [4, 3, 2])
@@ -94,7 +94,7 @@ def test_addition_initial_condition():
 
 def test_multiplication_initial_condition():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(Dx**2 + x*Dx - 1, x, 0, [3, 1])
     q = HolonomicFunction(Dx**2 + 1, x, 0, [1, 1])
     r = HolonomicFunction((x**4 + 14*x**2 + 60) + 4*x*Dx + (x**4 + 9*x**2 + 20)*Dx**2 + \
@@ -123,7 +123,7 @@ def test_multiplication_initial_condition():
 
 def test_HolonomicFunction_composition():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(ZZ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(Dx-1, x).composition(x**2+x)
     r = HolonomicFunction((-2*x - 1) + Dx, x)
     assert p == r
@@ -148,7 +148,7 @@ def test_HolonomicFunction_composition():
 
 def test_From_Hyper():
     x = symbols('x')
-    R, Dx = DiffOperatorAlgebra(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = hyper([1, 1], [S(3)/2], x**2/4)
     q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + 4/3])
     r = From_Hyper(p)

@@ -1,1 +1,1 @@
-from .holonomic import DifferentialOperator, HolonomicFunction, DiffOperatorAlgebra
+from .holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators
