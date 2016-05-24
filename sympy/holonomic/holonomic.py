@@ -5,8 +5,9 @@ from __future__ import print_function, division
 from sympy import symbols, Symbol, diff, S, Dummy
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
+from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from sympy.core.compatibility import range
-from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
 from sympy.polys.domains import QQ, ZZ
 from sympy.polys.domains.pythonrational import PythonRational
@@ -785,6 +786,31 @@ class HolonomicFunction(object):
         if self._have_init_cond:
             return HolonomicFunction(sol, self.x, self.x0, self.y0)
         return HolonomicFunction(sol, self.x)
+
+    def to_Sequence(self):
+        dict1 = {}
+        n = symbols('n', integer=True)
+        R, _ = RecurrenceOperators(QQ.old_poly_ring(n), 'Sn')
+        for i, j in enumerate(self.annihilator.listofpoly):
+            listofdmp = j.all_coeffs()
+            degree = len(listofdmp) - 1
+            for k in range (degree + 1):
+                coeff = listofdmp[degree - k]
+                if i - k in dict1.keys():
+                    dict1[i - k] += (coeff * factorial(n - k + i) / factorial(n - k)).simplify()
+                else:
+                    dict1[i - k] = (coeff * factorial(n - k + i) / factorial(n - k)).simplify()
+        sol = []
+        lower = min(dict1.keys())
+        upper = max(dict1.keys())
+        for i in range(upper - lower + 1):
+            j = lower + i
+            if j in dict1.keys():
+                sol.append(dict1[j])
+            else:
+                sol.append(S(0))
+        sol = RecurrenceOperator(sol, R)
+        return HolonomicSequence(sol)
 
 
 def From_Hyper(func, x0=0, evalf=False):
