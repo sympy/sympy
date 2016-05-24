@@ -295,6 +295,7 @@ class Variance(Expr):
         except:
             return super(Basic, self).doit(**hints)
 
+
 class Covariance(Expr):
     """
     Symbolic expression for the covariance.
