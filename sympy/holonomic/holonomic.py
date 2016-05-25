@@ -16,6 +16,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
+from sympy.polys.polyroots import roots
 
 
 def DifferentialOperators(base, generator):
@@ -810,7 +811,21 @@ class HolonomicFunction(object):
             else:
                 sol.append(S(0))
         sol = RecurrenceOperator(sol, R)
-        return HolonomicSequence(sol)
+        if not self._have_init_cond:
+            return HolonomicSequence(sol)
+        if self.x0 != 0:
+            return HolonomicSequence(sol)
+
+        order = sol.order
+        all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
+        max_root = max(all_roots.keys())
+        if max_root >= 0:
+            order += max_root + 1
+        y0 = _extend_y0(self, order)
+        u0 = []
+        for i, j in enumerate(y0):
+            u0.append(j / factorial(i))
+        return HolonomicSequence(sol, u0)
 
 
 def From_Hyper(func, x0=0, evalf=False):
