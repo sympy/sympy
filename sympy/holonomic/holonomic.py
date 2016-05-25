@@ -797,6 +797,8 @@ class HolonomicFunction(object):
             degree = len(listofdmp) - 1
             for k in range (degree + 1):
                 coeff = listofdmp[degree - k]
+                if coeff == 0:
+                    continue
                 if i - k in dict1.keys():
                     dict1[i - k] += (coeff * factorial(n - k + i) / factorial(n - k)).simplify()
                 else:
@@ -818,9 +820,11 @@ class HolonomicFunction(object):
 
         order = sol.order
         all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
-        max_root = max(all_roots.keys())
-        if max_root >= 0:
-            order += max_root + 1
+        all_roots = all_roots.keys()
+        if all_roots:
+            max_root = max(all_roots)
+            if max_root >= 0:
+                order += max_root + 1
         y0 = _extend_y0(self, order)
         u0 = []
         for i, j in enumerate(y0):
