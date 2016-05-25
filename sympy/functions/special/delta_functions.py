@@ -18,6 +18,17 @@ class DiracDelta(Function):
     """
     The DiracDelta function and its derivatives.
 
+    DiracDelta is not an ordinary function. It can be rigorously defined either
+    as a distribution or as a measure.
+
+    As a measure, it accepts a subset A of the real number line as an argument,
+    and returns DiracDelta(A) = 1 if 0 belongs to A, and DiracDelta(A) = 0 otherwise. Only
+    these integrated values are well defined, not the pointwise values of the measure itself.
+
+    In the theory of distributions, DiracDelta is defined only in relation to how it affects
+    other functions when it is "integrated" against them. It simply takes a good test function ``f(x)``
+    to its value ``f(0)`` whereas the derivative of DiracDelta takes a test function ``f(x)`` to ``-f'(0)``.
+
     DiracDelta function has the following properties:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
@@ -66,13 +77,13 @@ class DiracDelta(Function):
         """
         Returns the first derivative of a DiracDelta Function.
 
-        The difference between `diff()` and `fdiff()` is:-
-        `diff()` is the user-level function and `fdiff()` is an object method.
-        `fdiff()` is a convenience. It lets the user write the derivative without
+        The difference between ``diff()`` and ``fdiff()`` is:-
+        ``diff()`` is the user-level function and ``fdiff()`` is an object method.
+        ``fdiff()`` is a convenience. It lets the user write the derivative without
         concern for the chain rule.
-        `diff(expr, x)` calls `expr._eval_derivative(x)` internally,
-        if `expr` is a subclass of `Function`, then the `Function._eval_derivative`
-        calls `expr.fdiff`.
+        ``diff(expr, x)`` calls ``expr._eval_derivative(x)`` internally,
+        if ``expr`` is a subclass of ``Function``, then the ``Function._eval_derivative``
+        calls ``expr.fdiff``.
 
         Examples
         ========
@@ -106,13 +117,13 @@ class DiracDelta(Function):
     def eval(cls, arg, k=0):
         """
         Returns a simplified form or a value of DiracDelta depending on the
-        argument passed by the DiracDelta object or the argument `arg` passed
-        by the method `eval()`.
+        argument passed by the DiracDelta object or the argument ``arg`` passed
+        by the method ``eval()``.
 
-        The `eval()` method is automatically called when the `DiracDelta` class
+        The ``eval()`` method is automatically called when the ``DiracDelta`` class
         is about to be instantiated and it returns either some simplified instance
         or the unevaluated instance depending on the argument passed. In other words,
-        `eval()` method is not needed to be called explicitly, it is being called
+        ``eval()`` method is not needed to be called explicitly, it is being called
         and evaluated once the object is called.
 
         Examples
@@ -340,13 +351,13 @@ class Heaviside(Function):
     def eval(cls, arg):
         """
         Returns a simplified form or a value of Heaviside depending on the
-        argument passed by the Heaviside object or the argument `arg` passed
-        by the method `eval()`.
+        argument passed by the Heaviside object or the argument ``arg`` passed
+        by the method ``eval()``.
 
-        The `eval()` method is automatically called when the `Heaviside` class
+        The ``eval()`` method is automatically called when the ``Heaviside`` class
         is about to be instantiated and it returns either some simplified instance
         or the unevaluated instance depending on the argument passed. In other words,
-        `eval()` method is not needed to be called explicitly, it is being called
+        ``eval()`` method is not needed to be called explicitly, it is being called
         and evaluated once the object is called.
 
         Examples
