@@ -221,4 +221,29 @@ def coincidence(C, alpha, beta):
                     C[v][A.index(x**-1)] = mu
 
 
+# method used in the HLT strategy
+def scan_and_fill(C, alpha, word):
+    f = alpha
+    i = 0
+    b = alpha
+    j = len(word)
+    while True:
+        while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
+            f = C[f][A.index(word.subword(i, i+1))]
+            i += 1
+        if i >= r:
+            if f != alpha:
+                coincidence(C, f, alpha)
+                return
+        while j >= i and C[b][A.index(word.subword(i, i+1))] != -1:
+            b = C[b][A.index(word.subword(i, i+1))]
+            j -= 1
+        if j < i:
+            coincidence(C, f, b)
+        elif j == i + 1:
+            C[f][A.index(word.subword(i, i+1))] = b
+            C[b][A.index(word.subword(i, i+1).inverse())] = f
+        else:
+            define(C, f, word.subword(i, i+1))
+
 FpGroupElm = FreeGroupElm
