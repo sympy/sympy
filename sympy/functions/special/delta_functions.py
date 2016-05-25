@@ -196,15 +196,19 @@ class DiracDelta(Function):
            >>> y = Symbol('y')
 
            >>> DiracDelta(y).rewrite(Piecewise)
-           DiracDelta(y)
+           Piecewise((oo, Eq(y, 0)), (0, True))
 
            >>> DiracDelta(y, 1).rewrite(Piecewise)
            DiracDelta(y, 1)
 
+           >>> z = Symbol('z', complex=True)
+
+           >>> DiracDelta(z).rewrite(Piecewise)
+           DiracDelta(z)
+
         """
-        if self.args[0].is_real and len(args) == 1:
+        if (self.args[0].is_real or not (self.args[0].is_real is None and self.args[0].is_complex)) and len(args) == 1:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
-        return self
 
     @staticmethod
     def _latex_no_arg(printer):
@@ -284,10 +288,15 @@ class Heaviside(Function):
            >>> y = Symbol('y')
 
            >>> Heaviside(y).rewrite(Piecewise)
-           Heaviside(y)
+           Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True))
+
+           >>> z = Symbol('z', complex=True)
+
+           >>> Heaviside(z).rewrite(Piecewise)
+           Heaviside(z)
 
         """
-        if arg.is_real:
+        if arg.is_real or not (arg.is_real is None and arg.is_complex):
             return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
 
     def _eval_rewrite_as_sign(self, arg):
