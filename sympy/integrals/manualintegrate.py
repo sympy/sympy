@@ -340,19 +340,11 @@ def mul_rule(integral):
 def _parts_rule(integrand, symbol):
     # LIATE rule:
     # log, inverse trig, algebraic (polynomial), trigonometric, exponential
-    def pull_out_polys(integrand):
+    def pull_out_algebraic(integrand):
         integrand = integrand.together()
-        polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
-                                                   arg.is_algebraic_expr(symbol))]
-        # polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
-        #                                            (isinstance(arg, sympy.Pow) and \
-        #                                             (symbol in arg.as_base_exp()[0].free_symbols)))]
-        # polys = [arg for arg in integrand.args if (arg.is_polynomial(symbol) or \
-        #                                            (isinstance(arg, sympy.Pow) and \
-        #                                             (symbol in arg.as_base_exp()[0].free_symbols) and \
-        #                                             arg.as_base_exp()[1] is not sympy.sympify(-1)))]
-        if polys:
-            u = sympy.Mul(*polys)
+        algebraic = [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)]
+        if algebraic:
+            u = sympy.Mul(*algebraic)
             dv = integrand / u
             return u, dv
 
@@ -369,7 +361,7 @@ def _parts_rule(integrand, symbol):
         return pull_out_u_rl
 
     liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
-                   pull_out_polys, pull_out_u(sympy.sin, sympy.cos),
+                   pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
 
 
@@ -416,6 +408,8 @@ def parts_rule(integral):
             return
 
         while True:
+            if (integrand / (v * du)).cancel() == 1:
+                break
             if symbol not in (integrand / (v * du)).cancel().free_symbols:
                 coefficient = ((v * du) / integrand).cancel()
                 rule = CyclicPartsRule(
