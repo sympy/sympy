@@ -404,6 +404,51 @@ class ImageSet(Set):
                             self.base_set.intersect(
                                 solveset_real(im, n_)))
 
+        elif isinstance(other, Interval):
+            from sympy.solvers.solveset import invert_real, invert_complex
+
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+            base_set = self.base_set
+            inf, sup = other.inf, other.sup
+            new_inf, new_sup = None, None
+
+            # In order to determine the domain of inversion, we can use the
+            # `Interval` object.
+            if other.is_subset(S.Reals):
+                inverter = invert_real
+            else:
+                inverter = invert_complex
+
+            # Invert the function for the boundary of the `Interval`
+            g1, h1 = inverter(f, inf, n)
+            g2, h2 = inverter(f, sup, n)
+
+            if all(isinstance(i, FiniteSet) for i in (h1, h2)):
+                # these conditions imply that we have successfully
+                # contracted the domain according to our `base_set`.
+                if g1 == n:
+                    if len(h1) == 1:
+                        new_inf = h1.args[0]
+                if g2 == n:
+                    if len(h2) == 1:
+                        new_sup = h2.args[0]
+                # TODO: Design a technique to handle multiple-inverse
+                # functions
+
+                # Either of the new boundary values cannot be determined
+                if any(i is None for i in (new_sup, new_inf)):
+                    return
+                # the new contracted domain
+                new_interval = Interval(new_inf, new_sup)
+                # the new base set
+                range_set = base_set._intersect(new_interval)
+                if isinstance(range_set, Range) and range_set.size is not S.Infinity:
+                    range_set = FiniteSet(*list(range_set))
+                if range_set is not None:
+                    return imageset(Lambda(n, f), range_set)
+            else:
+                return
 
 class Range(Set):
     """
