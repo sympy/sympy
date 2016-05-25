@@ -11,7 +11,7 @@ from sympy.core.decorators import wraps
 from tempfile import NamedTemporaryFile
 import os
 import sys
-
+import warnings
 
 class MockPrint(object):
 
@@ -232,10 +232,21 @@ def plot_and_save(name):
     # Examples from the 'advanced' notebook
     ###
 
-    i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
-    p = plot(i, (y, 1, 5))
-    p.save(tmp_file('%s_advanced_integral' % name))
-    p._backend.close()
+    # XXX: This raises the warning "The evaluation of the expression is
+    # problematic. We are trying a failback method that may still work. Please
+    # report this as a bug." It has to use the fallback because using evalf()
+    # is the only way to evaluate the integral. We should perhaps just remove
+    # that warning.
+
+    with warnings.catch_warnings(record=True) as w:
+        i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
+        p = plot(i, (y, 1, 5))
+        p.save(tmp_file('%s_advanced_integral' % name))
+        p._backend.close()
+        # Make sure no other warnings were raised
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "The evaluation of the expression is problematic" in str(w[0].message)
 
     s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))

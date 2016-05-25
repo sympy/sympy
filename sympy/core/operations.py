@@ -367,7 +367,7 @@ class AssocOp(Basic):
         if isinstance(expr, cls):
             return expr.args
         else:
-            return (expr,)
+            return (sympify(expr),)
 
 
 class ShortCircuit(Exception):
@@ -443,23 +443,12 @@ class LatticeOp(AssocOp):
     @classmethod
     def make_args(cls, expr):
         """
-        Return a sequence of elements `args` such that cls(*args) == expr
-
-        >>> from sympy import Symbol, Mul, Add
-        >>> x, y = map(Symbol, 'xy')
-
-        >>> Mul.make_args(x*y)
-        (x, y)
-        >>> Add.make_args(x*y)
-        (x*y,)
-        >>> set(Add.make_args(x*y + y)) == set([y, x*y])
-        True
-
+        Return a set of args such that cls(*arg_set) == expr.
         """
         if isinstance(expr, cls):
             return expr._argset
         else:
-            return frozenset([expr])
+            return frozenset([sympify(expr)])
 
     @property
     @cacheit

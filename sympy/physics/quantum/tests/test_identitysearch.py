@@ -21,7 +21,7 @@ def test_generate_gate_rules_1():
     ph = PhaseGate(0)
     cgate_t = CGate(0, TGate(1))
 
-    assert generate_gate_rules((x,)) == set([((x,), ())])
+    assert generate_gate_rules((x,)) == {((x,), ())}
 
     gate_rules = set([((x, x), ()),
                       ((x,), (x,))])
@@ -91,13 +91,13 @@ def test_generate_gate_rules_2():
     cgate_t = CGate(0, TGate(1))
 
     # Note: 1 (type int) is not the same as 1 (type One)
-    expected = set([(x, Integer(1))])
+    expected = {(x, Integer(1))}
     assert generate_gate_rules((x,), return_as_muls=True) == expected
 
-    expected = set([(Integer(1), Integer(1))])
+    expected = {(Integer(1), Integer(1))}
     assert generate_gate_rules(x*x, return_as_muls=True) == expected
 
-    expected = set([((), ())])
+    expected = {((), ())}
     assert generate_gate_rules(x*x, return_as_muls=False) == expected
 
     gate_rules = set([(x*y*x, Integer(1)),
@@ -173,9 +173,9 @@ def test_generate_equivalent_ids_1():
     # Test with tuples
     (x, y, z, h) = create_gate_sequence()
 
-    assert generate_equivalent_ids((x,)) == set([(x,)])
-    assert generate_equivalent_ids((x, x)) == set([(x, x)])
-    assert generate_equivalent_ids((x, y)) == set([(x, y), (y, x)])
+    assert generate_equivalent_ids((x,)) == {(x,)}
+    assert generate_equivalent_ids((x, x)) == {(x, x)}
+    assert generate_equivalent_ids((x, y)) == {(x, y), (y, x)}
 
     gate_seq = (x, y, z)
     gate_ids = set([(x, y, z), (y, z, x), (z, x, y), (z, y, x),
@@ -194,12 +194,12 @@ def test_generate_equivalent_ids_1():
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
     gate_seq = (x, y, x, y)
-    gate_ids = set([(x, y, x, y), (y, x, y, x)])
+    gate_ids = {(x, y, x, y), (y, x, y, x)}
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
     cgate_y = CGate((1,), y)
     gate_seq = (y, cgate_y, y, cgate_y)
-    gate_ids = set([(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)])
+    gate_ids = {(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)}
     assert generate_equivalent_ids(gate_seq) == gate_ids
 
     cnot = CNOT(1, 0)
@@ -214,15 +214,15 @@ def test_generate_equivalent_ids_2():
     # Test with Muls
     (x, y, z, h) = create_gate_sequence()
 
-    assert generate_equivalent_ids((x,), return_as_muls=True) == set([x])
+    assert generate_equivalent_ids((x,), return_as_muls=True) == {x}
 
-    gate_ids = set([Integer(1)])
+    gate_ids = {Integer(1)}
     assert generate_equivalent_ids(x*x, return_as_muls=True) == gate_ids
 
-    gate_ids = set([x*y, y*x])
+    gate_ids = {x*y, y*x}
     assert generate_equivalent_ids(x*y, return_as_muls=True) == gate_ids
 
-    gate_ids = set([(x, y), (y, x)])
+    gate_ids = {(x, y), (y, x)}
     assert generate_equivalent_ids(x*y) == gate_ids
 
     circuit = Mul(*(x, y, z))
@@ -238,12 +238,12 @@ def test_generate_equivalent_ids_2():
     assert generate_equivalent_ids(circuit, return_as_muls=True) == gate_ids
 
     circuit = Mul(*(x, y, x, y))
-    gate_ids = set([x*y*x*y, y*x*y*x])
+    gate_ids = {x*y*x*y, y*x*y*x}
     assert generate_equivalent_ids(circuit, return_as_muls=True) == gate_ids
 
     cgate_y = CGate((1,), y)
     circuit = Mul(*(y, cgate_y, y, cgate_y))
-    gate_ids = set([y*cgate_y*y*cgate_y, cgate_y*y*cgate_y*y])
+    gate_ids = {y*cgate_y*y*cgate_y, cgate_y*y*cgate_y*y}
     assert generate_equivalent_ids(circuit, return_as_muls=True) == gate_ids
 
     cnot = CNOT(1, 0)
@@ -358,7 +358,7 @@ def test_is_degenerate():
     (x, y, z, h) = create_gate_sequence()
 
     gate_id = GateIdentity(x, y, z)
-    ids = set([gate_id])
+    ids = {gate_id}
 
     another_id = (z, y, x)
     assert is_degenerate(ids, another_id) is True
@@ -390,7 +390,7 @@ def test_bfs_identity_search():
     (x, y, z, h) = create_gate_sequence()
 
     gate_list = [x]
-    id_set = set([GateIdentity(x, x)])
+    id_set = {GateIdentity(x, x)}
     assert bfs_identity_search(gate_list, 1, max_depth=2) == id_set
 
     # Set should not contain degenerate quantum circuits
@@ -479,7 +479,7 @@ def test_bfs_identity_search():
     s = PhaseGate(0)
     t = TGate(0)
     gate_list = [s, t]
-    id_set = set([GateIdentity(s, s, s, s)])
+    id_set = {GateIdentity(s, s, s, s)}
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
 
 
@@ -488,5 +488,5 @@ def test_bfs_identity_search_xfail():
     s = PhaseGate(0)
     t = TGate(0)
     gate_list = [Dagger(s), t]
-    id_set = set([GateIdentity(Dagger(s), t, t)])
+    id_set = {GateIdentity(Dagger(s), t, t)}
     assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set

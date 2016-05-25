@@ -132,7 +132,7 @@ class VectorLatexPrinter(LatexPrinter):
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
-        test1 = not all([True for i in red if i.free_symbols == set([t])])
+        test1 = not all([True for i in red if i.free_symbols == {t}])
         test2 = not all([(t == i) for i in syms])
         if test1 or test2:
             return LatexPrinter().doprint(der_expr)
@@ -151,6 +151,13 @@ class VectorLatexPrinter(LatexPrinter):
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
+
+    def parenthesize(self, item, level, strict=False):
+        item_latex = self._print(item)
+        if item_latex.startswith(r"\dot") or item_latex.startswith(r"\ddot") or item_latex.startswith(r"\dddot"):
+            return self._print(item)
+        else:
+            return LatexPrinter.parenthesize(self, item, level, strict)
 
 
 class VectorPrettyPrinter(PrettyPrinter):
@@ -182,11 +189,11 @@ class VectorPrettyPrinter(PrettyPrinter):
         if len(pform.picture) > 1:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        dots = {0 : u(""),
-                1 : u("\N{COMBINING DOT ABOVE}"),
-                2 : u("\N{COMBINING DIAERESIS}"),
-                3 : u("\N{COMBINING THREE DOTS ABOVE}"),
-                4 : u("\N{COMBINING FOUR DOTS ABOVE}")}
+        dots = {0 : u"",
+                1 : u"\N{COMBINING DOT ABOVE}",
+                2 : u"\N{COMBINING DIAERESIS}",
+                3 : u"\N{COMBINING THREE DOTS ABOVE}",
+                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         pic = d['picture'][0]

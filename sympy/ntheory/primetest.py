@@ -4,42 +4,46 @@ Primality testing
 """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 
-# pseudoprimes that will pass through last mr_safe test
-_pseudos = set([
-            669094855201,
-           1052516956501, 2007193456621, 2744715551581, 9542968210729,
-          17699592963781, 19671510288601,
-          24983920772821, 24984938689453, 29661584268781, 37473222618541,
-          46856248255981, 47922612926653, 48103703944453, 49110566041153,
-          49752242681221, 91206655032481, 91481980096033, 119034193492321,
-         123645258399601, 128928036060253, 137364148720147, 150753857310253,
-         153131886327421, 155216912613121, 185610214763821, 224334357392701,
-         227752294950181, 230058334559041, 304562854940401, 306001576998253,
-         335788261073821, 377133492079081, 379242177424951, 389970770948461,
-         397319638319521, 448114903362253, 523235160050221, 628999496281621,
-         699349238838253, 746667678235753, 790198268451301, 794036495175661,
-         823820871230281, 867739535711821, 1039918661294761, 1099127938585141,
-        1104388025338153, 1173374598605653, 1262797719066157, 1265872947674653,
-        1325898212229667, 1327034517143653, 1418575746675583, 1666122072463621,
-        1837400535259453, 1857422490084961, 1870756820971741, 1914550540480717,
-        2018963273468221, 2163829000939453, 2206020317369221, 2301037384029121,
-        2416062055125421, 2435076500074921, 2545656135020833, 2594428516569781,
-        2669983768115821, 2690937050990653, 2758640869506607, 2833525461416653,
-        2876662942007221, 2932155806957821, 2957010595723801, 3183606449929153,
-        3220133449185901, 3424103775720253, 3625360152399541, 3939300299037421,
-        3947917710714841, 3980273496750253, 4182256679324041, 4450605887818261,
-        4727893739521501, 4750350311306953, 4755334362931153, 5756440863559753,
-        5760976603475341, 5794399356078761, 5954850603819253, 6125544931991761,
-        6320931714094861, 6347593619672581, 6406268028524101, 6510632945054941,
-        6620082224794741, 6627325072566061, 6844056606431101, 6989404981060153,
-        7144293947609521, 7288348593229021, 7288539837129253, 7406102904971689,
-        7430233301822341, 7576425305871193, 7601696719033861, 7803926845356487,
-        7892007967006633, 7947797946559453, 8207000460596953, 8295064717807513,
-        8337196000698841, 8352714234009421, 8389755717406381, 8509654470665701,
-        8757647355282841, 8903933671696381, 8996133652295653, 9074421465661261,
-        9157536631454221, 9188353522314541])
+from sympy.core.compatibility import range, as_int
+from sympy.core.numbers import Float
+
+from mpmath.libmp import bitcount as _bitlength
+
+
+
+def _int_tuple(*i):
+    return tuple(int(_) for _ in i)
+
+
+def is_square(n, prep=True):
+    """Return True if n == a * a for some integer a, else False.
+    If n is suspected of *not* being a square then this is a
+    quick method of confirming that it is not.
+
+    References
+    ==========
+
+    [1]  http://mersenneforum.org/showpost.php?p=110896
+
+    See Also
+    ========
+    sympy.core.power.integer_nthroot
+    """
+    if prep:
+        n = as_int(n)
+        if n < 0:
+            return False
+        if n in [0, 1]:
+            return True
+    m = n & 127
+    if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
+        m = n % 63;
+        if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
+            from sympy.ntheory import perfect_power
+            if perfect_power(n, [2]):
+                return True
+    return False
 
 
 def _test(n, base, s, t):
@@ -89,103 +93,361 @@ def mr(n, bases):
     from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
-    n = int(n)
+    n = as_int(n)
     if n < 2:
         return False
-    # remove powers of 2 from n = t * 2**s + 1
+    # remove powers of 2 from n-1 (= t * 2**s)
     s = trailing(n - 1)
     t = n >> s
     for base in bases:
-        base = ZZ(base)
-        if not _test(n, base, s, t):
-            return False
+        # Bases >= n are wrapped, bases < 2 are invalid
+        if base >= n:
+            base %= n
+        if base >= 2:
+            base = ZZ(base)
+            if not _test(n, base, s, t):
+                return False
     return True
 
 
-def _mr_safe(n):
-    """For n < 10**16, use the Miller-Rabin test to determine with
-    certainty (unless the code is buggy!) whether n is prime.
+def _lucas_sequence(n, P, Q, k):
+    """Return the modular Lucas sequence (U_k, V_k, Q_k).
 
-    Although the primes 2 through 17 are sufficient to confirm that a number
-    less than 341550071728322 (that is not prime 2 through 17) is prime, this
-    range is broken up into smaller ranges with earlier ranges requiring less
-    work. For example, for n < 1373653 only the bases 2 and 3 need be tested.
+    Given a Lucas sequence defined by P, Q, returns the kth values for
+    U and V, along with Q^k, all modulo n.  This is intended for use with
+    possibly very large values of n and k, where the combinatorial functions
+    would be completely unusable.
 
-    What makes this a "safe" Miller-Rabin routine is that for n less than
-    the indicated limit, the given bases have been confirmed to detect all
-    composite numbers. What can potentially make this routine "unsafe" is
-    including ranges for which previous tests do not removes prime factors of
-    the bases being used. For example, this routine assumes that 2 and 3 have
-    already been removed as prime; but if the first test were the one for
-    n < 170584961 (that uses bases 350 and 3958281543) the routine would have
-    to ensure that the primes 5, 7, 29, 67, 679067 are already removed or else
-    they will be reported as being composite. For this reason it is helpful to
-    list the prime factors of the bases being tested as is done below. The
-    _mr_safe_helper can be used to generate this info-tag.
+    The modular Lucas sequences are used in numerous places in number theory,
+    especially in the Lucas compositeness tests and the various n + 1 proofs.
 
-    References for the bounds:
-    ==========================
+    Examples
+    ========
 
-    1. http://primes.utm.edu/prove/prove2_3.html
-    2. http://www.trnicely.net/misc/mpzspsp.html
-    3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
-        Accuracy_of_the_test
-    4. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
-    5. http://uucode.com/obf/dalbec/alg.html#sprp
+    >>> from sympy.ntheory.primetest import _lucas_sequence
+    >>> N = 10**2000 + 4561
+    >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
+    (0, 2, 1)
 
     """
+    D = P*P - 4*Q
+    if n < 2:
+        raise ValueError("n must be >= 2")
+    if k < 0:
+        raise ValueError("k must be >= 0")
+    if D == 0:
+        raise ValueError("D must not be zero")
 
-    if n < 1373653:
-        return mr(n, [2, 3])
-        #[2, 3] stot = 1 clear == bases
-        # these two (and similar below) are commented out since they are
-        # more expensive in terms of stot than a later test.
-        #if n < 9080191: return mr(n, [31, 73]) # ref [3]
-        # [31, 73] stot = 4 clear == bases
-        #if n < 25326001: return mr(n, [2, 3, 5])
-        # [2, 3, 5] stot = 3 clear == bases
-    if n < 170584961:
-        return mr(n, [350, 3958281543])
-        # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
-    if n < 4759123141:
-        return mr(n, [2, 7, 61])  # ref [3]
-        # [2, 7, 61] stot = 3 clear == bases
-    if n < 75792980677:
-        return mr(n, [2, 379215, 457083754])
-        # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
-        #if n < 118670087467: return n is not 3215031751 and mr(n, [2, 3, 5, 7]) # ref [3]
-        # [2, 3, 5, 7] stot = 4 clear == bases
-    if n < 1000000000000:
-        return mr(n, [2, 13, 23, 1662803])
-        # [2, 13, 23, 1662803] stot = 4 clear == bases
-        #if n < 2152302898747: return mr(n, [2, 3, 5, 7, 11])
-        # [2, 3, 5, 7, 11] stot = 5 clear == bases
-        #if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])
-        # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases
-        #if n < 21652684502221: return mr(n, [2, 1215, 34862, 574237825])
-        # [2, 1215, 34862, 574237825] stot = 8 clear [2, 3, 5, 7, 17431, 3281359]
-        #if n < 341550071728321: return mr(n, [2, 3, 5, 7, 11, 13, 17])
-        # [2, 3, 5, 7, 11, 13, 17] stot = 11 clear == bases
-    if n < 10000000000000000:
-        return mr(n, [2, 3, 7, 61, 24251]) and n not in _pseudos
-        # [2, 3, 7, 61, 24251] stot = 5 clear == bases
-    raise ValueError("n too large")
+    if k == 0:
+        return _int_tuple(0, 2, Q)
+    U = 1
+    V = P
+    Qk = Q
+    b = _bitlength(k)
+    if Q == 1:
+        # Optimization for extra strong tests.
+        while b > 1:
+            U = (U*V) % n
+            V = (V*V - 2) % n
+            b -= 1
+            if (k >> (b - 1)) & 1:
+                t = U*D
+                U = U*P + V
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = V*P + t
+                if V & 1:
+                    V += n
+                V >>= 1
+    elif P == 1 and Q == -1:
+        # Small optimization for 50% of Selfridge parameters.
+        while b > 1:
+            U = (U*V) % n
+            if Qk == 1:
+                V = (V*V - 2) % n
+            else:
+                V = (V*V + 2) % n
+                Qk = 1
+            b -= 1
+            if (k >> (b-1)) & 1:
+                t = U*D
+                U = U + V
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = V + t
+                if V & 1:
+                    V += n
+                V >>= 1
+                Qk = -1
+    else:
+        # The general case with any P and Q.
+        while b > 1:
+            U = (U*V) % n
+            V = (V*V - 2*Qk) % n
+            Qk *= Qk
+            b -= 1
+            if (k >> (b - 1)) & 1:
+                t = U*D
+                U = U*P + V
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = V*P + t
+                if V & 1:
+                    V += n
+                V >>= 1
+                Qk *= Q
+            Qk %= n
+    U %= n
+    V %= n
+    return _int_tuple(U, V, Qk)
+
+
+def _lucas_selfridge_params(n):
+    """Calculates the Selfridge parameters (D, P, Q) for n.  This is
+       method A from page 1401 of Baillie and Wagstaff.
+
+    References
+    ==========
+    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    """
+    from sympy.core import igcd
+    from sympy.ntheory.residue_ntheory import jacobi_symbol
+    D = 5
+    while True:
+        g = igcd(abs(D), n)
+        if g > 1 and g != n:
+            return (0, 0, 0)
+        if jacobi_symbol(D, n) == -1:
+            break
+        if D > 0:
+          D = -D - 2
+        else:
+          D = -D + 2
+    return _int_tuple(D, 1, (1 - D)/4)
+
+
+def _lucas_extrastrong_params(n):
+    """Calculates the "extra strong" parameters (D, P, Q) for n.
+
+    References
+    ==========
+    - OEIS A217719: Extra Strong Lucas Pseudoprimes
+      https://oeis.org/A217719
+    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    """
+    from sympy.core import igcd
+    from sympy.ntheory.residue_ntheory import jacobi_symbol
+    P, Q, D = 3, 1, 5
+    while True:
+        g = igcd(D, n)
+        if g > 1 and g != n:
+            return (0, 0, 0)
+        if jacobi_symbol(D, n) == -1:
+            break
+        P += 1
+        D = P*P - 4
+    return _int_tuple(D, P, Q)
+
+
+def is_lucas_prp(n):
+    """Standard Lucas compositeness test with Selfridge parameters.  Returns
+    False if n is definitely composite, and True if n is a Lucas probable
+    prime.
+
+    This is typically used in combination with the Miller-Rabin test.
+
+    References
+    ==========
+    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    - OEIS A217120: Lucas Pseudoprimes
+      https://oeis.org/A217120
+    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import isprime, is_lucas_prp
+    >>> for i in range(10000):
+    ...     if is_lucas_prp(i) and not isprime(i):
+    ...        print(i)
+    323
+    377
+    1159
+    1829
+    3827
+    5459
+    5777
+    9071
+    9179
+    """
+    n = as_int(n)
+    if n == 2:
+        return True
+    if n < 2 or (n % 2) == 0:
+        return False
+    if is_square(n, False):
+        return False
+
+    D, P, Q = _lucas_selfridge_params(n)
+    if D == 0:
+        return False
+    U, V, Qk = _lucas_sequence(n, P, Q, n+1)
+    return U == 0
+
+
+def is_strong_lucas_prp(n):
+    """Strong Lucas compositeness test with Selfridge parameters.  Returns
+    False if n is definitely composite, and True if n is a strong Lucas
+    probable prime.
+
+    This is often used in combination with the Miller-Rabin test, and
+    in particular, when combined with M-R base 2 creates the strong BPSW test.
+
+    References
+    ==========
+    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    - OEIS A217255: Strong Lucas Pseudoprimes
+      https://oeis.org/A217255
+    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import isprime, is_strong_lucas_prp
+    >>> for i in range(20000):
+    ...     if is_strong_lucas_prp(i) and not isprime(i):
+    ...        print(i)
+    5459
+    5777
+    10877
+    16109
+    18971
+    """
+    from sympy.ntheory.factor_ import trailing
+    n = as_int(n)
+    if n == 2:
+        return True
+    if n < 2 or (n % 2) == 0:
+        return False
+    if is_square(n, False):
+        return False
+
+    D, P, Q = _lucas_selfridge_params(n)
+    if D == 0:
+        return False
+
+    # remove powers of 2 from n+1 (= k * 2**s)
+    s = trailing(n + 1)
+    k = (n+1) >> s
+
+    U, V, Qk = _lucas_sequence(n, P, Q, k)
+
+    if U == 0 or V == 0:
+        return True
+    for r in range(1, s):
+        V = (V*V - 2*Qk) % n
+        if V == 0:
+            return True
+        Qk = pow(Qk, 2, n)
+    return False
+
+
+def is_extra_strong_lucas_prp(n):
+    """Extra Strong Lucas compositeness test.  Returns False if n is
+    definitely composite, and True if n is a "extra strong" Lucas probable
+    prime.
+
+    The parameters are selected using P = 3, Q = 1, then incrementing P until
+    (D|n) == -1.  The test itself is as defined in Grantham 2000, from the
+    Mo and Jones preprint.  The parameter selection and test are the same as
+    used in OEIS A217719, Perl's Math::Prime::Util, and the Lucas pseudoprime
+    page on Wikipedia.
+
+    With these parameters, there are no counterexamples below 2^64 nor any
+    known above that range.  It is 20-50% faster than the strong test.
+
+    Because of the different parameters selected, there is no relationship
+    between the strong Lucas pseudoprimes and extra strong Lucas pseudoprimes.
+    In particular, one is not a subset of the other.
+
+    References
+    ==========
+    - "Frobenius Pseudoprimes", Jon Grantham, 2000.
+      http://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
+    - OEIS A217719: Extra Strong Lucas Pseudoprimes
+      https://oeis.org/A217719
+    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import isprime, is_extra_strong_lucas_prp
+    >>> for i in range(20000):
+    ...     if is_extra_strong_lucas_prp(i) and not isprime(i):
+    ...        print(i)
+    989
+    3239
+    5777
+    10877
+    """
+    # Implementation notes:
+    #   1) the parameters differ from Thomas R. Nicely's.  His parameter
+    #      selection leads to pseudoprimes that overlap M-R tests, and
+    #      contradict Baillie and Wagstaff's suggestion of (D|n) = -1.
+    #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
+    #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
+    #      references on the MathWorld page, or run it and see Q=-1 is wrong.
+    from sympy.ntheory.factor_ import trailing
+    n = as_int(n)
+    if n == 2:
+        return True
+    if n < 2 or (n % 2) == 0:
+        return False
+    if is_square(n, False):
+        return False
+
+    D, P, Q = _lucas_extrastrong_params(n)
+    if D == 0:
+        return False
+
+    # remove powers of 2 from n+1 (= k * 2**s)
+    s = trailing(n + 1)
+    k = (n+1) >> s
+
+    U, V, Qk = _lucas_sequence(n, P, Q, k)
+
+    if U == 0 and (V == 2 or V == n - 2):
+        return True
+    if V == 0:
+        return True
+    for r in range(1, s):
+        V = (V*V - 2) % n
+        if V == 0:
+            return True
+    return False
 
 
 def isprime(n):
     """
-    Test if n is a prime number (True) or not (False). For n < 10**16 the
-    answer is accurate; greater n values have a small probability of actually
+    Test if n is a prime number (True) or not (False). For n < 2^64 the
+    answer is definitive; larger n values have a small probability of actually
     being pseudoprimes.
 
-    Negative primes (e.g. -2) are not considered prime.
+    Negative numbers (e.g. -2) are not considered prime.
 
-    The function first looks for trivial factors, and if none is found,
-    performs a safe Miller-Rabin strong pseudoprime test with bases
-    that are known to prove a number prime. Finally, a general Miller-Rabin
-    test is done with the first k bases which will report a pseudoprime as a
-    prime with an error of about 4**-k. The current value of k is 46 so the
-    error is about 2 x 10**-28.
+    The first step is looking for trivial factors, which if found enables
+    a quick return.  For small numbers, a set of deterministic Miller-Rabin
+    tests are performed with bases that are known to have no counterexamples
+    in their range.  Finally if the number is larger than 2^64, a strong
+    BPSW test is performed.  While this is a probable prime test and we
+    believe counterexamples exist, there are no known counterexamples.
 
     Examples
     ========
@@ -203,15 +465,33 @@ def isprime(n):
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime
 
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    from sympy.core.numbers import Float
     if isinstance(n, (Float, float)):
         return False
     n = int(n)
-    if n < 2:
+
+    # Step 1, do quick composite testing via trial division.  The individual
+    # modulo tests benchmark faster than one or two primorial igcds for me.
+    # The point here is just to speedily handle small numbers and many
+    # composites.  Step 2 only requires that n <= 2 get handled here.
+    if n in [2, 3, 5]:
+        return True
+    if n < 2 or (n % 2) == 0 or (n % 3) == 0 or (n % 5) == 0:
         return False
-    if n & 1 == 0:
-        return n == 2
+    if n < 49:
+        return True
+    if (n %  7) == 0 or (n % 11) == 0 or (n % 13) == 0 or (n % 17) == 0 or \
+       (n % 19) == 0 or (n % 23) == 0 or (n % 29) == 0 or (n % 31) == 0 or \
+       (n % 37) == 0 or (n % 41) == 0 or (n % 43) == 0 or (n % 47) == 0:
+        return False
+    if n < 2809:
+        return True
     if n <= 23001:
         return pow(2, n, n) == 2 and n not in [341, 561, 645, 1105, 1387, 1729,
                                                1905, 2047, 2465, 2701, 2821,
@@ -221,62 +501,75 @@ def isprime(n):
                                                12801, 13741, 13747, 13981,
                                                14491, 15709, 15841, 16705,
                                                18705, 18721, 19951, 23001]
-    try:
-        return _mr_safe(n)
-    except ValueError:
-        # prime list to use when number must be tested as a probable prime;
-        # these are the 46 primes less than 200
-        bases = [
-            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-            53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
-            109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
-            173, 179, 181, 191, 193, 197, 199]
-        return mr(n, bases)
+
+    # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
+    # This should be a bit faster than our step 2, and for large values will
+    # be a lot faster than our step 3 (C+GMP vs. Python).
+    from sympy.core.compatibility import HAS_GMPY
+    if HAS_GMPY == 2:
+        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
+        return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
 
 
-def _mr_safe_helper(_s):
-    """
-    Analyze a (new) mr_safe line for for total number of s's to
-    be tested in _test along with the primes that must be cleared
-    by a previous test.
+    # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:
+    #    https://miller-rabin.appspot.com/
+    # for lists.  We have made sure the M-R routine will successfully handle
+    # bases larger than n, so we can use the minimal set.
+    if n < 341531:
+        return mr(n, [9345883071009581737])
+    if n < 885594169:
+        return mr(n, [725270293939359937, 3569819667048198375])
+    if n < 350269456337:
+        return mr(n, [4230279247111683200, 14694767155120705706, 16641139526367750375])
+    if n < 55245642489451:
+        return mr(n, [2, 141889084524735, 1199124725622454117, 11096072698276303650])
+    if n < 7999252175582851:
+        return mr(n, [2, 4130806001517, 149795463772692060, 186635894390467037, 3967304179347715805])
+    if n < 585226005592931977:
+        return mr(n, [2, 123635709730000, 9233062284813009, 43835965440333360, 761179012939631437, 1263739024124850375])
+    if n < 18446744073709551616:
+        return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
 
-    e.g.
+    # We could do this instead at any point:
+    #if n < 18446744073709551616:
+    #   return mr(n, [2]) and is_extra_strong_lucas_prp(n)
 
-    >>> from sympy.ntheory.primetest import _mr_safe_helper
-    >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
-     # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
-    >>> print(_mr_safe_helper('return mr(n, [2, 379215, 457083754])'))
-     # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
+    # Here are tests that are safe for MR routines that don't understand
+    # large bases.
+    #if n < 9080191:
+    #    return mr(n, [31, 73])
+    #if n < 19471033:
+    #    return mr(n, [2, 299417])
+    #if n < 38010307:
+    #    return mr(n, [2, 9332593])
+    #if n < 316349281:
+    #    return mr(n, [11000544, 31481107])
+    #if n < 4759123141:
+    #    return mr(n, [2, 7, 61])
+    #if n < 105936894253:
+    #    return mr(n, [2, 1005905886, 1340600841])
+    #if n < 31858317218647:
+    #    return mr(n, [2, 642735, 553174392, 3046413974])
+    #if n < 3071837692357849:
+    #    return mr(n, [2, 75088, 642735, 203659041, 3613982119])
+    #if n < 18446744073709551616:
+    #    return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
 
-    """
+    # Step 3: BPSW.
+    #
+    #  Time for isprime(10**2000 + 4561), no gmpy or gmpy2 installed
+    #     44.0s   old isprime using 46 bases
+    #      5.3s   strong BPSW + one random base
+    #      4.3s   extra strong BPSW + one random base
+    #      4.1s   strong BPSW
+    #      3.2s   extra strong BPSW
 
-    def _info(bases):
-        """
-        Analyze the list of bases, reporting the number of 'j-loops' that
-        will be required if this list is passed to _test (stot) and the primes
-        that must be cleared by a previous test.
+    # Classic BPSW from page 1401 of the paper.  See alternate ideas below.
+    return mr(n, [2]) and is_strong_lucas_prp(n)
 
-        This info tag should then be appended to any new mr_safe line
-        that is added so someone can easily see whether that line satisfies
-        the requirements of mr_safe (see docstring there for details).
+    # Using extra strong test, which is somewhat faster
+    #return mr(n, [2]) and is_extra_strong_lucas_prp(n)
 
-        """
-        from sympy.ntheory.factor_ import factorint, trailing
-
-        factors = []
-        tot = 0
-        for b in bases:
-            tot += trailing(b - 1)
-            f = factorint(b)
-            factors.extend(f)
-        factors = sorted(set(factors))
-        bases = sorted(set(bases))
-        if bases == factors:
-            factors = '== bases'
-        else:
-            factors = str(factors)
-        return ' # %s stot = %s clear %s' % tuple(
-            [str(x).replace('L', '') for x in (list(bases), tot, factors)])
-
-    _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
-    return _info(_r)
+    # Add a random M-R base
+    #import random
+    #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)

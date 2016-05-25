@@ -12,7 +12,7 @@ from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
-def _init_python_printing(stringify_func):
+def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
     from sympy.core.compatibility import builtins
@@ -27,7 +27,7 @@ def _init_python_printing(stringify_func):
         """
         if arg is not None:
             builtins._ = None
-            print(stringify_func(arg))
+            print(stringify_func(arg, **settings))
             builtins._ = arg
 
     sys.displayhook = _displayhook
@@ -35,7 +35,7 @@ def _init_python_printing(stringify_func):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer):
+                           latex_printer, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -125,14 +125,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
-            s = latex(o, mode=latex_mode)
+            s = latex(o, mode=latex_mode, **settings)
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
                 debug('preview failed with:', repr(e),
                       ' Falling back to matplotlib backend')
                 if latex_mode != 'inline':
-                    s = latex(o, mode='inline')
+                    s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
 
     def _print_latex_matplotlib(o):
@@ -140,7 +140,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by mathtext
         """
         if _can_print_latex(o):
-            s = latex(o, mode='inline')
+            s = latex(o, mode='inline', **settings)
             return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
@@ -148,7 +148,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain')
+            s = latex(o, mode='plain', **settings)
             s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
@@ -241,7 +241,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None):
+                  latex_printer=None, **settings):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -307,8 +307,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     pretty_printer: function, optional, default=None
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
-        A custom LaTeX printer. This should mimic sympy.printing.latex()
-        This should mimic sympy.printing.latex().
+        A custom LaTeX printer. This should mimic sympy.printing.latex().
 
     Examples
     ========
@@ -413,8 +412,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if in_ipython:
+        mode_in_settings = settings.pop("mode", None)
+        if mode_in_settings:
+            debug("init_printing: Mode is not able to be set due to internals"
+                  "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer)
+                               print_builtin, latex_printer, **settings)
     else:
-        _init_python_printing(stringify_func)
+        _init_python_printing(stringify_func, **settings)

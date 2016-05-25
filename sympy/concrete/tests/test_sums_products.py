@@ -654,22 +654,22 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set([y])
-        assert func(2, (x, 1, y)).free_symbols == set([y])
+        assert func(0, (x, 1, y)).free_symbols == {y}
+        assert func(2, (x, 1, y)).free_symbols == {y}
         assert func(x, (x, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y)).free_symbols == set([x, y])
-        assert func(x, (y, 1, 2)).free_symbols == set([x])
-        assert func(x, (y, 1, 1)).free_symbols == set([x])
-        assert func(x, (y, 1, z)).free_symbols == set([x, z])
+        assert func(x, (x, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y)).free_symbols == {x, y}
+        assert func(x, (y, 1, 2)).free_symbols == {x}
+        assert func(x, (y, 1, 1)).free_symbols == {x}
+        assert func(x, (y, 1, z)).free_symbols == {x, z}
         assert func(x, (x, 1, y), (y, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == set([z])
-        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
-    assert Sum(1, (x, 1, y)).free_symbols == set([y])
+        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == {z}
+        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == {x, z}
+    assert Sum(1, (x, 1, y)).free_symbols == {y}
     # free_symbols answers whether the object *as written* has free symbols,
     # not whether the evaluated expression has free symbols
-    assert Product(1, (x, 1, y)).free_symbols == set([y])
+    assert Product(1, (x, 1, y)).free_symbols == {y}
 
 
 def test_conjugate_transpose():
@@ -836,7 +836,7 @@ def test_issue_2787():
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
     assert res == Piecewise(
-        (n*p, And(Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p/Abs(p - 1) <= 1)),
+        (n*p, p/Abs(p - 1) <= 1),
         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
         True))
 

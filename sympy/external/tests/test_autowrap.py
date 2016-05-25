@@ -111,31 +111,34 @@ def runtest_issue_10274(language, backend):
     for file in os.listdir(tmp):
         if file.startswith("wrapped_code_") and file.endswith(".c"):
             fil = open(tmp + '/' + file)
-            assert fil.read() == ("/******************************************************************************\n"
-                         " *                    Code generated with sympy "+ sympy.__version__+"                     *\n"
-                         " *                                                                            *\n"
-                         " *              See http://www.sympy.org/ for more information.               *\n"
-                         " *                                                                            *\n"
-                         " *                      This file is part of 'autowrap'                       *\n"
-                         " ******************************************************************************/\n"
-                         "#include " + '"' + file[:-1]+ 'h"' + "\n"
-                         "#include <math.h>\n"
-                         "\n"
-                         "double helper(double a, double b, double c) {\n"
-                         "\n"
-                         "   double helper_result;\n"
-                         "   helper_result = a - b + c;\n"
-                         "   return helper_result;\n"
-                         "\n"
-                         "}\n"
-                         "\n"
-                         "double autofunc(double a, double b, double c) {\n"
-                         "\n"
-                         "   double autofunc_result;\n"
-                         "   autofunc_result = pow(helper(a, b, c), 13);\n"
-                         "   return autofunc_result;\n"
-                         "\n"
-                         "}\n")
+            lines = fil.readlines()
+            assert lines[0] == "/******************************************************************************\n"
+            assert "Code generated with sympy " + sympy.__version__ in lines[1]
+            assert lines[2:] == [
+                " *                                                                            *\n",
+                " *              See http://www.sympy.org/ for more information.               *\n",
+                " *                                                                            *\n",
+                " *                      This file is part of 'autowrap'                       *\n",
+                " ******************************************************************************/\n",
+                "#include " + '"' + file[:-1]+ 'h"' + "\n",
+                "#include <math.h>\n",
+                "\n",
+                "double helper(double a, double b, double c) {\n",
+                "\n",
+                "   double helper_result;\n",
+                "   helper_result = a - b + c;\n",
+                "   return helper_result;\n",
+                "\n",
+                "}\n",
+                "\n",
+                "double autofunc(double a, double b, double c) {\n",
+                "\n",
+                "   double autofunc_result;\n",
+                "   autofunc_result = pow(helper(a, b, c), 13);\n",
+                "   return autofunc_result;\n",
+                "\n",
+                "}\n",
+                ]
 
 #
 # tests of language-backend combinations

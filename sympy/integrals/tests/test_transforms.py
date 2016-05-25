@@ -33,8 +33,8 @@ def test_undefined_function():
 def test_free_symbols():
     from sympy import Function
     f = Function('f')
-    assert mellin_transform(f(x), x, s).free_symbols == set([s])
-    assert mellin_transform(f(x)*a, x, s).free_symbols == set([s, a])
+    assert mellin_transform(f(x), x, s).free_symbols == {s}
+    assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
 
 
 def test_as_integral():

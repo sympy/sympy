@@ -592,7 +592,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     recast = dict([(i, Dummy(i.name, real=True))
         for i in gens if i.is_real is None])
     inequalities = [i.xreplace(recast) for i in inequalities]
-    symbols = set([i.xreplace(recast) for i in symbols])
+    symbols = {i.xreplace(recast) for i in symbols}
 
     # prefilter
     keep = []
@@ -616,4 +616,4 @@ def reduce_inequalities(inequalities, symbols=[]):
     rv = _reduce_inequalities(inequalities, symbols)
 
     # restore original symbols and return
-    return rv.xreplace(dict([(v, k) for k, v in recast.items()]))
+    return rv.xreplace({v: k for k, v in recast.items()})

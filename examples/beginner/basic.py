@@ -5,19 +5,18 @@
 Demonstrates how to create symbols and print some algebra operations.
 """
 
-import sympy
-from sympy import pprint
+from sympy import Symbol, pprint
 
 
 def main():
-    a = sympy.Symbol('a')
-    b = sympy.Symbol('b')
-    c = sympy.Symbol('c')
+    a = Symbol('a')
+    b = Symbol('b')
+    c = Symbol('c')
     e = ( a*b*b + 2*b*a*b )**c
 
-    print
+    print('')
     pprint(e)
-    print
+    print('')
 
 if __name__ == "__main__":
     main()

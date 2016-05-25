@@ -30,7 +30,7 @@ def _filtered_gens(poly, symbol):
     set([x, exp(x)])
 
     """
-    gens = set([g for g in poly.gens if symbol in g.free_symbols])
+    gens = {g for g in poly.gens if symbol in g.free_symbols}
     for g in list(gens):
         ag = 1/g
         if g in gens and ag in gens:

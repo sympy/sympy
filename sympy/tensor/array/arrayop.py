@@ -2,7 +2,7 @@ import itertools
 
 import collections
 
-from sympy import S, Tuple, MatrixBase
+from sympy import S, Tuple, MatrixBase, transpose
 from sympy import S, Tuple, diff, MatrixBase
 
 from sympy.tensor.array import ImmutableDenseNDimArray
@@ -123,16 +123,39 @@ def tensorcontraction(array, *contraction_axes):
         cum_shape[rank - i - 1] = _cumul
         _cumul *= int(array.shape[rank - i - 1])
 
+    # DEFINITION: by absolute position it is meant the position along the one
+    # dimensional array containing all the tensor components.
+
+    # Possible future work on this module: move computation of absolute
+    # positions to a class method.
+
+    # Determine absolute positions of the uncontracted indices:
     remaining_indices = [[cum_shape[i]*j for j in range(array.shape[i])]
                          for i in range(rank) if i not in taken_dims]
 
+    # Determine absolute positions of the contracted indices:
+    summed_deltas = []
+    for axes_group in contraction_axes:
+        lidx = []
+        for js in range(array.shape[axes_group[0]]):
+            lidx.append(sum([cum_shape[ig] * js for ig in axes_group]))
+        summed_deltas.append(lidx)
+
+    # Compute the contracted array:
+    #
+    # 1. external for loops on all uncontracted indices.
+    #    Uncontracted indices are determined by the combinatorial product of
+    #    the absolute positions of the remaining indices.
+    # 2. internal loop on all contracted indices.
+    #    It sum the values of the absolute contracted index and the absolute
+    #    uncontracted index for the external loop.
     contracted_array = []
     for icontrib in itertools.product(*remaining_indices):
-        i = sum(icontrib)
+        index_base_position = sum(icontrib)
         isum = S.Zero
-        for axes_group in contraction_axes:
-            for js in range(array.shape[axes_group[0]]):
-                isum += array[i + sum([cum_shape[ig]*js for ig in axes_group])]
+        for sum_to_index in itertools.product(*summed_deltas):
+            isum += array[index_base_position + sum(sum_to_index)]
+
         contracted_array.append(isum)
 
     if len(remaining_indices) == 0:
@@ -185,3 +208,67 @@ def derive_by_array(expr, dx):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
         else:
             return diff(expr, dx)
+
+
+def permutedims(expr, perm):
+    """
+    Permutes the indices of an array.
+
+    Parameter specifies the permutation of the indices.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z, t
+    >>> from sympy import sin
+    >>> from sympy.tensor.array import Array, permutedims
+    >>> a = Array([[x, y, z], [t, sin(x), 0]])
+    >>> a
+    [[x, y, z], [t, sin(x), 0]]
+    >>> permutedims(a, (1, 0))
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    If the array is of second order, ``transpose`` can be used:
+
+    >>> from sympy import transpose
+    >>> transpose(a)
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    Examples on higher dimensions:
+
+    >>> b = Array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    >>> permutedims(b, (2, 1, 0))
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, (1, 2, 0))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    ``Permutation`` objects are also allowed:
+
+    >>> from sympy.combinatorics import Permutation
+    >>> permutedims(b, Permutation([1, 2, 0]))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    """
+    if not isinstance(expr, NDimArray):
+        raise TypeError("expression has to be an N-dim array")
+
+    from sympy.combinatorics import Permutation
+    if not isinstance(perm, Permutation):
+        perm = Permutation(list(perm))
+
+    if perm.size != expr.rank():
+        raise ValueError("wrong permutation size")
+
+    # Get the inverse permutation:
+    iperm = ~perm
+
+    indices_span = perm([range(i) for i in expr.shape])
+
+    new_array = [None]*len(expr)
+    for i, idx in enumerate(itertools.product(*indices_span)):
+        t = iperm(idx)
+        new_array[i] = expr[t]
+
+    new_shape = perm(expr.shape)
+
+    return expr.func(new_array, new_shape)

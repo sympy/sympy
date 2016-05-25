@@ -11,8 +11,8 @@ def test_euler_interface():
     raises(TypeError, lambda: euler(D(x(t), t)*y(t), [x(t), y]))
     raises(ValueError, lambda: euler(D(x(t), t)*x(y), [x(t), x(y)]))
     raises(TypeError, lambda: euler(D(x(t), t)**2, x(0)))
-    assert euler(D(x(t), t)**2/2, set([x(t)])) == [Eq(-D(x(t), t, t))]
-    assert euler(D(x(t), t)**2/2, x(t), set([t])) == [Eq(-D(x(t), t, t))]
+    assert euler(D(x(t), t)**2/2, {x(t)}) == [Eq(-D(x(t), t, t))]
+    assert euler(D(x(t), t)**2/2, x(t), {t}) == [Eq(-D(x(t), t, t))]
 
 
 def test_euler_pendulum():

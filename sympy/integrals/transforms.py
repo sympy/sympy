@@ -74,8 +74,8 @@ class IntegralTransform(Function):
         This method returns the symbols that will exist when the transform
         is evaluated.
         """
-        return self.function.free_symbols.union(set([self.transform_variable])) \
-            - set([self.function_variable])
+        return self.function.free_symbols.union({self.transform_variable}) \
+            - {self.function_variable}
 
     def _compute_transform(self, f, x, s, **hints):
         raise NotImplementedError
