@@ -791,11 +791,12 @@ class HolonomicFunction(object):
     def to_Sequence(self):
         dict1 = {}
         n = symbols('n', integer=True)
-        R, _ = RecurrenceOperators(QQ.old_poly_ring(n), 'Sn')
+        dom = self.annihilator.parent.base.dom
+        R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
         for i, j in enumerate(self.annihilator.listofpoly):
             listofdmp = j.all_coeffs()
             degree = len(listofdmp) - 1
-            for k in range (degree + 1):
+            for k in range(degree + 1):
                 coeff = listofdmp[degree - k]
                 if coeff == 0:
                     continue
@@ -809,7 +810,7 @@ class HolonomicFunction(object):
         for i in range(upper - lower + 1):
             j = lower + i
             if j in dict1.keys():
-                sol.append(dict1[j])
+                sol.append(dict1[j].subs(n, n - lower))
             else:
                 sol.append(S(0))
         sol = RecurrenceOperator(sol, R)
