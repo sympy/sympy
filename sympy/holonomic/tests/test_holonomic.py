@@ -1,4 +1,4 @@
-from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_Hyper
+from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
 from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr
 from sympy import ZZ, QQ
 
@@ -146,14 +146,14 @@ def test_HolonomicFunction_composition():
         15*x**4 + 16*x**3 + 6*x**2 + 4*x + 1)*Dx**2, x)
     assert p == r
 
-def test_From_Hyper():
+def test_from_hyper():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = hyper([1, 1], [S(3)/2], x**2/4)
     q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + 4/3])
-    r = from_Hyper(p)
+    r = from_hyper(p)
     assert r == q
-    p = from_Hyper(hyper([1], [S(3)/2], x**2/4))
+    p = from_hyper(hyper([1], [S(3)/2], x**2/4))
     q = HolonomicFunction(-2*x + (-x**2 + 4)*Dx + 2*x*Dx**2, x)
     x0 = 1
     y0 = '[sqrt(pi)*exp(1/4)*erf(1/2), -sqrt(pi)*exp(1/4)*erf(1/2)/2 + 1]'

@@ -744,7 +744,7 @@ class HolonomicFunction(object):
         See Also
         ========
 
-        from_Hyper
+        from_hyper
         """
 
         R = self.annihilator.parent
@@ -787,7 +787,7 @@ class HolonomicFunction(object):
         return HolonomicFunction(sol, self.x)
 
 
-def from_Hyper(func, x0=0, evalf=False):
+def from_hyper(func, x0=0, evalf=False):
     """
     Converts Hypergeometric Function to Holonomic.
     func is the Hypergeometric Function and x0 be the point at
@@ -795,10 +795,10 @@ def from_Hyper(func, x0=0, evalf=False):
     Examples
     =======
 
-    >>> from sympy.holonomic.holonomic import from_Hyper, DifferentialOperators
+    >>> from sympy.holonomic.holonomic import from_hyper, DifferentialOperators
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
-    >>> from_Hyper(hyper([], [S(3)/2], x**2/4))
+    >>> from_hyper(hyper([], [S(3)/2], x**2/4))
     HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1) , f'(1) = -sinh(1) + cosh(1)
 
     """
@@ -902,8 +902,6 @@ def DMFdiff(frac):
 def DMFsubs(frac, x0):
     if not isinstance(frac, DMF):
         return frac
-    K = frac.ring
-    R = K.dom.old_poly_ring(K.gens[0])
     p = frac.num
     q = frac.den
     sol_p = S(0)
