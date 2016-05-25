@@ -1085,7 +1085,7 @@ def test_nlinsolve_using_solve_poly_and_substitution():
 
 @SKIP("Comparison Error, No bug in nlinsolve")
 def test_nlinsolve_complex():
-    x, y, z = symbols('x, y, z', real = True)
+    x, y, z = symbols('x, y, z')
     assert nlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
     FiniteSet(Dict(\
         (x, imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)),\
