@@ -128,7 +128,6 @@ class FreeGroup(DefaultPrinting):
     """
     is_associative = True
     is_group = True
-    is_fp_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
 

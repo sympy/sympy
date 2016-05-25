@@ -99,19 +99,19 @@ def coset_table(fp_grp, H):
 # x: Mathematically an element of "A" (set of generators and
 #   their inverses), represented using "FpGroupElm"
 
-def define(coset_table, alpha, x):
-    if coset_table.n == DefaultMaxLimit:
+def define(C, alpha, x):
+    if C.n == DefaultMaxLimit:
         # abort the further generation of cosets
         return
-    coset_table.n += 1
+    C.n += 1
     # beta is the new coset generated
     beta = n
-    coset_table.p[beta] = beta
-    coset_table[alpha][coset_table.A.index(x)] = beta
-    coset_table[alpha][coset_table.A.index(x.inverse())] = alpha
+    C.p[beta] = beta
+    C[alpha][C.A.index(x)] = beta
+    C[alpha][C.A.index(x.inverse())] = alpha
 
 
-def scan(coset_table, alpha, word, A):
+def scan(C, alpha, word, A):
     """
     >>> F, x, y = free_group("x, y")
     >>> A = [x, x**-1, y, y**-1]
@@ -129,12 +129,12 @@ def scan(coset_table, alpha, word, A):
     >>> c1
     [[1, 1, -1, 1], [0, 0, 0, -1]]
 
-    >>> c2 = [[1, 1, 2, 1], [0, 0, 0, -1]] + [[-1, -1, -1, 0]]
+    >>> c2 = [[1, 1, 2, 1], [0, 0, 0, -1], [-1, -1, -1, 0]]
     >>> scan(c2, 1, y**3, A)
     >>> c2
     [[1, 1, 2, 1], [0, 0, 0, 2], [-1, -1, 1, 0]]
 
-    >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0]] + [[2, 2, -1, -1]]
+    >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, -1, -1]]
     >>> scan(c4, 2, (x*y)**3, A)
     >>> c3
     [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
@@ -149,26 +149,76 @@ def scan(coset_table, alpha, word, A):
     r = len(word)
     # list of union of generators and their inverses
     # A = coset_table.A
-    while i < r and coset_table[f][A.index(word.subword(i, i+1))] != -1:
-        f = coset_table[f][A.index(word.subword(i, i+1))]
+    while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
+        f = C[f][A.index(word.subword(i, i+1))]
         i += 1
     if i >= r:
         if f != alpha:
             # implement the "coincidence" routine on Pg 158 of Handbook.
-            concidence(coset_table, f, alpha)
+            coincidence(C, f, alpha)
             return
     b = alpha
     j = r
-    while j >= i and coset_table[b][A.index(word.subword(j-1, j).inverse())] != -1:
-        b = coset_table[b][A.index(word.subword(j-1, j).inverse())]
+    while j >= i and C[b][A.index(word.subword(j-1, j).inverse())] != -1:
+        b = C[b][A.index(word.subword(j-1, j).inverse())]
         j -= 1
     if j < i:
         # run the "coincidence" routine
-        concidence(C, f, b)
+        coincidence(C, f, b)
     elif j == i + 1:
         # deduction process
-        coset_table[f][A.index(word.subword(i, i+1))] = b
-        coset_table[b][A.index(word.subword(i, i+1).inverse())] = f
+        C[f][A.index(word.subword(i, i+1))] = b
+        C[b][A.index(word.subword(i, i+1).inverse())] = f
+
+# here alpha, beta represent the pair of cosets where
+# coicidence occurs
+
+def merge(k, lamda, p, q, l):
+    phi = rep(k, p)
+    chi = rep(lamda, p)
+    if phi != chi:
+        mu = min(phi, chi)
+        v = max(phi, chi)
+        p[v] = mu
+        l += 1
+        q[l] = v
+
+def rep(k, p):
+    lamda = k
+    pho = p[lamda]
+    while p != lamda:
+        lamda = pho
+        pho = p[lamda]
+    mu = k
+    pho = p[mu]
+    while pho != lamda:
+        p[mu] = lamda
+        mu = pho
+        pho = p[mu]
+    return lamda
+
+def coincidence(C, alpha, beta):
+    l = 0
+    q = []
+    merge(alpha, beta, p, q, l)
+    i = 1
+    while i <= l:
+        gamma = q[i]
+        i += 1
+        sigma = sigma - set(gamma)
+        for x in A:
+            if C[gamma][A.index(x)] != -1:
+                delta = C[gamma][A.index(x)]
+                C[delta][A.index(x**-1)] = -1
+                mu = rep(gamma, p)
+                v = rep(delta, p)
+                if C[mu][A.index(x)] == -1:
+                    merge(v, C[mu][A.index(x)], p, q, l)
+                elif C[v][A.index(x**-1)] != -1:
+                    merge(mu, C[v][A.index(x**-1)], p, q, l)
+                else:
+                    C[mu][A.index(x)] = v
+                    C[v][A.index(x**-1)] = mu
 
 
 FpGroupElm = FreeGroupElm
