@@ -441,6 +441,18 @@ def test_imageset_intersect_real():
     assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
+def test_imageset_intersect_interval():
+    from sympy.abc import n
+    f1 = ImageSet(Lambda(n, n*pi), S.Integers)
+    f2 = ImageSet(Lambda(n, 2*n), Interval(0, pi))
+    f3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+
+    assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f2.intersect(Interval( 1, 2)) == Interval(1, 2)
+    assert f3.intersect(Interval(-1, 1)) == S.EmptySet
+    assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
+
+
 def test_infinitely_indexed_set_3():
     from sympy.abc import n, m, t
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
