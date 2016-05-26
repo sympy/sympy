@@ -67,6 +67,8 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
+        if arg.is_real is False or (arg.is_real is None and arg.is_complex):
+            raise ValueError("DiracDelta is not defined for the complex arguments and also for them which are not real.")
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
     def simplify(self, x):
@@ -195,19 +197,14 @@ class DiracDelta(Function):
 
            >>> y = Symbol('y')
 
-           >>> DiracDelta(y).rewrite(Piecewise)
-           Piecewise((oo, Eq(y, 0)), (0, True))
+           >>> DiracDelta(y + 10).rewrite(Piecewise)
+           Piecewise((oo, Eq(y + 10, 0)), (0, True))
 
            >>> DiracDelta(y, 1).rewrite(Piecewise)
            DiracDelta(y, 1)
 
-           >>> z = Symbol('z', complex=True)
-
-           >>> DiracDelta(z).rewrite(Piecewise)
-           DiracDelta(z)
-
         """
-        if (self.args[0].is_real or not (self.args[0].is_real is None and self.args[0].is_complex)) and len(args) == 1:
+        if len(args) == 1:
             return Piecewise((oo, Eq(args[0], 0)), (0, True))
 
     @staticmethod
@@ -269,6 +266,8 @@ class Heaviside(Function):
             return S.Zero
         elif arg.is_positive:
             return S.One
+        if arg.is_real is False or (arg.is_real is None and arg.is_complex):
+            raise ValueError("Heaviside is not defined for the complex arguments and also for them which are not real.")
 
     def _eval_rewrite_as_Piecewise(self, arg):
         """Represents Heaviside in a Piecewise form
@@ -290,14 +289,8 @@ class Heaviside(Function):
            >>> Heaviside(y).rewrite(Piecewise)
            Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True))
 
-           >>> z = Symbol('z', complex=True)
-
-           >>> Heaviside(z).rewrite(Piecewise)
-           Heaviside(z)
-
         """
-        if arg.is_real or not (arg.is_real is None and arg.is_complex):
-            return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
+        return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
 
     def _eval_rewrite_as_sign(self, arg):
         if arg.is_real:

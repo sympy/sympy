@@ -15,6 +15,8 @@ x, y = symbols('x y')
 
 
 def test_DiracDelta():
+    w, z = Symbol('w', real=False), Symbol('z', complex=True)
+
     assert DiracDelta(1) == 0
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
@@ -60,9 +62,13 @@ def test_DiracDelta():
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
+    raises(ValueError, lambda: DiracDelta(z))
+    raises(ValueError, lambda: DiracDelta(w))
 
 
 def test_heaviside():
+    w, z = Symbol('w', real=False), Symbol('z', complex=True)
+
     assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
@@ -82,15 +88,20 @@ def test_heaviside():
     raises(ArgumentIndexError, lambda: Heaviside(x).fdiff(2))
     raises(ValueError, lambda: Heaviside(I))
     raises(ValueError, lambda: Heaviside(2 + 3*I))
+    raises(ValueError, lambda: DiracDelta(z))
+    raises(ValueError, lambda: DiracDelta(w))
 
 
 def test_rewrite():
     x, y, z = Symbol('x', real=True), Symbol('y'), Symbol('z', complex=True)
+    w = Symbol('w', real=False)
     assert Heaviside(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (S(1)/2, Eq(x, 0)), (0, True))
     assert Heaviside(y).rewrite(Piecewise) == \
         Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True))
-    assert Heaviside(z).rewrite(Piecewise) == Heaviside(z)
+
+    raises(ValueError, lambda: Heaviside(z).rewrite(Piecewise))
+    raises(ValueError, lambda: Heaviside(w).rewrite(Piecewise))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
@@ -101,4 +112,6 @@ def test_rewrite():
         Piecewise((oo, Eq(x - 5, 0)), (0, True))
     assert DiracDelta(x-5, 1).rewrite(Piecewise) == \
         DiracDelta(x-5, 1)
-    assert DiracDelta(z).rewrite(Piecewise) == DiracDelta(z)
+
+    raises(ValueError, lambda: DiracDelta(z).rewrite(Piecewise))
+    raises(ValueError, lambda: DiracDelta(w).rewrite(Piecewise))
