@@ -446,11 +446,17 @@ def test_imageset_intersect_interval():
     f1 = ImageSet(Lambda(n, n*pi), S.Integers)
     f2 = ImageSet(Lambda(n, 2*n), Interval(0, pi))
     f3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    # complex expressions
+    f4 = ImageSet(Lambda(n, n*I*pi), S.Integers)
+    f5 = ImageSet(Lambda(n, 2*I*n*pi + pi/2), S.Integers)
 
     assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
-    assert f2.intersect(Interval( 1, 2)) == Interval(1, 2)
+    assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
     assert f3.intersect(Interval(-1, 1)) == S.EmptySet
     assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
+    assert f4.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f4.intersect(Interval(1, 2)) == S.EmptySet
+    assert f5.intersect(Interval(0, 1)) == S.EmptySet
 
 
 def test_infinitely_indexed_set_3():
