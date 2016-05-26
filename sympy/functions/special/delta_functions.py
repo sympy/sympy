@@ -67,8 +67,8 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
-        if arg.is_real is False or (arg.is_real is None and arg.is_complex):
-            raise ValueError("DiracDelta is not defined for the complex arguments and also for them which are not real.")
+        if fuzzy_not(im(arg).is_zero):
+            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
     def simplify(self, x):
@@ -184,7 +184,7 @@ class DiracDelta(Function):
            ========
 
            >>> from sympy import DiracDelta, Piecewise, Symbol, oo
-           >>> x = Symbol('x', real=True)
+           >>> x = Symbol('x')
 
            >>> DiracDelta(x).rewrite(Piecewise)
            Piecewise((oo, Eq(x, 0)), (0, True))
@@ -192,16 +192,11 @@ class DiracDelta(Function):
            >>> DiracDelta(x - 5).rewrite(Piecewise)
            Piecewise((oo, Eq(x - 5, 0)), (0, True))
 
+           >>> DiracDelta(x**2 - 5).rewrite(Piecewise)
+           Piecewise((oo, Eq(x**2 - 5, 0)), (0, True))
+
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
            DiracDelta(x - 5, 4)
-
-           >>> y = Symbol('y')
-
-           >>> DiracDelta(y + 10).rewrite(Piecewise)
-           Piecewise((oo, Eq(y + 10, 0)), (0, True))
-
-           >>> DiracDelta(y, 1).rewrite(Piecewise)
-           DiracDelta(y, 1)
 
         """
         if len(args) == 1:
@@ -266,8 +261,6 @@ class Heaviside(Function):
             return S.Zero
         elif arg.is_positive:
             return S.One
-        if arg.is_real is False or (arg.is_real is None and arg.is_complex):
-            raise ValueError("Heaviside is not defined for the complex arguments and also for them which are not real.")
 
     def _eval_rewrite_as_Piecewise(self, arg):
         """Represents Heaviside in a Piecewise form
@@ -276,7 +269,7 @@ class Heaviside(Function):
            ========
 
            >>> from sympy import Heaviside, Piecewise, Symbol
-           >>> x = Symbol('x', real=True)
+           >>> x = Symbol('x')
 
            >>> Heaviside(x).rewrite(Piecewise)
            Piecewise((1, x > 0), (1/2, Eq(x, 0)), (0, True))
@@ -284,10 +277,8 @@ class Heaviside(Function):
            >>> Heaviside(x - 5).rewrite(Piecewise)
            Piecewise((1, x - 5 > 0), (1/2, Eq(x - 5, 0)), (0, True))
 
-           >>> y = Symbol('y')
-
-           >>> Heaviside(y).rewrite(Piecewise)
-           Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True))
+           >>> Heaviside(x**2 - 1).rewrite(Piecewise)
+           Piecewise((1, x**2 - 1 > 0), (1/2, Eq(x**2 - 1, 0)), (0, True))
 
         """
         return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
