@@ -2715,7 +2715,7 @@ def test_issue_9457_9467_9876():
 def test_issue_9480():
     m = Matrix([[-5 + 5*sqrt(2), -5],
                 [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
-    assert m.rank() < m.rows
+    assert m.rank() == 1
 
 
 def test_issue_9422():
