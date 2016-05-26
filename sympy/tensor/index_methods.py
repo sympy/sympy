@@ -36,14 +36,15 @@ def _remove_repeated(inds):
     (set([1, 3]), (2,))
 
     """
-    sum_index = {}
+    ind_set = set()
+    remove_set = set()
     for i in inds:
-        if i in sum_index:
-            sum_index[i] += 1
+        if i in ind_set:
+            remove_set.add(i)
         else:
-            sum_index[i] = 0
-    inds = [x for x in inds if not sum_index[x]]
-    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+            ind_set.add(i)
+
+    return ind_set-remove_set, tuple(remove_set)
 
 
 def _get_indices_Mul(expr, return_dummies=False):
