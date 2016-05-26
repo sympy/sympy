@@ -7,7 +7,7 @@ from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.numbers import igcdex, ilcm, igcd
-from sympy.core.power import integer_nthroot
+from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
@@ -27,6 +27,7 @@ from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
+
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
@@ -855,26 +856,27 @@ def _diop_quadratic(var, coeff, t):
             c = C // g
             e = sign(B/A)
 
-
-            _c = e*sqrt(c)*D - sqrt(a)*E
-            if _c == 0:
+            sqa = isqrt(a)
+            sqc = isqrt(c)
+            _c = e*sqc*D - sqa*E
+            if not _c:
                 z = symbols("z", real=True)
-                eq = sqrt(a)*g*z**2 + D*z + sqrt(a)*F
+                eq = sqa*g*z**2 + D*z + sqa*F
                 roots = solveset_real(eq, z).intersect(S.Integers)
                 for root in roots:
-                    ans = diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)
+                    ans = diop_solve(sqa*x + e*sqc*y - root)
                     sol.add((ans[0], ans[1]))
 
-            elif _is_int(_c):
-                solve_x = lambda u: -e*sqrt(c)*g*_c*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
-                    - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // _c
+            elif _is_int(c):
+                solve_x = lambda u: -e*sqc*g*_c*t**2 - (E + 2*e*sqc*g*u)*t\
+                    - (e*sqc*g*u**2 + E*u + e*sqc*F) // _c
 
-                solve_y = lambda u: sqrt(a)*g*_c*t**2 + (D + 2*sqrt(a)*g*u)*t \
-                    + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // _c
+                solve_y = lambda u: sqa*g*_c*t**2 + (D + 2*sqa*g*u)*t \
+                    + (sqa*g*u**2 + D*u + sqa*F) // _c
 
                 for z0 in range(0, abs(_c)):
                     if divisible(
-                            sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F,
+                            sqa*g*z0**2 + D*z0 + sqa*F,
                             _c):
                         sol.add((solve_x(z0), solve_y(z0)))
 
@@ -1800,13 +1802,13 @@ def _diop_ternary_quadratic(_var, coeff):
             _coeff[x*y] = 0
             _coeff[x*z] = 0
 
-            X_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
+            x_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
 
-            if X_0 is None:
+            if x_0 is None:
                 return (None, None, None)
 
             p, q = _rational_pq(B*y_0 + C*z_0, 2*A)
-            x_0, y_0, z_0 = X_0*q - p, y_0*q, z_0*q
+            x_0, y_0, z_0 = x_0*q - p, y_0*q, z_0*q
 
         elif coeff[z*y] != 0:
             if coeff[y**2] == 0:
@@ -2546,7 +2548,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
     >>> from sympy.abc import a, b, c, d, e, f
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
-    set([(2, 4, 4, 10, 47)])
+    set([(15, 22, 22, 24, 24)])
 
     Reference
     =========
@@ -2808,26 +2810,23 @@ def sum_of_three_squares(n):
     if n % 8 == 3:
         s = s if _odd(s) else s - 1
 
-        for i in range(s, -1, -2):
-            if isprime((n - i**2) // 2):
-                x = i
-                break
-
-        y, z = prime_as_sum_of_two_squares((n - x**2) // 2)
-        return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
+        for x in range(s, -1, -2):
+            N = (n - x**2) // 2
+            if isprime(N):
+                y, z = prime_as_sum_of_two_squares(N)
+                return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
+        return
 
     if n % 8 == 2 or n % 8 == 6:
         s = s if _odd(s) else s - 1
     else:
         s = s - 1 if _odd(s) else s
 
-    for i in range(s, -1, -2):
-        if isprime(n - i**2):
-            x = i
-            break
-
-    y, z = prime_as_sum_of_two_squares(n - x**2)
-    return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
+    for x in range(s, -1, -2):
+        N = n - x**2
+        if isprime(N):
+            y, z = prime_as_sum_of_two_squares(N)
+            return _sorted_tuple(2**v*x, 2**v*y, 2**v*z)
 
 
 def sum_of_four_squares(n):
@@ -2902,16 +2901,16 @@ def power_representation(n, p, k, zeros=False):
 
     >>> f = power_representation(1729, 3, 2)
     >>> next(f)
-    (1, 12)
-    >>> next(f)
     (9, 10)
+    >>> next(f)
+    (1, 12)
 
     If the flag `zeros` is True, the solution may contain tuples with
     zeros; any such solutions will be generated after the solutions
     without zeros:
 
     >>> list(power_representation(125, 2, 3, zeros=True))
-    [(3, 4, 10), (5, 6, 8), (0, 2, 11), (0, 5, 10)]
+    [(5, 6, 8), (3, 4, 10), (0, 5, 10), (0, 2, 11)]
 
     For even `p` the `permute_sign` function can be used to get all
     signed values:
@@ -2982,13 +2981,13 @@ def power_representation(n, p, k, zeros=False):
     if n >= k:
         a = integer_nthroot(n - (k - 1), p)[0]
         for t in pow_rep_recursive(a, k, n, [], p):
-            yield t
+            yield tuple(reversed(t))
 
     if zeros:
         a = integer_nthroot(n, p)[0]
         for i in range(1, k):
             for t in pow_rep_recursive(a, i, n, [], p):
-                yield (0,) * (k - i) + t
+                yield tuple(reversed(t + (0,) * (k - i)))
 
 
 sum_of_powers = power_representation
@@ -2997,15 +2996,15 @@ sum_of_powers = power_representation
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
 
     if k == 0 and n_remaining == 0:
-        yield _sorted_tuple(*terms)
+        yield tuple(terms)
     else:
-        if n_i >= 1 and k > 0 and n_remaining >= 0:
-            if n_i**p <= n_remaining:
-                for t in pow_rep_recursive(n_i, k - 1, n_remaining - n_i**p, terms + [n_i], p):
-                    yield _sorted_tuple(*t)
-
+        if n_i >= 1 and k > 0:
             for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
-                yield _sorted_tuple(*t)
+                yield t
+            residual = n_remaining - pow(n_i, p)
+            if residual >= 0:
+                for t in pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p):
+                    yield t
 
 
 def sum_of_squares(n, k, zeros=False):
