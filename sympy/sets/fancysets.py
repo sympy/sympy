@@ -11,6 +11,7 @@ from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet, imageset)
+from sympy.sets.conditionset import ConditionSet
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -405,7 +406,8 @@ class ImageSet(Set):
                                 solveset_real(im, n_)))
 
         elif isinstance(other, Interval):
-            from sympy.solvers.solveset import invert_real, invert_complex
+            from sympy.solvers.solveset import invert_real, invert_complex,
+            solveset
 
             f = self.lamda.expr
             n = self.lamda.variables[0]
@@ -413,20 +415,15 @@ class ImageSet(Set):
             inf, sup = other.inf, other.sup
             new_inf, new_sup = None, None
 
-            # In order to determine the domain of inversion, we can use the
-            # `Interval` object.
-            if other.is_subset(S.Reals):
+            if f.is_real:
                 inverter = invert_real
             else:
                 inverter = invert_complex
 
-            # Invert the function for the boundary of the `Interval`
             g1, h1 = inverter(f, inf, n)
             g2, h2 = inverter(f, sup, n)
 
             if all(isinstance(i, FiniteSet) for i in (h1, h2)):
-                # these conditions imply that we have successfully
-                # contracted the domain according to our `base_set`.
                 if g1 == n:
                     if len(h1) == 1:
                         new_inf = h1.args[0]
@@ -436,19 +433,34 @@ class ImageSet(Set):
                 # TODO: Design a technique to handle multiple-inverse
                 # functions
 
-                # Either of the new boundary values cannot be determined
+                # Any of the new boundary values cannot be determined
                 if any(i is None for i in (new_sup, new_inf)):
                     return
-                # the new contracted domain
-                new_interval = Interval(new_inf, new_sup)
-                # the new base set
-                range_set = base_set._intersect(new_interval)
-                if isinstance(range_set, Range) and range_set.size is not S.Infinity:
+
+                range_set = S.EmptySet
+
+                if all(i.is_real for i in (new_sup, new_inf)):
+                    new_interval = Interval(new_inf, new_sup)
+                    range_set = base_set._intersect(new_interval)
+                else:
+                    if other.is_subset(S.Reals):
+                        solutions = solveset(f, n, S.Reals)
+                        if not isinstance(range_set, (ImageSet, ConditionSet)):
+                            range_set = solutions._intersect(other)
+                        else:
+                            return
+
+                if range_set is S.EmptySet:
+                    return S.EmptySet
+                elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
                     range_set = FiniteSet(*list(range_set))
+
                 if range_set is not None:
                     return imageset(Lambda(n, f), range_set)
+                return
             else:
                 return
+
 
 class Range(Set):
     """
