@@ -388,12 +388,39 @@ def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
+    g, h = g.expand(), h.expand()
     if not h.has(symbol):
         return _solve_as_poly(g, symbol, domain)
     else:
-        valid_solns = _solveset(g, symbol, domain)
-        invalid_solns = _solveset(h, symbol, domain)
-        return valid_solns - invalid_solns
+        # search for exp(I*x) type of terms
+        flag = False
+        atoms = list(g.atoms(exp))
+        atoms += list(h.atoms(exp))
+        for atom in atoms:
+            for a in atom.args:
+                if a.is_imaginary:
+                    flag = True
+        if flag:
+            # to get soln for solveset((tan(x)-1).rewrite(exp), x, S.Reals)
+            # these types of expression, in desired form we need to do this.
+            y = Dummy('y')
+            # make it independent from exp(I*symbol)
+            g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+            solns = _solveset(g, y, domain) - _solveset(h, y, domain)
+            if g.has(symbol) or h.has(symbol):
+                return ConditionSet(symbol, Eq(f, 0), S.Reals)
+            if isinstance(solns, FiniteSet):
+                result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+                       for s in solns])
+                return Intersection(result, domain)
+            elif solns is S.EmptySet:
+                return S.EmptySet
+            else:
+                return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        else:
+            valid_solns = _solveset(g, symbol, domain)
+            invalid_solns = _solveset(h, symbol, domain)
+            return valid_solns - invalid_solns
 
 
 def _solve_trig(f, symbol, domain):
