@@ -306,6 +306,7 @@ def test_issue_10847():
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**(5/2)/20 - (2*x + 3)**(3/2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5/2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
+    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == (-log(y) + log(y - 1))*log(y) + log(y)**2/2 - Integral(log(y - 1)/y, y)
 
 def test_constant_independent_of_symbol():
     assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
