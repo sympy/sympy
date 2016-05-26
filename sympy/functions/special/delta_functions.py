@@ -21,13 +21,20 @@ class DiracDelta(Function):
     DiracDelta is not an ordinary function. It can be rigorously defined either
     as a distribution or as a measure.
 
-    As a measure, it accepts a subset A of the real number line as an argument,
-    and returns DiracDelta(A) = 1 if 0 belongs to A, and DiracDelta(A) = 0 otherwise. Only
-    these integrated values are well defined, not the pointwise values of the measure itself.
-
-    In the theory of distributions, DiracDelta is defined only in relation to how it affects
-    other functions when it is "integrated" against them. It simply takes a good test function ``f(x)``
-    to its value ``f(0)`` whereas the derivative of DiracDelta takes a test function ``f(x)`` to ``-f'(0)``.
+    DiracDelta only makes sense in definite integrals, and in particular, integrals
+    of the form ``Integral(f(x)*DiracDelta(x - x0), (x, a, b))``, where it equals
+    ``f(x0)`` if ``a <= x0 <= b`` and ``0`` otherwise. Formally, DiracDelta acts
+    in some ways like a function that takes on ``oo`` at ``0`` and ``0`` elsewhere,
+    but in many ways it also does not. It can often be useful to treat DiracDelta
+    in formal ways, building up and manipulating expressions with delta functions
+    (which may eventually be integrated), but care must be taken to not treat it
+    as a real function.
+    SymPy's ``oo`` is similar. It only truly makes sense formally in certain contexts
+    (such as integration limits), but SymPy allows its use everywhere, and tries to
+    consistent with operations on it (like ``1/oo``), but it is easy to get into trouble
+    and get wrong results if ``oo`` is treated too much like a number.
+    Similarly, if DiracDelta is treated too much like a function, it is easy to get wrong
+    or nonsensical results.
 
     DiracDelta function has the following properties:
 
@@ -156,10 +163,10 @@ class DiracDelta(Function):
         >>> DiracDelta(x).eval(1)
         0
 
-        >>> DiracDelta(x -100).subs(x, 5)
+        >>> DiracDelta(x - 100).subs(x, 5)
         0
 
-        >>> DiracDelta(x -100).subs(x, 100)
+        >>> DiracDelta(x - 100).subs(x, 100)
         DiracDelta(0)
 
         """
@@ -263,7 +270,7 @@ class DiracDelta(Function):
            >>> DiracDelta(x*y).is_simple(y)
            True
 
-           >>> DiracDelta(x**2+x-2).is_simple(x)
+           >>> DiracDelta(x**2 + x - 2).is_simple(x)
            False
 
            >>> DiracDelta(cos(x)).is_simple(x)
@@ -384,10 +391,10 @@ class Heaviside(Function):
         >>> Heaviside(x).eval(100)
         1
 
-        >>> Heaviside(x -100).subs(x, 5)
+        >>> Heaviside(x - 100).subs(x, 5)
         0
 
-        >>> Heaviside(x -100).subs(x, 105)
+        >>> Heaviside(x - 100).subs(x, 105)
         1
 
         """
@@ -417,10 +424,10 @@ class Heaviside(Function):
         >>> Heaviside(x).rewrite(sign)
         sign(x)/2 + 1/2
 
-        >>> Heaviside(x-2).rewrite(sign)
+        >>> Heaviside(x - 2).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
-        >>> Heaviside(x**2-2*x +1).rewrite(sign)
+        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> y = Symbol('y')
@@ -428,7 +435,7 @@ class Heaviside(Function):
         >>> Heaviside(y).rewrite(sign)
         Heaviside(y)
 
-        >>> Heaviside(y**2-2*y +1).rewrite(sign)
+        >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
         Heaviside(y**2 - 2*y + 1)
 
         See Also
