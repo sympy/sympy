@@ -71,6 +71,9 @@ class FpGroup(Basic):
             Y_copy.append(relator.identity_cyclic_reduction())
         Y = Y_copy
 
+    def coset_table(self, H):
+        pass
+
 
 # sets the upper limit on the number of cosets generated during
 # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
@@ -100,10 +103,11 @@ def coset_table(fp_grp, H):
 #   their inverses), represented using "FpGroupElm"
 
 def define(C, alpha, x):
-    if C.n == DefaultMaxLimit:
-        # abort the further generation of cosets
-        return
-    C.n += 1
+    # now C.n is now obtainable
+#    if C.n == DefaultMaxLimit:
+#        # abort the further generation of cosets
+#        return
+#    C.n += 1
     # beta is the new coset generated
     beta = n
     C.p[beta] = beta
@@ -205,20 +209,23 @@ def coincidence(C, alpha, beta):
     while i <= l:
         gamma = q[i]
         i += 1
-        sigma = sigma - set(gamma)
-        for x in A:
-            if C[gamma][A.index(x)] != -1:
-                delta = C[gamma][A.index(x)]
-                C[delta][A.index(x**-1)] = -1
+        del C[gamma]
+        # commenting this out
+        # sigma = sigma - set(gamma)
+        for ind in range(len(A)):
+            if C[gamma][ind] != -1:
+                delta = C[gamma][ind]
+                # index of x**-1 in A is index(x)+1
+                C[delta][ind + 1] = -1
                 mu = rep(gamma, p)
                 v = rep(delta, p)
-                if C[mu][A.index(x)] == -1:
-                    merge(v, C[mu][A.index(x)], p, q, l)
-                elif C[v][A.index(x**-1)] != -1:
-                    merge(mu, C[v][A.index(x**-1)], p, q, l)
+                if C[mu][ind] == -1:
+                    merge(v, C[mu][ind], p, q, l)
+                elif C[v][ind + 1] != -1:
+                    merge(mu, C[v][ind + 1], p, q, l)
                 else:
-                    C[mu][A.index(x)] = v
-                    C[v][A.index(x**-1)] = mu
+                    C[mu][ind] = v
+                    C[v][ind + 1] = mu
 
 
 # method used in the HLT strategy
@@ -245,5 +252,60 @@ def scan_and_fill(C, alpha, word):
             C[b][A.index(word.subword(i, i+1).inverse())] = f
         else:
             define(C, f, word.subword(i, i+1))
+
+
+# Pg. 166
+def process_deductions(C, R):
+    while deduction_stack is not empty:
+        if deduction_stack is full:
+            lookahead(C, R)
+            empty_deduction_stack
+        else:
+            deduction_stack.pop((alpha, x))
+            if p[alpha] == alpha:
+                for w in R_c:
+                    scan(C, alpha, w)
+                    if p[alpha] < alpha:
+                        break
+        beta = C[alpha][x]
+        if p[beta] == beta:
+            for w in R_c_x_inv:
+                scan(C, beta, w)
+                if p[beta] < beta:
+                    break
+
+def standardize(C):
+    gamma = 2
+    n = C.n
+    for a in range(n):
+        x in A
+        beta = C[alpha][A.index(x)]*gamma
+        if beta >= gamma:
+            if beta > gamma:
+                switch(C, gamma, beta)*gamma
+                gamma += 1
+                if gamma == n:
+                    return
+
+
+# Pg. 166
+def coset_enumeration_c(fp_grp, Y):
+    X = fp_grp.generators
+    R = fp_grp.relators
+    for i in range(len(R)):
+        R[i] = R[i].identity_cyclic_reduction()
+    R_union_R_inverse = R + [rel.inverse() for rel in R]
+    p = []
+    p[0] = 1
+    n = 0
+    for w in Y:
+        scan_and_fill(C, 0, w)
+    process_deductions(C, R)
+    for alpha in range(len(C)):
+        for x in range(len(A)):
+            if C[alpha][x] == -1:
+                define(C, alpha, x)
+                process_deductions(C, R)
+    return C
 
 FpGroupElm = FreeGroupElm
