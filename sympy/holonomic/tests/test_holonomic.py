@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
-=======
-from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
->>>>>>> b17feaa7580c12dd1a1d0bc262058958230f1ab1
+from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr
 from sympy import ZZ, QQ
 
