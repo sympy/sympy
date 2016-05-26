@@ -788,7 +788,7 @@ class HolonomicFunction(object):
             return HolonomicFunction(sol, self.x, self.x0, self.y0)
         return HolonomicFunction(sol, self.x)
 
-    def to_Sequence(self):
+    def to_sequence(self):
         dict1 = {}
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
