@@ -27,7 +27,7 @@ from types import FunctionType
 
 def _iszero(x):
     """Returns True if x is zero."""
-    if not x.free_symbols:
+    if hasattr(x, "free_symbols") and not x.free_symbols:
         # if we do not have free symbols, we will call _simplify()
         # without risks to lose some confines for domain of an expression,
         # because it will be some number
