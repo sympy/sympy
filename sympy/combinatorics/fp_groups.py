@@ -126,6 +126,12 @@ def scan(C, alpha, word, A):
     # this lead to deductions 2^y = 3, 3^(y^-1) = 2 (1, 2, 3 represent cosets in this comment)
     >>> c
     [[0, 0, 1, 2], [-1, -1, 2, 0], [-1, -1, 0, 1]]
+    >>> scan(c, 0, x**-1*y**-1*x*y, A)
+    >>> c
+    [[0, 0, 1, 2], [-1, -1, 2, 0], [2, 2, 0, 1]]
+    >>> scan(c, 1, x**-1*y**-1*x*y, A)
+    >>> c
+    [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
 
     # Example 5.2, Pg 154
     >>> c1 = [[1, 1, -1, -1], [0, 0, -1, -1]]
@@ -235,6 +241,7 @@ def scan_and_fill(C, alpha, word):
     b = alpha
     j = len(word)
     while True:
+        # do the forward scanning
         while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
             f = C[f][A.index(word.subword(i, i+1))]
             i += 1
@@ -242,6 +249,7 @@ def scan_and_fill(C, alpha, word):
             if f != alpha:
                 coincidence(C, f, alpha)
                 return
+        # forward scan was incomplete, scan backwards
         while j >= i and C[b][A.index(word.subword(i, i+1))] != -1:
             b = C[b][A.index(word.subword(i, i+1))]
             j -= 1
@@ -307,5 +315,22 @@ def coset_enumeration_c(fp_grp, Y):
                 define(C, alpha, x)
                 process_deductions(C, R)
     return C
+
+# Pg. 167 5.2.3
+def compress(C):
+    gamma = 0
+    for alpha in range(C.n):
+        if p[alpha] == alpha:
+            gamma += 1
+            if gamma != alpha:
+                for x in A:
+                    beta = C[alpha][A.index(x)]
+                    if beta == alpha:
+                        beta = gamma
+                    C[gamma][A.index(x)] = beta
+                    C[beta][A.index(x**-1)] == gamma
+    C.n = gamma
+    for alpha in range(C.n):
+        p[alpha] = alpha
 
 FpGroupElm = FreeGroupElm
