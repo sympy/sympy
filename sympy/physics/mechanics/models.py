@@ -48,8 +48,8 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
 
     Returns
     -------
-    system : pydy.system.System
-        A system constructed from the KanesMethod object.
+    kane : sympy.physics.mechanics.kane.KanesMethod
+        A KanesMethod object.
 
     """
 
@@ -139,8 +139,8 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
 
     Returns
     -------
-    system : pydy.system.System
-        The system containing the symbolics.
+    kane : sympy.physics.mechanics.kane.KanesMethod
+        A KanesMethod object.
 
     Notes
     -----
