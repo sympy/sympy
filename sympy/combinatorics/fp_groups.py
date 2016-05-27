@@ -146,6 +146,7 @@ def scan(C, alpha, word, A):
     >>> c3
     [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
 
+    # Example 5.3
     >>> c_1 = [[1, None, None, None], [2, 0, None, None],
                 [None, 1, 3, None], [None, None, None, 2]]
     >>> scan(c_1, 0, x**2*y**2, A)
@@ -191,6 +192,64 @@ def scan(C, alpha, word, A):
      [0, 2, 0, 2],
      [0, 2, None, None],
      [None, 4, 1, 4]]
+
+    # Example 5.4
+    >>> F, a, b, c, d, e = free_group("a, b, c, d, e")
+    >>> A = [a, a**-1, b, b**-1, c, c**-1, d, d**-1, e, e**-1]
+    >>> c1 = [[0, None, 1, None, None, None, None, None, None, None],
+               [None, None, None, 0, None, None, None, None, None, None],
+               [None, None, None, None, None, None, None, None, None, None]]
+    >>> scan(c1, 0, a*b*c**-1, A)
+    >>> c1
+    [[0, None, 1, None, 1, None, None, None, None, None],
+     [None, None, None, 0, None, 0, None, None, None, None],
+     [None, None, None, None, None, None, None, None, None, None]]
+    >>> c1 = [[0, None, 1, None, 1, None, None, None, None, None],
+              [None, None, None, 0, 2, 0, None, None, None, None],
+              [None, None, None, None, None, 1, None, None, None, None]]
+    >>> scan(c1, 0, b*c*d**-1, A)
+    >>> c1
+    [[0, None, 1, None, 1, None, 2, None, None, None],
+     [None, None, None, 0, 2, 0, None, None, None, None],
+     [None, None, None, None, None, 1, None, 0, None, None]]
+    >>> scan(c1, 0, d*e*a**-1, A)
+    >>> c1
+    [[0, None, 1, None, 1, None, 2, None, None, 2],
+     [None, None, None, 0, 2, 0, None, None, None, None],
+     [None, None, None, None, None, 1, None, 0, 0, None]]
+    >>> scan(c1, 2, e*a*b**-1, A)
+    >>> c1
+    [[0, None, 1, 2, 1, None, 2, None, None, 2],
+     [None, None, None, 0, 2, 0, None, None, None, None],
+     [None, None, 0, None, None, 1, None, 0, 0, None]]
+    >>> scan(c1, 2, b*c*d**-1, A)
+    >>> c1
+    [[0, None, 1, 2, 1, None, 2, None, None, 2],
+     [None, None, None, 0, 2, 0, None, 2, None, None],
+     [None, None, 0, None, None, 1, 1, 0, 0, None]]
+    >>> scan(c1, 1, c*d*e**-1, A)
+    >>> c1
+    [[0, None, 1, 2, 1, None, 2, None, None, 2],
+     [None, None, None, 0, 2, 0, None, 2, 1, 1],
+     [None, None, 0, None, None, 1, 1, 0, 0, None]]
+    >>> scan(c1, 2, d*e*a**-1, A)
+    >>> c1
+    [[0, None, 1, 2, 1, None, 2, None, None, 2],
+     [None, 2, None, 0, 2, 0, None, 2, 1, 1],
+     [1, None, 0, None, None, 1, 1, 0, 0, None]]
+    >>> scan(c1, 0, e*a*b**-1, A)
+    >>> c1
+    [[0, None, 1, 2, 1, None, 2, None, 2, 2],
+     [None, 2, None, 0, 2, 0, None, 2, 1, 1],
+     [1, None, 0, None, None, 1, 1, 0, 0, 0]]
+    >>> scan(c1, 0, c*d*e**-1, A)
+    # sudden-collapse
+    # I don't know what this means!! (programmatically, mathematically clear)
+    >>> c1
+    [[0, None, 0, 0, 0, 0, 0, 0, 0, 0],
+     [None, 2, None, 0, 2, 0, None, 2, 1, None],
+     [0, None, 0, None, None, None, None, 0, 0, 0]]
+
 
     """
     # alpha is an integer representing a "coset"
