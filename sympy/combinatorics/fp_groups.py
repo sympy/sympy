@@ -65,14 +65,8 @@ class FpGroup(Basic):
         # gens is list of generators of self.
         pass
 
-    def coset_enumeration_c(G, Y):
-        Y_copy = []
-        for relator in Y:
-            Y_copy.append(relator.identity_cyclic_reduction())
-        Y = Y_copy
-
-    def coset_table(self, H):
-        pass
+    def coset_table(self, Y):
+        R = self.relators
 
 
 # sets the upper limit on the number of cosets generated during
@@ -102,18 +96,19 @@ def coset_table(fp_grp, H):
 # x: Mathematically an element of "A" (set of generators and
 #   their inverses), represented using "FpGroupElm"
 
-def define(C, alpha, x):
-    # now C.n is now obtainable
-#    if C.n == DefaultMaxLimit:
-#        # abort the further generation of cosets
-#        return
-#    C.n += 1
+# Pg. 153
+def define(C, alpha, x, A):
+    # now C.n is not obtainable
+    if len(C) == DefaultMaxLimit:
+        # abort the further generation of cosets
+        return
+    C.append([-1]*len(A))
     # beta is the new coset generated
-    beta = n
-    C.p[beta] = beta
-    C[alpha][C.A.index(x)] = beta
-    C[alpha][C.A.index(x.inverse())] = alpha
+    beta = len(C) - 1
+    C[alpha][A.index(x)] = beta
+    C[beta][A.index(x.inverse())] = alpha
 
+p = []
 
 def scan(C, alpha, word, A):
     """
@@ -145,7 +140,7 @@ def scan(C, alpha, word, A):
     [[1, 1, 2, 1], [0, 0, 0, 2], [-1, -1, 1, 0]]
 
     >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, -1, -1]]
-    >>> scan(c4, 2, (x*y)**3, A)
+    >>> scan(c3, 2, (x*y)**3, A)
     >>> c3
     [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
 
@@ -173,12 +168,19 @@ def scan(C, alpha, word, A):
         b = C[b][A.index(word.subword(j-1, j).inverse())]
         j -= 1
     if j < i:
+        # we have an incorrect completed scan with coincidence f ~ b
         # run the "coincidence" routine
+        # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
+        # we have p[α]=α iff α ∈ Ω.
+        p.extend(list(range(len(C))))
+        p[b] = f
         coincidence(C, f, b)
     elif j == i + 1:
         # deduction process
         C[f][A.index(word.subword(i, i+1))] = b
         C[b][A.index(word.subword(i, i+1).inverse())] = f
+    # otherwise scan is incomplete and yields no information
+
 
 # here alpha, beta represent the pair of cosets where
 # coicidence occurs
@@ -192,6 +194,8 @@ def merge(k, lamda, p, q, l):
         p[v] = mu
         l += 1
         q[l] = v
+    return l
+
 
 def rep(k, p):
     lamda = k
@@ -207,10 +211,13 @@ def rep(k, p):
         pho = p[mu]
     return lamda
 
+
+# alpha, beta coincide
 def coincidence(C, alpha, beta):
     l = 0
     q = []
-    merge(alpha, beta, p, q, l)
+    #XXX what are p, q here?
+    l = merge(alpha, beta, p, q, l)
     i = 1
     while i <= l:
         gamma = q[i]
@@ -235,11 +242,12 @@ def coincidence(C, alpha, beta):
 
 
 # method used in the HLT strategy
-def scan_and_fill(C, alpha, word):
+def scan_and_fill(C, alpha, word, A):
     f = alpha
     i = 0
     b = alpha
-    j = len(word)
+    r = len(word)
+    j = r
     while True:
         # do the forward scanning
         while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
@@ -250,8 +258,8 @@ def scan_and_fill(C, alpha, word):
                 coincidence(C, f, alpha)
                 return
         # forward scan was incomplete, scan backwards
-        while j >= i and C[b][A.index(word.subword(i, i+1))] != -1:
-            b = C[b][A.index(word.subword(i, i+1))]
+        while j >= i and C[b][A.index(word.subword(j-1, j))] != -1:
+            b = C[b][A.index(word.subword(j-1, j))]
             j -= 1
         if j < i:
             coincidence(C, f, b)
@@ -259,7 +267,9 @@ def scan_and_fill(C, alpha, word):
             C[f][A.index(word.subword(i, i+1))] = b
             C[b][A.index(word.subword(i, i+1).inverse())] = f
         else:
-            define(C, f, word.subword(i, i+1))
+            # here "define" routine is called passing "A" as
+            # fourth argument
+            define(C, f, word.subword(i, i+1), A)
 
 
 # Pg. 166
@@ -282,6 +292,7 @@ def process_deductions(C, R):
                 if p[beta] < beta:
                     break
 
+
 def standardize(C):
     gamma = 2
     n = C.n
@@ -294,6 +305,26 @@ def standardize(C):
                 gamma += 1
                 if gamma == n:
                     return
+
+
+# relator-based method
+def coset_enumeration_r(fp_grp, Y):
+    p = [0]
+    n = 0
+    R = fp_grp.relators
+    for w in Y:
+        scan_and_fill(C, 0, w)
+    for alpha in range(len(C)):
+        for w in R:
+            scan_and_fill(C, alpha, w)
+            if p[alpha] < alpha:
+                break
+        if p[alpha] < alpha:
+            continue
+        for x in A:
+            if C[alpha][A.index(x)] != -1:
+                define(C, alpha, x)
+    return C
 
 
 # Pg. 166
@@ -316,6 +347,7 @@ def coset_enumeration_c(fp_grp, Y):
                 process_deductions(C, R)
     return C
 
+
 # Pg. 167 5.2.3
 def compress(C):
     gamma = 0
@@ -332,5 +364,6 @@ def compress(C):
     C.n = gamma
     for alpha in range(C.n):
         p[alpha] = alpha
+
 
 FpGroupElm = FreeGroupElm
