@@ -398,10 +398,31 @@ class Point(GeometryEntity):
 
         return o.intersection(self)
 
-    def dot(self, p2):
-        """Return dot product of self with another Point."""
-        p2 = Point(p2)
-        return Add(*[a*b for a,b in zip(self, p2)])
+    def dot(self, p):
+        """Return dot product of self with another Point.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        dot product : number or symbolic expression.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p1, p2, p3 = Point(0, 1), Point(0.5, 1), Point(1, 1)
+        >>> p1.dot(p2)
+        1
+        >>> p2.dot(p3)
+        3/2
+
+        """
+        return sum(a*b for a, b in zip(self, p))
 
     def equals(self, other):
         """Returns whether the coordinates of self and other agree."""

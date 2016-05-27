@@ -59,6 +59,10 @@ def test_point():
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
 
+    assert p1.dot(p4) == x1 + x2
+    assert p3.dot(p4) == 0
+    assert p4.dot(p5) == 1
+
     x_pos = Symbol('x', real=True, positive=True)
     p2_1 = Point(x_pos, 0)
     p2_2 = Point(0, x_pos)
