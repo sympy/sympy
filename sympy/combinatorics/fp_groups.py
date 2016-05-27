@@ -86,7 +86,7 @@ def coset_table(fp_grp, H):
         A.extend([gen, gen.inverse()])
     r = len(A)
     # start with table of 1 row (can change) and 2*(no. of gens) coloumns (fixed)
-    table = [r*[-1]]
+    table = [r*[None]]
 
 # coset_table: Mathematically a coset table
 #               represented using a list of lists
@@ -97,12 +97,13 @@ def coset_table(fp_grp, H):
 #   their inverses), represented using "FpGroupElm"
 
 # Pg. 153
+## later: remove "A" from argument
 def define(C, alpha, x, A):
     # now C.n is not obtainable
     if len(C) == DefaultMaxLimit:
         # abort the further generation of cosets
         return
-    C.append([-1]*len(A))
+    C.append([None]*len(A))
     # beta is the new coset generated
     beta = len(C) - 1
     C[alpha][A.index(x)] = beta
@@ -110,39 +111,86 @@ def define(C, alpha, x, A):
 
 p = []
 
+## later: remove "A" from arguments
 def scan(C, alpha, word, A):
     """
     >>> F, x, y = free_group("x, y")
     >>> A = [x, x**-1, y, y**-1]
 
     # Example 5.1, Pg 150
-    >>> c = [[0, 0, 1, 2], [-1, -1, -1, 0], [-1, -1, 0, -1]]
-    >>> scan(c, 1, y**3, A)
+    >>> c = [[0, 0, 1, 2], [None, None, None, 0], [None, None, 0, None]]
+    >>> scan(c, 0, y**3, A)
     # this lead to deductions 2^y = 3, 3^(y^-1) = 2 (1, 2, 3 represent cosets in this comment)
     >>> c
-    [[0, 0, 1, 2], [-1, -1, 2, 0], [-1, -1, 0, 1]]
+    [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
     >>> scan(c, 0, x**-1*y**-1*x*y, A)
     >>> c
-    [[0, 0, 1, 2], [-1, -1, 2, 0], [2, 2, 0, 1]]
+    [[0, 0, 1, 2], [None, None, 2, 0], [2, 2, 0, 1]]
     >>> scan(c, 1, x**-1*y**-1*x*y, A)
     >>> c
     [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
 
     # Example 5.2, Pg 154
-    >>> c1 = [[1, 1, -1, -1], [0, 0, -1, -1]]
+    >>> c1 = [[1, 1, None, None], [0, 0, None, None]]
     >>> scan(c1, 0, x*y, A)
     >>> c1
-    [[1, 1, -1, 1], [0, 0, 0, -1]]
+    [[1, 1, None, 1], [0, 0, 0, None]]
 
-    >>> c2 = [[1, 1, 2, 1], [0, 0, 0, -1], [-1, -1, -1, 0]]
+    >>> c2 = [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
     >>> scan(c2, 1, y**3, A)
     >>> c2
-    [[1, 1, 2, 1], [0, 0, 0, 2], [-1, -1, 1, 0]]
+    [[1, 1, 2, 1], [0, 0, 0, 2], [None, None, 1, 0]]
 
-    >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, -1, -1]]
+    >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, None, None]]
     >>> scan(c3, 2, (x*y)**3, A)
     >>> c3
     [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
+
+    >>> c_1 = [[1, None, None, None], [2, 0, None, None],
+                [None, 1, 3, None], [None, None, None, 2]]
+    >>> scan(c_1, 0, x**2*y**2, A)
+    >>> c_1
+    [[1, None, None, 3],
+     [2, 0, None, None],
+     [None, 1, 3, None],
+     [None, None, 0, 2]]
+    >>> c_2 = [[1, None, None, 3], [2, 0, None, None],
+               [4, 1, 3, None], [None, None, 0, 2],
+               [None, 2, 5, None], [None, None, None, 4]]
+    >>> scan(c_2, 1, x**2*y**2, A)
+    >>> c_2
+    [[1, None, None, 3],
+     [2, 0, None, 5],
+     [4, 1, 3, None],
+     [None, None, 0, 2],
+     [None, 2, 5, None],
+     [None, None, 1, 4]]
+    >>> c_3 = c_2.copy()
+    >>> scan(c_3, 0, x**3*y**5, A)
+    >>> c_3
+    [[1, None, None, 3],
+     [2, 0, 2, 5],
+     [4, 1, 3, 1],
+     [None, None, 0, 2],
+     [None, 2, 5, None],
+     [None, None, 1, 4]]
+    >>> c_4 = c_3.copy()
+    >>> scan(c_4, 2, x**2*y**2, A)
+    >>> c_4
+    [[1, None, None, 3],
+     [2, 0, 2, 5],
+     [4, 1, 3, 1],
+     [None, None, 0, 2],
+     [5, 2, 5, None],
+     [None, 4, 1, 4]]
+    >>> scan(c_4, 1, x**3*y**5, A)
+    >>> c_4
+    [[1, 3, 1, 3],
+     [2, 0, 2, 0],
+     [3, 1, 3, 1],
+     [0, 2, 0, 2],
+     [0, 2, None, None],
+     [None, 4, 1, 4]]
 
     """
     # alpha is an integer representing a "coset"
@@ -154,18 +202,19 @@ def scan(C, alpha, word, A):
     r = len(word)
     # list of union of generators and their inverses
     # A = coset_table.A
-    while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
+    while i < r and C[f][A.index(word.subword(i, i+1))] is not None:
         f = C[f][A.index(word.subword(i, i+1))]
         i += 1
+    # can this be replaced with i == r ?
     if i >= r:
         if f != alpha:
             # implement the "coincidence" routine on Pg 158 of Handbook.
-            coincidence(C, f, alpha)
+            coincidence(C, f, alpha, A)
             return
     b = alpha
-    j = r
-    while j >= i and C[b][A.index(word.subword(j-1, j).inverse())] != -1:
-        b = C[b][A.index(word.subword(j-1, j).inverse())]
+    j = r - 1
+    while j >= i and C[b][A.index(word.subword(j, j+1).inverse())] is not None:
+        b = C[b][A.index(word.subword(j, j+1).inverse())]
         j -= 1
     if j < i:
         # we have an incorrect completed scan with coincidence f ~ b
@@ -173,9 +222,8 @@ def scan(C, alpha, word, A):
         # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
         # we have p[α]=α iff α ∈ Ω.
         p.extend(list(range(len(C))))
-        p[b] = f
-        coincidence(C, f, b)
-    elif j == i + 1:
+        coincidence(C, f, b, A)
+    elif j == i:
         # deduction process
         C[f][A.index(word.subword(i, i+1))] = b
         C[b][A.index(word.subword(i, i+1).inverse())] = f
@@ -183,7 +231,7 @@ def scan(C, alpha, word, A):
 
 
 # here alpha, beta represent the pair of cosets where
-# coicidence occurs
+# coincidence occurs
 
 def merge(k, lamda, p, q, l):
     phi = rep(k, p)
@@ -193,52 +241,51 @@ def merge(k, lamda, p, q, l):
         v = max(phi, chi)
         p[v] = mu
         l += 1
-        q[l] = v
+        q.append(v)
     return l
 
 
 def rep(k, p):
     lamda = k
-    pho = p[lamda]
-    while p != lamda:
-        lamda = pho
-        pho = p[lamda]
+    rho = p[lamda]
+    while rho != lamda:
+        lamda = rho
+        rho = p[lamda]
     mu = k
-    pho = p[mu]
-    while pho != lamda:
+    rho = p[mu]
+    while rho != lamda:
         p[mu] = lamda
-        mu = pho
-        pho = p[mu]
+        mu = rho
+        rho = p[mu]
     return lamda
 
 
 # alpha, beta coincide
-def coincidence(C, alpha, beta):
+def coincidence(C, alpha, beta, A):
     l = 0
     q = []
-    #XXX what are p, q here?
     l = merge(alpha, beta, p, q, l)
-    i = 1
-    while i <= l:
+    i = 0
+    while i < l:
         gamma = q[i]
         i += 1
-        del C[gamma]
+        # comment by Kalevi, this is already done by p[v] = mu
+        # del C[gamma]
         # commenting this out
         # sigma = sigma - set(gamma)
-        for ind in range(len(A)):
-            if C[gamma][ind] != -1:
-                delta = C[gamma][ind]
-                # index of x**-1 in A is index(x)+1
-                C[delta][ind + 1] = -1
+        for x in A:
+            delta = C[gamma][A.index(x)]
+            if delta is not None:
+                C[delta][A.index(x**-1)] = None
                 mu = rep(gamma, p)
-                v = rep(delta, p)
-                if C[mu][ind] == -1:
-                    merge(v, C[mu][ind], p, q, l)
-                elif C[v][ind + 1] != -1:
-                    merge(mu, C[v][ind + 1], p, q, l)
+                nu = rep(delta, p)
+                if C[mu][A.index(x)] is not None:
+                    l = merge(nu, C[mu][A.index(x)], p, q, l)
+                elif C[nu][A.index(x**-1)] is not None:
+                    l = merge(mu, C[nu][A.index(x**-1)], p, q, l)
                 else:
-                    C[mu][ind] = v
-                    C[v][ind + 1] = mu
+                    C[mu][A.index(x)] = nu
+                    C[nu][A.index(x**-1)] = mu
 
 
 # method used in the HLT strategy
@@ -250,7 +297,7 @@ def scan_and_fill(C, alpha, word, A):
     j = r
     while True:
         # do the forward scanning
-        while i < r and C[f][A.index(word.subword(i, i+1))] != -1:
+        while i < r and C[f][A.index(word.subword(i, i+1))] is not None:
             f = C[f][A.index(word.subword(i, i+1))]
             i += 1
         if i >= r:
@@ -258,7 +305,7 @@ def scan_and_fill(C, alpha, word, A):
                 coincidence(C, f, alpha)
                 return
         # forward scan was incomplete, scan backwards
-        while j >= i and C[b][A.index(word.subword(j-1, j))] != -1:
+        while j >= i and C[b][A.index(word.subword(j-1, j))] is not None:
             b = C[b][A.index(word.subword(j-1, j))]
             j -= 1
         if j < i:
@@ -322,7 +369,7 @@ def coset_enumeration_r(fp_grp, Y):
         if p[alpha] < alpha:
             continue
         for x in A:
-            if C[alpha][A.index(x)] != -1:
+            if C[alpha][A.index(x)] is not None:
                 define(C, alpha, x)
     return C
 
@@ -342,7 +389,7 @@ def coset_enumeration_c(fp_grp, Y):
     process_deductions(C, R)
     for alpha in range(len(C)):
         for x in range(len(A)):
-            if C[alpha][x] == -1:
+            if C[alpha][x] is None:
                 define(C, alpha, x)
                 process_deductions(C, R)
     return C

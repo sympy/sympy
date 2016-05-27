@@ -332,7 +332,6 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
     `FreeGroup` class.
 
     """
-    is_identity = None
     is_assoc_word = True
 
     def new(self, init):
