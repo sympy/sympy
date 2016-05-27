@@ -308,6 +308,23 @@ class AssocOp(Basic):
         from .mul import Mul
         from .symbol import Symbol
         from .function import AppliedUndef
+
+        def _evalf_float(expr, prec):
+            """
+            It is not infinity usually, so it can be calculated
+            But if ev_float is, we can have calculating error,
+            so, we will try to calculate with prec until DEFAULT_MAXPREC
+
+            """
+            from sympy.core.evalf import DEFAULT_MAXPREC
+            ev_float = expr._eval_evalf(prec)
+            while (ev_float is not None
+                   and ev_float.is_infinite is True
+                   and prec < DEFAULT_MAXPREC):
+                prec *= 8
+                ev_float = self._eval_evalf(prec)
+            return ev_float
+
         if isinstance(self, (Mul, Add)):
             x, tail = self.as_independent(Symbol, AppliedUndef)
             # if x is an AssocOp Function then the _evalf below will
@@ -326,7 +343,7 @@ class AssocOp(Basic):
                     # are dealing with and all other _eval_evalf routines should
                     # be doing the same thing (i.e. taking binary prec and
                     # finding the evalf-able args)
-                    newa = a._eval_evalf(prec)
+                    newa = _evalf_float(a, prec)
                     if newa is None:
                         args.append(a)
                     else:
@@ -339,7 +356,7 @@ class AssocOp(Basic):
         # deal with
         args = []
         for a in self.args:
-            newa = a._eval_evalf(prec)
+            newa = _evalf_float(a, prec)
             if newa is None:
                 args.append(a)
             else:

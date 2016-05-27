@@ -707,12 +707,6 @@ class Expr(Basic, EvalfMixin):
                 # check to see that we can get a value
                 prec = 2
                 n2 = self._eval_evalf(prec)
-                # It is not infinity usually, so it can be calculated
-                # But if n2 is, we can have calculating error,
-                # so, we will try to calculate with prec until DEFAULT_MAXPREC
-                while n2.is_infinite is True and prec < DEFAULT_MAXPREC:
-                    prec *= 8
-                    n2 = self._eval_evalf(prec)
                 if n2 is None:
                     raise AttributeError
                 if n2._prec == 1:  # no significance
