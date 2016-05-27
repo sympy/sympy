@@ -74,7 +74,6 @@ class RecurrenceOperatorAlgebra(object):
                 self.gen_symbol = generator
 
     def __str__(self):
-
         string = 'Univariate Recurrence Operator Algebra in intermediate '\
             + sstr(self.gen_symbol) + ' over the base ring ' + \
             (self.base).__str__()
@@ -173,7 +172,6 @@ class RecurrenceOperator(object):
         # multiply a polynomial `b` with a list of polynomials
 
         def _mul_dmp_diffop(b, listofother):
-
             if isinstance(listofother, list):
                 sol = []
                 for i in listofother:
@@ -186,7 +184,6 @@ class RecurrenceOperator(object):
 
         # compute Sn^i * b
         def _mul_Sni_b(b):
-
             sol = [base.zero]
 
             if isinstance(b, list):
@@ -209,7 +206,6 @@ class RecurrenceOperator(object):
         return RecurrenceOperator(sol, self.parent)
 
     def __rmul__(self, other):
-
         if not isinstance(other, RecurrenceOperator):
 
             if isinstance(other, int):
@@ -225,7 +221,6 @@ class RecurrenceOperator(object):
             return RecurrenceOperator(sol, self.parent)
 
     def __add__(self, other):
-
         if isinstance(other, RecurrenceOperator):
 
             sol = _add_lists(self.listofpoly, other.listofpoly)
@@ -249,14 +244,12 @@ class RecurrenceOperator(object):
     __radd__ = __add__
 
     def __sub__(self, other):
-
         return self + (-1) * other
 
     def __rsub__(self, other):
         return (-1) * self + other
 
     def __pow__(self, n):
-
         if n == 1:
             return self
         if n == 0:
@@ -279,7 +272,6 @@ class RecurrenceOperator(object):
                 return powreduce * powreduce
 
     def __str__(self):
-
         listofpoly = self.listofpoly
         print_str = ''
 
@@ -305,7 +297,6 @@ class RecurrenceOperator(object):
     __repr__ = __str__
 
     def __eq__(self, other):
-
         if isinstance(other, RecurrenceOperator):
             if self.listofpoly == other.listofpoly and self.parent == other.parent:
                 return True
@@ -337,7 +328,6 @@ class HolonomicSequence(object):
         self.n = recurrence.parent.base.gens[0]
 
     def __repr__(self):
-
         str_sol = 'HolonomicSequence(%s, %s)' % ((self.recurrence).__repr__(), sstr(self.n))
         if not self._have_init_cond:
             return str_sol
@@ -354,7 +344,6 @@ class HolonomicSequence(object):
     __str__ = __repr__
 
     def __eq__(self, other):
-
         if self.recurrence == other.recurrence:
             if self.n == other.n:
                 if self._have_init_cond and other._have_init_cond:

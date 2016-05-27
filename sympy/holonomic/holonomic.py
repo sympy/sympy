@@ -92,7 +92,6 @@ class DifferentialOperatorAlgebra(object):
                 self.gen_symbol = generator
 
     def __str__(self):
-
         string = 'Univariate Differential Operator Algebra in intermediate '\
             + sstr(self.gen_symbol) + ' over the base ring ' + \
             (self.base).__str__()
@@ -188,7 +187,6 @@ class DifferentialOperator(object):
         # multiply a polynomial `b` with a list of polynomials
 
         def _mul_dmp_diffop(b, listofother):
-
             if isinstance(listofother, list):
                 sol = []
                 for i in listofother:
@@ -201,7 +199,6 @@ class DifferentialOperator(object):
 
         # compute Dx^i * b
         def _mul_Dxi_b(b):
-
             sol1 = [self.parent.base.zero]
             sol2 = []
 
@@ -224,7 +221,6 @@ class DifferentialOperator(object):
         return DifferentialOperator(sol, self.parent)
 
     def __rmul__(self, other):
-
         if not isinstance(other, DifferentialOperator):
 
             if isinstance(other, int):
@@ -240,7 +236,6 @@ class DifferentialOperator(object):
             return DifferentialOperator(sol, self.parent)
 
     def __add__(self, other):
-
         if isinstance(other, DifferentialOperator):
 
             sol = _add_lists(self.listofpoly, other.listofpoly)
@@ -264,14 +259,12 @@ class DifferentialOperator(object):
     __radd__ = __add__
 
     def __sub__(self, other):
-
         return self + (-1) * other
 
     def __rsub__(self, other):
         return (-1) * self + other
 
     def __pow__(self, n):
-
         if n == 1:
             return self
         if n == 0:
@@ -294,7 +287,6 @@ class DifferentialOperator(object):
                 return powreduce * powreduce
 
     def __str__(self):
-
         listofpoly = self.listofpoly
         print_str = ''
 
@@ -320,7 +312,6 @@ class DifferentialOperator(object):
     __repr__ = __str__
 
     def __eq__(self, other):
-
         if isinstance(other, DifferentialOperator):
             if self.listofpoly == other.listofpoly and self.parent == other.parent:
                 return True
@@ -456,7 +447,6 @@ class HolonomicFunction(object):
         self.x = x
 
     def __repr__(self):
-
         str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
         if not self._have_init_cond:
             return str_sol
@@ -473,7 +463,6 @@ class HolonomicFunction(object):
     __str__ = __repr__
 
     def __add__(self, other):
-
         deg1 = self.annihilator.order
         deg2 = other.annihilator.order
         dim = max(deg1, deg2)
@@ -579,7 +568,6 @@ class HolonomicFunction(object):
         return HolonomicFunction(self.annihilator * D, self.x)
 
     def __eq__(self, other):
-
         if self.annihilator == other.annihilator:
             if self.x == other.x:
                 if self._have_init_cond and other._have_init_cond:
@@ -595,7 +583,6 @@ class HolonomicFunction(object):
             return False
 
     def __mul__(self, other):
-
         ann_self = self.annihilator
 
         if not isinstance(other, HolonomicFunction):
@@ -713,7 +700,6 @@ class HolonomicFunction(object):
         return self * -1 + other
 
     def __pow__(self, n):
-
         if n == 0:
             return S(1)
         if n == 1:
@@ -807,8 +793,7 @@ class HolonomicFunction(object):
         sol = []
         lower = min(dict1.keys())
         upper = max(dict1.keys())
-        for i in range(upper - lower + 1):
-            j = lower + i
+        for j in range(lower, upper + 1):
             if j in dict1.keys():
                 sol.append(dict1[j].subs(n, n - lower))
             else:
