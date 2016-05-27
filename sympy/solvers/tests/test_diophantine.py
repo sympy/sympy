@@ -794,7 +794,7 @@ def test_diop_sum_of_even_powers():
     raises(NotImplementedError, lambda: diop_general_sum_of_even_powers(-eq, 2))
     neg = symbols('neg', negative=True)
     eq = x**4 + y**4 + neg**4 - 2673
-    assert diop_general_sum_of_even_powers(eq) == set([(-2, 4, 7)])
+    assert diop_general_sum_of_even_powers(eq) == set([(-3, 6, 6)])
     assert diophantine(x**4 + y**4 + 2) == set()
     assert diop_general_sum_of_even_powers(x**4 + y**4 - 2, limit=0) == set()
 
@@ -816,7 +816,7 @@ def test_sum_of_squares_powers():
     assert list(sum_of_squares(0, 3)) == []
     assert list(sum_of_squares(4, 1)) == [(2,)]
     assert list(sum_of_squares(5, 1)) == []
-    assert list(sum_of_squares(50, 2)) == [(1, 7), (5, 5)]
+    assert list(sum_of_squares(50, 2)) == [(5, 5), (1, 7)]
     assert list(sum_of_squares(11, 5, True)) == [
         (1, 1, 1, 2, 2), (0, 0, 1, 1, 3)]
     assert list(sum_of_squares(8, 8)) == [(1, 1, 1, 1, 1, 1, 1, 1)]

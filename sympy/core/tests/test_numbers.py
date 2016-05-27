@@ -4,13 +4,17 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin)
 from sympy.core.compatibility import long, u
-from sympy.core.power import integer_nthroot
+from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     mpf_norm, comp, mod_inverse)
-from mpmath import mpf
+from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
+
+from mpmath import mpf
 import mpmath
+
+
 
 t = Symbol('t', real=False)
 
@@ -203,8 +207,14 @@ def test_igcd():
     assert igcd(-7, 3) == 1
     assert igcd(-7, -3) == 1
     assert igcd(*[10, 20, 30]) == 10
-    raises(ValueError, lambda: igcd(45.1, 30))
-    raises(ValueError, lambda: igcd(45, 30.1))
+    raises(TypeError, lambda: igcd())
+    raises(TypeError, lambda: igcd(2))
+    raises(ValueError, lambda: igcd(0, None))
+    raises(ValueError, lambda: igcd(1, 2.2))
+    for args in permutations((45.1, 1, 30)):
+        raises(ValueError, lambda: igcd(*args))
+    for args in permutations((1, 2, None)):
+        raises(ValueError, lambda: igcd(*args))
 
 
 def test_ilcm():
@@ -855,10 +865,22 @@ def test_powers():
     # Test that this is fast
     assert integer_nthroot(2, 10**10) == (1, False)
 
+    # output should be int if possible
+    assert type(integer_nthroot(2**61, 2)[0]) is int
+
 
 def test_integer_nthroot_overflow():
     assert integer_nthroot(10**(50*50), 50) == (10**50, True)
     assert integer_nthroot(10**100000, 10000) == (10**10, True)
+
+
+def test_isqrt():
+    from math import sqrt as _sqrt
+    limit = 17984395633462800708566937239551
+    assert int(_sqrt(limit)) == integer_nthroot(limit, 2)[0]
+    assert int(_sqrt(limit + 1)) != integer_nthroot(limit + 1, 2)[0]
+    assert isqrt(limit + 1) == integer_nthroot(limit + 1, 2)[0]
+    assert isqrt(limit + 1 + S.Half) == integer_nthroot(limit + 1, 2)[0]
 
 
 def test_powers_Integer():

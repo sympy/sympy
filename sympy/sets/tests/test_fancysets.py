@@ -314,6 +314,10 @@ def test_range_interval_intersection():
     assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
     assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
 
+    # Null Range intersections
+    assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
+    assert Range(0).intersect(Interval(-oo, oo)) is S.EmptySet
+
 
 def test_Integers_eval_imageset():
     ans = ImageSet(Lambda(x, 2*x + S(3)/7), S.Integers)

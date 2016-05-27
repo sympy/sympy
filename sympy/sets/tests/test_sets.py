@@ -1009,6 +1009,17 @@ def test_issue_10326():
     assert Interval(-oo, oo).contains(-oo) is S.false
 
 
+def test_issue_2799():
+    U = S.UniversalSet
+    a = Symbol('a', real=True)
+    inf_interval = Interval(a, oo)
+    R = S.Reals
+
+    assert U + inf_interval == inf_interval + U
+    assert U + R == R + U
+    assert R + inf_interval == inf_interval + R
+
+
 def test_issue_9706():
     assert Interval(-oo, 0).closure == Interval(-oo, 0, True, False)
     assert Interval(0, oo).closure == Interval(0, oo, False, True)
