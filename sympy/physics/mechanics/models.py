@@ -189,8 +189,8 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
         specified = None
 
     for i in range(n):
-        Bi = I.orientnew('B{}'.format(i), 'Axis', [q[i + 1], -I.z])
-        Bi.set_ang_vel(I, u[i + 1] * -I.z)
+        Bi = I.orientnew('B{}'.format(i), 'Axis', [q[i + 1], I.z])
+        Bi.set_ang_vel(I, u[i + 1] * I.z)
         frames.append(Bi)
 
         Pi = points[-1].locatenew('P{}'.format(i + 1), l[i] * Bi.y)
