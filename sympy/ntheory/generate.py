@@ -244,9 +244,6 @@ def prime(nth):
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
-    prime_arr = [2, 3, 5, 7, 11, 13, 17]
-    if n <= 7:
-        return prime_arr[n - 1]
     if n <= len(sieve._list):
         return sieve[n]
 
