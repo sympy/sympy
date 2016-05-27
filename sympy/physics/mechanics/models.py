@@ -116,12 +116,12 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
 
     ::
 
-          |
-          v   y    o
-          g   ^   /
-              |  /
-          ----|-/--  theta0
-          |   |/  |
+                  |
+         o    y   v
+          \ 0 ^   g
+           \  |
+          --\-|----
+          |  \|   |
       F-> |   o --|---> x
           |       |
           ---------
