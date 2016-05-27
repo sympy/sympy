@@ -1223,7 +1223,7 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
 
     Returns
     =======
-    Returns Finiteset .
+    Returns a FiniteSet of ordered tuple.
 
     Examples
     ========
@@ -1232,7 +1232,9 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
     >>> x, y = symbols('x, y', real = True)
     >>> from sympy.solvers.solveset import substitution
     >>> substitution([x +y], [x], [{y : 1}], [y], [x, y])
-    {{x: -1, y: 1}}
+    {(-1, 1)}
+    >>> substitution([x +y], [x], [{y : 1}], [y], [y, x])
+    {(1, -1)}
 
     """
     # TODO: known_symbol is not needed, remove this variable.
@@ -1252,28 +1254,12 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
     for eq in ordered(system, lambda _: len(_ok_syms(_))):
         u = Dummy()  # used in solution checking
         newresult = [] # TODO: Make it FiniteSet
-        bad_results = []
         got_s = set()
         hit = False
         complements = {}
         for r in result:
             # update eq with everything that is known so far
             eq2 = eq.subs(r)
-            # if check is True then we see if it satisfies this
-            # equation, otherwise we just accept it
-            if r:
-                b = checksol(u, u, eq2, minimal=True)
-                if b is not None:
-                    # this solution is sufficient to know whether
-                    # it is valid or not so we either accept or
-                    # reject it, then continue
-                    if b:
-                        newresult.append(r)
-                    else:
-                        bad_results.append(r)
-                    continue
-            # search for a symbol amongst those available that
-            # can be solved for
             ok_syms = _ok_syms(eq2, sort=True)
             if not ok_syms:
                 if r:
@@ -1309,7 +1295,7 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                     soln = soln.args[1]
                 for sol in soln:
                     if got_s and any([ss in sol.free_symbols for ss in got_s]):
-                        # sol depends on previously solved symbols: discard it
+                        # sol depends on previously solved symbols, discard it
                         continue
                     rnew = dict(r.copy())
                     for k, v in r.items():
@@ -1327,9 +1313,6 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                 raise NotImplementedError('could not solve %s' % eq2)
         else:
             result = newresult
-            for b in bad_results:
-                if b in result:
-                    result.remove(b)
 
     result_finiteset = FiniteSet()
     infinite_soln = 0
@@ -1361,7 +1344,7 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
 
     # if infinte_soln == 1 means we have general soln
     # eg : {{x: -1, y : 1}, {x : -y , y: y}} then
-    # return {{x : -y, y : y}} only which is last element always
+    # return {{x : -y, y : y}} only which is last element.
     result_finiteset = result_finiteset \
     if not infinite_soln == 1 else FiniteSet(list(result_finiteset)[-1])
 
@@ -1376,7 +1359,12 @@ def substitution(system, symbols, result, known_symbols, all_symbols):
                         res_copy[k_res] = FiniteSet(v_res) - FiniteSet(v_c)
             result = result + FiniteSet(Dict(res_copy))
         result_finiteset = result
-    return result_finiteset
+    # convert to ordered tuple
+    result = FiniteSet()
+    for r in result_finiteset:
+        temp = [r[s] for s in all_symbols]
+        result += FiniteSet(tuple(temp))
+    return result
 
 def nlinsolve(system, symbols):
     r"""
@@ -1403,10 +1391,7 @@ def nlinsolve(system, symbols):
     =======
 
     A FiniteSet of ordered tuple of values of `symbols` for which
-    the `system` has solution, when system is zero dimensional
-    system. For positive dimensional system A Finiteset of Dict
-    ( key = symbol and value = symbol solution). Dict is defined
-    at sympy.core.containers .
+    the `system` has solution.
 
     Please note that general FiniteSet is unordered, the solution
     returned here is not simply a FiniteSet of solutions, rather
@@ -1458,17 +1443,14 @@ def nlinsolve(system, symbols):
     >>> is_zero_dimensional(system)
     False
     >>> pprint(nlinsolve(system, [a, b, c, d]))
-         -1             1
-    {{a: ---, b: -d, c: -, d: {d} \ {0}}}
-          d             d
+      -1       1
+    {(---, -d, -, {d} \ {0})}
+       d       d
 
 
     >>> x, y = symbols('x, y', real = True)
     >>> nlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    {{x: -y + 2, y: y}}
-
-    * Note: You have to take assumption `real = True`, otherwise solveset returns
-    solution with Intersection S.Reals.
+    {(-y + 2, y)}
 
     * Non linear system having non polynomial equation, if there is
     complex solution for particular symbol and no real solution, then `nlinsolve`
@@ -1482,8 +1464,7 @@ def nlinsolve(system, symbols):
     >>> from sympy.solvers.solveset import nlinsolve
     >>> x, y, _n = symbols('x, y, _n')
     >>> nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {{x: log(sin(2)), y: 2}, {x: ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers()), y: -2}}
-
+    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers()), -2)}
 
     * Non linear system having all the equations polynomial, then it
     returns both real and complex solutions.
@@ -1500,7 +1481,9 @@ def nlinsolve(system, symbols):
 
 
     * If system is linear positive dimensional system, `nlinsolve` can
-    solve this system also, since it is using `groebner` method.
+    solve this system also, since it is using `groebner` method. But it
+    is not recommended to solve linear system using `nlinsolve`, because
+    `linsolve` is better for all kind of linear system.
 
     Examples
     ========
@@ -1510,7 +1493,7 @@ def nlinsolve(system, symbols):
     >>> from sympy.solvers.solveset import nlinsolve
     >>> x, y, z = symbols('x, y, z', real = True)
     >>> pprint(nlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z]))
-    {{x: 3*z - 5, y: -z + 4, z: z}}
+    {(3*z - 5, -z + 4, z)}
 
 
     More examples:
@@ -1525,23 +1508,14 @@ def nlinsolve(system, symbols):
     >>> nlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {{x: 1, y: 2}, {x: 1 + sqrt(5), y: -sqrt(5) + 2}, {x: -sqrt(5) + 1, y: 2 + sqrt(5)}}
+    {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
+    >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
+    {(2, 1), (2 + sqrt(5), -sqrt(5) + 1), (-sqrt(5) + 2, 1 + sqrt(5))}
 
-    The last example is zero dimensional but is_zero_dimensional returned false
-    thats why solution is coming from substitution method
 
     Note :
     =======
-
-    1. If system if zero dimensional system (Finite solution,
-    solvable using `solve_poly_system`) then if symbols = [y, z, x]
-    then solution is Finiteset((y_solution, z_solution, x_solution)),
-    means in the same order.
-    2. If infinite solution (substitution method is used ), then solution
-    will be in Finiteset Dict and always ordered . If symbols = [y, z, x]
-    then final solution = Finiteset({x : x_solution, y : y_solution, z :
-        z_solution})
-    3. `Dict` is defined in `SymPy`. `Finiteset` can't be used with Python `dict`.
+    1. `Dict` is defined in `SymPy`. `Finiteset` can't be used with Python `dict`.
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
@@ -1654,9 +1628,19 @@ def nlinsolve(system, symbols):
                 except NotImplementedError:
                     pass
             if depend_soln:
-                # TODO no need of solved_syms. Remove it from entire method
                 solved_syms = list(depend_soln)
-        # Polynomail is done. Now use substition method to get the solution
+            # If we have solved all the symbols or
+            # can't solve further(no more eq),
+            # return that soln in ordered tuple
+            if not nonpolys:
+                # convert to ordered tuple
+                result_tuple = FiniteSet()
+                for r in result:
+                    rcopy = dict(r.copy())
+                    temp = [rcopy[s] for s in symbols]
+                    result_tuple += FiniteSet(tuple(temp))
+                return result_tuple
+        # Polynomail is done. Now use substitution method to get the solution
         # for unsolved symbols if nonpolys list is not None.
         if nonpolys:
             if not result:

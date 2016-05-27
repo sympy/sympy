@@ -1045,12 +1045,12 @@ def test_solve_decomposition():
 
 
 # non linear system of equations
-
+# some testcases imported from test_solvers.py
 def test_nlinsolve_positive_dimensional():
     x, y, z, a, b, c = symbols('x, y, z, a, b, c', real = True)
-    assert nlinsolve([x*y, x*y - x], [x, y]) == FiniteSet(Dict((x, 0), (y, y)))
+    assert nlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
     assert nlinsolve([a**2 + a*c, a - b], [a, b]) ==\
-     FiniteSet(Dict((a, S(0)), (b, S(0))), Dict((a, -c), (b, -c)))
+     FiniteSet((0, 0), (-c, -c))
      # here (a= 0, b = 0) is independent soln so both is printed.
      # if symbols = [a, b, c] then only {a : -c ,b : -c}
 
@@ -1058,80 +1058,72 @@ def test_nlinsolve_polysys():
     x, y, z = symbols('x, y, z', real = True)
     assert nlinsolve([x**2 + y - 2, x**2 + y], [x, y]) == S.EmptySet
     assert nlinsolve([(x + y)**2 - 4, x + y - 2],[x, y]) == \
-    FiniteSet(Dict((x, -y + 2), (y, y)))
+    FiniteSet((-y + 2, y))
+    # this is completely solved under if polys block
     assert nlinsolve([x**2 - y**2], [x, y]) == \
-    FiniteSet(Dict((x, -y), (y, y)), Dict((x, y), (y, y)))
+    FiniteSet((-y, y), (y, y))
+    assert nlinsolve([x**2 - y**2], [y, x]) == \
+    FiniteSet((-x, x), (x, x))
 
 
 def test_nlinsolve_using_solve_poly_and_substitution():
     x, y, z = symbols('x, y, z', real = True)
     assert nlinsolve([(x + y)*n - y**2 + 2], [x, y]) == \
-    FiniteSet(Dict((y, y), (x, (-n*y + y**2 - 2)/n)))
+    FiniteSet(((-n*y + y**2 - 2)/n, y))
     assert nlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
-    FiniteSet(Dict((x, log(sin(S(1)/3))), (y, S(1)/3)))
-    # TODO : Make this in proper order [y ,x, z]
+    FiniteSet((log(sin(S(1)/3)), S(1)/3))
+
     assert nlinsolve([z**2*x**2 - z**2*y**2/exp(x)], [y, x, z]) == \
-    FiniteSet(Dict((x, x), (y, y), (z, 0)), Dict((x, x), \
-        (y, -exp(x/2)*Abs(x)), (z, z)), \
-    Dict((x, x), (y, exp(x/2)*Abs(x)), (z, z)))
+    FiniteSet((y, x, 0), \
+        (-sqrt(x**2*exp(x)), x, z), (sqrt(x**2*exp(x)), x, z))
 
-    # For this case is_zero_dimensional(system) returns False
-    # But it can be solvable using solve_poly_system, means it is 0 dimensional
-    # Right now nlinsolve using substitution method
-    assert nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y]) == \
-    FiniteSet(Dict((x, 1), (y, 2)), Dict((x, 1 + sqrt(5)), \
-        (y, -sqrt(5) + 2)), Dict((x, -sqrt(5) + 1), \
-        (y, 2 + sqrt(5))))
 
-@SKIP("Comparison Error, No bug in nlinsolve")
 def test_nlinsolve_complex():
     x, y, z = symbols('x, y, z')
+    # Comparision error LHS : 2*pi*n but in RHS after simplification
+    # 2*n*pi
     assert nlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
-    FiniteSet(Dict(\
-        (x, imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)),\
-         (y, - log(3))))
-
+    FiniteSet((
+        imageset(Lambda(n, I*(2*pi*n + pi) + log(sin(log(S(3))))),\
+         S.Integers), -log(S(3))))
     assert nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
-        FiniteSet(Dict((x, log(sin(S(2)))), (y, S(2))), \
-        Dict((x, imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers)),\
-         (y, -2)))
+        FiniteSet((log(sin(2)), 2),\
+         (imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2))
+
     # In following cases nlinsolve `x` value (LHS) is not simplified
-    # but in (RHS) FiniteSet inside Dict value is simplified
+    # but in (RHS) FiniteSet value is simplified( -ve is inside)
     # so assertion error
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert nlinsolve(eqs, [x, y]) == \
-    FiniteSet(Dict({x : log(-z**2 - sin(log(3))), y : -log(3)}))
+    FiniteSet((log(-(z**2 + sin(log(3)))), -log(3)))
     assert nlinsolve(eqs, [x, z]) == \
-    FiniteSet(Dict((x, log(-(z**2 - sin(y)))), (z, z)))
+    FiniteSet((log(-(z**2 - sin(y))), z))
 
 @XFAIL
 # After the transcendental equation solver these will work
 def test_solve_nonlinear_trans():
     x, y, z = symbols('x, y, z', real = True)
-    assert nlinsolve([x**2 - y**2/exp(x)], [x, y]) == [{x: 2*LambertW(y/2)}]
-    assert nlinsolve([x**2 - y**2/exp(x)], [y, x]) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
-    x = Symbol('x', positive=True)
-    y = Symbol('y')
-    y = Symbol('y', positive=True)
-    assert nlinsolve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
-    assert nlinsolve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert nlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet((2*LambertW(y/2), y))
+    assert nlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
+    assert nlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((x*exp(x/2), x))
+    assert nlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet(2*LambertW(y/2), y)
 
 
 def test_issue_5132():
     x, y, z, r, t = symbols('x, y, z, r, t')
     assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
-        FiniteSet(Dict((x, sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t)), \
-            (y, -sqrt(r*tan(t)**2/(tan(t)**2 + 1)))), \
-            Dict((x, sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t)), \
-            (y, sqrt(r*tan(t)**2/(tan(t)**2 + 1)))))
+        FiniteSet((sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),\
+         -sqrt(r*tan(t)**2/(tan(t)**2 + 1))),\
+          (sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),\
+           sqrt(r*tan(t)**2/(tan(t)**2 + 1))))
 
     assert nlinsolve([sqrt(x**2 + y**2) - sqrt(10), x + y - 4], [x, y]) == \
-    FiniteSet(Dict((x, 1), (y, 3)), Dict((x, 3), (y, 1)))
+    FiniteSet((1, 3), (3, 1))
 
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert nlinsolve(eqs, [y, z]) == \
-    FiniteSet(Dict((y, -log(3)), (z, -sqrt(-exp(2*x) - sin(log(3))))),\
-     Dict((y, -log(3)), (z, sqrt(-exp(2*x) - sin(log(3))))))
+    FiniteSet((-log(3), -sqrt(-exp(2*x) - sin(log(3)))),\
+     (-log(3), sqrt(-exp(2*x) - sin(log(3)))))
 
 
 def test_issue_6752():
