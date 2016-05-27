@@ -45,10 +45,13 @@ def test_primepi():
 
 
 def test_composite():
+    from sympy.ntheory.generate import sieve
+    sieve._reset()
     assert composite(1) == 4
     assert composite(2) == 6
     assert composite(5) == 10
     assert composite(11) == 20
+    assert composite(41) == 58
     assert composite(57) == 80
     assert composite(296) == 370
     assert composite(559) == 684
@@ -82,17 +85,30 @@ def test_compositepi():
 
 
 def test_generate():
+    from sympy.ntheory.generate import sieve
+    sieve._reset()
     assert nextprime(-4) == 2
     assert nextprime(2) == 3
     assert nextprime(5) == 7
     assert nextprime(12) == 13
-    assert nextprime(90) == 97
-    assert nextprime(10**40) == (10**40 + 121)
     assert prevprime(3) == 2
     assert prevprime(7) == 5
     assert prevprime(13) == 11
+    assert prevprime(19) == 17
+    assert prevprime(20) == 19
+
+    sieve.extend_to_no(9)
+    assert sieve._list[-1] == 23
+
+    assert sieve._list[-1] < 31
+    assert 31 in sieve
+
+    assert nextprime(90) == 97
+    assert nextprime(10**40) == (10**40 + 121)
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
+    assert list(sieve.primerange(10, 1)) == []
+    assert list(primerange(10, 1)) == []
     assert list(primerange(2, 7)) == [2, 3, 5]
     assert list(primerange(2, 10)) == [2, 3, 5, 7]
     assert list(primerange(1050, 1100)) == [1051, 1061,
@@ -126,11 +142,13 @@ def test_generate():
     sieve.extend(3000)
     assert nextprime(2968) == 2969
     assert prevprime(2930) == 2927
+    raises(ValueError, lambda: prevprime(1))
 
 
 def test_randprime():
     import random
     random.seed(1234)
+    assert randprime(10, 1) is None
     assert randprime(2, 3) == 2
     assert randprime(1, 3) == 2
     assert randprime(3, 5) == 3
