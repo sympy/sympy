@@ -212,7 +212,9 @@ class ImageSet(Set):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, pi, Dummy, Lambda
+    >>> from sympy.sets.sets import FiniteSet, Interval
+    >>> from sympy.sets.fancysets import ImageSet
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -232,6 +234,12 @@ class ImageSet(Set):
     4
     9
     16
+
+    >>> n = Dummy('n')
+    >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
+    >>> dom = Interval(-1, 1)
+    >>> dom.intersect(solutions)
+    {0}
 
     See Also
     ========
@@ -406,13 +414,12 @@ class ImageSet(Set):
                                 solveset_real(im, n_)))
 
         elif isinstance(other, Interval):
-            from sympy.solvers.solveset import invert_real, invert_complex,
-            solveset
+            from sympy.solvers.solveset import (invert_real, invert_complex,
+                                                solveset)
 
             f = self.lamda.expr
             n = self.lamda.variables[0]
             base_set = self.base_set
-            inf, sup = other.inf, other.sup
             new_inf, new_sup = None, None
 
             if f.is_real:
@@ -420,8 +427,8 @@ class ImageSet(Set):
             else:
                 inverter = invert_complex
 
-            g1, h1 = inverter(f, inf, n)
-            g2, h2 = inverter(f, sup, n)
+            g1, h1 = inverter(f, other.inf, n)
+            g2, h2 = inverter(f, other.sup, n)
 
             if all(isinstance(i, FiniteSet) for i in (h1, h2)):
                 if g1 == n:
