@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy
+from sympy import symbols, Symbol, diff, S, Dummy, Order
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -775,6 +775,23 @@ class HolonomicFunction(object):
         return HolonomicFunction(sol, self.x)
 
     def to_sequence(self):
+        """
+        Finds the recurrence relation in power series expansion
+        of the function.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
+        HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1
+        """
+
         dict1 = {}
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
@@ -816,6 +833,48 @@ class HolonomicFunction(object):
         for i, j in enumerate(y0):
             u0.append(j / factorial(i))
         return HolonomicSequence(sol, u0)
+
+    def series(self, n=6):
+        """
+        Finds the power series expansion of given holonomic function.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).series()
+        1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
+        """
+
+        recurrence = self.to_sequence()
+        l = len(recurrence.u0) - 1
+        k = recurrence.recurrence.order
+        x = self.x
+        seq_dmp = recurrence.recurrence.listofpoly
+        R = recurrence.recurrence.parent.base
+        K = R.get_field()
+        seq = []
+        for i, j in enumerate(seq_dmp):
+            seq.append(K.new(j.rep))
+        sub = [-seq[i] / seq[k] for i in range(k)]
+        sol = recurrence.u0
+        if l + 1 >= n:
+            pass
+        else:
+            for i in range(l + 1 - k, n - k):
+                coeff = S(0)
+                for j in range(k):
+                    coeff += DMFsubs(sub[j], i) * sol[i + j]
+                sol.append(coeff)
+        ser = S(0)
+        for i, j in enumerate(sol):
+            ser += x**i * j
+        return ser + Order(x**n, x)
 
 
 def from_hyper(func, x0=0, evalf=False):
