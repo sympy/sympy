@@ -18,7 +18,8 @@ try:
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
-    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
+                      "See http://docs.sympy.org/latest/install.html#mpmath "
+                      "for more information.")
 
 from sympy.release import __version__
 
