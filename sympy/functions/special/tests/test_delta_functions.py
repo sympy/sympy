@@ -47,16 +47,16 @@ def test_DiracDelta():
     assert DiracDelta(x*y).expand(diracdelta=True, wrt=y) == DiracDelta(y)/abs(x)
     assert DiracDelta(x**2*y).expand(diracdelta=True, wrt=x) == DiracDelta(x**2*y)
     assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
-    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == \
-        DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == (
+        DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
     with raises(SymPyDeprecationWarning):
         assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
         assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
         assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
         assert DiracDelta(y).simplify(x) == DiracDelta(y)
-        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == \
-            DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
+        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == (
+            DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
@@ -88,17 +88,16 @@ def test_heaviside():
 
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
-    assert Heaviside(x).rewrite(Piecewise) == \
-        Piecewise((1, x > 0), (S(1)/2, Eq(x, 0)), (0, True))
-    assert Heaviside(y).rewrite(Piecewise) == \
-        Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True))
+    assert Heaviside(x).rewrite(Piecewise) == (
+        Piecewise((1, x > 0), (1/2, Eq(x, 0)), (0, True)))
+    assert Heaviside(y).rewrite(Piecewise) == (
+        Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True)))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((oo, Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
-    assert DiracDelta(x-5).rewrite(Piecewise) == \
-        Piecewise((oo, Eq(x - 5, 0)), (0, True))
-    assert DiracDelta(x-5, 1).rewrite(Piecewise) == \
-        DiracDelta(x-5, 1)
+    assert DiracDelta(x-5).rewrite(Piecewise) == (
+        Piecewise((oo, Eq(x - 5, 0)), (0, True)))
+    assert DiracDelta(x-5, 1).rewrite(Piecewise) == DiracDelta(x-5, 1)
