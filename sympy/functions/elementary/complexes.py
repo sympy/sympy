@@ -887,13 +887,13 @@ class periodic_argument(Function):
             newargs = [x for x in ar.args if not x.is_positive]
             if len(newargs) != len(ar.args):
                 return periodic_argument(Mul(*newargs), period)
+        if period == oo:
+            return unbranched_argument(ar)
         unbranched = cls._getunbranched(ar)
         if unbranched is None:
             return None
         if unbranched.has(periodic_argument, atan2, arg, atan):
             return None
-        if period == oo:
-            return unbranched
         if period != oo:
             n = ceiling(unbranched/period - S(1)/2)*period
             if not n.has(ceiling):
@@ -911,9 +911,29 @@ class periodic_argument(Function):
         return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
 
 
-def unbranched_argument(arg):
-    from sympy import oo
-    return periodic_argument(arg, oo)
+def unbranched_argument(ar):
+    from sympy import exp_polar, log, polar_lift, oo
+    if isinstance(ar, principal_branch):
+        return periodic_argument(*ar.args)
+    if ar.is_Mul:
+        args = ar.args
+    else:
+        args = [ar]
+    unbranched = 0
+    for a in args:
+        if not a.is_polar:
+            unbranched += arg(a)
+        elif a.func is exp_polar:
+            unbranched += a.exp.as_real_imag()[1]
+        elif a.is_Pow:
+            re, im = a.exp.as_real_imag()
+            unbranched += re*unbranched_argument(
+                a.base) + im*log(abs(a.base))
+        elif a.func is polar_lift:
+            unbranched += arg(a.args[0])
+        else:
+            return None
+    return unbranched
 
 
 class principal_branch(Function):
