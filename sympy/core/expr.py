@@ -705,8 +705,7 @@ class Expr(Basic, EvalfMixin):
                 return False
             try:
                 # check to see that we can get a value
-                prec = 2
-                n2 = self._eval_evalf(prec)
+                n2 = self._eval_evalf(2)
                 if n2 is None:
                     raise AttributeError
                 if n2._prec == 1:  # no significance
