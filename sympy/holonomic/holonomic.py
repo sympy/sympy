@@ -919,7 +919,7 @@ class HolonomicFunction(object):
             seq.append(K.new(j.rep))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
-        sol = recurrence.u0
+        sol = [i for i in recurrence.u0]
 
         if l + 1 >= n:
             pass
@@ -927,7 +927,8 @@ class HolonomicFunction(object):
             for i in range(l + 1 - k, n - k):
                 coeff = S(0)
                 for j in range(k):
-                    coeff += DMFsubs(sub[j], i) * sol[i + j]
+                    if i + j >= 0:
+                        coeff += DMFsubs(sub[j], i) * sol[i + j]
                 sol.append(coeff)
 
         if coefficient:
