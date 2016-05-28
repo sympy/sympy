@@ -879,8 +879,6 @@ class periodic_argument(Function):
         from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
         if not period.is_positive:
             return None
-        if period == oo and isinstance(ar, principal_branch):
-            return periodic_argument(*ar.args)
         if ar.func is polar_lift and period >= 2*pi:
             return periodic_argument(ar.args[0], period)
         if ar.is_Mul:
