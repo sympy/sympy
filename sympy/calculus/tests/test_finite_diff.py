@@ -1,5 +1,5 @@
 from sympy.core.compatibility import range
-from sympy import S, symbols, Function
+from sympy import S, symbols, Function, Derivative
 from sympy.calculus.finite_diff import (
     apply_finite_diff, finite_diff_weights, as_finite_diff
 )
@@ -175,3 +175,7 @@ def test_as_finite_diff():
     assert (as_finite_diff(f(x).diff(x, 3), [x-h, x+h, x + 3*h, x + 5*h]) -
             (2*h)**-3 * (f(x + 5*h)-f(x-h) +
                          3*(f(x+h)-f(x + 3*h)))).simplify() == 0
+    #issue 11007
+    f = Function('f')(x, h)
+    d2fdxdh = f.diff(x).diff(h)
+    assert str(as_finite_diff(d2fdxdh, wrt=x)) == '-Derivative(f(x - 1/2, h), h) + Derivative(f(x + 1/2, h), h)'

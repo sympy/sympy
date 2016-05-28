@@ -386,7 +386,12 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
             points = [x0 + points*i/S(2) for i
                       in range(-order, order + 1, 2)]
 
+    expression = derivative.expr
+    if len(derivative.variables) > 1:
+        variables = [i for i in derivative.variables if i != wrt]
+        for i in variables:
+            expression = expression.diff(i)
     if len(points) < order+1:
         raise ValueError("Too few points for order %d" % order)
     return apply_finite_diff(order, points, [
-        derivative.expr.subs({wrt: x}) for x in points], x0)
+        expression.subs({wrt: x}) for x in points], x0)
