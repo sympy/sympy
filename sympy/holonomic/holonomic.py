@@ -915,6 +915,11 @@ class HolonomicFunction(object):
         K = R.get_field()
         seq = []
 
+        if 0 in roots(seq_dmp[-1].rep, filter='Z').keys():
+            singular = True
+        else:
+            singular = False
+
         for i, j in enumerate(seq_dmp):
             seq.append(K.new(j.rep))
 
@@ -939,6 +944,40 @@ class HolonomicFunction(object):
             ser += x**i * j
 
         return ser + Order(x**n, x)
+
+    def _indicial(self):
+        list_coeff = self.annihilator.listofpoly
+        R = self.annihilator.parent.base
+        x = self.x
+        s = R.zero
+        y = R.one
+
+        def _pole_degree(poly):
+            root_all = roots(poly.rep, filter='Z')
+            if 0 in root_all.keys():
+                return root_all[0]
+            else:
+                return 0
+
+        degree = [j.degree() for j in list_coeff]
+        degree = max(degree)
+        inf = 10 * (max(1, degree) + max(1, self.annihilator.order))
+
+        deg = lambda q: inf if q.is_zero else _pole_degree(q)
+        b = deg(list_coeff[0])
+        print (b)
+
+        for j in range(1, len(list_coeff)):
+            b = min(b, deg(list_coeff[j]) - j)
+            print(b)
+
+        for i, j in enumerate(list_coeff):
+            listofdmp = j.all_coeffs()
+            degree = len(listofdmp) - 1
+            if - i - b <= 0:
+                s = s + listofdmp[degree - i - b] * y
+            y *= x - i
+        return roots(s.rep, filter='R').keys()
 
 
 def from_hyper(func, x0=0, evalf=False):
