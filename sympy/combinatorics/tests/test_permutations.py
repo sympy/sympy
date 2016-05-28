@@ -1,11 +1,13 @@
 from itertools import permutations
 
 from sympy.core.compatibility import range
+from sympy.core.symbol import Symbol
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
+a = Symbol('a', integer=True)
 
 
 def test_Permutation():
@@ -29,7 +31,7 @@ def test_Permutation():
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
-    assert len(set([p, p])) == 1
+    assert len({p, p}) == 1
     r = Permutation([1, 3, 2, 0, 4, 6, 5])
     ans = Permutation(_af_rmuln(*[w.array_form for w in (p, q, r)])).array_form
     assert rmul(p, q, r).array_form == ans
@@ -107,7 +109,7 @@ def test_Permutation():
     raises(ValueError, lambda: p.commutator(Permutation([])))
 
     assert len(p.atoms()) == 7
-    assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
+    assert q.atoms() == {0, 1, 2, 3, 4, 5, 6}
 
     assert p.inversion_vector() == [2, 4, 1, 3, 1, 0]
     assert q.inversion_vector() == [3, 1, 2, 2, 0, 1]
@@ -255,7 +257,7 @@ def test_ranking():
         a = a.next_lex()
         b = b.next_trotterjohnson()
     assert a == b is None
-    assert set([tuple(a) for a in l]) == set([tuple(a) for a in tj])
+    assert {tuple(a) for a in l} == {tuple(a) for a in tj}
 
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[6], [5], [0, 1, 2, 3, 4]])
@@ -342,7 +344,7 @@ def test_args():
     assert Permutation(3).list(-1) == []
     assert Permutation(5)(1, 2).list(-1) == [0, 2, 1]
     assert Permutation(5)(1, 2).list() == [0, 2, 1, 3, 4, 5]
-    raises(TypeError, lambda: Permutation([1, 2], [0]))
+    raises(ValueError, lambda: Permutation([1, 2], [0]))
            # enclosing brackets needed
     raises(ValueError, lambda: Permutation([[1, 2], 0]))
            # enclosing brackets needed on 0
@@ -364,6 +366,8 @@ def test_Cycle():
     raises(ValueError, lambda: Cycle().list())
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
+    assert Cycle(3).list(2) == [0, 1]
+    assert Cycle(3).list(6) == [0, 1, 2, 3, 4, 5]
     assert Permutation(Cycle(1, 2), size=4) == \
         Permutation([0, 2, 1, 3])
     assert str(Cycle(1, 2)(4, 5)) == '(1 2)(4 5)'
@@ -371,9 +375,12 @@ def test_Cycle():
     assert Cycle(Permutation(list(range(3)))) == Cycle()
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
+    assert Cycle().size == 0
     raises(TypeError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
+    raises(ValueError, lambda: Cycle(4)[a])
+    raises(ValueError, lambda: Cycle(2, -4, 3))
 
     # check round-trip
     p = Permutation([[1, 2], [4, 3]], size=5)

@@ -86,13 +86,13 @@ Here follows a list of possible assumption names:
 
     finite
     infinite
-        object absolute value is bounded (is value is
-        arbitrarily large).  See [7]_, [8]_, [9]_.
+        object absolute value is bounded (arbitrarily large).
+        See [7]_, [8]_, [9]_.
 
     negative
     nonnegative
-        object can have only negative (only
-        nonnegative) values [1]_.
+        object can have only negative (nonnegative)
+        values [1]_.
 
     positive
     nonpositive

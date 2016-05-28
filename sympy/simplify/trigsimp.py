@@ -15,7 +15,7 @@ from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 
-
+from sympy.polys import Poly
 from sympy.polys.polyerrors import PolificationFailed
 from sympy.polys.polytools import groebner
 from sympy.polys.domains import ZZ
@@ -269,7 +269,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         gens = list(set(gens))
 
         # all the functions we can do anything with
-        allfuncs = set([sin, cos, tan, sinh, cosh, tanh])
+        allfuncs = {sin, cos, tan, sinh, cosh, tanh}
         # sin(3*x) -> ((3, x), sin)
         trigterms = [(g.args[0].as_coeff_mul(), g.func) for g in gens
                      if g.func in allfuncs]

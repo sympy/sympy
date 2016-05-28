@@ -170,3 +170,21 @@ def test_issue_10348():
     u = dynamicsymbols('u:3')
     I = ReferenceFrame('I')
     A = I.orientnew('A', 'space', u, 'XYZ')
+
+def test_partial_velocity():
+
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+
+    u1, u2 = dynamicsymbols('u1, u2')
+
+    A.set_ang_vel(N, u1 * A.x + u2 * N.y)
+
+    assert N.partial_velocity(A, u1) == -A.x
+    assert N.partial_velocity(A, u1, u2) == (-A.x, -N.y)
+
+    assert A.partial_velocity(N, u1) == A.x
+    assert A.partial_velocity(N, u1, u2) == (A.x, N.y)
+
+    assert N.partial_velocity(N, u1) == 0
+    assert A.partial_velocity(A, u1) == 0

@@ -461,9 +461,9 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     if isinstance(gate_seq, Number):
         if return_as_muls:
-            return set([(Integer(1), Integer(1))])
+            return {(Integer(1), Integer(1))}
         else:
-            return set([((), ())])
+            return {((), ())}
 
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
@@ -576,7 +576,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """
 
     if isinstance(gate_seq, Number):
-        return set([Integer(1)])
+        return {Integer(1)}
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
 

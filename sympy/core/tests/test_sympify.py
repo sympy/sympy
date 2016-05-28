@@ -508,11 +508,11 @@ def test_Range():
 
 def test_sympify_set():
     n = Symbol('n')
-    assert sympify(set([n])) == FiniteSet(n)
+    assert sympify({n}) == FiniteSet(n)
     assert sympify(set()) == EmptySet()
 
 
 @XFAIL
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
-    assert sympify(set(['.3', '.2']), rational=True) == FiniteSet(*ans)
+    assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)

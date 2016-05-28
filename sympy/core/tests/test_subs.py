@@ -142,7 +142,7 @@ def test_dict_ambigous():   # see issue 3566
     assert e.subs({x: y, y: 2}) == 5
     # here, there are no obviously clashing keys or values
     # but the results depend on the order
-    assert exp(x/2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == exp(y + 1)
+    assert exp(x/2 + y).subs({exp(y + 1): 2, x: 2}) == exp(y + 1)
 
 
 def test_deriv_sub_bug3():
@@ -622,14 +622,14 @@ def test_mul2():
 
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
-    assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+    assert (x*y*x).subs([(x, x*y), (y, x)], simultaneous=True) == (x*y*x**2*y)
 
 
 def test_issue_2877():
     f = Float(2.0)
     assert (x + f).subs({f: 2}) == x + 2
 
-    def r(a,b,c):
+    def r(a, b, c):
         return factor(a*x**2 + b*x + c)
     e = r(5/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
@@ -656,6 +656,12 @@ def test_issue_5217():
     assert q.subs(sub) == 2*y**2*s
 
 
+def test_issue_10829():
+    from sympy.abc import x, y
+
+    assert (4**x).subs(2**x, y) == y**2
+    assert (9**x).subs(3**x, y) == y**2
+
 def test_pow_eval_subs_no_cache():
     # Tests pull request 9376 is working
     from sympy.core.cache import clear_cache
@@ -678,3 +684,15 @@ def test_RootOf_issue_10092():
     eq = x**3 - 17*x**2 + 81*x - 118
     r = RootOf(eq, 0)
     assert (x < r).subs(x, r) is S.false
+
+
+def test_issue_8886():
+    from sympy.physics.mechanics import ReferenceFrame as R
+    from sympy.abc import x
+    # if something can't be sympified we assume that it
+    # doesn't play well with SymPy and disallow the
+    # substitution
+    v = R('A').x
+    assert x.subs(x, v) == x
+    assert v.subs(v, x) == v
+    assert v.__eq__(x) is False

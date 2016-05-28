@@ -235,59 +235,59 @@ def mmrv(a, b):
 
 
 def test_mrv1():
-    assert mmrv(x, x) == set([x])
-    assert mmrv(x + 1/x, x) == set([x])
-    assert mmrv(x**2, x) == set([x])
-    assert mmrv(log(x), x) == set([x])
-    assert mmrv(exp(x), x) == set([exp(x)])
-    assert mmrv(exp(-x), x) == set([exp(-x)])
-    assert mmrv(exp(x**2), x) == set([exp(x**2)])
-    assert mmrv(-exp(1/x), x) == set([x])
-    assert mmrv(exp(x + 1/x), x) == set([exp(x + 1/x)])
+    assert mmrv(x, x) == {x}
+    assert mmrv(x + 1/x, x) == {x}
+    assert mmrv(x**2, x) == {x}
+    assert mmrv(log(x), x) == {x}
+    assert mmrv(exp(x), x) == {exp(x)}
+    assert mmrv(exp(-x), x) == {exp(-x)}
+    assert mmrv(exp(x**2), x) == {exp(x**2)}
+    assert mmrv(-exp(1/x), x) == {x}
+    assert mmrv(exp(x + 1/x), x) == {exp(x + 1/x)}
 
 
 def test_mrv2a():
-    assert mmrv(exp(x + exp(-exp(x))), x) == set([exp(-exp(x))])
-    assert mmrv(exp(x + exp(-x)), x) == set([exp(x + exp(-x)), exp(-x)])
-    assert mmrv(exp(1/x + exp(-x)), x) == set([exp(-x)])
+    assert mmrv(exp(x + exp(-exp(x))), x) == {exp(-exp(x))}
+    assert mmrv(exp(x + exp(-x)), x) == {exp(x + exp(-x)), exp(-x)}
+    assert mmrv(exp(1/x + exp(-x)), x) == {exp(-x)}
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
 def test_mrv2b():
-    assert mmrv(exp(x + exp(-x**2)), x) == set([exp(-x**2)])
+    assert mmrv(exp(x + exp(-x**2)), x) == {exp(-x**2)}
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
 def test_mrv2c():
     assert mmrv(
-        exp(-x + 1/x**2) - exp(x + 1/x), x) == set([exp(x + 1/x), exp(1/x**2 - x)])
+        exp(-x + 1/x**2) - exp(x + 1/x), x) == {exp(x + 1/x), exp(1/x**2 - x)}
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
 
 
 def test_mrv3():
-    assert mmrv(exp(x**2) + x*exp(x) + log(x)**x/x, x) == set([exp(x**2)])
+    assert mmrv(exp(x**2) + x*exp(x) + log(x)**x/x, x) == {exp(x**2)}
     assert mmrv(
-        exp(x)*(exp(1/x + exp(-x)) - exp(1/x)), x) == set([exp(x), exp(-x)])
+        exp(x)*(exp(1/x + exp(-x)) - exp(1/x)), x) == {exp(x), exp(-x)}
     assert mmrv(log(
-        x**2 + 2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
-    assert mmrv(log(x - log(x))/log(x), x) == set([x])
+        x**2 + 2*exp(exp(3*x**3*log(x)))), x) == {exp(exp(3*x**3*log(x)))}
+    assert mmrv(log(x - log(x))/log(x), x) == {x}
     assert mmrv(
-        (exp(1/x - exp(-x)) - exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
+        (exp(1/x - exp(-x)) - exp(1/x))*exp(x), x) == {exp(x), exp(-x)}
     assert mmrv(
-        1/exp(-x + exp(-x)) - exp(x), x) == set([exp(x), exp(-x), exp(x - exp(-x))])
-    assert mmrv(log(log(x*exp(x*exp(x)) + 1)), x) == set([exp(x*exp(x))])
-    assert mmrv(exp(exp(log(log(x) + 1/x))), x) == set([x])
+        1/exp(-x + exp(-x)) - exp(x), x) == {exp(x), exp(-x), exp(x - exp(-x))}
+    assert mmrv(log(log(x*exp(x*exp(x)) + 1)), x) == {exp(x*exp(x))}
+    assert mmrv(exp(exp(log(log(x) + 1/x))), x) == {x}
 
 
 def test_mrv4():
     ln = log
     assert mmrv((ln(ln(x) + ln(ln(x))) - ln(ln(x)))/ln(ln(x) + ln(ln(ln(x))))*ln(x),
-            x) == set([x])
+            x) == {x}
     assert mmrv(log(log(x*exp(x*exp(x)) + 1)) - exp(exp(log(log(x) + 1/x))), x) == \
-        set([exp(x*exp(x))])
+        {exp(x*exp(x))}
 
 
 def mrewrite(a, b, c):
@@ -307,7 +307,7 @@ def test_rewrite1():
 
 def test_rewrite2():
     e = exp(x)*log(log(exp(x)))
-    assert mmrv(e, x) == set([exp(x)])
+    assert mmrv(e, x) == {exp(x)}
     assert mrewrite(mrv(e, x), x, m) == (1/m*log(x), -x)
 
 #sometimes infinite recursion due to log(exp(x**2)) not simplifying
@@ -335,7 +335,7 @@ def test_mrv_leadterm2():
 
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
-    assert mmrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == set([exp(-x - x*log(x))])
+    assert mmrv(exp(-x + exp(-x)*exp(-x*log(x))), x) == {exp(-x - x*log(x))}
     assert mrv_leadterm(exp(-x + exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
 
 
@@ -384,7 +384,7 @@ def test_limit4():
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1 + exp(-x)))
     expr = exp(h)*exp(-x/(1 + h))*exp(exp(-x + h))/h**2 - exp(x) + x
-    expected = set([1/h, exp(x), exp(x - h), exp(x/(1 + h))])
+    expected = {1/h, exp(x), exp(x - h), exp(x/(1 + h))}
     # XXX Incorrect result
     assert mrv(expr, x).difference(expected) == set()
 

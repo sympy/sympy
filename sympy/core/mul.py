@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -9,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import cmp_to_key, reduce, range
+from .compatibility import reduce, range
 from .expr import Expr
 
 # internal marker to indicate:

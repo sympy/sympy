@@ -48,7 +48,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if not numerical:
         return True
     repl = {}
-    for n, a in enumerate(r.free_symbols - set([z])):
+    for n, a in enumerate(r.free_symbols - {z}):
         repl[a] = randcplx(n)/div
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
@@ -333,7 +333,7 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
+    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
         repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
@@ -465,9 +465,9 @@ def test_meijerg():
     bm = [b1, b2 + 1]
     niq, ops = reduce_order_meijer(G_Function(an, ap, bm, bq))
     assert niq.an == (a1,)
-    assert set(niq.ap) == set([a3, a4])
+    assert set(niq.ap) == {a3, a4}
     assert niq.bm == (b1,)
-    assert set(niq.bq) == set([b3, b4])
+    assert set(niq.bq) == {b3, b4}
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
 

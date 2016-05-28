@@ -222,6 +222,10 @@ def test_evalf_bugs():
     #issue 7416
     assert as_mpmath(0.0, 10, {'chop': True}) == 0
 
+    #issue 5412
+    assert ((oo*I).n() == S.Infinity*I)
+    assert ((oo+oo*I).n() == S.Infinity + S.Infinity*I)
+
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)

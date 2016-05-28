@@ -94,11 +94,11 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u('')
+    _label_separator = u''
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
-from sympy.core.compatibility import combinations_with_replacement
 from sympy.core.numbers import Rational
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
