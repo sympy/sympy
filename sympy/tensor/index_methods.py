@@ -15,7 +15,6 @@ from __future__ import print_function, division
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
-from sympy.sets.sets import FiniteSet
 
 from sympy.core.compatibility import reduce
 
@@ -27,13 +26,13 @@ class IndexConformanceException(Exception):
 def _remove_repeated(inds):
     """Removes repeated objects from sequences
 
-    Returns a set of the unique objects and a tuple of all that have been
+    Returns a set of the unique objects and a set of all that have been
     removed.
 
     >>> from sympy.tensor.index_methods import _remove_repeated
     >>> l1 = [1, 2, 3, 2]
     >>> _remove_repeated(l1)
-    (set([1, 3]), (2,))
+    (set([1, 3]), set([2]))
 
     """
     ind_set = set()
@@ -78,7 +77,7 @@ def _get_indices_Mul(expr, return_dummies=False):
                 symmetry[pair] = s[pair]
 
     if return_dummies:
-        return inds, symmetry, dummies
+        return inds, symmetry, tuple(dummies)
     else:
         return inds, symmetry
 
@@ -374,12 +373,12 @@ def get_contraction_structure(expr):
 
     if isinstance(expr, Indexed):
         junk, key = _remove_repeated(expr.indices)
-        return {FiniteSet(*key) or None: {expr}}
+        return {tuple(key) or None: {expr}}
     elif expr.is_Atom:
         return {None: {expr}}
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
-        result = {FiniteSet(*key) or None: {expr}}
+        result = {tuple(key) or None: {expr}}
         # recurse on every factor
         nested = []
         for fac in expr.args:

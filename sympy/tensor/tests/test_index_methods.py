@@ -1,6 +1,5 @@
 from sympy.core import symbols, S, Pow, Function
 from sympy.functions import exp
-from sympy.sets.sets import FiniteSet
 from sympy.utilities.pytest import raises
 from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.tensor.index_methods import IndexConformanceException
@@ -87,10 +86,9 @@ def test_get_contraction_structure_basic():
     i, j = Idx('i'), Idx('j')
     assert get_contraction_structure(x[i]*y[j]) == {None: set([x[i]*y[j]])}
     assert get_contraction_structure(x[i] + y[j]) == {None: set([x[i], y[j]])}
+    assert get_contraction_structure(x[i]*y[i]) == {(i,): set([x[i]*y[i]])}
     assert get_contraction_structure(
-        x[i]*y[i]) == {FiniteSet(i): set([x[i]*y[i]])}
-    assert get_contraction_structure(
-        1 + x[i]*y[i]) == {None: set([S.One]), FiniteSet(i): set([x[i]*y[i]])}
+        1 + x[i]*y[i]) == {None: set([S.One]), (i,): set([x[i]*y[i]])}
     assert get_contraction_structure(x[i]**y[i]) == {None: set([x[i]**y[i]])}
 
 
@@ -100,11 +98,10 @@ def test_get_contraction_structure_complex():
     A = IndexedBase('A')
     i, j, k = Idx('i'), Idx('j'), Idx('k')
     expr1 = y[i] + A[i, j]*x[j]
-    d1 = {None: set([y[i]]), FiniteSet(j): set([A[i, j]*x[j]])}
+    d1 = {None: set([y[i]]), (j,): set([A[i, j]*x[j]])}
     assert get_contraction_structure(expr1) == d1
     expr2 = expr1*A[k, i] + x[k]
-    d2 = {None: set([x[k]]), FiniteSet(i): set([expr1*A[k, i]]),
-          expr1*A[k, i]: [d1]}
+    d2 = {None: set([x[k]]), (i,): set([expr1*A[k, i]]), expr1*A[k, i]: [d1]}
     assert get_contraction_structure(expr2) == d2
 
 
@@ -116,8 +113,8 @@ def test_contraction_structure_simple_Pow():
     assert get_contraction_structure(ii_jj) == {
         None: set([ii_jj]),
         ii_jj: [
-            {FiniteSet(i): set([x[i, i]])},
-            {FiniteSet(j): set([y[j, j]])}
+            {(i,): set([x[i, i]])},
+            {(j,): set([y[j, j]])}
         ]
     }
 
@@ -132,18 +129,18 @@ def test_contraction_structure_Mul_and_Pow():
     ij_i = (x[i]*y[j])**(y[i])
     assert get_contraction_structure(ij_i) == {None: set([ij_i])}
     j_ij_i = x[j]*(x[i]*y[j])**(y[i])
-    assert get_contraction_structure(j_ij_i) == {FiniteSet(j): set([j_ij_i])}
+    assert get_contraction_structure(j_ij_i) == {(j,): set([j_ij_i])}
     j_i_ji = x[j]*x[i]**(y[j]*x[i])
-    assert get_contraction_structure(j_i_ji) == {FiniteSet(j): set([j_i_ji])}
+    assert get_contraction_structure(j_i_ji) == {(j,): set([j_i_ji])}
     ij_exp_kki = x[i]*y[j]*exp(y[i]*y[k, k])
     result = get_contraction_structure(ij_exp_kki)
     expected = {
-        FiniteSet(i): set([ij_exp_kki]),
+        (i,): set([ij_exp_kki]),
         ij_exp_kki: [{
                      None: set([exp(y[i]*y[k, k])]),
                 exp(y[i]*y[k, k]): [{
                     None: set([y[i]*y[k, k]]),
-                    y[i]*y[k, k]: [{FiniteSet(k): set([y[k, k]])}]
+                    y[i]*y[k, k]: [{(k,): set([y[k, k]])}]
                 }]}
         ]
     }
@@ -158,8 +155,8 @@ def test_contraction_structure_Add_in_Pow():
     expected = {
         None: set([s_ii_jj_s]),
         s_ii_jj_s: [
-            {None: set([S.One]), FiniteSet(i): set([x[i, i]])},
-            {None: set([S.One]), FiniteSet(j): set([y[j, j]])}
+            {None: set([S.One]), (i,): set([x[i, i]])},
+            {None: set([S.One]), (j,): set([y[j, j]])}
         ]
     }
     result = get_contraction_structure(s_ii_jj_s)
@@ -175,12 +172,12 @@ def test_contraction_structure_Pow_in_Pow():
     expected = {
         None: set([ii_jj_kk]),
         ii_jj_kk: [
-            {FiniteSet(i): set([x[i, i]])},
+            {(i,): set([x[i, i]])},
             {
                 None: set([y[j, j]**z[k, k]]),
                 y[j, j]**z[k, k]: [
-                    {FiniteSet(j): set([y[j, j]])},
-                    {FiniteSet(k): set([z[k, k]])}
+                    {(j,): set([y[j, j]])},
+                    {(k,): set([z[k, k]])}
                 ]
             }
         ]
@@ -205,8 +202,8 @@ def test_ufunc_support():
 
     assert get_contraction_structure(f(x[i])) == {None: set([f(x[i])])}
     assert get_contraction_structure(
-        f(y[i])*g(x[i])) == {FiniteSet(i): set([f(y[i])*g(x[i])])}
+        f(y[i])*g(x[i])) == {(i,): set([f(y[i])*g(x[i])])}
     assert get_contraction_structure(
-        f(y[i])*g(f(x[i]))) == {FiniteSet(i): set([f(y[i])*g(f(x[i]))])}
+        f(y[i])*g(f(x[i]))) == {(i,): set([f(y[i])*g(f(x[i]))])}
     assert get_contraction_structure(
-        f(x[j], y[i])*g(x[i])) == {FiniteSet(i): set([f(x[j], y[i])*g(x[i])])}
+        f(x[j], y[i])*g(x[i])) == {(i,): set([f(x[j], y[i])*g(x[i])])}
