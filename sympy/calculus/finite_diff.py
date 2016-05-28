@@ -353,7 +353,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
     >>> as_finite_diff(d2fdxdy, wrt=x)
-    -f(x - 1/2, y) + f(x + 1/2, y)
+    -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
 
     See also
     ========
