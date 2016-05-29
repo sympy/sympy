@@ -888,7 +888,7 @@ class HolonomicFunction(object):
 
         return HolonomicSequence(sol, u0)
 
-    def series(self, n=6, coefficient=False):
+    def series(self, n=6, coefficient=False, order=True):
         """
         Finds the power series expansion of given holonomic function.
 
@@ -949,8 +949,10 @@ class HolonomicFunction(object):
         ser = S(0)
         for i, j in enumerate(sol):
             ser += x**i * j
-
-        return ser + Order(x**n, x)
+        if order:
+            return ser + Order(x**n, x)
+        else:
+            return ser
 
     def _indicial(self):
         list_coeff = self.annihilator.listofpoly
@@ -985,6 +987,26 @@ class HolonomicFunction(object):
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
         return roots(s.rep, filter='R').keys()
+
+    def evalf(self, *args, **kwargs):
+        """
+        Find numerical value of a holonomic function. The substitution must be
+        done here.
+
+        Examples
+        =======
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(subs={x:1})  # e^1
+        2.71828182845905
+        """
+
+        return self.series(n=50, order=False).evalf(*args, **kwargs)
 
 
 def from_hyper(func, x0=0, evalf=False):
