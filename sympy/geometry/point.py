@@ -20,7 +20,6 @@ from sympy.functions.elementary.complexes import im
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
-from sympy.core.add import Add
 
 from .entity import GeometryEntity
 
@@ -95,7 +94,7 @@ class Point(GeometryEntity):
         if evaluate:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
+                 for f in coords.atoms(Float)]))
         if len(coords) == 2:
             return Point2D(coords, **kwargs)
         if len(coords) == 3:
@@ -192,7 +191,7 @@ class Point(GeometryEntity):
 
     def is_scalar_multiple(p1, p2):
         """Returns whether `p1` and `p2` are scalar multiples
-        of eachother.
+        of each other.
         """
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of eachother
@@ -329,7 +328,8 @@ class Point(GeometryEntity):
         Point2D(7, 3)
 
         """
-        return Point([simplify((a + b)*S.Half) for a, b in zip(self.args, p.args)])
+        return Point([simplify((a + b)*S.Half)
+                      for a, b in zip(self.args, p.args)])
 
     def evalf(self, prec=None, **options):
         """Evaluate the coordinates of the point.
@@ -391,7 +391,8 @@ class Point(GeometryEntity):
         """
         if isinstance(o, Point):
             if len(self) != len(o):
-                raise ValueError("Points must be of the same dimension to intersect")
+                raise ValueError("Points must be of the same dimension "
+                                 "to intersect")
             if self == o:
                 return [self]
             return []
@@ -422,6 +423,7 @@ class Point(GeometryEntity):
         3/2
 
         """
+        p = Point(p)
         return sum(a*b for a, b in zip(self, p))
 
     def equals(self, other):
@@ -429,7 +431,7 @@ class Point(GeometryEntity):
         # a point is equal to another point if all its components are equal
         if not isinstance(other, Point) or len(self.args) != len(other.args):
             return False
-        return all(a.equals(b) for a,b in zip(self.args, other.args))
+        return all(a.equals(b) for a, b in zip(self.args, other.args))
 
     def __len__(self):
         return len(self.args)
@@ -489,6 +491,7 @@ class Point(GeometryEntity):
         """Returns the distance between this point and the origin."""
         origin = Point([0]*len(self))
         return Point.distance(origin, self)
+
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
@@ -560,7 +563,7 @@ class Point2D(Point):
         if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
+                 for f in coords.atoms(Float)]))
         return GeometryEntity.__new__(cls, *coords)
 
     def __contains__(self, item):
@@ -773,10 +776,11 @@ class Point2D(Point):
             # We hit this block if matrix argument is not actually a Matrix.
             valid_matrix = False
         if not valid_matrix:
-            raise ValueError("The argument to the transform function must be " \
-            + "a 3x3 matrix")
+            raise ValueError("The argument to the transform function must be "
+                             "a 3x3 matrix")
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
+
 
 class Point3D(Point):
     """A point in a 3-dimensional Euclidean space.
@@ -845,7 +849,7 @@ class Point3D(Point):
         if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
+                 for f in coords.atoms(Float)]))
         return GeometryEntity.__new__(cls, *coords)
 
     def __contains__(self, item):
@@ -918,7 +922,7 @@ class Point3D(Point):
         >>> p1.direction_ratio(Point3D(2, 3, 5))
         [1, 1, 2]
         """
-        return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
+        return [(point.x - self.x), (point.y - self.y), (point.z - self.z)]
 
     def direction_cosine(self, point):
         """
@@ -944,7 +948,7 @@ class Point3D(Point):
         """
         a = self.direction_ratio(point)
         b = sqrt(sum(i**2 for i in a))
-        return [(point.x - self.x) / b,(point.y - self.y) / b,
+        return [(point.x - self.x) / b, (point.y - self.y) / b,
                 (point.z - self.z) / b]
 
     @staticmethod
@@ -1030,7 +1034,9 @@ class Point3D(Point):
                 return all(p.is_coplanar(i) for i in points)
             except ValueError:
                 pass
-        raise ValueError('At least 3 non-collinear points needed to define plane.')
+
+        raise ValueError('At least 3 non-collinear points needed to '
+                         'define plane.')
 
     def intersection(self, o):
         """The intersection between this point and another point.
@@ -1093,7 +1099,8 @@ class Point3D(Point):
         """
         if pt:
             pt = Point3D(pt)
-            return self.translate(*(-pt).args).scale(x, y, z).translate(*pt.args)
+            return self.translate(*(-pt).args).scale(x, y, z) \
+                .translate(*pt.args)
         return Point3D(self.x*x, self.y*y, self.z*z)
 
     def translate(self, x=0, y=0, z=0):
@@ -1136,8 +1143,8 @@ class Point3D(Point):
             # We hit this block if matrix argument is not actually a Matrix.
             valid_matrix = False
         if not valid_matrix:
-            raise ValueError("The argument to the transform function must be " \
-            + "a 4x4 matrix")
+            raise ValueError("The argument to the transform function must be "
+                             "a 4x4 matrix")
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)
