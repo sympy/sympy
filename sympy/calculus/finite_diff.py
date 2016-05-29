@@ -17,7 +17,7 @@ for:
 
 """
 
-from sympy import S
+from sympy import S, Derivative
 from sympy.core.compatibility import iterable, range
 
 
@@ -362,6 +362,18 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     sympy.calculus.finite_diff.finite_diff_weights
 
     """
+    if derivative.is_Add:
+        result = S(0)
+        for subexpr in derivative.args:
+            if isinstance(subexpr, Derivative):
+                result = result + as_finite_diff(subexpr, wrt=wrt)
+            elif isinstance(S.NegativeOne*subexpr, Derivative):
+                result = result + S.NegativeOne*as_finite_diff(S.NegativeOne *
+                    subexpr, wrt=wrt)
+            else:
+                ValueError('Unable to evaluate expression')
+        return result
+
     if wrt is None:
         wrt = derivative.variables[0]
         # we need Derivative to be univariate to guess wrt
