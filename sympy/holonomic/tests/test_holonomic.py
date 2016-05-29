@@ -1,6 +1,6 @@
 from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr
+from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O
 from sympy import ZZ, QQ
 
 
@@ -87,6 +87,7 @@ def test_addition_initial_condition():
     r = HolonomicFunction((x**6 + 2*x**4 - 5*x**2 - 6) + (4*x**5 + 36*x**3 - 32*x)*Dx + \
          (x**6 + 3*x**4 + 5*x**2 - 9)*Dx**2 + (4*x**5 + 36*x**3 - 32*x)*Dx**3 + (x**4 + \
             10*x**2 - 3)*Dx**4, x, 0, [4, 5, -1, -17])
+    assert p + q == r
     q = HolonomicFunction(Dx**3 + x, x, 2, [3, 0, 1])
     p = HolonomicFunction(Dx - 1, x, 2, [1])
     r = HolonomicFunction((-x**2 - x + 1) + (x**2 + x)*Dx + (-x - 2)*Dx**3 + \
@@ -195,4 +196,29 @@ def test_to_Sequence_Initial_Coniditons():
     assert p == q
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
     q = HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2)
+    assert p == q
+
+def test_series():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    p = HolonomicFunction(Dx**2 + 2*x*Dx, x, 0, [0, 1]).series(n=10)
+    q = x - x**3/3 + x**5/10 - x**7/42 + x**9/216 + O(x**10)
+    assert p == q
+    p = HolonomicFunction(Dx - 1, x, 0, 1).composition(x**2)  # e^(x**2)
+    q = HolonomicFunction(Dx**2 + 1, x, 0, [1, 0])  # cos(x)
+    r = (p * q).series(n=10)  # expansion of cos(x) * exp(x**2)
+    s = 1 + x**2/2 + x**4/24 - 31*x**6/720 - 179*x**8/8064 + O(x**10)
+    assert r == s
+    t = HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1])  # log(1 + x)
+    r = (p * t + q).series(n=10)
+    s = 1 + x - x**2 + 4*x**3/3 - 17*x**4/24 + 31*x**5/30 - 481*x**6/720 +\
+     71*x**7/105 - 20159*x**8/40320 + 379*x**9/840 + O(x**10)
+    assert r == s
+    p = HolonomicFunction((6+6*x-3*x**2) - (10*x-3*x**2-3*x**3)*Dx + \
+        (4-6*x**3+2*x**4)*Dx**2, x, 0, [0, 1]).series(n=7)
+    q = x + x**3/6 - 3*x**4/16 + x**5/20 - 23*x**6/960 + O(x**7)
+    assert p == q
+    p = HolonomicFunction((6+6*x-3*x**2) - (10*x-3*x**2-3*x**3)*Dx + \
+        (4-6*x**3+2*x**4)*Dx**2, x, 0, [1, 0]).series(n=7)
+    q = 1 - 3*x**2/4 - x**3/4 - 5*x**4/32 - 3*x**5/40 - 17*x**6/384 + O(x**7)
     assert p == q

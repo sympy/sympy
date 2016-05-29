@@ -900,6 +900,9 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).series()  # e^x
         1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
 
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).series(n=8)  # sin(x)
+        x - x**3/6 + x**5/120 - x**7/5040 + O(x**8)
+
         See Also
         ========
 
