@@ -3,7 +3,9 @@ from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_group import FreeGroupElm
+from itertools import chain
 
 
 @public
@@ -69,503 +71,510 @@ class FpGroup(Basic):
         R = self.relators
 
 
-# sets the upper limit on the number of cosets generated during
-# Coset Enumeration. "M" from Derek Holt's. It is supposed to be
-# user definable.
-DefaultMaxLimit = 500
+class CosetTable(list):
+    # coset_table: Mathematically a coset table
+    #               represented using a list of lists
+    # alpha: Mathematically a coset (precisely, a live coset)
+    #       represented by an integer between i with 1 <= i <= n
+    #       α ∈ c
+    # x: Mathematically an element of "A" (set of generators and
+    #   their inverses), represented using "FpGroupElm"
+    # fp_grp: Finitely Presented Group with < X|R > as presentation.
+    # H: subgroup of fp_grp.
+    # NOTE: We start with H as being only a list of words in generators
+    #       of "fp_grp". Since `.subgroup` method has not been implemented.
 
-# fp_grp: Finitely Presented Group with < X|R > as presentation.
-# H: subgroup of fp_grp.
-# NOTE: We start with H as being only a list of words in generators
-#       of "fp_grp". Since `.subgroup` method has not been implemented.
+    # sets the upper limit on the number of cosets generated during
+    # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
+    # user definable.
+    DefaultMaxLimit = 500
 
-def coset_table(fp_grp, H):
-    # list of generators and their inverses, should be made a tuple.
-    A = []
-    for gen in fp_grp:
-        A.extend([gen, gen.inverse()])
-    r = len(A)
-    # start with table of 1 row (can change) and 2*(no. of gens) coloumns (fixed)
-    table = [r*[None]]
+    def __init__(self, fp_grp, subgroup):
+        self.fp_group = fp_grp
+        self.subgroup = subgroup
+        self.p = [0]
+        self.A = list(chain.from_iterable((gen, gen**-1) \
+                for gen in self.fp_group.generators))
+        self.append([None]*len(self.A))
 
-# coset_table: Mathematically a coset table
-#               represented using a list of lists
-# alpha: Mathematically a coset (precisely, a live coset)
-#       represented by an integer between i with 1 <= i <= n
-#       α ∈ c
-# x: Mathematically an element of "A" (set of generators and
-#   their inverses), represented using "FpGroupElm"
+    @property
+    def omega(self):
+        return [coset for coset in self.p if self.p[coset] == coset]
 
-# Pg. 153
-## later: remove "A" from argument
-def define(C, alpha, x, A):
-    # now C.n is not obtainable
-    if len(C) == DefaultMaxLimit:
-        # abort the further generation of cosets
-        return
-    C.append([None]*len(A))
-    # beta is the new coset generated
-    beta = len(C) - 1
-    C[alpha][A.index(x)] = beta
-    C[beta][A.index(x.inverse())] = alpha
+    @property
+    def n(self):
+        return max(self.omega) + 1
 
-p = []
+    # checks whether the Coset Table is complete or not
+    def is_complete(self):
+        return not None in flatten(self)
 
-## later: remove "A" from arguments
-def scan(C, alpha, word, A):
-    """
-    >>> F, x, y = free_group("x, y")
-    >>> A = [x, x**-1, y, y**-1]
-
-    # Example 5.1, Pg 150
-    >>> c = [[0, 0, 1, 2], [None, None, None, 0], [None, None, 0, None]]
-    >>> scan(c, 0, y**3, A)
-    # this lead to deductions 2^y = 3, 3^(y^-1) = 2 (1, 2, 3 represent cosets in this comment)
-    >>> c
-    [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
-    >>> scan(c, 0, x**-1*y**-1*x*y, A)
-    >>> c
-    [[0, 0, 1, 2], [None, None, 2, 0], [2, 2, 0, 1]]
-    >>> scan(c, 1, x**-1*y**-1*x*y, A)
-    >>> c
-    [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
-
-    # Example 5.2, Pg 154
-    >>> c1 = [[1, 1, None, None], [0, 0, None, None]]
-    >>> scan(c1, 0, x*y, A)
-    >>> c1
-    [[1, 1, None, 1], [0, 0, 0, None]]
-
-    >>> c2 = [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
-    >>> scan(c2, 1, y**3, A)
-    >>> c2
-    [[1, 1, 2, 1], [0, 0, 0, 2], [None, None, 1, 0]]
-
-    >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, None, None]]
-    >>> scan(c3, 2, (x*y)**3, A)
-    >>> c3
-    [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
-
-    # Example 5.3
-    >>> c_1 = [[1, None, None, None], [2, 0, None, None],
-                [None, 1, 3, None], [None, None, None, 2]]
-    >>> scan(c_1, 0, x**2*y**2, A)
-    >>> c_1
-    [[1, None, None, 3],
-     [2, 0, None, None],
-     [None, 1, 3, None],
-     [None, None, 0, 2]]
-    >>> c_2 = [[1, None, None, 3], [2, 0, None, None],
-               [4, 1, 3, None], [None, None, 0, 2],
-               [None, 2, 5, None], [None, None, None, 4]]
-    >>> scan(c_2, 1, x**2*y**2, A)
-    >>> c_2
-    [[1, None, None, 3],
-     [2, 0, None, 5],
-     [4, 1, 3, None],
-     [None, None, 0, 2],
-     [None, 2, 5, None],
-     [None, None, 1, 4]]
-    >>> c_3 = c_2.copy()
-    >>> scan(c_3, 0, x**3*y**5, A)
-    >>> c_3
-    [[1, None, None, 3],
-     [2, 0, 2, 5],
-     [4, 1, 3, 1],
-     [None, None, 0, 2],
-     [None, 2, 5, None],
-     [None, None, 1, 4]]
-    >>> c_4 = c_3.copy()
-    >>> scan(c_4, 2, x**2*y**2, A)
-    >>> c_4
-    [[1, None, None, 3],
-     [2, 0, 2, 5],
-     [4, 1, 3, 1],
-     [None, None, 0, 2],
-     [5, 2, 5, None],
-     [None, 4, 1, 4]]
-    >>> scan(c_4, 1, x**3*y**5, A)
-    >>> c_4
-    [[1, 3, 1, 3],
-     [2, 0, 2, 0],
-     [3, 1, 3, 1],
-     [0, 2, 0, 2],
-     [0, 2, None, None],
-     [None, 4, 1, 4]]
-
-    # Example 5.4
-    >>> F, a, b, c, d, e = free_group("a, b, c, d, e")
-    >>> A = [a, a**-1, b, b**-1, c, c**-1, d, d**-1, e, e**-1]
-    >>> c1 = [[0, None, 1, None, None, None, None, None, None, None],
-               [None, None, None, 0, None, None, None, None, None, None],
-               [None, None, None, None, None, None, None, None, None, None]]
-    >>> scan(c1, 0, a*b*c**-1, A)
-    >>> c1
-    [[0, None, 1, None, 1, None, None, None, None, None],
-     [None, None, None, 0, None, 0, None, None, None, None],
-     [None, None, None, None, None, None, None, None, None, None]]
-    >>> c1 = [[0, None, 1, None, 1, None, None, None, None, None],
-              [None, None, None, 0, 2, 0, None, None, None, None],
-              [None, None, None, None, None, 1, None, None, None, None]]
-    >>> scan(c1, 0, b*c*d**-1, A)
-    >>> c1
-    [[0, None, 1, None, 1, None, 2, None, None, None],
-     [None, None, None, 0, 2, 0, None, None, None, None],
-     [None, None, None, None, None, 1, None, 0, None, None]]
-    >>> scan(c1, 0, d*e*a**-1, A)
-    >>> c1
-    [[0, None, 1, None, 1, None, 2, None, None, 2],
-     [None, None, None, 0, 2, 0, None, None, None, None],
-     [None, None, None, None, None, 1, None, 0, 0, None]]
-    >>> scan(c1, 2, e*a*b**-1, A)
-    >>> c1
-    [[0, None, 1, 2, 1, None, 2, None, None, 2],
-     [None, None, None, 0, 2, 0, None, None, None, None],
-     [None, None, 0, None, None, 1, None, 0, 0, None]]
-    >>> scan(c1, 2, b*c*d**-1, A)
-    >>> c1
-    [[0, None, 1, 2, 1, None, 2, None, None, 2],
-     [None, None, None, 0, 2, 0, None, 2, None, None],
-     [None, None, 0, None, None, 1, 1, 0, 0, None]]
-    >>> scan(c1, 1, c*d*e**-1, A)
-    >>> c1
-    [[0, None, 1, 2, 1, None, 2, None, None, 2],
-     [None, None, None, 0, 2, 0, None, 2, 1, 1],
-     [None, None, 0, None, None, 1, 1, 0, 0, None]]
-    >>> scan(c1, 2, d*e*a**-1, A)
-    >>> c1
-    [[0, None, 1, 2, 1, None, 2, None, None, 2],
-     [None, 2, None, 0, 2, 0, None, 2, 1, 1],
-     [1, None, 0, None, None, 1, 1, 0, 0, None]]
-    >>> scan(c1, 0, e*a*b**-1, A)
-    >>> c1
-    [[0, None, 1, 2, 1, None, 2, None, 2, 2],
-     [None, 2, None, 0, 2, 0, None, 2, 1, 1],
-     [1, None, 0, None, None, 1, 1, 0, 0, 0]]
-    >>> scan(c1, 0, c*d*e**-1, A)
-    # sudden-collapse
-    # I don't know what this means!! (programmatically, mathematically clear)
-    >>> c1
-    [[0, None, 0, 0, 0, 0, 0, 0, 0, 0],
-     [None, 2, None, 0, 2, 0, None, 2, 1, None],
-     [0, None, 0, None, None, None, None, 0, 0, 0]]
-
-    # Example from original Todd-Cox
-    >>> F = FpGroup(F, [x**5, y**3, (x*y)**2])
-    # NOTE: In comments we name cosets as 1, 2, 3, ... (starting with 1)
-    # define H with Y = {x}, so H is subgroup generated by {x}
-    # 1. Start with "definitions" 1^x = 1 (trivial), 1^y = 2, 2^y = 3.
-    # here "^" operation represent the function χ (chi, from Derek Holt)
-    >>> C = [[0, 0, 1, None], [None, None, 2, 0], [None, None, None, 1]]
-    # scanning y**3 under 1
-    >>> scan(C, 0, y**3, A)
-    # added 3^y = 1 (by deduction)
-    >>> C
-    [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
-    # scanning (x*y)^2 under 1
-    >>> scan(C, 0, (x*y)**2, A)
-    # added 2^x = 3 (by deduction)
-    >>> C
-    [[0, 0, 1, 2], [2, None, 2, 0], [None, 1, 0, 1]]
-    # define 3^x = 4, 4^x = 5, 5^x = 6
-    >>> C = [[0, 0, 1, 2], [2, None, 2, 0], [3, 1, 0, 1], [4, 2, None, None], [5, 3, None, None], [None, 4, None, None]]
-    # scanning x**5 under 2
-    >>> scan(C, 1, x**5, A)
-    # added 2^y = 3, 6^x = 2 (by deductions)
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, None, None],
-     [5, 3, None, None],
-     [1, 4, None, None]]
-
-    # scanning (x*y)**3 under 3
-    >>> scan(C, 2, (x*y)**2, A)
-    # added 4^y = 6 (by deductions)
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, None],
-     [5, 3, None, None],
-     [1, 4, None, 3]]
-
-    # scanning y**5 under 4
-    >>> scan(C, 3, y**3, A)
-    # added 7^y = 4 (by deductions)
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, None, None],
-     [1, 4, 6, 3],
-     [None, None, 3, 5]]
-
-    >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
-             [3, 1, 0, 1], [4, 2, 5, 6],
-             [5, 3, 7, None], [1, 4, 6, 3],
-             [None, None, 3, 5], [None, None, None, 4]]
-    >>> scan(C, 3, (x*y)**2, A)
-    # added 5^y = 8, 8^x = 7
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, None],
-     [1, 4, 6, 3],
-     [None, 7, 3, 5],
-     [6, None, None, 4]]
-
-    # define 8^y = 9
-    >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
-             [3, 1, 0, 1], [4, 2, 5, 6],
-             [5, 3, 7, None], [1, 4, 6, 3],
-             [None, 7, 3, 5], [6, None, 8, 4],
-             [None, None, None, 7]]
-    >>> scan(C, 4, y**3, A)
-    # added 9^y = 5
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [None, 7, 3, 5],
-     [6, None, 8, 4],
-     [None, None, 4, 7]]
-    >>> scan(C, 4, (x*y)**2, A)
-    # added 7^x = 9
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [8, 7, 3, 5],
-     [6, None, 8, 4],
-     [None, 6, 4, 7]]
-
-    >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
-             [3, 1, 0, 1], [4, 2, 5, 6],
-             [5, 3, 7, 8], [1, 4, 6, 3],
-             [8, 7, 3, 5], [6, None, 8, 4],
-             [9, 6, 4, 7], [10, 8, None, None],
-             [None, 9, None, None]]
-    >>> scan(C, 6, x**5, A)
-    # added 11^x = 8
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [8, 7, 3, 5],
-     [6, 10, 8, 4],
-     [9, 6, 4, 7],
-     [10, 8, None, None],
-     [7, 9, None, None]]
-
-    >>> scan(C, 8, (x*y)**2, A)
-    # added 10^y = 11
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [8, 7, 3, 5],
-     [6, 10, 8, 4],
-     [9, 6, 4, 7],
-     [10, 8, 10, None],
-     [7, 9, None, 9]]
-    # define 11^y = 12
-    >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
-             [2, 5, 2, 0], [4, 2, 5, 6],
-             [5, 3, 7, 8], [1, 4, 6, 3],
-             [8, 7, 3, 5], [6, 10, 8, 4],
-             [9, 6, 4, 7], [10, 8, 10, None],
-             [7, 9, 11, 9], [None, None, None, 10]]
-    # added 12^y = 10
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [8, 7, 3, 5],
-     [6, 10, 8, 4],
-     [9, 6, 4, 7],
-     [10, 8, 10, 11],
-     [7, 9, 11, 9],
-     [None, None, 9, 10]]
-
-    >>> scan(C, 9, (x*y)**2, A)
-    # define 12^x = 12 (by deductions)
-    >>> C
-    [[0, 0, 1, 2],
-     [2, 5, 2, 0],
-     [3, 1, 0, 1],
-     [4, 2, 5, 6],
-     [5, 3, 7, 8],
-     [1, 4, 6, 3],
-     [8, 7, 3, 5],
-     [6, 10, 8, 4],
-     [9, 6, 4, 7],
-     [10, 8, 10, 11],
-     [7, 9, 11, 9],
-     [11, 11, 9, 10]]
-
-    """
-    # alpha is an integer representing a "coset"
-    # since scanning can be in two cases
-    # 1. for alpha=0 and w in Y (i.e generating set of H)
-    # 2. alpha in sigma (set of live cosets), w in R (relators)
-    f = alpha
-    i = 0
-    r = len(word)
-    # list of union of generators and their inverses
-    # A = coset_table.A
-    while i < r and C[f][A.index(word.subword(i, i+1))] is not None:
-        f = C[f][A.index(word.subword(i, i+1))]
-        i += 1
-    # can this be replaced with i == r ?
-    if i >= r:
-        if f != alpha:
-            # implement the "coincidence" routine on Pg 158 of Handbook.
-            coincidence(C, f, alpha, A, p)
+    # Pg. 153
+    def define(self, alpha, x):
+        A = self.A
+        #l = len(self)
+        if self.n == 500:
+            # abort the further generation of cosets
             return
-    b = alpha
-    j = r - 1
-    while j >= i and C[b][A.index(word.subword(j, j+1).inverse())] is not None:
-        b = C[b][A.index(word.subword(j, j+1).inverse())]
-        j -= 1
-    if j < i:
-        # we have an incorrect completed scan with coincidence f ~ b
-        # run the "coincidence" routine
-        # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
-        # we have p[α]=α iff α ∈ Ω.
-        p.extend(list(range(len(C))))
-        coincidence(C, f, b, A, p)
-    elif j == i:
-        # deduction process
-        C[f][A.index(word.subword(i, i+1))] = b
-        C[b][A.index(word.subword(i, i+1).inverse())] = f
-    # otherwise scan is incomplete and yields no information
+        self.append([None]*len(A))
+        # beta is the new coset generated
+        beta = len(self) - 1
+        self.p.append(beta)
+        self[alpha][A.index(x)] = beta
+        self[beta][A.index(x.inverse())] = alpha
 
+    def scan(self, alpha, word):
+        """
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> f = free_group(F, [x**3, y**3, x**-1*y**-1*x*y])
+        >>> c = CosetTable(f, [x])
 
-# here alpha, beta represent the pair of cosets where
-# coincidence occurs
+        # Example 5.1, Pg 150
+        >>> c = [[0, 0, 1, 2], [None, None, None, 0], [None, None, 0, None]]
+        >>> scan(c, 0, y**3, A)
+        # this lead to deductions 2^y = 3, 3^(y^-1) = 2 (1, 2, 3 represent cosets in this comment)
+        >>> c
+        [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
+        >>> scan(c, 0, x**-1*y**-1*x*y, A)
+        >>> c
+        [[0, 0, 1, 2], [None, None, 2, 0], [2, 2, 0, 1]]
+        >>> c.scan(1, x**-1*y**-1*x*y)
+        >>> c
+        [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
 
-def merge(k, lamda, p, q, l):
-    phi = rep(k, p)
-    chi = rep(lamda, p)
-    if phi != chi:
-        mu = min(phi, chi)
-        v = max(phi, chi)
-        p[v] = mu
-        l += 1
-        q.append(v)
-    return l
+        # Example 5.2, Pg 154
+        >>> c1 = [[1, 1, None, None], [0, 0, None, None]]
+        >>> c1.scan(0, x*y)
+        >>> c1
+        [[1, 1, None, 1], [0, 0, 0, None]]
 
+        >>> c2 = [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
+        >>> c2.scan(1, y**3)
+        >>> c2
+        [[1, 1, 2, 1], [0, 0, 0, 2], [None, None, 1, 0]]
 
-def rep(k, p):
-    lamda = k
-    rho = p[lamda]
-    while rho != lamda:
-        lamda = rho
+        >>> c3 = [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, None, None]]
+        >>> c3.scan(2, (x*y)**3)
+        >>> c3
+        [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3]]
+
+        # Example 5.3
+        >>> c_1 = [[1, None, None, None], [2, 0, None, None],
+                    [None, 1, 3, None], [None, None, None, 2]]
+        >>> c_1.scan(0, x**2*y**2)
+        >>> c_1
+        [[1, None, None, 3],
+         [2, 0, None, None],
+         [None, 1, 3, None],
+         [None, None, 0, 2]]
+        >>> c_2 = [[1, None, None, 3], [2, 0, None, None],
+                   [4, 1, 3, None], [None, None, 0, 2],
+                   [None, 2, 5, None], [None, None, None, 4]]
+        >>> c_2.scan(1, x**2*y**2)
+        >>> c_2
+        [[1, None, None, 3],
+         [2, 0, None, 5],
+         [4, 1, 3, None],
+         [None, None, 0, 2],
+         [None, 2, 5, None],
+         [None, None, 1, 4]]
+        >>> c_3 = c_2.copy()
+        >>> c_3.scan(0, x**3*y**5)
+        >>> c_3
+        [[1, None, None, 3],
+         [2, 0, 2, 5],
+         [4, 1, 3, 1],
+         [None, None, 0, 2],
+         [None, 2, 5, None],
+         [None, None, 1, 4]]
+        >>> c_4 = c_3.copy()
+        >>> c_4.scan(2, x**2*y**2)
+        >>> c_4
+        [[1, None, None, 3],
+         [2, 0, 2, 5],
+         [4, 1, 3, 1],
+         [None, None, 0, 2],
+         [5, 2, 5, None],
+         [None, 4, 1, 4]]
+        >>> c_4.scan(1, x**3*y**5)
+        >>> c_4
+        [[1, 3, 1, 3],
+         [2, 0, 2, 0],
+         [3, 1, 3, 1],
+         [0, 2, 0, 2],
+         [0, 2, None, None],
+         [None, 4, 1, 4]]
+
+        # Example 5.4
+        >>> F, a, b, c, d, e = free_group("a, b, c, d, e")
+        >>> A = [a, a**-1, b, b**-1, c, c**-1, d, d**-1, e, e**-1]
+        >>> c1 = [[0, None, 1, None, None, None, None, None, None, None],
+                   [None, None, None, 0, None, None, None, None, None, None],
+                   [None, None, None, None, None, None, None, None, None, None]]
+        >>> c1.scan(0, a*b*c**-1)
+        >>> c1
+        [[0, None, 1, None, 1, None, None, None, None, None],
+         [None, None, None, 0, None, 0, None, None, None, None],
+         [None, None, None, None, None, None, None, None, None, None]]
+        >>> c1 = [[0, None, 1, None, 1, None, None, None, None, None],
+                  [None, None, None, 0, 2, 0, None, None, None, None],
+                  [None, None, None, None, None, 1, None, None, None, None]]
+        >>> c1.scan(0, b*c*d**-1)
+        >>> c1
+        [[0, None, 1, None, 1, None, 2, None, None, None],
+         [None, None, None, 0, 2, 0, None, None, None, None],
+         [None, None, None, None, None, 1, None, 0, None, None]]
+        >>> c1.scan(0, d*e*a**-1)
+        >>> c1
+        [[0, None, 1, None, 1, None, 2, None, None, 2],
+         [None, None, None, 0, 2, 0, None, None, None, None],
+         [None, None, None, None, None, 1, None, 0, 0, None]]
+        >>> c1.scan(2, e*a*b**-1)
+        >>> c1
+        [[0, None, 1, 2, 1, None, 2, None, None, 2],
+         [None, None, None, 0, 2, 0, None, None, None, None],
+         [None, None, 0, None, None, 1, None, 0, 0, None]]
+        >>> c1.scan(2, b*c*d**-1)
+        >>> c1
+        [[0, None, 1, 2, 1, None, 2, None, None, 2],
+         [None, None, None, 0, 2, 0, None, 2, None, None],
+         [None, None, 0, None, None, 1, 1, 0, 0, None]]
+        >>> c1.scan(1, c*d*e**-1)
+        >>> c1
+        [[0, None, 1, 2, 1, None, 2, None, None, 2],
+         [None, None, None, 0, 2, 0, None, 2, 1, 1],
+         [None, None, 0, None, None, 1, 1, 0, 0, None]]
+        >>> c1.scan(2, d*e*a**-1)
+        >>> c1
+        [[0, None, 1, 2, 1, None, 2, None, None, 2],
+         [None, 2, None, 0, 2, 0, None, 2, 1, 1],
+         [1, None, 0, None, None, 1, 1, 0, 0, None]]
+        >>> c1.scan(0, e*a*b**-1)
+        >>> c1
+        [[0, None, 1, 2, 1, None, 2, None, 2, 2],
+         [None, 2, None, 0, 2, 0, None, 2, 1, 1],
+         [1, None, 0, None, None, 1, 1, 0, 0, 0]]
+        >>> c1.scan(0, c*d*e**-1)
+        # sudden-collapse
+        # I don't know what this means!! (programmatically, mathematically clear)
+        >>> c1
+        [[0, None, 0, 0, 0, 0, 0, 0, 0, 0],
+         [None, 2, None, 0, 2, 0, None, 2, 1, None],
+         [0, None, 0, None, None, None, None, 0, 0, 0]]
+
+        # Example from original Todd-Coxeter paper
+        >>> F = FpGroup(F, [x**5, y**3, (x*y)**2])
+        # NOTE: In comments we name cosets as 1, 2, 3, ... (starting with 1)
+        # define H with Y = {x}, so H is subgroup generated by {x}
+        # 1. Start with "definitions" 1^x = 1 (trivial), 1^y = 2, 2^y = 3.
+        # here "^" operation represent the function χ (chi, from Derek Holt)
+        >>> C = [[0, 0, 1, None], [None, None, 2, 0], [None, None, None, 1]]
+        # scanning y**3 under 1
+        >>> C.scan(0, y**3)
+        # added 3^y = 1 (by deduction)
+        >>> C
+        [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
+        # scanning (x*y)^2 under 1
+        >>> C.scan(0, (x*y)**2)
+        # added 2^x = 3 (by deduction)
+        >>> C
+        [[0, 0, 1, 2], [2, None, 2, 0], [None, 1, 0, 1]]
+        # define 3^x = 4, 4^x = 5, 5^x = 6
+        >>> C = [[0, 0, 1, 2], [2, None, 2, 0], [3, 1, 0, 1], [4, 2, None, None], [5, 3, None, None], [None, 4, None, None]]
+        # scanning x**5 under 2
+        >>> C.scan(1, x**5)
+        # added 2^y = 3, 6^x = 2 (by deductions)
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, None, None],
+         [5, 3, None, None],
+         [1, 4, None, None]]
+
+        # scanning (x*y)**3 under 3
+        >>> C.scan(2, (x*y)**2)
+        # added 4^y = 6 (by deductions)
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, None],
+         [5, 3, None, None],
+         [1, 4, None, 3]]
+
+        # scanning y**5 under 4
+        >>> C.scan(3, y**3)
+        # added 7^y = 4 (by deductions)
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, None, None],
+         [1, 4, 6, 3],
+         [None, None, 3, 5]]
+
+        >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
+                 [3, 1, 0, 1], [4, 2, 5, 6],
+                 [5, 3, 7, None], [1, 4, 6, 3],
+                 [None, None, 3, 5], [None, None, None, 4]]
+        >>> C.scan(3, (x*y)**2)
+        # added 5^y = 8, 8^x = 7
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, None],
+         [1, 4, 6, 3],
+         [None, 7, 3, 5],
+         [6, None, None, 4]]
+
+        # define 8^y = 9
+        >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
+                 [3, 1, 0, 1], [4, 2, 5, 6],
+                 [5, 3, 7, None], [1, 4, 6, 3],
+                 [None, 7, 3, 5], [6, None, 8, 4],
+                 [None, None, None, 7]]
+        >>> C.scan(4, y**3)
+        # added 9^y = 5
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [None, 7, 3, 5],
+         [6, None, 8, 4],
+         [None, None, 4, 7]]
+        >>> C.scan(4, (x*y)**2)
+        # added 7^x = 9
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [8, 7, 3, 5],
+         [6, None, 8, 4],
+         [None, 6, 4, 7]]
+
+        >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
+                 [3, 1, 0, 1], [4, 2, 5, 6],
+                 [5, 3, 7, 8], [1, 4, 6, 3],
+                 [8, 7, 3, 5], [6, None, 8, 4],
+                 [9, 6, 4, 7], [10, 8, None, None],
+                 [None, 9, None, None]]
+        >>> C.scan(6, x**5)
+        # added 11^x = 8
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [8, 7, 3, 5],
+         [6, 10, 8, 4],
+         [9, 6, 4, 7],
+         [10, 8, None, None],
+         [7, 9, None, None]]
+
+        >>> C.scan(8, (x*y)**2)
+        # added 10^y = 11
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [8, 7, 3, 5],
+         [6, 10, 8, 4],
+         [9, 6, 4, 7],
+         [10, 8, 10, None],
+         [7, 9, None, 9]]
+        # define 11^y = 12
+        >>> C = [[0, 0, 1, 2], [2, 5, 2, 0],
+                 [2, 5, 2, 0], [4, 2, 5, 6],
+                 [5, 3, 7, 8], [1, 4, 6, 3],
+                 [8, 7, 3, 5], [6, 10, 8, 4],
+                 [9, 6, 4, 7], [10, 8, 10, None],
+                 [7, 9, 11, 9], [None, None, None, 10]]
+        # added 12^y = 10
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [8, 7, 3, 5],
+         [6, 10, 8, 4],
+         [9, 6, 4, 7],
+         [10, 8, 10, 11],
+         [7, 9, 11, 9],
+         [None, None, 9, 10]]
+
+        >>> C.scan(9, (x*y)**2)
+        # define 12^x = 12 (by deductions)
+        >>> C
+        [[0, 0, 1, 2],
+         [2, 5, 2, 0],
+         [3, 1, 0, 1],
+         [4, 2, 5, 6],
+         [5, 3, 7, 8],
+         [1, 4, 6, 3],
+         [8, 7, 3, 5],
+         [6, 10, 8, 4],
+         [9, 6, 4, 7],
+         [10, 8, 10, 11],
+         [7, 9, 11, 9],
+         [11, 11, 9, 10]]
+
+        """
+        # alpha is an integer representing a "coset"
+        # since scanning can be in two cases
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in omega (set of live cosets), w in R (relators)
+        f = alpha
+        i = 0
+        r = len(word)
+        # list of union of generators and their inverses
+        A = self.A
+        while i < r and self[f][A.index(word.subword(i, i+1))] is not None:
+            f = self[f][A.index(word.subword(i, i+1))]
+            i += 1
+        # can this be replaced with i == r ?
+        if i >= r:
+            if f != alpha:
+                # implement the "coincidence" routine on Pg 158 of Handbook.
+                self.coincidence(f, alpha)
+                return
+        b = alpha
+        j = r - 1
+        while j >= i and self[b][A.index(word.subword(j, j+1)**-1)] is not None:
+            b = self[b][A.index(word.subword(j, j+1).inverse())]
+            j -= 1
+        if j < i:
+            # we have an incorrect completed scan with coincidence f ~ b
+            # run the "coincidence" routine
+            # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
+            # we have p[α]=α iff α ∈ Ω.
+            self.p.extend(list(range(len(self))))
+            self.coincidence(f, b)
+        elif j == i:
+            # deduction process
+            self[f][A.index(word.subword(i, i+1))] = b
+            self[b][A.index(word.subword(i, i+1).inverse())] = f
+        # otherwise scan is incomplete and yields no information
+
+    def merge(self, k, lamda, q, l):
+        p = self.p
+        phi = self.rep(k)
+        chi = self.rep(lamda)
+        if phi != chi:
+            mu = min(phi, chi)
+            v = max(phi, chi)
+            p[v] = mu
+            l += 1
+            q.append(v)
+        return l
+
+    def rep(self, k):
+        p = self.p
+        lamda = k
         rho = p[lamda]
-    mu = k
-    rho = p[mu]
-    while rho != lamda:
-        p[mu] = lamda
-        mu = rho
+        while rho != lamda:
+            lamda = rho
+            rho = p[lamda]
+        mu = k
         rho = p[mu]
-    return lamda
+        while rho != lamda:
+            p[mu] = lamda
+            mu = rho
+            rho = p[mu]
+        return lamda
 
+    # alpha, beta coincide
+    # here alpha, beta represent the pair of cosets where
+    # coincidence occurs
+    def coincidence(self, alpha, beta):
+        """
+        >>> F, x, y = free_group("x, y")
+        # when coincidence occurs with 5 ~ 0, then found 4 ~ 3.
+        >>> p = [0, 1, 2, 3, 4, 5]
+        >>> C = [[1, None, None, 3], [2, 0, 2, 5],
+                 [4, 1, 3, 1],[None, None, 0, 2],
+                 [5, 2, 5, None], [None, 4, 1, 4]]
+        >>> coincidence(C, 0, 5, [x, x**-1, y, y**-1], p)
+        >>> C
+        [[1, 3, 1, 3],
+         [2, 0, 2, 0],
+         [3, 1, 3, 1],
+         [0, 2, 0, 2],
+         [0, 2, None, None],
+         [None, 4, 1, 4]]
 
-# alpha, beta coincide
-def coincidence(C, alpha, beta, A, p):
-    """
-    >>> F, x, y = free_group("x, y")
-    # when coincidence occurs with 5 ~ 0, then found 4 ~ 3.
-    >>> p = [0, 1, 2, 3, 4, 5]
-    >>> C = [[1, None, None, 3], [2, 0, 2, 5],
-             [4, 1, 3, 1],[None, None, 0, 2],
-             [5, 2, 5, None], [None, 4, 1, 4]]
-    >>> coincidence(C, 0, 5, [x, x**-1, y, y**-1], p)
-    >>> C
-    [[1, 3, 1, 3],
-     [2, 0, 2, 0],
-     [3, 1, 3, 1],
-     [0, 2, 0, 2],
-     [0, 2, None, None],
-     [None, 4, 1, 4]]
+        """
+        A = self.A
+        p = self.p
+        l = 0
+        q = []
+        l = self.merge(alpha, beta, q, l)
+        i = 0
+        while i < l:
+            gamma = q[i]
+            i += 1
+            # comment by Kalevi, this is already done by p[v] = mu
+            # del C[gamma]
+            # commenting this out
+            # omega = omega - set(gamma)
+            for x in A:
+                delta = self[gamma][A.index(x)]
+                if delta is not None:
+                    self[delta][A.index(x**-1)] = None
+                    mu = self.rep(gamma)
+                    nu = self.rep(delta)
+                    if self[mu][A.index(x)] is not None:
+                        l = self.merge(nu, self[mu][A.index(x)], q, l)
+                    elif self[nu][A.index(x**-1)] is not None:
+                        l = self.merge(mu, self[nu][A.index(x**-1)], q, l)
+                    else:
+                        self[mu][A.index(x)] = nu
+                        self[nu][A.index(x**-1)] = mu
 
-    """
-    l = 0
-    q = []
-    l = merge(alpha, beta, p, q, l)
-    i = 0
-    while i < l:
-        gamma = q[i]
-        i += 1
-        # comment by Kalevi, this is already done by p[v] = mu
-        # del C[gamma]
-        # commenting this out
-        # sigma = sigma - set(gamma)
-        for x in A:
-            delta = C[gamma][A.index(x)]
-            if delta is not None:
-                C[delta][A.index(x**-1)] = None
-                mu = rep(gamma, p)
-                nu = rep(delta, p)
-                if C[mu][A.index(x)] is not None:
-                    l = merge(nu, C[mu][A.index(x)], p, q, l)
-                elif C[nu][A.index(x**-1)] is not None:
-                    l = merge(mu, C[nu][A.index(x**-1)], p, q, l)
-                else:
-                    C[mu][A.index(x)] = nu
-                    C[nu][A.index(x**-1)] = mu
-
-
-# method used in the HLT strategy
-def scan_and_fill(C, alpha, word, A):
-    f = alpha
-    i = 0
-    b = alpha
-    r = len(word)
-    j = r - 1
-    while True:
+    # method used in the HLT strategy
+    def scan_and_fill(self, alpha, word):
+        f = alpha
+        i = 0
+        r = len(word)
+        A = self.A
         # do the forward scanning
-        while i < r and C[f][A.index(word.subword(i, i+1))] is not None:
-            f = C[f][A.index(word.subword(i, i+1))]
+        while i < r and self[f][A.index(word.subword(i, i+1))] is not None:
+            f = self[f][A.index(word.subword(i, i+1))]
             i += 1
         if i >= r:
             if f != alpha:
-                coincidence(C, f, alpha, A, p)
+                self.coincidence(f, alpha)
                 return
         # forward scan was incomplete, scan backwards
-        while j >= i and C[b][A.index(word.subword(j, j+1))] is not None:
-            b = C[b][A.index(word.subword(j, j+1))]
+        b = alpha
+        j = r - 1
+        while j >= i and self[b][A.index(word.subword(j, j+1)**-1)] is not None:
+            b = self[b][A.index(word.subword(j, j+1)**-1)]
             j -= 1
         if j < i:
-            coincidence(C, f, b, A, p)
+            self.coincidence(f, b)
         elif j == i:
-            C[f][A.index(word.subword(i, i+1))] = b
-            C[b][A.index(word.subword(i, i+1).inverse())] = f
+            self[f][A.index(word.subword(i, i+1))] = b
+            self[b][A.index(word.subword(i, i+1)**-1)] = f
         else:
-            # here "define" routine is called passing "A" as
-            # fourth argument
-            define(C, f, word.subword(i, i+1), A)
-
+            self.define(f, word.subword(i, i+1))
 
 # Pg. 166
 def process_deductions(C, R):
@@ -604,21 +613,115 @@ def standardize(C):
 
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
-    p = [0]
-    n = 0
-    R = fp_grp.relators
+    """
+    # Example 5.1
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
+    >>> C = coset_enumeration_r(f, [x])
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C[i])
+    [0, 0, 1, 2]
+    [1, 1, 2, 0]
+    [2, 2, 0, 1]
+    >>> C.p
+    [0, 1, 2, 1, 2]
+
+    # Example 5.3
+    >>> f = FpGroup(F, [x**2*y**2, x**3*y**5])
+    >>> C = coset_enumeration_r(f, [x*y])
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C[i])
+    [1, 3, 1, 3]
+    [2, 0, 2, 0]
+    [3, 1, 3, 1]
+    [0, 2, 0, 2]
+    >>> C.p
+    [0,
+    1,
+    2,
+    3,
+    3,
+    1,
+    4,
+    0,
+    0,
+    2,
+    0,
+    1,
+    1,
+    6,
+    1,
+    2,
+    2,
+    2,
+    9,
+    0,
+    2,
+    3,
+    0,
+    9,
+    0,
+    1,
+    2,
+    2,
+    1,
+    2,
+    3,
+    1,
+    3,
+    3,
+    3,
+    4,
+    0,
+    1,
+    2,
+    3,
+    0,
+    2,
+    0,
+    0,
+    0,
+    2,
+    3,
+    0,
+    0,
+    3,
+    0,
+    1,
+    3,
+    1,
+    1,
+    1,
+    3,
+    0,
+    1,
+    1]
+
+    """
+    # 1. Initialize a coset table C for < X|R >
+    C = CosetTable(fp_grp, Y)
+    R = fp_grp.relators()
+    A = C.A
+    p = C.p
     for w in Y:
-        scan_and_fill(C, 0, w, A)
-    for alpha in range(len(C)) and p[alpha] == alpha:
-        for w in R:
-            scan_and_fill(C, alpha, w, A)
+        C.scan_and_fill(0, w)
+    alpha = 0
+    while alpha < C.n:
+        if p[alpha] == alpha:
+            for w in R:
+                C.scan_and_fill(alpha, w)
+                if p[alpha] < alpha:
+                    break
             if p[alpha] < alpha:
-                break
-        if p[alpha] < alpha:
-            continue
-        for x in A:
-            if C[alpha][A.index(x)] is None:
-                define(C, alpha, x, A)
+                continue
+            for x in A:
+                if C[alpha][A.index(x)] is None:
+                    C.define(alpha, x)
+        alpha += 1
     return C
 
 
