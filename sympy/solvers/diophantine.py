@@ -112,7 +112,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     Usage
     =====
 
-    ``diophantine(eq, t, syms, factor)``: Solve the diophantine
+    ``diophantine(eq, t, syms)``: Solve the diophantine
     equation ``eq``.
     ``t`` is the optional parameter to be used by ``diop_solve()``.
     ``syms`` is an optional list of symbols which determines the
