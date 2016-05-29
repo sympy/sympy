@@ -743,10 +743,11 @@ class HolonomicFunction(object):
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
 
-    def composition(self, expr):
+    def composition(self, expr, *args):
         """
-        Returns the Holonomic Function after composition with
-        an algebraic function.
+        Returns the annihilator after composition of a holonomic function with
+        an algebraic function. Initial conditions for the annihilator after composition
+        can be also be provided to the function.
 
         Examples
         ========
@@ -757,8 +758,11 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
-        >>> HolonomicFunction(Dx - 1, x).composition(x**2)  # e^(x**2)
-        HolonomicFunction((-2*x) + (1)Dx, x)
+        >>> HolonomicFunction(Dx - 1, x).composition(x**2, 0, [1])  # e^(x**2)
+        HolonomicFunction((-2*x) + (1)Dx, x), f(0) = 1
+
+        >>> HolonomicFunction(Dx**2 + 1, x).composition(x**2 - 1, 1, [1, 0])
+        HolonomicFunction((4*x**3) + (-1)Dx + (x)Dx**2, x), f(1) = 1 , f'(1) = 0
 
         See Also
         ========
@@ -801,8 +805,8 @@ class HolonomicFunction(object):
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
-        if self._have_init_cond:
-            return HolonomicFunction(sol, self.x, self.x0, self.y0)
+        if args:
+            return HolonomicFunction(sol, self.x, args[0], args[1])
         return HolonomicFunction(sol, self.x)
 
     def to_sequence(self):
@@ -1036,14 +1040,14 @@ def from_hyper(func, x0=0, evalf=False):
             x0 += 1
             y0 = _find_conditions(simp, x, x0, sol.order)
 
-        return HolonomicFunction(sol, x, x0, y0).composition(z)
+        return HolonomicFunction(sol, x).composition(z, x0, y0)
     if isinstance(simp, hyper):
         x0 = 1
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
             x0 += 1
             y0 = _find_conditions(simp, x, x0, sol.order, evalf)
-        return HolonomicFunction(sol, x, x0, y0).composition(z)
+        return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     return HolonomicFunction(sol, x).composition(z)
 

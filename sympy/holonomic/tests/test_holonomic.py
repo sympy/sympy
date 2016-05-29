@@ -204,7 +204,7 @@ def test_series():
     p = HolonomicFunction(Dx**2 + 2*x*Dx, x, 0, [0, 1]).series(n=10)
     q = x - x**3/3 + x**5/10 - x**7/42 + x**9/216 + O(x**10)
     assert p == q
-    p = HolonomicFunction(Dx - 1, x, 0, 1).composition(x**2)  # e^(x**2)
+    p = HolonomicFunction(Dx - 1, x).composition(x**2, 0, 1)  # e^(x**2)
     q = HolonomicFunction(Dx**2 + 1, x, 0, [1, 0])  # cos(x)
     r = (p * q).series(n=10)  # expansion of cos(x) * exp(x**2)
     s = 1 + x**2/2 + x**4/24 - 31*x**6/720 - 179*x**8/8064 + O(x**10)
