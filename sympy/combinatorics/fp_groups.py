@@ -72,6 +72,8 @@ class FpGroup(Basic):
         R = self.relators
 
 
+DefaultMaxLimit = 2000
+
 class CosetTable(Basic):
     # coset_table: Mathematically a coset table
     #               represented using a list of lists
@@ -88,7 +90,16 @@ class CosetTable(Basic):
     # sets the upper limit on the number of cosets generated during
     # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
     # user definable.
-    DefaultMaxLimit = 500
+
+    """
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of Computational Group Theory"
+
+    """
 
     def __init__(self, fp_grp, subgroup):
         self.fp_group = fp_grp
@@ -117,7 +128,7 @@ class CosetTable(Basic):
     def define(self, alpha, x):
         A = self.A
         #l = len(self)
-        if self.n == 10000:
+        if self.n == DefaultMaxLimit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))

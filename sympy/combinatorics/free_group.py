@@ -794,6 +794,41 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
+    def cyclic_subword(self, from_i, to_j):
+        group = self.group
+        l = len(self)
+        letter_form = self.letter_form
+        period1 = int(from_i/l)
+        if from_i >= l:
+            from_i -= l*period1
+            to_j -= l*period1
+        diff = to_j - from_i
+        word = letter_form[from_i: to_j]
+        period2 = int(to_j/l) - 1
+        word += letter_form*period2 + letter_form[:diff-l+from_i-l*period2]
+        word = letter_form_to_array_form(word, group)
+        return group.dtype(word)
+
+    def cyclic_conjugates(self):
+        """Returns a words which are cyclic to the word `self`.
+
+        References
+        ==========
+
+        http://planetmath.org/cyclicpermutation
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x*y*x*y*x
+        >>> w.cyclic_permutation()
+        {x**2*y*x*y, x*y*x**2*y, x*y*x*y*x, y*x**2*y*x, y*x*y*x**2}
+        >>> s = x*y*x**2*y*x
+        >>> s.cyclic_permutation()
+        {x**2*y*x**2*y, x*y*x**2*y*x, y*x**2*y*x**2}
+
+        """
+        return set([self.cyclic_subword(i, i+len(self)) for i in range(len(self))])
+
     def number_syllables(self):
         """Returns the number of syllables of the associative word `self`.
 
