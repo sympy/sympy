@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
@@ -116,7 +117,7 @@ class CosetTable(Basic):
     def define(self, alpha, x):
         A = self.A
         #l = len(self)
-        if self.n == 500:
+        if self.n == 10000:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
@@ -557,27 +558,33 @@ class CosetTable(Basic):
         i = 0
         r = len(word)
         A = self.A
-        # do the forward scanning
-        while i < r and self.table[f][A.index(word.subword(i, i+1))] is not None:
-            f = self.table[f][A.index(word.subword(i, i+1))]
-            i += 1
-        if i >= r:
-            if f != alpha:
-                self.coincidence(f, alpha)
-                return
-        # forward scan was incomplete, scan backwards
-        b = alpha
-        j = r - 1
-        while j >= i and self.table[b][A.index(word.subword(j, j+1)**-1)] is not None:
-            b = self.table[b][A.index(word.subword(j, j+1)**-1)]
-            j -= 1
-        if j < i:
-            self.coincidence(f, b)
-        elif j == i:
-            self.table[f][A.index(word.subword(i, i+1))] = b
-            self.table[b][A.index(word.subword(i, i+1)**-1)] = f
-        else:
-            self.define(f, word.subword(i, i+1))
+        l_A = len(A)
+        i_A = 0
+        while i_A < l_A:
+            # do the forward scanning
+            while i < r and self.table[f][A.index(word.subword(i, i+1))] is not None:
+                f = self.table[f][A.index(word.subword(i, i+1))]
+                i += 1
+            if i >= r:
+                if f != alpha:
+                    self.coincidence(f, alpha)
+                    return
+            # forward scan was incomplete, scan backwards
+            b = alpha
+            j = r - 1
+            while j >= i and self.table[b][A.index(word.subword(j, j+1)**-1)] is not None:
+                b = self.table[b][A.index(word.subword(j, j+1)**-1)]
+                j -= 1
+            if j < i:
+                self.coincidence(f, b)
+            elif j == i:
+                self.table[f][A.index(word.subword(i, i+1))] = b
+                self.table[b][A.index(word.subword(i, i+1)**-1)] = f
+            else:
+                self.define(f, word.subword(i, i+1))
+            # loop until it has filled the alpha row in the table.
+            i_A += 1
+
 
 # Pg. 166
 def process_deductions(C, R):
@@ -621,6 +628,8 @@ def coset_enumeration_r(fp_grp, Y):
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> F, x, y = free_group("x, y")
+
+    # Example 5.1
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     >>> C = coset_enumeration_r(f, [x])
     >>> for i in range(len(C.p)):
@@ -632,9 +641,23 @@ def coset_enumeration_r(fp_grp, Y):
     >>> C.p
     [0, 1, 2, 1, 2]
 
+    # Example 5.2
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**3])
+    >>> Y = [x*y]
+    >>> C = coset_enumeration_r(f, Y)
+    >>> C.table
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    [1, 1, 2, 1]
+    [0, 0, 0, 2]
+    [3, 3, 1, 0]
+    [2, 2, 3, 3]
+
     # Example 5.3
     >>> f = FpGroup(F, [x**2*y**2, x**3*y**5])
-    >>> C = coset_enumeration_r(f, [x*y])
+    >>> Y = [x*y]
+    >>> C = coset_enumeration_r(f, Y)
     >>> for i in range(len(C.p)):
     ...     if C.p[i] == i:
     ...         print(C[i])
@@ -642,67 +665,68 @@ def coset_enumeration_r(fp_grp, Y):
     [2, 0, 2, 0]
     [3, 1, 3, 1]
     [0, 2, 0, 2]
-    >>> C.p
-    [0,
-    1,
-    2,
-    3,
-    3,
-    1,
-    4,
-    0,
-    0,
-    2,
-    0,
-    1,
-    1,
-    6,
-    1,
-    2,
-    2,
-    2,
-    9,
-    0,
-    2,
-    3,
-    0,
-    9,
-    0,
-    1,
-    2,
-    2,
-    1,
-    2,
-    3,
-    1,
-    3,
-    3,
-    3,
-    4,
-    0,
-    1,
-    2,
-    3,
-    0,
-    2,
-    0,
-    0,
-    0,
-    2,
-    3,
-    0,
-    0,
-    3,
-    0,
-    1,
-    3,
-    1,
-    1,
-    1,
-    3,
-    0,
-    1,
-    1]
+
+    # Example 5.4
+    >>> F = free_group("a, b, c, d, e")
+    >>> f = FpGroup(F, [a*b*c**-1, b*c*d**-1, c*d*e**-1, d*e*a**-1, e*a*b**-1])
+    >>> Y = [a]
+    >>> C = coset_enumeration_r(f, Y)
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    # Exercises Pg. 161, Q2.
+    >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
+    >>> Y = []
+    >>> C = coset_enumeration_r(f, Y)
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    [1, 5, 7, 3]
+    [2, 0, 4, 8]
+    [5, 1, 3, 7]
+    [4, 8, 0, 2]
+    [7, 3, 5, 1]
+    [0, 2, 8, 4]
+    [8, 4, 2, 0]
+    [3, 7, 1, 5]
+
+    # John J. Cannon; Lucien A. Dimino; George Havas; Jane M. Watson
+    # Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490
+    # from 1973chwd.pdf
+    # Table 1. Ex. 1
+    >>> F, r, s, t = free_group("r, s, t")
+    >>> E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
+    >>> C = coset_enumeration_r(E1, [x])
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    [0, 0, 0, 0, 0, 0]
+
+    Ex. 2
+    >>> F, a, b = free_group("a, b")
+    >>> Cox = FpGroup(F, [a**6, b**6, (a*b)**2, (a**2*b**2)**2, (a**3*b**3)**5])
+    >>> C = coset_enumeration_r(Cox, [a])
+    >>> index = 0
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    ...         index += 1
+    >>> index
+    500
+
+    # Ex. 3
+    >>> F, a, b = free_group("a, b")
+    >>> B_2_4 = FpGroup(F, [a**4, b**4, (a*b)**4, (a**-1*b)**4, (a**2*b)**4, (a*b**2)**4, (a**2*b**2)**4, (a**-1*b*a*b)**4, (a*b**-1*a*b)**4])
+    >>> C = coset_enumeration_r(B_2_4, [a])
+    >>> index = 0
+    >>> for i in range(len(C.p)):
+    ...     if C.p[i] == i:
+    ...         print(C.table[i])
+    ...         index += 1
+    >>> index
+    1024
 
     """
     # 1. Initialize a coset table C for < X|R >
