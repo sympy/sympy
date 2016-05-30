@@ -19,7 +19,6 @@ class NewMatrix(MutableDenseMatrix):
         return a
 
     def row_join(self, rhs):
-
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -34,7 +33,6 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def col_join(self, bott):
-
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -49,7 +47,6 @@ class NewMatrix(MutableDenseMatrix):
         return type(self)(newmat)
 
     def gauss_jordan_solve(self, b, freevar=False):
-
         from sympy.matrices import Matrix, zeros
 
         aug = self.hstack(self.copy(), b.copy())
