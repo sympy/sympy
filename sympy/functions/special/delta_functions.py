@@ -272,16 +272,16 @@ class Heaviside(Function):
            >>> x = Symbol('x')
 
            >>> Heaviside(x).rewrite(Piecewise)
-           Piecewise((1, x > 0), (1/2, Eq(x, 0)), (0, True))
+           Piecewise((1, x > 0), (0, True))
 
            >>> Heaviside(x - 5).rewrite(Piecewise)
-           Piecewise((1, x - 5 > 0), (1/2, Eq(x - 5, 0)), (0, True))
+           Piecewise((1, x - 5 > 0), (0, True))
 
            >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-           Piecewise((1, x**2 - 1 > 0), (1/2, Eq(x**2 - 1, 0)), (0, True))
+           Piecewise((1, x**2 - 1 > 0), (0, True))
 
         """
-        return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
+        return Piecewise((1, arg > 0), (0, True))
 
     def _eval_rewrite_as_sign(self, arg):
         if arg.is_real:

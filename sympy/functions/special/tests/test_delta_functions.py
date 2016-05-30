@@ -89,15 +89,14 @@ def test_heaviside():
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Heaviside(x).rewrite(Piecewise) == (
-        Piecewise((1, x > 0), (1/2, Eq(x, 0)), (0, True)))
+        Piecewise((1, x > 0), (0, True)))
     assert Heaviside(y).rewrite(Piecewise) == (
-        Piecewise((1, y > 0), (1/2, Eq(y, 0)), (0, True)))
+        Piecewise((1, y > 0), (0, True)))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((oo, Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
-    assert DiracDelta(x-5).rewrite(Piecewise) == (
+    assert DiracDelta(x - 5).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x - 5, 0)), (0, True)))
-    assert DiracDelta(x-5, 1).rewrite(Piecewise) == DiracDelta(x-5, 1)
