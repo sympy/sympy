@@ -30,7 +30,7 @@ class DiracDelta(Function):
     (which may eventually be integrated), but care must be taken to not treat it
     as a real function.
     SymPy's ``oo`` is similar. It only truly makes sense formally in certain contexts
-    (such as integration limits), but SymPy allows its use everywhere, and tries to
+    (such as integration limits), but SymPy allows its use everywhere, and it tries to be
     consistent with operations on it (like ``1/oo``), but it is easy to get into trouble
     and get wrong results if ``oo`` is treated too much like a number.
     Similarly, if DiracDelta is treated too much like a function, it is easy to get wrong
@@ -52,9 +52,19 @@ class DiracDelta(Function):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, diff
-    >>> from sympy.abc import x
+    >>> from sympy import DiracDelta, diff, pi, Piecewise
+    >>> from sympy.abc import x, y
 
+    >>> DiracDelta(x)
+    DiracDelta(x)
+    >>> DiracDelta(1)
+    0
+    >>> DiracDelta(-1)
+    0
+    >>> DiracDelta(pi)
+    0
+    >>> DiracDelta(x - 4).subs(x, 4)
+    DiracDelta(0)
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
     >>> DiracDelta(x**2 - 1).fdiff()
@@ -63,6 +73,12 @@ class DiracDelta(Function):
     DiracDelta(x - 1, 2)
     >>> diff(DiracDelta(x**2 - 1),x,2)
     2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
+    >>> DiracDelta(3*x).is_simple(x)
+    True
+    >>> DiracDelta(x**2).is_simple(x)
+    False
+    >>> DiracDelta(x**2*y).expand(diracdelta=True, wrt=x)
+    DiracDelta(x**2*y)
 
 
     See Also
@@ -86,11 +102,10 @@ class DiracDelta(Function):
 
         The difference between ``diff()`` and ``fdiff()`` is:-
         ``diff()`` is the user-level function and ``fdiff()`` is an object method.
-        ``fdiff()`` is a convenience. It lets the user write the derivative without
-        concern for the chain rule.
-        ``diff(expr, x)`` calls ``expr._eval_derivative(x)`` internally,
-        if ``expr`` is a subclass of ``Function``, then the ``Function._eval_derivative``
-        calls ``expr.fdiff``.
+        ``fdiff()`` is just a convenience method available in the ``Function`` class.
+        It returns the derivative of the function without considering the chain rule.
+        ``diff(function, x)`` calls ``Function._eval_derivative`` which in turn calls
+        ``fdiff()`` internally to compute the derivative of the function.
 
         Examples
         ========
