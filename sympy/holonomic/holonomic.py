@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order
+from sympy import symbols, Symbol, diff, S, Dummy, Order, rf
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -422,7 +422,7 @@ class HolonomicFunction(object):
     HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1 , f'(0) = 2 , f''(0) = 1
 
     >>> p * q  # annihilator of e^x * sin(x)
-    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1 , f''(0) = 2
+    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
     """
 
     _op_priority = 20
@@ -850,9 +850,9 @@ class HolonomicFunction(object):
                 if coeff == 0:
                     continue
                 if i - k in dict1.keys():
-                    dict1[i - k] += (coeff * factorial(n - k + i) / factorial(n - k)).simplify()
+                    dict1[i - k] += (coeff * rf(n - k + 1, i))
                 else:
-                    dict1[i - k] = (coeff * factorial(n - k + i) / factorial(n - k)).simplify()
+                    dict1[i - k] = (coeff * rf(n - k + 1, i))
 
         sol = []
         lower = min(dict1.keys())
@@ -1096,7 +1096,7 @@ def _extend_y0(Holonomic, n):
     else:
         list_red = [-listofpoly[i] / listofpoly[a]
                     for i in range(a)]
-        y1 = y0
+        y1 = [i for i  in y0]
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):
