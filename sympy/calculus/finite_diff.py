@@ -365,13 +365,21 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     if derivative.is_Add:
         result = S(0)
         for subexpr in derivative.args:
-            if isinstance(subexpr, Derivative):
+            try:
                 result = result + as_finite_diff(subexpr, wrt=wrt)
-            elif isinstance(S.NegativeOne*subexpr, Derivative):
-                result = result + S.NegativeOne*as_finite_diff(S.NegativeOne *
-                    subexpr, wrt=wrt)
-            else:
-                ValueError('Unable to evaluate expression')
+            except AttributeError:
+                result = result + subexpr
+        return result
+
+    if derivative.is_Mul:
+        result = S(0)
+        for subexpr in derivative.args:
+            product = S(1)
+            try:
+                result = result + (as_finite_diff(subexpr, wrt=wrt) *
+                    derivative / subexpr)
+            except AttributeError:
+                result = result
         return result
 
     if wrt is None:
