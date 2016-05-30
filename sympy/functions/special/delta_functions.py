@@ -475,7 +475,7 @@ class Heaviside(Function):
         elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
-    def _eval_rewrite_as_Piecewise(self, arg):
+    def _eval_rewrite_as_Piecewise(self, arg, H0 = None):
         """Represents Heaviside in a Piecewise form
 
            Examples
@@ -494,10 +494,19 @@ class Heaviside(Function):
            Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
-        return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
+        if arg.is_real:
+            if H0 == None:
+                return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
+            if H0 == 0:
+                return Piecewise((0, arg <= 0), (1, arg > 0))
+            if H0 == 1:
+                return Piecewise((0, arg < 0), (1, arg >= 0))
+            return Piecewise((1, arg > 0), (H0, Eq(arg, 0)), (0, arg > 0))
 
-    def _eval_rewrite_as_sign(self, arg):
+    def _eval_rewrite_as_sign(self, *args):
         """Represents the Heaviside function in the form of sign function.
+        The value of the second argument of Heaviside must be unspecified or 1/2
+        for rewritting as sign to be strictly equivalent
 
         Examples
         ========
@@ -507,6 +516,9 @@ class Heaviside(Function):
 
         >>> Heaviside(x).rewrite(sign)
         sign(x)/2 + 1/2
+
+        >>> Heaviside(x, 0).rewrite(sign)
+        Heaviside(x, 0)
 
         >>> Heaviside(x - 2).rewrite(sign)
         sign(x - 2)/2 + 1/2
@@ -528,30 +540,13 @@ class Heaviside(Function):
         sign
 
         """
-=======
-    def _eval_rewrite_as_Piecewise(self, *args):
         if len(args) == 2:
             arg, H0 = args[0], args[1]
         else:
             arg, H0 = args[0], None
         if arg.is_real:
-            if H0 == None:
-                return Piecewise((1, arg > 0), (0, arg < 0))
-            if H0 == 0:
-                return Piecewise((1, arg > 0), (0, True))
-            if H0 == 1:
-                return Piecewise((1, arg >= 0), (0, True))
-            return Piecewise((1, arg > 0), (H0, Eq(arg, 0)), (0, True))
-
-    def _eval_rewrite_as_sign(self, *args):
-        if len(args) == 2:
-            arg, H0 = args[0], args[1]
-        else:
-            arg, H0 = args[0], None
-        # the value of H0 is ignored currently
->>>>>>> Heaviside(0,h) can be used to specify value at 0
-        if arg.is_real:
-            return (sign(arg)+1)/2
+            if H0 == None or H0 == S.Half:
+                return (sign(arg)+1)/2
 
     def _sage_(self):
         import sage.all as sage

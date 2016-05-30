@@ -99,11 +99,13 @@ def test_rewrite():
         Piecewise((0, x < 0), (y, Eq(x, 0)), (1, x > 0)))
     assert Heaviside(x, 0).rewrite(Piecewise) == (
         Piecewise((0, x <= 0), (1, x > 0)))
-    assert Heaviside(x, 1).rewrite(Piecewise) == \
+    assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
+    assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
