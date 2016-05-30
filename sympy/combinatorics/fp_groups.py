@@ -71,7 +71,7 @@ class FpGroup(Basic):
         R = self.relators
 
 
-class CosetTable(list):
+class CosetTable(Basic):
     # coset_table: Mathematically a coset table
     #               represented using a list of lists
     # alpha: Mathematically a coset (precisely, a live coset)
@@ -95,7 +95,7 @@ class CosetTable(list):
         self.p = [0]
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
-        self.append([None]*len(self.A))
+        self.table = [[None]*len(self.A)]
 
     @property
     def omega(self):
@@ -103,11 +103,14 @@ class CosetTable(list):
 
     @property
     def n(self):
+        """The number `n` represents the largest number that has been used so
+        far for a live coset
+        """
         return max(self.omega) + 1
 
     # checks whether the Coset Table is complete or not
     def is_complete(self):
-        return not None in flatten(self)
+        return not None in flatten(self.table)
 
     # Pg. 153
     def define(self, alpha, x):
@@ -116,12 +119,12 @@ class CosetTable(list):
         if self.n == 500:
             # abort the further generation of cosets
             return
-        self.append([None]*len(A))
+        self.table.append([None]*len(A))
         # beta is the new coset generated
-        beta = len(self) - 1
+        beta = len(self.table) - 1
         self.p.append(beta)
-        self[alpha][A.index(x)] = beta
-        self[beta][A.index(x.inverse())] = alpha
+        self.table[alpha][A.index(x)] = beta
+        self.table[beta][A.index(x.inverse())] = alpha
 
     def scan(self, alpha, word):
         """
@@ -446,8 +449,8 @@ class CosetTable(list):
         r = len(word)
         # list of union of generators and their inverses
         A = self.A
-        while i < r and self[f][A.index(word.subword(i, i+1))] is not None:
-            f = self[f][A.index(word.subword(i, i+1))]
+        while i < r and self.table[f][A.index(word.subword(i, i+1))] is not None:
+            f = self.table[f][A.index(word.subword(i, i+1))]
             i += 1
         # can this be replaced with i == r ?
         if i >= r:
@@ -457,8 +460,8 @@ class CosetTable(list):
                 return
         b = alpha
         j = r - 1
-        while j >= i and self[b][A.index(word.subword(j, j+1)**-1)] is not None:
-            b = self[b][A.index(word.subword(j, j+1).inverse())]
+        while j >= i and self.table[b][A.index(word.subword(j, j+1)**-1)] is not None:
+            b = self.table[b][A.index(word.subword(j, j+1).inverse())]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -469,8 +472,8 @@ class CosetTable(list):
             self.coincidence(f, b)
         elif j == i:
             # deduction process
-            self[f][A.index(word.subword(i, i+1))] = b
-            self[b][A.index(word.subword(i, i+1).inverse())] = f
+            self.table[f][A.index(word.subword(i, i+1))] = b
+            self.table[b][A.index(word.subword(i, i+1).inverse())] = f
         # otherwise scan is incomplete and yields no information
 
     def merge(self, k, lamda, q, l):
@@ -535,18 +538,18 @@ class CosetTable(list):
             # commenting this out
             # omega = omega - set(gamma)
             for x in A:
-                delta = self[gamma][A.index(x)]
+                delta = self.table[gamma][A.index(x)]
                 if delta is not None:
-                    self[delta][A.index(x**-1)] = None
+                    self.table[delta][A.index(x**-1)] = None
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
-                    if self[mu][A.index(x)] is not None:
-                        l = self.merge(nu, self[mu][A.index(x)], q, l)
-                    elif self[nu][A.index(x**-1)] is not None:
-                        l = self.merge(mu, self[nu][A.index(x**-1)], q, l)
+                    if self.table[mu][A.index(x)] is not None:
+                        l = self.merge(nu, self.table[mu][A.index(x)], q, l)
+                    elif self.table[nu][A.index(x**-1)] is not None:
+                        l = self.merge(mu, self.table[nu][A.index(x**-1)], q, l)
                     else:
-                        self[mu][A.index(x)] = nu
-                        self[nu][A.index(x**-1)] = mu
+                        self.table[mu][A.index(x)] = nu
+                        self.table[nu][A.index(x**-1)] = mu
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
@@ -555,8 +558,8 @@ class CosetTable(list):
         r = len(word)
         A = self.A
         # do the forward scanning
-        while i < r and self[f][A.index(word.subword(i, i+1))] is not None:
-            f = self[f][A.index(word.subword(i, i+1))]
+        while i < r and self.table[f][A.index(word.subword(i, i+1))] is not None:
+            f = self.table[f][A.index(word.subword(i, i+1))]
             i += 1
         if i >= r:
             if f != alpha:
@@ -565,14 +568,14 @@ class CosetTable(list):
         # forward scan was incomplete, scan backwards
         b = alpha
         j = r - 1
-        while j >= i and self[b][A.index(word.subword(j, j+1)**-1)] is not None:
-            b = self[b][A.index(word.subword(j, j+1)**-1)]
+        while j >= i and self.table[b][A.index(word.subword(j, j+1)**-1)] is not None:
+            b = self.table[b][A.index(word.subword(j, j+1)**-1)]
             j -= 1
         if j < i:
             self.coincidence(f, b)
         elif j == i:
-            self[f][A.index(word.subword(i, i+1))] = b
-            self[b][A.index(word.subword(i, i+1)**-1)] = f
+            self.table[f][A.index(word.subword(i, i+1))] = b
+            self.table[b][A.index(word.subword(i, i+1)**-1)] = f
         else:
             self.define(f, word.subword(i, i+1))
 
@@ -586,13 +589,13 @@ def process_deductions(C, R):
             deduction_stack.pop((alpha, x))
             if p[alpha] == alpha:
                 for w in R_c:
-                    scan(C, alpha, w)
+                    C.scan(alpha, w)
                     if p[alpha] < alpha:
                         break
-        beta = C[alpha][x]
+        beta = C.table[alpha][x]
         if p[beta] == beta:
             for w in R_c_x_inv:
-                scan(C, beta, w)
+                C.scan(beta, w)
                 if p[beta] < beta:
                     break
 
@@ -602,10 +605,10 @@ def standardize(C):
     n = C.n
     for a in range(n):
         x in A
-        beta = C[alpha][A.index(x)]*gamma
+        beta = C.table[alpha][A.index(x)]*gamma
         if beta >= gamma:
             if beta > gamma:
-                switch(C, gamma, beta)*gamma
+                C.switch(gamma, beta)*gamma
                 gamma += 1
                 if gamma == n:
                     return
@@ -719,7 +722,7 @@ def coset_enumeration_r(fp_grp, Y):
             if p[alpha] < alpha:
                 continue
             for x in A:
-                if C[alpha][A.index(x)] is None:
+                if C.table[alpha][A.index(x)] is None:
                     C.define(alpha, x)
         alpha += 1
     return C
