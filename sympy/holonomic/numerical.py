@@ -8,6 +8,11 @@ from sympy.holonomic.holonomic import DMFsubs
 
 
 def euler(func, points):
+    """
+    Euler method for numerical integration along a given set of
+    points in the complex plane.
+    """
+
     ann = func.annihilator
     a = ann.order
     R = ann.parent.base
@@ -28,7 +33,7 @@ def euler(func, points):
     for i, j in enumerate(points[1:]):
         sol = _eular(red, points[i], j, sol, a)
 
-    return sol
+    return sympify(sol)
 
 
 def _eular(red, x0, x1, y0, a):

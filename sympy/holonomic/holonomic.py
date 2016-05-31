@@ -991,11 +991,13 @@ class HolonomicFunction(object):
     def evalf(self, points):
         """
         Finds numerical value of a holonomic function using Euler's method.
-        A set of points (real or complex) must be provided along a path for
-        the numerical integration.
+        A set of points (real or complex) must be provided which will be the
+        path for the numerical integration.
 
-        The path should be given as a list [x1, x2, ... xn]. Returns the value of the
-        functions and it's derivatives at xn.
+        The path should be given as a list [x1, x2, ... xn]. The numerical values
+        will be computed at each point in this order x1 --> x2 --> x3 ... --> xn.
+
+        Returns the value of the functions and it's derivatives at xn.
 
         Examples
         =======
@@ -1004,11 +1006,13 @@ class HolonomicFunction(object):
         >>> from sympy.polys.domains import ZZ, QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
-        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+        >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+        >>> # a straight line on the real axis from (0 to 1)
         >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)  # e^1
         [2.5937424601]
+        >>> # exact solution is 2.71828182845905
         """
 
         from sympy.holonomic.numerical import euler
@@ -1137,7 +1141,11 @@ def DMFsubs(frac, x0):
     sol_p = S(0)
     sol_q = S(0)
     for i, j in enumerate(reversed(p)):
+        if isinstance(j, PythonRational):
+            j = sympify(j)
         sol_p += j * x0**i
     for i, j in enumerate(reversed(q)):
+        if isinstance(j, PythonRational):
+            j = sympify(j)
         sol_q += j * x0**i
     return sol_p / sol_q
