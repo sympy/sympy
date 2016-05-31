@@ -820,11 +820,11 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> w = x*y*x*y*x
-        >>> w.cyclic_permutation()
-        {x**2*y*x*y, x*y*x**2*y, x*y*x*y*x, y*x**2*y*x, y*x*y*x**2}
+        >>> w.cyclic_conjugates()
+        set([x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x])
         >>> s = x*y*x**2*y*x
-        >>> s.cyclic_permutation()
-        {x**2*y*x**2*y, x*y*x**2*y*x, y*x**2*y*x**2}
+        >>> s.cyclic_conjugates()
+        set([x**2*y*x**2*y, y*x**2*y*x**2, x*y*x**2*y*x])
 
         """
         return set([self.cyclic_subword(i, i+len(self)) for i in range(len(self))])
