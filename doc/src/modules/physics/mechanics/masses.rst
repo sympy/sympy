@@ -21,7 +21,7 @@ Particle
 
 Particles are created with the class ``Particle`` in :mod:`mechanics`.
 A ``Particle`` object has an associated point and an associated mass which are
-the only two attributes of the object.::
+the only two attributes of the object.
 
   >>> from sympy.physics.mechanics import Particle, Point
   >>> from sympy import Symbol
@@ -45,7 +45,7 @@ Rigid Body
 
 Rigid bodies are created in a similar fashion as particles. The ``RigidBody``
 class generates objects with four attributes: mass, center of mass, a reference
-frame, and an inertia tuple::
+frame, and an inertia tuple
 
   >>> from sympy import Symbol
   >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
@@ -219,7 +219,7 @@ The following example shows how to use the momenta functions in
 :mod:`mechanics`.
 
 One begins by creating the requisite symbols to describe the system. Then
-the reference frame is created and the kinematics are done. ::
+the reference frame is created and the kinematics are done.
 
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
@@ -238,14 +238,14 @@ the reference frame is created and the kinematics are done. ::
   >> P.v2pt_theory(O, N, a)
 
 Finally, the bodies that make up the system are created. In this case the
-system consists of a particle Pa and a RigidBody A. ::
+system consists of a particle Pa and a RigidBody A.
 
   >> Pa = Particle('Pa', P, m)
   >> I = outer(N.z, N.z)
   >> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 Then one can either choose to evaluate the the momenta of individual components
-of the system or of the entire system itself. ::
+of the system or of the entire system itself.
 
   >> linear_momentum(N,A)
   M*l1*q1d*N.y
@@ -321,7 +321,7 @@ The following example shows how to use the energy functions in
 :mod:`mechanics`.
 
 As was discussed above in the momenta functions, one first creates the system
-by going through an identical procedure. ::
+by going through an identical procedure.
 
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
@@ -344,7 +344,7 @@ by going through an identical procedure. ::
   >> A = RigidBody('A', Ac, a, M, (I, Ac))
 
 The user can then determine the kinetic energy of any number of entities of the
-system: ::
+system:
 
   >> kinetic_energy(N, Pa)
   2*l1**2*m*q1d**2
@@ -359,14 +359,14 @@ limited to determining just inertial kinetic energy.
 For potential energies, the user must first specify the potential energy of
 every entity of the system using the :mod:`potential_energy` property. The
 potential energy of any number of entities comprising the system can then be
-determined: ::
+determined:
 
   >> Pa.potential_energy = m * g * h
   >> A.potential_energy = M * g * H
   >> potential_energy(A, Pa)
   H*M*g + g*h*m
 
-One can also determine the Lagrangian for this system: ::
+One can also determine the Lagrangian for this system:
 
   >> Lagrangian(Pa, A)
   -H*M*g + M*l1**2*q1d**2/2 - g*h*m + 2*l1**2*m*q1d**2 + q1d**2/2
