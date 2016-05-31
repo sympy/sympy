@@ -1084,7 +1084,7 @@ def test_nlinsolve_complex():
     # 2*n*pi
     assert nlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
     FiniteSet((
-        imageset(Lambda(n, I*(2*pi*n + pi) + log(sin(log(S(3))))),\
+        imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))),\
          S.Integers), -log(S(3))))
     assert nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
         FiniteSet((log(sin(2)), 2),\
@@ -1112,10 +1112,9 @@ def test_solve_nonlinear_trans():
 def test_issue_5132():
     x, y, z, r, t = symbols('x, y, z, r, t')
     assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
-        FiniteSet((sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),\
-         -sqrt(r*tan(t)**2/(tan(t)**2 + 1))),\
-          (sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),\
-           sqrt(r*tan(t)**2/(tan(t)**2 + 1))))
+        FiniteSet((sqrt(r*sin(t)**2)/tan(t),\
+         -sqrt(r*sin(t)**2)), \
+        (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2)))
 
     assert nlinsolve([sqrt(x**2 + y**2) - sqrt(10), x + y - 4], [x, y]) == \
     FiniteSet((1, 3), (3, 1))
@@ -1139,10 +1138,11 @@ def test_issue_2777():
     a, b = 191/S(20), 3*sqrt(391)/20
     ans = {(a, -b), (a, b)}
     assert nlinsolve((e1, e2), (x, y)) == ans # pass
-    assert nlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet #Some soln is coming
+    # Some soln is coming. solveset_real bug
+    assert nlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
     # make the 2nd circle's radius be -3
     e2 += 6
-    assert nlinsolve((e1, e2), (x, y)) == S.EmptySet #Some soln is coming
+    assert nlinsolve((e1, e2), (x, y)) == S.EmptySet # pass
 
 
 @XFAIL
