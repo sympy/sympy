@@ -22,12 +22,37 @@ differentiated non-holonomic equations.
   \mathbf{k_d}(q, t) \dot{u} + \mathbf{f_d}(q, \dot{q}, u, t) &= 0\\
   \mathbf{k_{dnh}}(q, t) \dot{u} + \mathbf{f_{dnh}}(q, \dot{q}, u, t) &= 0\\
 
-In :mod:`mechanics` holonomic constraints are only used for the linearization
-process; it is assumed that they will be too complicated to solve for the
-dependent coordinate(s).  If you are able to easily solve a holonomic
-constraint, you should consider redefining your problem in terms of a smaller
-set of coordinates. Alternatively, the time-differentiated holonomic
-constraints can be supplied.
+The first equation is non-linear in the generalized coordinates and typically
+describes configuration constraints like kinematic loops. For the purposes of
+forming the non-linear equations of motion, these are additional equations that
+must be satisfied along with the other equations. In :mod:`mechanics` holonomic
+constraints are only used for the linearization process; it is assumed that
+they will be too complicated to solve for the dependent coordinate(s). If you
+are able to easily solve a holonomic constraint, you should consider redefining
+your problem in terms of a smaller set of coordinates. Alternatively, the
+time-differentiated holonomic constraints can be supplied.
+
+The second equation describes the non-holonomic constraints, i.e. velocity
+constraints, that are linear in the generalized speeds. There are fewer
+equations than generalized speeds, and thus describe the relationship between
+the dependent and independent generalized speeds. Where there are :math:`m`
+dependent speeds and :math:`o-m` independent speed.
+
+The third equation is called the kinematical differential equation and it
+describes the relationship between the generalized speeds and the derivatives
+of the generalized coordinates. These are defined by the analyst and can reduce
+the length of the final equations of motion if chosen carefully. The simplest
+and always valid choice is :math:`u = \dot{q}`. These equations define the
+additional equations needed to transform the second order equations of motion
+into first order form.
+
+The fourth equation is the dynamical differential equation. This equation is
+linear in the derivatives of the generalized speeds and is equivalent to Kane's
+:math:`F_r + F_r^* = 0`.
+
+The fifth equation is the derivative of the non-holonomic constraints. This can
+be used to augment the independent dynamical equations if it is desired to
+solve for the dependent generalized speeds.
 
 Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
 is zero. In this module, these expressions are rearranged into the following
