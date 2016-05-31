@@ -30,6 +30,7 @@ def _parse_relators(rels):
     """Parse the passed relators."""
     return rels
 
+
 _fp_group_cache = {}
 
 class FpGroup(Basic):
@@ -488,7 +489,7 @@ class CosetTable(Basic):
             self.table[b][A.index(word.subword(i, i+1).inverse())] = f
         # otherwise scan is incomplete and yields no information
 
-    def merge(self, k, lamda, q, l):
+    def merge(self, k, lamda, q):
         p = self.p
         phi = self.rep(k)
         chi = self.rep(lamda)
@@ -496,9 +497,7 @@ class CosetTable(Basic):
             mu = min(phi, chi)
             v = max(phi, chi)
             p[v] = mu
-            l += 1
             q.append(v)
-        return l
 
     def rep(self, k):
         p = self.p
@@ -539,12 +538,11 @@ class CosetTable(Basic):
         A = self.A
         p = self.p
         l = 0
+        # behaves as a queue
         q = []
-        l = self.merge(alpha, beta, q, l)
-        i = 0
-        while i < l:
-            gamma = q[i]
-            i += 1
+        self.merge(alpha, beta, q)
+        while len(q) > 0:
+            gamma = q.pop(0)
             # comment by Kalevi, this is already done by p[v] = mu
             # del C[gamma]
             # commenting this out
@@ -556,9 +554,9 @@ class CosetTable(Basic):
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
                     if self.table[mu][A.index(x)] is not None:
-                        l = self.merge(nu, self.table[mu][A.index(x)], q, l)
+                        self.merge(nu, self.table[mu][A.index(x)], q)
                     elif self.table[nu][A.index(x**-1)] is not None:
-                        l = self.merge(mu, self.table[nu][A.index(x**-1)], q, l)
+                        self.merge(mu, self.table[nu][A.index(x**-1)], q)
                     else:
                         self.table[mu][A.index(x)] = nu
                         self.table[nu][A.index(x**-1)] = mu
@@ -645,7 +643,7 @@ def coset_enumeration_r(fp_grp, Y):
     >>> C = coset_enumeration_r(f, [x])
     >>> for i in range(len(C.p)):
     ...     if C.p[i] == i:
-    ...         print(C[i])
+    ...         print(C.table[i])
     [0, 0, 1, 2]
     [1, 1, 2, 0]
     [2, 2, 0, 1]
@@ -671,7 +669,7 @@ def coset_enumeration_r(fp_grp, Y):
     >>> C = coset_enumeration_r(f, Y)
     >>> for i in range(len(C.p)):
     ...     if C.p[i] == i:
-    ...         print(C[i])
+    ...         print(C.table[i])
     [1, 3, 1, 3]
     [2, 0, 2, 0]
     [3, 1, 3, 1]
