@@ -60,7 +60,7 @@ known_functions = {
     "": "is_finite",
     "": "is_normal",
     "": "classify",
-    "": "integer_decode",   # unstable in Rust 1.6
+    "": "integer_decode",   # unstable in Rust 1.9
     "floor": "floor",
     "ceiling": "ceil",
     "": "round",
@@ -85,9 +85,9 @@ known_functions = {
     "": "log10",
     "": "to_degrees",
     "": "to_radians",
-    "": "ldexp",        # unstable in Rust 1.6
-    "": "frexp",        # unstable in Rust 1.6
-    "": "next_after",   # unstable in Rust 1.6
+    "": "ldexp",        # unstable in Rust 1.9
+    "": "frexp",        # unstable in Rust 1.9
+    "": "next_after",   # unstable in Rust 1.9
     "Max": "max",
     "Min": "min",
     "": "abs_sub",
