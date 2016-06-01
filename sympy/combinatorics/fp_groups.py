@@ -115,7 +115,9 @@ class CosetTable(Basic):
 
     @property
     def omega(self):
-        return [coset for coset in self.p if self.p[coset] == coset]
+        """Set of live cosets
+        """
+        return [coset for coset in range(len(self.p)) if self.p[coset] == coset]
 
     @property
     def n(self):
@@ -138,7 +140,6 @@ class CosetTable(Basic):
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
-        print(self.table, alpha)
         self.table[alpha][A.index(x)] = beta
         self.table[beta][A.index(x.inverse())] = alpha
 
@@ -151,7 +152,6 @@ class CosetTable(Basic):
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
-        print(self.table, alpha)
         self.table[alpha][A.index(x)] = beta
         self.table[beta][A.index(x.inverse())] = alpha
 
@@ -326,52 +326,61 @@ class CosetTable(Basic):
                         break
 
     def standardize(self):
-        gamma = 2
-        for a in range(self.n):
-            x in A
-            beta = self.table[alpha][A_dict[x]]*gamma
-            if beta >= gamma:
-                if beta > gamma:
-                    self.switch(gamma, beta)*gamma
-                    gamma += 1
-                    if gamma == n:
-                        return
-
-    # Pg. 167 5.2.3
-    def compress(self):
-        gamma = 0
-        p = self.p
-        n = self.n
         A = self.A
         A_dict = self.A_dict
-        for alpha in range(self.n):
-            if p[alpha] == alpha:
-                gamma += 1
-                if gamma != alpha:
-                    for x in A:
-                        beta = self.table[alpha][A_dict[x]]
-                        if beta == alpha:
-                            beta = gamma
-                        self.table[gamma][A.index(x)] = beta
-                        self.table[beta][A.index(x**-1)] == gamma
-        self.n = gamma
-        for alpha in range(self.n):
-            p[alpha] = alpha
+        gamma = 1
+        for alpha in range(len(self.p)):
+            for x in self.A:
+                beta = self.table[alpha][A_dict[x]]*gamma
+                if beta >= gamma:
+                    if beta > gamma:
+                        self.switch(gamma, beta)*gamma
+                        gamma += 1
+                        if gamma == self.n:
+                            return
+
+    # Compression of a Coset Table
+    # Pg. 167 5.2.3
+    def compress(self):
+        """Removes the non-live cosets from the coset table
+        """
+        gamma = -1
+        A = self.A
+        A_dict = self.A_dict
+        for alpha in self.omega:
+            gamma += 1
+            # a non-live coset is found with `gamma ~ alpha`
+            if gamma != alpha:
+                # replace α by γ in coset table
+                for x in A:
+                    beta = self.table[alpha][A_dict[x]]
+                    if beta == alpha:
+                        beta = gamma
+                    self.table[gamma][A.index(x)] = beta
+                    self.table[beta][A.index(x**-1)] == gamma
+        # all the cosets in the table are live cosets
+        self.p = list(range(gamma + 1))
+        # delete the useless coloumns
+        del self.table[len(self.p):]
 
     def switch(self, beta, gamma):
         """
         Switch the elements β, γ of Ω in C
         """
+        A = self.A
+        A_dict = self.A_dict
+        X = self.fp_group.generators
         for x in X:
-            z = self.table[gamma][x]
-            self.table[gamma][x] = self.table[beta][x]
-            self.table[beta][x] = z
-            for a in range(len(self.p)):
-                if self.p[a] == a:
-                    if self.table[alpha][x] == beta:
-                        self.table[alpha][x] = gamma
-                    elif self.table[alpha][x] == gamma:
-                        self.table[alpha][x] = beta
+            #self.table[gamma][x], self.table[beta][x] = self.table[beta][x], self.table[gamma][x]
+            z = self.table[gamma][A_dict[x]]
+            self.table[gamma][A_dict[x]] = self.table[beta][A_dict[x]]
+            self.table[beta][A_dict[x]] = z
+            for alpha in range(len(self.p)):
+                if self.p[alpha] == alpha:
+                    if self.table[alpha][A_dict[x]] == beta:
+                        self.table[alpha][A_dict[x]] = gamma
+                    elif self.table[alpha][A_dict[x]] == gamma:
+                        self.table[alpha][A_dict[x]] = beta
 
 
 # relator-based method
