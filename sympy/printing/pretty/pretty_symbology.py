@@ -120,14 +120,14 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = {l: (g(l), G(l)) for l in greek_letters}
 greek_unicode = dict((L, g(L)) for L in greek_letters)
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u('\N{GREEK SMALL LETTER FINAL SIGMA}')
+greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -195,21 +195,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u('\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}'),
-    'dddot': lambda s: s+u('\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}'),
-    'ddot': lambda s: s+u('\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: s+u('\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: s+u('\N{COMBINING CARON}'),
-    'breve': lambda s: s+u('\N{COMBINING BREVE}'),
-    'acute': lambda s: s+u('\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: s+u('\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: s+u('\N{COMBINING TILDE}'),
-    'hat': lambda s: s+u('\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: s+u('\N{COMBINING OVERLINE}'),
-    'vec': lambda s: s+u('\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u('\N{PRIME}'),
-    'prm': lambda s: s+u('\N{PRIME}'),
+    'mathring': lambda s: s+u'\N{COMBINING RING ABOVE}',
+    'ddddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}',
+    'dddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}',
+    'ddot': lambda s: s+u'\N{COMBINING DIAERESIS}',
+    'dot': lambda s: s+u'\N{COMBINING DOT ABOVE}',
+    'check': lambda s: s+u'\N{COMBINING CARON}',
+    'breve': lambda s: s+u'\N{COMBINING BREVE}',
+    'acute': lambda s: s+u'\N{COMBINING ACUTE ACCENT}',
+    'grave': lambda s: s+u'\N{COMBINING GRAVE ACCENT}',
+    'tilde': lambda s: s+u'\N{COMBINING TILDE}',
+    'hat': lambda s: s+u'\N{COMBINING CIRCUMFLEX ACCENT}',
+    'bar': lambda s: s+u'\N{COMBINING OVERLINE}',
+    'vec': lambda s: s+u'\N{COMBINING RIGHT ARROW ABOVE}',
+    'prime': lambda s: s+u'\N{PRIME}',
+    'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -217,10 +217,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u('\N{DOUBLE VERTICAL LINE}')+s+u('\N{DOUBLE VERTICAL LINE}'),
-    'avg': lambda s: u('\N{MATHEMATICAL LEFT ANGLE BRACKET}')+s+u('\N{MATHEMATICAL RIGHT ANGLE BRACKET}'),
-    'abs': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
-    'mag': lambda s: u('\N{VERTICAL LINE}')+s+u('\N{VERTICAL LINE}'),
+    'norm': lambda s: u'\N{DOUBLE VERTICAL LINE}'+s+u'\N{DOUBLE VERTICAL LINE}',
+    'avg': lambda s: u'\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+u'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
+    'abs': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
+    'mag': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
 }
 
 # VERTICAL OBJECTS

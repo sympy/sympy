@@ -25,7 +25,7 @@ issues
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
    * System of equations: `x + y = 1` and `x - y = 0`
    * Relational: `x > 0`
-   * And the most important case "We don't Know"
+   * And the most important case: "We don't Know"
 
 2. The input API is also a mess, there are a lot of parameters. Many of them
    are not needed and they make it hard for the user and the developers to
@@ -41,9 +41,9 @@ Why Solveset?
 
 * ``solveset`` has a cleaner input and output interface: ``solveset`` returns
   a set object and a set object takes care of all types of output. For
-  cases where it doesn't "know" all the solutions a ``ConditionSet`` with partial
+  cases where it doesn't "know" all the solutions a ``ConditionSet`` with a partial
   solution is returned. For input it only takes the equation, the variables
-  to solve for and the optional argument ``domain`` in which the equations has to
+  to solve for and the optional argument ``domain`` over which the equation is to
   be solved.
 
 * ``solveset`` can return infinitely many solutions. For example solving for
@@ -52,7 +52,7 @@ Why Solveset?
 
 * There is a clear code level and interface level separation between solvers
   for equations in the complex domain and the real domain. For example
-  solving `exp(x) = 1` when `x` is to be solved in the complex domain, returns
+  solving `e^x = 1` when `x` is to be solved in the complex domain, returns
   the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
   if `x` is to be solved in the real domain then only `\{0\}` is returned.
 
@@ -132,7 +132,7 @@ Also, the predefined set classes such as:
 
    Represents the empty set.
 
- The above six sets are available as Singletons, like say ``S.Integers``.
+ The above six sets are available as Singletons, like ``S.Integers``.
 
 
 It is capable of most of the set operations in mathematics:
@@ -150,30 +150,30 @@ represent many types of solutions. For the single variable case it can represent
  * Finitely many solutions (by ``FiniteSet``).
 
  * Infinitely many solutions, both countably and uncountably infinite solutions
-   (using the ``ImageSet`` module) .
+   (using the ``ImageSet`` module).
 
  * ``Interval``
 
- * There can also be bizarre solutions to equations like set of rational
+ * There can also be bizarre solutions to equations like the set of rational
    numbers.
 
-No other programmer's object (list, dictionary, generator, python sets)
-provides the flexibility of mathematical sets which our sets module try to
-emulate. The second reason to use sets is that they are close to the entities
-which mathematician's deals with and it makes it easier to reason about them.
-Set objects conform to Pythonic conventions when possible, i.e., ``x in A`` and
+No other Python object (list, dictionary, generator, Python sets) provides the
+flexibility of mathematical sets which our sets module tries to emulate. The
+second reason to use sets is that they are close to the entities which
+mathematicians deal with and it makes it easier to reason about them.  Set
+objects conform to Pythonic conventions when possible, i.e., ``x in A`` and
 ``for i in A`` both work when they can be computed. Another advantage of using
 objects closer to mathematical entities is that the user won't have to "learn"
 our representation and she can have her expectations transferred from her
 mathematical experience.
 
 For the multivariate case we represent solutions as a set of points in a
-n-dimensional space and a point is represented by a FiniteSet of ordered
-tuples, which is a point in `\mathbb{R}^n` or \mathbb{C}^n\.
+n-dimensional space and a point is represented by a ``FiniteSet`` of ordered
+tuples, which is a point in `\mathbb{R}^n` or `\mathbb{C}^n`.
 
 Please note that, the general ``FiniteSet`` is unordered, but a ``FiniteSet``
-with a tuple as it's only argument becomes ordered, Since a tuple is ordered.
-So the order in the tuple is mapped to a pre-defined order of variables,
+with a tuple as its only argument becomes ordered, since a tuple is ordered.
+So the order in the tuple is mapped to a pre-defined order of variables
 while returning solutions.
 
 For example:
@@ -197,19 +197,21 @@ Why not use dicts as output?
     two equations: `f = 0`, `g = 0`. Let's say that we are able to solve
     `f = 0` but solving `g = 0` isn't supported yet. In this case we cannot
     represent partial solution of the given equation `fg = 0` using dicts.
-    This problem is solved with sets using ``ConditionSet`` object:
+    This problem is solved with sets using a ``ConditionSet`` object:
 
-    `sol_f` U `\{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
+    `sol_f \cup \{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
     of the equation `f = 0`.
 
-  * Using dict may lead to surprising results like:
+  * Using a dict may lead to surprising results like:
 
     - ``solve(Eq(x**2, 1), x) != solve(Eq(y**2, 1), y)``
-      Though, mathematically, it doesn't make sense. Using ``FiniteSet`` here
+
+
+      Mathematically, this doesn't make sense. Using ``FiniteSet`` here
       solves the problem.
 
-  * It can also not represent solutions for Equations like `|x| < 1`, which
-    is a disk of radius 1 in the Argand Plane. This problem is solved using
+  * It also cannot represent solutions for equations like `|x| < 1`, which is
+    a disk of radius 1 in the Argand Plane. This problem is solved using
     complex sets implemented as ``ComplexRegion``.
 
 
@@ -270,7 +272,7 @@ What are the general methods employed by solveset to solve an equation?
  * If the given function is a relational (``>=``, ``<=``, ``>``, ``<``), and
    the domain is real, then ``solve_univariate_inequality`` and solutions are
    returned. Solving for complex solutions of inequalities, like `x^2 < 0`
-   is not yet supported.".
+   is not yet supported.
 
 
  * Based on the ``domain``, the equation is dispatched to one of the two
@@ -285,9 +287,9 @@ What are the general methods employed by solveset to solve an equation?
    recursively.
 
 
- * The function class is now checked if it's trigonometric or hyperbolic, then
-   the function ``_solve_real_trig`` is called, which solves it by converting
-   it to complex exponential form.
+ * If the function is trigonometric or hyperbolic, the function
+   ``_solve_real_trig`` is called, which solves it by converting it to complex
+   exponential form.
 
 
  * The function is now checked if there is any instance of a ``Piecewise``
@@ -298,9 +300,9 @@ What are the general methods employed by solveset to solve an equation?
  * The respective solver now tries to invert the equation using the routines
    ``invert_real`` and ``invert_complex``. These routines are based on the
    concept of mathematical inverse (though not exactly). It reduces the
-   real/complex valued equation ``f(x) = y`` to a set of equations:
-   ``{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is a
-   simpler function than ``f(x)``. There is some work needed to be done in
+   real/complex valued equation `f(x) = y` to a set of equations:
+   `\{g(x)  = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) \}` where `g(x)` is a
+   simpler function than `f(x)`. There is some work needed to be done in
    this to find invert of more complex expressions.
 
 
@@ -314,20 +316,18 @@ What are the general methods employed by solveset to solve an equation?
  * If none of the above method is successful, then methods of polynomial is
    used as follows:
 
-   - The method to solve the rational function is called:
-     ``_solve_as_rational(f, symbol, solveset_solver, as_poly_solver)``
-     its third argument is the ``solveset_solver`` which can either be
-     ``solveset_real`` or ``solveset_complex`` based on these, respective
-     poly solvers ``_solve_as_poly_real`` or ``_solve_as_poly_complex``
-     is called to solve as polynomial.
+   - The method to solve the rational function, ``_solve_as_rational``, is
+     called.  Based on the domain, the respective poly solver
+     ``_solve_as_poly_real`` or ``_solve_as_poly_complex`` is called to solve
+     ``f`` as a polynomial.
 
    - The underlying method ``_solve_as_poly`` solves the equation using
-     polynomial techniques if its already a polynomial equation or, with
+     polynomial techniques if it's already a polynomial equation or, with
      a change of variables, can be made so.
 
 
- * The final solution set obtained is taken intersection with the input
-   domain, and the resulting solution is returned.
+ * The final solution set returned by ``solveset`` is the intersection of the
+   set of solutions found above and the input domain.
 
 .. Remember to change the above part when the new solver is implemented.
 
@@ -426,19 +426,19 @@ Search based solver and step-by-step solution
 
  * Composition: `\{x|f(g(x))=0;x \in S\} \Rightarrow \{x|g(x)=y; x \in S, y \in \{z|f(z)=0; z \in S\}\}`
 
- * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} ∩ S`
-                      `\text{ where } `x_i` `\text{ are roots of } P(x)`
+ * Polynomial Solver: `\{x | P(x) = 0;x \in S\} \Rightarrow  \{x_1,x_2, ... ,x_n\} \cap S`,
+                      where `x_i` are roots of `P(x)`.
 
  * Invert solver: `\{x|f(x)=0;x \in S\} \Rightarrow  \{g(0)| \text{ all g such that } f(g(x)) = x\}`
 
- * logcombine: `\{x| log(f(x)) + log(g(x));x \in S\}`
-               `\Rightarrow  \{x| log(f(x).g(x)); x \in S\} \text{ if } f(x) > 0 \text{ and } g(x) > 0`
-               `\Rightarrow  \{x| log(f(x)) + log(g(x));x \in S\} \text{ otherwise}`
+ * logcombine: `\{x| \log(f(x)) + \log(g(x));x \in S\}`
+               `\Rightarrow  \{x| \log(f(x).g(x)); x \in S\} \text{ if } f(x) > 0 \text{ and } g(x) > 0`
+               `\Rightarrow  \{x| \log(f(x)) + \log(g(x));x \in S\} \text{ otherwise}`
 
- * product solve: `\{x|f(x)*g(x)=0; x \in S\}`
+ * product solve: `\{x|f(x)g(x)=0; x \in S\}`
                   `\Rightarrow  \{x|f(x)=0; x \in S\} U \{x|g(x)=0; x \in S\}`
                   `\text{ given } f(x) \text{ and } g(x) \text{ are bounded.}`
-                  `\Rightarrow  \{x|f(x)*g(x)=0; x \in S\}, \text{ otherwise}`
+                  `\Rightarrow  \{x|f(x)g(x)=0; x \in S\}, \text{ otherwise}`
 
  Since the output type is same as the input type any composition of these
  transformations is also a valid transformation. And our aim is to find
@@ -455,21 +455,21 @@ Search based solver and step-by-step solution
 How do we deal with cases where only some of the solutions are known?
 ---------------------------------------------------------------------
 
- Creating a universal equation solver, which can solve each and every
- equation we encounter in mathematics is an ideal case for solvers in
- a Computer Algebra System. We always have some cases, which are not
- solved, or solved with incomplete solutions, so it's very important
- to represent that situation. For this type of situation we use
- `ConditionSet` class in the sets module, which acts as an unevaluated
- solveset object.
+ Creating a universal equation solver, which can solve each and every equation
+ we encounter in mathematics is an ideal case for solvers in a Computer
+ Algebra System. When cases which are not solved or can only be solved
+ incompletely, a ``ConditionSet`` is used and acts as an unevaluated solveset
+ object.
 
- See `Richardson's theorem <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
+ Note that, mathematically, finding a complete set of solutions for an
+ equation is undecidable. See `Richardson's theorem
+ <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_.
 
  ``ConditionSet`` is basically a Set of elements which satisfy a given
  condition. For example, to represent the solutions of the equation in
  the real domain:
 
- .. math::  (x^2 - 4)*(\sin(x) + x)
+ .. math::  (x^2 - 4)(\sin(x) + x)
 
  We can represent it as:
 
@@ -484,33 +484,33 @@ What will you do with the old solve?
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 
- * Replace ``solve`` with ``solveset``, by the time solveset is
-   at least powerful as ``solve``, i.e. ``solveset`` does everything
-   that ``solve`` can do currently, and
+ * Replace ``solve`` with ``solveset`` once solveset is at least as powerful as
+   ``solve``, i.e., ``solveset`` does everything that ``solve`` can do
+   currently, and
 
- * Eventually rename ``solveset`` to ``solve``.
+ * eventually rename ``solveset`` to ``solve``.
 
 
 How are symbolic parameters handled in solveset?
 ------------------------------------------------
 
- Solveset is in its initial phase of development as of now, so the
- symbolic parameters aren't handled well for all the cases, but some
- work has been done in this regard to depict our ideology towards
- symbolic parameters. As an example the solving of `|x| = n` for `x`
- where `n` is a symbolic parameter. Solveset returns the value of `x`
- considering the domain of the symbolic parameter `n` as well, i.e. :
+ Solveset is in its initial phase of development, so the symbolic parameters
+ aren't handled well for all the cases, but some work has been done in this
+ regard to depict our ideology towards symbolic parameters. As an example,
+ consider the solving of `|x| = n` for real `x`, where `n` is a symbolic
+ parameter. Solveset returns the value of `x` considering the domain of the
+ symbolic parameter `n` as well:
 
- `([0, \infty) ∩ \{n\}) ∪ ((-\infty, 0] ∩ \{-n\})`.
+ .. math:: ([0, \infty) \cap \{n\}) \cup ((-\infty, 0] \cap \{-n\}).
 
- It simply means `n` is the solution only when it belongs to the ``Interval``
- `[0, \infty)` and `-n` is the solution only when `n` belongs to the ``Interval``
- `(- \infty, 0]`.
+ This simply means `n` is the solution only when it belongs to the
+ ``Interval`` `[0, \infty)` and `-n` is the solution only when `-n` belongs to
+ the ``Interval`` `(- \infty, 0]`.
 
- There are various other cases as well which needs to be addressed, like
- say, solving of `2^x + (a - 2)` for `x` where `a` is a symbolic parameter.
- As of now, It returns the solution as an intersection with `\mathbb{R}`, which
- is trivial, as it doesn't reveal the domain of `a` in the solution.
+ There are other cases to address too, like solving `2^x + (a - 2)` for `x`
+ where `a` is a symbolic parameter.  As of now, It returns the solution as an
+ intersection with `\mathbb{R}`, which is trivial, as it doesn't reveal the
+ domain of `a` in the solution.
 
  Recently, we have also implemented a function to find the domain of the
  expression in a FiniteSet (Intersection with the interval) in which it is

@@ -348,19 +348,19 @@ def test_eliminate_implications():
 
 
 def test_conjuncts():
-    assert conjuncts(A & B & C) == set([A, B, C])
-    assert conjuncts((A | B) & C) == set([A | B, C])
-    assert conjuncts(A) == set([A])
-    assert conjuncts(True) == set([True])
-    assert conjuncts(False) == set([False])
+    assert conjuncts(A & B & C) == {A, B, C}
+    assert conjuncts((A | B) & C) == {A | B, C}
+    assert conjuncts(A) == {A}
+    assert conjuncts(True) == {True}
+    assert conjuncts(False) == {False}
 
 
 def test_disjuncts():
-    assert disjuncts(A | B | C) == set([A, B, C])
-    assert disjuncts((A | B) & C) == set([(A | B) & C])
-    assert disjuncts(A) == set([A])
-    assert disjuncts(True) == set([True])
-    assert disjuncts(False) == set([False])
+    assert disjuncts(A | B | C) == {A, B, C}
+    assert disjuncts((A | B) & C) == {(A | B) & C}
+    assert disjuncts(A) == {A}
+    assert disjuncts(True) == {True}
+    assert disjuncts(False) == {False}
 
 
 def test_distribute():
@@ -538,7 +538,7 @@ def test_true_false():
 
     assert hash(true) == hash(True)
     assert hash(false) == hash(False)
-    assert len(set([true, True])) == len(set([false, False])) == 1
+    assert len({true, True}) == len({false, False}) == 1
 
     assert isinstance(true, BooleanAtom)
     assert isinstance(false, BooleanAtom)

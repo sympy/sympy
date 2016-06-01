@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, Dummy, Eq, Gt, Function,
+    Abs, Dummy, Eq, Gt, Function, Mod,
     LambertW, Piecewise, Poly, Rational, S, Symbol, Matrix,
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, cosh, sec, sqrt, symbols,
@@ -105,32 +105,32 @@ def test_invert_real():
                 imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
 
     assert invert_real(cos(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(acos(y), 2*pi))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi + Mod(-acos(y), 2*pi))), S.Integers)))
 
     assert invert_real(sec(x), y, x) == \
         (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
                 imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers)))
 
     assert invert_real(sec(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(asec(y), 2*pi))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi + Mod(-asec(y), 2*pi))), S.Integers)))
 
     assert invert_real(tan(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
+        (x, imageset(Lambda(n, n*pi + atan(y) % pi), S.Integers))
 
     assert invert_real(tan(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + atan(y))), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + atan(y) % pi)), S.Integers))
 
     assert invert_real(cot(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers))
+        (x, imageset(Lambda(n, n*pi + acot(y) % pi), S.Integers))
 
     assert invert_real(cot(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + acot(y) % pi)), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (x, Union(ImageSet(Lambda(n, n*pi + atan(atan(y))), S.Integers),\
-         ImageSet(Lambda(n, n*pi + atan(atan(y) + pi)), S.Integers)))
+        (x, Union(ImageSet(Lambda(n, n*pi + Mod(atan(Mod(atan(y), π)), π)), S.Integers),\
+         ImageSet(Lambda(n, n*pi + Mod(atan(Mod(atan(y), pi) + pi), pi)), S.Integers)))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -191,6 +191,8 @@ def test_is_function_class_equation():
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x)**2 + sin(x) - 1, x) is True
     assert _is_function_class_equation(TrigonometricFunction,
+                                       tan(x) + x, x) is False
+    assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2), x) is False
     assert _is_function_class_equation(TrigonometricFunction,
                                        tan(x**2) + sin(x), x) is False
@@ -216,6 +218,8 @@ def test_is_function_class_equation():
                                        a*tanh(x) - 1, x) is True
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x)**2 + sinh(x) - 1, x) is True
+    assert _is_function_class_equation(HyperbolicFunction,
+                                       tanh(x) + x, x) is False
     assert _is_function_class_equation(HyperbolicFunction,
                                        tanh(x**2), x) is False
     assert _is_function_class_equation(HyperbolicFunction,
@@ -314,16 +318,15 @@ def test_return_root_of():
     assert solveset_complex(s, x) == \
         FiniteSet(*Poly(s*4, domain='ZZ').all_roots())
 
-    # XXX: this comparison should work without converting the FiniteSet to list
-    # See #7876
+    # Refer issue #7876
     eq = x*(x - 1)**2*(x + 1)*(x**6 - x + 1)
-    assert list(solveset_complex(eq, x)) == \
-        list(FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
+    assert solveset_complex(eq, x) == \
+        FiniteSet(-1, 0, 1, CRootOf(x**6 - x + 1, 0),
                        CRootOf(x**6 - x + 1, 1),
                        CRootOf(x**6 - x + 1, 2),
                        CRootOf(x**6 - x + 1, 3),
                        CRootOf(x**6 - x + 1, 4),
-                       CRootOf(x**6 - x + 1, 5)))
+                       CRootOf(x**6 - x + 1, 5))
 
 
 def test__has_rational_power():
@@ -453,21 +456,13 @@ def test_solve_polynomial_symbolic_param():
         FiniteSet(sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
                   sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a)))
 
-    # By attempt to make Set.contains behave symbolically SetDifference on
-    # FiniteSet isn't working very well.
-    # Simple operations like `FiniteSet(a) - FiniteSet(-b)` raises `TypeError`
-    # The likely course of action will making such operations return
-    # SetDifference object. That will also change the expected output of
-    # the given tests. Till the SetDifference becomes well behaving again the
-    # following tests are kept as comments.
+    # issue 4507
+    assert solveset_complex(y - b/(1 + a*x), x) == \
+        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
 
-    # # issue 4508
-    # assert solveset_complex(y - b*x/(a + x), x) == \
-    #     FiniteSet(-a*y/(y - b))
-    #
-    # # issue 4507
-    # assert solveset_complex(y - b/(1 + a*x), x) == \
-    #     FiniteSet((b - y)/(a*y))
+    # issue 4508
+    assert solveset_complex(y - b*x/(a + x), x) == \
+        FiniteSet(-a*y/(y - b)) - FiniteSet(-a)
 
 
 def test_solve_rational():
@@ -560,10 +555,8 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
-    # issue 9565. Note: solveset_real does not solve this as it is
-    # solveset's job to handle Relationals
-    assert solveset(Abs((x - 1)/(x - 5)) <= S(1)/3, domain=S.Reals
-        ) == Interval(-1, 2)
+    # issue 9565
+    assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
 
     # issue #10069
     eq = abs(1/(x - 1)) - 1 > 0

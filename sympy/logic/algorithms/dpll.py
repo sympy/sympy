@@ -5,7 +5,7 @@ efficient unit propagation.
 
 References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
-  - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
+  - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
 from __future__ import print_function, division
 
@@ -212,7 +212,7 @@ def unit_propagate_int_repr(clauses, s):
     [set([3])]
 
     """
-    negated = set([-s])
+    negated = {-s}
     return [clause - negated for clause in clauses if s not in clause]
 
 

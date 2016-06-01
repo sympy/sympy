@@ -24,7 +24,9 @@ class BaseScalar(Expr):
 
         index = _sympify(index)
         system = _sympify(system)
-        obj = super(BaseScalar, cls).__new__(cls, Symbol(name), index, system, Symbol(pretty_str), Symbol(latex_str))
+        obj = super(BaseScalar, cls).__new__(cls, Symbol(name), index, system,
+                                             Symbol(pretty_str),
+                                             Symbol(latex_str))
         if not isinstance(system, CoordSysCartesian):
             raise TypeError("system should be a CoordSysCartesian")
         if index not in range(0, 3):
@@ -42,7 +44,7 @@ class BaseScalar(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     _diff_wrt = True
 

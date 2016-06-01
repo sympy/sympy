@@ -1,3 +1,5 @@
+TODO Fix release script to stop support for Python 2.6 and 3.2 (Issue #10463)
+
 # Prepare the VM
 
 First execute:

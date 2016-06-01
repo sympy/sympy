@@ -1189,7 +1189,7 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
-    @deprecated(useinstead="equals", deprecated_since_version="0.7.7")
+    @deprecated(useinstead="equals", deprecated_since_version="1.0")
     def equal(self, other):
         return self.equals(other)
 
