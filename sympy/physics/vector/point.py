@@ -249,10 +249,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's acceleration in the frame
         frame : ReferenceFrame
             The frame in which this point's acceleration is defined
+        value : Vector
+            The vector value of this point's acceleration in the frame
 
         Examples
         ========
@@ -278,10 +278,10 @@ class Point(object):
         Parameters
         ==========
 
+        otherpoint : Point
+            The other point which this point's location is defined relative to
         value : Vector
             The vector which defines the location of this point
-        point : Point
-            The other point which this point's location is defined relative to
 
         Examples
         ========
@@ -309,10 +309,10 @@ class Point(object):
         Parameters
         ==========
 
-        value : Vector
-            The vector value of this point's velocity in the frame
         frame : ReferenceFrame
             The frame in which this point's velocity is defined
+        value : Vector
+            The vector value of this point's velocity in the frame
 
         Examples
         ========
