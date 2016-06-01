@@ -725,8 +725,8 @@ def test_solve_complex_sqrt():
 
 def test_solveset_complex_tan():
     s = solveset_complex(tan(x).rewrite(exp), x)
-    assert s == imageset(Lambda(n, pi*n), S.Integers) - \
-        imageset(Lambda(n, pi*n + pi/2), S.Integers)
+    assert s == imageset(Lambda(n, n*pi), S.Integers) - \
+        imageset(Lambda(n, n*pi + pi/2), S.Integers)
 
 
 def test_solve_trig():
@@ -888,7 +888,7 @@ def test_conditionset():
         ConditionSet(x, True, S.Reals)
 
     assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals) == \
-        ConditionSet(x, Eq(x*(x + sin(x)) - 1, 0), S.Reals)
+        ConditionSet(x, Eq(x**2 + x*sin(x) - 1, 0), S.Reals)
 
     assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals) == \
         ConditionSet(x, Eq(-x + sin(Abs(x)), 0), Interval(-oo, oo))
@@ -919,7 +919,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    unsolved_object = ConditionSet(x, Eq(exp(2/x**2)*exp(2*x) + exp(x**(-2))*exp(x), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
