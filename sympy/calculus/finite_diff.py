@@ -17,7 +17,7 @@ for:
 
 """
 
-from sympy import S, Derivative
+from sympy import S
 from sympy.core.compatibility import iterable, range
 
 
@@ -362,25 +362,13 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     sympy.calculus.finite_diff.finite_diff_weights
 
     """
-    if derivative.is_Add:
-        result = S(0)
-        for subexpr in derivative.args:
-            try:
-                result = result + as_finite_diff(subexpr, wrt=wrt)
-            except AttributeError:
-                result = result + subexpr
-        return result
-
-    if derivative.is_Mul:
-        result = S(0)
-        for subexpr in derivative.args:
-            product = S(1)
-            try:
-                result = result + (as_finite_diff(subexpr, wrt=wrt) *
-                    derivative / subexpr)
-            except AttributeError:
-                result = result
-        return result
+    if derivative.is_Derivative:
+        pass
+    elif derivative.is_Atom:
+        return derivative
+    else:
+        return derivative.replace(lambda expr: expr.is_Derivative,
+            lambda expr: as_finite_diff(expr, wrt=wrt))
 
     if wrt is None:
         wrt = derivative.variables[0]
