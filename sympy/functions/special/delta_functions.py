@@ -268,20 +268,20 @@ class Heaviside(Function):
            Examples
            ========
 
-           >>> from sympy import Heaviside, Piecewise, Symbol
+           >>> from sympy import Heaviside, Piecewise, Symbol, pprint
            >>> x = Symbol('x')
 
            >>> Heaviside(x).rewrite(Piecewise)
-           Piecewise((1, x > 0), (0, True))
+           Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0))
 
            >>> Heaviside(x - 5).rewrite(Piecewise)
-           Piecewise((1, x - 5 > 0), (0, True))
+           Piecewise((0, x - 5 < 0), (Heaviside(0), Eq(x - 5, 0)), (1, x - 5 > 0))
 
            >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-           Piecewise((1, x**2 - 1 > 0), (0, True))
+           Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
-        return Piecewise((1, arg > 0), (0, True))
+        return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
 
     def _eval_rewrite_as_sign(self, arg):
         if arg.is_real:
