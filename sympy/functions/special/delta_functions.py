@@ -24,7 +24,7 @@ class DiracDelta(Function):
     DiracDelta only makes sense in definite integrals, and in particular, integrals
     of the form ``Integral(f(x)*DiracDelta(x - x0), (x, a, b))``, where it equals
     ``f(x0)`` if ``a <= x0 <= b`` and ``0`` otherwise. Formally, DiracDelta acts
-    in some ways like a function that takes on ``oo`` at ``0`` and ``0`` elsewhere,
+    in some ways like a function that is ``0`` everywhere except at ``0``,
     but in many ways it also does not. It can often be useful to treat DiracDelta
     in formal ways, building up and manipulating expressions with delta functions
     (which may eventually be integrated), but care must be taken to not treat it
@@ -67,8 +67,6 @@ class DiracDelta(Function):
     DiracDelta(0)
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
-    >>> DiracDelta(x**2 - 1).fdiff()
-    DiracDelta(x**2 - 1, 1)
     >>> diff(DiracDelta(x - 1),x,2)
     DiracDelta(x - 1, 2)
     >>> diff(DiracDelta(x**2 - 1),x,2)
@@ -77,8 +75,8 @@ class DiracDelta(Function):
     True
     >>> DiracDelta(x**2).is_simple(x)
     False
-    >>> DiracDelta(x**2*y).expand(diracdelta=True, wrt=x)
-    DiracDelta(x**2*y)
+    >>> DiracDelta((x**2 - 1)*y).expand(diracdelta=True, wrt=x)
+    DiracDelta(x - 1)/(2*Abs(y)) + DiracDelta(x + 1)/(2*Abs(y))
 
 
     See Also
@@ -139,8 +137,7 @@ class DiracDelta(Function):
     def eval(cls, arg, k=0):
         """
         Returns a simplified form or a value of DiracDelta depending on the
-        argument passed by the DiracDelta object or the argument ``arg`` passed
-        by the method ``eval()``.
+        argument passed by the DiracDelta object.
 
         The ``eval()`` method is automatically called when the ``DiracDelta`` class
         is about to be instantiated and it returns either some simplified instance
@@ -373,8 +370,7 @@ class Heaviside(Function):
     def eval(cls, arg):
         """
         Returns a simplified form or a value of Heaviside depending on the
-        argument passed by the Heaviside object or the argument ``arg`` passed
-        by the method ``eval()``.
+        argument passed by the Heaviside object.
 
         The ``eval()`` method is automatically called when the ``Heaviside`` class
         is about to be instantiated and it returns either some simplified instance
