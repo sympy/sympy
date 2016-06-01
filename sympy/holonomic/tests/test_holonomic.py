@@ -1,6 +1,6 @@
 from sympy.holonomic.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O
+from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O, I
 from sympy import ZZ, QQ
 
 
@@ -222,3 +222,34 @@ def test_series():
         (4-6*x**3+2*x**4)*Dx**2, x, 0, [1, 0]).series(n=7)
     q = 1 - 3*x**2/4 - x**3/4 - 5*x**4/32 - 3*x**5/40 - 17*x**6/384 + O(x**7)
     assert p == q
+
+def test_evalf():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    # a straight line on real axis
+    r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    p = HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1])
+    s = '0.699525841805253'
+    assert sstr(p.evalf(r)[-1]) == s
+    # a traingle with vertices (0, 1+i, 2)
+    r = [0.1 + 0.1*I]
+    for i in range(9):
+        r.append(r[-1]+0.1+0.1*I)
+    for i in range(10):
+        r.append(r[-1]+0.1-0.1*I)
+    s = '1.07530466271334 - 0.0251200594793912*I'
+    assert sstr(p.evalf(r)[-1]) == s
+    p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
+    s = '0.905546532085401 - 6.93889390390723e-18*I'
+    assert sstr(p.evalf(r)[-1]) == s
+    # a rectangular path (0 -> i -> 2+i -> 2)
+    r = [0.1*I]
+    for i in range(9):
+        r.append(r[-1]+0.1*I)
+    for i in range(20):
+        r.append(r[-1]+0.1)
+    for i in range(10):
+        r.append(r[-1]-0.1*I)
+    p = HolonomicFunction(Dx**2 + 1, x, 0, [1,1]).evalf(r)
+    s = '0.501421652861245 - 3.88578058618805e-16*I'
+    assert sstr(p[-1]) == s

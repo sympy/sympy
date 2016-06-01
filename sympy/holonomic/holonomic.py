@@ -635,10 +635,10 @@ class HolonomicFunction(object):
         R = ann_self.parent.base
         K = R.get_field()
 
-        for i, j in enumerate(ann_self.listofpoly):
+        for j in ann_self.listofpoly:
             list_self.append(K.new(j.rep))
 
-        for i, j in enumerate(ann_other.listofpoly):
+        for j in ann_other.listofpoly:
             list_other.append(K.new(j.rep))
         # will be used to reduce the degree
         self_red = [-list_self[i] / list_self[a]
@@ -988,10 +988,16 @@ class HolonomicFunction(object):
             y *= x - i
         return roots(s.rep, filter='R').keys()
 
-    def evalf(self, *args, **kwargs):
+    def evalf(self, points, **kwargs):
         """
-        Find numerical value of a holonomic function. The substitution must be
-        done here.
+        Finds numerical value of a holonomic function using Euler's method.
+        A set of points (real or complex) must be provided which will be the
+        path for the numerical integration.
+
+        The path should be given as a list [x1, x2, ... xn]. The numerical values
+        will be computed at each point in this order x1 --> x2 --> x3 ... --> xn.
+
+        Returns values of the function at x1, x2, ... xn in a list.
 
         Examples
         =======
@@ -1001,12 +1007,17 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+        >>> # a straight line on the real axis from (0 to 1)
+        >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
-        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(subs={x:1})  # e^1
-        2.71828182845905
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)  # e^1
+        [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
+         2.357947691, 2.5937424601]
+        >>> # exact solution at 1 is 2.71828182845905
         """
 
-        return self.series(n=50, order=False).evalf(*args, **kwargs)
+        from sympy.holonomic.numerical import euler
+        return euler(self, points, **kwargs)
 
 
 def from_hyper(func, x0=0, evalf=False):
@@ -1050,7 +1061,7 @@ def from_hyper(func, x0=0, evalf=False):
                 val = simp.subs(x, x0).evalf()
             else:
                 val = simp.subs(x, x0)
-            if isinstance(val, Infinity) or isinstance(val, NaN):
+            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff()
@@ -1131,7 +1142,11 @@ def DMFsubs(frac, x0):
     sol_p = S(0)
     sol_q = S(0)
     for i, j in enumerate(reversed(p)):
+        if isinstance(j, PythonRational):
+            j = sympify(j)
         sol_p += j * x0**i
     for i, j in enumerate(reversed(q)):
+        if isinstance(j, PythonRational):
+            j = sympify(j)
         sol_q += j * x0**i
     return sol_p / sol_q
