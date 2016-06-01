@@ -138,6 +138,7 @@ class CosetTable(Basic):
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
+        print(self.table, alpha)
         self.table[alpha][A.index(x)] = beta
         self.table[beta][A.index(x.inverse())] = alpha
 
@@ -276,46 +277,66 @@ class CosetTable(Basic):
             # loop until it has filled the alpha row in the table.
             i_A += 1
 
-
-# Pg. 166
-def process_deductions(C, R):
-    while deduction_stack is not empty:
-        if deduction_stack is full:
-            lookahead(C, R)
-            empty_deduction_stack
-        else:
-            deduction_stack.pop((alpha, x))
-            if p[alpha] == alpha:
-                for w in R_c:
-                    C.scan(alpha, w)
-                    if p[alpha] < alpha:
+    # Pg. 166
+    def process_deductions(self, R_c_x):
+        deduction_stack = []
+        max_stack_size = 500
+        p = self.p
+        while len(deduction_stack) > 0:
+            if len(deduction_stack) <= max_stack_size:
+                self.lookahead(R_c_x)
+                del deduction_stack
+            else:
+                deduction_stack.pop((alpha, x))
+                if p[alpha] == alpha:
+                    for w in R_c:
+                        self.scan(alpha, w)
+                        if p[alpha] < alpha:
+                            break
+            beta = self.table[alpha][x]
+            if p[beta] == beta:
+                for w in R_c_x_inv:
+                    self.scan(beta, w)
+                    if p[beta] < beta:
                         break
-        beta = C.table[alpha][x]
-        if p[beta] == beta:
-            for w in R_c_x_inv:
-                C.scan(beta, w)
-                if p[beta] < beta:
-                    break
 
+    def standardize(self):
+        gamma = 2
+        for a in range(self.n):
+            x in A
+            beta = self.table[alpha][A_dict[x]]*gamma
+            if beta >= gamma:
+                if beta > gamma:
+                    self.switch(gamma, beta)*gamma
+                    gamma += 1
+                    if gamma == n:
+                        return
 
-def standardize(C):
-    gamma = 2
-    n = C.n
-    for a in range(n):
-        x in A
-        beta = C.table[alpha][A_dict[x]]*gamma
-        if beta >= gamma:
-            if beta > gamma:
-                C.switch(gamma, beta)*gamma
+    # Pg. 167 5.2.3
+    def compress(self):
+        gamma = 0
+        p = self.p
+        n = self.n
+        A = self.A
+        A_dict = self.A_dict
+        for alpha in range(self.n):
+            if p[alpha] == alpha:
                 gamma += 1
-                if gamma == n:
-                    return
+                if gamma != alpha:
+                    for x in A:
+                        beta = self.table[alpha][A_dict[x]]
+                        if beta == alpha:
+                            beta = gamma
+                        self.table[gamma][A.index(x)] = beta
+                        self.table[beta][A.index(x**-1)] == gamma
+        self.n = gamma
+        for alpha in range(self.n):
+            p[alpha] = alpha
 
 
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
     """
-    # Example 5.1
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> F, x, y = free_group("x, y")
@@ -444,41 +465,33 @@ def coset_enumeration_r(fp_grp, Y):
 # Pg. 166
 # coset-table bases method
 def coset_enumeration_c(fp_grp, Y):
+    # 1. Initialize a coset table C for < X|R >
+    C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
-    R = fp_grp.relators
-    for i in range(len(R)):
-        R[i] = R[i].identity_cyclic_reduction()
-    R_union_R_inverse = R + [rel.inverse() for rel in R]
-    p = []
-    p[0] = 1
-    n = 0
+    R = fp_grp.relators()
+    R_cyc_red = [rel.identity_cyclic_reduction() for rel in R]
+    R_c = list(chain.from_iterable((rel.cyclic_conjugates(), (rel**-1).cyclic_conjugates()) \
+            for rel in R_cyc_red))
+    R_set = set()
+    for conjugate in R_c:
+        R_set = R_set.union(conjugate)
+    R_c_x = []
+    # TODO
+    # the method of removing the corresponding element from R_set cotaining "x"
+    # would work better, since that would continuously reduce the size of R_set
+    for x in C.A:
+        R_c_x.append(set([word for word in R_set if word.subword(0, 1) == x]))
     for w in Y:
-        scan_and_fill(C, 0, w)
-    process_deductions(C, R)
-    for alpha in range(len(C)):
-        for x in range(len(A)):
-            if C[alpha][x] is None:
-                define(C, alpha, x)
-                process_deductions(C, R)
+        C.scan_and_fill(0, w)
+    for x in range(len(C.A)):
+        C.process_deductions(R_c_x[x])
+    for alpha in range(len(C.p)):
+        if C.p[alpha] == alpha:
+            for x in range(len(C.A)):
+                if C.table[alpha][x] is None:
+                    C.define(alpha, x)
+                    C.process_deductions(R_c_x[A.index(x)])
     return C
-
-
-# Pg. 167 5.2.3
-def compress(C):
-    gamma = 0
-    for alpha in range(C.n):
-        if p[alpha] == alpha:
-            gamma += 1
-            if gamma != alpha:
-                for x in A:
-                    beta = C[alpha][A_dict[x]]
-                    if beta == alpha:
-                        beta = gamma
-                    C[gamma][A.index(x)] = beta
-                    C[beta][A.index(x**-1)] == gamma
-    C.n = gamma
-    for alpha in range(C.n):
-        p[alpha] = alpha
 
 
 FpGroupElm = FreeGroupElm

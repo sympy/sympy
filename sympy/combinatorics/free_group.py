@@ -653,7 +653,6 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         True
         >>> swapnil0*swapnil1 == swapnil1*swapnil0
         False
-
         >>> swapnil1**0 == swap0**0
         False
 
