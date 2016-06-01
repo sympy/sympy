@@ -325,19 +325,56 @@ class CosetTable(Basic):
                     if p[beta] < beta:
                         break
 
+    def switch(self, beta, gamma):
+        """
+        Switch the elements β, γ of Ω in C
+        """
+        A = self.A
+        A_dict = self.A_dict
+        X = self.fp_group.generators
+        table = self.table
+        for x in A:
+            #table[gamma][x], table[beta][x] = table[beta][x], table[gamma][x]
+            print(gamma, A_dict[x])
+            z = table[gamma][A_dict[x]]
+            table[gamma][A_dict[x]] = table[beta][A_dict[x]]
+            table[beta][A_dict[x]] = z
+            for alpha in range(len(self.p)):
+                if self.p[alpha] == alpha:
+                    if table[alpha][A_dict[x]] == beta:
+                        table[alpha][A_dict[x]] = gamma
+                    elif table[alpha][A_dict[x]] == gamma:
+                        table[alpha][A_dict[x]] = beta
+
     def standardize(self):
+        """
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
+        >>> F, x, y = free_group("x, y")
+
+        # Example 5.3 from [1]
+        >>> f = FpGroup(F, [x**2*y**2, x**3*y**5])
+        >>> C = coset_enumeration_r(f, [])
+        >>> C.compress()
+        >>> C.table
+        [[1, 3, 1, 3], [2, 0, 2, 0], [3, 1, 3, 1], [0, 2, 0, 2]]
+        >>> C.standardize()
+        >>> C.table
+        [[1, 2, 1, 2], [3, 0, 3, 0], [0, 3, 0, 3], [2, 1, 2, 1]]
+
+        """
         A = self.A
         A_dict = self.A_dict
         gamma = 1
-        for alpha in range(len(self.p)):
-            for x in self.A:
-                beta = self.table[alpha][A_dict[x]]*gamma
+        for alpha in range(self.n):
+            for x in A:
+                beta = self.table[alpha][A_dict[x]]
                 if beta >= gamma:
                     if beta > gamma:
-                        self.switch(gamma, beta)*gamma
-                        gamma += 1
-                        if gamma == self.n:
-                            return
+                        self.switch(gamma, beta)
+                    gamma += 1
+                    if gamma == self.n:
+                        return
 
     # Compression of a Coset Table
     # Pg. 167 5.2.3
@@ -362,25 +399,6 @@ class CosetTable(Basic):
         self.p = list(range(gamma + 1))
         # delete the useless coloumns
         del self.table[len(self.p):]
-
-    def switch(self, beta, gamma):
-        """
-        Switch the elements β, γ of Ω in C
-        """
-        A = self.A
-        A_dict = self.A_dict
-        X = self.fp_group.generators
-        for x in X:
-            #self.table[gamma][x], self.table[beta][x] = self.table[beta][x], self.table[gamma][x]
-            z = self.table[gamma][A_dict[x]]
-            self.table[gamma][A_dict[x]] = self.table[beta][A_dict[x]]
-            self.table[beta][A_dict[x]] = z
-            for alpha in range(len(self.p)):
-                if self.p[alpha] == alpha:
-                    if self.table[alpha][A_dict[x]] == beta:
-                        self.table[alpha][A_dict[x]] = gamma
-                    elif self.table[alpha][A_dict[x]] == gamma:
-                        self.table[alpha][A_dict[x]] = beta
 
 
 # relator-based method
@@ -435,6 +453,27 @@ def coset_enumeration_r(fp_grp, Y):
     ...     if C.p[i] == i:
     ...         print(C.table[i])
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    # example of "compress" method
+    >>> C.table
+    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [None, None, None, 0, 2, 0, None, 2, 1, None],
+    [None, None, 0, None, 4, None, None, 0, 0, None],
+    [1, None, None, None, None, 7, None, 1, 7, 0],
+    [None, None, None, None, None, None, 0, None, None, None],
+    [None, None, None, None, 0, None, None, None, None, None],
+    [None, None, 0, None, None, None, None, None, None, None],
+    [None, 1, 2, 1, None, None, None, None, None, None],
+    [None, None, None, 1, 3, None, None, None, None, None],
+    [8, None, None, None, None, None, None, 2, 12, 1],
+    [None, None, None, None, None, None, 1, None, None, None],
+    [None, None, None, None, None, None, None, None, 1, None],
+    [None, 2, 4, None, None, None, None, None, None, None],
+    [None, None, None, 12, None, 2, None, None, None, None],
+    [None, None, None, 2, 9, None, None, None, None, None]]
+    >>> C.compress()
+    >>> C.table
+    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
     # Exercises Pg. 161, Q2.
     >>> F, x, y = free_group("x, y")
