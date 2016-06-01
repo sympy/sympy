@@ -183,24 +183,24 @@ class DiracDelta(Function):
            Examples
            ========
 
-           >>> from sympy import DiracDelta, Piecewise, Symbol, oo
+           >>> from sympy import DiracDelta, Piecewise, Symbol
            >>> x = Symbol('x')
 
            >>> DiracDelta(x).rewrite(Piecewise)
-           Piecewise((oo, Eq(x, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x, 0)), (0, True))
 
            >>> DiracDelta(x - 5).rewrite(Piecewise)
-           Piecewise((oo, Eq(x - 5, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True))
 
            >>> DiracDelta(x**2 - 5).rewrite(Piecewise)
-           Piecewise((oo, Eq(x**2 - 5, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x**2 - 5, 0)), (0, True))
 
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
            DiracDelta(x - 5, 4)
 
         """
         if len(args) == 1:
-            return Piecewise((oo, Eq(args[0], 0)), (0, True))
+            return Piecewise((DiracDelta(0), Eq(args[0], 0)), (0, True))
 
     @staticmethod
     def _latex_no_arg(printer):
