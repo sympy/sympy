@@ -7,7 +7,7 @@ from mpmath import mp
 from sympy.holonomic.holonomic import DMFsubs
 
 
-def euler(func, points):
+def euler(func, points, derivatives=False):
     """
     Euler method for numerical integration along a given set of
     points in the complex plane.
@@ -28,15 +28,18 @@ def euler(func, points):
     if len(y0) < a:
         raise TypeError("Not Enough Initial Conditions")
     x0 = func.x0
-    sol = _eular(red, x0, points[0], y0, a)
+    sol = [_euler(red, x0, points[0], y0, a)]
 
     for i, j in enumerate(points[1:]):
-        sol = _eular(red, points[i], j, sol, a)
+        sol.append(_euler(red, points[i], j, sol[-1], a))
 
-    return sympify(sol)
+    if not derivatives:
+        return [sympify(i[0]) for i in sol]
+    else:
+        return sympify(sol)
 
 
-def _eular(red, x0, x1, y0, a):
+def _euler(red, x0, x1, y0, a):
     A = sympify(x0)._to_mpmath(mp.prec)
     B = sympify(x1)._to_mpmath(mp.prec)
     y_0 = [sympify(i)._to_mpmath(mp.prec) for i in y0]

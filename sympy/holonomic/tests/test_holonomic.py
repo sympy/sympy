@@ -229,19 +229,19 @@ def test_evalf():
     # a straight line on real axis
     r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
     p = HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1])
-    s = '[0.699525841805253, 0.473684210526316]'
-    assert sstr(p.evalf(r)) == s
+    s = '0.699525841805253'
+    assert sstr(p.evalf(r)[-1]) == s
     # a traingle with vertices (0, 1+i, 2)
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
     for i in range(10):
         r.append(r[-1]+0.1-0.1*I)
-    s = '[1.07530466271334 - 0.0251200594793912*I, 0.325243709762363 - 0.0204211046742834*I]'
-    assert sstr(p.evalf(r)) == s
+    s = '1.07530466271334 - 0.0251200594793912*I'
+    assert sstr(p.evalf(r)[-1]) == s
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
-    s = '[0.905546532085401 - 6.93889390390723e-18*I, -0.428943686179764 + 1.52655665885959e-16*I]'
-    assert sstr(p.evalf(r)) == s
+    s = '0.905546532085401 - 6.93889390390723e-18*I'
+    assert sstr(p.evalf(r)[-1]) == s
     # a rectangular path (0 -> i -> 2+i -> 2)
     r = [0.1*I]
     for i in range(9):
@@ -251,5 +251,5 @@ def test_evalf():
     for i in range(10):
         r.append(r[-1]-0.1*I)
     p = HolonomicFunction(Dx**2 + 1, x, 0, [1,1]).evalf(r)
-    s = '[0.501421652861245 - 3.88578058618805e-16*I, -1.32082554630158 - 2.15105711021124e-16*I]'
-    assert sstr(p) == s
+    s = '0.501421652861245 - 3.88578058618805e-16*I'
+    assert sstr(p[-1]) == s

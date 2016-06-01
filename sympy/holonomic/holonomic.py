@@ -988,7 +988,7 @@ class HolonomicFunction(object):
             y *= x - i
         return roots(s.rep, filter='R').keys()
 
-    def evalf(self, points):
+    def evalf(self, points, **kwargs):
         """
         Finds numerical value of a holonomic function using Euler's method.
         A set of points (real or complex) must be provided which will be the
@@ -997,7 +997,7 @@ class HolonomicFunction(object):
         The path should be given as a list [x1, x2, ... xn]. The numerical values
         will be computed at each point in this order x1 --> x2 --> x3 ... --> xn.
 
-        Returns the value of the functions and it's derivatives at xn.
+        Returns values of the function at x1, x2, ... xn in a list.
 
         Examples
         =======
@@ -1011,12 +1011,13 @@ class HolonomicFunction(object):
         >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)  # e^1
-        [2.5937424601]
-        >>> # exact solution is 2.71828182845905
+        [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
+         2.357947691, 2.5937424601]
+        >>> # exact solution at 1 is 2.71828182845905
         """
 
         from sympy.holonomic.numerical import euler
-        return euler(self, points)
+        return euler(self, points, **kwargs)
 
 
 def from_hyper(func, x0=0, evalf=False):
