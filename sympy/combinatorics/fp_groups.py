@@ -142,6 +142,19 @@ class CosetTable(Basic):
         self.table[alpha][A.index(x)] = beta
         self.table[beta][A.index(x.inverse())] = alpha
 
+    def define_f(self, alpha, x):
+        A = self.A
+        if self.n == DefaultMaxLimit:
+            # abort the further generation of cosets
+            return
+        self.table.append([None]*len(A))
+        # beta is the new coset generated
+        beta = len(self.table) - 1
+        self.p.append(beta)
+        print(self.table, alpha)
+        self.table[alpha][A.index(x)] = beta
+        self.table[beta][A.index(x.inverse())] = alpha
+
     def scan(self, alpha, word):
         """
         >>> from sympy.combinatorics.free_group import free_group
@@ -277,6 +290,18 @@ class CosetTable(Basic):
             # loop until it has filled the alpha row in the table.
             i_A += 1
 
+    def look_ahead(self):
+        R = self.fp_group.relators()
+        p = self.p
+        for beta in p:
+            if p[beta] == beta:
+                # complete scan all relators under all cosets(obviously live)
+                # without making new definitions
+                for w in R:
+                    self.scan(beta, w)
+                    if p[beta] < beta:
+                        continue
+
     # Pg. 166
     def process_deductions(self, R_c_x):
         deduction_stack = []
@@ -332,6 +357,21 @@ class CosetTable(Basic):
         self.n = gamma
         for alpha in range(self.n):
             p[alpha] = alpha
+
+    def switch(self, beta, gamma):
+        """
+        Switch the elements β, γ of Ω in C
+        """
+        for x in X:
+            z = self.table[gamma][x]
+            self.table[gamma][x] = self.table[beta][x]
+            self.table[beta][x] = z
+            for a in range(len(self.p)):
+                if self.p[a] == a:
+                    if self.table[alpha][x] == beta:
+                        self.table[alpha][x] = gamma
+                    elif self.table[alpha][x] == gamma:
+                        self.table[alpha][x] = beta
 
 
 # relator-based method
@@ -463,8 +503,9 @@ def coset_enumeration_r(fp_grp, Y):
 
 
 # Pg. 166
-# coset-table bases method
+# coset-table based method
 def coset_enumeration_c(fp_grp, Y):
+    # Usual practise with Felsch method is to
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
@@ -475,14 +516,20 @@ def coset_enumeration_c(fp_grp, Y):
     R_set = set()
     for conjugate in R_c:
         R_set = R_set.union(conjugate)
+    # denotes subset of R_c whose words start with "x".
     R_c_x = []
     # TODO
     # the method of removing the corresponding element from R_set cotaining "x"
     # would work better, since that would continuously reduce the size of R_set
     for x in C.A:
         R_c_x.append(set([word for word in R_set if word.subword(0, 1) == x]))
+    # Usual practise with Felsch method is to start by calling SCAN_AND_FILL
+    # for the trivial coset, ∀ w ∈ Y.
     for w in Y:
         C.scan_and_fill(0, w)
+    # The code of procedures DEFINE, SCAN and COINCIDENCE are first modified
+    # such that each time the value of α^x is defined or altered for any α and
+    # x, the pair (α,x) is pushed onto this deduction stack.
     for x in range(len(C.A)):
         C.process_deductions(R_c_x[x])
     for alpha in range(len(C.p)):
