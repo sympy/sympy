@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElm
+from sympy.combinatorics.free_group import FreeGroupElement
 from itertools import chain
 
 
@@ -51,7 +51,7 @@ class FpGroup(Basic):
         obj._free_group = fr_grp
         obj._relators = relators
         obj.generators = obj._generators()
-        obj.dytype = type("FpGroupElm", (FpGroupElm,), {"group": obj})
+        obj.dytype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
         return obj
 
     @property
@@ -85,7 +85,7 @@ class CosetTable(Basic):
     #       represented by an integer between i with 1 <= i <= n
     #       α ∈ c
     # x: Mathematically an element of "A" (set of generators and
-    #   their inverses), represented using "FpGroupElm"
+    #   their inverses), represented using "FpGroupElement"
     # fp_grp: Finitely Presented Group with < X|R > as presentation.
     # H: subgroup of fp_grp.
     # NOTE: We start with H as being only a list of words in generators
@@ -334,8 +334,6 @@ class CosetTable(Basic):
         X = self.fp_group.generators
         table = self.table
         for x in A:
-            #table[gamma][x], table[beta][x] = table[beta][x], table[gamma][x]
-            print(gamma, A_dict[x])
             z = table[gamma][A_dict[x]]
             table[gamma][A_dict[x]] = table[beta][A_dict[x]]
             table[beta][A_dict[x]] = z
@@ -347,7 +345,12 @@ class CosetTable(Basic):
                         table[alpha][A_dict[x]] = beta
 
     def standardize(self):
-        """
+        """Standardize a compressed Coset Table. "Standardize" reorders the
+        elements of \Omega such that, if we scan the coset table first by
+        elements of \Omega and then by elements of A, then the cosets occur in
+        ascending order. `standardize()` is used at the end of an enumeration
+        to permute the cosets so that they occur in some sort of standard order.
+
         >>> from sympy.combinatorics.free_group import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
@@ -589,4 +592,4 @@ def coset_enumeration_c(fp_grp, Y):
     return C
 
 
-FpGroupElm = FreeGroupElm
+FpGroupElement = FreeGroupElement

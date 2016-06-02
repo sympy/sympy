@@ -32,7 +32,7 @@ def free_group(symbols):
     >>> x**2*y**-1
     x**2*y**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -56,7 +56,7 @@ def xfree_group(symbols):
     >>> y**2*x**-2*z**-1
     y**2*x**-2*z**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -80,7 +80,7 @@ def vfree_group(symbols):
     >>> x**2*y**-2*z
     x**2*y**-2*z
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -141,8 +141,8 @@ class FreeGroup(DefaultPrinting):
             obj = object.__new__(cls)
             obj._hash = _hash
             obj._rank = rank
-            # dtype method is used to create new instances of FreeGroupElm
-            obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
+            # dtype method is used to create new instances of FreeGroupElement
+            obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
             obj._gens_set = set(obj.generators)
@@ -183,8 +183,8 @@ class FreeGroup(DefaultPrinting):
     def __contains__(self, i):
         """Return True if `i` is contained in FreeGroup.
         """
-        if not isinstance(i, FreeGroupElm):
-            raise TypeError("FreeGroup contains only FreeGroupElm as elements "
+        if not isinstance(i, FreeGroupElement):
+            raise TypeError("FreeGroup contains only FreeGroupElement as elements "
                         ", not elements of type %s" % type(i))
         group = i.group
         return self == group
@@ -303,7 +303,7 @@ class FreeGroup(DefaultPrinting):
         True
 
         """
-        if not isinstance(g, FreeGroupElm):
+        if not isinstance(g, FreeGroupElement):
             return False
         elif self != g.group:
             return False
@@ -322,11 +322,11 @@ class FreeGroup(DefaultPrinting):
 
 
 ############################################################################
-#                          FreeGroupElm                                    #
+#                          FreeGroupElement                                #
 ############################################################################
 
 
-class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
+class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     """Used to create elements of FreeGroup. It can not be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
@@ -367,7 +367,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         Since elements (i.e. words) don't commute, the indexing of tuple
         makes that property to stay.
 
-        The structure in `array_form` of `FreeGroupElm` is shown below,
+        The structure in `array_form` of `FreeGroupElement` is shown below,
 
         ( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )
 
@@ -392,7 +392,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
     @property
     def letter_form(self):
         """
-        The  letter  representation  of an `FreeGroupElm` is as a
+        The  letter  representation  of an `FreeGroupElement` is as a
         tuple of generator symbols, each entry corresponding to a group
         generator. Inverses of the generators are represented by
         negative generator symbols.
@@ -421,7 +421,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
 
     @property
     def ext_rep(self):
-        """This is called the External Representation of `FreeGroupElm`
+        """This is called the External Representation of `FreeGroupElement`
         """
         return tuple(flatten(self.array_form))
 
@@ -518,7 +518,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
 
     def inverse(self):
         """
-        Returns the inverse of a `FreeGroupElm` element
+        Returns the inverse of a `FreeGroupElement` element
 
         Examples
         ========
@@ -536,7 +536,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         return group.dtype(r)
 
     def order(self):
-        """Find the order of a `FreeGroupElm`.
+        """Find the order of a `FreeGroupElement`.
 
         Examples
         ========
@@ -557,7 +557,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         """
         group = self.group
         if not isinstance(other, group.dtype):
-            raise ValueError("commutator of only `FreeGroupElm` of the same "
+            raise ValueError("commutator of only `FreeGroupElement` of the same "
                     "`FreeGroup` exists")
         else:
             return self.inverse()*other.inverse()*self*other

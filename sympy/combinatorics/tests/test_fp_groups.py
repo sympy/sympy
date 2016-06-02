@@ -65,7 +65,7 @@ def test_scan_2():
             [None, 1, None, None], [1, 3, None, None]]
     assert c.p == [0, 1, 2, 1, 1]
     assert c.n == 3
-    assert c.omega == [0, 1, 2, 1, 1]
+    assert c.omega == [0, 1, 2]
 
     # Example 5.2 [1]
     f = FpGroup(F, [x**2, y**3, (x*y)**3])
@@ -117,7 +117,7 @@ def test_scan_2():
     assert c.table == [[1, 1, 2, 1], [0, 0, 0, 2], [3, 3, 1, 0], [2, 2, 3, 3], [2, None, None, 3]]
     assert c.p == [0, 1, 2, 3, 3]
     assert c.n == 4
-    assert c.omega == [0, 1, 2, 3, 3]
+    assert c.omega == [0, 1, 2, 3]
 
 
 def test_HLT_method():
