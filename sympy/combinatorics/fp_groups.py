@@ -494,6 +494,10 @@ class CosetTable(Basic):
         gamma = -1
         A = self.A
         A_dict = self.A_dict
+        chi = []
+        for i in range(len(self.p)):
+            if self.p[i] != i:
+                chi.append(i)
         for alpha in self.omega:
             gamma += 1
             # a non-live coset is found with `gamma ~ alpha`
@@ -509,6 +513,16 @@ class CosetTable(Basic):
         self.p = list(range(gamma + 1))
         # delete the useless coloumns
         del self.table[len(self.p):]
+        # re-define values
+        for row in self.table:
+            for j in range(len(self.A)):
+                t = 0
+                for k in chi:
+                    if k < row[j]:
+                        t += 1
+                    else:
+                        break
+                row[j] -= t
 
 
 # relator-based method
