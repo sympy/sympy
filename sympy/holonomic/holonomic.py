@@ -1100,7 +1100,7 @@ def from_hyper(func, x0=0, evalf=False):
 
 def from_meijerg(func, x0=0, evalf=False):
     """
-    Converts a Meijer-G function to Holonomic.
+    Converts a Meijer G-function to Holonomic.
     func is the Hypergeometric Function and x0 be the point at
     which initial conditions are required.
 
