@@ -173,7 +173,7 @@ class CosetTable(Basic):
         while i < r and self.table[f][A_dict[word.subword(i, i+1)]] is not None:
             f = self.table[f][A_dict[word.subword(i, i+1)]]
             i += 1
-        # can this be replaced with i == r ?
+        # This can be replaced with i==r.But will wait to see if this changes something
         if i >= r:
             if f != alpha:
                 # implement the "coincidence" routine on Pg 158 of Handbook.
@@ -187,8 +187,6 @@ class CosetTable(Basic):
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
             # run the "coincidence" routine
-            # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
-            # we have p[α]=α iff α ∈ Ω.
             self.coincidence_f(f, b)
         elif j == i:
             # deduction process
@@ -264,9 +262,6 @@ class CosetTable(Basic):
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
             # run the "coincidence" routine
-            # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
-            # we have p[α]=α iff α ∈ Ω.
-            self.p.extend(list(range(len(self))))
             self.coincidence(f, b)
         elif j == i:
             # deduction process
