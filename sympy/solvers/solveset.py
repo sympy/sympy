@@ -386,6 +386,8 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
+    from sympy.core import expand_log
+
     f = together(f, deep=True)
     g, h = fraction(f)
     g, h = g.expand(), h.expand()
@@ -397,8 +399,8 @@ def _solve_as_rational(f, symbol, domain):
         atoms = list(g.atoms(exp))
         atoms += list(h.atoms(exp))
         for atom in atoms:
-            for a in atom.args:
-                if a.is_imaginary:
+            for img in expand_log(atom, force=True).atoms(I):
+                if img:
                     flag = True
         if flag:
             # to get soln for solveset((tan(x)-1).rewrite(exp), x, S.Reals)

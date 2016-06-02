@@ -129,7 +129,7 @@ def test_invert_real():
         (x, imageset(Lambda(n, log(n*pi + acot(y) % pi)), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (x, Union(ImageSet(Lambda(n, n*pi + Mod(atan(Mod(atan(y), π)), π)), S.Integers),\
+        (x, Union(ImageSet(Lambda(n, n*pi + Mod(atan(Mod(atan(y), pi)), pi)), S.Integers),\
          ImageSet(Lambda(n, n*pi + Mod(atan(Mod(atan(y), pi) + pi), pi)), S.Integers)))
 
     x = Symbol('x', positive=True)
@@ -458,7 +458,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
+        FiniteSet((b - y)/(a*y)) - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -725,8 +725,8 @@ def test_solve_complex_sqrt():
 
 def test_solveset_complex_tan():
     s = solveset_complex(tan(x).rewrite(exp), x)
-    assert s == imageset(Lambda(n, n*pi), S.Integers) - \
-        imageset(Lambda(n, n*pi + pi/2), S.Integers)
+    assert s == imageset(Lambda(n, 2*n*pi), S.Integers) + \
+        imageset(Lambda(n, 2*n*pi + pi), S.Integers)
 
 
 def test_solve_trig():
@@ -746,8 +746,8 @@ def test_solve_trig():
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
     assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
+        Union(ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers),
+              ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
 
 
