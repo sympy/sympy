@@ -363,37 +363,105 @@ def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
+    g, h = g.expand(), h.expand()
     if not h.has(symbol):
         return _solve_as_poly(g, symbol, domain)
     else:
-        valid_solns = _solveset(g, symbol, domain)
-        invalid_solns = _solveset(h, symbol, domain)
-        return valid_solns - invalid_solns
+        # search for exp(I*x) terms
+        flag = False
+        atoms = list(g.atoms(exp))
+        atoms += list(h.atoms(exp))
+        for atom in atoms:
+            for a in atom.args:
+                if a.is_imaginary:
+                    flag = True
+        if flag:
+            # to get soln in desired form  for 
+            # solveset((tan(x)-1).rewrite(exp), x, S.Reals)
+            # and these type of expressions, we need to
+            # make polynomial equation by replace I*symbol with dummy.
+            y = Dummy('y')
+            # make it independent from exp(I*symbol)
+            g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+            solns = _solveset(g, y, domain) - _solveset(h, y, domain)
+            if g.has(symbol) or h.has(symbol):
+                return ConditionSet(symbol, Eq(f, 0), S.Reals)
+            if isinstance(solns, FiniteSet):
+                result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+                       for s in solns])
+                return Intersection(result, domain)
+            elif solns is S.EmptySet:
+                return S.EmptySet
+            else:
+                return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+        else:
+            valid_solns = _solveset(g, symbol, domain)
+            invalid_solns = _solveset(h, symbol, domain)
+            return valid_solns - invalid_solns
 
+
+
+def _reduce_imageset(soln):
+    """
+    Try to reduce number of imageset in the solution.
+    Helper to _solve_trig method.
+    """
+    from sympy.polys import factor
+    from sympy.polys.polyfuncs import interpolate
+    soln_2pi = []
+    soln_list = []
+    soln_len = len(soln.args)
+    for i in range(0, soln_len):
+        soln_list.append(soln.args[i])
+    for s in soln_list:
+        lamb = s.args[0]
+        val = lamb(0)
+        soln_2pi.append(val)
+    n = Dummy('n', real =True)
+    equations = []
+    positive_eq = []
+    negative_eq = []
+    for j in range(0,len(soln_2pi)):
+        if soln_2pi[j]<0:
+            negative_eq.append(soln_2pi[j])
+        elif soln_2pi[j] > 0:
+            positive_eq.append(soln_2pi[j])
+    plen = len(positive_eq)
+    nlen = len(negative_eq)
+    if not (plen == 1 and nlen == 1):
+        positive_eq.sort()
+        negative_eq.sort()
+        negative_eq.reverse()
+        if not nlen == 1:
+            res1 = factor(interpolate(negative_eq, n))
+        else:
+            res1 = 2*n*pi + negative_eq[0]
+        equations = []
+        if not plen == 1:
+            res2 = factor(interpolate(positive_eq, n))
+        else:
+            res2 = 2*n*pi + positive_eq[0]
+        soln = Union(imageset(Lambda(n, res1), S.Integers),\
+         imageset(Lambda(n, res2), S.Integers))
+    return soln
 
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
-    f = trigsimp(f)
-    f_original = f
+    if _is_function_class_equation(TrigonometricFunction, f, symbol):
+        f = trigsimp(f)
+    # trigsimp is not defined for hyperbolic
+    # TODO trigh function for Hyperbolic Functions if required
+    f_orig = f
     f = f.rewrite(exp)
-    f = together(f)
-    g, h = fraction(f)
-    y = Dummy('y')
-    g, h = g.expand(), h.expand()
-    g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), S.Reals)
+    soln = solveset_complex(f, symbol)
 
-    solns = solveset_complex(g, y) - solveset_complex(h, y)
-
-    if isinstance(solns, FiniteSet):
-        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
-                       for s in solns])
-        return Intersection(result, domain)
-    elif solns is S.EmptySet:
-        return S.EmptySet
-    else:
-        return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
+    if isinstance(soln,Union) and all(isinstance(s, ImageSet) for s in soln.args):
+        soln = _reduce_imageset(soln)
+    if isinstance(soln, ConditionSet):
+        # try to solve without converting it into exp form
+        # TODO need more improvement here.
+        soln = _solve_as_poly(f_orig, symbol, domain)
+    return soln.intersection(domain) if domain.is_subset(S.Reals) else soln
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
