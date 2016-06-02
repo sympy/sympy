@@ -77,6 +77,7 @@ class FpGroup(Basic):
 # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
 # user definable.
 DefaultMaxLimit = 4000
+max_stack_size = 500
 
 class CosetTable(Basic):
     # coset_table: Mathematically a coset table
@@ -112,6 +113,7 @@ class CosetTable(Basic):
                 for gen in self.fp_group.generators))
         self.table = [[None]*len(self.A)]
         self.A_dict = {x: self.A.index(x) for x in self.A}
+        self.deduction_stack = []
 
     @property
     def omega(self):
@@ -152,8 +154,80 @@ class CosetTable(Basic):
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
+        self.deduction_stack.append((alpha, x))
         self.table[alpha][A.index(x)] = beta
         self.table[beta][A.index(x.inverse())] = alpha
+
+    def scan_f(self, alpha, word):
+        """
+        """
+        # alpha is an integer representing a "coset"
+        # since scanning can be in two cases
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in omega (set of live cosets), w in R (relators)
+        f = alpha
+        i = 0
+        r = len(word)
+        # list of union of generators and their inverses
+        A_dict = self.A_dict
+        while i < r and self.table[f][A_dict[word.subword(i, i+1)]] is not None:
+            f = self.table[f][A_dict[word.subword(i, i+1)]]
+            i += 1
+        # can this be replaced with i == r ?
+        if i >= r:
+            if f != alpha:
+                # implement the "coincidence" routine on Pg 158 of Handbook.
+                self.coincidence(f, alpha)
+                return
+        b = alpha
+        j = r - 1
+        while j >= i and self.table[b][A_dict[word.subword(j, j+1)**-1]] is not None:
+            b = self.table[b][A_dict[word.subword(j, j+1).inverse()]]
+            j -= 1
+        if j < i:
+            # we have an incorrect completed scan with coincidence f ~ b
+            # run the "coincidence" routine
+            # line: We assume that before each call of COINCIDENCE, for α ∈ [1..n],
+            # we have p[α]=α iff α ∈ Ω.
+            self.coincidence_f(f, b)
+        elif j == i:
+            # deduction process
+            self.table[f][A_dict[word.subword(i, i+1)]] = b
+            self.table[b][A_dict[word.subword(i, i+1).inverse()]] = f
+            self.deduction_stack.append((f, word.subword(i, i+1)))
+        # otherwise scan is incomplete and yields no information
+
+    # alpha, beta coincide
+    # here alpha, beta represent the pair of cosets where
+    # coincidence occurs
+    def coincidence_f(self, alpha, beta):
+        """
+        """
+        A_dict = self.A_dict
+        p = self.p
+        l = 0
+        # behaves as a queue
+        q = []
+        self.merge(alpha, beta, q)
+        while len(q) > 0:
+            gamma = q.pop(0)
+            # comment by Kalevi, this is already done by p[v] = mu
+            # del C[gamma]
+            # commenting this out
+            # omega = omega - set(gamma)
+            for x in A_dict:
+                delta = self.table[gamma][A_dict[x]]
+                if delta is not None:
+                    self.table[delta][A_dict[x**-1]] = None
+                    mu = self.rep(gamma)
+                    nu = self.rep(delta)
+                    if self.table[mu][A_dict[x]] is not None:
+                        self.merge(nu, self.table[mu][A_dict[x]], q)
+                    elif self.table[nu][A_dict[x**-1]] is not None:
+                        self.merge(mu, self.table[nu][A_dict[x**-1]], q)
+                    else:
+                        self.table[mu][A_dict[x]] = nu
+                        self.table[nu][A_dict[x**-1]] = mu
 
     def scan(self, alpha, word):
         """
@@ -290,6 +364,41 @@ class CosetTable(Basic):
             # loop until it has filled the alpha row in the table.
             i_A += 1
 
+    # method used in the HLT strategy
+    def scan_and_fill_f(self, alpha, word):
+        f = alpha
+        i = 0
+        r = len(word)
+        A_dict = self.A_dict
+        l_A = len(A_dict)
+        i_A = 0
+        while i_A < l_A:
+            # do the forward scanning
+            while i < r and self.table[f][A_dict[word.subword(i, i+1)]] is not None:
+                f = self.table[f][A_dict[word.subword(i, i+1)]]
+                i += 1
+            if i >= r:
+                if f != alpha:
+                    self.coincidence_f(f, alpha)
+                    return
+            # forward scan was incomplete, scan backwards
+            b = alpha
+            j = r - 1
+            while j >= i and self.table[b][A_dict[word.subword(j, j+1)**-1]] is not None:
+                b = self.table[b][A_dict[word.subword(j, j+1)**-1]]
+                j -= 1
+            if j < i:
+                self.coincidence_f(f, b)
+            elif j == i:
+                self.deduction_stack.append((f, word.subword(i, i+1)))
+                self.table[f][A_dict[word.subword(i, i+1)]] = b
+                self.table[b][A_dict[word.subword(i, i+1)**-1]] = f
+            else:
+                self.deduction_stack.append((f, word.subword(i, i+1)))
+                self.define_f(f, word.subword(i, i+1))
+            # loop until it has filled the alpha row in the table.
+            i_A += 1
+
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
@@ -303,25 +412,23 @@ class CosetTable(Basic):
                         continue
 
     # Pg. 166
-    def process_deductions(self, R_c_x):
-        deduction_stack = []
-        max_stack_size = 500
+    def process_deductions(self, R_c_x, R_c_x_inv):
         p = self.p
-        while len(deduction_stack) > 0:
-            if len(deduction_stack) <= max_stack_size:
-                self.lookahead(R_c_x)
-                del deduction_stack
+        while len(self.deduction_stack) > 0:
+            if len(self.deduction_stack) >= max_stack_size:
+                self.lookahead()
+                del self.deduction_stack[:]
             else:
-                deduction_stack.pop((alpha, x))
+                alpha, x = self.deduction_stack.pop()
                 if p[alpha] == alpha:
-                    for w in R_c:
-                        self.scan(alpha, w)
+                    for w in R_c_x:
+                        self.scan_f(alpha, w)
                         if p[alpha] < alpha:
                             break
-            beta = self.table[alpha][x]
+            beta = self.table[alpha][self.A.index(x)]
             if p[beta] == beta:
                 for w in R_c_x_inv:
-                    self.scan(beta, w)
+                    self.scan_f(beta, w)
                     if p[beta] < beta:
                         break
 
@@ -556,11 +663,12 @@ def coset_enumeration_r(fp_grp, Y):
 # Pg. 166
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y):
-    # Usual practise with Felsch method is to
-    # 1. Initialize a coset table C for < X|R >
+    # Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
     R = fp_grp.relators()
+    A = C.A
+    # replace all the elements by cyclic reductions
     R_cyc_red = [rel.identity_cyclic_reduction() for rel in R]
     R_c = list(chain.from_iterable((rel.cyclic_conjugates(), (rel**-1).cyclic_conjugates()) \
             for rel in R_cyc_red))
@@ -568,27 +676,22 @@ def coset_enumeration_c(fp_grp, Y):
     for conjugate in R_c:
         R_set = R_set.union(conjugate)
     # denotes subset of R_c whose words start with "x".
-    R_c_x = []
+    R_c_list = []
     # TODO
     # the method of removing the corresponding element from R_set cotaining "x"
     # would work better, since that would continuously reduce the size of R_set
     for x in C.A:
-        R_c_x.append(set([word for word in R_set if word.subword(0, 1) == x]))
-    # Usual practise with Felsch method is to start by calling SCAN_AND_FILL
-    # for the trivial coset, ∀ w ∈ Y.
+        R_c_list.append(set([word for word in R_set if word.subword(0, 1) == x]))
     for w in Y:
-        C.scan_and_fill(0, w)
-    # The code of procedures DEFINE, SCAN and COINCIDENCE are first modified
-    # such that each time the value of α^x is defined or altered for any α and
-    # x, the pair (α,x) is pushed onto this deduction stack.
-    for x in range(len(C.A)):
-        C.process_deductions(R_c_x[x])
-    for alpha in range(len(C.p)):
-        if C.p[alpha] == alpha:
-            for x in range(len(C.A)):
-                if C.table[alpha][x] is None:
-                    C.define(alpha, x)
-                    C.process_deductions(R_c_x[A.index(x)])
+        C.scan_and_fill_f(0, w)
+    #return C.table, C.deduction_stack
+    for x in C.A:
+        C.process_deductions(R_c_list[A.index(x)], R_c_list[A.index(x**-1)])
+    for alpha in C.omega:
+        for x in range(len(C.A)):
+            if C.table[alpha][x] is None:
+                C.define_f(alpha, x)
+                C.process_deductions(R_c_x[A.index(x)])
     return C
 
 

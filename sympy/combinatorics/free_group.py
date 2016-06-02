@@ -940,6 +940,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return True
         return sign(self.exponent_syllable(0)) == sign(self.exponent_syllable(-1))
 
+    #TODO: should be moved to FpGroupElement
     def identity_cyclic_reduction(self):
         """Return a unique cyclically reduced version of the word.
 
