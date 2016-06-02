@@ -361,6 +361,7 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
+    from sympy.core import expand_log
     f = together(f, deep=True)
     g, h = fraction(f)
     g, h = g.expand(), h.expand()
@@ -372,11 +373,11 @@ def _solve_as_rational(f, symbol, domain):
         atoms = list(g.atoms(exp))
         atoms += list(h.atoms(exp))
         for atom in atoms:
-            for a in atom.args:
-                if a.is_imaginary:
+            for img in expand_log(atom, force=True).atoms(I):
+                if img:
                     flag = True
         if flag:
-            # to get soln in desired form  for 
+            # to get soln in desired form  for
             # solveset((tan(x)-1).rewrite(exp), x, S.Reals)
             # and these type of expressions, we need to
             # make polynomial equation by replace I*symbol with dummy.
@@ -428,21 +429,31 @@ def _reduce_imageset(soln):
             positive_eq.append(soln_2pi[j])
     plen = len(positive_eq)
     nlen = len(negative_eq)
+    new_soln = None
     if not (plen == 1 and nlen == 1):
         positive_eq.sort()
         negative_eq.sort()
         negative_eq.reverse()
-        if not nlen == 1:
+        if nlen > 1:
             res1 = factor(interpolate(negative_eq, n))
-        else:
+            new_soln = imageset(Lambda(n, res1), S.Integers)
+        elif nlen == 1:
             res1 = 2*n*pi + negative_eq[0]
-        equations = []
-        if not plen == 1:
+            new_soln = imageset(Lambda(n, res1), S.Integers)
+
+        if plen > 1:
             res2 = factor(interpolate(positive_eq, n))
-        else:
+            if not new_soln is None:
+                new_soln += imageset(Lambda(n, res2), S.Integers)
+            else:
+                new_soln = imageset(Lambda(n, res2), S.Integers)
+        elif plen == 1:
             res2 = 2*n*pi + positive_eq[0]
-        soln = Union(imageset(Lambda(n, res1), S.Integers),\
-         imageset(Lambda(n, res2), S.Integers))
+            if not new_soln is None:
+                new_soln += imageset(Lambda(n, res2), S.Integers)
+            else:
+                new_soln = imageset(Lambda(n, res2), S.Integers)
+        soln = new_soln
     return soln
 
 def _solve_trig(f, symbol, domain):
@@ -872,11 +883,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
+    {n*pi | n in Integers()} \ {0}
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+    {n*pi | n in Integers()}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
