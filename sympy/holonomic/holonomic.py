@@ -12,7 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.polys.domains import QQ, ZZ
 from sympy.polys.domains.pythonrational import PythonRational
 from sympy.simplify.hyperexpand import hyperexpand
-from sympy.functions.special.hyper import hyper
+from sympy.functions.special.hyper import hyper, meijerg
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
@@ -346,13 +346,17 @@ def _normalize(list_of, parent, negative=True):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
             list_of_coeff.append(j)
+
         num.append(base(list_of_coeff[i].num))
         den = list_of_coeff[i].den
+
         if isinstance(den[0], PythonRational):
             for i, j in enumerate(den):
                 den[i] = j.p
+
         denom.append(R(den))
 
+    # lcm of denominators in the coefficients
     for i in denom:
         lcm_denom = i.lcm(lcm_denom)
 
@@ -361,13 +365,19 @@ def _normalize(list_of, parent, negative=True):
 
     lcm_denom = K.new(lcm_denom.rep)
 
+    # multiply the coefficients with lcm
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = j * lcm_denom
 
     gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
+
+    # gcd of numerators in the coefficients
     for i in num:
         gcd_numer = i.gcd(gcd_numer)
+
     gcd_numer = K.new(gcd_numer.rep)
+
+    # divide all the coefficients by the gcd
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = base.from_FractionField(j / gcd_numer, K)
 
@@ -543,7 +553,7 @@ class HolonomicFunction(object):
             sol = solcomp[0]
 
         # taking only the coefficients needed to multiply with `self`
-        # can be also be done the other way by taking R.H.S and multiply with
+        # can be also be done the other way by taking R.H.S and multiplying with
         # `other`
         sol = sol[:dim + 1 - deg1]
         sol1 = _normalize(sol, self.annihilator.parent)
@@ -589,6 +599,7 @@ class HolonomicFunction(object):
         D = self.annihilator.parent.derivative_operator
         if (not args) or (not self._have_init_cond):
             return HolonomicFunction(self.annihilator * D, self.x)
+
         # definite integral if limits are (x0, x)
         if len(args) == 1 and len(args[0]) == 3 and args[0][1] == self.x0 and args[0][2] == self.x:
             y0 = [S(0)]
@@ -640,26 +651,27 @@ class HolonomicFunction(object):
 
         for j in ann_other.listofpoly:
             list_other.append(K.new(j.rep))
-        # will be used to reduce the degree
-        self_red = [-list_self[i] / list_self[a]
-                    for i in range(a)]
 
-        other_red = [-list_other[i] / list_other[b]
-                     for i in range(b)]
+        # will be used to reduce the degree
+        self_red = [-list_self[i] / list_self[a] for i in range(a)]
+
+        other_red = [-list_other[i] / list_other[b] for i in range(b)]
+
         # coeff_mull[i][j] is the coefficient of Dx^i(f).Dx^j(g)
-        coeff_mul = [[S(0) for i in range(b + 1)]
-                     for j in range(a + 1)]
+        coeff_mul = [[S(0) for i in range(b + 1)] for j in range(a + 1)]
         coeff_mul[0][0] = S(1)
+
         # making the ansatz
-        lin_sys = [[coeff_mul[i][j]
-                    for i in range(a) for j in range(b)]]
+        lin_sys = [[coeff_mul[i][j] for i in range(a) for j in range(b)]]
 
         homo_sys = [[S(0) for q in range(a * b)]]
         homo_sys = NewMatrix(homo_sys).transpose()
 
         sol = (NewMatrix(lin_sys).transpose()).gauss_jordan_solve(homo_sys)
+
         # until a non trivial solution is found
         while sol[0].is_zero:
+
             # updating the coefficents Dx^i(f).Dx^j(g) for next degree
             for i in range(a - 1, -1, -1):
                 for j in range(b - 1, -1, -1):
@@ -669,6 +681,7 @@ class HolonomicFunction(object):
                         coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
                     else:
                         coeff_mul[i][j] = coeff_mul[i][j].diff()
+
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
                 if not coeff_mul[i][b] == S(0):
@@ -1075,6 +1088,79 @@ def from_hyper(func, x0=0, evalf=False):
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
     if isinstance(simp, hyper):
+        x0 = 1
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        return HolonomicFunction(sol, x).composition(z, x0, y0)
+
+    return HolonomicFunction(sol, x).composition(z)
+
+
+def from_meijerg(func, x0=0, evalf=False):
+    """
+    Converts a Meijer-G function to Holonomic.
+    func is the Hypergeometric Function and x0 be the point at
+    which initial conditions are required.
+
+    Examples
+    =======
+
+    >>> from sympy.holonomic.holonomic import from_meijerg, DifferentialOperators
+    >>> from sympy import symbols, meijerg, S
+    >>> x = symbols('x')
+    >>> from_meijerg(meijerg(([], []), ([S(1)/2], [0]), x**2/4))
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1/sqrt(pi)
+    """
+
+    a = func.ap
+    b = func.bq
+    n = len(func.an)
+    m = len(func.bm)
+    p = len(a)
+    z = func.args[2]
+    x = z.atoms(Symbol).pop()
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    mnp = (-1)**(m + n - p)
+    r1 = x * mnp
+
+    for i in range(len(a)):
+        r1 *= x * Dx + 1 - a[i]
+
+    r2 = 1
+
+    for i in range(len(b)):
+        r2 *= x * Dx - b[i]
+
+    sol = r1 - r2
+
+    simp = hyperexpand(func)
+
+    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+        return HolonomicFunction(sol, x).composition(z)
+
+    def _find_conditions(simp, x, x0, order, evalf=False):
+        y0 = []
+        for i in range(order):
+            if evalf:
+                val = simp.subs(x, x0).evalf()
+            else:
+                val = simp.subs(x, x0)
+            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+                return None
+            y0.append(val)
+            simp = simp.diff()
+        return y0
+
+    if not isinstance(simp, meijerg):
+        y0 = _find_conditions(simp, x, x0, sol.order)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditions(simp, x, x0, sol.order)
+
+        return HolonomicFunction(sol, x).composition(z, x0, y0)
+    if isinstance(simp, meijerg):
         x0 = 1
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
