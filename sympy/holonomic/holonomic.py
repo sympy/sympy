@@ -1236,3 +1236,42 @@ def DMFsubs(frac, x0):
             j = sympify(j)
         sol_q += j * x0**i
     return sol_p / sol_q
+
+
+def from_sympy(func):
+    from sympy import meijerint
+    from sympy.functions.elementary.exponential import exp_polar, exp
+    x = func.atoms(Symbol).pop()
+    args = meijerint._rewrite1(func, x)
+    if args:
+        fac, po, g, _ = args
+    else:
+        return None
+    fac_list = [fac * i[0] for i in g]
+    t = po.as_base_exp()
+    s = t[1] if t[0] is x else S(0)
+    po_list = [s + i[1] for i in g]
+    G_list = [i[2] for i in g]
+    def _shift(func, s):
+        z = func.args[-1]
+        d = z.collect(x, evaluate=False)
+        b = d.keys()[0]
+        a = d[b]
+        if isinstance(a, exp_polar):
+            a = exp(a.as_base_exp()[1])
+            z = a * b
+        t = b.as_base_exp()
+        b = t[1] if t[0] is x else S(0)
+        r = s / b
+        an = (i + r for i in func.args[0][0])
+        ap = (i + r for i in func.args[0][1])
+        bm = (i + r for i in func.args[1][0])
+        bq = (i + r for i in func.args[1][1])
+        return a**-r, meijerg((an, ap), (bm, bq), z)
+
+    coeff, m = _shift(G_list[0], po_list[0])
+    sol = fac_list[0] * coeff * from_meijerg(m)
+    for i in range(1, len(G_list)):
+        coeff, m = _shift(G_list[i], po_list[i])
+        sol += fac_list[i] * coeff * from_meijerg(m)
+    return sol
