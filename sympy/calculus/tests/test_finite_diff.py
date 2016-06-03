@@ -176,6 +176,12 @@ def test_as_finite_diff():
             (2*h)**-3 * (f(x + 5*h)-f(x-h) +
                          3*(f(x+h)-f(x + 3*h)))).simplify() == 0
     #issue 11007
-    f = Function('f')(x, h)
-    d2fdxdh = f.diff(x).diff(h)
-    assert str(as_finite_diff(d2fdxdh, wrt=x)) == '-Derivative(f(x - 1/2, h), h) + Derivative(f(x + 1/2, h), h)'
+    f = Function('f')
+    g = Function('g')
+    d2fdxdh = f(x,h).diff(x).diff(h)
+    dfgdx = (f(x)*g(x)).diff(x)
+    
+    assert (as_finite_diff(d2fdxdh, wrt=x) + Derivative(f(x - S(1)/2, h), h) -
+            Derivative(f(x + S(1)/2, h), h)).simplify() == 0
+    assert(as_finite_diff(dfgdx, wrt=x) - ((-f(x - S(1)/2) + f(x + S(1)/2))*g(x) +
+            (-g(x - S(1)/2) + g(x + S(1)/2))*f(x))).simplify() == 0
