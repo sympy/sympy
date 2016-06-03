@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order, rf
+from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -17,6 +17,7 @@ from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
+from sympy.functions.elementary.exponential import exp_polar, exp
 
 
 def DifferentialOperators(base, generator):
@@ -1122,6 +1123,9 @@ def from_meijerg(func, x0=0, evalf=False):
     z = func.args[2]
     x = z.atoms(Symbol).pop()
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+
+    # compute the differential equation satisfied by the
+    # Meijer G-function.
     mnp = (-1)**(m + n - p)
     r1 = x * mnp
 
@@ -1153,6 +1157,7 @@ def from_meijerg(func, x0=0, evalf=False):
             simp = simp.diff()
         return y0
 
+    # computing initial conditions
     if not isinstance(simp, meijerg):
         y0 = _find_conditions(simp, x, x0, sol.order)
         while not y0:
@@ -1160,12 +1165,14 @@ def from_meijerg(func, x0=0, evalf=False):
             y0 = _find_conditions(simp, x, x0, sol.order)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
+
     if isinstance(simp, meijerg):
         x0 = 1
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
             x0 += 1
             y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     return HolonomicFunction(sol, x).composition(z)
@@ -1211,6 +1218,7 @@ def DMFdiff(frac):
     # differentiate a p/q DMF object
     if not isinstance(frac, DMF):
         return frac.diff()
+
     K = frac.ring
     p = K.numer(frac)
     q = K.denom(frac)
@@ -1223,43 +1231,75 @@ def DMFsubs(frac, x0):
     # substitute the point x0 in DMF object of the form p/q
     if not isinstance(frac, DMF):
         return frac
+
     p = frac.num
     q = frac.den
     sol_p = S(0)
     sol_q = S(0)
+
     for i, j in enumerate(reversed(p)):
         if isinstance(j, PythonRational):
             j = sympify(j)
         sol_p += j * x0**i
+
     for i, j in enumerate(reversed(q)):
         if isinstance(j, PythonRational):
             j = sympify(j)
         sol_q += j * x0**i
+
     return sol_p / sol_q
 
 
 def from_sympy(func):
-    from sympy import meijerint
-    from sympy.functions.elementary.exponential import exp_polar, exp
+    """
+    Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
+    to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
+    representation of the function provided.
+
+    Examples
+    ========
+
+    >>> from sympy.holonomic.holonomic import from_sympy
+    >>> from sympy import sin, exp, symbols
+    >>> x = symbols('x')
+    >>> from_sympy(sin(x))
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+
+    >>> from_sympy(exp(x))
+    HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
+
+    See Also
+    ========
+
+    meijerint._rewrite1
+    """
+
     x = func.atoms(Symbol).pop()
     args = meijerint._rewrite1(func, x)
+
     if args:
         fac, po, g, _ = args
     else:
         return None
+
+    # lists for sum of meijerg functions
     fac_list = [fac * i[0] for i in g]
     t = po.as_base_exp()
     s = t[1] if t[0] is x else S(0)
     po_list = [s + i[1] for i in g]
     G_list = [i[2] for i in g]
+
+    # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
     def _shift(func, s):
         z = func.args[-1]
         d = z.collect(x, evaluate=False)
         b = d.keys()[0]
         a = d[b]
+
         if isinstance(a, exp_polar):
             a = exp(a.as_base_exp()[1])
             z = a * b
+
         t = b.as_base_exp()
         b = t[1] if t[0] is x else S(0)
         r = s / b
@@ -1267,11 +1307,15 @@ def from_sympy(func):
         ap = (i + r for i in func.args[0][1])
         bm = (i + r for i in func.args[1][0])
         bq = (i + r for i in func.args[1][1])
+
         return a**-r, meijerg((an, ap), (bm, bq), z)
 
     coeff, m = _shift(G_list[0], po_list[0])
     sol = fac_list[0] * coeff * from_meijerg(m)
+
+    # add all the meijerg functions after converting to holonomic
     for i in range(1, len(G_list)):
         coeff, m = _shift(G_list[i], po_list[i])
         sol += fac_list[i] * coeff * from_meijerg(m)
+
     return sol
