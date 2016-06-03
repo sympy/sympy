@@ -1315,7 +1315,7 @@ def from_sympy(func):
     def _shift(func, s):
         z = func.args[-1]
         d = z.collect(x, evaluate=False)
-        b = d.keys()[0]
+        b = list(d)[0]
         a = d[b]
 
         if isinstance(a, exp_polar):
