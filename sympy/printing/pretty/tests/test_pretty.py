@@ -13,7 +13,7 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 
@@ -4375,6 +4375,15 @@ def test_gammas():
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+
+
+def test_deltas():
+    assert xpretty(DiracDelta(x), use_unicode=True) == u'δ(x)'
+    assert xpretty(DiracDelta(x, 1), use_unicode=True) == \
+u("""\
+ (1)    \n\
+δ    (x)\
+""")
 
 
 def test_hyper():
