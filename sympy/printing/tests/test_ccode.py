@@ -247,7 +247,7 @@ def test_ccode_loops_matrix_vector():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = A[%s]*x[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -287,7 +287,7 @@ def test_ccode_loops_add():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = A[%s]*x[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -315,7 +315,7 @@ def test_ccode_loops_multiple_contractions():
         '   for (int j=0; j<n; j++){\n'
         '      for (int k=0; k<o; k++){\n'
         '         for (int l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        '            y[i] = a[%s]*b[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -385,14 +385,14 @@ def test_ccode_loops_multiple_terms():
     s2 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
+        '      y[i] = a[%s]*b[k] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = a[%s]*b[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )
