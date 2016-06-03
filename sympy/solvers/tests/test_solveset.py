@@ -717,7 +717,7 @@ def test_solve_trig():
     assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
     assert solveset_real(tan(x), x) == \
-        imageset(Lambda(n, 2*n*pi + pi), S.Integers)
+        imageset(Lambda(n, pi*(n - 1)), S.Integers)
     assert solveset_real(tan(x) - 1, x) == \
         imageset(Lambda(n, pi*(4*n - 3)/4), S.Integers)
 
@@ -1503,8 +1503,9 @@ def test_issue_9531_and_9606():
 
 
 def test_issue_7914():
+    n = Dummy('n' ,real = True)
     assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1, x) ==\
-    ImageSet(Lambda(n, pi*(4*n - 3)/6), S.Integers) + ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
+    ImageSet(Lambda(n, pi*(4*n - 3)/6), S.Integers) + ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers)
 
 
 def test_issue_10671():
@@ -1513,6 +1514,6 @@ def test_issue_10671():
 
 
 def test_simplifed_trig_solution():
-    assert solveset(cos(x) + cos(3*x) + cos(5*x),x,S.Reals) == \
+    assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == \
     ImageSet(Lambda(n, n*pi/6), S.Integers)
 

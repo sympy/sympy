@@ -426,23 +426,35 @@ def _reduce_imageset(soln):
     """
     from sympy.polys import factor
     from sympy.polys.polyfuncs import interpolate
+    # solution within 2*pi
     soln_2pi = []
+    # soln list
     soln_list = []
+    # number of imageset
     soln_len = len(soln.args)
+    # principle value and it's extended from
+    soln_extended = {}
     for i in range(0, soln_len):
+        # list of imageset
         soln_list.append(soln.args[i])
     for s in soln_list:
+        # lambda expression
         lamb = s.args[0]
+        # value
         val = lamb(0)
         soln_2pi.append(val)
+        # stroing it's extended form
+        # to put as it is if can't simplify
+        soln_extended[val] = s.lamda.expr
+
     n = Dummy('n', real =True)
     equations = []
     positive_eq = []
     negative_eq = []
     for j in range(0,len(soln_2pi)):
-        if soln_2pi[j]<0:
+        if soln_2pi[j] < 0:
             negative_eq.append(soln_2pi[j])
-        elif soln_2pi[j] > 0:
+        elif soln_2pi[j] >= 0:
             positive_eq.append(soln_2pi[j])
     plen = len(positive_eq)
     nlen = len(negative_eq)
@@ -453,23 +465,23 @@ def _reduce_imageset(soln):
         negative_eq.reverse()
         if nlen > 1:
             res1 = factor(interpolate(negative_eq, n))
-            new_soln = imageset(Lambda(n, res1), S.Integers)
+            new_soln = ImageSet(Lambda(n, res1), S.Integers)
         elif nlen == 1:
-            res1 = 2*n*pi + negative_eq[0]
-            new_soln = imageset(Lambda(n, res1), S.Integers)
+            res1 = soln_extended[negative_eq[0]]
+            new_soln = ImageSet(Lambda(n, res1), S.Integers)
 
         if plen > 1:
             res2 = factor(interpolate(positive_eq, n))
             if not new_soln is None:
-                new_soln += imageset(Lambda(n, res2), S.Integers)
+                new_soln += ImageSet(Lambda(n, res2), S.Integers)
             else:
-                new_soln = imageset(Lambda(n, res2), S.Integers)
+                new_soln = ImageSet(Lambda(n, res2), S.Integers)
         elif plen == 1:
-            res2 = 2*n*pi + positive_eq[0]
+            res2 = soln_extended[positive_eq[0]]
             if not new_soln is None:
-                new_soln += imageset(Lambda(n, res2), S.Integers)
+                new_soln += ImageSet(Lambda(n, res2), S.Integers)
             else:
-                new_soln = imageset(Lambda(n, res2), S.Integers)
+                new_soln = ImageSet(Lambda(n, res2), S.Integers)
         soln = new_soln
     return soln
 
