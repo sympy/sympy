@@ -1171,9 +1171,17 @@ class PrettyPrinter(Printer):
 
     def _print_DiracDelta(self, e):
         if self._use_unicode:
-            pform = self._print(e.args[0])
             if len(e.args) == 2:
-                pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
+                a = prettyForm(greek_unicode['delta'])
+                b = self._print(e.args[1])
+                b = prettyForm(*b.parens())
+                c = self._print(e.args[0])
+                c = prettyForm(*c.parens())
+                pform = a**b
+                pform = stringPict(*pform.right(' '))
+                pform = stringPict(*pform.right(c))
+                return pform
+            pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
             pform = prettyForm(*pform.left(greek_unicode['delta']))
             return pform

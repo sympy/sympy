@@ -4379,7 +4379,11 @@ def test_gammas():
 
 def test_deltas():
     assert xpretty(DiracDelta(x), use_unicode=True) == u'δ(x)'
-    assert xpretty(DiracDelta(x, 1), use_unicode=True) == u'δ(x, 1)'
+    assert xpretty(DiracDelta(x, 1), use_unicode=True) == \
+u("""\
+ (1)    \n\
+δ    (x)\
+""")
 
 
 def test_hyper():
