@@ -17,7 +17,7 @@ Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490.
 
 
 def test_scan_2():
-    # Example 5.1 [1]
+    # Example 5.1 from [1]
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     c = CosetTable(f, [x])
@@ -67,7 +67,7 @@ def test_scan_2():
     assert c.n == 3
     assert c.omega == [0, 1, 2]
 
-    # Example 5.2 [1]
+    # Example 5.2 from [1]
     f = FpGroup(F, [x**2, y**3, (x*y)**3])
     c = CosetTable(f, [x*y])
 
@@ -121,7 +121,7 @@ def test_scan_2():
 
 
 def test_HLT_method():
-    # Example 5.1 [1]
+    # Example 5.1 from [1]
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     C = coset_enumeration_r(f, [x])
@@ -130,7 +130,7 @@ def test_HLT_method():
         if C.p[i] == i:
             assert C.table[i] == c_1[i]
 
-    # Group denoted by E₁
+    # E₁ from [2] Pg. 474
     F, r, s, t = free_group("r, s, t")
     E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
     C = coset_enumeration_r(E1, [r])
@@ -139,7 +139,7 @@ def test_HLT_method():
         if C.p[i] == i:
             C.table[i] == c_E1[i]
 
-    # Group denoted by Cox
+    # Cox group from [2] Pg. 474
     F, a, b = free_group("a, b")
     Cox = FpGroup(F, [a**6, b**6, (a*b)**2, (a**2*b**2)**2, (a**3*b**3)**5])
     C = coset_enumeration_r(Cox, [a])
@@ -646,7 +646,7 @@ def test_HLT_method():
                        [460, 489, 329, 329],
                        [472, 472, 471, 491]]
 
-    # Group denoted by B₁,₂
+    # Group denoted by B₂,₄ from [2] Pg. 474
     F, a, b = free_group("a, b")
     B_2_4 = FpGroup(F, [a**4, b**4, (a*b)**4, (a**-1*b)**4, (a**2*b)**4, (a*b**2)**4, (a**2*b**2)**4, (a**-1*b*a*b)**4, (a*b**-1*a*b)**4])
     C = coset_enumeration_r(B_2_4, [a])
@@ -655,3 +655,10 @@ def test_HLT_method():
         if C.p[i] == i:
             index_b_2_4 += 1
     assert index_b_2_4 == 1024
+
+    # trivial Macdonald group G(2,2) from [2] Pg. 480
+    M = FpGroup(F, [b**-1*a**-1*b*a*b**-1*a*b*a**-2, a**-1*b**-1*a*b*a**-1*b*a*b**-2])
+    C = coset_enumeration_r(M, [a])
+    C.compress()
+    C.standardize()
+    assert C.table == [[0, 0, 0, 0]]

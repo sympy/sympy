@@ -174,9 +174,6 @@ class FreeGroup(DefaultPrinting):
             gens.append(group.dtype(elm))
         return tuple(gens)
 
-    def __getitem__(self, i):
-        return self.generators[i]
-
     def clone(self, symbols=None):
         return self.__class__(symbols or self.symbols)
 
@@ -415,9 +412,24 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         array_form
 
         """
-        symbols = self.group.symbols
         return tuple(flatten([(i,)*j if j > 0 else (-i,)*(-j)
-                        for i, j in self.array_form]))
+                    for i, j in self.array_form]))
+
+    def __getitem__(self, i):
+        group = self.group
+        r = self.letter_form[i]
+        if r.is_Symbol:
+            return group.dtype(((r, 1),))
+        else:
+            return group.dtype(((-r, -1),))
+
+    @property
+    def letter_form_elm(self):
+        """
+        """
+        group = self.group
+        r = self.letter_form
+        return [group.dtype(((elm,1),)) if elm.is_Symbol else group.dtype(((-elm,-1),)) for elm in r]
 
     @property
     def ext_rep(self):
