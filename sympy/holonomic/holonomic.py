@@ -570,7 +570,9 @@ class HolonomicFunction(object):
                 y0 = [a + b for a, b in zip(y0_self, y0_other)]
                 return HolonomicFunction(sol, self.x, self.x0, y0)
             else:
-                raise NotImplementedError
+                # initial conditions for different points
+                # to be implemented
+                pass
 
         return HolonomicFunction(sol, self.x)
 

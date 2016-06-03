@@ -1,6 +1,7 @@
-from sympy.holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper, from_meijerg
+from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
+    DifferentialOperators, from_hyper, from_meijerg, from_sympy)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O, I, meijerg
+from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O, I, meijerg, sin, cos
 from sympy import ZZ, QQ
 
 
@@ -270,3 +271,15 @@ def test_evalf():
     p = HolonomicFunction(Dx**2 + 1, x, 0, [1,1]).evalf(r)
     s = '0.501421652861245 - 3.88578058618805e-16*I'
     assert sstr(p[-1]) == s
+
+def test_from_sympy():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    p = from_sympy((sin(x)/x)**2)
+    q = HolonomicFunction(24*x + (24*x**2 + 12)*Dx + (4*x**3 + 24*x)*Dx**2 + \
+        10*x**2*Dx**3 + x**3*Dx**4, x, 1, [-cos(2)/2 + 1/2, -1 + cos(2) + sin(2), \
+        -4*sin(2) - cos(2) + 3, -12 + 14*sin(2)])
+    assert p == q
+    p = from_sympy(1/(1+x**2)**2)
+    q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, 1)
+    assert p == q
