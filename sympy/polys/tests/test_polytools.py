@@ -3030,6 +3030,9 @@ def test_is_zero_dimensional():
     F = [x**2 - 2*x*z + 5, x*y**2 + y*z**3, 3*y**2 - 8*z**2]
     assert is_zero_dimensional(F, x, y, z) is True
 
+    F = [x**2 + 2/y - 2, x + y - 3]
+    assert is_zero_dimensional(F) is True
+
 
 def test_GroebnerBasis():
     F = [x*y - 2*y, 2*y**2 - x**2]
