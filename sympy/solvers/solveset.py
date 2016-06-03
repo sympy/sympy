@@ -406,6 +406,23 @@ def _reduce_imageset(soln):
     """
     Try to reduce number of imageset in the solution.
     Helper to _solve_trig method.
+
+    It first extract the expression of imageset and
+    sort the negative and positive expression.
+    Now using interpolate defined in polys/polyfuncs.py
+    generates a function on `n`, which can return all the
+    expression.
+
+    Parameters
+    ==========
+
+    soln : trigonometric equation solution having imageset(s)
+
+    Returns
+    =======
+
+    It returns simplified imageset if possible.
+
     """
     from sympy.polys import factor
     from sympy.polys.polyfuncs import interpolate
@@ -467,7 +484,11 @@ def _solve_trig(f, symbol, domain):
     soln = solveset_complex(f, symbol)
 
     if isinstance(soln,Union) and all(isinstance(s, ImageSet) for s in soln.args):
-        soln = _reduce_imageset(soln)
+        try:
+            soln = _reduce_imageset(soln)
+        except:
+            pass
+
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form
         # TODO need more improvement here.
