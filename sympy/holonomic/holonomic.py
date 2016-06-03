@@ -186,8 +186,8 @@ class DifferentialOperator(object):
                 listofother = [other]
         else:
             listofother = other.listofpoly
-        # multiply a polynomial `b` with a list of polynomials
 
+        # multiplies a polynomial `b` with a list of polynomials
         def _mul_dmp_diffop(b, listofother):
             if isinstance(listofother, list):
                 sol = []
@@ -271,15 +271,16 @@ class DifferentialOperator(object):
             return self
         if n == 0:
             return DifferentialOperator([self.parent.base.one], self.parent)
+
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
             sol = []
             for i in range(0, n):
                 sol.append(self.parent.base.zero)
             sol.append(self.parent.base.one)
-
             return DifferentialOperator(sol, self.parent)
 
+        # the general case
         else:
             if n % 2 == 1:
                 powreduce = self**(n - 1)
@@ -342,15 +343,19 @@ def _normalize(list_of, parent, negative=True):
     lcm_denom = R.from_sympy(S(1))
     list_of_coeff = []
 
+    # convert polynomials to the elements of associated
+    # fraction field
     for i, j in enumerate(list_of):
         if not isinstance(j, K.dtype):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
             list_of_coeff.append(j)
 
+        # corresponding numerators of the sequence of polynomials
         num.append(base(list_of_coeff[i].num))
-        den = list_of_coeff[i].den
 
+        # corresponding denominators
+        den = list_of_coeff[i].den
         if isinstance(den[0], PythonRational):
             for i, j in enumerate(den):
                 den[i] = j.p
@@ -821,6 +826,7 @@ class HolonomicFunction(object):
         sol = sol.subs(tau, 1)
         sol = _normalize(sol[0:], R, negative=False)
 
+        # if initial conditions are given for the resulting function
         if args:
             return HolonomicFunction(sol, self.x, args[0], args[1])
         return HolonomicFunction(sol, self.x)
@@ -952,6 +958,7 @@ class HolonomicFunction(object):
         if l + 1 >= n:
             pass
         else:
+            # use the initial conditions to find the next term
             for i in range(l + 1 - k, n - k):
                 coeff = S(0)
                 for j in range(k):
@@ -971,6 +978,9 @@ class HolonomicFunction(object):
             return ser
 
     def _indicial(self):
+        """Computes the roots of Indicial equation.
+        """
+
         list_coeff = self.annihilator.listofpoly
         R = self.annihilator.parent.base
         x = self.x
@@ -1057,6 +1067,8 @@ def from_hyper(func, x0=0, evalf=False):
     z = func.args[2]
     x = z.atoms(Symbol).pop()
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+
+    # generalized hypergeometric differential equation
     r1 = 1
     for i in range(len(a)):
         r1 = r1 * (x * Dx + a[i])
@@ -1077,21 +1089,28 @@ def from_hyper(func, x0=0, evalf=False):
                 val = simp.subs(x, x0).evalf()
             else:
                 val = simp.subs(x, x0)
+            # return None if it is Infinite or NaN
             if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff()
         return y0
 
+    # if the function is known symbolically
     if not isinstance(simp, hyper):
         y0 = _find_conditions(simp, x, x0, sol.order)
         while not y0:
+            # if values don't exist at 0, then try to find initial
+            # conditions at 1. If it doesn't exist at 1 too then
+            # try 2 and so on.
             x0 += 1
             y0 = _find_conditions(simp, x, x0, sol.order)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
+
     if isinstance(simp, hyper):
         x0 = 1
+        # use evalf if the function can't be simpified
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
             x0 += 1
@@ -1193,6 +1212,7 @@ def _extend_y0(Holonomic, n):
     y0 = Holonomic.y0
     R = annihilator.parent.base
     K = R.get_field()
+
     for i, j in enumerate(annihilator.listofpoly):
             if isinstance(j, annihilator.parent.base.dtype):
                 listofpoly.append(K.new(j.rep))
