@@ -337,6 +337,8 @@ class CosetTable(Basic):
         A_dict_inv = self.A_dict_inv
         l_A = len(A_dict)
         i_A = 0
+        b = alpha
+        j = r - 1
         while i_A < l_A:
             # do the forward scanning
             while i < r and self.table[f][A_dict[word[i]]] is not None:
@@ -347,8 +349,6 @@ class CosetTable(Basic):
                     self.coincidence(f, alpha)
                 return
             # forward scan was incomplete, scan backwards
-            b = alpha
-            j = r - 1
             while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
                 b = self.table[b][A_dict_inv[word[j]]]
                 j -= 1

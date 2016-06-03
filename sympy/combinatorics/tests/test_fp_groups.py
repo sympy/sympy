@@ -16,7 +16,7 @@ Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490.
 """
 
 
-def test_scan_2():
+def test_scan_1():
     # Example 5.1 from [1]
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
