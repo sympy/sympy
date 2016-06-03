@@ -330,23 +330,23 @@ class CosetTable(Basic):
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
-        f = alpha
-        i = 0
-        r = len(word)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        r = len(word)
         l_A = len(A_dict)
+        f = alpha
+        i = 0
         i_A = 0
         b = alpha
         j = r - 1
         while i_A < l_A:
             # do the forward scanning
-            while i < r and self.table[f][A_dict[word[i]]] is not None:
+            while i <= j and self.table[f][A_dict[word[i]]] is not None:
                 f = self.table[f][A_dict[word[i]]]
                 i += 1
-            if i >= r:
-                if f != alpha:
-                    self.coincidence(f, alpha)
+            if i > j:
+                if f != b:
+                    self.coincidence(f, b)
                 return
             # forward scan was incomplete, scan backwards
             while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
@@ -359,7 +359,7 @@ class CosetTable(Basic):
                 self.table[b][A_dict_inv[word[i]]] = f
             else:
                 self.define(f, word[i])
-            # loop until it has filled the alpha row in the table.
+            # loop until it has filled the α row in the table.
             i_A += 1
 
     # method used in the HLT strategy
