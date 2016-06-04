@@ -68,7 +68,7 @@ class FpGroup(Basic):
 # sets the upper limit on the number of cosets generated during
 # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
 # user definable.
-CosetTableDefaultMaxLimit = 4000
+CosetTableDefaultMaxLimit = 4096000
 max_stack_size = 500
 
 class CosetTable(Basic):
@@ -401,8 +401,7 @@ class CosetTable(Basic):
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
-        for beta in p:
-            if p[beta] == beta:
+        for beta in self.omega:
                 # complete scan all relators under all cosets(obviously live)
                 # without making new definitions
                 for w in R:
@@ -496,10 +495,7 @@ class CosetTable(Basic):
         A = self.A
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
-        chi = []
-        for i in range(len(self.p)):
-            if self.p[i] != i:
-                chi.append(i)
+        chi = tuple([i for i in range(len(self.p)) if self.p[i] != i])
         for alpha in self.omega:
             gamma += 1
             # a non-live coset is found with `gamma ~ alpha`
