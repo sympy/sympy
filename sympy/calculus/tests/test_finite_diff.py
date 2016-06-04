@@ -180,8 +180,8 @@ def test_as_finite_diff():
     g = Function('g')
     d2fdxdh = f(x,h).diff(x).diff(h)
     dfgdx = (f(x)*g(x)).diff(x)
-    
+
     assert (as_finite_diff(d2fdxdh, wrt=x) + Derivative(f(x - S(1)/2, h), h) -
             Derivative(f(x + S(1)/2, h), h)).simplify() == 0
-    assert(as_finite_diff(dfgdx, wrt=x) - ((-f(x - S(1)/2) + f(x + S(1)/2))*g(x) +
-            (-g(x - S(1)/2) + g(x + S(1)/2))*f(x))).simplify() == 0
+    assert (as_finite_diff(dfgdx, wrt=x) - ((-f(x - S(1)/2) + f(x + S(1)/2)) *
+            g(x) + (-g(x - S(1)/2) + g(x + S(1)/2))*f(x))).simplify() == 0
