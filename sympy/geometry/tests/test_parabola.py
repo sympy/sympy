@@ -1,12 +1,7 @@
 from __future__ import division
 
-from sympy import Dummy, Rational, S, Symbol, pi, sqrt, oo
-from sympy.core.compatibility import range
-from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
-                            Point2D, Polygon, Ray, RegularPolygon,
-                            Segment, Triangle, intersection, Parabola)
-from sympy.integrals.integrals import Integral
-from sympy.utilities.pytest import raises, slow
+from sympy import oo
+from sympy.geometry import Line, Point, Point2D, Parabola
 
 
 def test_parabola_geom():
