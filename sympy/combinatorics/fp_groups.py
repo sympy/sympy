@@ -160,28 +160,34 @@ class CosetTable(Basic):
 
     def scan_f(self, alpha, word):
         """
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.fp_groups import CosetTable, FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
+        >>> c = CosetTable(f, [x])
+
         """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
         # 2. alpha in omega (set of live cosets), w in R (relators)
+        A_dict = self.A_dict
+        A_dict_inv = self.A_dict_inv
         f = alpha
         i = 0
         r = len(word)
-        # list of union of generators and their inverses
-        A_dict = self.A_dict
-        A_dict_inv = self.A_dict_inv
-        while i < r and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
-            i += 1
-        # This can be replaced with i==r.But will wait to see if this changes something
-        if i >= r:
-            if f != alpha:
-                # implement the "coincidence" routine on Pg 158 of Handbook.
-                self.coincidence(f, alpha)
-            return
         b = alpha
         j = r - 1
+        # list of union of generators and their inverses
+        while i <= j and self.table[f][A_dict[word[i]]] is not None:
+            f = self.table[f][A_dict[word[i]]]
+            i += 1
+        # can this be replaced with i == r ?
+        if i > j:
+            if f != b:
+                # implement the "coincidence" routine on Pg 158 of Handbook.
+                self.coincidence_f(f, b)
+            return
         while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
             b = self.table[b][A_dict_inv[word[j]]]
             j -= 1
@@ -219,6 +225,7 @@ class CosetTable(Basic):
                 delta = self.table[gamma][A_dict[x]]
                 if delta is not None:
                     self.table[delta][A_dict_inv[x]] = None
+                    self.deduction_stack.append((delta, x**-1))
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
                     if self.table[mu][A_dict[x]] is not None:
@@ -242,23 +249,23 @@ class CosetTable(Basic):
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
         # 2. alpha in omega (set of live cosets), w in R (relators)
+        A_dict = self.A_dict
+        A_dict_inv = self.A_dict_inv
         f = alpha
         i = 0
         r = len(word)
+        b = alpha
+        j = r - 1
         # list of union of generators and their inverses
-        A_dict = self.A_dict
-        A_dict_inv = self.A_dict_inv
-        while i < r and self.table[f][A_dict[word[i]]] is not None:
+        while i <= j and self.table[f][A_dict[word[i]]] is not None:
             f = self.table[f][A_dict[word[i]]]
             i += 1
         # can this be replaced with i == r ?
-        if i >= r:
-            if f != alpha:
+        if i > j:
+            if f != b:
                 # implement the "coincidence" routine on Pg 158 of Handbook.
-                self.coincidence(f, alpha)
+                self.coincidence(f, b)
             return
-        b = alpha
-        j = r - 1
         while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
             b = self.table[b][A_dict_inv[word[j]]]
             j -= 1
@@ -403,12 +410,12 @@ class CosetTable(Basic):
         R = self.fp_group.relators()
         p = self.p
         for beta in self.omega:
-                # complete scan all relators under all cosets(obviously live)
-                # without making new definitions
-                for w in R:
-                    self.scan(beta, w)
-                    if p[beta] < beta:
-                        continue
+            # complete scan all relators under all cosets(obviously live)
+            # without making new definitions
+            for w in R:
+                self.scan(beta, w)
+                if p[beta] < beta:
+                    continue
 
     # Pg. 166
     def process_deductions(self, R_c_x, R_c_x_inv):
@@ -674,6 +681,15 @@ def coset_enumeration_r(fp_grp, Y):
 # Pg. 166
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y):
+    """
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
+    >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
+    >>> C = coset_enumeration_c(f, [x])
+    >>> C.table
+    [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
+
+    """
     # Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
@@ -697,13 +713,12 @@ def coset_enumeration_c(fp_grp, Y):
         C.scan_and_fill_f(0, w)
     for x in A:
         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    #return C.table, C.deduction_stack
     for alpha in C.omega:
         for x in C.A:
             if C.table[alpha][C.A_dict[x]] is None:
                 C.define_f(alpha, x)
                 C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    return C
+    return C.table
 
 
 FpGroupElement = FreeGroupElement
