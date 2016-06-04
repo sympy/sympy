@@ -429,7 +429,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         group = self.group
         r = self.letter_form
-        return [group.dtype(((elm,1),)) if elm.is_Symbol else group.dtype(((-elm,-1),)) for elm in r]
+        return [group.dtype(((elm,1),)) if elm.is_Symbol \
+                else group.dtype(((-elm,-1),)) for elm in r]
 
     @property
     def ext_rep(self):
@@ -525,8 +526,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     __rtruediv__ = __rdiv__
 
     def __add__(self, other):
-        raise TypeError("unsupported operand type(s) for + or add: '%s' and '%s'"
-                    % (self.__class__.__name__, other.__class__.__name__))
+        return NotImplemented
 
     def inverse(self):
         """
@@ -938,7 +938,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def is_cyclically_reduced(self):
         """Returns whether the word is cyclically reduced or not.
         A word is cyclically reduced if by forming the cycle of the
-        word, the word is not reduced.
+        word, the word is not reduced, i.e a word w = a_1 ... a_n
+        is called cyclically reduced if a_1 != a_n**−1.
 
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
@@ -948,9 +949,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         True
 
         """
-        if self.number_syllables() <= 2:
-            return True
-        return sign(self.exponent_syllable(0)) == sign(self.exponent_syllable(-1))
+        return self[0] != self[-1]**-1
 
     #TODO: should be moved to FpGroupElement
     def identity_cyclic_reduction(self):

@@ -7,6 +7,7 @@ from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_group import FreeGroupElement
 from itertools import chain
+from bisect import bisect_left
 
 
 @public
@@ -140,21 +141,22 @@ class CosetTable(Basic):
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
-        self.table[alpha][A.index(x)] = beta
-        self.table[beta][A.index(x.inverse())] = alpha
+        self.table[alpha][self.A_dict[x]] = beta
+        self.table[beta][self.A_dict_inv[x]] = alpha
 
     def define_f(self, alpha, x):
         A = self.A
-        if self.n == DefaultMaxLimit:
+        if self.n == CosetTableDefaultMaxLimit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
         # beta is the new coset generated
         beta = len(self.table) - 1
         self.p.append(beta)
+        self.table[alpha][self.A_dict[x]] = beta
+        self.table[beta][self.A_dict_inv[x]] = alpha
+        # append to deduction stack
         self.deduction_stack.append((alpha, x))
-        self.table[alpha][A.index(x)] = beta
-        self.table[beta][A.index(x.inverse())] = alpha
 
     def scan_f(self, alpha, word):
         """
@@ -364,38 +366,37 @@ class CosetTable(Basic):
 
     # method used in the HLT strategy
     def scan_and_fill_f(self, alpha, word):
-        f = alpha
-        i = 0
-        r = len(word)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        r = len(word)
         l_A = len(A_dict)
+        f = alpha
+        i = 0
         i_A = 0
+        b = alpha
+        j = r - 1
         while i_A < l_A:
             # do the forward scanning
-            while i < r and self.table[f][A_dict[word[i]]] is not None:
+            while i <= j and self.table[f][A_dict[word[i]]] is not None:
                 f = self.table[f][A_dict[word[i]]]
                 i += 1
-            if i >= r:
-                if f != alpha:
-                    self.coincidence_f(f, alpha)
+            if i > j:
+                if f != b:
+                    self.coincidence_f(f, b)
                 return
             # forward scan was incomplete, scan backwards
-            b = alpha
-            j = r - 1
             while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
                 b = self.table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
                 self.coincidence_f(f, b)
             elif j == i:
-                self.deduction_stack.append((f, word[i]))
                 self.table[f][A_dict[word[i]]] = b
                 self.table[b][A_dict_inv[word[i]]] = f
-            else:
                 self.deduction_stack.append((f, word[i]))
+            else:
                 self.define_f(f, word[i])
-            # loop until it has filled the alpha row in the table.
+            # loop until it has filled the α row in the table.
             i_A += 1
 
     def look_ahead(self):
@@ -423,7 +424,7 @@ class CosetTable(Basic):
                         self.scan_f(alpha, w)
                         if p[alpha] < alpha:
                             break
-            beta = self.table[alpha][self.A.index(x)]
+            beta = self.table[alpha][self.A_dict[x]]
             if p[beta] == beta:
                 for w in R_c_x_inv:
                     self.scan_f(beta, w)
@@ -451,11 +452,14 @@ class CosetTable(Basic):
                         table[alpha][A_dict[x]] = beta
 
     def standardize(self):
-        """Standardize a compressed Coset Table. "Standardize" reorders the
-        elements of \Omega such that, if we scan the coset table first by
-        elements of \Omega and then by elements of A, then the cosets occur in
-        ascending order. `standardize()` is used at the end of an enumeration
-        to permute the cosets so that they occur in some sort of standard order.
+        """A coset table is standardized if when running through the cosets
+        and within each coset through the generator images (ignoring generator
+        inverses), the cosets appear in order of the integers 0, 1, 2, ... n.
+        "Standardize" reorders the elements of \Omega such that, if we scan
+        the coset table first by elements of \Omega and then by elements of A,
+        then the cosets occur in ascending order. `standardize()` is used at
+        the end of an enumeration to permute the cosets so that they occur in
+        some sort of standard order.
 
         >>> from sympy.combinatorics.free_group import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
@@ -514,13 +518,7 @@ class CosetTable(Basic):
         # re-define values
         for row in self.table:
             for j in range(len(self.A)):
-                t = 0
-                for k in chi:
-                    if k < row[j]:
-                        t += 1
-                    else:
-                        break
-                row[j] -= t
+                row[j] -= bisect_left(chi, row[j])
 
 
 # relator-based method
@@ -697,14 +695,14 @@ def coset_enumeration_c(fp_grp, Y):
         R_c_list.append(set([word for word in R_set if word[0] == x]))
     for w in Y:
         C.scan_and_fill_f(0, w)
+    for x in A:
+        C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     #return C.table, C.deduction_stack
-    for x in C.A:
-        C.process_deductions(R_c_list[A.index(x)], R_c_list[A.index(x**-1)])
     for alpha in C.omega:
-        for x in range(len(C.A)):
-            if C.table[alpha][x] is None:
+        for x in C.A:
+            if C.table[alpha][C.A_dict[x]] is None:
                 C.define_f(alpha, x)
-                C.process_deductions(R_c_x[A.index(x)])
+                C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     return C
 
 
