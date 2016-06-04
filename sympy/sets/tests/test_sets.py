@@ -10,6 +10,7 @@ from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z, m, n
+from sympy.sets.sets import reduce_imageset
 
 
 def test_imageset():
@@ -1041,10 +1042,25 @@ def test_issue_8257():
     assert FiniteSet(-oo) + Interval(-oo, oo) == reals_plus_negativeinfinity
 
 
+def test_reduce_imageset():
+    # Radians : 60, 180, 300 , ...
+    assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers) +\
+         ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)) == \
+    ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers)
+
+    # Radians : 0, 60, 180, 360, ...
+    assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
+        ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) + \
+        ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)) == \
+    ImageSet(Lambda(n, n*pi*(n - 1)/6), S.Integers)
+
+
 def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
 
+<<<<<<< HEAD
 
 def test_issue_11174():
     soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
@@ -1052,3 +1068,5 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+=======
+>>>>>>> reduce_imageset is moved to sets.py

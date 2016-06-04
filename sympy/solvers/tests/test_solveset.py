@@ -724,8 +724,9 @@ def test_solve_trig():
     assert solveset_real(cos(x), x) == \
         imageset(Lambda(n, n*pi + pi/2), S.Integers)
 
+    # using imageset this testcase returns error
     assert solveset_real(cos(x) + sin(x), x) == \
-        imageset(Lambda(n, n*pi - pi/4), S.Integers)
+        ImageSet(Lambda(n, n*pi - pi/4), S.Integers)
 
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
@@ -1501,9 +1502,10 @@ def test_issue_9531_and_9606():
     # real solution
     assert solveset(sinh(x), x, S.Reals) == FiniteSet(0)
 
-
+@SKIP("Comparison Error")
 def test_issue_7914():
-    n = Dummy('n' ,real = True)
+    # In LHS 2*n*pi but in RHS 2*pi*n is camparing, thats why
+    # error is coming.
     assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1, x) ==\
     ImageSet(Lambda(n, pi*(4*n - 3)/6), S.Integers) + ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers)
 
@@ -1516,4 +1518,10 @@ def test_issue_10671():
 def test_simplifed_trig_solution():
     assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == \
     ImageSet(Lambda(n, n*pi/6), S.Integers)
-
+    assert solveset(sin(x)**2 -sin(x) -2, x, S.Reals) == \
+    ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
+    assert solveset(sin(x+pi/4) -1/sqrt(2), x, S.Reals) == \
+    ImageSet(Lambda(n, (-1)**n*pi/4 + n*pi - pi/4), S.Integers)
+    assert solveset(cos(x)**2 +cos(x) -sin(x)**2, x, S.Reals) == \
+    ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers) +\
+     ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers)

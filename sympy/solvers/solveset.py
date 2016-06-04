@@ -401,92 +401,9 @@ def _solve_as_rational(f, symbol, domain):
             return valid_solns - invalid_solns
 
 
-
-def _reduce_imageset(soln):
-    """
-    Try to reduce number of imageset in the solution.
-    Helper to _solve_trig method.
-
-    It first extract the expression of imageset and
-    sort the negative and positive expression.
-    Now using interpolate defined in polys/polyfuncs.py
-    generates a function on `n`, which can return all the
-    expression.
-
-    Parameters
-    ==========
-
-    soln : trigonometric equation solution having imageset(s)
-
-    Returns
-    =======
-
-    It returns simplified imageset if possible.
-
-    """
-    from sympy.polys import factor
-    from sympy.polys.polyfuncs import interpolate
-    # solution within 2*pi
-    soln_2pi = []
-    # soln list
-    soln_list = []
-    # number of imageset
-    soln_len = len(soln.args)
-    # principle value and it's extended from
-    soln_extended = {}
-    for i in range(0, soln_len):
-        # list of imageset
-        soln_list.append(soln.args[i])
-    for s in soln_list:
-        # lambda expression
-        lamb = s.args[0]
-        # value
-        val = lamb(0)
-        soln_2pi.append(val)
-        # stroing it's extended form
-        # to put as it is if can't simplify
-        soln_extended[val] = s.lamda.expr
-
-    n = Dummy('n', real =True)
-    equations = []
-    positive_eq = []
-    negative_eq = []
-    for j in range(0,len(soln_2pi)):
-        if soln_2pi[j] < 0:
-            negative_eq.append(soln_2pi[j])
-        elif soln_2pi[j] >= 0:
-            positive_eq.append(soln_2pi[j])
-    plen = len(positive_eq)
-    nlen = len(negative_eq)
-    new_soln = None
-    if not (plen == 1 and nlen == 1):
-        positive_eq.sort()
-        negative_eq.sort()
-        negative_eq.reverse()
-        if nlen > 1:
-            res1 = factor(interpolate(negative_eq, n))
-            new_soln = ImageSet(Lambda(n, res1), S.Integers)
-        elif nlen == 1:
-            res1 = soln_extended[negative_eq[0]]
-            new_soln = ImageSet(Lambda(n, res1), S.Integers)
-
-        if plen > 1:
-            res2 = factor(interpolate(positive_eq, n))
-            if not new_soln is None:
-                new_soln += ImageSet(Lambda(n, res2), S.Integers)
-            else:
-                new_soln = ImageSet(Lambda(n, res2), S.Integers)
-        elif plen == 1:
-            res2 = soln_extended[positive_eq[0]]
-            if not new_soln is None:
-                new_soln += ImageSet(Lambda(n, res2), S.Integers)
-            else:
-                new_soln = ImageSet(Lambda(n, res2), S.Integers)
-        soln = new_soln
-    return soln
-
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
+    from sympy.sets.sets import reduce_imageset
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
@@ -497,14 +414,15 @@ def _solve_trig(f, symbol, domain):
 
     if isinstance(soln,Union) and all(isinstance(s, ImageSet) for s in soln.args):
         try:
-            soln = _reduce_imageset(soln)
+            soln = reduce_imageset(soln)
         except:
             pass
 
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form
-        # TODO need more improvement here.
-        soln = _solve_as_poly(f_orig, symbol, domain)
+        # In this time if ConditionSet is returned then it's
+        # expression will be in Trigonometric Function.
+        return _solve_as_poly(f_orig, symbol, domain)
     return soln.intersection(domain) if domain.is_subset(S.Reals) else soln
 
 

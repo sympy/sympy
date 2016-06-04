@@ -2105,3 +2105,119 @@ def imageset(*args):
         return r
 
     return ImageSet(f, set)
+
+
+def reduce_imageset(soln):
+    """
+    Try to reduce number of imageset in the args.
+    It is mostly helper to _solve_trig method defined in
+    solvers/solveset.py.
+
+    First extract the expression of imageset and
+    sort the negative and positive expression.
+    and using interpolate defined in polys/polyfuncs.py
+    generates a function in `n`, which can return all the
+    expressions.
+
+    Parameters
+    ==========
+
+    soln : imageset or union of imagesets.
+
+    Returns
+    =======
+
+    simplified imageset if possible.
+
+    Examples
+    ========
+
+    >>> from sympy import Lambda
+    >>> from sympy.sets.fancysets import ImageSet
+    >>> from sympy import pprint
+    >>> from sympy.sets.sets import reduce_imageset
+    >>> from sympy.core import Dummy, pi, S
+    >>> n = Dummy('n')
+    >>> pprint(reduce_imageset(ImageSet(Lambda(n, 2*n*pi + pi/6), \
+        S.Integers) + ImageSet(Lambda(n, 2*n*pi + 2*pi/6), \
+        S.Integers)+ ImageSet(Lambda(n, 2*n*pi + 3*pi/6), \
+        S.Integers)), use_unicode= False)
+     n*pi
+    {---- | n in Integers()}
+      6
+    >>> pprint(reduce_imageset(ImageSet(Lambda(n, 2*n*pi + 3*pi/4), \
+        S.Integers)+ ImageSet(Lambda(n, 2*n*pi + 7*pi/4), \
+        S.Integers)), use_unicode = False)
+     pi*(4*n - 1)
+    {------------ | n in Integers()}
+          4
+
+
+    """
+    from sympy.polys import factor
+    from sympy.polys.polyfuncs import interpolate
+    from sympy.sets.fancysets import ImageSet
+    from sympy.core.function import Lambda
+
+    # number of imageset
+    soln_len = len(soln.args)
+    if soln_len == 1:
+        return soln
+    # solution within 2*pi
+    soln_2pi = []
+    # soln list
+    soln_list = []
+
+    # principle value and it's extended from
+    soln_extended = {}
+    for i in range(0, soln_len):
+        # list of imageset
+        soln_list.append(soln.args[i])
+    for s in soln_list:
+        # lambda expression
+        lamb = s.args[0]
+        # value
+        val = lamb(0)
+        soln_2pi.append(val)
+        # stroing it's extended form
+        # to put as it is if can't simplify
+        soln_extended[val] = s
+
+    n = Dummy('n', real =True)
+    equations = []
+    positive_eq = []
+    negative_eq = []
+    for j in range(0,len(soln_2pi)):
+        if soln_2pi[j] < 0:
+            negative_eq.append(soln_2pi[j])
+        elif soln_2pi[j] >= 0:
+            positive_eq.append(soln_2pi[j])
+    plen = len(positive_eq)
+    nlen = len(negative_eq)
+    new_soln = None
+    if not (plen == 1 and nlen == 1):
+        positive_eq.sort()
+        negative_eq.sort()
+        negative_eq.reverse()
+        if nlen > 1:
+            res1 = factor(interpolate(negative_eq, n))
+            new_soln = ImageSet(Lambda(n, res1), S.Integers)
+        elif nlen == 1:
+            res1 = soln_extended[negative_eq[0]]
+            new_soln = res1
+
+        if plen > 1:
+            res2 = factor(interpolate(positive_eq, n))
+            if not new_soln is None:
+                new_soln += ImageSet(Lambda(n, res2), S.Integers)
+            else:
+                new_soln = ImageSet(Lambda(n, res2), S.Integers)
+        elif plen == 1:
+            res2 = soln_extended[positive_eq[0]]
+            if not new_soln is None:
+                new_soln += res2
+            else:
+                new_soln = res2
+        soln = new_soln
+    return soln
+
