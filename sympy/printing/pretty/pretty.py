@@ -1142,22 +1142,11 @@ class PrettyPrinter(Printer):
 
     def _print_SingularityFunction(self, e):
         if self._use_unicode:
-            x = self._print(e.args[0])
+            shift = self._print(e.args[0]-e.args[1])
             n = self._print(e.args[2])
             base = prettyForm("<")
-            base = prettyForm(*base.right(x))
-            if e.args[1].is_negative:
-                a = self._print(-1*e.args[1])
-                base = prettyForm(*base.right(" + "))
-                base = prettyForm(*base.right(a))
-                base = prettyForm(*base.right(">"))
-            elif e.args[1] == 0:
-                base = prettyForm(*base.right(">"))
-            else:
-                a = self._print(e.args[1])
-                base = prettyForm(*base.right(" - "))
-                base = prettyForm(*base.right(a))
-                base = prettyForm(*base.right(">"))
+            base = prettyForm(*base.right(shift))
+            base = prettyForm(*base.right(">"))
             pform = base**n
             return pform
         else:
