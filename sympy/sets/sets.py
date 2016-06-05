@@ -2188,7 +2188,9 @@ def reduce_imageset(soln):
         # to put as it is if can't simplify.
         soln_extended[val] = s
 
-    n = Dummy('n', real =True)
+    # use the same dummy variable. New Dummy will make
+    # comparison error in testcase
+    n = (soln_list[0].lamda.expr).atoms(Dummy).pop()
     equations = []
     positive_eq = []
     negative_eq = []
@@ -2225,4 +2227,3 @@ def reduce_imageset(soln):
                 new_soln = res2
         soln = new_soln
     return soln
-

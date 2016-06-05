@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range)
+    Matrix, signsimp, Range, Dummy)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -1043,6 +1043,7 @@ def test_issue_8257():
 
 
 def test_reduce_imageset():
+    n = Dummy('n')
     # Radians : 60, 180, 300 , ...
     assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) \
         + ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers) +\
@@ -1060,7 +1061,6 @@ def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
 
-<<<<<<< HEAD
 
 def test_issue_11174():
     soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
@@ -1068,5 +1068,3 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
-=======
->>>>>>> reduce_imageset is moved to sets.py
