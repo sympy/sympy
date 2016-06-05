@@ -2,15 +2,16 @@
 Kane's Method in Physics/Mechanics
 ==================================
 
-:mod:`kane` provides functionality for deriving equations of motion using
-Kane's method [Kane1985]_. This document will describe Kane's method as used in
-this module, but not how the equations are actually derived.
+:mod:`sympy.physics.mechanics.kane` provides functionality for deriving
+equations of motion using Kane's method [Kane1985]_. This document will
+describe Kane's method as used in this module, please refer to Kane's book for
+the mathematical details of the algorithm.
 
 Structure of Equations
 ======================
 
-In :mod:`kane` we describe a multi-body system with 5 general sets of equations
-given the:
+In :mod:`sympy.physics.mechanics.kane` we describe a multi-body system with 5
+general sets of equations given the:
 
 - :math:`n`: number of generalized coordinates and number of generalized speeds
 - :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
@@ -69,7 +70,7 @@ The equations are then as follows:
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
 Equation sets 1 through 3 are provided by the analyst, where as the sets 3 and
-4 are computed by the :py:class:`KanesMethod` class.
+4 are computed by the class:`sympy.physics.mechanics.kane.KanesMethod` class.
 
 Holonomic Constraint Equations
 ------------------------------
@@ -81,6 +82,13 @@ must be satisfied along with the other equations. :py:class:`KanesMethod` only
 uses the holonomic constraints if the equations are linearized. It is assumed
 that the equations are not solvable for the dependent coordinate(s) [1]_.
 
+These equations should be passed to
+class:`sympy.physics.mechanics.kane.KanesMethod` on initialization, e.g.::
+
+   >>> KanesMethod(..., configuration_constraints=(expr_0, expr_1, ...), ...)
+
+where the constraint expressions are equivalent to zero.
+
 .. [1] The equations can be either linear or non-linear in the coordinates. It
    is recommended that the user analytically solve for the independent
    generalized coordinates if possible before passing them to
@@ -88,13 +96,6 @@ that the equations are not solvable for the dependent coordinate(s) [1]_.
    constraint, you should consider redefining your problem in terms of a
    smaller set of coordinates. Alternatively, the time-differentiated holonomic
    constraints can be supplied.
-
-These equations should be passed to :py:class:`KanesMethod` on initialization,
-e.g.::
-
-   >>> KanesMethod(..., configuration_constraints=(expr_0, expr_1, ...), ...)
-
-where the constraint expressions are equivalent to zero.
 
 Non-Holonomic Constraint Equations
 ----------------------------------
@@ -109,18 +110,11 @@ To solve these for the dependent speeds :math:`\mathbf{u}` can be broken into
 the dependent and independent speeds:
 
 .. math::
-   \mathbf{u} = [\mathbf{u}_r, \mathbf{u}_s]^T
-   \mathbf{u}_r = -\mathbf{M}_{u_r}(\mathbf{q}, t)^{-1} [ \mathbf{M}_{u_s}(\mathbf{q}, t) \mathbf{u}_s + \mathbf{f}_{nh}(\mathbf{q}, t)]\\
-
-where
-
-.. math::
-   \mathbf{M}_{u_r}(\mathbf{q}, t) \in \mathbb{R}^{m \times m} \\
-   \mathbf{M}_{u_s}(\mathbf{q}, t) \in \mathbb{R}^{m \times p} \\
-   \mathbf{f}_{nh}(\mathbf{q}, t) \in \mathbb{R}^m
+   \mathbf{u} = [\mathbf{u}_r, \mathbf{u}_s]^T \\
+   \mathbf{u}_r = -\mathbf{M}_{n}(\mathbf{q}, t)^{-1} \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t)
 
 The non-holonomic constraint expressions should be passed directly to the
-:py:class:`KanesMethod` class as such::
+class:`sympy.physics.mechanics.kane.KanesMethod` class as such::
 
    >>> KanesMethod(..., velocity_constraints=(expr_0, expr_1), ...)
 
@@ -138,16 +132,24 @@ The simplest and always valid choice is :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 These equations define the additional equations needed to transform the second
 order equations of motion into first order form.
 
-The ``kindiff()`` method of the :class:`KanesMethod` class returns a dictionary
-with expressions for the dependent generalized speeds.
+These are passed into :class:`sympy.physics.mechanics.kane.KanesMethod` class
+as such::
+
+   >>> KanesMethod(..., kd_eqs=(expr_0, expr_1), ...)
+
+where each expression is equal to zero.
+
+The ``kindiff()`` method of the
+:class:`sympy.physics.mechanics.kane.KanesMethod` class returns a dictionary
+with expressions for derivatives of the generalized coordinates.
 
 Dynamic Differential Equations
 ------------------------------
 
 The fourth equation is the dynamical differential equation. This equation is
 linear in the derivatives of the generalized speeds and is equivalent to Kane's
-:math:`F_r + F_r^* = 0`. These equations are the primary result from executing
-the `kanes_equation` method::
+:math:`\mathbf{F}_r + \mathbf{F}_r^* = 0`. These equations are the primary
+result from executing the :meth:`kanes_equation` method::
 
    >>> kane = KanesMethod(...)
    >>> fr, frstar = kane.kanes_equations(bodies, loads)
@@ -170,17 +172,11 @@ The fifth equation is the derivative of the non-holonomic constraints. This can
 be used to augment the independent dynamical equations if it is desired to
 solve for the dependent generalized speeds.
 
-Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
-is zero. In this module, these expressions are rearranged into the following
-form:
-
- :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`
-
 Accessing the Variables and the Equations
 -----------------------------------------
 
 For a non-holonomic system with :math:`n` total speeds and :math:`m` motion
-constraints, we will get :math:`n - m` equations. The :py:class:`KanesMethod`
+constraints, we will get :math:`n - m` equations. The :class:`KanesMethod`
 class organizes the equations in the following fashion:
 
 .. math::
@@ -229,7 +225,7 @@ kinematic equations:
   \tilde{\mathbf{f}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) &=
    \begin{bmatrix}
      \mathbf{f}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) \\
-     - \mathbf{M}_{u}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{\dot{q}}(\mathbf{q}, t)
+     - \mathbf{M}_{u}(\mathbf{q}, t) \mathbf{u} - \mathbf{f}_{\dot{q}}(\mathbf{q}, t)
   \end{bmatrix}\\
 
 Each component is accessed as such::
