@@ -329,7 +329,7 @@ class Parabola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Parabola, Point, Line
+        >>> from sympy import Parabola, Point, Line, Symbol
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.equation()
         -x**2 - 16*y + 64
