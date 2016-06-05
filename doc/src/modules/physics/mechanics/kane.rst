@@ -1,16 +1,16 @@
-==================================
-Kane's Method in Physics/Mechanics
-==================================
+=============
+Kane's Method
+=============
 
-:mod:`sympy.physics.mechanics.kane` provides functionality for deriving
-equations of motion using Kane's method [Kane1985]_. This document will
-describe Kane's method as used in this module, please refer to Kane's book for
-the mathematical details of the algorithm.
+The :mod:`~sympy.physics.mechanics.kane` module provides functionality for
+deriving equations of motion using Kane's method [Kane1985]_. This document
+will describe Kane's method as used in this module, please refer to Kane's book
+for the mathematical details of the algorithm.
 
 Structure of Equations
 ======================
 
-In :mod:`sympy.physics.mechanics.kane` we describe a multi-body system with 5
+In :mod:`~sympy.physics.mechanics.kane` we describe a multi-body system with 5
 general sets of equations given the:
 
 - :math:`n`: number of generalized coordinates and number of generalized speeds
@@ -70,7 +70,7 @@ The equations are then as follows:
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
 Equation sets 1 through 3 are provided by the analyst, where as the sets 3 and
-4 are computed by the class:`sympy.physics.mechanics.kane.KanesMethod` class.
+4 are computed by the :class:`~sympy.physics.mechanics.kane.KanesMethod` class.
 
 Holonomic Constraint Equations
 ------------------------------
@@ -78,12 +78,13 @@ Holonomic Constraint Equations
 The first set of equations describes the configuration constraints which are
 typically non-linear in the generalized coordinates. For the purposes of
 forming the non-linear equations of motion, these are additional equations that
-must be satisfied along with the other equations. :py:class:`KanesMethod` only
-uses the holonomic constraints if the equations are linearized. It is assumed
-that the equations are not solvable for the dependent coordinate(s) [1]_.
+must be satisfied along with the other equations.
+:class:`~sympy.physics.mechanics.kane.KanesMethod` only uses the holonomic
+constraints if the equations are linearized. It is assumed that the equations
+are not solvable for the dependent coordinate(s) [1]_.
 
 These equations should be passed to
-class:`sympy.physics.mechanics.kane.KanesMethod` on initialization, e.g.::
+:class:`~sympy.physics.mechanics.kane.KanesMethod` on initialization, e.g.::
 
    >>> KanesMethod(..., configuration_constraints=(expr_0, expr_1, ...), ...)
 
@@ -114,7 +115,7 @@ the dependent and independent speeds:
    \mathbf{u}_r = -\mathbf{M}_{n}(\mathbf{q}, t)^{-1} \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t)
 
 The non-holonomic constraint expressions should be passed directly to the
-class:`sympy.physics.mechanics.kane.KanesMethod` class as such::
+:class:`~sympy.physics.mechanics.kane.KanesMethod` class as such::
 
    >>> KanesMethod(..., velocity_constraints=(expr_0, expr_1), ...)
 
@@ -132,7 +133,7 @@ The simplest and always valid choice is :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 These equations define the additional equations needed to transform the second
 order equations of motion into first order form.
 
-These are passed into :class:`sympy.physics.mechanics.kane.KanesMethod` class
+These are passed into :class:`~sympy.physics.mechanics.kane.KanesMethod` class
 as such::
 
    >>> KanesMethod(..., kd_eqs=(expr_0, expr_1), ...)
@@ -140,7 +141,7 @@ as such::
 where each expression is equal to zero.
 
 The ``kindiff()`` method of the
-:class:`sympy.physics.mechanics.kane.KanesMethod` class returns a dictionary
+:class:`~sympy.physics.mechanics.kane.KanesMethod` class returns a dictionary
 with expressions for derivatives of the generalized coordinates.
 
 Dynamic Differential Equations
@@ -149,7 +150,8 @@ Dynamic Differential Equations
 The fourth equation is the dynamical differential equation. This equation is
 linear in the derivatives of the generalized speeds and is equivalent to Kane's
 :math:`\mathbf{F}_r + \mathbf{F}_r^* = 0`. These equations are the primary
-result from executing the :meth:`kanes_equation` method::
+result from executing the
+:meth:`~sympy.physics.mechanics.kane.KanesMethod.kanes_equation` method::
 
    >>> kane = KanesMethod(...)
    >>> fr, frstar = kane.kanes_equations(bodies, loads)
@@ -176,8 +178,9 @@ Accessing the Variables and the Equations
 -----------------------------------------
 
 For a non-holonomic system with :math:`n` total speeds and :math:`m` motion
-constraints, we will get :math:`n - m` equations. The :class:`KanesMethod`
-class organizes the equations in the following fashion:
+constraints, we will get :math:`n - m` equations. The
+:class:`~sympy.physics.mechanics.KanesMethod` class organizes the equations in
+the following fashion:
 
 .. math::
   \mathbf{M}(\mathbf{q}, t) &=
@@ -211,8 +214,8 @@ where the total equation is::
 
    >>> Equality(kane.mass_matrix * kane.u, kane.forcing)
 
-Additionally, :py:class:`KanesMethod` provides the combined dynamic and
-kinematic equations:
+Additionally, :class:`~sympy.physics.mechanics.KanesMethod` provides the
+combined dynamic and kinematic equations:
 
 .. math::
   \tilde{\mathbf{M}}(\mathbf{q}, t) &=
@@ -244,10 +247,11 @@ where the total equation is::
 Simple Example
 ==============
 
-The formulation of the equations of motion in :mod:`mechanics` starts with
-creation of a ``KanesMethod`` object. Upon initialization of the
-``KanesMethod`` object, an inertial reference frame needs to be supplied. along
-with some basic system information, such as coordinates and speeds::
+The formulation of the equations of motion in
+:mod:`~sympy.physics.mechanics` starts with creation of a ``KanesMethod``
+object. Upon initialization of the ``KanesMethod`` object, an inertial
+reference frame needs to be supplied. along with some basic system information,
+such as coordinates and speeds::
 
   >>> from sympy.physics.mechanics import *
   >>> N = ReferenceFrame('N')
