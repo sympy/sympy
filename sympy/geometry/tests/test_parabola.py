@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import Symbol, Rational, oo
+from sympy import Rational, oo
 from sympy import Line, Point, Point2D, Parabola
 from sympy.utilities.pytest import raises
 
@@ -33,10 +33,7 @@ def test_parabola_geom():
            Parabola(Point(7, 8), Line(Point(3, 7), Point(2, 9))))
     raises(ValueError, lambda:
            Parabola(Point(0, 2), Line(Point(7, 2), Point(6, 2))))
-    raises(TypeError, lambda:
-           Parabola(Point(7, 8), Symbol("z"), Symbol("r")))
-    raises(ValueError, lambda:
-           Parabola(Point(7, 8), Point(3, 8)))
+    raises(ValueError, lambda: Parabola(Point(7, 8), Point(3, 8)))
 
     # Basic Stuff
     assert pa1.focus == Point(0, 0)
