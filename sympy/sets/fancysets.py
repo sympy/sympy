@@ -552,8 +552,12 @@ class Range(Set):
             if not all(i.is_number for i in other.args[:2]):
                 return
 
+            # In case of null Range, return an EmptySet.
+            if self.size == 0:
+                return S.EmptySet
+
             # trim down to self's size, and represent
-            # as a Range with step 1
+            # as a Range with step 1.
             start = ceiling(max(other.inf, self.inf))
             if start not in other:
                 start += 1
