@@ -717,7 +717,7 @@ def test_solve_trig():
     assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
     assert solveset_real(tan(x), x) == \
-        imageset(Lambda(n, pi*(n - 1)), S.Integers)
+        imageset(Lambda(n, pi*n), S.Integers)
     assert solveset_real(tan(x) - 1, x) == \
         imageset(Lambda(n, pi*(4*n - 3)/4), S.Integers)
 
@@ -748,19 +748,6 @@ def test_solve_trig_abs():
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
-
-
-@XFAIL
-def test_solve_trig_simplified():
-    from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        imageset(Lambda(n, n*pi), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        imageset(Lambda(n, n*pi + pi/2), S.Integers)
-
-    assert solveset_real(cos(x) + sin(x), x) == \
-        imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
 
 @XFAIL

@@ -1053,7 +1053,7 @@ def test_reduce_imageset():
     assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
         ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) + \
         ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)) == \
-    ImageSet(Lambda(n, n*pi*(n - 1)/6), S.Integers)
+    ImageSet(Lambda(n, n*pi*(n + 1)/6), S.Integers)
 
 
 def test_issue_10931():

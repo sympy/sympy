@@ -2178,9 +2178,14 @@ def reduce_imageset(soln):
         lamb = s.args[0]
         # value
         val = lamb(0)
-        soln_2pi.append(val)
-        # stroing it's extended form
-        # to put as it is if can't simplify
+        # If start with +ve then interpolate
+        # can return function which can give 0 also
+        if not val is S.Zero:
+            soln_2pi.append(val)
+        else:
+            soln_2pi.append(lamb(1))
+        # storing it's extended form
+        # to put as it is if can't simplify.
         soln_extended[val] = s
 
     n = Dummy('n', real =True)
@@ -2190,7 +2195,7 @@ def reduce_imageset(soln):
     for j in range(0,len(soln_2pi)):
         if soln_2pi[j] < 0:
             negative_eq.append(soln_2pi[j])
-        elif soln_2pi[j] >= 0:
+        elif soln_2pi[j] > 0:
             positive_eq.append(soln_2pi[j])
     plen = len(positive_eq)
     nlen = len(negative_eq)
