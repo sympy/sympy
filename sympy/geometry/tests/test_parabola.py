@@ -1,7 +1,8 @@
 from __future__ import division
 
-from sympy import oo
-from sympy.geometry import Line, Point, Point2D, Parabola
+from sympy import Symbol, Rational, oo
+from sympy import Line, Point, Point2D, Parabola
+from sympy.utilities.pytest import raises
 
 
 def test_parabola_geom():
@@ -14,6 +15,8 @@ def test_parabola_geom():
     d3 = Line(Point(4, 0), slope=oo)
     d4 = Line(Point(7, 6), slope=0)
 
+    half = Rational(1, 2)
+
     pa1 = Parabola(None, d2)
     pa2 = Parabola(directrix=d1)
     pa3 = Parabola(p1, d1)
@@ -23,6 +26,17 @@ def test_parabola_geom():
     pa7 = Parabola(p2, d1)
     pa8 = Parabola(p4, d1)
     pa9 = Parabola(p4, d3)
+
+    raises(ValueError, lambda:
+           Parabola(Point(7, 8, 9), Line(Point(6, 7), Point(7, 7))))
+    raises(NotImplementedError, lambda:
+           Parabola(Point(7, 8), Line(Point(3, 7), Point(2, 9))))
+    raises(ValueError, lambda:
+           Parabola(Point(0, 2), Line(Point(7, 2), Point(6, 2))))
+    raises(TypeError, lambda:
+           Parabola(Point(7, 8), Symbol("z"), Symbol("r")))
+    raises(ValueError, lambda:
+           Parabola(Point(7, 8), Point(3, 8)))
 
     # Basic Stuff
     assert pa1.focus == Point(0, 0)
@@ -35,12 +49,12 @@ def test_parabola_geom():
     assert pa6.vertex == Point2D(0, 5)
     assert pa6.eccentricity == 1
     assert pa7.focus == Point2D(3, 7)
-    assert pa7.focal_length == 1/2
-    assert pa7.p_parameter == -1/2
-    assert pa7.vertex == Point2D(7/2, 7)
-    assert pa4.focal_length == 1/2
-    assert pa4.p_parameter == 1/2
-    assert pa4.vertex == Point2D(3, 13/2)
+    assert pa7.focal_length == half
+    assert pa7.p_parameter == -half
+    assert pa7.vertex == Point2D(7*half, 7)
+    assert pa4.focal_length == half
+    assert pa4.p_parameter == half
+    assert pa4.vertex == Point2D(3, 13*half)
     assert pa8.focal_length == 1
     assert pa8.p_parameter == 1
     assert pa8.vertex == Point2D(5, 0)

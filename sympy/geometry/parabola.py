@@ -9,13 +9,11 @@ from __future__ import division, print_function
 
 from sympy.core import S
 from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
 
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from sympy.geometry.line import Line
-from sympy.geometry.util import _symbol
-
-import random
 
 
 class Parabola(GeometrySet):
@@ -45,10 +43,9 @@ class Parabola(GeometrySet):
 
     Raises
     ======
-    TypeError
-        When `focus` is not a Point.
     ValueError
         When `focus` is not a two dimensional point.
+        When `focus` is a point of directrix.
     NotImplementedError
         When `directrix` is neither horizontal nor vertical.
 
@@ -73,19 +70,21 @@ class Parabola(GeometrySet):
 
         if len(focus) != 2:
             raise ValueError('The focus must be a two dimensional'
-                             ' point'.format(cls))
+                             ' point')
 
         directrix = Line(directrix)
 
         if (directrix.slope != 0 and directrix.slope != S.Infinity):
             raise NotImplementedError('The directrix must be a horizontal'
                                       ' or vertical line')
+        if directrix.contains(focus):
+            raise ValueError('The focus must not be a point of directrix')
 
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
 
     @property
     def ambient_dimension(self):
-        return 2
+        return S(2)
 
     @property
     def focus(self):
@@ -173,6 +172,17 @@ class Parabola(GeometrySet):
 
         focal_lenght : number or symbolic expression
 
+        Notes
+        =====
+
+        The distance between the vertex and the focus
+        (or the vertex and directrix), measured along the axis
+        of symmetry, is the "focal length".
+
+        See Also
+        ========
+
+        https://en.wikipedia.org/wiki/Parabola
 
         Examples
         ========
@@ -196,6 +206,21 @@ class Parabola(GeometrySet):
         =======
 
         p : number or symbolic expression
+
+        Notes
+        =====
+
+        The absolute value of p is the focal length. The sign on p tells
+        which way the parabola faces. Vertical parabolas that open up
+        and horizontal that open right, give a positive value for p.
+        Vertical parabolas that open down and horizontal that open left,
+        give a negative value for p.
+
+
+        See Also
+        ========
+
+        http://www.sparknotes.com/math/precalc/conicsections/section2.rhtml
 
         Examples
         ========
@@ -261,6 +286,17 @@ class Parabola(GeometrySet):
 
         eccentricity : number
 
+        A parabola may also be characterized as a conic section with an
+        eccentricity of 1. As a consequence of this, all parabolas are
+        similar, meaning that while they can be different sizes,
+        they are all the same shape.
+
+        See Also
+        ========
+
+        https://en.wikipedia.org/wiki/Parabola
+
+
         Examples
         ========
 
@@ -274,17 +310,17 @@ class Parabola(GeometrySet):
         The eccentricity for every Parabola is 1 by definition.
 
         """
-        return 1
+        return S(1)
 
-    def equation(self, x='x', y='y'):
+    def equation(self, x=None, y=None):
         """The equation of the parabola.
 
         Parameters
         ==========
-        x : str, optional
-            Label for the x-axis. Default value is 'x'.
-        y : str, optional
-            Label for the y-axis. Default value is 'y'.
+        x : Symbol, optional
+            Label for the x-axis. Default value is Symbol("x").
+        y : Symbol, optional
+            Label for the y-axis. Default value is Symbol("y").
 
         Returns
         =======
@@ -297,10 +333,21 @@ class Parabola(GeometrySet):
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.equation()
         -x**2 - 16*y + 64
+        >>> p1.equation(Symbol("f"))
+        -f**2 - 16*y + 64
+        >>> p1.equation(y = Symbol("z"))
+        -x**2 - 16*z + 64
 
         """
-        x = _symbol(x)
-        y = _symbol(y)
+        if x is None:
+            x = Symbol("x")
+        else:
+            x = x
+
+        if y is None:
+            y = Symbol("y")
+        else:
+            y = y
 
         if (self.axis_of_symmetry.slope == 0):
             t1 = 4 * (self.p_parameter) * (x - self.vertex.x)
