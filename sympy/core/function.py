@@ -1105,8 +1105,9 @@ class Derivative(Expr):
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate:
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols):
+            from sympy import IndexedBase
+            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
+            if symbol_set.difference(expr.free_symbols).difference(expr.atoms(IndexedBase)):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.

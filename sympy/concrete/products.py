@@ -214,8 +214,6 @@ class Product(ExprWithIntLimits):
             if dif.is_Integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = 1 / f
-            if isinstance(i, Idx):
-                i = i.label
 
             g = self._eval_product(f, (i, a, b))
             if g in (None, S.NaN):
