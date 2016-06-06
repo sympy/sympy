@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core import S, sympify, oo
+from sympy.core import S, sympify, oo, diff
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im
@@ -84,3 +84,30 @@ class SingularityFunction(Function):
             return Piecewise((S(1), (x - a) > 0), (0, True))
         elif n > 0:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
+
+    def _eval_rewrite_as_Heaviside(self, *args):
+        """
+
+        Examples
+        ========
+
+        """
+        x = self.args[0]
+        a = self.args[1]
+        n = self.args[2]
+
+        if n == -2:
+            return diff(Heaviside(x - a), x, 2)
+        if n == -1:
+            return diff(Heaviside(x - a), x, 1)
+        if n >= 0:
+            return (x - a)**n*Heaviside(x - a)
+
+    def _eval_rewrite_as_DiracDelta(self, *args):
+        """
+
+        Examples
+        ========
+
+        """
+        return self.rewrite(Heaviside)
