@@ -1,6 +1,6 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose,
-    Piecewise, I, Eq, Derivative, oo, SingularityFunction
+    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta,
+    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside, Derivative
 )
 
 
@@ -62,3 +62,7 @@ def test_rewrite():
         Piecewise((oo, Eq(x - 2, 0)), (0, True)))
     assert SingularityFunction(x, 0, -2).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x, 0)), (0, True)))
+
+    expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
+    assert expr.rewrite(Heaviside) == (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    assert expr.rewrite(DiracDelta) == (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
