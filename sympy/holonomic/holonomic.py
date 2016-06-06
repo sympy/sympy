@@ -1047,6 +1047,9 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r, method='Euler')
         [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
          2.357947691, 2.5937424601]
+
+        One can also observe that the value obtained using Runge-Kutta 4th order
+        is much more accurate than Euler's method.
         """
 
         from sympy.holonomic.numerical import _evalf
