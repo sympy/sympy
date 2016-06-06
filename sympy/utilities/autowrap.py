@@ -938,6 +938,8 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
                                            flags, verbose)
         if not isinstance(expr, (list, tuple)):
             expr = [expr]
+        if len(expr) == 0:
+            raise ValueError('Expression iterable has zero length')
         routines = [make_routine('autofunc{}'.format(idx), exprx, args) for idx, exprx in enumerate(expr)]
         return code_wrapper.wrap_code(routines, helpers=helps)
     else:
