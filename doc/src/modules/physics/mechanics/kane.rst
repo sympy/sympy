@@ -5,7 +5,7 @@ Kane's Method
 The :mod:`~sympy.physics.mechanics.kane` module provides functionality for
 deriving equations of motion using Kane's method [Kane1985]_. This document
 will describe Kane's method as used in this module, please refer to Kane's book
-for the mathematical details of the algorithm.
+for the mathematical details of the underlying algorithm.
 
 Structure of Equations
 ======================
@@ -15,12 +15,12 @@ general sets of equations given the:
 
 - :math:`n`: number of generalized coordinates and number of generalized speeds
 - :math:`\mathbf{q}` : vector of generalized coordinates where :math:`\mathbf{q} \in \mathbb{R}^n`
-- :math:`M` : number of holonomic constraint equations
+- :math:`o` : number of holonomic constraint equations
 - :math:`\mathbf{u}` : vector of generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^n`
 - :math:`m` : number of non-holonomic constraint equations
-- :math:`p` : number of independent speeds, i.e. :math:`n-m`
-- :math:`\mathbf{u}_r` : dependent speeds where :math:`\mathbf{u} \in \mathbb{R}^m`
-- :math:`\mathbf{u}_s` : independent speeds where :math:`\mathbf{u} \in \mathbb{R}^p`
+- :math:`p` : number of independent generalized speeds, i.e. :math:`n-m`
+- :math:`\mathbf{u}_r` : dependent generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^m`
+- :math:`\mathbf{u}_s` : independent generalized speeds where :math:`\mathbf{u} \in \mathbb{R}^p`
 
 The equations are then as follows:
 
@@ -29,7 +29,7 @@ The equations are then as follows:
    .. math::
       \mathbf{f}_h(\mathbf{q}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{f}_h \in \mathbb{R}^M
+      \mathbf{f}_h \in \mathbb{R}^o
 
 2. Non-holonomic constraints
 
@@ -242,7 +242,7 @@ Each component is accessed as such::
 
 where the total equation is::
 
-   >>> Equality(kane.mass_matrix_full * (kane.u.row_join(kane.q)), kane.forcing_full)
+   >>> Equality(kane.mass_matrix_full * kane.q.col_join(kane.u).diff(), kane.forcing_full)
 
 Simple Example
 ==============
