@@ -1,5 +1,5 @@
 from sympy.core.compatibility import range
-from sympy.ntheory.generate import Sieve
+from sympy.ntheory.generate import Sieve, sieve
 from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
     is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime)
 
@@ -110,6 +110,9 @@ def test_isprime():
 922696291677532547504444585610194940420003990443211677661994962953925\
 045269871932907037356403227370127845389912612030924484149472897688540\
 6024976768122077071687938121709811322297802059565867'''))
+    sieve.extend(3000)
+    assert isprime(2819)
+    assert not isprime(2931)
 
 
 def test_is_square():
