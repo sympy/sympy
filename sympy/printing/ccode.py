@@ -96,6 +96,8 @@ class CCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
+        'declare': None,
+        'assign_to': False,
     }
 
     def __init__(self, settings={}):
@@ -227,6 +229,9 @@ class CCodePrinter(CodePrinter):
         if expr in self._dereference:
             return '(*{0})'.format(name)
         else:
+            if self._settings['declare'] and not self._settings['assign_to']:
+                codestring = self._settings['declare'] + " %s"
+                return self._get_statement(codestring % name)
             return name
 
     def _print_sign(self, func):
@@ -298,6 +303,8 @@ def ccode(expr, assign_to=None, **settings):
         Setting contract=False will not generate loops, instead the user is
         responsible to provide values for the indices in the code.
         [default=True].
+    declare: string, optional
+        When given, it specifies the data type while declaration of a variable.
 
     Examples
     ========
@@ -372,6 +379,15 @@ def ccode(expr, assign_to=None, **settings):
        A[1] = x;
     }
     A[2] = sin(x);
+
+    Support for specifying data type while declaring a variable is provided.
+    
+    >>> from sympy import ccode, symbols
+    >>> a, b = symbols("a, b")
+    >>> ccode(a**2, b, declare="double")
+    'double b = pow(a, 2);'
+    >>> ccode(a, declare="double")
+    'double a;'
     """
 
     return CCodePrinter(settings).doprint(expr, assign_to)

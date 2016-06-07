@@ -476,3 +476,11 @@ def test_ccode_sign():
 
     expr = sign(cos(x))
     assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'
+
+
+def test_ccode_declare():
+
+    a, b = symbols("a, b")
+
+    assert ccode(a**2, b, declare="double") == "double b = pow(a, 2);"
+    assert ccode(a, declare="double") == "double a;"

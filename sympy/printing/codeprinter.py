@@ -134,6 +134,7 @@ class CodePrinter(StrPrinter):
 
         if assign_to:
             expr = Assignment(assign_to, expr)
+            self._settings['assign_to'] = True
         else:
             # _sympify is not enough b/c it errors on iterables
             expr = sympify(expr)
@@ -353,7 +354,10 @@ class CodePrinter(StrPrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            codestring = "%s = %s"
+            if 'declare' in self._settings and self._settings['declare']:
+                codestring = self._settings['declare'] + " " + codestring
+            return self._get_statement(codestring % (lhs_code, rhs_code))
 
     def _print_Symbol(self, expr):
 
