@@ -384,13 +384,15 @@ def _solve_as_rational(f, symbol, domain):
             y = Dummy('y')
             # make it independent from exp(I*symbol)
             g, h = g.subs(exp(I*symbol), y), h.subs(exp(I*symbol), y)
+
             solns = _solveset(g, y, domain) - _solveset(h, y, domain)
             if g.has(symbol) or h.has(symbol):
                 return ConditionSet(symbol, Eq(f, 0), S.Reals)
             if isinstance(solns, FiniteSet):
                 result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
-                return Intersection(result, domain)
+                return result.intersection(domain) \
+                if domain.is_subset(S.Reals) else result
             elif solns is S.EmptySet:
                 return S.EmptySet
             else:
@@ -404,20 +406,38 @@ def _solve_as_rational(f, symbol, domain):
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     from sympy.sets.sets import reduce_imageset
+    from sympy import factor_list
+
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
     # TODO trigh function for Hyperbolic Functions if required
     f_orig = f
-    f = f.rewrite(exp)
-    soln = solveset_complex(f, symbol)
+    # factor_list isn't working for factor_list(sqrt(2)*sin(x))
+    # so `.as_independent` is used. Fix issue => remove below line.
+    # issue #11198
+    if f.is_Mul:
+        ind, f = f.as_independent(symbol)
+    fact_list = factor_list(f)[1]
+    if len(fact_list) == 0:
+        # means no symbol
+        # S.Reals in solution
+        return ConditionSet(symbol, Eq(f, 0), domain)
+    soln = S.EmptySet
 
-    if isinstance(soln,Union) and all(isinstance(s, ImageSet) for s in soln.args):
-        try:
-            soln = reduce_imageset(soln)
-        except:
-            pass
+    for fact in fact_list:
+        f2 =fact[0]
+        f2 = f2.rewrite(exp)
+        soln_fact = solveset_complex(f2, symbol)
 
+        if isinstance(soln_fact, Union):
+            # if union then try to reduce it
+            try:
+                soln += reduce_imageset(soln_fact)
+            except:
+                pass
+        else:
+            soln += soln_fact
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form
         # In this time if ConditionSet is returned then it's

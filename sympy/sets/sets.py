@@ -2122,7 +2122,7 @@ def reduce_imageset(soln):
     Parameters
     ==========
 
-    soln : imageset or union of imagesets.
+    soln : Union of imagesets.
 
     Returns
     =======
@@ -2154,7 +2154,7 @@ def reduce_imageset(soln):
 
 
     """
-    from sympy.polys import factor
+    from sympy.polys import factor, Poly
     from sympy.polys.polyfuncs import interpolate
     from sympy.sets.fancysets import ImageSet
     from sympy.core.function import Lambda
@@ -2183,7 +2183,8 @@ def reduce_imageset(soln):
         if not val is S.Zero:
             soln_2pi.append(val)
         else:
-            soln_2pi.append(lamb(1))
+            val = lamb(1)
+            soln_2pi.append(val)
         # storing it's extended form
         # to put as it is if can't simplify.
         soln_extended[val] = s
@@ -2192,38 +2193,43 @@ def reduce_imageset(soln):
     # comparison error in testcase
     n = (soln_list[0].lamda.expr).atoms(Dummy).pop()
     equations = []
-    positive_eq = []
-    negative_eq = []
-    for j in range(0,len(soln_2pi)):
+    positive = []
+    negative = []
+    for j in range(0, len(soln_2pi)):
         if soln_2pi[j] < 0:
-            negative_eq.append(soln_2pi[j])
+            negative.append(soln_2pi[j])
         elif soln_2pi[j] > 0:
-            positive_eq.append(soln_2pi[j])
-    plen = len(positive_eq)
-    nlen = len(negative_eq)
-    new_soln = None
+            positive.append(soln_2pi[j])
+    plen = len(positive)
+    nlen = len(negative)
+    new_soln = S.EmptySet
     if not (plen == 1 and nlen == 1):
-        positive_eq.sort()
-        negative_eq.sort()
-        negative_eq.reverse()
+        positive.sort()
+        # reverse because of -ve sign
+        negative.sort(reverse=True)
+        cant_simplify = False
         if nlen > 1:
-            res1 = factor(interpolate(negative_eq, n))
-            new_soln = ImageSet(Lambda(n, res1), S.Integers)
-        elif nlen == 1:
-            res1 = soln_extended[negative_eq[0]]
-            new_soln = res1
+            # factor to get pi outside
+            res1 = factor(interpolate(negative, n))
+            if (Poly(res1, n).all_monoms())[0][0] > 1:
+                cant_simplify = True
+            else:
+                new_soln = ImageSet(Lambda(n, res1), S.Integers)
+        if cant_simplify or nlen == 1:
+            # no simplification
+            for j in range(0, len(negative)):
+                new_soln += soln_extended[negative[j]]
+            cant_simplify = False
 
         if plen > 1:
-            res2 = factor(interpolate(positive_eq, n))
-            if not new_soln is None:
+            res2 = factor(interpolate(positive, n))
+            if (Poly(res2, n).all_monoms())[0][0] > 1:
+                cant_simplify = True
+            else:
                 new_soln += ImageSet(Lambda(n, res2), S.Integers)
-            else:
-                new_soln = ImageSet(Lambda(n, res2), S.Integers)
-        elif plen == 1:
-            res2 = soln_extended[positive_eq[0]]
-            if not new_soln is None:
-                new_soln += res2
-            else:
-                new_soln = res2
+        if cant_simplify or plen == 1:
+            for j in range(0, len(positive)):
+                new_soln += soln_extended[positive[j]]
+
         soln = new_soln
     return soln

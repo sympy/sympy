@@ -1510,3 +1510,33 @@ def test_simplifed_trig_solution():
     assert solveset(cos(x)**2 +cos(x) -sin(x)**2, x, S.Reals) == \
     ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers) +\
      ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers)
+    assert solveset((sin(x)+1)**2, x, S.Reals) == \
+    ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
+
+
+@SKIP("Comparison error")
+def test_simplifed_trig_solution_1():
+    # `factor_list` is helpful for these types of case.
+    soln = ImageSet(Lambda(n, -pi*(4*n - 3)/6), S.Integers) +\
+     ImageSet(Lambda(n, -pi*(2*n - 1)/4), S.Integers) + \
+     ImageSet(Lambda(n, pi*(2*n - 1)/4), S.Integers)
+    assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == \
+    soln
+
+    s = solveset((tan(x)**2 - 3).rewrite(exp), x)
+    assert s == ImageSet(Lambda(n, 2*n*pi + 4*pi/3), \
+        S.Integers) + ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) \
+    + ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers) + \
+    ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
+
+
+@XFAIL
+def test_simplifed_trig_solution_2():
+    # Need improvement in sets/reduce_imageset
+    # to get these simplified solution
+    assert solveset(tan(x)**2 - 3,x) == \
+    ImageSet(Lambda(n, pi*(n - pi/3)), S.Integers) + \
+        ImageSet(Lambda(_n, pi*(n + pi/3)), S.Integers)
+    assert solveset(3*tan(x)**2 -1, x) == \
+    ImageSet(Lambda(n, pi*(n + pi/6)), S.Integers) + \
+    ImageSet(Lambda(n, pi*(n - pi/6)), S.Integers)
