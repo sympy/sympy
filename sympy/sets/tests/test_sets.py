@@ -1050,7 +1050,7 @@ def test_reduce_imageset():
          ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)) == \
     ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers)
 
-    # Radians : 0, 60, 180, 360, ...
+    # Radians : 0, 180, 360, ...
     assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
         ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)) == \
     ImageSet(Lambda(n, n*pi), S.Integers)
@@ -1059,7 +1059,6 @@ def test_reduce_imageset():
 def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
-
 
 def test_issue_11174():
     soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)

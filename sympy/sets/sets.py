@@ -2127,7 +2127,8 @@ def reduce_imageset(soln):
     Returns
     =======
 
-    simplified imageset if possible.
+    simplified imageset if possible otherwise returns original
+    soln.
 
     Examples
     ========
@@ -2151,8 +2152,13 @@ def reduce_imageset(soln):
      pi*(4*n - 1)
     {------------ | n in Integers()}
           4
-
-
+    >>> soln = ImageSet(Lambda(n, 2*n*pi + pi/3), \
+        S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    >>> reduce_imageset(soln)
+    ImageSet(Lambda(_n, 2*_n*pi), Integers()) U \
+    ImageSet(Lambda(_n, 2*_n*pi + pi), Integers()) U \
+    ImageSet(Lambda(_n, 2*_n*pi + pi/3), Integers())
     """
     from sympy.polys import factor, Poly
     from sympy.polys.polyfuncs import interpolate
