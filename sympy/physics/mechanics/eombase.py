@@ -2,13 +2,13 @@
 from sympy import Matrix, zeros
 
 
-class EOM(object):
+class EOMBase(object):
     def __init__(self, coordinates, speeds, forcing_vector, mass_matrix,
                  k_kqdot, k_ku, f_k, loads=(), bodies=()):
 
         # Dynamical differential equation
-        self._k_d = mass_matrix
-        self._f_d = forcing_vector
+        self._mass_matrix = mass_matrix
+        self._forcing = forcing_vector
 
         # Kinematical differential equation
         # Using the equation form defined in Kane's method documentation
@@ -18,45 +18,55 @@ class EOM(object):
         self._f_k = f_k
 
         # Coordinates and speeds
-        self._coordinates = coordinates
-        self._speeds = speeds
+        self._q = coordinates
+        self._u = speeds
 
         # Default values
-        self._bodies = bodies
-        self._loads = loads
+        self._bodylist = bodies
+        self._forcelist = loads
+
+    def eom_check(self):
+        try:
+            self._mass_matrix
+        except AttributeError:
+            raise ValueError('Need to compute the equations of motion first')
 
     @property
-    def bodies(self):
-        return self._bodies
+    def bodylist(self):
+        return self._bodylist
 
     @property
-    def loads(self):
-        return self._loads
+    def forcelist(self):
+        return self._forcelist
 
     @property
     def forcing(self):
-        return self._f_d
+        self.eom_check()
+        return self._forcing
 
     @property
     def forcing_full(self):
-        f1 = self._k_ku * Matrix(self.speeds) + self._f_k
+        self.eom_check()
+        f1 = self._k_ku * Matrix(self.u) + self._f_k
         return Matrix([f1, self.forcing])
 
     @property
     def mass_matrix(self):
-        return self._k_d
+        self.eom_check()
+        return self._mass_matrix
 
     @property
     def mass_matrix_full(self):
-        o = len(self.speeds)
-        n = len(self.coordinates)
+        self.eom_check()
+        o = len(self.u)
+        n = len(self.q)
         return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
                 n)).row_join(self.mass_matrix))
 
     @property
-    def coordinates(self):
-        return self._coordinates
+    def q(self):
+        return self._q
 
     @property
-    def speeds(self):
-        return self._speeds
+    def u(self):
+        return self._u

@@ -37,40 +37,40 @@ k_ku = Matrix([1])
 f_k = Matrix([0])
 
 # Determine what inputs should be used
-EOM = eombase.EOM([q], [qd], f, mm, k_kqdot, k_ku, f_k, loads=fl, bodies=[Pa])
+EOM = eombase.EOMBase([q], [qd], f, mm, k_kqdot, k_ku, f_k, loads=fl, bodies=[Pa])
 
 
 def test_eom_properties():
     # Test that the class gives access to necessary attributes and returns the
     # correct values based on the input mass spring damper system
-    assert EOM.bodies == [Pa]
+    assert EOM.bodylist == [Pa]
     assert simplify(EOM.mass_matrix - Matrix([[m]])) == Matrix([[0]])
     assert simplify(EOM.mass_matrix_full - Matrix([[1, 0],
                                                    [0, m]])) == zeros(2, 2)
-    assert EOM.loads == [(P, -b * qd * N.x)]
+    assert EOM.forcelist == [(P, -b * qd * N.x)]
     assert simplify(EOM.forcing -
                     Matrix([[-b*Derivative(q, t) - 1.0*k*q]])) == zeros(1)
     assert simplify(EOM.forcing_full -
                     Matrix([[Derivative(q, t)],
                             [-b*Derivative(q, t) - 1.0*k*q]])) == zeros(2, 1)
-    assert EOM.coordinates == [q]
-    assert EOM.speeds == [qd]
+    assert EOM.q == [q]
+    assert EOM.u == [qd]
 
     # The properties should not be able to be changed
     Change = "Attempt to set values for the properties"
     with raises(AttributeError):
-        EOM.bodies = Change
+        EOM.bodylist = Change
     with raises(AttributeError):
         EOM.mass_matrix = Change
     with raises(AttributeError):
         EOM.mass_matrix_full = Change
     with raises(AttributeError):
-        EOM.loads = Change
+        EOM.forcelist = Change
     with raises(AttributeError):
         EOM.forcing = Change
     with raises(AttributeError):
         EOM.forcing_full = Change
     with raises(AttributeError):
-        EOM.coordinates = Change
+        EOM.q = Change
     with raises(AttributeError):
-        EOM.speeds = Change
+        EOM.u = Change

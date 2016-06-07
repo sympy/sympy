@@ -12,11 +12,12 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
+from sympy.physics.mechanics.eombase import EOMBase
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
 
-class KanesMethod(object):
+class KanesMethod(EOMBase):
     """Kane's method object.
 
     This object is used to do the "book-keeping" as you go through and form
@@ -738,6 +739,11 @@ class KanesMethod(object):
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
+
+        # Form the mass matrix and the forcing vector
+        self._mass_matrix = Matrix([self._k_d, self._k_dnh])
+        self._forcing = -Matrix([self._f_d, self._f_dnh])
+
         return (self._fr, self._frstar)
 
     def rhs(self, inv_method=None):
@@ -776,58 +782,7 @@ class KanesMethod(object):
     @property
     def auxiliary_eqs(self):
         """A matrix containing the auxiliary equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
+        self.eom_check()
         if not self._uaux:
             raise ValueError('No auxiliary speeds have been declared.')
         return self._aux_eq
-
-    @property
-    def mass_matrix(self):
-        """The mass matrix of the system."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        return Matrix([self._k_d, self._k_dnh])
-
-    @property
-    def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        o = len(self.u)
-        n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
-                n)).row_join(self.mass_matrix))
-
-    @property
-    def forcing(self):
-        """The forcing vector of the system."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        return -Matrix([self._f_d, self._f_dnh])
-
-    @property
-    def forcing_full(self):
-        """The forcing vector of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
-
-    @property
-    def q(self):
-        return self._q
-
-    @property
-    def u(self):
-        return self._u
-
-    @property
-    def bodylist(self):
-        return self._bodylist
-
-    @property
-    def forcelist(self):
-        return self._forcelist
