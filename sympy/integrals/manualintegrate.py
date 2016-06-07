@@ -341,11 +341,11 @@ def _parts_rule(integrand, symbol):
     # LIATE rule:
     # log, inverse trig, algebraic (polynomial), trigonometric, exponential
     def pull_out_algebraic(integrand):
-        integrand = integrand.together()
+        integrand = integrand.cancel().together()
         algebraic = [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)]
         if algebraic:
             u = sympy.Mul(*algebraic)
-            dv = integrand / u
+            dv = (integrand / u).cancel()
             return u, dv
 
     def pull_out_u(*functions):
@@ -942,7 +942,7 @@ def integral_steps(integrand, symbol, **options):
     integral = IntegralInfo(integrand, symbol)
 
     def key(integral):
-        integrand = integral.integrand
+        integrand = integral.integrand.simplify()
 
         if isinstance(integrand, TrigonometricFunction):
             return TrigonometricFunction
