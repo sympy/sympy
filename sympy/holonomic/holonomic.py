@@ -1014,11 +1014,11 @@ class HolonomicFunction(object):
             y *= x - i
         return roots(s.rep, filter='R').keys()
 
-    def evalf(self, points, **kwargs):
+    def evalf(self, points, method='RK4'):
         """
-        Finds numerical value of a holonomic function using Euler's method.
-        A set of points (real or complex) must be provided which will be the
-        path for the numerical integration.
+        Finds numerical value of a holonomic function using numerical methods.
+        (RK4 by default). A set of points (real or complex) must be provided
+        which will be the path for the numerical integration.
 
         The path should be given as a list [x1, x2, ... xn]. The numerical values
         will be computed at each point in this order x1 --> x2 --> x3 ... --> xn.
@@ -1036,14 +1036,24 @@ class HolonomicFunction(object):
         >>> # a straight line on the real axis from (0 to 1)
         >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
-        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)  # e^1
+        # using Runge-Kutta 4th order on e^x from 0.1 to 1.
+        # exact solution at 1 is 2.71828182845905
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)
+        [1.10517083333333, 1.22140257085069, 1.34985849706254, 1.49182424008069, 
+        1.64872063859684, 1.82211796209193, 2.01375162659678, 2.22553956329232, 
+        2.45960141378007, 2.71827974413517]
+
+        # using Euler's method for the same
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r, method='Euler')
         [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
          2.357947691, 2.5937424601]
-        >>> # exact solution at 1 is 2.71828182845905
+
+        One can also observe that the value obtained using Runge-Kutta 4th order
+        is much more accurate than Euler's method.
         """
 
-        from sympy.holonomic.numerical import euler
-        return euler(self, points, **kwargs)
+        from sympy.holonomic.numerical import _evalf
+        return _evalf(self, points, method=method)
 
 
 def from_hyper(func, x0=0, evalf=False):
