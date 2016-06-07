@@ -1169,6 +1169,25 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_DiracDelta(self, e):
+        if self._use_unicode:
+            if len(e.args) == 2:
+                a = prettyForm(greek_unicode['delta'])
+                b = self._print(e.args[1])
+                b = prettyForm(*b.parens())
+                c = self._print(e.args[0])
+                c = prettyForm(*c.parens())
+                pform = a**b
+                pform = stringPict(*pform.right(' '))
+                pform = stringPict(*pform.right(c))
+                return pform
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek_unicode['delta']))
+            return pform
+        else:
+            return self._print_Function(e)
+
     def _print_expint(self, e):
         from sympy import Function
         if e.args[0].is_Integer and self._use_unicode:
@@ -1714,6 +1733,9 @@ class PrettyPrinter(Printer):
 
     def _print_FracField(self, field):
         return prettyForm(sstr(field))
+
+    def _print_FreeGroupElm(self, elm):
+        return prettyForm(str(elm))
 
     def _print_PolyElement(self, poly):
         return prettyForm(sstr(poly))

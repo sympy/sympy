@@ -27,13 +27,13 @@ def _process_limits(*symbols):
     orientation = 1
     for V in symbols:
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
-            limits.append(Tuple(V))
-            continue
-        elif isinstance(V, Idx):
-            if V.lower is None or V.upper is None:
-                limits.append(Tuple(V))
+            if isinstance(V, Idx):
+                if V.lower is None or V.upper is None:
+                    limits.append(Tuple(V))
+                else:
+                    limits.append(Tuple(V, V.lower, V.upper))
             else:
-                limits.append(Tuple(V, V.lower, V.upper))
+                limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))

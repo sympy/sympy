@@ -27,6 +27,10 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
+.. autofunction:: composite
+
+.. autofunction:: compositepi
+
 .. module:: sympy.ntheory.factor_
 
 .. autofunction:: smoothness
@@ -60,6 +64,8 @@ Ntheory Functions Reference
 .. autofunction:: antidivisor_count
 
 .. autofunction:: totient
+
+.. autofunction:: reduced_totient
 
 .. autofunction:: divisor_sigma
 

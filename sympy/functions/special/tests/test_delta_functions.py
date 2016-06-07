@@ -1,11 +1,15 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq
+    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo
 )
 
 from sympy.utilities.pytest import raises
 
 from sympy.core.function import ArgumentIndexError
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
 
@@ -39,15 +43,25 @@ def test_DiracDelta():
     assert DiracDelta(sqrt(x)).is_simple(x) is False
     assert DiracDelta(x).is_simple(y) is False
 
-    assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
-    assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
-    assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
-    assert DiracDelta(y).simplify(x) == DiracDelta(y)
-    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == \
-        DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=x) == DiracDelta(x)/abs(y)
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=y) == DiracDelta(y)/abs(x)
+    assert DiracDelta(x**2*y).expand(diracdelta=True, wrt=x) == DiracDelta(x**2*y)
+    assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True, wrt=x) == (
+        DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
+
+    with raises(SymPyDeprecationWarning):
+        assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
+        assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
+        assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
+        assert DiracDelta(y).simplify(x) == DiracDelta(y)
+        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == (
+            DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
     raises(ValueError, lambda: DiracDelta(x, -1))
+    raises(ValueError, lambda: DiracDelta(I))
+    raises(ValueError, lambda: DiracDelta(2 + 3*I))
 
 
 def test_heaviside():
@@ -74,9 +88,15 @@ def test_heaviside():
 
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
-    assert Heaviside(x).rewrite(Piecewise) == \
-        Piecewise((1, x > 0), (S(1)/2, Eq(x, 0)), (0, True))
-    assert Heaviside(y).rewrite(Piecewise) == Heaviside(y)
+    assert Heaviside(x).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0)))
+    assert Heaviside(y).rewrite(Piecewise) == (
+        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, y > 0)))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
+
+    assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
+    assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
+    assert DiracDelta(x - 5).rewrite(Piecewise) == (
+        Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True)))
