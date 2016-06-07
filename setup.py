@@ -70,6 +70,7 @@ modules = [
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
+    'sympy.circuit',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
