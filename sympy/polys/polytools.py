@@ -5652,6 +5652,9 @@ def _symbolic_factor_list(expr, opt, method):
             continue
         if arg.is_Pow:
             base, exp = arg.args
+            if base.is_Number and exp.is_Number:
+                coeff *= arg
+                continue
             if base.is_Number:
                 factors.append((base, exp))
                 continue
