@@ -931,6 +931,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     flags = flags if flags else ()
 
     if backend.upper() == 'NUMPY':
+        # maxargs is set by numpy compile-time constant NPY_MAXARGS
+        # If a future version of numpy modifies or removes this restriction
+        # this variable should be changed or removed
+        maxargs = 32
         helps = []
         for name, expr, args in helpers:
             helps.append(make_routine(name, expr, args))
@@ -940,6 +944,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
             expr = [expr]
         if len(expr) == 0:
             raise ValueError('Expression iterable has zero length')
+        if (len(expr) + len(args)) > maxargs:
+            raise ValueError('Cannot create ufunc with more than {0} total arguments: got {1} in, {2} out'
+                             .format(maxargs, len(args), len(expr)))
         routines = [make_routine('autofunc{}'.format(idx), exprx, args) for idx, exprx in enumerate(expr)]
         return code_wrapper.wrap_code(routines, helpers=helps)
     else:
