@@ -78,7 +78,7 @@ class DifferentialOperatorAlgebra(object):
     """
 
     def __init__(self, base, generator):
-        # the base ring for the algebra
+        # the base polynomial ring for the algebra
         self.base = base
         # the operator representing differentiation i.e. `Dx`
         self.derivative_operator = DifferentialOperator(
@@ -160,10 +160,8 @@ class DifferentialOperator(object):
         # convert the expressions into ring elements using from_sympy
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
-                if isinstance(j, int):
-                    list_of_poly[i] = self.parent.base.from_sympy(S(j))
-                elif not isinstance(j, self.parent.base.dtype):
-                    list_of_poly[i] = self.parent.base.from_sympy(j)
+                if not isinstance(j, self.parent.base.dtype):
+                    list_of_poly[i] = self.parent.base.from_sympy(sympify(j))
 
             self.listofpoly = list_of_poly
         # highest power of `Dx`
@@ -225,11 +223,8 @@ class DifferentialOperator(object):
     def __rmul__(self, other):
         if not isinstance(other, DifferentialOperator):
 
-            if isinstance(other, int):
-                other = S(other)
-
             if not isinstance(other, self.parent.base.dtype):
-                other = (self.parent.base).from_sympy(other)
+                other = (self.parent.base).from_sympy(sympify(other))
 
             sol = []
             for j in self.listofpoly:
@@ -244,9 +239,7 @@ class DifferentialOperator(object):
             return DifferentialOperator(sol, self.parent)
 
         else:
-
-            if isinstance(other, int):
-                other = S(other)
+            other = sympify(other)
             list_self = self.listofpoly
             if not isinstance(other, self.parent.base.dtype):
                 list_other = [((self.parent).base).from_sympy(other)]
@@ -871,7 +864,7 @@ class HolonomicFunction(object):
                 coeff = listofdmp[degree - k]
                 if coeff == 0:
                     continue
-                if i - k in dict1.keys():
+                if dict1.has_key(i - k):
                     dict1[i - k] += (coeff * rf(n - k + 1, i))
                 else:
                     dict1[i - k] = (coeff * rf(n - k + 1, i))
@@ -1039,8 +1032,8 @@ class HolonomicFunction(object):
         # using Runge-Kutta 4th order on e^x from 0.1 to 1.
         # exact solution at 1 is 2.71828182845905
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)
-        [1.10517083333333, 1.22140257085069, 1.34985849706254, 1.49182424008069, 
-        1.64872063859684, 1.82211796209193, 2.01375162659678, 2.22553956329232, 
+        [1.10517083333333, 1.22140257085069, 1.34985849706254, 1.49182424008069,
+        1.64872063859684, 1.82211796209193, 2.01375162659678, 2.22553956329232,
         2.45960141378007, 2.71827974413517]
 
         # using Euler's method for the same
