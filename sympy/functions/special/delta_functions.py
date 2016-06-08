@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, diff
+from sympy.core import S, sympify, diff, oo
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.core.logic import fuzzy_not
@@ -18,6 +18,24 @@ class DiracDelta(Function):
     """
     The DiracDelta function and its derivatives.
 
+    DiracDelta is not an ordinary function. It can be rigorously defined either
+    as a distribution or as a measure.
+
+    DiracDelta only makes sense in definite integrals, and in particular, integrals
+    of the form ``Integral(f(x)*DiracDelta(x - x0), (x, a, b))``, where it equals
+    ``f(x0)`` if ``a <= x0 <= b`` and ``0`` otherwise. Formally, DiracDelta acts
+    in some ways like a function that is ``0`` everywhere except at ``0``,
+    but in many ways it also does not. It can often be useful to treat DiracDelta
+    in formal ways, building up and manipulating expressions with delta functions
+    (which may eventually be integrated), but care must be taken to not treat it
+    as a real function.
+    SymPy's ``oo`` is similar. It only truly makes sense formally in certain contexts
+    (such as integration limits), but SymPy allows its use everywhere, and it tries to be
+    consistent with operations on it (like ``1/oo``), but it is easy to get into trouble
+    and get wrong results if ``oo`` is treated too much like a number.
+    Similarly, if DiracDelta is treated too much like a function, it is easy to get wrong
+    or nonsensical results.
+
     DiracDelta function has the following properties:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
@@ -30,6 +48,36 @@ class DiracDelta(Function):
     Derivatives of ``k``-th order of DiracDelta have the following property:
 
     5) ``DiracDelta(x,k) = 0``, for all ``x != 0``
+
+    Examples
+    ========
+
+    >>> from sympy import DiracDelta, diff, pi, Piecewise
+    >>> from sympy.abc import x, y
+
+    >>> DiracDelta(x)
+    DiracDelta(x)
+    >>> DiracDelta(1)
+    0
+    >>> DiracDelta(-1)
+    0
+    >>> DiracDelta(pi)
+    0
+    >>> DiracDelta(x - 4).subs(x, 4)
+    DiracDelta(0)
+    >>> diff(DiracDelta(x))
+    DiracDelta(x, 1)
+    >>> diff(DiracDelta(x - 1),x,2)
+    DiracDelta(x - 1, 2)
+    >>> diff(DiracDelta(x**2 - 1),x,2)
+    2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
+    >>> DiracDelta(3*x).is_simple(x)
+    True
+    >>> DiracDelta(x**2).is_simple(x)
+    False
+    >>> DiracDelta((x**2 - 1)*y).expand(diracdelta=True, wrt=x)
+    DiracDelta(x - 1)/(2*Abs(y)) + DiracDelta(x + 1)/(2*Abs(y))
+
 
     See Also
     ========
@@ -47,6 +95,35 @@ class DiracDelta(Function):
     is_real = True
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of a DiracDelta Function.
+
+        The difference between ``diff()`` and ``fdiff()`` is:-
+        ``diff()`` is the user-level function and ``fdiff()`` is an object method.
+        ``fdiff()`` is just a convenience method available in the ``Function`` class.
+        It returns the derivative of the function without considering the chain rule.
+        ``diff(function, x)`` calls ``Function._eval_derivative`` which in turn calls
+        ``fdiff()`` internally to compute the derivative of the function.
+
+        Examples
+        ========
+
+        >>> from sympy import DiracDelta, diff
+        >>> from sympy.abc import x
+
+        >>> DiracDelta(x).fdiff()
+        DiracDelta(x, 1)
+
+        >>> DiracDelta(x, 1).fdiff()
+        DiracDelta(x, 2)
+
+        >>> DiracDelta(x**2 - 1).fdiff()
+        DiracDelta(x**2 - 1, 1)
+
+        >>> diff(DiracDelta(x, 1)).fdiff()
+        DiracDelta(x, 3)
+
+        """
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
             k = 0
@@ -58,6 +135,53 @@ class DiracDelta(Function):
 
     @classmethod
     def eval(cls, arg, k=0):
+        """
+        Returns a simplified form or a value of DiracDelta depending on the
+        argument passed by the DiracDelta object.
+
+        The ``eval()`` method is automatically called when the ``DiracDelta`` class
+        is about to be instantiated and it returns either some simplified instance
+        or the unevaluated instance depending on the argument passed. In other words,
+        ``eval()`` method is not needed to be called explicitly, it is being called
+        and evaluated once the object is called.
+
+        Examples
+        ========
+
+        >>> from sympy import DiracDelta, S, Subs
+        >>> from sympy.abc import x
+
+        >>> DiracDelta(x)
+        DiracDelta(x)
+
+        >>> DiracDelta(x,1)
+        DiracDelta(x, 1)
+
+        >>> DiracDelta(1)
+        0
+
+        >>> DiracDelta(5,1)
+        0
+
+        >>> DiracDelta(0)
+        DiracDelta(0)
+
+        >>> DiracDelta(-1)
+        0
+
+        >>> DiracDelta(S.NaN)
+        nan
+
+        >>> DiracDelta(x).eval(1)
+        0
+
+        >>> DiracDelta(x - 100).subs(x, 5)
+        0
+
+        >>> DiracDelta(x - 100).subs(x, 100)
+        DiracDelta(0)
+
+        """
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
@@ -67,6 +191,8 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
+        if fuzzy_not(im(arg).is_zero):
+            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
     def simplify(self, x):
@@ -158,7 +284,7 @@ class DiracDelta(Function):
            >>> DiracDelta(x*y).is_simple(y)
            True
 
-           >>> DiracDelta(x**2+x-2).is_simple(x)
+           >>> DiracDelta(x**2 + x - 2).is_simple(x)
            False
 
            >>> DiracDelta(cos(x)).is_simple(x)
@@ -174,6 +300,31 @@ class DiracDelta(Function):
         if p:
             return p.degree() == 1
         return False
+
+    def _eval_rewrite_as_Piecewise(self, *args):
+        """Represents DiracDelta in a Piecewise form
+
+           Examples
+           ========
+
+           >>> from sympy import DiracDelta, Piecewise, Symbol
+           >>> x = Symbol('x')
+
+           >>> DiracDelta(x).rewrite(Piecewise)
+           Piecewise((DiracDelta(0), Eq(x, 0)), (0, True))
+
+           >>> DiracDelta(x - 5).rewrite(Piecewise)
+           Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True))
+
+           >>> DiracDelta(x**2 - 5).rewrite(Piecewise)
+           Piecewise((DiracDelta(0), Eq(x**2 - 5, 0)), (0, True))
+
+           >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
+           DiracDelta(x - 5, 4)
+
+        """
+        if len(args) == 1:
+            return Piecewise((DiracDelta(0), Eq(args[0], 0)), (0, True))
 
     @staticmethod
     def _latex_no_arg(printer):
@@ -217,6 +368,25 @@ class Heaviside(Function):
     is_real = True
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of a Heaviside Function.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, diff
+        >>> from sympy.abc import x
+
+        >>> Heaviside(x).fdiff()
+        DiracDelta(x)
+
+        >>> Heaviside(x**2 - 1).fdiff()
+        DiracDelta(x**2 - 1)
+
+        >>> diff(Heaviside(x)).fdiff()
+        DiracDelta(x, 1)
+
+        """
         if argindex == 1:
             # property number 1
             return DiracDelta(self.args[0])
@@ -225,6 +395,47 @@ class Heaviside(Function):
 
     @classmethod
     def eval(cls, arg):
+        """
+        Returns a simplified form or a value of Heaviside depending on the
+        argument passed by the Heaviside object.
+
+        The ``eval()`` method is automatically called when the ``Heaviside`` class
+        is about to be instantiated and it returns either some simplified instance
+        or the unevaluated instance depending on the argument passed. In other words,
+        ``eval()`` method is not needed to be called explicitly, it is being called
+        and evaluated once the object is called.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, S
+        >>> from sympy.abc import x
+
+        >>> Heaviside(x)
+        Heaviside(x)
+
+        >>> Heaviside(19)
+        1
+
+        >>> Heaviside(0)
+        Heaviside(0)
+
+        >>> Heaviside(-5)
+        0
+
+        >>> Heaviside(S.NaN)
+        nan
+
+        >>> Heaviside(x).eval(100)
+        1
+
+        >>> Heaviside(x - 100).subs(x, 5)
+        0
+
+        >>> Heaviside(x - 100).subs(x, 105)
+        1
+
+        """
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
@@ -236,10 +447,58 @@ class Heaviside(Function):
             return S.One
 
     def _eval_rewrite_as_Piecewise(self, arg):
-        if arg.is_real:
-            return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))
+        """Represents Heaviside in a Piecewise form
+
+           Examples
+           ========
+
+           >>> from sympy import Heaviside, Piecewise, Symbol, pprint
+           >>> x = Symbol('x')
+
+           >>> Heaviside(x).rewrite(Piecewise)
+           Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0))
+
+           >>> Heaviside(x - 5).rewrite(Piecewise)
+           Piecewise((0, x - 5 < 0), (Heaviside(0), Eq(x - 5, 0)), (1, x - 5 > 0))
+
+           >>> Heaviside(x**2 - 1).rewrite(Piecewise)
+           Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
+
+        """
+        return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
 
     def _eval_rewrite_as_sign(self, arg):
+        """Represents the Heaviside function in the form of sign function.
+
+        Examples
+        ========
+
+        >>> from sympy import Heaviside, Symbol, sign
+        >>> x = Symbol('x', real=True)
+
+        >>> Heaviside(x).rewrite(sign)
+        sign(x)/2 + 1/2
+
+        >>> Heaviside(x - 2).rewrite(sign)
+        sign(x - 2)/2 + 1/2
+
+        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
+        sign(x**2 - 2*x + 1)/2 + 1/2
+
+        >>> y = Symbol('y')
+
+        >>> Heaviside(y).rewrite(sign)
+        Heaviside(y)
+
+        >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
+        Heaviside(y**2 - 2*y + 1)
+
+        See Also
+        ========
+
+        sign
+
+        """
         if arg.is_real:
             return (sign(arg)+1)/2
 
