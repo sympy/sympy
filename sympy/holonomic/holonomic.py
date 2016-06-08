@@ -864,7 +864,7 @@ class HolonomicFunction(object):
                 coeff = listofdmp[degree - k]
                 if coeff == 0:
                     continue
-                if dict1.has_key(i - k):
+                if i - k in dict1:
                     dict1[i - k] += (coeff * rf(n - k + 1, i))
                 else:
                     dict1[i - k] = (coeff * rf(n - k + 1, i))
