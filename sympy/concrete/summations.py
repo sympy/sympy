@@ -183,6 +183,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
+            if isinstance(i, Idx):
+                i = i.label
 
             newf = eval_sum(f, (i, a, b))
             if newf is None:
@@ -233,11 +235,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # don't want to differentiate wrt any free symbol in the upper or lower
         # limits
         # XXX remove this test for free_symbols when the default _eval_derivative is in
-        if x.is_Indexed:
-            from sympy import IndexedBase
-            if x.base not in self.atoms(IndexedBase):
-                return S.Zero
-        elif x not in self.free_symbols:
+        if x not in self.free_symbols:
             return S.Zero
 
         # get limits and the function
