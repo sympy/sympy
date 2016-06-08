@@ -255,7 +255,7 @@ def test_issue_4149():
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
 
 def test_issue_11207():
-    assert floor(floor(x)) == x
-    assert floor(ceiling(x)) == x
-    assert ceiling(floor(x)) == x
-    assert floor(ceiling(x)) == x
+    assert floor(floor(x)) == floor(x)
+    assert floor(ceiling(x)) == ceiling(x)
+    assert ceiling(floor(x)) == floor(x)
+    assert floor(ceiling(x)) == ceiling(x)
