@@ -223,10 +223,7 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, pspace, symbol=None):
-        if symbol is None:
-            # Allow single arg, representing pspace == PSpace()
-            pspace, symbol = PSpace(), pspace
+    def __new__(cls, pspace, symbol):
         if not isinstance(symbol, Symbol):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
@@ -1103,5 +1100,5 @@ def _value_check(condition, message):
 
     Raises ValueError with message if condition is not True
     """
-    if condition == False:
+    if condition != True:
         raise ValueError(message)

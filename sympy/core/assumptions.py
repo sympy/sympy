@@ -66,10 +66,8 @@ Here follows a list of possible assumption names:
         divisor other than ``1`` or the number itself.  See [4]_.
 
     zero
-        object has the value of ``0``.
-
     nonzero
-        object is a real number that is not zero.
+        object is zero (not zero).
 
     rational
         object can have only values from the set

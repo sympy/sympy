@@ -390,9 +390,6 @@ class StrPrinter(Printer):
         return "Rational function field in %s over %s with %s order" % \
             (", ".join(map(self._print, field.symbols)), field.domain, field.order)
 
-    def _print_FreeGroupElm(self, elm):
-        return elm.__str__()
-
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
 
@@ -571,11 +568,6 @@ class StrPrinter(Printer):
             "==": "Eq",
             "!=": "Ne",
             ":=": "Assignment",
-            '+=': "AddAugmentedAssignment",
-            "-=": "SubAugmentedAssignment",
-            "*=": "MulAugmentedAssignment",
-            "/=": "DivAugmentedAssignment",
-            "%=": "ModAugmentedAssignment",
         }
 
         if expr.rel_op in charmap:
