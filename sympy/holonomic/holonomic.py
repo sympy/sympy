@@ -156,6 +156,7 @@ class DifferentialOperator(object):
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
         # sequence of polynomials in x for each power of Dx
+        # the list should not have trailing zeroes
         # represents the operator
         # convert the expressions into ring elements using from_sympy
         if isinstance(list_of_poly, list):
@@ -239,10 +240,9 @@ class DifferentialOperator(object):
             return DifferentialOperator(sol, self.parent)
 
         else:
-            other = sympify(other)
             list_self = self.listofpoly
             if not isinstance(other, self.parent.base.dtype):
-                list_other = [((self.parent).base).from_sympy(other)]
+                list_other = [((self.parent).base).from_sympy(sympify(other))]
             else:
                 list_other = [other]
             sol = []
@@ -428,10 +428,10 @@ class HolonomicFunction(object):
     >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])  # sin(x)
 
     >>> p + q  # annihilator of e^x + sin(x)
-    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1 , f'(0) = 2 , f''(0) = 1
+    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1, f'(0) = 2, f''(0) = 1
 
     >>> p * q  # annihilator of e^x * sin(x)
-    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
     """
 
     _op_priority = 20
@@ -468,7 +468,7 @@ class HolonomicFunction(object):
             cond_str = ''
             diff_str = ''
             for i in self.y0:
-                cond_str += ', f%s(%s) = %s ' % (diff_str, sstr(self.x0), sstr(i))
+                cond_str += ', f%s(%s) = %s' % (diff_str, sstr(self.x0), sstr(i))
                 diff_str += "'"
 
             sol = str_sol + cond_str
@@ -589,11 +589,11 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
         >>> HolonomicFunction(Dx - 1, x, 0, 1).integrate((x, 0, x))  # e^x - 1
-        HolonomicFunction((-1)Dx + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+        HolonomicFunction((-1)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
         # integrate(cos(x), (x 0, x)) = sin(x)
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [1, 0]).integrate((x, 0, x))
-        HolonomicFunction((1)Dx + (1)Dx**3, x), f(0) = 0 , f'(0) = 1 , f''(0) = 0
+        HolonomicFunction((1)Dx + (1)Dx**3, x), f(0) = 0, f'(0) = 1, f''(0) = 0
         """
 
         # just multiply by Dx from right
@@ -776,7 +776,7 @@ class HolonomicFunction(object):
         HolonomicFunction((-2*x) + (1)Dx, x), f(0) = 1
 
         >>> HolonomicFunction(Dx**2 + 1, x).composition(x**2 - 1, 1, [1, 0])
-        HolonomicFunction((4*x**3) + (-1)Dx + (x)Dx**2, x), f(1) = 1 , f'(1) = 0
+        HolonomicFunction((4*x**3) + (-1)Dx + (x)Dx**2, x), f(1) = 1, f'(1) = 0
 
         See Also
         ========
@@ -1062,7 +1062,7 @@ def from_hyper(func, x0=0, evalf=False):
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> from_hyper(hyper([], [S(3)/2], x**2/4))
-    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1) , f'(1) = -sinh(1) + cosh(1)
+    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1), f'(1) = -sinh(1) + cosh(1)
     """
 
     a = func.ap
@@ -1136,7 +1136,7 @@ def from_meijerg(func, x0=0, evalf=False):
     >>> from sympy import symbols, meijerg, S
     >>> x = symbols('x')
     >>> from_meijerg(meijerg(([], []), ([S(1)/2], [0]), x**2/4))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1/sqrt(pi)
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1/sqrt(pi)
     """
 
     a = func.ap
@@ -1288,7 +1288,7 @@ def from_sympy(func):
     >>> from sympy import sin, exp, symbols
     >>> x = symbols('x')
     >>> from_sympy(sin(x))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
     >>> from_sympy(exp(x))
     HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
