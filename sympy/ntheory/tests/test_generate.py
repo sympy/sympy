@@ -2,7 +2,7 @@ from sympy import Sieve, sieve
 from sympy.core.compatibility import range
 
 from sympy.ntheory import isprime, totient, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
+    primerange, primepi, prime, primorial, composite, compositepi
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.utilities.pytest import raises
@@ -100,8 +100,6 @@ def test_generate():
     assert nextprime(2, 2) == 5
 
     raises(ValueError, lambda: totient(0))
-
-    raises(ValueError, lambda: reduced_totient(0))
 
     raises(ValueError, lambda: primorial(0))
 

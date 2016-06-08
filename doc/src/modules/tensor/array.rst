@@ -6,9 +6,6 @@ N-dim array
 .. automodule:: sympy.tensor.array
 
 
-Classes
--------
-
 .. autoclass:: ImmutableDenseNDimArray
    :members:
 
@@ -20,15 +17,3 @@ Classes
 
 .. autoclass:: MutableSparseNDimArray
    :members:
-
-
-Functions
----------
-
-.. autofunction:: derive_by_array
-
-.. autofunction:: permutedims
-
-.. autofunction:: tensorcontraction
-
-.. autofunction:: tensorproduct
