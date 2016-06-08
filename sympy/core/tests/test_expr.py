@@ -1279,7 +1279,7 @@ def test_issue_5300():
 
 def test_floordiv():
     from sympy.functions.elementary.integers import floor
-    assert x//y == floor(x/y)
+    assert x // y == floor(x / y)
 
 
 def test_as_coeff_Mul():

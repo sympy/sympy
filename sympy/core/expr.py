@@ -308,9 +308,9 @@ class Expr(Basic, EvalfMixin):
                 return sympify(dif.is_negative)
         return StrictLessThan(self, other, evaluate=False)
 
-    def __floordiv__(self,other):
+    def __floordiv__(self, other):
         from sympy.functions.elementary.integers import floor
-        return floor(self/other)
+        return floor(self / other)
 
     @staticmethod
     def _from_mpmath(x, prec):
