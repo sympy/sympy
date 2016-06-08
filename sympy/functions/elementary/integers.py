@@ -124,6 +124,10 @@ class floor(RoundFunction):
                 return Integer(int(arg.floor()))
             else:
                 return arg
+        elif isinstance(arg, ceiling):
+            return arg.args[0]
+        elif isinstance(arg, floor):
+            return arg.args[0]
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
@@ -195,6 +199,10 @@ class ceiling(RoundFunction):
                 return Integer(int(arg.ceiling()))
             else:
                 return arg
+        elif isinstance(arg, ceiling):
+            return arg.args[0]
+        elif isinstance(arg, floor):
+            return arg.args[0]
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
