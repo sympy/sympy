@@ -471,6 +471,9 @@ class Range(Set):
 
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
+
+        args = _sympify(args)
+
         if len(args) == 1:
             if isinstance(args[0], range if PY3 else xrange):
                 args = args[0].__reduce__()[1]  # use pickle method
@@ -481,7 +484,7 @@ class Range(Set):
         if slc.step == 0:
             raise ValueError("step cannot be 0")
 
-        start, stop, step = slc.start or 0, slc.stop, slc.step or 1
+        start, stop, step = slc.start or S(0), slc.stop, slc.step or S(1)
         try:
             start, stop, step = [
                 w if w in [S.NegativeInfinity, S.Infinity]
@@ -512,8 +515,8 @@ class Range(Set):
             n = ceiling((stop - ref)/step)
             if n <= 0:
                 # null Range
-                start = end = 0
-                step = 1
+                start = end = S(0)
+                step = S(1)
             else:
                 end = ref + n*step
         return Basic.__new__(cls, start, end, step)
