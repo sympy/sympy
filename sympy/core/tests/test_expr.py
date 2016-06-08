@@ -1277,6 +1277,10 @@ def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
+def test_floordiv():
+    from sympy.functions.elementary.integers import floor
+    assert x//y == floor(x/y)
+
 
 def test_as_coeff_Mul():
     assert S(0).as_coeff_Mul() == (S.One, S.Zero)
