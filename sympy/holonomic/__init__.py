@@ -1,3 +1,2 @@
-from .holonomic import (DifferentialOperator, HolonomicFunction, DifferentialOperators,
-    from_hyper, from_meijerg, from_sympy)
+from .holonomic import DifferentialOperator, HolonomicFunction, DifferentialOperators, from_hyper
 from .recurrence import RecurrenceOperators, RecurrenceOperator, HolonomicSequence
