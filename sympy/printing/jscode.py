@@ -10,8 +10,7 @@ Math object where possible.
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.codegen.ast import Assignment
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import string_types, range
 
