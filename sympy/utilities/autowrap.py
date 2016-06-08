@@ -573,6 +573,8 @@ static PyMethodDef ${module}Methods[] = {
         {NULL, NULL, 0, NULL}
 };""")
 
+_ufunc_outcalls = Template("*((double *)out${outnum}) = ${funcname}(${call_args});")
+
 _ufunc_body = Template("""\
 static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
 {
@@ -581,7 +583,7 @@ static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps
     ${declare_args}
     ${declare_steps}
     for (i = 0; i < n; i++) {
-        *((double *)out1) = ${funcname}(${call_args});
+        ${outcalls}
         ${step_increments}
     }
 }
@@ -665,12 +667,51 @@ class UfuncifyCodeWrapper(CodeWrapper):
         command = [sys.executable, "setup.py", "build_ext", "--inplace"]
         return command
 
-    def _prepare_files(self, routine):
+    def wrap_code(self, routines, helpers=None):
+        # This routine overrides CodeWrapper because we can't assume funcname == routines[0].name
+        # Therefore we have to break the CodeWrapper private API.
+        # There isn't an obvious way to extend multi-expr support to
+        # the other autowrap backends, so we limit this change to ufuncify.
+        helpers = helpers if helpers is not None else []
+        # We just need a consistent name
+        funcname = 'wrapped_' + str(id(routines) + id(helpers))
+
+        workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
+        if not os.access(workdir, os.F_OK):
+            os.mkdir(workdir)
+        oldwork = os.getcwd()
+        os.chdir(workdir)
+        try:
+            sys.path.append(workdir)
+            self._generate_code(routines, helpers)
+            self._prepare_files(routines, funcname)
+            self._process_files(routines)
+            mod = __import__(self.module_name)
+        finally:
+            sys.path.remove(workdir)
+            CodeWrapper._module_counter += 1
+            os.chdir(oldwork)
+            if not self.filepath:
+                try:
+                    shutil.rmtree(workdir)
+                except OSError:
+                    # Could be some issues on Windows
+                    pass
+
+        return self._get_wrapped_function(mod, funcname)
+
+    def _generate_code(self, main_routines, helper_routines):
+        all_routines = main_routines + helper_routines
+        self.generator.write(
+            all_routines, self.filename, True, self.include_header,
+            self.include_empty)
+
+    def _prepare_files(self, routines, funcname):
 
         # C
         codefilename = self.module_name + '.c'
         with open(codefilename, 'w') as f:
-            self.dump_c([routine], f, self.filename)
+            self.dump_c(routines, f, self.filename, funcname=funcname)
 
         # setup.py
         with open('setup.py', 'w') as f:
@@ -685,7 +726,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
                                         filename=self.filename)
         f.write(setup)
 
-    def dump_c(self, routines, f, prefix):
+    def dump_c(self, routines, f, prefix, funcname=None):
         """Write a C file with python wrappers
 
         This file contains all the definitions of the routines in c code.
@@ -698,7 +739,13 @@ class UfuncifyCodeWrapper(CodeWrapper):
             File-like object to write the file to
         prefix
             The filename prefix, used to name the imported module.
+        funcname
+            Name of the main function to be returned.
         """
+        if (funcname is None) and (len(routines) == 1):
+            funcname = routines[0].name
+        elif funcname is None:
+            raise ValueError('funcname must be specified for multiple output routines')
         functions = []
         function_creation = []
         ufunc_init = []
@@ -706,61 +753,65 @@ class UfuncifyCodeWrapper(CodeWrapper):
         include_file = "\"{0}.h\"".format(prefix)
         top = _ufunc_top.substitute(include_file=include_file, module=module)
 
-        for r_index, routine in enumerate(routines):
-            name = routine.name
+        name = funcname
 
-            # Partition the C function arguments into categories
-            py_in, py_out = self._partition_args(routine.arguments)
-            n_in = len(py_in)
-            n_out = 1
+        # Partition the C function arguments into categories
+        # Here we assume all routines accept the same arguments
+        r_index = 0
+        py_in, _ = self._partition_args(routines[0].arguments)
+        n_in = len(py_in)
+        n_out = len(routines)
 
-            # Declare Args
-            form = "char *{0}{1} = args[{2}];"
-            arg_decs = [form.format('in', i, i) for i in range(n_in)]
-            arg_decs.append(form.format('out', 1, n_in))
-            declare_args = '\n    '.join(arg_decs)
+        # Declare Args
+        form = "char *{0}{1} = args[{2}];"
+        arg_decs = [form.format('in', i, i) for i in range(n_in)]
+        arg_decs.extend([form.format('out', i, i+n_in) for i in range(n_out)])
+        declare_args = '\n    '.join(arg_decs)
 
-            # Declare Steps
-            form = "npy_intp {0}{1}_step = steps[{2}];"
-            step_decs = [form.format('in', i, i) for i in range(n_in)]
-            step_decs.append(form.format('out', 1, n_in))
-            declare_steps = '\n    '.join(step_decs)
+        # Declare Steps
+        form = "npy_intp {0}{1}_step = steps[{2}];"
+        step_decs = [form.format('in', i, i) for i in range(n_in)]
+        step_decs.extend([form.format('out', i, i+n_in) for i in range(n_out)])
+        declare_steps = '\n    '.join(step_decs)
 
-            # Call Args
-            form = "*(double *)in{0}"
-            call_args = ', '.join([form.format(a) for a in range(n_in)])
+        # Call Args
+        form = "*(double *)in{0}"
+        call_args = ', '.join([form.format(a) for a in range(n_in)])
 
-            # Step Increments
-            form = "{0}{1} += {0}{1}_step;"
-            step_incs = [form.format('in', i) for i in range(n_in)]
-            step_incs.append(form.format('out', 1))
-            step_increments = '\n        '.join(step_incs)
+        # Step Increments
+        form = "{0}{1} += {0}{1}_step;"
+        step_incs = [form.format('in', i) for i in range(n_in)]
+        step_incs.extend([form.format('out', i, i) for i in range(n_out)])
+        step_increments = '\n        '.join(step_incs)
 
-            # Types
-            n_types = n_in + n_out
-            types = "{" + ', '.join(["NPY_DOUBLE"]*n_types) + "};"
+        # Types
+        n_types = n_in + n_out
+        types = "{" + ', '.join(["NPY_DOUBLE"]*n_types) + "};"
 
-            # Docstring
-            docstring = '"Created in SymPy with Ufuncify"'
+        # Docstring
+        docstring = '"Created in SymPy with Ufuncify"'
 
-            # Function Creation
-            function_creation.append("PyObject *ufunc{0};".format(r_index))
+        # Function Creation
+        function_creation.append("PyObject *ufunc{0};".format(r_index))
 
-            # Ufunc initialization
-            init_form = _ufunc_init_form.substitute(module=module,
-                                                    funcname=name,
-                                                    docstring=docstring,
-                                                    n_in=n_in, n_out=n_out,
-                                                    ind=r_index)
-            ufunc_init.append(init_form)
+        # Ufunc initialization
+        init_form = _ufunc_init_form.substitute(module=module,
+                                                funcname=name,
+                                                docstring=docstring,
+                                                n_in=n_in, n_out=n_out,
+                                                ind=r_index)
+        ufunc_init.append(init_form)
 
-            body = _ufunc_body.substitute(module=module, funcname=name,
-                                          declare_args=declare_args,
-                                          declare_steps=declare_steps,
-                                          call_args=call_args,
-                                          step_increments=step_increments,
-                                          n_types=n_types, types=types)
-            functions.append(body)
+        outcalls = [_ufunc_outcalls.substitute(outnum=i, call_args=call_args,
+                                               funcname=routines[i].name) for i in range(n_out)]
+
+        body = _ufunc_body.substitute(module=module, funcname=name,
+                                      declare_args=declare_args,
+                                      declare_steps=declare_steps,
+                                      call_args=call_args,
+                                      step_increments=step_increments,
+                                      n_types=n_types, types=types, outcalls='\n        '.join(outcalls))
+        functions.append(body)
 
         body = '\n\n'.join(functions)
         ufunc_init = '\n    '.join(ufunc_init)
@@ -777,9 +828,6 @@ class UfuncifyCodeWrapper(CodeWrapper):
         py_out = []
         for arg in args:
             if isinstance(arg, OutputArgument):
-                if py_out:
-                    msg = "Ufuncify doesn't support multiple OutputArguments"
-                    raise ValueError(msg)
                 py_out.append(arg)
             elif isinstance(arg, InOutArgument):
                 raise ValueError("Ufuncify doesn't support InOutArguments")
@@ -883,13 +931,24 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     flags = flags if flags else ()
 
     if backend.upper() == 'NUMPY':
-        routine = make_routine('autofunc', expr, args)
+        # maxargs is set by numpy compile-time constant NPY_MAXARGS
+        # If a future version of numpy modifies or removes this restriction
+        # this variable should be changed or removed
+        maxargs = 32
         helps = []
         for name, expr, args in helpers:
             helps.append(make_routine(name, expr, args))
         code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
                                            flags, verbose)
-        return code_wrapper.wrap_code(routine, helpers=helps)
+        if not isinstance(expr, (list, tuple)):
+            expr = [expr]
+        if len(expr) == 0:
+            raise ValueError('Expression iterable has zero length')
+        if (len(expr) + len(args)) > maxargs:
+            raise ValueError('Cannot create ufunc with more than {0} total arguments: got {1} in, {2} out'
+                             .format(maxargs, len(args), len(expr)))
+        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for idx, exprx in enumerate(expr)]
+        return code_wrapper.wrap_code(routines, helpers=helps)
     else:
         # Dummies are used for all added expressions to prevent name clashes
         # within the original expression.
