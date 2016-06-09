@@ -806,31 +806,31 @@ def substitution_rule(integral):
             if contains_dont_know(subrule):
                 continue
 
-            if sympy.simplify(c - 1) != 0:
-                _, denom = c.as_numer_denom()
-                if subrule:
-                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+            # if sympy.simplify(c - 1) != 0:
+            #     _, denom = c.as_numer_denom()
+            #     if subrule:
+            #         subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
 
-                if denom.free_symbols:
-                    piecewise = []
-                    could_be_zero = []
+            #     if denom.free_symbols:
+            #         piecewise = []
+            #         could_be_zero = []
 
-                    if isinstance(denom, sympy.Mul):
-                        could_be_zero = denom.args
-                    else:
-                        could_be_zero.append(denom)
+            #         if isinstance(denom, sympy.Mul):
+            #             could_be_zero = denom.args
+            #         else:
+            #             could_be_zero.append(denom)
 
-                    for expr in could_be_zero:
-                        if not fuzzy_not(expr.is_zero):
-                            substep = integral_steps(integrand.subs(expr, 0), symbol)
+            #         for expr in could_be_zero:
+            #             if not fuzzy_not(expr.is_zero):
+            #                 substep = integral_steps(integrand.subs(expr, 0), symbol)
 
-                            if substep:
-                                piecewise.append((
-                                    substep,
-                                    sympy.Eq(expr, 0)
-                                ))
-                    piecewise.append((subrule, True))
-                    subrule = PiecewiseRule(piecewise, substituted, symbol)
+            #                 if substep:
+            #                     piecewise.append((
+            #                         substep,
+            #                         sympy.Eq(expr, 0)
+            #                     ))
+            #         piecewise.append((subrule, True))
+            #         subrule = PiecewiseRule(piecewise, substituted, symbol)
 
             ways.append(URule(u_var, u_func, c,
                               subrule,
@@ -855,6 +855,12 @@ def substitution_rule(integral):
 partial_fractions_rule = rewriter(
     lambda integrand, symbol: integrand.is_rational_function(),
     lambda integrand, symbol: integrand.apart(symbol))
+
+cancel_rule = rewriter(
+    # lambda integrand, symbol: integrand.is_algebraic_expr(),
+    # lambda integrand, symbol: isinstance(integrand, sympy.Mul),
+    lambda integrand, symbol: True,
+    lambda integrand, symbol: integrand.cancel())
 
 distribute_expand_rule = rewriter(
     lambda integrand, symbol: (
@@ -942,7 +948,7 @@ def integral_steps(integrand, symbol, **options):
     integral = IntegralInfo(integrand, symbol)
 
     def key(integral):
-        integrand = integral.integrand.simplify()
+        integrand = integral.integrand
 
         if isinstance(integrand, TrigonometricFunction):
             return TrigonometricFunction
@@ -986,6 +992,9 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     partial_fractions_rule),
                 condition(
+                    integral_is_subclass(sympy.Mul, sympy.Pow),
+                    cancel_rule),
+                condition(
                     integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
                     parts_rule),
                 condition(
@@ -1021,7 +1030,7 @@ def eval_add(substeps, integrand, symbol):
 
 @evaluates(URule)
 def eval_u(u_var, u_func, constant, substep, integrand, symbol):
-    result = _manualintegrate(substep)
+    result = constant * _manualintegrate(substep)
     return result.subs(u_var, u_func)
 
 @evaluates(PartsRule)
