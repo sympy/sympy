@@ -128,6 +128,9 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
 
     """
+    if isinstance(seq, basestring):
+        return [[''.join(i) for i in reshape(list(seq), how)[0]]]
+
     m = sum(flatten(how))
     n, rem = divmod(len(seq), m)
     if m < 0 or rem:
@@ -151,7 +154,7 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(seq, multiple=True):
+def group(seq, multiple=True, f=None):
     """
     Splits a sequence into a list of lists of equal, adjacent elements.
 
@@ -167,12 +170,32 @@ def group(seq, multiple=True):
     >>> group([1, 1, 3, 2, 2, 1], multiple=False)
     [(1, 2), (3, 1), (2, 2), (1, 1)]
 
+    For a sequence in which elements having a similar property
+    should be grouped together, an identity function can be
+    passed which defines whether an element of the sequence
+    belongs to the group or not. In this case, there is no
+    advantage to using `multiple=False` since there will never
+    be runs of matching subgroups:
+
+    >>> group([1, 2, 3, 2, 3, 1, 4, 5, 2, 3], f=lambda x: x<4)
+    [[1, 2, 3, 2, 3, 1], [4, 5], [2, 3]]
+    >>> group([1, 2, 3, 2, 3, 1, 4, 5, 2, 3], f=lambda x: x<4, multiple=False)
+    [([1, 2, 3, 2, 3, 1], 1), ([4, 5], 1), ([2, 3], 1)]
+
     See Also
     ========
-    multiset
+    find, multiset, reshape, runs, split
     """
     if not seq:
         return []
+
+    if f is not None:
+        how = [[c] for b, c in group(
+            [f(i) for i in seq], multiple=False)]
+        if multiple:
+            return reshape(seq, how)[0]
+        else:
+            return [(i, 1) for i in reshape(seq, how)[0]]
 
     current, groups = [seq[0]], []
 
@@ -2084,6 +2107,10 @@ def runs(seq, op=gt):
     [[0, 1, 2], [2], [1, 4], [3], [2], [2]]
     >>> runs([0, 1, 2, 2, 1, 4, 3, 2, 2], op=ge)
     [[0, 1, 2, 2], [1, 4], [3], [2, 2]]
+
+    See Also
+    ========
+    find, group, multiset, split
     """
     cycles = []
     seq = iter(seq)
@@ -2268,3 +2295,247 @@ def signed_permutations(t):
     """
     return (type(t)(i) for j in permutations(t)
         for i in permute_signs(j))
+
+
+def seq_replace(seq, a, b=[]):
+    """
+    Replace subsequence a with b in-place in seq. If list
+    b has a length of 1 it may be passed as the element
+    instead of wrapping it as a list.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import seq_replace
+    >>> seq = [1, 2, 1, 2, 3]
+    >>> seq_replace(seq, [1, 2], 4)
+    >>> seq
+    [4, 4, 3]
+    >>> seq = [1, 2, 1, 2, 3]
+    >>> seq_replace(seq, [1, 2], [2, 1])
+    >>> seq
+    [2, 1, 2, 1, 3]
+
+    See Also
+    ========
+    sympy.utilities.misc.replace
+    """
+    a = list(a)
+    if type(b) is not list:
+        b = [b]
+    if not a or a == b:
+        return
+    start = 0
+    while True:
+        i = find(seq, a, start)
+        if i == -1:
+            break
+        seq[i:i+len(a)] = b
+        start = i + len(b)
+
+
+def find(sequence, subsequence, start=0):
+    """Return starting index at which subsequence appears in sequence
+    at or beyond the index corresponding to position `start`, else -1.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import find
+    >>> find('alabaster', 'ba')
+    3
+    >>> find('alabaster', 'a', 1)
+    2
+    >>> find('alabaster', 'e', -3)
+    7
+
+    See Also
+    ========
+    group, multiset, runs, split
+    """
+    # adapted from http://code.activestate.com/recipes/
+    # 117223-boyer-moore-horspool-string-searching/
+    from collections import defaultdict
+    m = len(subsequence)
+    n = len(sequence)
+    if m > n:
+        return -1
+    if start < 0:
+        start = max(-n, start) + n
+    skip = defaultdict(lambda: m)
+    for k in range(m - 1):
+        skip[subsequence[k]] = m - k - 1
+    k = m - 1 + start
+    while k < n:
+        j = m - 1
+        i = k
+        while j >= 0 and sequence[i] == subsequence[j]:
+            j -= 1
+            i -= 1
+        if j == -1:
+            return i + 1
+        k += skip[sequence[k]]
+    return -1
+
+
+def split(s, ignore=()):
+    """Split sequence into subsequences separated by elements that
+    are in ignore.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import split
+    >>> split('abbc', 'b')
+    ['a', 'c']
+
+    To split on a sequence, one can replace the sequence with a unique
+    element and then split on that element:
+
+    >>> from sympy.utilities.iterables import seq_replace
+    >>> from sympy.core.symbol import Dummy
+    >>> s = list('abcskipd')
+    >>> uniq = [Dummy()]
+    >>> seq_replace(s, list('skip'), uniq)
+    >>> split(s, uniq)
+    [['a', 'b', 'c'], ['d']]
+
+    See Also
+    ========
+    find, group, multiset, seq_replace, runs
+    """
+    if not ignore:
+        return [s]
+    rv = []
+    i = 0
+    ignoring = False
+    for j in range(len(s)):
+        if s[j] in ignore:
+            if ignoring:
+                i = j
+            else:
+                rv.append(s[i:j])
+                ignoring = True
+        elif ignoring:
+            i = j
+            ignoring = False
+    if ignoring:
+        rv.append(s[j:j])
+    else:
+        rv.append(s[i:])
+    return rv
+
+
+def longest_repetition(*s):
+    """Returns the longest, continguous repeated subsequence
+    in `s` that is lexically smaller than any other
+    subsequences of the same length, else returns None.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import longest_repetition as lr
+    >>> lr('ba')
+    ''
+    >>> lr('bab')
+    'b'
+    >>> lr('babab')
+    'ab'
+    >>> lr('ab', 'bca', 'bc')
+    'bc'
+
+    If there are characters that should be ignored,
+    split those out and process the fragments.
+
+    With strings, the `split` method can be used:
+
+    >>> lr(*'ab$bca$bc'.split('$'))
+    'bc'
+
+    With sequences, the split function can be used:
+
+    >>> from sympy.utilities.iterables import split
+    >>> s = [(1, 2, -1, 2, 3, 4), (2, 3, 5, 0, 1, 2, 3, 0, 1, 2)]
+    >>> pieces = [i for si in s for i in split(si, [0, -1])]; pieces
+    [(1, 2), (2, 3, 4), (2, 3, 5), (1, 2, 3), (1, 2)]
+    >>> lr(*pieces)
+    (1, 2)
+    """
+    # sort the indices by suffix from index j in sequence i
+    ix = [(i, j) for i in range(len(s)) for j in range(len(s[i]))]
+    ix.sort(key=lambda ij: s[ij[0]][ij[1]:])
+    start, length = (0, 0), 0
+    # the find the longest prefix shared by pairs of suffixes
+    for (i, a), (j, b) in zip(ix, ix[1:]):
+        # find common prefix
+        la = len(s[i]) - a
+        lb = len(s[j]) - b
+        for m in range(min(la, lb)):
+            if s[i][a + m] != s[j][b + m]:
+                break
+        else:
+            # they all matched
+            m += 1
+        if i == j and m > abs(b - a):  # matches overlap in s[i]
+            # mark the position of the middle of the the longer subsequence
+            if la > lb:
+                m = la//2
+            else:
+                a = b
+                m = lb//2
+            # trim the subsequence until it appears as a match in the
+            # latter half of the longer subsequence
+            while m and m > length:
+                if find(s[i], s[i][a: a + m], a + m) != -1:
+                    break
+                m -= 1
+        # if it's the longest so far, store it
+        if m > length:
+            start, length = (i, a), m
+    i, a = start
+    return s[i][a: a + length]
+
+
+def all_repetitions(*s, **kwargs):
+    """Return a list of all subsequences in s that are repeated. The
+    subsequences are recursively processed so that any smaller
+    subsequences in them that appear in any of the original sequences
+    will be identified. By default, subsequences longer than 2 will be
+    identified. The keyword ``small`` can be used to specify
+    a larger or smaller size.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import all_repetitions
+    >>> s = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
+    >>> all_repetitions(*s)
+    ['abcd', 'abc', 'bc']
+    >>> all_repetitions(*s, small=3)
+    ['abcd', 'abc']
+    >>> all_repetitions(*s, small=1)
+    ['abcd', 'abc', 'bc', 'a', 'd']
+    """
+    small = as_int(kwargs.get('small', 2))
+    if small < 0:
+        raise ValueError('`small` must be positive')
+    s = list(s)  # b/c tuple args cannot be modified in place
+    reps = []
+    while not all(len(i) < small for i in s):
+        L = longest_repetition(*s)
+        if len(L) < small:
+            # the longest repetition is too small
+            break
+        reps.append(L)
+        # break s_i into pieces, removing the found subsequences
+        i = 0
+        while i < len(s):
+            at = find(s[i], L)
+            if at != -1:
+                s[i:i+1] = [s[i][:at], s[i][at + len(L):]]
+            i += 1
+        # if len(L) > small then there may be subsequences shared
+        # between it an the remaining sequences of s
+        if len(L) != small:
+            s.append(L[:])
+    return reps

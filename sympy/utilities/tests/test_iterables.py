@@ -9,13 +9,16 @@ from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
-    flatten, generate_bell, generate_derangements, generate_involutions,
+    flatten, generate_bell, generate_derangements,
+    generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
     multiset_combinations, multiset_partitions,
-    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
+    multiset_permutations, necklaces, numbered_symbols, ordered,
+    ordered_partitions, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations, ordered_partitions)
+    rotate_left, rotate_right, runs, sift, subsets, take,
+    topological_sort, unflatten, uniq, variations,
+    seq_replace, find, split, longest_repetition, all_repetitions)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -92,6 +95,14 @@ def test_group():
     assert group([1, 1, 2, 2, 2, 1, 3, 3]) == [[1, 1], [2, 2, 2], [1], [3, 3]]
     assert group([1, 1, 2, 2, 2, 1, 3, 3], multiple=False) == [(1, 2),
                  (2, 3), (1, 1), (3, 2)]
+
+    f = lambda x: x <= 2
+    assert group([], f=f) == []
+    assert group([1, 2, 3, 1, 2, 3], f=f) == [[1, 2], [3], [1, 2], [3]]
+
+    assert group('abcdefghi', f=lambda c:c in 'bc') == ['a', 'bc', 'defghi']
+    assert group('abcdefghi', f=lambda c:c in 'bc', multiple=False) == [
+        ('a', 1), ('bc', 1), ('defghi', 1)]
 
 
 def test_subsets():
@@ -726,3 +737,99 @@ def test_ordered_partitions():
                 sum(1 for p in f(i, j, 1)) ==
                 sum(1 for p in f(i, j, 0)) ==
                 nT(i, j))
+
+
+def test_seq_replace():
+    l = [1, 2, 3, 2, 3, 4]
+    seq_replace(l, [2, 3], 5)
+    assert l == [1, 5, 5, 4]
+
+    l = [1, 2, 1, 2, 3]
+    seq_replace(l, [1, 2, 3], 4)
+    assert l == [1, 2, 4]
+
+    l = [1, 2, 1, 2, 1, 2]
+    seq_replace(l, [1, 2], 3)
+    assert l == [3, 3, 3]
+
+    l = [1, 2, 1, 2, 1, 2]
+    seq_replace(l, [1, 2])
+    assert l == []
+
+    l = [1, 2, 1, 2, 1, 3]
+    seq_replace(l, [3])
+    assert l == [1, 2, 1, 2, 1]
+
+    l = [1, 2, 1, 2]
+    seq_replace(l, [1, 2], [1, 2])
+    assert l == [1, 2, 1, 2]
+
+    l = [1, 2, 1, 2]
+    seq_replace(l, [], [])
+    assert l == [1, 2, 1, 2]
+
+
+def test_longest_repetition():
+    lr = longest_repetition
+    assert lr('a') == ''
+    assert lr('aaa') == 'a'
+    assert lr('aaaa') == 'aa'
+    assert lr('aaaac') == 'aa'
+    assert lr('babab') == 'ab'
+    assert lr('bcbcb') == 'bc'
+    assert lr('abcabd') == 'ab'
+    assert lr('aabaabc') == 'aab'
+    assert lr('abcxxabcxxabc') == 'abcxx'
+    assert lr('aba$bxa$bab') == 'a$b'
+    assert lr(*'aba$bxa$bab'.split('$')) == 'ab'
+    assert lr('a$$$$$$aaaa') == '$$$'
+    assert lr(*'a$$$$$$aaaa'.split('$')) == 'aa'
+    assert lr(*split(list('a$$$$$$aaaabb'), list('a$'))) == ['b']
+    assert lr(*'ab$aa$abba$'.split('$')) == 'ab'
+    assert lr(*'baaabaaaa'.split('b')) == 'aaa'
+
+
+def test_all_repetitions():
+    raises(ValueError, lambda: all_repetitions('abc', small=1.2))
+    raises(ValueError, lambda: all_repetitions('abc', small=-1))
+    assert all_repetitions('abc', 'abcd', small=5) == []
+
+    s = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
+    a1 = ['abcd', 'abc', 'bc']
+    a2 = ['abcd', 'abc']
+    a3 = ['abcd', 'abc', 'bc', 'a', 'd']
+    assert all_repetitions(*s) == a1
+    assert all_repetitions(*s, small=3) == a2
+    assert all_repetitions(*s, small=1) == a3
+    # test them in list form
+    s, a1, a2, a3 = [[list(i) for i in j] for j in (s, a1, a2, a3)]
+    assert all_repetitions(*s) == a1
+    assert all_repetitions(*s, small=3) == a2
+    assert all_repetitions(*s, small=1) == a3
+
+
+def test_split():
+    assert split('a') == ['a']
+    assert split('a', 'b') == ['a']
+    assert split('a', 'a') == ['', '']
+    assert split('ab', 'a') == ['', 'b']
+    assert split('cab', 'a') == ['c', 'b']
+    assert split('cab', 'b') == ['ca', '']
+    assert split('cab', 'c') == ['', 'ab']
+    assert split('ccab', 'c') == ['', 'ab']
+    assert split([1, 0, 2, 3, 4, 3], [3, 2]) == [[1, 0], [4], []]
+
+
+def test_find():
+    assert find('', 'a') == -1
+    assert find('a', 'a') == 0
+    assert find('aa', 'a') == 0
+    assert find('ba', 'a') == 1
+    assert find('aa', 'a', 1) == 1
+    assert find('aba', 'a', 1) == 2
+    assert find('aba', 'a', 3) == -1
+    assert find('aba', 'a', -1) == 2
+    assert find('aba', 'a', -2) == 2
+    assert find('aba', 'a', -3) == 0
+    assert find('aba', 'a', -4) == 0
+    assert find('aba', 'a', -5) == 0
