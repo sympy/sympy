@@ -348,7 +348,9 @@ def _normalize(list_of, parent, negative=True):
     # convert polynomials to the elements of associated
     # fraction field
     for i, j in enumerate(list_of):
-        if not isinstance(j, K.dtype):
+        if isinstance(j, base.dtype):
+            list_of_coeff.append(K.new(j.rep))
+        elif not isinstance(j, K.dtype):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
             list_of_coeff.append(j)
@@ -567,6 +569,7 @@ class HolonomicFunction(object):
         sol1 = _normalize(sol, self.annihilator.parent)
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
+        sol = _normalize(sol.listofpoly, self.annihilator.parent, negative=False)
         # solving initial conditions
         if self._have_init_cond and other._have_init_cond:
             if self.x0 == other.x0:
