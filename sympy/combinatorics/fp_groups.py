@@ -122,8 +122,8 @@ class CosetTable(Basic):
 
     @property
     def n(self):
-        """The number `n` represents the largest number that has been used so
-        far for a live coset
+        """The number `n` represents length of the sublist containing the live
+        cosets far for a live coset.
         """
         return max(self.omega) + 1
 
@@ -134,7 +134,7 @@ class CosetTable(Basic):
     # Pg. 153
     def define(self, alpha, x):
         A = self.A
-        if self.n == CosetTableDefaultMaxLimit:
+        if len(self.table) == CosetTableDefaultMaxLimit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
@@ -146,7 +146,7 @@ class CosetTable(Basic):
 
     def define_f(self, alpha, x):
         A = self.A
-        if self.n == CosetTableDefaultMaxLimit:
+        if self.table == CosetTableDefaultMaxLimit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
@@ -342,13 +342,12 @@ class CosetTable(Basic):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         r = len(word)
-        l_A = len(A_dict)
         f = alpha
         i = 0
-        i_A = 0
         b = alpha
         j = r - 1
-        while i_A < l_A:
+        # loop until it has filled the α row in the table.
+        while True:
             # do the forward scanning
             while i <= j and self.table[f][A_dict[word[i]]] is not None:
                 f = self.table[f][A_dict[word[i]]]
@@ -368,21 +367,18 @@ class CosetTable(Basic):
                 self.table[b][A_dict_inv[word[i]]] = f
             else:
                 self.define(f, word[i])
-            # loop until it has filled the α row in the table.
-            i_A += 1
 
     # method used in the HLT strategy
     def scan_and_fill_f(self, alpha, word):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         r = len(word)
-        l_A = len(A_dict)
         f = alpha
         i = 0
-        i_A = 0
         b = alpha
         j = r - 1
-        while i_A < l_A:
+        # loop until it has filled the α row in the table.
+        while True:
             # do the forward scanning
             while i <= j and self.table[f][A_dict[word[i]]] is not None:
                 f = self.table[f][A_dict[word[i]]]
@@ -403,8 +399,6 @@ class CosetTable(Basic):
                 self.deduction_stack.append((f, word[i]))
             else:
                 self.define_f(f, word[i])
-            # loop until it has filled the α row in the table.
-            i_A += 1
 
     def look_ahead(self):
         R = self.fp_group.relators()
@@ -415,7 +409,7 @@ class CosetTable(Basic):
             for w in R:
                 self.scan(beta, w)
                 if p[beta] < beta:
-                    continue
+                    break
 
     # Pg. 166
     def process_deductions(self, R_c_x, R_c_x_inv):
