@@ -259,6 +259,15 @@ class DifferentialOperator(object):
     def __rsub__(self, other):
         return (-1) * self + other
 
+    def __neg__(self):
+        return -1 * self
+
+    def __div__(self, other):
+        return self * (S.One / other)
+
+    def __truediv__(self, other):
+        return self.__div__(other)
+
     def __pow__(self, n):
         if n == 1:
             return self
@@ -743,6 +752,9 @@ class HolonomicFunction(object):
 
     def __rsub__(self, other):
         return self * -1 + other
+
+    def __neg__(self):
+        return -1 * self
 
     def __pow__(self, n):
         if n == 0:
