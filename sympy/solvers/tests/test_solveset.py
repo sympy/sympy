@@ -15,7 +15,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.sets import (FiniteSet, ConditionSet, Complement)
+from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
 from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
@@ -25,7 +25,7 @@ from sympy.core.containers import Dict
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, solveset, nlinsolve)
+    solveset, solve_decomposition, solveset, nonlinsolve)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -1046,88 +1046,84 @@ def test_solve_decomposition():
 
 # non linear system of equations
 # some testcases imported from test_solvers.py
-def test_nlinsolve_positive_dimensional():
+def test_nonlinsolve_positive_dimensional():
     x, y, z, a, b, c = symbols('x, y, z, a, b, c', real = True)
-    assert nlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
-    assert nlinsolve([a**2 + a*c, a - b], [a, b]) ==\
+    assert nonlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
+    assert nonlinsolve([a**2 + a*c, a - b], [a, b]) ==\
      FiniteSet((0, 0), (-c, -c))
      # here (a= 0, b = 0) is independent soln so both is printed.
      # if symbols = [a, b, c] then only {a : -c ,b : -c}
 
-def test_nlinsolve_polysys():
+def test_nonlinsolve_polysys():
     x, y, z = symbols('x, y, z', real = True)
-    assert nlinsolve([x**2 + y - 2, x**2 + y], [x, y]) == S.EmptySet
-    assert nlinsolve([(x + y)**2 - 4, x + y - 2],[x, y]) == \
+    assert nonlinsolve([x**2 + y - 2, x**2 + y], [x, y]) == S.EmptySet
+    assert nonlinsolve([(x + y)**2 - 4, x + y - 2],[x, y]) == \
     FiniteSet((-y + 2, y))
     # this is completely solved under if polys block
-    assert nlinsolve([x**2 - y**2], [x, y]) == \
+    assert nonlinsolve([x**2 - y**2], [x, y]) == \
     FiniteSet((-y, y), (y, y))
-    assert nlinsolve([x**2 - y**2], [y, x]) == \
+    assert nonlinsolve([x**2 - y**2], [y, x]) == \
     FiniteSet((-x, x), (x, x))
 
 
-def test_nlinsolve_using_solve_poly_and_substitution():
+def test_nonlinsolve_using_solve_poly_and_substitution():
     x, y, z = symbols('x, y, z', real = True)
-    assert nlinsolve([(x + y)*n - y**2 + 2], [x, y]) == \
+    assert nonlinsolve([(x + y)*n - y**2 + 2], [x, y]) == \
     FiniteSet(((-n*y + y**2 - 2)/n, y))
-    assert nlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
     FiniteSet((log(sin(S(1)/3)), S(1)/3))
 
-    assert nlinsolve([z**2*x**2 - z**2*y**2/exp(x)], [y, x, z]) == \
+    assert nonlinsolve([z**2*x**2 - z**2*y**2/exp(x)], [y, x, z]) == \
     FiniteSet((y, x, 0), \
         (-sqrt(x**2*exp(x)), x, z), (sqrt(x**2*exp(x)), x, z))
 
 
-def test_nlinsolve_complex():
-    x, y, z = symbols('x, y, z')
-    # Comparision error LHS : 2*pi*n but in RHS after simplification
-    # 2*n*pi
-    assert nlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
+def test_nonlinsolve_complex():
+    n = Dummy('n')
+    assert nonlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
     FiniteSet((
-        imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))),\
+        ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))),\
          S.Integers), -log(S(3))))
-    assert nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
+    assert nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
         FiniteSet((log(sin(2)), 2),\
-         (imageset(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2))
+         (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2))
 
-    # In following cases nlinsolve `x` value (LHS) is not simplified
-    # but in (RHS) FiniteSet value is simplified( -ve is inside)
-    # so assertion error
+def test_nonlinsolve_exp_real_soln():
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    assert nlinsolve(eqs, [x, y]) == \
-    FiniteSet((log(-(z**2 + sin(log(3)))), -log(3)))
-    assert nlinsolve(eqs, [x, z]) == \
-    FiniteSet((log(-(z**2 - sin(y))), z))
+    soln1 = FiniteSet((-sqrt(-exp(2*x) - sin(log(3))), -log(3)), \
+        (sqrt(-exp(2*x) - sin(log(3))), -log(3)))
+    assert nonlinsolve(eqs, [z, y]) == soln1
+
 
 @XFAIL
 # After the transcendental equation solver these will work
 def test_solve_nonlinear_trans():
     x, y, z = symbols('x, y, z', real = True)
-    assert nlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet((2*LambertW(y/2), y))
-    assert nlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
-    assert nlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((x*exp(x/2), x))
-    assert nlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet(2*LambertW(y/2), y)
+    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet((2*LambertW(y/2), y))
+    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
+    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((x*exp(x/2), x))
+    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet(2*LambertW(y/2), y)
 
 
 def test_issue_5132():
     x, y, z, r, t = symbols('x, y, z, r, t')
-    assert nlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
+    assert nonlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
         FiniteSet((sqrt(r*sin(t)**2)/tan(t),\
          -sqrt(r*sin(t)**2)), \
         (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2)))
 
-    assert nlinsolve([sqrt(x**2 + y**2) - sqrt(10), x + y - 4], [x, y]) == \
+    assert nonlinsolve([sqrt(x**2 + y**2) - sqrt(10), x + y - 4], [x, y]) == \
     FiniteSet((1, 3), (3, 1))
 
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    assert nlinsolve(eqs, [y, z]) == \
+    assert nonlinsolve(eqs, [y, z]) == \
     FiniteSet((-log(3), -sqrt(-exp(2*x) - sin(log(3)))),\
      (-log(3), sqrt(-exp(2*x) - sin(log(3)))))
 
 
 def test_issue_6752():
     a,b,c,d = symbols('a,b,c,d', real = True)
-    assert nlinsolve([a**2 + a, a - b], [a, b]) == {(-1, -1), (0, 0)}
+    assert nonlinsolve([a**2 + a, a - b], [a, b]) == {(-1, -1), (0, 0)}
 
 
 @XFAIL
@@ -1137,12 +1133,12 @@ def test_issue_2777():
     e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
     a, b = 191/S(20), 3*sqrt(391)/20
     ans = {(a, -b), (a, b)}
-    assert nlinsolve((e1, e2), (x, y)) == ans # pass
-    # Some soln is coming. solveset_real bug
-    assert nlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
+    assert nonlinsolve((e1, e2), (x, y)) == ans # pass
+    # Some soln is coming. solveset_real bug #11184
+    assert nonlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
     # make the 2nd circle's radius be -3
     e2 += 6
-    assert nlinsolve((e1, e2), (x, y)) == S.EmptySet # pass
+    assert nonlinsolve((e1, e2), (x, y)) == S.EmptySet # pass
 
 
 @XFAIL
@@ -1167,8 +1163,8 @@ def test_issue_8828():
     g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
     G = g1,g2,g3
 
-    A = nlinsolve(F, v)
-    B = nlinsolve(G, v)#failss
+    A = nonlinsolve(F, v)
+    B = nonlinsolve(G, v)#failss
 
     p, q = [set([tuple(i.evalf(2) for i in j) for j in R]) for R in [A, B]]
     assert p == q

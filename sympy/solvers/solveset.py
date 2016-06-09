@@ -1197,9 +1197,9 @@ def linsolve(system, *symbols):
     return solution
 
 
-###############################################################################
-################################ NLINSOLVE ####################################
-###############################################################################
+#######################################
+# ------------------------------nonlinsolve ----------------------------------#
+#######################################
 
 
 def substitution(system, symbols, result, known_symbols, exclude, all_symbols):
@@ -1255,7 +1255,7 @@ def substitution(system, symbols, result, known_symbols, exclude, all_symbols):
 
     # sort so equation with the fewest potential symbols is first
     for eq in ordered(system, lambda _: len(_ok_syms(_))):
-        newresult = [] # TODO: Make it FiniteSet
+        newresult = []
         got_s = set()
         hit = False
         complements = {}
@@ -1333,8 +1333,8 @@ def substitution(system, symbols, result, known_symbols, exclude, all_symbols):
         # eg. {x: y+2} then final soln is {x: y+2, y: y}
         if len(r) < len(all_symbols):
             solved_symbols = r.keys()
-            unsolved = list(filter(lambda x: x not in solved_symbols,
-                                           all_symbols))
+            unsolved = list(filter(
+                lambda x: x not in solved_symbols, all_symbols))
             rcopy = dict(r.copy())
             # If `r` is SymPy Dict. Convert it to python dict
             for us in unsolved:
@@ -1344,13 +1344,13 @@ def substitution(system, symbols, result, known_symbols, exclude, all_symbols):
             # if we have another symbol `z` then add {z: z} using above line.
             r = rcopy
             infinite_soln += 1
-        result_finiteset = result_finiteset +  FiniteSet(Dict(r))
+        result_finiteset = result_finiteset + FiniteSet(Dict(r))
 
     # if infinte_soln == 1 means we have general soln
     # eg : {{x: -1, y : 1}, {x : -y , y: y}} then
     # return {{x : -y, y : y}} only which is last element.
     result_finiteset = result_finiteset \
-    if not infinite_soln == 1 else FiniteSet(list(result_finiteset)[-1])
+        if not infinite_soln == 1 else FiniteSet(list(result_finiteset)[-1])
 
     if complements:
         # If solveset have returned some complements for any symbol
@@ -1370,7 +1370,8 @@ def substitution(system, symbols, result, known_symbols, exclude, all_symbols):
         result += FiniteSet(tuple(temp))
     return result
 
-def nlinsolve(system, symbols):
+
+def nonlinsolve(system, symbols):
     r"""
     Solve system of N non linear equations with M variables, which
     means both under - and overdetermined systems are supported.
@@ -1419,9 +1420,9 @@ def nlinsolve(system, symbols):
     `symbols = [x, y]`
 
     >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y = symbols('x, y', real = True)
-    >>> nlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
+    >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
 
 
@@ -1437,7 +1438,7 @@ def nlinsolve(system, symbols):
     >>> from sympy.core.symbol import symbols
     >>> from sympy import pprint
     >>> from sympy.polys.polytools import is_zero_dimensional
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> a, b, c, d = symbols('a, b, c, d', real = True)
     >>> foo =  a + b + c + d
     >>> bar = a*b + b*c + c*d + d*a
@@ -1446,29 +1447,30 @@ def nlinsolve(system, symbols):
     >>> system = [foo, bar, foo_bar, bar_foo]
     >>> is_zero_dimensional(system)
     False
-    >>> pprint(nlinsolve(system, [a, b, c, d]))
+    >>> pprint(nonlinsolve(system, [a, b, c, d]))
       -1       1
     {(---, -d, -, {d} \ {0})}
        d       d
 
 
     >>> x, y = symbols('x, y', real = True)
-    >>> nlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
+    >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
     {(-y + 2, y)}
 
     * Non linear system having non polynomial equation, if there is
-    complex solution for particular symbol and no real solution, then `nlinsolve`
-    returns it's general solution.
+    complex solution for particular symbol and no real solution, then
+    `nonlinsolve` returns it's general solution.
 
     Example
     =======
 
     >>> from sympy.core.symbol import symbols
     >>> from sympy import sqrt, exp, sin
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y, _n = symbols('x, y, _n')
-    >>> nlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers()), -2)}
+    >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
+    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
+        log(sin(2))), Integers()), -2)}
 
     * Non linear system having all the equations polynomial, then it
     returns both real and complex solutions.
@@ -1478,15 +1480,15 @@ def nlinsolve(system, symbols):
 
     >>> from sympy.core.symbol import symbols
     >>> from sympy import sqrt, exp, sin
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y = symbols('x, y')
-    >>> nlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
+    >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
 
-    * If system is linear positive dimensional system, `nlinsolve` can
+    * If system is linear positive dimensional system, `nonlinsolve` can
     solve this system also, since it is using `groebner` method. But it
-    is not recommended to solve linear system using `nlinsolve`, because
+    is not recommended to solve linear system using `nonlinsolve`, because
     `linsolve` is better for all kind of linear system.
 
     Examples
@@ -1494,9 +1496,9 @@ def nlinsolve(system, symbols):
 
     >>> from sympy.core.symbol import symbols
     >>> from sympy import pprint
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y, z = symbols('x, y, z', real = True)
-    >>> pprint(nlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z]))
+    >>> pprint(nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z]))
     {(3*z - 5, -z + 4, z)}
 
 
@@ -1505,21 +1507,22 @@ def nlinsolve(system, symbols):
 
     >>> from sympy.core.symbol import symbols
     >>> from sympy import sqrt
-    >>> from sympy.solvers.solveset import nlinsolve
+    >>> from sympy.solvers.solveset import nonlinsolve
     >>> x, y, z = symbols('x, y, z', real = True)
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
-    >>> nlinsolve((e1, e2), (x, y))
+    >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
-    >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
+    >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
     {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
-    >>> nlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
+    >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 + sqrt(5), -sqrt(5) + 1), (-sqrt(5) + 2, 1 + sqrt(5))}
 
 
     Note :
     =======
-    1. `Dict` is defined in `SymPy`. `Finiteset` can't be used with Python `dict`.
+    1. `Dict` is defined in `SymPy`. `Finiteset` can't be used with
+    Python `dict`.
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
@@ -1563,11 +1566,12 @@ def nlinsolve(system, symbols):
                 # try to solve, when all the equations are poly
                 result = solve_poly_system(polys, *symbols)
                 # May be some extra soln is added because
-                # we did `poly = g.as_poly(*symbols, extension=True)` to make it poly
+                # we did `poly = g.as_poly(*symbols, extension=True)`
+                # to make it poly
                 # need to check that
                 result_update = FiniteSet()
                 for r in result:
-                    d = dict(list(zip(symbols,r)))
+                    d = dict(list(zip(symbols, r)))
                     if all(checksol(eq, d) for eq in system):
                         result_update += FiniteSet(r)
                 return result_update
@@ -1586,7 +1590,9 @@ def nlinsolve(system, symbols):
                 new_system.append(p.as_expr())
             # solved_symbols = []
             result = [{}]
-            result = substitution(new_system, symbols, result, [], denominators, symbols)
+            result = substitution(
+                new_system, symbols, result, [],
+                denominators, symbols)
 
     else:
         result = FiniteSet()
@@ -1602,15 +1608,18 @@ def nlinsolve(system, symbols):
                     res = solve_poly_system(polys, new_symbols)
                     # TODO : improve the result code so that we
                     # dont need to add r[unsolved symbols] = unsolved
-                    # at the end ie. if we got x value then do FiniteSet(x_val, y)
-                    # and update(dynamically update) the `y` when got the
+                    # at the end ie. if we got x value then do
+                    # FiniteSet(x_val, y) and update(dynamically update)
+                    # the `y` when got the
                     # value otherwise return as it is(for +ve dimensional).
                     for r in res:
                         skip = False
                         # check tuples of res
                         for r1 in r:
-                            if depend_soln and any([k in r1.free_symbols
-                                for k, v in depend_soln.items()]):
+                            if depend_soln and \
+                                any(
+                                    [k in r1.free_symbols
+                                        for k, v in depend_soln.items()]):
                                 # sol depends on previously
                                 # solved symbols: discard it
                                 # eg : depend_soln=> {x : -y} and
@@ -1645,11 +1654,15 @@ def nlinsolve(system, symbols):
                             if unsolved:
                                 rcopy[unsolved] = unsolved
                             # remove which is making denom zero
-                            if not any(checksol(d, rcopy) for d in denominators):
+                            if not any(
+                                checksol(d, rcopy) for d in denominators
+                            ):
                                 result_update += FiniteSet(Dict(rcopy))
                         else:
                             # remove which is making denom zero
-                            if not any(checksol(d, dict(r)) for d in denominators):
+                            if not any(
+                                checksol(d, dict(r)) for d in denominators
+                            ):
                                 result_update += FiniteSet(Dict(r))
                     result = result_update
                 except NotImplementedError:
@@ -1674,10 +1687,14 @@ def nlinsolve(system, symbols):
                 # because we are passing list of dict or FiniteSet
                 result = [{}]
             # if non polynomail equation is present
-            unsolved_syms = list(filter(lambda x: x not in solved_syms, symbols))
-            # one by one solve for unsolved after substitution of solved symbols values.
-            result = substitution(nonpolys, unsolved_syms, \
-                list(result), solved_syms, denominators, symbols)
+            unsolved_syms = list(
+                filter(lambda x: x not in solved_syms, symbols))
+            # one by one solve for unsolved after substitution of
+            # solved symbols values.
+            result = substitution(
+                nonpolys, unsolved_syms, list(result),
+                solved_syms, denominators, symbols
+            )
 
     if result:
         return result
