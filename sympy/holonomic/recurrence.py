@@ -313,6 +313,11 @@ class RecurrenceOperator(object):
 
 
 class HolonomicSequence(object):
+    """
+    A Holonomic Sequence is a type of sequence satisfying a linear homogeneous
+    recurrence relation with Polynomial coefficients. Alternatively, A sequence
+    is Holonomic if and only if its generating function is a Holonomic Function.
+    """
 
     def __init__(self, recurrence, u0=[]):
         self.recurrence = recurrence
