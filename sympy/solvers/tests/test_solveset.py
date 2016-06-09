@@ -17,7 +17,7 @@ from sympy.polys.rootoftools import CRootOf
 
 from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
+from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 from sympy.core.containers import Dict
@@ -1514,20 +1514,21 @@ def test_simplifed_trig_solution():
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
 
 
-@SKIP("Comparison error")
 def test_simplifed_trig_solution_1():
     # `factor_list` is helpful for these types of case.
-    soln = ImageSet(Lambda(n, -pi*(4*n - 3)/6), S.Integers) +\
-     ImageSet(Lambda(n, -pi*(2*n - 1)/4), S.Integers) + \
-     ImageSet(Lambda(n, pi*(2*n - 1)/4), S.Integers)
+    n1 = Dummy('n1')
+    soln = ImageSet(Lambda(n1, 2*n1*pi - 5*pi/6), S.Integers) +\
+    ImageSet(Lambda(n1, 2*n1*pi - pi/6), S.Integers) + \
+     ImageSet(Lambda(n1, -pi*(2*n1 - 1)/4), S.Integers) + \
+     ImageSet(Lambda(n1, pi*(2*n1 - 1)/4), S.Integers)
     assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == \
     soln
 
     s = solveset((tan(x)**2 - 3).rewrite(exp), x)
-    assert s == ImageSet(Lambda(n, 2*n*pi + 4*pi/3), \
-        S.Integers) + ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) \
-    + ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers) + \
-    ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
+    assert s == ImageSet(Lambda(n1, 2*n1*pi + 4*pi/3), \
+        S.Integers) + ImageSet(Lambda(n1, 2*n1*pi + 2*pi/3), S.Integers) \
+    + ImageSet(Lambda(n1, 2*n1*pi + 5*pi/3), S.Integers) + \
+    ImageSet(Lambda(n1, 2*n1*pi + pi/3), S.Integers)
 
 
 @XFAIL

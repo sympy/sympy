@@ -563,6 +563,9 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
+    # If solution in ImageSet then return it as it is
+    if isinstance(result, ImageSet) or any(isinstance(r, ImageSet) for r in result.args):
+        return result
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 

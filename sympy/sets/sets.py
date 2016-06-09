@@ -2164,6 +2164,7 @@ def reduce_imageset(soln):
     from sympy.polys.polyfuncs import interpolate
     from sympy.sets.fancysets import ImageSet
     from sympy.core.function import Lambda
+    from sympy.core import pi
 
     # number of imageset
     soln_len = len(soln.args)
@@ -2214,13 +2215,19 @@ def reduce_imageset(soln):
         # reverse because of -ve sign
         negative.sort(reverse=True)
         cant_simplify = False
+        # There are some cases that would not give general form
+        try_it = [ pi/6, pi/3, pi/4, pi/2, pi, 4*pi/3, 5*pi/4, 3*pi/2,\
+        2*pi/3, -pi/6, -pi/3, -pi/4, -pi/2, -pi, -4*pi/3, -5*pi/4, -3*pi/2]
         if nlen > 1:
-            # factor to get pi outside
-            res1 = factor(interpolate(negative, n))
-            if (Poly(res1, n).all_monoms())[0][0] > 1:
-                cant_simplify = True
+            if (negative[1] - negative[0] in try_it):
+                # factor to get pi outside
+                res1 = factor(interpolate(negative, n))
+                if (Poly(res1, n).all_monoms())[0][0] > 1:
+                    cant_simplify = True
+                else:
+                    new_soln = ImageSet(Lambda(n, res1), S.Integers)
             else:
-                new_soln = ImageSet(Lambda(n, res1), S.Integers)
+                cant_simplify = True
         if cant_simplify or nlen == 1:
             # no simplification
             for j in range(0, len(negative)):
@@ -2228,11 +2235,14 @@ def reduce_imageset(soln):
             cant_simplify = False
 
         if plen > 1:
-            res2 = factor(interpolate(positive, n))
-            if (Poly(res2, n).all_monoms())[0][0] > 1:
-                cant_simplify = True
+            if (positive[1] - positive[0] in try_it):
+                res2 = factor(interpolate(positive, n))
+                if (Poly(res2, n).all_monoms())[0][0] > 1:
+                    cant_simplify = True
+                else:
+                    new_soln += ImageSet(Lambda(n, res2), S.Integers)
             else:
-                new_soln += ImageSet(Lambda(n, res2), S.Integers)
+                cant_simplify = True
         if cant_simplify or plen == 1:
             for j in range(0, len(positive)):
                 new_soln += soln_extended[positive[j]]
