@@ -45,7 +45,7 @@ def test_manualintegrate_parts():
     assert manualintegrate(x * log(x), x) == x**2*log(x)/2 - x**2/4
     assert manualintegrate(log(x), x) == x * log(x) - x
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
-        -6*x*exp(x) + (3*x**2 + 5)*exp(x) + 6*exp(x)
+        3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
