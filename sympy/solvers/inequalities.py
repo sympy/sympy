@@ -6,7 +6,7 @@ from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets.sets import FiniteSet, Union
+from sympy.sets.sets import FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 
 from sympy.functions import Abs
@@ -14,6 +14,7 @@ from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.utilities.misc import filldedent
+from sympy.simplify.radsimp import fraction, denom
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
@@ -417,7 +418,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
             solns = solve(n, gen, check=False)
             singularities = solve(d, gen, check=False)
         else:
-            solns = solve(e, gen, check=False)
+            solns = solve(e, gen, check=True)
             singularities = []
             for d in denoms(e):
                 singularities.extend(solve(d, gen))
@@ -442,6 +443,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
         start = S.NegativeInfinity
         sol_sets = [S.EmptySet]
+        nsol_sets = [S.EmptySet]
         try:
             reals = _nsort(set(solns + singularities), separated=True)[0]
         except NotImplementedError:
@@ -481,9 +483,30 @@ def solve_univariate_inequality(expr, gen, relational=True):
         if valid(pt):
             sol_sets.append(Interval(start, end, True, True))
 
+        elif solns == []: # if no solutions for equation e
+            nsol_sets = _real_conditions(expr,gen)
+        cv = Intersection(*nsol_sets).subs(gen,_gen)
         rv = Union(*sol_sets).subs(gen, _gen)
-
+        rv = Union(rv, cv)
     return rv if not relational else rv.as_relational(_gen)
+
+
+def _real_conditions(expr, gen):
+    from sympy.core import Mul, Pow
+    n_sol_sets = []
+    e = expr.gts - expr.lts
+    for subexpression in e.atoms(Pow):
+        #find domain of x in subexpression having sqrt()
+        if denom(subexpression.exp) == 2:
+            n_sol_sets.append(solve_univariate_inequality(subexpression.base > \
+                0, gen, relational=False))
+    if e.is_Add:
+        for subexpr in e.args:
+            if not subexpr.atoms(Pow):
+                #find domain of x in subexpression not having sqrt()
+                n_sol_sets.append(solve_univariate_inequality(subexpr > 0, gen,\
+                    relational=False))
+    return n_sol_sets
 
 
 def _solve_inequality(ie, s):
