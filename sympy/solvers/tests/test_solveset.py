@@ -1086,3 +1086,13 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+def test_issue_11064():
+    eq = x + sqrt(x**2-5)
+    assert solveset(eq > 0, x, S.Reals) == \
+        Interval.open(sqrt(5), oo)
+    assert solveset(eq < 0, x, S.Reals) == \
+        Interval.open(-oo, -sqrt(5))
+    eq = 2 + sqrt(x - 4) #PR 11109
+    assert solveset(eq > 0, x, S.Reals) == \
+        Interval.open(4, oo)
