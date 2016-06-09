@@ -638,6 +638,11 @@ class HolonomicFunction(object):
         ann_self = self.annihilator
 
         if not isinstance(other, HolonomicFunction):
+            other = sympify(other)
+
+            if not other.is_constant():
+                raise NotImplementedError(" Can't multiply a HolonomicFunction and expressions/functions.")
+
             if not self._have_init_cond:
                 return self
             else:
@@ -755,6 +760,12 @@ class HolonomicFunction(object):
 
     def __neg__(self):
         return -1 * self
+
+    def __div__(self, other):
+        return self * (S.One / other)
+
+    def __truediv__(self, other):
+        return self.__div__(other)
 
     def __pow__(self, n):
         if n == 0:
