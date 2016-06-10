@@ -71,6 +71,8 @@ def test_powers():
     assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
     assert (2**(x + 2)).subs(2, 3) == 3**(x + 3)
+    f = exp(pi*x)
+    assert f.subs(exp(pi*x), x) == x
 
 
 def test_logexppow():   # no eval()
