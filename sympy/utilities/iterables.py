@@ -2390,7 +2390,7 @@ def find(seq, subseq, start=0, all=False):
     return -1 if not all else loc
 
 
-def split(s, ignore=()):
+def split(seq, ignore=()):
     """Split sequence into subsequences separated by elements that
     are in ignore.
 
@@ -2406,10 +2406,10 @@ def split(s, ignore=()):
 
     >>> from sympy.utilities.iterables import seq_replace
     >>> from sympy.core.symbol import Dummy
-    >>> s = list('abcskipd')
+    >>> seq = list('abcskipd')
     >>> uniq = [Dummy()]
-    >>> seq_replace(s, list('skip'), uniq)
-    >>> split(s, uniq)
+    >>> seq_replace(seq, list('skip'), uniq)
+    >>> split(seq, uniq)
     [['a', 'b', 'c'], ['d']]
 
     See Also
@@ -2417,31 +2417,34 @@ def split(s, ignore=()):
     find, group, multiset, seq_replace, runs
     """
     if not ignore:
-        return [s]
+        return [seq]
     rv = []
     i = 0
     ignoring = False
-    for j in range(len(s)):
-        if s[j] in ignore:
+    for j in range(len(seq)):
+        if seq[j] in ignore:
             if ignoring:
                 i = j
             else:
-                rv.append(s[i:j])
+                rv.append(seq[i:j])
                 ignoring = True
         elif ignoring:
             i = j
             ignoring = False
     if ignoring:
-        rv.append(s[j:j])
+        rv.append(seq[j:j])
     else:
-        rv.append(s[i:])
+        rv.append(seq[i:])
     return rv
 
 
-def longest_repetition(*s):
+def longest_repetition(*seq, **kwargs):
     """Returns the longest, continguous repeated subsequence
-    in `s` that is lexically smaller than any other
-    subsequences of the same length, else returns None.
+    in `seq` that is lexically smaller than any other
+    subsequences of the same length, else returns None. To
+    obtain all sequences of maximal length set keyword `all`
+    to True. If the keyword `max` is set to an integer, no
+    sequence longer that `max` will be returned.
 
     Examples
     ========
@@ -2453,8 +2456,12 @@ def longest_repetition(*s):
     'b'
     >>> lr('babab')
     'ab'
-    >>> lr('ab', 'bca', 'bc')
+    >>> lr('abdc', 'bca', 'bcdc')
     'bc'
+    >>> lr('abdc', 'bca', 'bcdc', all=True)
+    ['bc', 'dc']
+    >>> lr('abdc', 'bca', 'bcdce', all=True, max=1)
+    ['a', 'b', 'c', 'd']
 
     If there are characters that should be ignored,
     split those out and process the fragments.
@@ -2467,28 +2474,31 @@ def longest_repetition(*s):
     With sequences, the split function can be used:
 
     >>> from sympy.utilities.iterables import split
-    >>> s = [(1, 2, -1, 2, 3, 4), (2, 3, 5, 0, 1, 2, 3, 0, 1, 2)]
-    >>> pieces = [i for si in s for i in split(si, [0, -1])]; pieces
+    >>> seq = [(1, 2, -1, 2, 3, 4), (2, 3, 5, 0, 1, 2, 3, 0, 1, 2)]
+    >>> pieces = [i for si in seq for i in split(si, [0, -1])]; pieces
     [(1, 2), (2, 3, 4), (2, 3, 5), (1, 2, 3), (1, 2)]
     >>> lr(*pieces)
     (1, 2)
     """
+    all_hits = kwargs.get('all', False)
+    big = kwargs.get('max', max(len(i) for i in seq))
     # sort the indices by suffix from index j in sequence i
-    ix = [(i, j) for i in range(len(s)) for j in range(len(s[i]))]
-    ix.sort(key=lambda ij: s[ij[0]][ij[1]:])
+    ix = [(i, j) for i in range(len(seq)) for j in range(len(seq[i]))]
+    ix.sort(key=lambda ij: seq[ij[0]][ij[1]:])
     start, length = (0, 0), 0
+    hits = []
     # the find the longest prefix shared by pairs of suffixes
     for (i, a), (j, b) in zip(ix, ix[1:]):
         # find common prefix
-        la = len(s[i]) - a
-        lb = len(s[j]) - b
-        for m in range(min(la, lb)):
-            if s[i][a + m] != s[j][b + m]:
+        la = len(seq[i]) - a
+        lb = len(seq[j]) - b
+        for m in range(min(la, lb, big)):
+            if seq[i][a + m] != seq[j][b + m]:
                 break
         else:
             # they all matched
             m += 1
-        if i == j and m > abs(b - a):  # matches overlap in s[i]
+        if i == j and m > abs(b - a):  # matches overlap in seq[i]
             # mark the position of the middle of the the longer subsequence
             if la > lb:
                 m = la//2
@@ -2498,18 +2508,25 @@ def longest_repetition(*s):
             # trim the subsequence until it appears as a match in the
             # latter half of the longer subsequence
             while m and m > length:
-                if find(s[i], s[i][a: a + m], a + m) != -1:
+                if find(seq[i], seq[i][a: a + m], a + m) != -1:
                     break
                 m -= 1
-        # if it's the longest so far, store it
+        # if it'seq the longest so far, store it
+        hit = seq[i][a: a + m]
         if m > length:
             start, length = (i, a), m
-    i, a = start
-    return s[i][a: a + length]
+            hits = [hit]
+        elif all_hits and m == length and hit not in hits:
+            hits.append(hit)
+    if not all_hits:
+        i, a = start
+        return seq[i][a: a + length]
+    else:
+        return hits
 
 
-def all_repetitions(*s, **kwargs):
-    """Return a list of all subsequences in s that are repeated. The
+def all_repetitions(*seq, **kwargs):
+    """Return a list of all subsequences in seq that are repeated. The
     subsequences are recursively processed so that any smaller
     subsequences in them that appear in any of the original sequences
     will be identified. By default, subsequences longer than 2 will be
@@ -2520,34 +2537,34 @@ def all_repetitions(*s, **kwargs):
     ========
 
     >>> from sympy.utilities.iterables import all_repetitions
-    >>> s = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
-    >>> all_repetitions(*s)
+    >>> seq = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
+    >>> all_repetitions(*seq)
     ['abcd', 'abc', 'bc']
-    >>> all_repetitions(*s, small=3)
+    >>> all_repetitions(*seq, small=3)
     ['abcd', 'abc']
-    >>> all_repetitions(*s, small=1)
+    >>> all_repetitions(*seq, small=1)
     ['abcd', 'abc', 'bc', 'a', 'd']
     """
     small = as_int(kwargs.get('small', 2))
     if small < 0:
         raise ValueError('`small` must be positive')
-    s = list(s)  # b/c tuple args cannot be modified in place
+    seq = list(seq)  # b/c tuple args cannot be modified in place
     reps = []
-    while not all(len(i) < small for i in s):
-        L = longest_repetition(*s)
+    while not all(len(i) < small for i in seq):
+        L = longest_repetition(*seq)
         if len(L) < small:
             # the longest repetition is too small
             break
         reps.append(L)
         # break s_i into pieces, removing the found subsequences
         i = 0
-        while i < len(s):
-            at = find(s[i], L)
+        while i < len(seq):
+            at = find(seq[i], L)
             if at != -1:
-                s[i:i+1] = [s[i][:at], s[i][at + len(L):]]
+                seq[i:i+1] = [seq[i][:at], seq[i][at + len(L):]]
             i += 1
         # if len(L) > small then there may be subsequences shared
-        # between it an the remaining sequences of s
+        # between it an the remaining sequences of seq
         if len(L) != small:
-            s.append(L[:])
+            seq.append(L[:])
     return reps
