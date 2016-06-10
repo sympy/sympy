@@ -899,7 +899,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         ========
 
         >>> from sympy.combinatorics.free_group import free_group
-        >>> f, a, b = free_group("a b")
+        >>> f, a, b = free_group("a, b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
         b

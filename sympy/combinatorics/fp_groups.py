@@ -32,6 +32,11 @@ def _parse_relators(rels):
     return rels
 
 
+###############################################################################
+#                           FINITELY PRESENTED GROUPS                         #
+###############################################################################
+
+
 class FpGroup(Basic):
     """
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
@@ -190,7 +195,7 @@ class CosetTable(Basic):
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
-    # α, β coincide, here α, β represent the pair of cosets where
+    # α, β coincide, i.e. α, β represent the pair of cosets where
     # coincidence occurs
     def coincidence_f(self, alpha, beta):
         """
@@ -277,7 +282,7 @@ class CosetTable(Basic):
             rho = p[mu]
         return lamda
 
-    # α, β coincide, here α, β represent the pair of cosets where
+    # α, β coincide, i.e. α, β represent the pair of cosets where
     # coincidence occurs
     def coincidence(self, alpha, beta):
         """
@@ -601,7 +606,8 @@ def coset_enumeration_r(fp_grp, Y):
 
     # Ex. 3
     >>> F, a, b = free_group("a, b")
-    >>> B_2_4 = FpGroup(F, [a**4, b**4, (a*b)**4, (a**-1*b)**4, (a**2*b)**4, (a*b**2)**4, (a**2*b**2)**4, (a**-1*b*a*b)**4, (a*b**-1*a*b)**4])
+    >>> B_2_4 = FpGroup(F, [a**4, b**4, (a*b)**4, (a**-1*b)**4, (a**2*b)**4, \
+            (a*b**2)**4, (a**2*b**2)**4, (a**-1*b*a*b)**4, (a*b**-1*a*b)**4])
     >>> C = coset_enumeration_r(B_2_4, [a])
     >>> index = 0
     >>> for i in range(len(C.p)):
@@ -626,11 +632,10 @@ def coset_enumeration_r(fp_grp, Y):
                 C.scan_and_fill(alpha, w)
                 if p[alpha] < alpha:
                     break
-            if p[alpha] < alpha:
-                continue
-            for x in A_dict:
-                if C.table[alpha][A_dict[x]] is None:
-                    C.define(alpha, x)
+            if p[alpha] >= alpha:
+                for x in A_dict:
+                    if C.table[alpha][A_dict[x]] is None:
+                        C.define(alpha, x)
         alpha += 1
     return C
 
