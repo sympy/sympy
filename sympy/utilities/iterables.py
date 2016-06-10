@@ -2334,7 +2334,7 @@ def seq_replace(seq, a, b=[]):
         start = i + len(b)
 
 
-def find(sequence, subsequence, start=0):
+def find(seq, subseq, start=0, all=False):
     """Return starting index at which subsequence appears in sequence
     at or beyond the index corresponding to position `start`, else -1.
 
@@ -2344,10 +2344,18 @@ def find(sequence, subsequence, start=0):
     >>> from sympy.utilities.iterables import find
     >>> find('alabaster', 'ba')
     3
-    >>> find('alabaster', 'a', 1)
+    >>> find('alabaster', 'a', start=1)
     2
-    >>> find('alabaster', 'e', -3)
+    >>> find('alabaster', 'e', start=-3)
     7
+
+    To find all occurances at or past the start,
+    set keyword `all` to True:
+
+    >>> find('alabaster', 'a', all=True)
+    [0, 2, 4]
+    >>> find('alabaster', 'a', 1, all=True)
+    [2, 4]
 
     See Also
     ========
@@ -2356,26 +2364,30 @@ def find(sequence, subsequence, start=0):
     # adapted from http://code.activestate.com/recipes/
     # 117223-boyer-moore-horspool-string-searching/
     from collections import defaultdict
-    m = len(subsequence)
-    n = len(sequence)
+    m = len(subseq)
+    n = len(seq)
     if m > n:
-        return -1
+        return -1 if not all else []
     if start < 0:
         start = max(-n, start) + n
     skip = defaultdict(lambda: m)
     for k in range(m - 1):
-        skip[subsequence[k]] = m - k - 1
+        skip[subseq[k]] = m - k - 1
     k = m - 1 + start
+    loc = []
     while k < n:
         j = m - 1
         i = k
-        while j >= 0 and sequence[i] == subsequence[j]:
+        while j >= 0 and seq[i] == subseq[j]:
             j -= 1
             i -= 1
         if j == -1:
-            return i + 1
-        k += skip[sequence[k]]
-    return -1
+            if all:
+                loc.append(i + 1)
+            else:
+                return i + 1
+        k += skip[seq[k]]
+    return -1 if not all else loc
 
 
 def split(s, ignore=()):

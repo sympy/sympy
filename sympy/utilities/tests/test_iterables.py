@@ -825,11 +825,15 @@ def test_find():
     assert find('a', 'a') == 0
     assert find('aa', 'a') == 0
     assert find('ba', 'a') == 1
-    assert find('aa', 'a', 1) == 1
-    assert find('aba', 'a', 1) == 2
-    assert find('aba', 'a', 3) == -1
-    assert find('aba', 'a', -1) == 2
-    assert find('aba', 'a', -2) == 2
-    assert find('aba', 'a', -3) == 0
-    assert find('aba', 'a', -4) == 0
-    assert find('aba', 'a', -5) == 0
+    assert find('aa', 'a', start=1) == 1
+    assert find('aa', 'a', all=True) == [0, 1]
+    assert find('aa', 'a', start=1, all=True) == [1]
+    assert find('aa', 'a', 2, all=True) == []
+    assert find('aa', 'aaa', all=True) == []
+    assert find('aba', 'a', start=1) == 2
+    assert find('aba', 'a', start=3) == -1
+    assert find('aba', 'a', start=-1) == 2
+    assert find('aba', 'a', start=-2) == 2
+    assert find('aba', 'a', start=-3) == 0
+    assert find('aba', 'a', start=-4) == 0
+    assert find('aba', 'a', start=-5) == 0
