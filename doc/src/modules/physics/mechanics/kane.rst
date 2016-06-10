@@ -4,8 +4,8 @@ Kane's Method
 
 The :mod:`~sympy.physics.mechanics.kane` module provides functionality for
 deriving equations of motion using Kane's method [Kane1985]_. This document
-will describe Kane's method as used in this module, please refer to Kane's book
-for the mathematical details of the underlying algorithm.
+describes Kane's method as used in this module, please refer to Kane's book and
+the source code for the mathematical details of the underlying algorithms.
 
 Structure of Equations
 ======================
@@ -34,9 +34,9 @@ The equations are then as follows:
 2. Non-holonomic constraints
 
    .. math::
-      \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u}_r + \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t) = 0 \quad
+      \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u} + \mathbf{f}_{n}(\mathbf{q}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{M}_{n} \in \mathbb{R}^{m \times m}
+      \mathbf{M}_{n} \in \mathbb{R}^{m \times n}
       \mathrm{,\ }
       \mathbf{f}_{n} \in \mathbb{R}^m
 
@@ -63,14 +63,14 @@ The equations are then as follows:
 5. Differentiated non-holonomic equations
 
    .. math::
-      \mathbf{M}_{\dot{n}}(\mathbf{q}, t) \dot{\mathbf{u}}_r + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
+      \mathbf{M}_{\dot{n}}(\mathbf{q}, t) \dot{\mathbf{u}} + \mathbf{f}_{\dot{n}}(\mathbf{q}, \dot{\mathbf{q}}, \mathbf{u}, t) = 0 \quad
       \mathrm{where} \quad
-      \mathbf{M}_{\dot{n}} \in \mathbb{R}^{m \times m}
+      \mathbf{M}_{\dot{n}} \in \mathbb{R}^{m \times n}
       \mathrm{,\ }
       \mathbf{f}_{\dot{n}} \in \mathbb{R}^m
 
-Equation sets 1 through 3 are provided by the analyst, where as the sets 3 and
-4 are computed by the :class:`~sympy.physics.mechanics.kane.KanesMethod` class.
+Equation sets 1 through 3 are provided by the analyst, where as the sets 4 and
+5 are computed by the :class:`~sympy.physics.mechanics.kane.KanesMethod` class.
 
 Holonomic Constraint Equations
 ------------------------------
@@ -113,6 +113,14 @@ the dependent and independent speeds:
 .. math::
    \mathbf{u} = [\mathbf{u}_r, \mathbf{u}_s]^T \\
    \mathbf{u}_r = -\mathbf{M}_{n}(\mathbf{q}, t)^{-1} \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t)
+
+
+.. math::
+   \mathbf{M}_{n}(\mathbf{q}, t) \mathbf{u}_r + \mathbf{f}_{n}(\mathbf{q}, \mathbf{u}_s, t) = 0 \quad
+   \mathrm{where} \quad
+   \mathbf{M}_{n} \in \mathbb{R}^{m \times m}
+   \mathrm{,\ }
+   \mathbf{f}_{n} \in \mathbb{R}^m
 
 The non-holonomic constraint expressions should be passed directly to the
 :class:`~sympy.physics.mechanics.kane.KanesMethod` class as such::
@@ -173,6 +181,14 @@ Derivative of the Non-holonomic Constraint Equations
 The fifth equation is the derivative of the non-holonomic constraints. This can
 be used to augment the independent dynamical equations if it is desired to
 solve for the dependent generalized speeds.
+
+These can be optionally passed into
+:class:`~sympy.physics.mechanics.kane.KanesMethod` as::
+
+   >>> KanesMethod(..., acceleration_constraints=(expr_0, expr_1), ...)
+
+where each expression is equal to zero, but otherwise they are automatically
+computed from the provided velocity constraints.
 
 Accessing the Variables and the Equations
 -----------------------------------------
