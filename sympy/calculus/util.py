@@ -7,7 +7,63 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
+from sympy.solvers.inqualities import solve_univariate_inequality
+from sympy.solvers.solveset import _has_rational_power
 from sympy.functions.elementary.miscellaneous import Min, Max
+
+
+def continuous_in(f, symbol, interval):
+    """
+    Finds the intervals of continuity of a function in a given interval range.
+    This method is limited by the ability to determine the various
+    singularities and discontinuities of the given function.
+
+    Examples
+    ========
+    >>> from sympy import Symbol, S, tan, log, pi, sqrt
+    >>> from sympy.sets import Interval
+    >>> from sympy.calculus.singularities import continuous_in
+    >>> x = Symbol('x')
+    >>> continuous_in(1/x, x, S.Reals)
+    (-oo, 0) U (0, oo)
+    >>> continuous_in(tan(x), x, Interval(0, pi))
+    [0, pi/2) U (pi/2, pi]
+    >>> continuous_in(sqrt(x - 2), x, Interval(-5, 5))
+    [2, 5]
+    >>> continuous_in(log(2*x - 1), x, S.Reals)
+    (1/2, oo)
+
+    """
+    if interval.is_subset(S.Reals):
+        constrained_interval = interval
+        for atom in f.atoms(Pow):
+            predicate, denom = _has_rational_power(atom, symbol)
+            constraint = S.EmptySet
+            if predicate and denom == 2:
+                constraint = solve_univariate_inequality(atom.base >= 0,
+                                                         symbol).as_set()
+                constrained_interval = Intersection(constraint,
+                                                    constrained_interval)
+        for atom in f.atoms(log):
+            constraint = solve_univariate_inequality(atom.args[0] > 0,
+                                                     symbol).as_set()
+            constrained_interval = Intersection(constraint,
+                                                constrained_interval)
+        interval = constrained_interval
+    try:
+        sings = S.EmptySet
+        for atom in f.atoms(Pow):
+            predicate, denom = _has_rational_power(atom, symbol)
+            if predicate and denom == 2:
+                sings = solveset(1/f, symbol, interval)
+                break
+        else:
+            sings = Intersection(solveset(1/f, symbol), interval)
+    except:
+        raise NotImplementedError("Methods for determining the continuous domains"
+                                  " of this function has not been developed.")
+
+    return interval - sings
 
 
 def not_empty_in(finset_intersection, *syms):
