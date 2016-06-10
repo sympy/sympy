@@ -32,8 +32,6 @@ def _parse_relators(rels):
     return rels
 
 
-_fp_group_cache = {}
-
 class FpGroup(Basic):
     """
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
@@ -122,8 +120,8 @@ class CosetTable(Basic):
 
     @property
     def n(self):
-        """The number `n` represents length of the sublist containing the live
-        cosets far for a live coset.
+        """The number 'n' represents the length of the sublist containing the
+        live cosets.
         """
         return max(self.omega) + 1
 
@@ -159,14 +157,6 @@ class CosetTable(Basic):
         self.deduction_stack.append((alpha, x))
 
     def scan_f(self, alpha, word):
-        """
-        >>> from sympy.combinatorics.free_group import free_group
-        >>> from sympy.combinatorics.fp_groups import CosetTable, FpGroup
-        >>> F, x, y = free_group("x, y")
-        >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
-        >>> c = CosetTable(f, [x])
-
-        """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
@@ -182,10 +172,8 @@ class CosetTable(Basic):
         while i <= j and self.table[f][A_dict[word[i]]] is not None:
             f = self.table[f][A_dict[word[i]]]
             i += 1
-        # can this be replaced with i == r ?
         if i > j:
             if f != b:
-                # implement the "coincidence" routine on Pg 158 of Handbook.
                 self.coincidence_f(f, b)
             return
         while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
@@ -202,8 +190,7 @@ class CosetTable(Basic):
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
-    # alpha, beta coincide
-    # here alpha, beta represent the pair of cosets where
+    # α, β coincide, here α, β represent the pair of cosets where
     # coincidence occurs
     def coincidence_f(self, alpha, beta):
         """
@@ -217,10 +204,6 @@ class CosetTable(Basic):
         self.merge(alpha, beta, q)
         while len(q) > 0:
             gamma = q.pop(0)
-            # comment by Kalevi, this is already done by p[v] = mu
-            # del C[gamma]
-            # commenting this out
-            # omega = omega - set(gamma)
             for x in A_dict:
                 delta = self.table[gamma][A_dict[x]]
                 if delta is not None:
@@ -237,14 +220,6 @@ class CosetTable(Basic):
                         self.table[nu][A_dict_inv[x]] = mu
 
     def scan(self, alpha, word):
-        """
-        >>> from sympy.combinatorics.free_group import free_group
-        >>> from sympy.combinatorics.fp_groups import CosetTable, FpGroup
-        >>> F, x, y = free_group("x, y")
-        >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
-        >>> c = CosetTable(f, [x])
-
-        """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
@@ -260,10 +235,8 @@ class CosetTable(Basic):
         while i <= j and self.table[f][A_dict[word[i]]] is not None:
             f = self.table[f][A_dict[word[i]]]
             i += 1
-        # can this be replaced with i == r ?
         if i > j:
             if f != b:
-                # implement the "coincidence" routine on Pg 158 of Handbook.
                 self.coincidence(f, b)
             return
         while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
@@ -304,8 +277,7 @@ class CosetTable(Basic):
             rho = p[mu]
         return lamda
 
-    # alpha, beta coincide
-    # here alpha, beta represent the pair of cosets where
+    # α, β coincide, here α, β represent the pair of cosets where
     # coincidence occurs
     def coincidence(self, alpha, beta):
         """
@@ -319,10 +291,6 @@ class CosetTable(Basic):
         self.merge(alpha, beta, q)
         while len(q) > 0:
             gamma = q.pop(0)
-            # comment by Kalevi, this is already done by p[v] = mu
-            # del C[gamma]
-            # commenting this out
-            # omega = omega - set(gamma)
             for x in A_dict:
                 delta = self.table[gamma][A_dict[x]]
                 if delta is not None:
@@ -368,7 +336,6 @@ class CosetTable(Basic):
             else:
                 self.define(f, word[i])
 
-    # method used in the HLT strategy
     def scan_and_fill_f(self, alpha, word):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
@@ -400,6 +367,7 @@ class CosetTable(Basic):
             else:
                 self.define_f(f, word[i])
 
+    # currently not used anywhere
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
