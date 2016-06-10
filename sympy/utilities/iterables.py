@@ -12,7 +12,8 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range
+    as_int, default_sort_key, is_sequence, iterable, ordered, range,
+    string_types
 )
 
 from sympy.utilities.enumerative import (
@@ -128,7 +129,7 @@ def reshape(seq, how):
     [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
 
     """
-    if isinstance(seq, basestring):
+    if isinstance(seq, string_types):
         return [[''.join(i) for i in reshape(list(seq), how)[0]]]
 
     m = sum(flatten(how))
@@ -2575,9 +2576,9 @@ def extract_repetitions(seq, replacements):
     by recursively removing repeated subsequences so as to minimize the
     metric ``R + S`` where ``R`` is the combined length of the
     computed subsequences and ``S`` is the length of the modified
-    original sequences. If the elements of the sequences are
-    multiplied, this metric corresponds with trying to minimize the
-    number of multiplications and assignments.
+    original sequences. If the elements of the sequences represent
+    factors that are multiplied together then this metric corresponds
+    to minimizing the number of multiplications and assignments.
 
     Examples
     ========
@@ -2585,7 +2586,7 @@ def extract_repetitions(seq, replacements):
     >>> from sympy.utilities.iterables import extract_repetitions
     >>> import string
     >>> s = ('cbedbbcebc', 'baebbcaabb', 'bdeaaddcdc')
-    >>> r, c = extract_repetitions(s, string.uppercase)
+    >>> r, c = extract_repetitions(s, string.ascii_uppercase)
     >>> r
     [('D', 'dc'), ('C', 'bb'), ('B', 'aa'), ('A', 'Cc')]
     >>> c
@@ -2610,14 +2611,36 @@ def extract_repetitions(seq, replacements):
 
     The multiplications and assignments have decreased from 30 to 29.
 
+    Although examples have used strings, the sequences may be sequences
+    of orderable elements, e.g. integers.
+
+    >>> s = [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
+    >>> negs = (-i for i in range(1, sum(len(i) for i in s)))
+    >>> extract_repetitions(s, negs)
+    ([(-2, [1, 2]), (-1, [1, -2])], [[-2, 3], [-1], [-1, 3]])
+    >>> r, c = _
+
+    The original sequence can be recovered by applying the extractions
+    in reverse order:
+
+    >>> from sympy.utilities.iterables import seq_replace
+    >>> for ri in reversed(r):
+    ...     for i in range(len(c)):
+    ...         seq_replace(c[i], [ri[0]], ri[1])
+    ...
+    >>> c
+    [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
     """
-    snew = list(seq)  # leave original unchanged
     if not seq:
-        return [], snew
+        return [], []
+    string = isinstance(seq[0], string_types)
+    if string:
+        snew = list(seq)
+    else:
+        snew = [list(i) for i in seq]  # leave original unchanged
     # more terms will be appended, so keep track of the original length
     N = len(snew)
     # record whether we are working with strings or not
-    string = isinstance(snew[0], basestring)
     # make sure we have an iter
     replacements = iter(replacements)
     # record the replacement symbols that are introduced
@@ -2641,7 +2664,7 @@ def extract_repetitions(seq, replacements):
                 most = c
         # get a new replacement symbol and use it to replace
         # subsequence `best`
-        rep = replacements.next()
+        rep = next(replacements)
         for i in range(len(snew)):
             if string:
                 snew[i] = snew[i].replace(best, rep)

@@ -4,7 +4,7 @@ import string
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial, true)
+    factorial, true, oo)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
@@ -26,6 +26,7 @@ from sympy.utilities.enumerative import (
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
+from sympy.sets.fancysets import Range
 from sympy.utilities.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
@@ -848,7 +849,7 @@ def test_extract_repetitions():
         'dcaabededb', 'aaacdddaba', 'dcaceacdcb', 'ecabcedbad',
         'eebeabdebb', 'ebbdabdbbc', 'ddeadbeadb', 'decedceced',
         'edddbcceea', 'eeddacdcac']
-    a, b = extract_repetitions(s, string.uppercase)
+    a, b = extract_repetitions(s, string.ascii_uppercase)
     assert a == \
         [('P', 'dd'), ('O', 'ce'), ('N', 'bb'), ('M', 'ad'), ('L', 'ac'),
         ('K', 'ed'), ('J', 'ab'), ('I', 'Kd'), ('H', 'eN'), ('G', 'dca'),
@@ -863,8 +864,11 @@ def test_extract_repetitions():
     assert s == b
 
     s = [list(i) for i in ('abc','abcd','abcde')]
-    re = extract_repetitions(s, string.uppercase)
+    re = extract_repetitions(s, string.ascii_uppercase)
     assert re == ([('B', ['a', 'b', 'c']), ('A', ['B', 'd'])],
         [['B'], ['A'], ['A', 'e']])
-    assert extract_repetitions(s, [1, 2]) == \
-        ([(2, ['a', 'b', 'c']), (1, [2, 'd'])], [[2], [1], [1, 'e']])
+    s = [[ord(i) for i in i] for i in ('abc','abcd','abcde')]
+    ans = ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
+    assert extract_repetitions(s, [-1, -2]) == ans
+    assert extract_repetitions(s, Range(-1, -oo, -1)) == \
+        ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
