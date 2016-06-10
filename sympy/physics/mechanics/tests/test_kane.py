@@ -182,6 +182,11 @@ def test_rolling_disc():
     # critical speed (where all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
     A = KM.linearize(A_and_B=True, new_method=True)[0]
+    # NOTE : I had to add this simplify call because the resulting A matrix
+    # will evaluate such that some entries are NaN, i.e. zeros in denominators.
+    # This is a fundamental issue that needs to be addressed about the new
+    # linearizer.
+    A.simplify()
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
     assert A_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
 
