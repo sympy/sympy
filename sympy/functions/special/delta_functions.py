@@ -440,7 +440,7 @@ class Heaviside(Function):
         Heaviside(0)
 
         >>> Heaviside(0, 1)
-        Heaviside(1)
+        1
 
         >>> Heaviside(-5)
         0
@@ -467,7 +467,7 @@ class Heaviside(Function):
             return S.One
         elif arg.is_zero:
             if H0 == S.NaN:
-                return cls(arg)
+                return
             elif H0 != None:
                 return H0
         elif arg is S.NaN:
@@ -494,14 +494,13 @@ class Heaviside(Function):
            Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
-        if arg.is_real:
-            if H0 == None:
-                return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
-            if H0 == 0:
-                return Piecewise((0, arg <= 0), (1, arg > 0))
-            if H0 == 1:
-                return Piecewise((0, arg < 0), (1, arg >= 0))
-            return Piecewise((1, arg > 0), (H0, Eq(arg, 0)), (0, arg > 0))
+        if H0 == None:
+            return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
+        if H0 == 0:
+            return Piecewise((0, arg <= 0), (1, arg > 0))
+        if H0 == 1:
+            return Piecewise((0, arg < 0), (1, arg >= 0))
+        return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
 
     def _eval_rewrite_as_sign(self, *args):
         """Represents the Heaviside function in the form of sign function.
