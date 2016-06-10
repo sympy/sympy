@@ -708,8 +708,11 @@ def test_solve_complex_sqrt():
 
 def test_solveset_complex_tan():
     s = solveset_complex(tan(x).rewrite(exp), x)
-    assert s == imageset(Lambda(n, 2*n*pi), S.Integers) + \
-        imageset(Lambda(n, 2*n*pi + pi), S.Integers)
+    assert s == imageset(Lambda(n, n*pi), S.Integers)
+
+    s = solveset((tan(x)**2 - 3).rewrite(exp), x)
+    assert s == ImageSet(Lambda(n, n*pi + pi/3), \
+        S.Integers) + ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
 
 
 def test_solve_trig():
@@ -719,7 +722,7 @@ def test_solve_trig():
     assert solveset_real(tan(x), x) == \
         imageset(Lambda(n, pi*n), S.Integers)
     assert solveset_real(tan(x) - 1, x) == \
-        imageset(Lambda(n, pi*(4*n - 3)/4), S.Integers)
+        imageset(Lambda(n, pi*n + pi/4), S.Integers)
 
     assert solveset_real(cos(x), x) == \
         imageset(Lambda(n, n*pi + pi/2), S.Integers)
@@ -1491,8 +1494,11 @@ def test_issue_9531_and_9606():
 
 
 def test_issue_7914():
+    n = Dummy('n')
     assert solveset(sin(2*x)*cos(x) + cos(2*x)*sin(x) -1, x) ==\
-    ImageSet(Lambda(n, pi*(4*n - 3)/6), S.Integers) + ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers)
+    ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers) + \
+    ImageSet(Lambda(n, 2*n*pi +5* pi/6), S.Integers) + \
+    ImageSet(Lambda(n, 2*n*pi - pi/2), S.Integers)
 
 
 def test_issue_10671():
@@ -1501,43 +1507,32 @@ def test_issue_10671():
 
 
 def test_simplifed_trig_solution():
+    n = Dummy('n', real = True)
     assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == \
-    ImageSet(Lambda(n, n*pi/6), S.Integers)
-    assert solveset(sin(x)**2 -sin(x) -2, x, S.Reals) == \
+    ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers) + \
+    ImageSet(Lambda(n, n*pi + pi/6), S.Integers) + \
+    ImageSet(Lambda(n, n*pi + pi/3), S.Integers) + \
+    ImageSet(Lambda(n, n*pi + pi/2), S.Integers) + \
+    ImageSet(Lambda(n, n*pi + 5*pi/6), S.Integers)
+
+    assert solveset(sin(x)**2 - sin(x) -2, x, S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
     assert solveset(sin(x+pi/4) -1/sqrt(2), x, S.Reals) == \
     ImageSet(Lambda(n, (-1)**n*pi/4 + n*pi - pi/4), S.Integers)
-    assert solveset(cos(x)**2 +cos(x) -sin(x)**2, x, S.Reals) == \
-    ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers) +\
-     ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers)
     assert solveset((sin(x)+1)**2, x, S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
 
+    # `factor_list` is helpful for these types of case
+    n = Dummy('n')
+    soln = ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers) +\
+    ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers) + \
+    ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers)
+    assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == soln
 
-def test_simplifed_trig_solution_1():
-    # `factor_list` is helpful for these types of case.
-    n1 = Dummy('n1')
-    soln = ImageSet(Lambda(n1, 2*n1*pi - 5*pi/6), S.Integers) +\
-    ImageSet(Lambda(n1, 2*n1*pi - pi/6), S.Integers) + \
-     ImageSet(Lambda(n1, -pi*(2*n1 - 1)/4), S.Integers) + \
-     ImageSet(Lambda(n1, pi*(2*n1 - 1)/4), S.Integers)
-    assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == \
-    soln
+    assert solveset_real(tan(x)**2 - 3, x) == \
+    ImageSet(Lambda(n, pi*n + pi/3), S.Integers) + \
+        ImageSet(Lambda(n, pi*n + 2*pi/3), S.Integers)
 
-    s = solveset((tan(x)**2 - 3).rewrite(exp), x)
-    assert s == ImageSet(Lambda(n1, 2*n1*pi + 4*pi/3), \
-        S.Integers) + ImageSet(Lambda(n1, 2*n1*pi + 2*pi/3), S.Integers) \
-    + ImageSet(Lambda(n1, 2*n1*pi + 5*pi/3), S.Integers) + \
-    ImageSet(Lambda(n1, 2*n1*pi + pi/3), S.Integers)
-
-
-@XFAIL
-def test_simplifed_trig_solution_2():
-    # Need improvement in sets/reduce_imageset
-    # to get these simplified solution
-    assert solveset(tan(x)**2 - 3,x) == \
-    ImageSet(Lambda(n, pi*(n - pi/3)), S.Integers) + \
-        ImageSet(Lambda(_n, pi*(n + pi/3)), S.Integers)
-    assert solveset(3*tan(x)**2 -1, x) == \
-    ImageSet(Lambda(n, pi*(n + pi/6)), S.Integers) + \
-    ImageSet(Lambda(n, pi*(n - pi/6)), S.Integers)
+    assert solveset_real(3*tan(x)**2 -1, x) == \
+    ImageSet(Lambda(n, pi*n + pi/6), S.Integers) + \
+    ImageSet(Lambda(n, pi*n + 5*pi/6), S.Integers)

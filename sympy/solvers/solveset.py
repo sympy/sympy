@@ -67,18 +67,19 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> from sympy.solvers.solveset import invert_complex, invert_real
     >>> from sympy.abc import x, y
     >>> from sympy import exp, log
+    >>> from sympy import exp, sin, Symbol, pprint, S
 
     When does exp(x) == y?
 
-    >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
+    >>> pprint(invert_complex(exp(x), y, x), use_unicode = False)
+    (x, {I*(2*n*pi + arg(y)) + log(|y|) | n in Integers()})
     >>> invert_real(exp(x), y, x)
     (x, Intersection((-oo, oo), {log(y)}))
 
     When does exp(x) == 1?
 
-    >>> invert_complex(exp(x), 1, x)
-    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers()))
+    >>> pprint(invert_complex(exp(x), 1, x), use_unicode = False)
+    (x, {2*n*I*pi | n in Integers()})
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -405,8 +406,16 @@ def _solve_as_rational(f, symbol, domain):
 
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
-    from sympy.sets.sets import reduce_imageset
-    from sympy import factor_list
+    from sympy import factor, factor_list
+
+    def good_for_factor(trig_eq):
+        i = 0
+        for a in trig_eq.args:
+            if isinstance(a, TrigonometricFunction) or \
+                                isinstance(a, HyperbolicFunction):
+                i += 1
+                if i >= 2:
+                    return True
 
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
@@ -423,21 +432,37 @@ def _solve_trig(f, symbol, domain):
         # means no symbol
         # S.Reals in solution
         return ConditionSet(symbol, Eq(f, 0), domain)
+
     soln = S.EmptySet
-
     for fact in fact_list:
-        f2 =fact[0]
-        f2 = f2.rewrite(exp)
-        soln_fact = solveset_complex(f2, symbol)
-
-        if isinstance(soln_fact, Union):
-            # if union then try to reduce it
-            try:
-                soln += reduce_imageset(soln_fact)
-            except:
-                pass
+        f1 = fact[0]
+        f1 = f1.rewrite(exp)
+        factors = S.EmptySet
+        # factor the `exp` expression reduce the number of ImageSet
+        # eg. f = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1
+        # compare soln of solveset(f) and solveset(factor(f.rewrite(exp)))
+        if not len(fact_list) == 1 or good_for_factor(fact[0]):
+            # if only one term then it is over factorization
+            # no need at that time eg. f = sin(x) can directly give n*pi by
+            # exp(I*x) - exp(-I*x)
+            f1 = factor(f1)
+        # If factor_list would be for exp(I*x) types of expression then we can
+        # directly use the factor_list here.
+        if f1.is_Mul:
+            for fact in f1.args:
+                # dont add numbers
+                if not fact.is_number:
+                    # sorted using FiniteSet
+                    factors += FiniteSet(fact)
         else:
+            factors = [f1]
+
+        for f2 in factors:
+            soln_fact = solveset_complex(f2, symbol)
+            # Inside sets.py _union_simplify tryies to
+            # reduce number of ImageSet
             soln += soln_fact
+
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form
         # In this time if ConditionSet is returned then it's

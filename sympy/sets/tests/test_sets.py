@@ -10,7 +10,6 @@ from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z, m, n
-from sympy.sets.sets import reduce_imageset
 
 
 def test_imageset():
@@ -1042,18 +1041,29 @@ def test_issue_8257():
     assert FiniteSet(-oo) + Interval(-oo, oo) == reals_plus_negativeinfinity
 
 
-def test_reduce_imageset():
+def test_Union_imageset():
     n = Dummy('n')
-    # Radians : 60, 180, 300 , ...
-    assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi + 5*pi/3), S.Integers) +\
-         ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)) == \
-    ImageSet(Lambda(n, pi*(2*n - 1)/3), S.Integers)
 
-    # Radians : 0, 180, 360, ...
-    assert reduce_imageset(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
+    assert Union(ImageSet(Lambda(n, 2*n*pi), S.Integers)) == \
+    ImageSet(Lambda(n, 2*pi*n), S.Integers)
+
+    assert Union(S.EmptySet, ImageSet(Lambda(n, 2*n*pi), \
+                    S.Integers)) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
+
+    assert Union(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
         ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)) == \
     ImageSet(Lambda(n, n*pi), S.Integers)
+
+    assert Union(ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi + 5*pi/4), S.Integers)) == \
+    ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+
+    assert Union(ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi - 2*pi/3), S.Integers) \
+        + ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers))== \
+    ImageSet(Lambda(n, n*pi - pi/3), S.Integers) + \
+    ImageSet(Lambda(n, n*pi - 2*pi/3), S.Integers)
 
 
 def test_issue_10931():

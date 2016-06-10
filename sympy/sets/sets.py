@@ -153,6 +153,138 @@ class Set(Basic):
         """
         return self.is_disjoint(other)
 
+    def _union_simplify(self, other):
+        """
+        Try to reduce number of imageset in the args.
+        It is mostly helper to _solve_trig method defined in
+        solvers/solveset.py.
+
+        Helper method for `_union ` of ImageSet.
+
+        First extract the expression of imageset and put in list in new_list
+        (for self) and final_list(for other). If there is any
+        expr in new_list have difference of pi or -pi with any final_list expr.
+        then club them into one expr( (2*n + 1)*pi and 2*n*pi  => n*pi) ,
+        add them and remove previous expr from final_list.
+        At the end final_list contains the minimum number of expr that can
+        generate all the expressions of self and  other.
+
+        Parameters
+        ==========
+
+        self : S.EmptySet of imageset(s).
+        other : S.EmptySet or  imageset(s)
+.
+        Returns
+        =======
+        simplified imageset(s) if possible otherwise self + other .
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> from sympy import pprint
+        >>> from sympy.core import Dummy, pi, S, Symbol
+        >>> n = Dummy('n')
+        >>> pprint(\
+            ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)._union_simplify(\
+                ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)),\
+                use_unicode = False)
+                3*pi
+        {n*pi + ---- | n in Integers()}
+                 4
+
+
+        >>> pprint((ImageSet(Lambda(n, 2*n*pi + pi/3), \
+            S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)).\
+            _union_simplify(ImageSet(Lambda(n, 2*n*pi), S.Integers)),\
+            use_unicode = False)
+                                             pi
+        {n*pi | n in Integers()} U {2*n*pi + -- | n in Integers()}
+                                             3
+
+
+        """
+
+        from sympy.sets.fancysets import ImageSet
+        from sympy.core.function import Lambda
+        from sympy.core import pi
+
+        if self is S.EmptySet:
+            return other
+
+        new_list = []
+        # number of imageset
+        if isinstance(self, ImageSet):
+            new_img_len = 1
+            new_list.append(self)
+        else:
+            new_img_len = len(self.args)
+            for i in range(0, new_img_len):
+                # list of imageset
+                new_list.append(self.args[i])
+
+        new_expr = []
+        final_expr = []
+        # soln list
+        final_list = []
+        final_len = 0
+
+        if isinstance(other, ImageSet):
+            final_len = 1
+            final_list.append(other)
+        else:
+            final_len = len(other.args)
+            for i in range(0, final_len):
+                # list of imageset
+                final_list.append(other.args[i])
+
+        # use one dummy variable n_final
+        n_self = (new_list[0].lamda.expr).atoms(Dummy).pop()
+        # there may be problem when inside expr we have more than one
+        # dummy variable
+        n_final = (final_list[0].lamda.expr).atoms(Dummy).pop()
+
+        # Extracting expr
+        for s in new_list:
+            # lambda expression
+            lamb = s.lamda.expr
+            new_expr.append(lamb.subs(n_self, n_final))
+
+        for s in final_list:
+            # lambda expression
+            lamb = s.lamda.expr
+            final_expr.append(lamb)
+        final = S.EmptySet
+        i = 0
+
+        # there may be problem when it is not linear
+        # but we don't get that case in _solve_trig.
+        while i < new_img_len:
+            done = False
+            for j in range(0, len(final_expr)):
+                if final_expr[j] - new_expr[i] == pi:
+                    # (2*x*pi + pi + expr1) -( 2*x*pi  + exp1) = pi
+                    # can be => x*pi + expr1
+                    final_expr.extend([pi * n_final + new_expr[i].subs(n_final, 0)])
+                    final_expr.remove(final_expr[j])
+                    done = True
+                elif final_expr[j] - new_expr[i] == -pi:
+                    # (2*x*pi + expr1) -( 2*x*pi  + pi + exp1) = -pi
+                    # can be => x*pi + expr1
+                    final_expr += [pi * n_final + final_expr[j].subs(n_final, 0)]
+                    final_expr.remove(final_expr[j])
+                    done = True
+            if not done:
+                final_expr.append(new_expr[i])
+            i += 1
+
+        final = Union(*[ImageSet(Lambda(n_final, s), S.Integers) \
+                            for s in final_expr], evaluate=False)
+        return final
+
+
     def _union(self, other):
         """
         This function should only be used internally
@@ -165,7 +297,10 @@ class Set(Basic):
 
         Used within the :class:`Union` class
         """
-        return None
+        try:
+            return self._union_simplify(other)
+        except:
+            return None
 
     def complement(self, universe):
         """
@@ -2105,147 +2240,3 @@ def imageset(*args):
         return r
 
     return ImageSet(f, set)
-
-
-def reduce_imageset(soln):
-    """
-    Try to reduce number of imageset in the args.
-    It is mostly helper to _solve_trig method defined in
-    solvers/solveset.py.
-
-    First extract the expression of imageset and
-    sort the negative and positive expression.
-    and using interpolate defined in polys/polyfuncs.py
-    generates a function in `n`, which can return all the
-    expressions.
-
-    Parameters
-    ==========
-
-    soln : Union of imagesets.
-
-    Returns
-    =======
-
-    simplified imageset if possible otherwise returns original
-    soln.
-
-    Examples
-    ========
-
-    >>> from sympy import Lambda
-    >>> from sympy.sets.fancysets import ImageSet
-    >>> from sympy import pprint
-    >>> from sympy.sets.sets import reduce_imageset
-    >>> from sympy.core import Dummy, pi, S
-    >>> n = Dummy('n')
-    >>> pprint(reduce_imageset(ImageSet(Lambda(n, 2*n*pi + pi/6), \
-        S.Integers) + ImageSet(Lambda(n, 2*n*pi + 2*pi/6), \
-        S.Integers)+ ImageSet(Lambda(n, 2*n*pi + 3*pi/6), \
-        S.Integers)), use_unicode= False)
-     n*pi
-    {---- | n in Integers()}
-      6
-    >>> pprint(reduce_imageset(ImageSet(Lambda(n, 2*n*pi + 3*pi/4), \
-        S.Integers)+ ImageSet(Lambda(n, 2*n*pi + 7*pi/4), \
-        S.Integers)), use_unicode = False)
-     pi*(4*n - 1)
-    {------------ | n in Integers()}
-          4
-    >>> soln = ImageSet(Lambda(n, 2*n*pi + pi/3), \
-        S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi), S.Integers)
-    >>> reduce_imageset(soln)
-    ImageSet(Lambda(_n, 2*_n*pi), Integers()) U \
-    ImageSet(Lambda(_n, 2*_n*pi + pi), Integers()) U \
-    ImageSet(Lambda(_n, 2*_n*pi + pi/3), Integers())
-    """
-    from sympy.polys import factor, Poly
-    from sympy.polys.polyfuncs import interpolate
-    from sympy.sets.fancysets import ImageSet
-    from sympy.core.function import Lambda
-    from sympy.core import pi
-
-    # number of imageset
-    soln_len = len(soln.args)
-    if soln_len == 1:
-        return soln
-    # solution within 2*pi
-    soln_2pi = []
-    # soln list
-    soln_list = []
-
-    # principle value and it's extended from
-    soln_extended = {}
-    for i in range(0, soln_len):
-        # list of imageset
-        soln_list.append(soln.args[i])
-    for s in soln_list:
-        # lambda expression
-        lamb = s.args[0]
-        # value
-        val = lamb(0)
-        # If start with +ve then interpolate
-        # can return function which can give 0 also
-        if not val is S.Zero:
-            soln_2pi.append(val)
-        else:
-            val = lamb(1)
-            soln_2pi.append(val)
-        # storing it's extended form
-        # to put as it is if can't simplify.
-        soln_extended[val] = s
-
-    # use the same dummy variable. New Dummy will make
-    # comparison error in testcase
-    n = (soln_list[0].lamda.expr).atoms(Dummy).pop()
-    equations = []
-    positive = []
-    negative = []
-    for j in range(0, len(soln_2pi)):
-        if soln_2pi[j] < 0:
-            negative.append(soln_2pi[j])
-        elif soln_2pi[j] > 0:
-            positive.append(soln_2pi[j])
-    plen = len(positive)
-    nlen = len(negative)
-    new_soln = S.EmptySet
-    if not (plen == 1 and nlen == 1):
-        positive.sort()
-        # reverse because of -ve sign
-        negative.sort(reverse=True)
-        cant_simplify = False
-        # There are some cases that would not give general form
-        try_it = [ pi/6, pi/3, pi/4, pi/2, pi, 4*pi/3, 5*pi/4, 3*pi/2,\
-        2*pi/3, -pi/6, -pi/3, -pi/4, -pi/2, -pi, -4*pi/3, -5*pi/4, -3*pi/2]
-        if nlen > 1:
-            if (negative[1] - negative[0] in try_it):
-                # factor to get pi outside
-                res1 = factor(interpolate(negative, n))
-                if (Poly(res1, n).all_monoms())[0][0] > 1:
-                    cant_simplify = True
-                else:
-                    new_soln = ImageSet(Lambda(n, res1), S.Integers)
-            else:
-                cant_simplify = True
-        if cant_simplify or nlen == 1:
-            # no simplification
-            for j in range(0, len(negative)):
-                new_soln += soln_extended[negative[j]]
-            cant_simplify = False
-
-        if plen > 1:
-            if (positive[1] - positive[0] in try_it):
-                res2 = factor(interpolate(positive, n))
-                if (Poly(res2, n).all_monoms())[0][0] > 1:
-                    cant_simplify = True
-                else:
-                    new_soln += ImageSet(Lambda(n, res2), S.Integers)
-            else:
-                cant_simplify = True
-        if cant_simplify or plen == 1:
-            for j in range(0, len(positive)):
-                new_soln += soln_extended[positive[j]]
-
-        soln = new_soln
-    return soln
