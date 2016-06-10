@@ -1,5 +1,6 @@
 from __future__ import print_function
 from textwrap import dedent
+import string
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
@@ -18,7 +19,8 @@ from sympy.utilities.iterables import (
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, subsets, take,
     topological_sort, unflatten, uniq, variations,
-    seq_replace, find, split, longest_repetition, all_repetitions)
+    seq_replace, find, split, longest_repetition, all_repetitions,
+    extract_repetitions)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -177,10 +179,12 @@ def test_cartes():
     assert list(cartes('a', repeat=2)) == [('a', 'a')]
     assert list(cartes(list(range(2)))) == [(0,), (1,)]
 
+
 def test_filter_symbols():
     s = numbered_symbols()
     filtered = filter_symbols(s, symbols("x0 x2 x3"))
     assert take(filtered, 3) == list(symbols("x1 x4 x5"))
+
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
@@ -837,3 +841,30 @@ def test_find():
     assert find('aba', 'a', start=-3) == 0
     assert find('aba', 'a', start=-4) == 0
     assert find('aba', 'a', start=-5) == 0
+
+
+def test_extract_repetitions():
+    s = [
+        'dcaabededb', 'aaacdddaba', 'dcaceacdcb', 'ecabcedbad',
+        'eebeabdebb', 'ebbdabdbbc', 'ddeadbeadb', 'decedceced',
+        'edddbcceea', 'eeddacdcac']
+    a, b = extract_repetitions(s, string.uppercase)
+    assert a == \
+        [('P', 'dd'), ('O', 'ce'), ('N', 'bb'), ('M', 'ad'), ('L', 'ac'),
+        ('K', 'ed'), ('J', 'ab'), ('I', 'Kd'), ('H', 'eN'), ('G', 'dca'),
+        ('F', 'cK'), ('E', 'Ld'), ('D', 'Jd'), ('C', 'eF'), ('B', 'eMb'),
+        ('A', 'Ec')]
+    assert b == \
+        ['GJKKb', 'aaEPJa', 'GOAb', 'ecJFbM', 'eebeDH', 'HdDNc', 'PBB',
+        'dCcC', 'IdbcOea', 'eIAL']
+    for ai in a[::-1]:
+        for i in range(len(b)):
+            b[i] = b[i].replace(*ai)
+    assert s == b
+
+    s = [list(i) for i in ('abc','abcd','abcde')]
+    re = extract_repetitions(s, string.uppercase)
+    assert re == ([('B', ['a', 'b', 'c']), ('A', ['B', 'd'])],
+        [['B'], ['A'], ['A', 'e']])
+    assert extract_repetitions(s, [1, 2]) == \
+        ([(2, ['a', 'b', 'c']), (1, [2, 'd'])], [[2], [1], [1, 'e']])

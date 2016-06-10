@@ -2568,3 +2568,94 @@ def all_repetitions(*seq, **kwargs):
         if len(L) != small:
             seq.append(L[:])
     return reps
+
+
+def extract_repetitions(seq, replacements):
+    """Return a replacement list and sequences that have been modified
+    by recursively removing repeated subsequences so as to minimize the
+    metric ``R + S`` where ``R`` is the combined length of the
+    computed subsequences and ``S`` is the length of the modified
+    original sequences. If the elements of the sequences are
+    multiplied, this metric corresponds with trying to minimize the
+    number of multiplications and assignments.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import extract_repetitions
+    >>> import string
+    >>> s = ('cbedbbcebc', 'baebbcaabb', 'bdeaaddcdc')
+    >>> r, c = extract_repetitions(s, string.uppercase)
+    >>> r
+    [('D', 'dc'), ('C', 'bb'), ('B', 'aa'), ('A', 'Cc')]
+    >>> c
+    ['cbedAebc', 'baeABC', 'bdeBdDD']
+
+    If each letter represented a number then the original number of
+    multiplications and assignments is
+
+    >>> len(''.join(s))
+    30
+
+    After the extraction there are fewer multiplications in the
+    modified sequences:
+
+    >>> len(''.join(c))
+    21
+
+    But there are new assignments and multiplications:
+
+    >>> len(''.join([j for i, j in r]))
+    8
+
+    The multiplications and assignments have decreased from 30 to 29.
+
+    """
+    snew = list(seq)  # leave original unchanged
+    if not seq:
+        return [], snew
+    # more terms will be appended, so keep track of the original length
+    N = len(snew)
+    # record whether we are working with strings or not
+    string = isinstance(snew[0], basestring)
+    # make sure we have an iter
+    replacements = iter(replacements)
+    # record the replacement symbols that are introduced
+    reps = []
+    while True:
+        long_reps = longest_repetition(*snew, all=True)
+        if not long_reps or len(long_reps[0]) == 1:
+            # there was no nontrivial repetition
+            break
+        # find which repetition occured the most often;
+        # I don't think this guarantees the best result
+        # but it seems to work well
+        most = 0
+        best = None
+        for r in long_reps:
+            c = 0
+            for si in snew:
+                c += len(find(si, r, all=True))
+            if c > most:
+                best = r
+                most = c
+        # get a new replacement symbol and use it to replace
+        # subsequence `best`
+        rep = replacements.next()
+        for i in range(len(snew)):
+            if string:
+                snew[i] = snew[i].replace(best, rep)
+            else:
+                seq_replace(snew[i], best, rep)
+        # record the rep
+        reps.append(rep)
+        # *append `best` so that any subsequence that it has that
+        # is in any of the sequences of `snew` can be recursively
+        # identified
+        snew.append(best)
+    # identify the replacements with the (perhaps modified) subsequence
+    reps = list(zip(reps, snew[N:]))[::-1]
+    # remove the subsequences from the end of the list of modified
+    # original sequences
+    snew = snew[:N]
+    return reps, snew
