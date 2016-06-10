@@ -1,12 +1,26 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, tan,
-        sin, pi)
-from sympy.calculus.util import not_empty_in, AccumBounds
+                   sin, pi)
+from sympy.calculus.util import (function_range, continuous_in, not_empty_in,
+                                 AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
 from sympy.abc import x
 
 a = Symbol('a', real=True)
+
+
+def test_function_range():
+    x = Symbol('x')
+    assert function_range(sin(x), x, Interval(-pi/2, pi/2)) == Interval(-1, 1)
+    assert function_range(sin(x), x, Interval(0, pi)) == Interval(0, 1)
+    assert function_range(tan(x), x, Interval(0, pi)) == Interval(-oo, oo)
+    assert function_range(tan(x), x, Interval(pi/2, pi)) == Interval(-oo, 0)
+    assert function_range((x + 3)/(x - 2), x, Interval(-5, 5)) == Interval(-oo, oo)
+    assert function_range(1/(x**2), x, Interval(-1, 1)) == Interval(1, oo)
+    assert function_range(exp(x), x, Interval(-1, 1)) == Interval(exp(-1), exp(1))
+    assert function_range(log(x) - x, x, S.Reals) == Interval(-oo, -1)
+    assert function_range(sqrt(3*x - 1), x, Interval(0, 2)) == Interval(0, sqrt(5))
 
 
 def test_not_empty_in():
