@@ -1,4 +1,4 @@
-from sympy import Order, S
+from sympy import Order, S, log, limit
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -7,8 +7,6 @@ from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
-from sympy.solvers.inqualities import solve_univariate_inequality
-from sympy.solvers.solveset import _has_rational_power
 from sympy.functions.elementary.miscellaneous import Min, Max
 
 
@@ -22,7 +20,7 @@ def continuous_in(f, symbol, interval):
     ========
     >>> from sympy import Symbol, S, tan, log, pi, sqrt
     >>> from sympy.sets import Interval
-    >>> from sympy.calculus.singularities import continuous_in
+    >>> from sympy.calculus.util import continuous_in
     >>> x = Symbol('x')
     >>> continuous_in(1/x, x, S.Reals)
     (-oo, 0) U (0, oo)
@@ -34,6 +32,9 @@ def continuous_in(f, symbol, interval):
     (1/2, oo)
 
     """
+    from sympy.solvers.inequalities import solve_univariate_inequality
+    from sympy.solvers.solveset import solveset, _has_rational_power
+
     if interval.is_subset(S.Reals):
         constrained_interval = interval
         for atom in f.atoms(Pow):
@@ -77,7 +78,7 @@ def function_range(f, symbol, domain):
 
     >>> from sympy import Symbol, S, exp, log, pi, sqrt, sin, tan
     >>> from sympy.sets import Interval
-    >>> from sympy.calculus.singularities import function_range
+    >>> from sympy.calculus.util import function_range
     >>> x = Symbol('x')
     >>> function_range(sin(x), x, Interval(0, 2*pi))
     [-1, 1]
@@ -93,6 +94,8 @@ def function_range(f, symbol, domain):
     [0, 3]
 
     """
+    from sympy.solvers.solveset import solveset
+
     vals = S.EmptySet
     intervals = continuous_in(f, symbol, domain)
     range_int = S.EmptySet
