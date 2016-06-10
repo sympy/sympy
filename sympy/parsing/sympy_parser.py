@@ -574,6 +574,8 @@ def lambda_notation(tokens, local_dict, global_dict):
                 if tokNum == OP and tokVal == ':':
                     tokVal = ','
                     flag = True
+                if not flag and tokNum == OP and tokVal in ['*', '**']:
+                    raise TokenError("Starred arguments in lambda not supported")
                 if flag:
                     result.insert(-1, (tokNum, tokVal))
                 else:
@@ -702,6 +704,72 @@ def rationalize(tokens, local_dict, global_dict):
         else:
             result.append((toknum, tokval))
 
+    return result
+
+
+def _transform_equals_sign(tokens, local_dict, global_dict):
+    """Transforms the equals sign ``=`` to instances of Eq.
+
+    This is a helper function for `convert_equals_signs`.
+    Works with expressions containing one equals sign and no
+    nesting. Expressions like `(1=2)=False` won't work with this
+    and should be used with `convert_equals_signs`.
+
+    Examples: 1=2     to Eq(1,2)
+              1*2=x   to Eq(1*2, x)
+
+    This does not deal with function arguments yet.
+
+    """
+    result = []
+    if (OP, "=") in tokens:
+        result.append((NAME, "Eq"))
+        result.append((OP, "("))
+        for index, token in enumerate(tokens):
+            if token == (OP, "="):
+                result.append((OP, ","))
+                continue
+            result.append(token)
+        result.append((OP, ")"))
+    else:
+        result = tokens
+    return result
+
+
+def convert_equals_signs(result, local_dict, global_dict):
+    """ Transforms all the equals signs ``=`` to instances of Eq.
+
+    Parses the equals signs in the expression and replaces them with
+    appropriate Eq instances.Also works with nested equals signs.
+
+    Does not yet play well with function arguments.
+    For example, the expression `(x=y)` is ambiguous and can be interpreted
+    as x being an argument to a function and `convert_equals_signs` won't
+    work for this.
+
+    See also
+    ========
+    convert_equality_operators
+
+    Examples:
+    =========
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, convert_equals_signs)
+    >>> parse_expr("1*2=x", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(2, x)
+    >>> parse_expr("(1*2=x)=False", transformations=(
+    ... standard_transformations + (convert_equals_signs,)))
+    Eq(Eq(2, x), False)
+
+    """
+    for step in (_group_parentheses(convert_equals_signs),
+                  _apply_functions,
+                  _transform_equals_sign):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
     return result
 
 
@@ -863,11 +931,24 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
-
+            left = self.visit(node.left)
+            if isinstance(node.left, ast.UnaryOp) and (isinstance(node.right, ast.UnaryOp) == 0) and sympy_class in ('Mul',):
+                left, right = right, left
             if isinstance(node.op, ast.Sub):
                 right = ast.UnaryOp(op=ast.USub(), operand=right)
-            elif isinstance(node.op, ast.Div):
-                right = ast.Call(
+            if isinstance(node.op, ast.Div):
+                if isinstance(node.left, ast.UnaryOp):
+                    if isinstance(node.right,ast.UnaryOp):
+                        left, right = right, left
+                    left = ast.Call(
+                    func=ast.Name(id='Pow', ctx=ast.Load()),
+                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None
+                )
+                else:
+                    right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
                     keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
@@ -877,7 +958,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
-                args=[self.visit(node.left), right],
+                args=[left, right],
                 keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None

@@ -489,7 +489,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     >>> from sympy.abc import x, k
 
     >>> rh(exp(x), x, -S.One, (k + 1), k, 1)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> rh(ln(1 + x), x, k**2, k*(k + 1), k, 1)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -672,20 +672,20 @@ def solve_de(f, x, DE, order, g, k):
     >>> from sympy.abc import x, k, f
 
     >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), 2, f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
     """
     sol = None
-    syms = DE.free_symbols.difference(set([g, x]))
+    syms = DE.free_symbols.difference({g, x})
 
     if syms:
         RE = _transform_DE_RE(DE, g, k, order, syms)
     else:
         RE = hyper_re(DE, g, k)
-    if not RE.free_symbols.difference(set([k])):
+    if not RE.free_symbols.difference({k}):
         sol = _solve_hyper_RE(f, x, RE, g, k)
 
     if sol:
@@ -693,7 +693,7 @@ def solve_de(f, x, DE, order, g, k):
 
     if syms:
         DE = _transform_explike_DE(DE, g, x, order, syms)
-    if not DE.free_symbols.difference(set([x])):
+    if not DE.free_symbols.difference({x}):
         sol = _solve_explike_DE(f, x, DE, g, k)
 
     if sol:
@@ -717,7 +717,7 @@ def hyper_algorithm(f, x, k, order=4):
     >>> from sympy.abc import x, k
 
     >>> hyper_algorithm(exp(x), x, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> hyper_algorithm(ln(1 + x), x, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -738,7 +738,7 @@ def hyper_algorithm(f, x, k, order=4):
             sol = solve_de(f, x, DE, i, g, k)
         if sol:
             return sol
-        if not DE.free_symbols.difference(set([x])):
+        if not DE.free_symbols.difference({x}):
             des.append(DE)
 
     # If nothing works

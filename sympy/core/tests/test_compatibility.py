@@ -1,4 +1,5 @@
-from sympy.core.compatibility import default_sort_key, as_int, ordered, iterable
+from sympy.core.compatibility import (default_sort_key, as_int, ordered,
+    iterable, NotIterable)
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 
@@ -24,6 +25,36 @@ def test_iterable():
     assert iterable(1) is False
     assert iterable(None) is False
 
+    class Test1(NotIterable):
+        pass
+
+    assert iterable(Test1()) is False
+
+    class Test2(NotIterable):
+        _iterable = True
+
+    assert iterable(Test2()) is True
+
+    class Test3(object):
+        pass
+
+    assert iterable(Test3()) is False
+
+    class Test4(object):
+        _iterable = True
+
+    assert iterable(Test4()) is True
+
+    class Test5(object):
+        def __iter__(self):
+            yield 1
+
+    assert iterable(Test5()) is True
+
+    class Test6(Test5):
+        _iterable = False
+
+    assert iterable(Test6()) is False
 
 def test_ordered():
     # Issue 7210 - this had been failing with python2/3 problems

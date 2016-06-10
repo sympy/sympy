@@ -1648,6 +1648,7 @@ class Triangle(Polygon):
     incircle
     medians
     medial
+    nine_point_circle
 
     Raises
     ======
@@ -2249,6 +2250,63 @@ class Triangle(Polygon):
         s = self.sides
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
 
+    @property
+    def nine_point_circle(self):
+        """The nine-point circle of the triangle.
+
+        Nine-point circle is the circumcircle of the medial triangle, which
+        passes through the feet of altitudes and the middle points of segments
+        connecting the vertices and the orthocenter.
+
+        Returns
+        =======
+
+        nine_point_circle : Circle
+
+        See also
+        ========
+
+        sympy.geometry.line.Segment.midpoint
+        sympy.geometry.polygon.Triangle.medial
+        sympy.geometry.polygon.Triangle.orthocenter
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.nine_point_circle
+        Circle(Point2D(1/4, 1/4), sqrt(2)/4)
+
+        """
+        return Circle(*self.medial.vertices)
+
+    @property
+    def eulerline(self):
+        """The Euler line of the triangle.
+
+        The line which passes through circumcenter, centroid and orthocenter.
+
+        Returns
+        =======
+
+        eulerline : Line (or Point for equilateral triangles in which case all
+                    centers coincide)
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point, Triangle
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
+        >>> t = Triangle(p1, p2, p3)
+        >>> t.eulerline
+        Line(Point2D(0, 0), Point2D(1/2, 1/2))
+
+        """
+        if self.is_equilateral():
+            return self.orthocenter
+        return Line(self.orthocenter, self.circumcenter)
 
 def rad(d):
     """Return the radian value for the given degrees (pi = 180 degrees)."""

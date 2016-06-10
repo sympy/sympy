@@ -235,10 +235,11 @@ def get_indices(expr):
         return inds, {}
     elif expr is None:
         return set(), {}
+    elif isinstance(expr, Idx):
+        return {expr}, {}
     elif expr.is_Atom:
         return set(), {}
-    elif isinstance(expr, Idx):
-        return set([expr]), {}
+
 
     # recurse via specialized functions
     else:
@@ -335,11 +336,11 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys(), key=default_sort_key)
-    [(x[j]*A[i, j] + y[i])*x[i], (i,)]
+    [(A[i, j]*x[j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([(x[j]*A[i, j] + y[i])*x[i]])
+    set([(A[i, j]*x[j] + y[i])*x[i]])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
+    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:
@@ -373,12 +374,12 @@ def get_contraction_structure(expr):
 
     if isinstance(expr, Indexed):
         junk, key = _remove_repeated(expr.indices)
-        return {key or None: set([expr])}
+        return {key or None: {expr}}
     elif expr.is_Atom:
-        return {None: set([expr])}
+        return {None: {expr}}
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
-        result = {key or None: set([expr])}
+        result = {key or None: {expr}}
         # recurse on every factor
         nested = []
         for fac in expr.args:
@@ -399,7 +400,7 @@ def get_contraction_structure(expr):
         for d in dbase, dexp:
             if not (None in d and len(d) == 1):
                 dicts.append(d)
-        result = {None: set([expr])}
+        result = {None: {expr}}
         if dicts:
             result[expr] = dicts
         return result
@@ -431,13 +432,13 @@ def get_contraction_structure(expr):
             deep = get_contraction_structure(arg)
             if not (None in deep and len(deep) == 1):
                 deeplist.append(deep)
-        d = {None: set([expr])}
+        d = {None: {expr}}
         if deeplist:
             d[expr] = deeplist
         return d
 
     # this test is expensive, so it should be at the end
     elif not expr.has(Indexed):
-        return {None: set([expr])}
+        return {None: {expr}}
     raise NotImplementedError(
         "FIXME: No specialized handling of type %s" % type(expr))

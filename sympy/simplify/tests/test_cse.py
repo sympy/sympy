@@ -1,7 +1,7 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
+                   Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
                    IndexedBase, Idx, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -9,6 +9,7 @@ from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
     MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import MatrixSymbol
 
 from sympy.core.compatibility import range
 
@@ -273,7 +274,7 @@ def test_issue_4499():
 
 
 def test_issue_6169():
-    r = RootOf(x**6 - 4*x**5 - 2, 1)
+    r = CRootOf(x**6 - 4*x**5 - 2, 1)
     assert cse(r) == ([], [r])
     # and a check that the right thing is done with the new
     # mechanism
@@ -293,8 +294,16 @@ def test_cse_Indexed():
     assert len(replacements) > 0
 
 
-@XFAIL
 def test_cse_MatrixSymbol():
+    # MatrixSymbols have non-Basic args, so make sure that works
+    A = MatrixSymbol("A", 3, 3)
+    assert cse(A) == ([], [A])
+
+    n = symbols('n', integer=True)
+    B = MatrixSymbol("B", n, n)
+    assert cse(B) == ([], [B])
+
+def test_cse_MatrixExpr():
     from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
@@ -304,6 +313,11 @@ def test_cse_MatrixSymbol():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
+    replacements, reduced_exprs = cse([expr1 + expr2, expr1])
+    assert replacements
+
+    replacements, reduced_exprs = cse([A**2, A + A**2])
+    assert replacements
 
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))

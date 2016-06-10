@@ -327,6 +327,19 @@ def test_symbol_real():
     assert a.is_zero is False
 
 
+def test_symbol_imaginary():
+    a = Symbol('a', imaginary=True)
+
+    assert a.is_real is False
+    assert a.is_integer is False
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
+    assert a.is_zero is False
+    assert a.is_nonzero is False  # since nonzero -> real
+
+
 def test_symbol_zero():
     x = Symbol('x', zero=True)
     assert x.is_positive is False
@@ -729,7 +742,7 @@ def test_Pow_is_algebraic():
     x = Symbol('x')
     assert (a**r).is_algebraic
     assert (a**x).is_algebraic is None
-    assert (na**r).is_algebraic is False
+    assert (na**r).is_algebraic is None
     assert (ia**r).is_algebraic
     assert (ia**ib).is_algebraic is False
 
@@ -739,6 +752,13 @@ def test_Pow_is_algebraic():
     assert Pow(2, sqrt(2), evaluate=False).is_algebraic is False
 
     assert Pow(S.GoldenRatio, sqrt(3), evaluate=False).is_algebraic is False
+
+    # issue 8649
+    t = Symbol('t', real=True, transcendental=True)
+    n = Symbol('n', integer=True)
+    assert (t**n).is_algebraic is None
+    assert (t**n).is_integer is None
+
 
 def test_Mul_is_prime():
     from sympy import Mul
@@ -971,3 +991,22 @@ def test_issue_9165():
 def test_issue_10024():
     x = Dummy('x')
     assert Mod(x, 2*pi).is_zero is None
+
+
+def test_issue_10302():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
+    i = u + u*I
+    assert i.is_real is None  # w/o simplification this should fail
+    assert (u + i).is_zero is None
+    assert (1 + i).is_zero is False
+    a = Dummy('a', zero=True)
+    assert (a + I).is_zero is False
+    assert (a + r*I).is_zero is None
+    assert (a + I).is_imaginary
+    assert (a + x + I).is_imaginary is None
+    assert (a + r*I + I).is_imaginary is None
+
+def test_complex_reciprocal_imaginary():
+    assert (1 / (4 + 3*I)).is_imaginary is False

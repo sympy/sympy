@@ -3,12 +3,18 @@ from itertools import product as cartes
 from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols, binomial)
+    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
+    binomial, simplify, frac)
 
+from sympy.calculus.util import AccumBounds
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
+
+from sympy.abc import x, y, z, k
+n = Symbol('n', integer=True, positive=True)
 
 
 def test_basic1():
@@ -172,7 +178,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
-    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == sin(oo)
+    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == AccumBounds(-1, 1)
     assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 
@@ -203,6 +209,24 @@ def test_doit():
     f = Integral(2 * x, x)
     l = Limit(f, x, oo)
     assert l.doit() == oo
+
+
+def test_AccumBounds():
+    assert limit(sin(k) - sin(k + 1), k, oo) == AccumBounds(-2, 2)
+    assert limit(cos(k) - cos(k + 1) + 1, k, oo) == AccumBounds(-1, 3)
+
+    # not the exact bound
+    assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
+
+    # test for issue #9934
+    t1 = Mul(S(1)/2, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
+
+    t2 = Mul(Add(AccumBounds(-2, 2), sin(1)), 1/(-2*cos(1) + 2))
+    assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
+
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
+    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
 
 
 @XFAIL
@@ -432,12 +456,17 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
 
 
+def test_issue_10801():
+    # make sure limits work with binomial
+    assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
+
+
 def test_issue_9205():
     x, y, a = symbols('x, y, a')
-    assert Limit(x, x, a).free_symbols == set([a])
-    assert Limit(x, x, a, '-').free_symbols == set([a])
-    assert Limit(x + y, x + y, a).free_symbols == set([a])
-    assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])
+    assert Limit(x, x, a).free_symbols == {a}
+    assert Limit(x, x, a, '-').free_symbols == {a}
+    assert Limit(x + y, x + y, a).free_symbols == {a}
+    assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
 def test_limit_seq():

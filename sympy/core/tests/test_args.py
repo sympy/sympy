@@ -133,6 +133,41 @@ def test_sympy__assumptions__sathandlers__CheckIsPrime():
     assert _test_args(CheckIsPrime(Q.positive))
     assert _test_args(CheckIsPrime(Q.positive(5)))
 
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__AugmentedAssignment():
+    from sympy.codegen.ast import AugmentedAssignment
+    assert _test_args(AugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__AddAugmentedAssignment():
+    from sympy.codegen.ast import AddAugmentedAssignment
+    assert _test_args(AddAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__SubAugmentedAssignment():
+    from sympy.codegen.ast import SubAugmentedAssignment
+    assert _test_args(SubAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__MulAugmentedAssignment():
+    from sympy.codegen.ast import MulAugmentedAssignment
+    assert _test_args(MulAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__DivAugmentedAssignment():
+    from sympy.codegen.ast import DivAugmentedAssignment
+    assert _test_args(DivAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__ModAugmentedAssignment():
+    from sympy.codegen.ast import ModAugmentedAssignment
+    assert _test_args(ModAugmentedAssignment(x, 1))
+
+def test_sympy__codegen__ast__CodeBlock():
+    from sympy.codegen.ast import CodeBlock, Assignment
+    assert _test_args(CodeBlock(Assignment(x, 1), Assignment(y, 2)))
+
+def test_sympy__codegen__ast__For():
+    from sympy.codegen.ast import For, CodeBlock, AddAugmentedAssignment
+    from sympy import Range
+    assert _test_args(For(x, Range(10), CodeBlock(AddAugmentedAssignment(y, 1))))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
@@ -460,6 +495,21 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
+def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
+    from sympy.tensor import IndexedBase, Idx
+    from sympy.sandbox.indexed_integrals import IndexedIntegral
+    A = IndexedBase('A')
+    i, j = symbols('i j', integer=True)
+    a1, a2 = symbols('a1:3', cls=Idx)
+    assert _test_args(IndexedIntegral(A[a1], A[a2]))
+    assert _test_args(IndexedIntegral(A[i], A[j]))
+
+
+def test_sympy__calculus__util__AccumulationBounds():
+    from sympy.calculus.util import AccumulationBounds
+    assert _test_args(AccumulationBounds(0, 1))
+
+
 def test_sympy__sets__sets__EmptySet():
     from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
@@ -589,7 +639,7 @@ die = DieDistribution(6)
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain
-    assert _test_args(ContinuousDomain(set([x]), Interval(-oo, oo)))
+    assert _test_args(ContinuousDomain({x}, Interval(-oo, oo)))
 
 
 def test_sympy__stats__crv__SingleContinuousDomain():
@@ -698,6 +748,35 @@ def test_sympy__stats__rv__ProductDomain():
     assert _test_args(ProductDomain(D, E))
 
 
+def test_sympy__stats__symbolic_probability__Probability():
+    from sympy.stats.symbolic_probability import Probability
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Probability(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Expectation():
+    from sympy.stats.symbolic_probability import Expectation
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Expectation(X > 0))
+
+
+def test_sympy__stats__symbolic_probability__Covariance():
+    from sympy.stats.symbolic_probability import Covariance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 3)
+    assert _test_args(Covariance(X, Y))
+
+
+def test_sympy__stats__symbolic_probability__Variance():
+    from sympy.stats.symbolic_probability import Variance
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Variance(X))
+
+
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
     from sympy.stats.frv_types import DiscreteUniformDistribution
     from sympy.core.containers import Tuple
@@ -731,32 +810,32 @@ def test_sympy__stats__frv_types__RademacherDistribution():
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
-    assert _test_args(FiniteDomain(set([(x, 1), (x, 2)])))  # x can be 1 or 2
+    assert _test_args(FiniteDomain({(x, 1), (x, 2)}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__SingleFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain
-    assert _test_args(SingleFiniteDomain(x, set([1, 2])))  # x can be 1 or 2
+    assert _test_args(SingleFiniteDomain(x, {1, 2}))  # x can be 1 or 2
 
 
 def test_sympy__stats__frv__ProductFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ProductFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
-    yd = SingleFiniteDomain(y, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
+    yd = SingleFiniteDomain(y, {1, 2})
     assert _test_args(ProductFiniteDomain(xd, yd))
 
 
 def test_sympy__stats__frv__ConditionalFiniteDomain():
     from sympy.stats.frv import SingleFiniteDomain, ConditionalFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(ConditionalFiniteDomain(xd, x > 1))
 
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2, 3, 4, 5, 6]))
+    xd = SingleFiniteDomain(x, {1, 2, 3, 4, 5, 6})
     p = 1.0/6
-    xd = SingleFiniteDomain(x, set([1, 2]))
+    xd = SingleFiniteDomain(x, {1, 2})
     assert _test_args(FinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 
@@ -929,6 +1008,9 @@ def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
 
+def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
+    from sympy.stats.crv_types import ShiftedGompertzDistribution
+    assert _test_args(ShiftedGompertzDistribution(1, 1))
 
 def test_sympy__stats__crv_types__StudentTDistribution():
     from sympy.stats.crv_types import StudentTDistribution
@@ -2124,6 +2206,14 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+
+def test_sympy__matrices__expressions__dotproduct__DotProduct():
+    from sympy.matrices.expressions.dotproduct import DotProduct
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('X', x, 1)
+    Y = MatrixSymbol('Y', x, 1)
+    assert _test_args(DotProduct(X, Y))
+
 def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
     from sympy.matrices.expressions.diagonal import DiagonalMatrix
     from sympy.matrices.expressions import MatrixSymbol
@@ -3096,9 +3186,14 @@ def test_sympy__polys__polytools__PurePoly():
     assert _test_args(PurePoly(2, x, y))
 
 
+@SKIP('abstract class')
 def test_sympy__polys__rootoftools__RootOf():
-    from sympy.polys.rootoftools import RootOf
-    assert _test_args(RootOf(x**3 + x + 1, 0))
+    pass
+
+
+def test_sympy__polys__rootoftools__ComplexRootOf():
+    from sympy.polys.rootoftools import ComplexRootOf
+    assert _test_args(ComplexRootOf(x**3 + x + 1, 0))
 
 
 def test_sympy__polys__rootoftools__RootSum():
@@ -3185,6 +3280,23 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
     assert _test_args(G_Function([2], [1], [], []))
+
+
+@SKIP("abstract class")
+def test_sympy__tensor__array__ndim_array__ImmutableNDimArray():
+    pass
+
+
+def test_sympy__tensor__array__dense_ndim_array__ImmutableDenseNDimArray():
+    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+    densarr = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(densarr)
+
+
+def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
+    from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
+    sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
+    assert _test_args(sparr)
 
 
 def test_sympy__tensor__indexed__Idx():
@@ -3315,6 +3427,12 @@ def test_sympy__geometry__ellipse__Ellipse():
 def test_sympy__geometry__ellipse__Circle():
     from sympy.geometry.ellipse import Circle
     assert _test_args(Circle((0, 1), 2))
+
+
+def test_sympy__geometry__parabola__Parabola():
+    from sympy.geometry.parabola import Parabola
+    from sympy.geometry.line import Line
+    assert _test_args(Parabola((0, 0), Line((2, 3), (4, 3))))
 
 
 @SKIP("abstract class")
@@ -3538,6 +3656,13 @@ def test_sympy__ntheory__factor___totient():
     assert _test_args(t)
 
 
+def test_sympy__ntheory__factor___reduced_totient():
+    from sympy.ntheory.factor_ import reduced_totient
+    k = symbols('k', integer=True)
+    t = reduced_totient(k)
+    assert _test_args(t)
+
+
 def test_sympy__ntheory__factor___divisor_sigma():
     from sympy.ntheory.factor_ import divisor_sigma
     k = symbols('k', integer=True)
@@ -3575,8 +3700,8 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
-def test_sympy__printing__codeprinter__Assignment():
-    from sympy.printing.codeprinter import Assignment
+def test_sympy__codegen__ast__Assignment():
+    from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
 
 

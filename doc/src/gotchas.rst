@@ -156,7 +156,7 @@ If you define a circular relationship, you will get a
     >>> def b():
     ...     return a()
     ...
-    >>> a()
+    >>> a() #doctest: +SKIP
     Traceback (most recent call last):
       File "...", line ..., in ...
         compileflags, 1) in test.globs

@@ -9,7 +9,7 @@ from sympy.polys.partfrac import (
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
                    Symbol, Dummy, factor, together, sqrt, Expr)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -147,7 +147,9 @@ def test_assemble_partfrac_list():
     assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
 
 
+@XFAIL
 def test_noncommutative_pseudomultivariate():
+    # apart doesn't go inside noncommutative expressions
     class foo(Expr):
         is_commutative=False
     e = x/(x + x*y)
@@ -155,6 +157,12 @@ def test_noncommutative_pseudomultivariate():
     assert apart(e + foo(e)) == c + foo(c)
     assert apart(e*foo(e)) == c*foo(c)
 
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/(1 + y)
+    assert apart(e + foo()) == c + foo()
 
 def test_issue_5798():
     assert apart(

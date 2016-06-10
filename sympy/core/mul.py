@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from functools import cmp_to_key
 import operator
 
 from .sympify import sympify
@@ -9,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import cmp_to_key, reduce, range
+from .compatibility import reduce, range
 from .expr import Expr
 
 # internal marker to indicate:
@@ -171,6 +172,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
+        from sympy.calculus.util import AccumBounds
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -265,6 +267,10 @@ class Mul(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, AccumBounds):
+                coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:
@@ -368,17 +374,17 @@ class Mul(Expr, AssocOp):
 
         # gather exponents of common bases...
         def _gather(c_powers):
-            new_c_powers = []
             common_b = {}  # b:e
             for b, e in c_powers:
                 co = e.as_coeff_Mul()
-                common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
+                common_b.setdefault(b, {}).setdefault(
+                    co[1], []).append(co[0])
             for b, d in common_b.items():
                 for di, li in d.items():
                     d[di] = Add(*li)
+            new_c_powers = []
             for b, e in common_b.items():
-                for t, c in e.items():
-                    new_c_powers.append((b, c*t))
+                new_c_powers.extend([(b, c*t) for t, c in e.items()])
             return new_c_powers
 
         # in c_powers
@@ -402,14 +408,45 @@ class Mul(Expr, AssocOp):
 
         #  0             1
         # x  -> 1       x  -> x
-        for b, e in c_powers:
-            if e is S.One:
-                if b.is_Number:
-                    coeff *= b
-                else:
-                    c_part.append(b)
-            elif e is not S.Zero:
-                c_part.append(Pow(b, e))
+
+        # this should only need to run twice; if it fails because
+        # it needs to be run more times, perhaps this should be
+        # changed to a "while True" loop -- the only reason it
+        # isn't such now is to allow a less-than-perfect result to
+        # be obtained rather than raising an error or entering an
+        # infinite loop
+        for i in range(2):
+            new_c_powers = []
+            changed = False
+            for b, e in c_powers:
+                if e.is_zero:
+                    continue
+                if e is S.One:
+                    if b.is_Number:
+                        coeff *= b
+                        continue
+                    p = b
+                if e is not S.One:
+                    p = Pow(b, e)
+                    # check to make sure that the base doesn't change
+                    # after exponentiation; to allow for unevaluated
+                    # Pow, we only do so if b is not already a Pow
+                    if p.is_Pow and not b.is_Pow:
+                        bi = b
+                        b, e = p.as_base_exp()
+                        if b != bi:
+                            changed = True
+                c_part.append(p)
+                new_c_powers.append((b, e))
+            # there might have been a change, but unless the base
+            # matches some other base, there is nothing to do
+            if changed and len(set(
+                    b for b, e in new_c_powers)) != len(new_c_powers):
+                # start over again
+                c_part = []
+                c_powers = _gather(new_c_powers)
+            else:
+                break
 
         #  x    x     x
         # 2  * 3  -> 6
@@ -1536,7 +1573,7 @@ class Mul(Expr, AssocOp):
             s *= x._sage_()
         return s
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1553,7 +1590,7 @@ class Mul(Expr, AssocOp):
         coef = S.One
         args = []
         for i, a in enumerate(self.args):
-            c, p = a.as_content_primitive(radical=radical)
+            c, p = a.as_content_primitive(radical=radical, clear=clear)
             coef *= c
             if p is not S.One:
                 args.append(p)

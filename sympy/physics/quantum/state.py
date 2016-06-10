@@ -34,10 +34,10 @@ _straight_bracket = "|"
 
 # Unicode brackets
 # MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u("\N{MATHEMATICAL LEFT ANGLE BRACKET}")
-_rbracket_ucode = u("\N{MATHEMATICAL RIGHT ANGLE BRACKET}")
+_lbracket_ucode = u"\N{MATHEMATICAL LEFT ANGLE BRACKET}"
+_rbracket_ucode = u"\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
 # LIGHT VERTICAL BAR
-_straight_bracket_ucode = u("\N{LIGHT VERTICAL BAR}")
+_straight_bracket_ucode = u"\N{LIGHT VERTICAL BAR}"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -133,9 +133,9 @@ class StateBase(QExpr):
         # Setup for unicode vs ascii
         if use_unicode:
             lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
-            slash, bslash, vert = u('\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}'), \
-                                  u('\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}'), \
-                                  u('\N{BOX DRAWINGS LIGHT VERTICAL}')
+            slash, bslash, vert = u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
+                                  u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
+                                  u'\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
             lbracket, rbracket = self.lbracket, self.rbracket
             slash, bslash, vert = '/', '\\', '|'
@@ -149,18 +149,18 @@ class StateBase(QExpr):
         brackets = []
         for bracket in lbracket, rbracket:
             # Create left bracket
-            if bracket in set([_lbracket, _lbracket_ucode]):
+            if bracket in {_lbracket, _lbracket_ucode}:
                 bracket_args = [ ' ' * (height//2 - i - 1) +
                                  slash for i in range(height // 2)]
                 bracket_args.extend(
                     [ ' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
-            elif bracket in set([_rbracket, _rbracket_ucode]):
+            elif bracket in {_rbracket, _rbracket_ucode}:
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
                 bracket_args.extend([ ' ' * (
                     height//2 - i - 1) + slash for i in range(height // 2)])
             # Create straight bracket
-            elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
+            elif bracket in {_straight_bracket, _straight_bracket_ucode}:
                 bracket_args = [vert for i in range(height)]
             else:
                 raise ValueError(bracket)

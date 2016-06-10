@@ -328,7 +328,7 @@ def test_call():
     raises(TypeError, lambda: Wild('x')(1))
 
 def test_unicode():
-    xu = Symbol(u('x'))
+    xu = Symbol(u'x')
     x = Symbol('x')
     assert x == xu
 

@@ -63,7 +63,7 @@ def sfield(exprs, *symbols, **options):
     >>> K
     Rational function field in x, exp(1/x), log(x), x**(1/3) over ZZ with lex order
     >>> f
-    (4*x**2*exp(1/x) + x*exp(1/x)*log(x))/((x**(1/3))**5)
+    (4*x**2*(exp(1/x)) + x*(exp(1/x))*(log(x)))/((x**(1/3))**5)
     """
     single = False
     if not is_sequence(exprs):

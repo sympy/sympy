@@ -14,19 +14,23 @@ class Point(Basic):
 
     def __new__(cls, name, position=Vector.zero, parent_point=None):
         name = str(name)
-        #Check the args first
+        # Check the args first
         if not isinstance(position, Vector):
-            raise TypeError("position should be a Vector instance")
-        if (not isinstance(parent_point, Point)
-                and parent_point is not None):
-            raise TypeError("parent_point should be a Point instance")
-        #Super class construction
+            raise TypeError(
+                "position should be an instance of Vector, not %s" % type(
+                    position))
+        if (not isinstance(parent_point, Point) and
+                parent_point is not None):
+            raise TypeError(
+                "parent_point should be an instance of Point, not %s" % type(
+                    parent_point))
+        # Super class construction
         if parent_point is None:
             obj = super(Point, cls).__new__(cls, Symbol(name), position)
         else:
             obj = super(Point, cls).__new__(cls, Symbol(name),
                                             position, parent_point)
-        #Decide the object parameters
+        # Decide the object parameters
         obj._name = name
         obj._pos = position
         if parent_point is None:
@@ -35,7 +39,7 @@ class Point(Basic):
         else:
             obj._parent = parent_point
             obj._root = parent_point._root
-        #Return object
+        # Return object
         return obj
 
     @cacheit
@@ -63,20 +67,20 @@ class Point(Basic):
 
         """
 
-        if (not isinstance(other, Point)
-                and not isinstance(other, CoordSysCartesian)):
+        if (not isinstance(other, Point) and
+                not isinstance(other, CoordSysCartesian)):
             raise TypeError(str(other) +
                             "is not a Point or CoordSysCartesian")
         if isinstance(other, CoordSysCartesian):
             other = other.origin
-        #Handle special cases
+        # Handle special cases
         if other == self:
             return Vector.zero
         elif other == self._parent:
             return self._pos
         elif other._parent == self:
             return -1 * other._pos
-        #Else, use point tree to calculate position
+        # Else, use point tree to calculate position
         rootindex, path = _path(self, other)
         result = Vector.zero
         i = -1
@@ -140,9 +144,9 @@ class Point(Basic):
 
         """
 
-        #Determine the position vector
+        # Determine the position vector
         pos_vect = self.position_wrt(coordinate_system.origin)
-        #Express it in the given coordinate system
+        # Express it in the given coordinate system
         return tuple(pos_vect.to_matrix(coordinate_system))
 
     def __str__(self, printer=None):

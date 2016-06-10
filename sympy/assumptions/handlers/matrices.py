@@ -39,6 +39,8 @@ class AskSymmetricHandler(CommonHandler):
         if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
             return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
+            if len(mmul.args) == 2:
+                return True
             return ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
 
     @staticmethod

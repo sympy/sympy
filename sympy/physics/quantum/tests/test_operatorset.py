@@ -20,26 +20,26 @@ from sympy.utilities.pytest import XFAIL
 
 @XFAIL
 def test_spin():
-    assert operators_to_state(set([J2Op, JxOp])) == JxKet()
-    assert operators_to_state(set([J2Op, JyOp])) == JyKet()
-    assert operators_to_state(set([J2Op, JzOp])) == JzKet()
-    assert operators_to_state(set([J2Op(), JxOp()])) == JxKet()
-    assert operators_to_state(set([J2Op(), JyOp()])) == JyKet()
-    assert operators_to_state(set([J2Op(), JzOp()])) == JzKet()
+    assert operators_to_state({J2Op, JxOp}) == JxKet()
+    assert operators_to_state({J2Op, JyOp}) == JyKet()
+    assert operators_to_state({J2Op, JzOp}) == JzKet()
+    assert operators_to_state({J2Op(), JxOp()}) == JxKet()
+    assert operators_to_state({J2Op(), JyOp()}) == JyKet()
+    assert operators_to_state({J2Op(), JzOp()}) == JzKet()
 
-    assert state_to_operators(JxKet) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyKet) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzKet) == set([J2Op(), JzOp()])
-    assert state_to_operators(JxBra) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyBra) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzBra) == set([J2Op(), JzOp()])
+    assert state_to_operators(JxKet) == {J2Op(), JxOp()}
+    assert state_to_operators(JyKet) == {J2Op(), JyOp()}
+    assert state_to_operators(JzKet) == {J2Op(), JzOp()}
+    assert state_to_operators(JxBra) == {J2Op(), JxOp()}
+    assert state_to_operators(JyBra) == {J2Op(), JyOp()}
+    assert state_to_operators(JzBra) == {J2Op(), JzOp()}
 
-    assert state_to_operators(JxKet()) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyKet()) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzKet()) == set([J2Op(), JzOp()])
-    assert state_to_operators(JxBra()) == set([J2Op(), JxOp()])
-    assert state_to_operators(JyBra()) == set([J2Op(), JyOp()])
-    assert state_to_operators(JzBra()) == set([J2Op(), JzOp()])
+    assert state_to_operators(JxKet()) == {J2Op(), JxOp()}
+    assert state_to_operators(JyKet()) == {J2Op(), JyOp()}
+    assert state_to_operators(JzKet()) == {J2Op(), JzOp()}
+    assert state_to_operators(JxBra()) == {J2Op(), JxOp()}
+    assert state_to_operators(JyBra()) == {J2Op(), JyOp()}
+    assert state_to_operators(JzBra()) == {J2Op(), JzOp()}
 
 
 def test_op_to_state():

@@ -223,7 +223,10 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, pspace, symbol):
+    def __new__(cls, pspace, symbol=None):
+        if symbol is None:
+            # Allow single arg, representing pspace == PSpace()
+            pspace, symbol = PSpace(), pspace
         if not isinstance(symbol, Symbol):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
@@ -258,7 +261,7 @@ class RandomSymbol(Expr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class ProductPSpace(PSpace):
@@ -387,7 +390,8 @@ class ProductDomain(RandomDomain):
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
             elem = frozenset([item for item in other
-                              if domain.symbols.contains(item[0]) == S.true])
+                              if sympify(domain.symbols.contains(item[0]))
+                              is S.true])
             # Test this sub-event
             if elem not in domain:
                 return False
@@ -746,7 +750,7 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> cdf(X)
-    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    Lambda(_z, -erfc(sqrt(2)*_z/2)/2 + 1)
     """
     if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
@@ -1080,7 +1084,7 @@ def rv_subs(expr, symbols=None):
         symbols = random_symbols(expr)
     if not symbols:
         return expr
-    swapdict = dict([(rv, rv.symbol) for rv in symbols])
+    swapdict = {rv: rv.symbol for rv in symbols}
     return expr.xreplace(swapdict)
 
 class NamedArgsMixin(object):
@@ -1099,5 +1103,5 @@ def _value_check(condition, message):
 
     Raises ValueError with message if condition is not True
     """
-    if condition != True:
+    if condition == False:
         raise ValueError(message)

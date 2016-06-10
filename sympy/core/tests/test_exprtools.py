@@ -215,6 +215,15 @@ def test_gcd_terms():
 
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
+    eq = x/2/y + 1/x/y
+    assert gcd_terms(eq, fraction=True, clear=True) == \
+        (x**2 + 2)/(2*x*y)
+    assert gcd_terms(eq, fraction=True, clear=False) == \
+        (x**2/2 + 1)/(x*y)
+    assert gcd_terms(eq, fraction=False, clear=True) == \
+        (x + 2/x)/(2*y)
+    assert gcd_terms(eq, fraction=False, clear=False) == \
+        (x/2 + 1/x)/y
 
 
 def test_factor_terms():
@@ -237,6 +246,12 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    assert factor_terms(x/2 + y) == x/2 + y
+    # fraction doesn't apply to integer denominators
+    assert factor_terms(x/2 + y, fraction=True) == x/2 + y
+    # clear *does* apply to the integer denominators
+    assert factor_terms(x/2 + y, clear=True) == Mul(S.Half, x + 2*y, evaluate=False)
 
     # check radical extraction
     eq = sqrt(2) + sqrt(10)

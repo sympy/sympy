@@ -72,13 +72,6 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
-    "galgebra.eval_check",
-    "galgebra.exp_check",
-    "galgebra.manifold_check",
-    "galgebra.mv_setup_options",
-    "galgebra.prob_not_solenoidal",
-    "galgebra.simple_check",
-    "galgebra.terminal_check",
 ]
 
 WINDOWED_EXAMPLES = [
@@ -89,14 +82,6 @@ WINDOWED_EXAMPLES = [
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
     "advanced.pyglet_plotting",
-    "galgebra.latex_check",
-    "galgebra.manifold_check_latex",
-    "galgebra.matrix_latex",
-    "galgebra.physics_check_latex",
-    "galgebra.print_check_latex",
-    "galgebra.products_latex",
-    "galgebra.simple_check_latex",
-    "galgebra.spherical_latex",
 ]
 
 EXAMPLE_DIR = os.path.dirname(__file__)

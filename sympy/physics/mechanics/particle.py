@@ -66,7 +66,7 @@ class Particle(object):
                 feature="Method sympy.physics.mechanics." +
                     "Particle.get_mass(self)",
                 useinstead="property sympy.physics.mechanics.Particle.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.mass
 
     def set_mass(self, value):
@@ -74,7 +74,7 @@ class Particle(object):
                 feature="Method sympy.physics.mechanics." +
                     "Particle.set_mass(self, value)",
                 useinstead="property sympy.physics.mechanics.Particle.mass",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.mass = value
 
     @property
@@ -93,7 +93,7 @@ class Particle(object):
                 feature="Method sympy.physics.mechanics." +
                     "Particle.get_point(self)",
                 useinstead="property sympy.physics.mechanics.Particle.point",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         return self.point
 
     def set_point(self, p):
@@ -101,7 +101,7 @@ class Particle(object):
                 feature="Method sympy.physics.mechanics.Particle." +
                     "set_point(self, p)",
                 useinstead="property sympy.physics.mechanics.Particle.point",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.point = p
 
     def linear_momentum(self, frame):
@@ -263,5 +263,5 @@ class Particle(object):
                     "Particle.set_potential_energy(self, scalar)",
                 useinstead="property sympy.physics.mechanics." +
                     "Particle.potential_energy",
-                deprecated_since_version="0.7.7", issue=9800).warn()
+                deprecated_since_version="1.0", issue=9800).warn()
         self.potential_energy = scalar

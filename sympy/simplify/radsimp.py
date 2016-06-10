@@ -5,9 +5,9 @@ from collections import defaultdict
 from sympy import SYMPY_DEBUG
 
 from sympy.core.evaluate import global_evaluate
-from sympy.core.compatibility import iterable, ordered, as_int, default_sort_key
+from sympy.core.compatibility import iterable, ordered, default_sort_key
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
-from sympy.core.numbers import Rational, Float
+from sympy.core.numbers import Rational
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
 from sympy.core.function import _mexpand
@@ -16,7 +16,6 @@ from sympy.functions import exp, sqrt, log
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 
-import mpmath
 
 
 
@@ -388,7 +387,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             # none of the patterns matched
             disliked += product
     # add terms now for each key
-    collected = dict([(k, Add(*v)) for k, v in collected.items()])
+    collected = {k: Add(*v) for k, v in collected.items()}
 
     if disliked is not S.Zero:
         collected[S.One] = disliked

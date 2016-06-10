@@ -210,7 +210,8 @@ class lambdify(object):
                 return None
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
-                                               in str(e)):
+                                               in str(e) or 'unorderable '
+                                               'types' in str(e)):
                 self.lambda_func = experimental_lambdify(self.args, self.expr,
                                                          use_evalf=True,
                                                          use_python_math=True)
@@ -237,7 +238,7 @@ class lambdify(object):
 
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)
-    return l.lambda_func
+    return l
 
 
 class Lambdifier(object):
@@ -302,8 +303,13 @@ class Lambdifier(object):
         if self.print_lambda:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
+        self.eval_str = eval_str
         exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
+
+    def __call__(self, *args, **kwargs):
+        return self.lambda_func(*args, **kwargs)
+
 
     ##############################################################################
     # Dicts for translating from sympy to other modules
@@ -321,7 +327,7 @@ class Lambdifier(object):
     # Strings that should be translated
     builtin_not_functions = {
         'I': '1j',
-        'oo': '1e400',
+#        'oo': '1e400',
     }
 
     ###
@@ -586,7 +592,17 @@ class Lambdifier(object):
                 template = 'float(%s)' % template
             elif self.complex_wrap_evalf:
                 template = 'complex(%s)' % template
-            return template % (func_name, self.tree2str(argtree))
+
+            # Wrapping should only happen on the outermost expression, which
+            # is the only thing we know will be a number.
+            float_wrap_evalf = self.float_wrap_evalf
+            complex_wrap_evalf = self.complex_wrap_evalf
+            self.float_wrap_evalf = False
+            self.complex_wrap_evalf = False
+            ret =  template % (func_name, self.tree2str_translate(argtree))
+            self.float_wrap_evalf = float_wrap_evalf
+            self.complex_wrap_evalf = complex_wrap_evalf
+            return ret
 
     ##############################################################################
     # The namespace constructors
