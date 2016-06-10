@@ -330,16 +330,17 @@ def mul_rule(integral):
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
+    next_step = integral_steps(f, symbol)
 
-    if coeff != 1 and integral_steps(f, symbol) is not None:
+    if coeff != 1 and next_step is not None:
         return ConstantTimesRule(
             coeff, f,
-            integral_steps(f, symbol),
+            next_step,
             integrand, symbol)
 
 def _parts_rule(integrand, symbol):
     # LIATE rule:
-    # log, inverse trig, algebraic (polynomial), trigonometric, exponential
+    # log, inverse trig, algebraic, trigonometric, exponential
     def pull_out_algebraic(integrand):
         integrand = integrand.cancel().together()
         algebraic = [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)]
@@ -440,8 +441,9 @@ def parts_rule(integral):
                              make_second_step(steps[1:], v * du),
                              integrand, symbol)
         else:
-            if integral_steps(integrand, symbol):
-                return integral_steps(integrand, symbol)
+            steps = integral_steps(integrand, symbol)
+            if steps:
+                return steps
             else:
                 return DontKnowRule(integrand, symbol)
 
