@@ -346,7 +346,9 @@ def _normalize(list_of, parent, negative=True):
     # convert polynomials to the elements of associated
     # fraction field
     for i, j in enumerate(list_of):
-        if not isinstance(j, K.dtype):
+        if isinstance(j, base.dtype):
+            list_of_coeff.append(K.new(j.rep))
+        elif not isinstance(j, K.dtype):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
             list_of_coeff.append(j)
@@ -1307,6 +1309,44 @@ def from_sympy(func):
     """
 
     x = func.atoms(Symbol).pop()
+
+    ispoly = func.is_polynomial()
+    if not ispoly:
+        israt = func.is_rational_function()
+    else:
+        israt = True
+
+    if ispoly or israt:
+        R = QQ.old_poly_ring(x)
+        _, Dx = DifferentialOperators(R, 'Dx')
+
+        if ispoly:
+            order = len(R.from_sympy(sympify(func)).rep)
+            sol = Dx**(order)
+
+        elif israt:
+            order = 1
+            p, q = func.as_numer_denom()
+            sol = p * q * Dx + p * q.diff() - q * p.diff()
+            sol = _normalize(sol.listofpoly, sol.parent, negative=False)
+
+        def _find_conditions(func, x, x0, order):
+            y0 = []
+            for i in range(order):
+                val = func.subs(x, x0)
+                if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+                    return None
+                y0.append(val)
+                func = func.diff()
+            return y0
+        x0 = 0
+        y0 = _find_conditions(func, x, x0, sol.order)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditions(func, x, x0, sol.order)
+
+        return HolonomicFunction(sol, x, x0, y0)
+
     args = meijerint._rewrite1(func, x)
 
     if args:
