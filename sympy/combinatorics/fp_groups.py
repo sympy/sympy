@@ -503,15 +503,12 @@ class CosetTable(Basic):
         chi = tuple([i for i in range(len(self.p)) if self.p[i] != i])
         for alpha in self.omega:
             gamma += 1
-            # a non-live coset is found with `gamma ~ alpha`
             if gamma != alpha:
                 # replace α by γ in coset table
                 for x in A:
                     beta = self.table[alpha][A_dict[x]]
-                    if beta == alpha:
-                        beta = gamma
-                    self.table[gamma][A.index(x)] = beta
-                    self.table[beta][A.index(x**-1)] == gamma
+                    self.table[gamma][A_dict[x]] = beta
+                    self.table[beta][A_dict_inv[x]] == gamma
         # all the cosets in the table are live cosets
         self.p = list(range(gamma + 1))
         # delete the useless coloumns
@@ -576,22 +573,6 @@ def coset_enumeration_r(fp_grp, Y):
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # example of "compress" method
-    >>> C.table
-    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [None, None, None, 0, 2, 0, None, 2, 1, None],
-    [None, None, 0, None, 4, None, None, 0, 0, None],
-    [1, None, None, None, None, 7, None, 1, 7, 0],
-    [None, None, None, None, None, None, 0, None, None, None],
-    [None, None, None, None, 0, None, None, None, None, None],
-    [None, None, 0, None, None, None, None, None, None, None],
-    [None, 1, 2, 1, None, None, None, None, None, None],
-    [None, None, None, 1, 3, None, None, None, None, None],
-    [8, None, None, None, None, None, None, 2, 12, 1],
-    [None, None, None, None, None, None, 1, None, None, None],
-    [None, None, None, None, None, None, None, None, 1, None],
-    [None, 2, 4, None, None, None, None, None, None, None],
-    [None, None, None, 12, None, 2, None, None, None, None],
-    [None, None, None, 2, 9, None, None, None, None, None]]
     >>> C.compress()
     >>> C.table
     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
@@ -601,17 +582,17 @@ def coset_enumeration_r(fp_grp, Y):
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> Y = []
     >>> C = coset_enumeration_r(f, Y)
-    >>> for i in range(len(C.p)):
-    ...     if C.p[i] == i:
-    ...         print(C.table[i])
-    [1, 5, 6, 3]
-    [2, 0, 4, 8]
-    [5, 1, 3, 6]
-    [4, 8, 0, 2]
-    [6, 3, 5, 1]
-    [0, 2, 8, 4]
-    [8, 4, 2, 0]
-    [3, 6, 1, 5]
+    >>> C.compress()
+    >>> C.standardize()
+    >>> C.table
+    [[1, 2, 3, 4],
+    [5, 0, 6, 7],
+    [0, 5, 7, 6],
+    [7, 6, 5, 0],
+    [6, 7, 0, 5],
+    [2, 1, 4, 3],
+    [3, 4, 2, 1],
+    [4, 3, 1, 2]]
 
     # John J. Cannon; Lucien A. Dimino; George Havas; Jane M. Watson
     # Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490
@@ -678,6 +659,7 @@ def coset_enumeration_c(fp_grp, Y):
     """
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
+    >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     >>> C = coset_enumeration_c(f, [x])
     >>> C.table
@@ -712,7 +694,7 @@ def coset_enumeration_c(fp_grp, Y):
             if C.table[alpha][C.A_dict[x]] is None:
                 C.define_f(alpha, x)
                 C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    return C.table
+    return C
 
 
 FpGroupElement = FreeGroupElement
