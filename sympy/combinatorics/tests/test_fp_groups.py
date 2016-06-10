@@ -669,19 +669,15 @@ def test_Felsch_method():
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     C = coset_enumeration_c(f, [x])
-    c_1 = [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
-    for i in range(len(C.p)):
-        if C.p[i] == i:
-            assert C.table[i] == c_1[i]
+    assert C.table == [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
 
     # E₁ from [2] Pg. 474
     F, r, s, t = free_group("r, s, t")
     E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
     C = coset_enumeration_c(E1, [r])
-    c_E1 = [0, 0, 0, 0, 0, 0]
-    for i in range(len(C.p)):
-        if C.p[i] == i:
-            C.table[i] == c_E1[i]
+    C.compress()
+    C.standardize()
+    assert C.table == [[0, 0, 0, 0, 0, 0]]
 
     # Cox group from [2] Pg. 474
     F, a, b = free_group("a, b")

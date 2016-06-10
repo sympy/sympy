@@ -426,7 +426,7 @@ class CosetTable(Basic):
                         if p[alpha] < alpha:
                             break
             beta = self.table[alpha][self.A_dict[x]]
-            if p[beta] == beta:
+            if beta is not None and p[beta] == beta:
                 for w in R_c_x_inv:
                     self.scan_f(beta, w)
                     if p[beta] < beta:
@@ -526,7 +526,7 @@ def coset_enumeration_r(fp_grp, Y):
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> F, x, y = free_group("x, y")
 
-    # Example 5.1
+    # Example 5.1 from [1]
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
     >>> C = coset_enumeration_r(f, [x])
     >>> for i in range(len(C.p)):
@@ -537,6 +537,20 @@ def coset_enumeration_r(fp_grp, Y):
     [2, 2, 0, 1]
     >>> C.p
     [0, 1, 2, 1, 1]
+
+    # Example from exercises Q2 [1]
+    >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
+    >>> C = coset_enumeration_r(f, [])
+    >>> C.compress(); C.standardize()
+    >>> C.table
+    [[1, 2, 3, 4],
+    [5, 0, 6, 7],
+    [0, 5, 7, 6],
+    [7, 6, 5, 0],
+    [6, 7, 0, 5],
+    [2, 1, 4, 3],
+    [3, 4, 2, 1],
+    [4, 3, 1, 2]]
 
     # Example 5.2
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**3])
@@ -678,18 +692,20 @@ def coset_enumeration_c(fp_grp, Y):
     R_set = set()
     for conjugate in R_c:
         R_set = R_set.union(conjugate)
-    # denotes subset of R_c whose words start with "x".
+    # a list of subsets of R_c whose words start with "x".
     R_c_list = []
-    # TODO
-    # the method of removing the corresponding element from R_set cotaining "x"
-    # would work better, since that would continuously reduce the size of R_set
     for x in C.A:
-        R_c_list.append(set([word for word in R_set if word[0] == x]))
+        r = set([word for word in R_set if word[0] == x])
+        R_c_list.append(r)
+        R_set.difference_update(r)
     for w in Y:
         C.scan_and_fill_f(0, w)
     for x in A:
         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    for alpha in C.omega:
+    i = 0
+    while i < len(C.omega):
+        alpha = C.omega[i]
+        i += 1
         for x in C.A:
             if C.table[alpha][C.A_dict[x]] is None:
                 C.define_f(alpha, x)
