@@ -1734,7 +1734,10 @@ class PrettyPrinter(Printer):
     def _print_FracField(self, field):
         return prettyForm(sstr(field))
 
-    def _print_FreeGroupElm(self, elm):
+    def _print_FreeGroupElement(self, elm):
+        return prettyForm(str(elm))
+
+    def _print_FreeAbelianGroupElement(self, elm):
         return prettyForm(str(elm))
 
     def _print_PolyElement(self, poly):

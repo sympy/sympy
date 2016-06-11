@@ -390,7 +390,10 @@ class StrPrinter(Printer):
         return "Rational function field in %s over %s with %s order" % \
             (", ".join(map(self._print, field.symbols)), field.domain, field.order)
 
-    def _print_FreeGroupElm(self, elm):
+    def _print_FreeGroupElement(self, elm):
+        return elm.__str__()
+
+    def _print_FreeAbelianGroupElement(self, elm):
         return elm.__str__()
 
     def _print_PolyElement(self, poly):
