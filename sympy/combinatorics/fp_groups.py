@@ -37,20 +37,22 @@ def _parse_relators(rels):
 ###############################################################################
 
 
-class FpGroup(Basic):
+class FpGroup(DefaultPrinting):
     """
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
     relators would be specified in such a way that each of them be equal to the
     identity of the provided free group.
     """
+    is_group = True
     is_FpGroup = True
+    is_PermutationGroup = False
 
     def __new__(cls, fr_grp, relators):
         relators = _parse_relators(relators)
         # return the corresponding FreeGroup if no relators are specified
         if not relators:
             return fr_grp
-        obj = Basic.__new__(cls, fr_grp, relators)
+        obj = object.__new__(cls)
         obj._free_group = fr_grp
         obj._relators = relators
         obj.generators = obj._generators()
@@ -75,7 +77,7 @@ class FpGroup(Basic):
 CosetTableDefaultMaxLimit = 4096000
 max_stack_size = 500
 
-class CosetTable(Basic):
+class CosetTable(DefaultPrinting):
     # coset_table: Mathematically a coset table
     #               represented using a list of lists
     # alpha: Mathematically a coset (precisely, a live coset)
