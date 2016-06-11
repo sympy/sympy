@@ -1230,7 +1230,7 @@ x_1 = Dummy('x_1')
 _lookup_table = None
 
 
-def from_sympy(func):
+def from_sympy(func, initcond=True):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
     to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
@@ -1257,7 +1257,7 @@ def from_sympy(func):
     x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat(func, x)
+    solpoly = _convert_poly_rat(func, x, initcond=initcond)
     if solpoly:
         return solpoly
 
@@ -1274,6 +1274,10 @@ def from_sympy(func):
         if t in _lookup_table:
             l = _lookup_table[t]
         sol = l[0][1]._subs(x)
+
+        if not initcond:
+            return sol.composition(func.args[0])
+
         x0 = 0
         y0 = _find_conditions(func, x, x0, sol.annihilator.order)
         while not y0:
@@ -1281,50 +1285,7 @@ def from_sympy(func):
             y0 = _find_conditions(func, x, x0, sol.annihilator.order)
         return sol.composition(func.args[0], x0, y0)
 
-    args = meijerint._rewrite1(func, x)
-
-    if args:
-        fac, po, g, _ = args
-    else:
-        return None
-
-    # lists for sum of meijerg functions
-    fac_list = [fac * i[0] for i in g]
-    t = po.as_base_exp()
-    s = t[1] if t[0] is x else S(0)
-    po_list = [s + i[1] for i in g]
-    G_list = [i[2] for i in g]
-
-    # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
-    def _shift(func, s):
-        z = func.args[-1]
-        d = z.collect(x, evaluate=False)
-        b = list(d)[0]
-        a = d[b]
-
-        if isinstance(a, exp_polar):
-            a = exp(a.as_base_exp()[1])
-            z = a * b
-
-        t = b.as_base_exp()
-        b = t[1] if t[0] is x else S(0)
-        r = s / b
-        an = (i + r for i in func.args[0][0])
-        ap = (i + r for i in func.args[0][1])
-        bm = (i + r for i in func.args[1][0])
-        bq = (i + r for i in func.args[1][1])
-
-        return a**-r, meijerg((an, ap), (bm, bq), z)
-
-    coeff, m = _shift(G_list[0], po_list[0])
-    sol = fac_list[0] * coeff * from_meijerg(m)
-
-    # add all the meijerg functions after converting to holonomic
-    for i in range(1, len(G_list)):
-        coeff, m = _shift(G_list[i], po_list[i])
-        sol += fac_list[i] * coeff * from_meijerg(m)
-
-    return sol
+    return _convert_meijerint(func, x)
 
 
 def _extend_y0(Holonomic, n):
@@ -1400,7 +1361,7 @@ def DMFsubs(frac, x0):
     return sol_p / sol_q
 
 
-def _convert_poly_rat(func, x):
+def _convert_poly_rat(func, x, initcond=True):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -1428,6 +1389,9 @@ def _convert_poly_rat(func, x):
         sol = p * q * Dx + p * q.diff() - q * p.diff()
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
+    if not initcond:
+        return HolonomicFunction(sol, x)
+
     x0 = 0
     y0 = _find_conditions(func, x, x0, sol.order)
     while not y0:
@@ -1435,6 +1399,53 @@ def _convert_poly_rat(func, x):
         y0 = _find_conditions(func, x, x0, sol.order)
 
     return HolonomicFunction(sol, x, x0, y0)
+
+
+def _convert_meijerint(func, x):
+    args = meijerint._rewrite1(func, x)
+
+    if args:
+        fac, po, g, _ = args
+    else:
+        return None
+
+    # lists for sum of meijerg functions
+    fac_list = [fac * i[0] for i in g]
+    t = po.as_base_exp()
+    s = t[1] if t[0] is x else S(0)
+    po_list = [s + i[1] for i in g]
+    G_list = [i[2] for i in g]
+
+    # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
+    def _shift(func, s):
+        z = func.args[-1]
+        d = z.collect(x, evaluate=False)
+        b = list(d)[0]
+        a = d[b]
+
+        if isinstance(a, exp_polar):
+            a = exp(a.as_base_exp()[1])
+            z = a * b
+
+        t = b.as_base_exp()
+        b = t[1] if t[0] is x else S(0)
+        r = s / b
+        an = (i + r for i in func.args[0][0])
+        ap = (i + r for i in func.args[0][1])
+        bm = (i + r for i in func.args[1][0])
+        bq = (i + r for i in func.args[1][1])
+
+        return a**-r, meijerg((an, ap), (bm, bq), z)
+
+    coeff, m = _shift(G_list[0], po_list[0])
+    sol = fac_list[0] * coeff * from_meijerg(m)
+
+    # add all the meijerg functions after converting to holonomic
+    for i in range(1, len(G_list)):
+        coeff, m = _shift(G_list[i], po_list[i])
+        sol += fac_list[i] * coeff * from_meijerg(m)
+
+    return sol
 
 
 def _create_table(table):
