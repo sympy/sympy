@@ -571,20 +571,17 @@ class Pow(Expr):
             not hold then the substitution should not occur so `bool` will be
             False.
             """
+            from .evalf import N
             coeff1, terms1 = ct1
             coeff2, terms2 = ct2
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                try:
-                    pow = as_int(pow)
+                if N(pow).is_Number:
                     combines = True
-                except ValueError:
+                else:
                     combines = Pow._eval_power(
                         Pow(*old.as_base_exp(), evaluate=False),
                         pow) is not None
-                if not combines:
-                    if pow.has(pi):
-                        combines = True
                 return combines, pow
             return False, None
 
