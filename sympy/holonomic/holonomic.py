@@ -1057,6 +1057,21 @@ class HolonomicFunction(object):
         from sympy.holonomic.numerical import _evalf
         return _evalf(self, points, method=method)
 
+    def _subs(self, z):
+        """
+        Changes only the variable of Holonomic Function, for internal
+        purposes. For composition use HolonomicFunction.composition()
+        """
+
+        dom = self.annihilator.parent.base.dom
+        R = dom.old_poly_ring(z)
+        parent, _ = DifferentialOperators(R, 'Dx')
+        sol = []
+        for j in self.annihilator.listofpoly:
+            sol.append(R(j.rep))
+        sol =  DifferentialOperator(sol, parent)
+        return HolonomicFunction(sol, z, self.x0, self.y0)
+
 
 def from_hyper(func, x0=0, evalf=False):
     """
@@ -1211,6 +1226,10 @@ def from_meijerg(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
+x_1 = Dummy('x_1')
+_lookup_table = None
+
+
 def from_sympy(func):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
@@ -1232,14 +1251,35 @@ def from_sympy(func):
     See Also
     ========
 
-    meijerint._rewrite1
+    meijerint._rewrite1, _convert_poly_rat, _create_table
     """
 
     x = func.atoms(Symbol).pop()
 
+    # try to convert if the function is polynomial or rational
     solpoly = _convert_poly_rat(func, x)
     if solpoly:
         return solpoly
+
+    # create the lookup table
+    global _lookup_table
+    if not _lookup_table:
+        _lookup_table = {}
+        _create_table(_lookup_table)
+
+    # use the table directly to convert to Holonomic
+    if func.is_Function:
+        f = func.subs(x, x_1)
+        t = _mytype(f, x_1)
+        if t in _lookup_table:
+            l = _lookup_table[t]
+        sol = l[0][1]._subs(x)
+        x0 = 0
+        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        while not y0:
+            x0 += 1
+            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        return sol.composition(func.args[0], x0, y0)
 
     args = meijerint._rewrite1(func, x)
 
@@ -1361,6 +1401,9 @@ def DMFsubs(frac, x0):
 
 
 def _convert_poly_rat(func, x):
+    """Converts Polynomials and Rationals to Holonomic.
+    """
+
     ispoly = func.is_polynomial()
     if not ispoly:
         israt = func.is_rational_function()
@@ -1375,23 +1418,15 @@ def _convert_poly_rat(func, x):
 
     if ispoly:
         order = len(R.from_sympy(sympify(func)).rep)
+        # differential equation satisfied by polynomial
         sol = Dx**(order)
 
     elif israt:
         order = 1
         p, q = func.as_numer_denom()
+        # differential equation satisfied by rational
         sol = p * q * Dx + p * q.diff() - q * p.diff()
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
-
-    def _find_conditions(func, x, x0, order):
-        y0 = []
-        for i in range(order):
-            val = func.subs(x, x0)
-            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
-                return None
-            y0.append(val)
-            func = func.diff()
-        return y0
 
     x0 = 0
     y0 = _find_conditions(func, x, x0, sol.order)
@@ -1400,3 +1435,53 @@ def _convert_poly_rat(func, x):
         y0 = _find_conditions(func, x, x0, sol.order)
 
     return HolonomicFunction(sol, x, x0, y0)
+
+
+def _create_table(table):
+    """
+    Create the lookup table.
+    """
+
+    def add(formula, annihilator, arg, x0=0, y0=[]):
+        """
+        Adds a formula in the dictionary
+        """
+        table.setdefault(_mytype(formula, x_1), []).append((formula,
+            HolonomicFunction(annihilator, arg, x0, y0)))
+
+    R = QQ.old_poly_ring(x_1)
+    _, Dx = DifferentialOperators(R, 'Dx')
+
+    from sympy import sin, cos, exp, log
+
+    # add some basic functions
+    add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])
+    add(cos(x_1), Dx**2 + 1, x_1, 0, [1, 0])
+    add(exp(x_1), Dx - 1, x_1, 0, 1)
+    add(log(x_1), Dx + x_1*Dx**2, x_1, 1, [0, 1])
+
+
+def _mytype(f, x):
+    """ Create a hashable entity describing the type of f. """
+    if x not in f.free_symbols:
+        return ()
+    elif f.is_Function:
+        return (type(f),)
+    else:
+        types = [_mytype(a, x) for a in f.args]
+        res = []
+        for t in types:
+            res += list(t)
+        res.sort()
+        return tuple(res)
+
+
+def _find_conditions(func, x, x0, order):
+    y0 = []
+    for i in range(order):
+        val = func.subs(x, x0)
+        if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+            return None
+        y0.append(val)
+        func = func.diff()
+    return y0
