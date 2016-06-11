@@ -44,9 +44,6 @@ def test_eval():
     assert SingularityFunction(x, a, nan) == nan
     assert SingularityFunction(x, nan, 1) == nan
     assert SingularityFunction(nan, a, n) == nan
-    assert conjugate(SingularityFunction(x, -10, 5)) == SingularityFunction(x, -10, 5)
-    assert adjoint(SingularityFunction(x, -10, 5)) == SingularityFunction(x, -10, 5)
-    assert transpose(SingularityFunction(x, -10, 5)) == SingularityFunction(x, -10, 5)
 
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
