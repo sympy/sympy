@@ -295,8 +295,7 @@ def inverse_trig_rule(integral):
             substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
         return substep
 
-    a, b = match[a], match[b]
-
+    a, b = match.get(a, 0), match.get(b, 0)
     # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
     possibilities = []
 
@@ -626,13 +625,14 @@ def trig_sincos_rule(integral):
         pattern, a, b, m, n = sincos_pattern(symbol)
         match = integrand.match(pattern)
 
-        if match:
-            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                sincos_botheven_condition: sincos_botheven,
-                sincos_sinodd_condition: sincos_sinodd,
-                sincos_cosodd_condition: sincos_cosodd
-            })((a, b, m, n, integrand, symbol))
+        if not match:
+            return
+        a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
+        return multiplexer({
+            sincos_botheven_condition: sincos_botheven,
+            sincos_sinodd_condition: sincos_sinodd,
+            sincos_cosodd_condition: sincos_cosodd
+        })((a, b, m, n, integrand, symbol))
 
 def trig_tansec_rule(integral):
     integrand, symbol = integral
@@ -645,13 +645,14 @@ def trig_tansec_rule(integral):
         pattern, a, b, m, n = tansec_pattern(symbol)
         match = integrand.match(pattern)
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                tansec_tanodd_condition: tansec_tanodd,
-                tansec_seceven_condition: tansec_seceven,
-                tan_tansquared_condition: tan_tansquared
-            })((a, b, m, n, integrand, symbol))
+        if not match:
+            return
+        a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+        return multiplexer({
+            tansec_tanodd_condition: tansec_tanodd,
+            tansec_seceven_condition: tansec_seceven,
+            tan_tansquared_condition: tan_tansquared
+        })((a, b, m, n, integrand, symbol))
 
 def trig_cotcsc_rule(integral):
     integrand, symbol = integral
@@ -665,12 +666,13 @@ def trig_cotcsc_rule(integral):
         pattern, a, b, m, n = cotcsc_pattern(symbol)
         match = integrand.match(pattern)
 
-        if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
-            return multiplexer({
-                cotcsc_cotodd_condition: cotcsc_cotodd,
-                cotcsc_csceven_condition: cotcsc_csceven
-            })((a, b, m, n, integrand, symbol))
+        if not match:
+            return
+        a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+        return multiplexer({
+            cotcsc_cotodd_condition: cotcsc_cotodd,
+            cotcsc_csceven_condition: cotcsc_csceven
+        })((a, b, m, n, integrand, symbol))
 
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
@@ -687,11 +689,10 @@ def trig_substitution_rule(integral):
     if matches:
         for expr in matches:
             match = expr.match(a + b*symbol**2)
-            a = match[a]
-            b = match[b]
-
-            a_positive = ((a.is_number and a > 0) or a.is_positive)
-            b_positive = ((b.is_number and b > 0) or b.is_positive)
+            if match:
+                a,b = match.get(a),match.get(b)
+            a_positive = (a != None) and (((a > 0 and a.is_number) or ((not isinstance(a, int)) and a.is_positive)))
+            b_positive = (b != None) and (( b > 0 and b.is_number) or ((not isinstance(a, int)) and b.is_positive))
             x_func = None
             if a_positive and b_positive:
                 # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
