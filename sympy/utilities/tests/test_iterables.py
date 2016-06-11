@@ -806,6 +806,7 @@ def test_split():
     assert split('cab', 'c') == ['', 'ab']
     assert split('ccab', 'c') == ['', 'ab']
     assert split([1, 0, 2, 3, 4, 3], [3, 2]) == [[1, 0], [4], []]
+    assert split([1, 0, 2, 3, 4, 3], 3) == [[1, 0, 2], [4], []]
 
 
 def test_find():
@@ -856,3 +857,6 @@ def test_extract_repetitions():
     assert extract_repetitions([-1, -2], *s) == ans
     assert extract_repetitions(Range(-1, -oo, -1), *s) == \
         ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
+    x0, x1 = take(numbered_symbols(), 2)
+    assert extract_repetitions(numbered_symbols(), *s) == \
+        ([(x1, [97, 98, 99]), (x0, [x1, 100])], [[x1], [x0], [x0, 101]])

@@ -2391,7 +2391,7 @@ def find(seq, subseq, start=0, all=False):
     return -1 if not all else loc
 
 
-def split(seq, ignore=()):
+def split(seq, ignore=[]):
     """Split sequence into subsequences separated by elements that
     are in ignore.
 
@@ -2408,7 +2408,7 @@ def split(seq, ignore=()):
     >>> from sympy.utilities.iterables import seq_replace
     >>> from sympy.core.symbol import Dummy
     >>> seq = list('abcskipd')
-    >>> uniq = [Dummy()]
+    >>> uniq = Dummy()
     >>> seq_replace(seq, list('skip'), uniq)
     >>> split(seq, uniq)
     [['a', 'b', 'c'], ['d']]
@@ -2419,6 +2419,8 @@ def split(seq, ignore=()):
     """
     if not ignore:
         return [seq]
+    if type(ignore) is not list and not isinstance(ignore, string_types):
+        ignore = [ignore]
     rv = []
     i = 0
     ignoring = False
@@ -2568,13 +2570,13 @@ def extract_repetitions(replacements, *seq):
 
     The multiplications and assignments have decreased from 30 to 29.
 
-    Although examples have used strings, the sequences may be sequences
-    of orderable elements, e.g. integers.
+    Although examples have used strings, the sequences may contain
+    orderable elements, e.g. integers:
 
     >>> s = [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
-    >>> from sympy import Range, oo
-    >>> extract_repetitions(Range(-1,-oo,-1), *s)
-    ([(-2, [1, 2]), (-1, [1, -2])], [[-2, 3], [-1], [-1, 3]])
+    >>> from sympy import numbered_symbols
+    >>> extract_repetitions(numbered_symbols(), *s)
+    ([(x1, [1, 2]), (x0, [1, x1])], [[x1, 3], [x0], [x0, 3]])
     >>> r, c = _
 
     The original sequence can be recovered by applying the extractions
@@ -2595,6 +2597,7 @@ def extract_repetitions(replacements, *seq):
         snew = list(seq)
     else:
         snew = [list(i) for i in seq]  # leave original unchanged
+    out = snew[:]
     # more terms will be appended, so keep track of the original length
     N = len(snew)
     # record whether we are working with strings or not
@@ -2604,7 +2607,7 @@ def extract_repetitions(replacements, *seq):
     reps = []
     while True:
         long_reps = longest_repetition(*snew, all=True)
-        if not long_reps or len(long_reps[0]) == 1:
+        if not long_reps or len(long_reps[0]) <= 1:
             # there was no nontrivial repetition
             break
         # find which repetition occured the most often;
@@ -2622,20 +2625,30 @@ def extract_repetitions(replacements, *seq):
         # get a new replacement symbol and use it to replace
         # subsequence `best`
         rep = next(replacements)
-        for i in range(len(snew)):
+        for i in range(len(out)):
+            if string:
+                out[i] = out[i].replace(best, rep)
+            else:
+                seq_replace(out[i], best, rep)
+        # split it out of snew so we don't have to process again
+        for i in range(len(snew)-1,-1,-1):
             if string:
                 snew[i] = snew[i].replace(best, rep)
+                snew[i:i+1] = list(filter(None, snew[i].split(rep)))
             else:
                 seq_replace(snew[i], best, rep)
+                snew[i:i+1] = list(filter(None, split(snew[i], rep)))
         # record the rep
         reps.append(rep)
         # *append `best` so that any subsequence that it has that
         # is in any of the sequences of `snew` can be recursively
         # identified
         snew.append(best)
+        out.append(best)
     # identify the replacements with the (perhaps modified) subsequence
-    reps = list(zip(reps, snew[N:]))[::-1]
+    reps = list(zip(reps, out[N:]))[::-1]
     # remove the subsequences from the end of the list of modified
     # original sequences
-    snew = snew[:N]
-    return reps, snew
+    out = out[:N]
+    # done
+    return reps, out
