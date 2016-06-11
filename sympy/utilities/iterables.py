@@ -2527,7 +2527,7 @@ def longest_repetition(*seq, **kwargs):
         return hits
 
 
-def extract_repetitions(seq, replacements):
+def extract_repetitions(replacements, *seq):
     """Return a replacement list and sequences that have been modified
     by recursively removing repeated subsequences so as to minimize the
     metric ``R + S`` where ``R`` is the combined length of the
@@ -2541,8 +2541,9 @@ def extract_repetitions(seq, replacements):
 
     >>> from sympy.utilities.iterables import extract_repetitions
     >>> import string
-    >>> s = ('cbedbbcebc', 'baebbcaabb', 'bdeaaddcdc')
-    >>> r, c = extract_repetitions(s, string.ascii_uppercase)
+    >>> s = ['cbedbbcebc', 'baebbcaabb', 'bdeaaddcdc']
+    >>> U = string.ascii_uppercase
+    >>> r, c = extract_repetitions(U, *s)
     >>> r
     [('D', 'dc'), ('C', 'bb'), ('B', 'aa'), ('A', 'Cc')]
     >>> c
@@ -2571,8 +2572,8 @@ def extract_repetitions(seq, replacements):
     of orderable elements, e.g. integers.
 
     >>> s = [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
-    >>> negs = (-i for i in range(1, sum(len(i) for i in s)))
-    >>> extract_repetitions(s, negs)
+    >>> from sympy import Range, oo
+    >>> extract_repetitions(Range(-1,-oo,-1), *s)
     ([(-2, [1, 2]), (-1, [1, -2])], [[-2, 3], [-1], [-1, 3]])
     >>> r, c = _
 

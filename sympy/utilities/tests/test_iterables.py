@@ -828,11 +828,12 @@ def test_find():
 
 
 def test_extract_repetitions():
+    U = string.ascii_uppercase
     s = [
         'dcaabededb', 'aaacdddaba', 'dcaceacdcb', 'ecabcedbad',
         'eebeabdebb', 'ebbdabdbbc', 'ddeadbeadb', 'decedceced',
         'edddbcceea', 'eeddacdcac']
-    a, b = extract_repetitions(s, string.ascii_uppercase)
+    a, b = extract_repetitions(U, *s)
     assert a == \
         [('P', 'dd'), ('O', 'ce'), ('N', 'bb'), ('M', 'ad'), ('L', 'ac'),
         ('K', 'ed'), ('J', 'ab'), ('I', 'Kd'), ('H', 'eN'), ('G', 'dca'),
@@ -847,11 +848,11 @@ def test_extract_repetitions():
     assert s == b
 
     s = [list(i) for i in ('abc','abcd','abcde')]
-    re = extract_repetitions(s, string.ascii_uppercase)
+    re = extract_repetitions(U, *s)
     assert re == ([('B', ['a', 'b', 'c']), ('A', ['B', 'd'])],
         [['B'], ['A'], ['A', 'e']])
     s = [[ord(i) for i in i] for i in ('abc','abcd','abcde')]
     ans = ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
-    assert extract_repetitions(s, [-1, -2]) == ans
-    assert extract_repetitions(s, Range(-1, -oo, -1)) == \
+    assert extract_repetitions([-1, -2], *s) == ans
+    assert extract_repetitions(Range(-1, -oo, -1), *s) == \
         ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
