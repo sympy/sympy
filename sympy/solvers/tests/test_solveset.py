@@ -1049,80 +1049,96 @@ def test_solve_decomposition():
 def test_nonlinsolve_positive_dimensional():
     x, y, z, a, b, c = symbols('x, y, z, a, b, c', real = True)
     assert nonlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
-    assert nonlinsolve([a**2 + a*c, a - b], [a, b]) ==\
-     FiniteSet((0, 0), (-c, -c))
+
+    system = [a**2 + a*c, a - b]
+    assert nonlinsolve(system, [a, b]) == FiniteSet((0, 0), (-c, -c))
      # here (a= 0, b = 0) is independent soln so both is printed.
      # if symbols = [a, b, c] then only {a : -c ,b : -c}
 
 def test_nonlinsolve_polysys():
     x, y, z = symbols('x, y, z', real = True)
     assert nonlinsolve([x**2 + y - 2, x**2 + y], [x, y]) == S.EmptySet
-    assert nonlinsolve([(x + y)**2 - 4, x + y - 2],[x, y]) == \
-    FiniteSet((-y + 2, y))
+
+    s = (-y + 2, y)
+    assert nonlinsolve([(x + y)**2 - 4, x + y - 2], [x, y]) == FiniteSet(s)
+
     # this is completely solved under if polys block
-    assert nonlinsolve([x**2 - y**2], [x, y]) == \
-    FiniteSet((-y, y), (y, y))
-    assert nonlinsolve([x**2 - y**2], [y, x]) == \
-    FiniteSet((-x, x), (x, x))
+    system = [x**2 - y**2]
+    assert nonlinsolve(system, [x, y]) == FiniteSet((-y, y), (y, y))
+
+    system = [x**2 - y**2]
+    assert nonlinsolve(system, [y, x]) == FiniteSet((-x, x), (x, x))
 
 
 def test_nonlinsolve_using_solve_poly_and_substitution():
     x, y, z = symbols('x, y, z', real = True)
-    assert nonlinsolve([(x + y)*n - y**2 + 2], [x, y]) == \
-    FiniteSet(((-n*y + y**2 - 2)/n, y))
-    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
-    FiniteSet((log(sin(S(1)/3)), S(1)/3))
+    system = [(x + y)*n - y**2 + 2]
+    s1 = ((-n*y + y**2 - 2)/n, y)
+    assert nonlinsolve(system, [x, y]) == FiniteSet(s1)
+    s1 = (log(sin(S(1)/3)), S(1)/3)
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == FiniteSet(s1)
 
-    assert nonlinsolve([z**2*x**2 - z**2*y**2/exp(x)], [y, x, z]) == \
-    FiniteSet((y, x, 0), \
+    system = [z**2*x**2 - z**2*y**2/exp(x)]
+    soln = FiniteSet((y, x, 0), \
         (-sqrt(x**2*exp(x)), x, z), (sqrt(x**2*exp(x)), x, z))
+    syms = [y, x, z]
+    assert nonlinsolve(system,syms) == soln
 
 
 def test_nonlinsolve_complex():
     n = Dummy('n')
-    assert nonlinsolve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
-    FiniteSet((
-        ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))),\
-         S.Integers), -log(S(3))))
-    assert nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
-        FiniteSet((log(sin(2)), 2),\
-         (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2))
+    system = [exp(x) - sin(y), 1/exp(y) - 3]
+    s11 = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
+    s1 = (s11, -log(S(3)))
+    assert nonlinsolve(system, [x, y]) == FiniteSet(s1)
+
+    system = [exp(x) - sin(y), y**2 - 4]
+    s1 = (log(sin(2)), 2)
+    s2 = (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2 )
+
+    assert nonlinsolve(system, [x, y]) == FiniteSet(s1, s2)
 
 def test_nonlinsolve_exp_real_soln():
-    eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    soln1 = FiniteSet((-sqrt(-exp(2*x) - sin(log(3))), -log(3)), \
-        (sqrt(-exp(2*x) - sin(log(3))), -log(3)))
-    assert nonlinsolve(eqs, [z, y]) == soln1
+    system = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
+    s1 = (-sqrt(-exp(2*x) - sin(log(3))), -log(3))
+    s2 = (sqrt(-exp(2*x) - sin(log(3))), -log(3))
+    soln = FiniteSet(s1, s2)
+    assert nonlinsolve(system, [z, y]) == soln
 
 
 @XFAIL
-# After the transcendental equation solver these will work
 def test_solve_nonlinear_trans():
-    x, y, z = symbols('x, y, z', real = True)
-    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet((2*LambertW(y/2), y))
-    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
-    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == FiniteSet((x*exp(x/2), x))
-    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == FiniteSet(2*LambertW(y/2), y)
+    # After the transcendental equation solver these will work
+    x, y, z = symbols('x, y, z', real=True)
+    soln1 = FiniteSet((2*LambertW(y/2), y))
+    soln2 = FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
+    soln3 = FiniteSet((x*exp(x/2), x))
+    soln4 = FiniteSet(2*LambertW(y/2), y)
+    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == soln1
+    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln2
+    assert nonlinsolve([x**2 - y**2/exp(x)], [y, x]) == soln3
+    assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == soln4
 
 
 def test_issue_5132():
-    x, y, z, r, t = symbols('x, y, z, r, t')
-    assert nonlinsolve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
-        FiniteSet((sqrt(r*sin(t)**2)/tan(t),\
-         -sqrt(r*sin(t)**2)), \
-        (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2)))
+    x, y, z, r, t = symbols('x, y, z, r, t', real=True)
+    system = [r - x**2 - y**2, tan(t) - y/x]
+    soln_x= Intersection(S.Reals, FiniteSet(sqrt(r*sin(t)**2)/tan(t)))
+    soln_y =  Intersection(S.Reals, FiniteSet(sqrt(r*sin(t)**2)))
+    assert nonlinsolve(system, [x, y]) == FiniteSet((soln_x, soln_y))
 
-    assert nonlinsolve([sqrt(x**2 + y**2) - sqrt(10), x + y - 4], [x, y]) == \
-    FiniteSet((1, 3), (3, 1))
+    system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
+    assert nonlinsolve(system, [x, y]) == FiniteSet((1, 3), (3, 1))
 
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    assert nonlinsolve(eqs, [y, z]) == \
-    FiniteSet((-log(3), -sqrt(-exp(2*x) - sin(log(3)))),\
-     (-log(3), sqrt(-exp(2*x) - sin(log(3)))))
+    s1 = (-log(3), -sqrt(-exp(2*x) - sin(log(3))))
+    s2 =  (-log(3), sqrt(-exp(2*x) - sin(log(3))))
+    soln = FiniteSet(s1, s2)
+    assert nonlinsolve(eqs, [y, z]) == soln
 
 
 def test_issue_6752():
-    a,b,c,d = symbols('a,b,c,d', real = True)
+    a,b,c,d = symbols('a, b, c, d', real=True)
     assert nonlinsolve([a**2 + a, a - b], [a, b]) == {(-1, -1), (0, 0)}
 
 
