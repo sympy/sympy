@@ -19,8 +19,7 @@ from sympy.utilities.iterables import (
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, subsets, take,
     topological_sort, unflatten, uniq, variations,
-    seq_replace, find, split, longest_repetition, all_repetitions,
-    extract_repetitions)
+    seq_replace, find, split, longest_repetition, extract_repetitions)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -792,25 +791,6 @@ def test_longest_repetition():
     assert lr(*split(list('a$$$$$$aaaabb'), list('a$'))) == ['b']
     assert lr(*'ab$aa$abba$'.split('$')) == 'ab'
     assert lr(*'baaabaaaa'.split('b')) == 'aaa'
-
-
-def test_all_repetitions():
-    raises(ValueError, lambda: all_repetitions('abc', small=1.2))
-    raises(ValueError, lambda: all_repetitions('abc', small=-1))
-    assert all_repetitions('abc', 'abcd', small=5) == []
-
-    s = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
-    a1 = ['abcd', 'abc', 'bc']
-    a2 = ['abcd', 'abc']
-    a3 = ['abcd', 'abc', 'bc', 'a', 'd']
-    assert all_repetitions(*s) == a1
-    assert all_repetitions(*s, small=3) == a2
-    assert all_repetitions(*s, small=1) == a3
-    # test them in list form
-    s, a1, a2, a3 = [[list(i) for i in j] for j in (s, a1, a2, a3)]
-    assert all_repetitions(*s) == a1
-    assert all_repetitions(*s, small=3) == a2
-    assert all_repetitions(*s, small=1) == a3
 
 
 def test_split():

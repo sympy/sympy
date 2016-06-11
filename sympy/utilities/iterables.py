@@ -2526,51 +2526,6 @@ def longest_repetition(*seq, **kwargs):
         return hits
 
 
-def all_repetitions(*seq, **kwargs):
-    """Return a list of all subsequences in seq that are repeated. The
-    subsequences are recursively processed so that any smaller
-    subsequences in them that appear in any of the original sequences
-    will be identified. By default, subsequences longer than 2 will be
-    identified. The keyword ``small`` can be used to specify
-    a larger or smaller size.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import all_repetitions
-    >>> seq = 'abc', 'abcd', 'abcd', 'bca', 'bcd'
-    >>> all_repetitions(*seq)
-    ['abcd', 'abc', 'bc']
-    >>> all_repetitions(*seq, small=3)
-    ['abcd', 'abc']
-    >>> all_repetitions(*seq, small=1)
-    ['abcd', 'abc', 'bc', 'a', 'd']
-    """
-    small = as_int(kwargs.get('small', 2))
-    if small < 0:
-        raise ValueError('`small` must be positive')
-    seq = list(seq)  # b/c tuple args cannot be modified in place
-    reps = []
-    while not all(len(i) < small for i in seq):
-        L = longest_repetition(*seq)
-        if len(L) < small:
-            # the longest repetition is too small
-            break
-        reps.append(L)
-        # break s_i into pieces, removing the found subsequences
-        i = 0
-        while i < len(seq):
-            at = find(seq[i], L)
-            if at != -1:
-                seq[i:i+1] = [seq[i][:at], seq[i][at + len(L):]]
-            i += 1
-        # if len(L) > small then there may be subsequences shared
-        # between it an the remaining sequences of seq
-        if len(L) != small:
-            seq.append(L[:])
-    return reps
-
-
 def extract_repetitions(seq, replacements):
     """Return a replacement list and sequences that have been modified
     by recursively removing repeated subsequences so as to minimize the
