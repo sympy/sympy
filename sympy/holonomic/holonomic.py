@@ -1048,7 +1048,7 @@ class HolonomicFunction(object):
         # using Euler's method for the same
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r, method='Euler')
         [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
-         2.357947691, 2.5937424601]
+        2.357947691, 2.5937424601]
 
         One can also observe that the value obtained using Runge-Kutta 4th order
         is much more accurate than Euler's method.
@@ -1211,6 +1211,82 @@ def from_meijerg(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
+def from_sympy(func):
+    """
+    Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
+    to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
+    representation of the function provided.
+
+    Examples
+    ========
+
+    >>> from sympy.holonomic.holonomic import from_sympy
+    >>> from sympy import sin, exp, symbols
+    >>> x = symbols('x')
+    >>> from_sympy(sin(x))
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+
+    >>> from_sympy(exp(x))
+    HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
+
+    See Also
+    ========
+
+    meijerint._rewrite1
+    """
+
+    x = func.atoms(Symbol).pop()
+
+    solpoly = _convert_poly_rat(func, x)
+    if solpoly:
+        return solpoly
+
+    args = meijerint._rewrite1(func, x)
+
+    if args:
+        fac, po, g, _ = args
+    else:
+        return None
+
+    # lists for sum of meijerg functions
+    fac_list = [fac * i[0] for i in g]
+    t = po.as_base_exp()
+    s = t[1] if t[0] is x else S(0)
+    po_list = [s + i[1] for i in g]
+    G_list = [i[2] for i in g]
+
+    # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
+    def _shift(func, s):
+        z = func.args[-1]
+        d = z.collect(x, evaluate=False)
+        b = list(d)[0]
+        a = d[b]
+
+        if isinstance(a, exp_polar):
+            a = exp(a.as_base_exp()[1])
+            z = a * b
+
+        t = b.as_base_exp()
+        b = t[1] if t[0] is x else S(0)
+        r = s / b
+        an = (i + r for i in func.args[0][0])
+        ap = (i + r for i in func.args[0][1])
+        bm = (i + r for i in func.args[1][0])
+        bq = (i + r for i in func.args[1][1])
+
+        return a**-r, meijerg((an, ap), (bm, bq), z)
+
+    coeff, m = _shift(G_list[0], po_list[0])
+    sol = fac_list[0] * coeff * from_meijerg(m)
+
+    # add all the meijerg functions after converting to holonomic
+    for i in range(1, len(G_list)):
+        coeff, m = _shift(G_list[i], po_list[i])
+        sol += fac_list[i] * coeff * from_meijerg(m)
+
+    return sol
+
+
 def _extend_y0(Holonomic, n):
     """
     Tries to find more initial conditions by substituting the initial
@@ -1284,110 +1360,43 @@ def DMFsubs(frac, x0):
     return sol_p / sol_q
 
 
-def from_sympy(func):
-    """
-    Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
-    to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
-    representation of the function provided.
-
-    Examples
-    ========
-
-    >>> from sympy.holonomic.holonomic import from_sympy
-    >>> from sympy import sin, exp, symbols
-    >>> x = symbols('x')
-    >>> from_sympy(sin(x))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
-
-    >>> from_sympy(exp(x))
-    HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
-
-    See Also
-    ========
-
-    meijerint._rewrite1
-    """
-
-    x = func.atoms(Symbol).pop()
-
+def _convert_poly_rat(func, x):
     ispoly = func.is_polynomial()
     if not ispoly:
         israt = func.is_rational_function()
     else:
         israt = True
 
-    if ispoly or israt:
-        R = QQ.old_poly_ring(x)
-        _, Dx = DifferentialOperators(R, 'Dx')
-
-        if ispoly:
-            order = len(R.from_sympy(sympify(func)).rep)
-            sol = Dx**(order)
-
-        elif israt:
-            order = 1
-            p, q = func.as_numer_denom()
-            sol = p * q * Dx + p * q.diff() - q * p.diff()
-            sol = _normalize(sol.listofpoly, sol.parent, negative=False)
-
-        def _find_conditions(func, x, x0, order):
-            y0 = []
-            for i in range(order):
-                val = func.subs(x, x0)
-                if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
-                    return None
-                y0.append(val)
-                func = func.diff()
-            return y0
-        x0 = 0
-        y0 = _find_conditions(func, x, x0, sol.order)
-        while not y0:
-            x0 += 1
-            y0 = _find_conditions(func, x, x0, sol.order)
-
-        return HolonomicFunction(sol, x, x0, y0)
-
-    args = meijerint._rewrite1(func, x)
-
-    if args:
-        fac, po, g, _ = args
-    else:
+    if not (ispoly or israt):
         return None
 
-    # lists for sum of meijerg functions
-    fac_list = [fac * i[0] for i in g]
-    t = po.as_base_exp()
-    s = t[1] if t[0] is x else S(0)
-    po_list = [s + i[1] for i in g]
-    G_list = [i[2] for i in g]
+    R = QQ.old_poly_ring(x)
+    _, Dx = DifferentialOperators(R, 'Dx')
 
-    # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
-    def _shift(func, s):
-        z = func.args[-1]
-        d = z.collect(x, evaluate=False)
-        b = list(d)[0]
-        a = d[b]
+    if ispoly:
+        order = len(R.from_sympy(sympify(func)).rep)
+        sol = Dx**(order)
 
-        if isinstance(a, exp_polar):
-            a = exp(a.as_base_exp()[1])
-            z = a * b
+    elif israt:
+        order = 1
+        p, q = func.as_numer_denom()
+        sol = p * q * Dx + p * q.diff() - q * p.diff()
+        sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
-        t = b.as_base_exp()
-        b = t[1] if t[0] is x else S(0)
-        r = s / b
-        an = (i + r for i in func.args[0][0])
-        ap = (i + r for i in func.args[0][1])
-        bm = (i + r for i in func.args[1][0])
-        bq = (i + r for i in func.args[1][1])
+    def _find_conditions(func, x, x0, order):
+        y0 = []
+        for i in range(order):
+            val = func.subs(x, x0)
+            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+                return None
+            y0.append(val)
+            func = func.diff()
+        return y0
 
-        return a**-r, meijerg((an, ap), (bm, bq), z)
+    x0 = 0
+    y0 = _find_conditions(func, x, x0, sol.order)
+    while not y0:
+        x0 += 1
+        y0 = _find_conditions(func, x, x0, sol.order)
 
-    coeff, m = _shift(G_list[0], po_list[0])
-    sol = fac_list[0] * coeff * from_meijerg(m)
-
-    # add all the meijerg functions after converting to holonomic
-    for i in range(1, len(G_list)):
-        coeff, m = _shift(G_list[i], po_list[i])
-        sol += fac_list[i] * coeff * from_meijerg(m)
-
-    return sol
+    return HolonomicFunction(sol, x, x0, y0)
