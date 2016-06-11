@@ -791,6 +791,9 @@ def test_longest_repetition():
     assert lr(*split(list('a$$$$$$aaaabb'), list('a$'))) == ['b']
     assert lr(*'ab$aa$abba$'.split('$')) == 'ab'
     assert lr(*'baaabaaaa'.split('b')) == 'aaa'
+    s = [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1]
+    assert longest_repetition(s, all=True, max=2) == \
+        [[0, 1], [1, 0], [1, 1]]
 
 
 def test_split():

@@ -2500,12 +2500,13 @@ def longest_repetition(*seq, **kwargs):
             # they all matched
             m += 1
         if i == j and m > abs(b - a):  # matches overlap in seq[i]
-            # mark the position of the middle of the the longer subsequence
+            # mark the position of the middle of the longer subsequence
             if la > lb:
                 m = la//2
             else:
                 a = b
                 m = lb//2
+            m = min(m, big)
             # trim the subsequence until it appears as a match in the
             # latter half of the longer subsequence
             while m and m > length:
