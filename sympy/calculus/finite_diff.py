@@ -367,8 +367,23 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     elif derivative.is_Atom:
         return derivative
     else:
-        return derivative.replace(lambda expr: expr.is_Derivative,
-            lambda expr: as_finite_diff(expr, wrt=wrt))
+        result = S(0)
+        if derivative.is_Add:
+            for subexpr in derivative.args:
+                if subexpr.has(wrt):
+                    if subexpr.is_Derivative:
+                        result += as_finite_diff(subexpr, wrt=wrt)
+                    elif subexpr.is_Mul:
+                        nresult = S(1)
+                        for expr in subexpr.args:
+                            if expr.is_Derivative:
+                                nresult *= as_finite_diff(expr, wrt=wrt)
+                            else:
+                                nresult *= expr
+                        result += nresult
+                else:
+                    result += 0
+        return result
 
     if wrt is None:
         wrt = derivative.variables[0]
