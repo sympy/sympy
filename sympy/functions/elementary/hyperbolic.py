@@ -1287,7 +1287,7 @@ class acsch(Function):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg is S.Zero:
-                return S.Infinity
+                return S.ComplexInfinity
             elif arg is S.One:
                 return log(1 + sqrt(2))
             elif arg is S.NegativeOne:
@@ -1296,38 +1296,25 @@ class acsch(Function):
         if arg.is_number:
             cst_table = {
                 S.ImaginaryUnit: -S.Pi / 2,
-                -S.ImaginaryUnit: S.Pi / 2,
-                -S.ImaginaryUnit*(sqrt(6) + sqrt(2)): S.Pi / 12,
                 S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
-                -S.ImaginaryUnit*(1 + sqrt(5)): S.Pi / 10,
                 S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
-                -S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): S.Pi / 8,
                 S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
-                -S.ImaginaryUnit*2: S.Pi / 6,
                 S.ImaginaryUnit*2: -S.Pi / 6,
-                -S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): S.Pi / 5,
                 S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
-                -S.ImaginaryUnit*sqrt(2): S.Pi / 4,
                 S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
-                -S.ImaginaryUnit*(sqrt(5)-1): 3*S.Pi / 10,
                 S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
-                -S.ImaginaryUnit*2 / sqrt(3): S.Pi / 3,
                 S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
-                -S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): 3*S.Pi / 8,
                 S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
-                -S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): 2*S.Pi / 5,
                 S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
-                -S.ImaginaryUnit*(sqrt(6) - sqrt(2)): 5*S.Pi / 12,
                 S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
                 S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
-                S(-2): S.ImaginaryUnit*log((1+sqrt(5))/2),
             }
 
             if arg in cst_table:
                 return cst_table[arg]*S.ImaginaryUnit
 
         if arg is S.ComplexInfinity:
-            return S.NaN
+            return S.Zero
 
         if _coeff_isneg(arg):
             return -cls(-arg)

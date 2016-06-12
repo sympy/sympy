@@ -588,7 +588,7 @@ def test_acsch():
     # values at fixed points
     assert acsch(1) == log(1 + sqrt(2))
     assert acsch(-1) == - log(1 + sqrt(2))
-    assert acsch(0) == oo
+    assert acsch(0) == zoo
     assert acsch(2) == log((1+sqrt(5))/2)
     assert acsch(-2) == - log((1+sqrt(5))/2)
 
@@ -632,15 +632,15 @@ def test_acsch():
     assert (csch(acsch(I*sqrt(2 - 2/sqrt(5)))) / (I*sqrt(2 - 2/sqrt(5)))).simplify() == 1
     assert (csch(acsch(-I*sqrt(2 - 2/sqrt(5)))) / (-I*sqrt(2 - 2/sqrt(5)))).simplify() == 1
 
-    # numerical evaluation //Not working as of now.
-    #assert str(acsch(5*I+1).n(6)) == '0.03918 - 0.19336*I'
-    #assert str(acsch(-5*I+1).n(6)) == '0.03918 + 0.19336*I'
+    # numerical evaluation
+    assert str(acsch(5*I+1).n(6)) == '0.0391819 - 0.193363*I'
+    assert str(acsch(-5*I+1).n(6)) == '0.0391819 + 0.193363*I'
 
 
 def test_acsch_infinities():
     assert acsch(oo) == 0
     assert acsch(-oo) == 0
-    assert acsch(zoo) == nan
+    assert acsch(zoo) == 0
 
 
 def test_acsch_rewrite():
