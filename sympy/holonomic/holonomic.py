@@ -1230,7 +1230,7 @@ x_1 = Dummy('x_1')
 _lookup_table = None
 
 
-def from_sympy(func, initcond=True):
+def from_sympy(func, x=None, initcond=True,):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
     to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
@@ -1254,7 +1254,8 @@ def from_sympy(func, initcond=True):
     meijerint._rewrite1, _convert_poly_rat, _create_table
     """
 
-    x = func.atoms(Symbol).pop()
+    if not x:
+        x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
     solpoly = _convert_poly_rat(func, x, initcond=initcond)
@@ -1289,15 +1290,15 @@ def from_sympy(func, initcond=True):
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow
-    sol = from_sympy(args[0], initcond=False)
+    sol = from_sympy(args[0], x=x, initcond=False)
 
     if f is Add:
         for i in range(1, len(args)):
-            sol += from_sympy(args[i], initcond=False)
+            sol += from_sympy(args[i], x=x, initcond=False)
 
     elif f is Mul:
         for i in range(1, len(args)):
-            sol *= from_sympy(args[i], initcond=False)
+            sol *= from_sympy(args[i], x=x, initcond=False)
 
     elif f is Pow:
         sol = sol**args[1]

@@ -1,7 +1,8 @@
 from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, from_sympy)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O, I, meijerg, sin, cos
+from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, sstr,
+    O, I, meijerg, sin, cos, log)
 from sympy import ZZ, QQ
 
 
@@ -405,3 +406,15 @@ def test_from_sympy():
     p = from_sympy(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, 1)
     assert p == q
+    p = from_sympy(exp(x)*sin(x)+x*log(1+x))
+    q = HolonomicFunction((4*x**4 + 40*x**3 + 180*x**2 + 352*x + 280)*Dx**2 + (8*x**5 +\
+        76*x**4 + 320*x**3 + 584*x**2 + 424*x + 20)*Dx**3 + (2*x**6 + 12*x**5 + 12*x**4 \
+        - 128*x**3 - 402*x**2 - 420*x - 112)*Dx**4 + (-2*x**6 - 16*x**5 - 50*x**4 - \
+        32*x**3 + 110*x**2 + 208*x + 102)*Dx**5 + (x**6 + 10*x**5 + 45*x**4 + 106*x**3 +\
+        136*x**2 + 90*x + 24)*Dx**6, x, 0, [0, 1, 4, -1, 8, -34])
+    assert p == q
+    p = from_sympy(x*exp(x)+cos(x)+1)
+    q = HolonomicFunction(Dx - 2*Dx**2 + 2*Dx**3 - 2*Dx**4 + Dx**5, x, \
+        0, [2, 1, 1, 3, 5])
+    assert p == q
+    assert (x*exp(x)+cos(x)+1).series(n=100) == p.series(n=100)
