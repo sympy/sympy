@@ -1285,6 +1285,34 @@ def from_sympy(func, initcond=True):
             y0 = _find_conditions(func, x, x0, sol.annihilator.order)
         return sol.composition(func.args[0], x0, y0)
 
+    # iterate though the expression recursively
+    args = func.args
+    f = func.func
+    from sympy.core import Add, Mul, Pow
+    sol = from_sympy(args[0], initcond=False)
+
+    if f is Add:
+        for i in range(1, len(args)):
+            sol += from_sympy(args[i], initcond=False)
+
+    elif f is Mul:
+        for i in range(1, len(args)):
+            sol *= from_sympy(args[i], initcond=False)
+
+    elif f is Pow:
+        sol = sol**args[1]
+
+    if not initcond:
+        return sol
+
+    x0 = 0
+    y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+    while not y0:
+        x0 += 1
+        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+
+    return HolonomicFunction(sol.annihilator, x, x0, y0)
+
     return _convert_meijerint(func, x)
 
 
