@@ -571,6 +571,7 @@ class Pow(Expr):
             not hold then the substitution should not occur so `bool` will be
             False.
             """
+            from sympy.simplify.radsimp import denom
             coeff1, terms1 = ct1
             coeff2, terms2 = ct2
             if terms1 == terms2:
@@ -579,7 +580,7 @@ class Pow(Expr):
                     pow = as_int(pow)
                     combines = True
                 except ValueError:
-                    if coeff2 == 1:
+                    if denom(pow) == 1:
                         combines = True
                     else:
                         combines = Pow._eval_power(
