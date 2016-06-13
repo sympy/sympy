@@ -15,9 +15,10 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
+    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
-from sympy.printing.codeprinter import Assignment
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1078,6 +1079,67 @@ x := y\
     ucode_str = \
 u("""\
 x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_AugmentedAssignment():
+    expr = AddAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x += y\
+"""
+    ucode_str = \
+u("""\
+x += y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = SubAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x -= y\
+"""
+    ucode_str = \
+u("""\
+x -= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = MulAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x *= y\
+"""
+    ucode_str = \
+u("""\
+x *= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = DivAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x /= y\
+"""
+    ucode_str = \
+u("""\
+x /= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = ModAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x %= y\
+"""
+    ucode_str = \
+u("""\
+x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
