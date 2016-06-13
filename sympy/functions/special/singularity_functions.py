@@ -14,7 +14,56 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 
 
 class SingularityFunction(Function):
-    """
+    r"""
+    The Singularity functions are a class of discontinuous functions. It takes a
+    variable , an offset and an exponent as arguments. These functions are
+    represented using Macaulay brackets as :-
+
+    .. math::
+        SingularityFunction(x, a, n) := {\langle x - a \rangle}^ n
+
+    It outputs ``(x - a)**n`` for ``x >= a`` and ``0`` for ``x < a`` for ``n`` being
+    nonnegative. For negative ``n``, it is not a conventional function but a distribution
+    or a limit of a sequence of functions such as if ``n == -1`` it represents a DiracDelta
+    Function and if ``n == -2`` it is a Doublet Function.
+
+    Examples
+    ========
+
+    >>> from sympy import SingularityFunction, diff, Piecewise, DiracDelta, Heaviside, Symbol
+    >>> from sympy.abc import x, a, n
+    >>> SingularityFunction(x, a, n)
+    SingularityFunction(x, a, n)
+    >>> y = Symbol('y', positive=True)
+    >>> n = Symbol('n', nonnegative=True)
+    >>> SingularityFunction(y, -10, n)
+    (y + 10)**n
+    >>> y = Symbol('y', negative=True)
+    >>> SingularityFunction(y, 10, n)
+    0
+    >>> SingularityFunction(x, 4, -1).subs(x, 4)
+    oo
+    >>> SingularityFunction(x, 10, -2).subs(x, 10)
+    oo
+    >>> SingularityFunction(4, 1, 5)
+    243
+    >>> diff(SingularityFunction(x, 1, 5), x)
+    5*SingularityFunction(x, 1, 4)
+    >>> diff(SingularityFunction(x, 4, 0), x, 2)
+    SingularityFunction(x, 4, -2)
+    >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
+    Piecewise(((x - 4)**5, x - 4 > 0), (0, True))
+
+    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')
+    returns the same output. One can use any of these methods according to their choice.
+
+    >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
+    >>> expr.rewrite(Heaviside)
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    >>> expr.rewrite(DiracDelta)
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    >>> expr.rewrite('HeavisideDiracDelta')
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
 
     """
@@ -22,6 +71,17 @@ class SingularityFunction(Function):
     is_real = True
 
     def fdiff(self, argindex=1):
+        '''
+        Returns the first derivative of a DiracDelta Function.
+
+        The difference between ``diff()`` and ``fdiff()`` is:-
+        ``diff()`` is the user-level function and ``fdiff()`` is an object method.
+        ``fdiff()`` is just a convenience method available in the ``Function`` class.
+        It returns the derivative of the function without considering the chain rule.
+        ``diff(function, x)`` calls ``Function._eval_derivative`` which in turn calls
+        ``fdiff()`` internally to compute the derivative of the function.
+
+        '''
         if argindex == 1:
             x = sympify(self.args[0])
             a = sympify(self.args[1])
@@ -36,9 +96,40 @@ class SingularityFunction(Function):
     @classmethod
     def eval(cls, variable, offset, exponent):
         """
+        Returns a simplified form or a value of Singularity Function depending on the
+        argument passed by the object.
+
+        The ``eval()`` method is automatically called when the ``SingularityFunction`` class
+        is about to be instantiated and it returns either some simplified instance
+        or the unevaluated instance depending on the argument passed. In other words,
+        ``eval()`` method is not needed to be called explicitly, it is being called
+        and evaluated once the object is called.
 
         Examples
         ========
+        >>> from sympy import SingularityFunction, Symbol, nan
+        >>> from sympy.abc import x, a, n
+        >>> SingularityFunction(x, a, n)
+        SingularityFunction(x, a, n)
+        >>> SingularityFunction(5, 3, 2)
+        4
+        >>> SingularityFunction(x, a, nan)
+        nan
+        >>> SingularityFunction(x, 3, 0).subs(x, 3)
+        1
+        >>> SingularityFunction(x, a, n).eval(3, 5, 1)
+        0
+        >>> SingularityFunction(x, a, n).eval(4, 1, 5)
+        243
+        >>> x = Symbol('x', positive = True)
+        >>> a = Symbol('a', negative = True)
+        >>> n = Symbol('n', nonnegative = True)
+        >>> SingularityFunction(x, a, n)
+        (-a + x)**n
+        >>> x = Symbol('x', negative = True)
+        >>> a = Symbol('a', positive = True)
+        >>> SingularityFunction(x, a, n)
+        0
 
         """
 
@@ -66,10 +157,11 @@ class SingularityFunction(Function):
                 return S.Infinity
 
     def _eval_rewrite_as_Piecewise(self, *args):
-        """
 
+        '''
+        Converts a Singularity Function expression into its Piecewise form.
 
-        """
+        '''
         x = self.args[0]
         a = self.args[1]
         n = sympify(self.args[2])
@@ -80,10 +172,10 @@ class SingularityFunction(Function):
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, *args):
-        """
+        '''
+        Rewrites a Singularity Function expression using Heavisides and DiracDeltas.
 
-
-        """
+        '''
         x = self.args[0]
         a = self.args[1]
         n = sympify(self.args[2])
