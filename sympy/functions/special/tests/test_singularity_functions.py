@@ -4,7 +4,6 @@ from sympy import (
 )
 
 
-# from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
@@ -60,6 +59,8 @@ def test_rewrite():
     assert SingularityFunction(x, 0, -2).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x, 0)), (0, True)))
 
-    expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
-    assert expr.rewrite(Heaviside) == (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
-    assert expr.rewrite(DiracDelta) == (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    expr_in = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
+    expr_out = (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    assert expr_in.rewrite(Heaviside) == expr_out
+    assert expr_in.rewrite(DiracDelta) == expr_out
+    assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
