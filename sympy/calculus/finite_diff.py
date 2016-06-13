@@ -17,7 +17,7 @@ for:
 
 """
 
-from sympy import S
+from sympy import S, Derivative
 from sympy.core.compatibility import iterable, range
 
 
@@ -284,7 +284,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
     return derivative
 
 
-def as_finite_diff(derivative, points=1, x0=None, wrt=None):
+def as_finite_diff(derivative, points=1, x0=None, wrt=None, applyall=False):
     """
     Returns an approximation of a derivative of a function in
     the form of a finite difference formula. The expression is a
@@ -314,6 +314,11 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         derivative is to be approximated for. If not provided it
         is required that the Derivative is ordinary. default: None
 
+    applyall: Bool
+        If True, all the derivative instances in the expression will be
+        replaced by applying as_finite_diff to themselves.
+        If False, then the whole expression is evaluated as a derivative
+        instance.
 
     Examples
     ========
@@ -366,23 +371,29 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         pass
     elif derivative.is_Atom:
         return derivative
+    elif applyall:
+        return derivative.replace(lambda expr: expr.is_Derivative,
+             lambda expr: as_finite_diff(expr, wrt=wrt))
     else:
         result = S(0)
         if derivative.is_Add:
             for subexpr in derivative.args:
-                if subexpr.has(wrt):
+                if subexpr.has(Derivative):
                     if subexpr.is_Derivative:
                         result += as_finite_diff(subexpr, wrt=wrt)
                     elif subexpr.is_Mul:
-                        nresult = S(1)
-                        for expr in subexpr.args:
-                            if expr.is_Derivative:
-                                nresult *= as_finite_diff(expr, wrt=wrt)
-                            else:
-                                nresult *= expr
-                        result += nresult
+                        result += as_finite_diff(subexpr, wrt=wrt)
                 else:
                     result += 0
+        elif derivative.is_Mul:
+            if derivative.has(Derivative):
+                nresult = S(1)
+                for expr in derivative.args:
+                    if expr.is_Derivative:
+                        nresult *= as_finite_diff(expr, wrt=wrt)
+                    else:
+                        nresult *= expr
+                result += nresult
         return result
 
     if wrt is None:
