@@ -1072,6 +1072,9 @@ class HolonomicFunction(object):
         """
 
         from sympy.holonomic.numerical import _evalf
+        for i in roots(self.annihilator.listofpoly[-1].rep):
+            if i == self.x0 or i in points:
+                raise TypeError("Provided path contains a singularity")
         return _evalf(self, points, method=method)
 
     def _subs(self, z):
@@ -1511,13 +1514,14 @@ def _create_table(table):
     R = QQ.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import sin, cos, exp, log
+    from sympy import sin, cos, exp, log, erf, sqrt, pi
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])
     add(cos(x_1), Dx**2 + 1, x_1, 0, [1, 0])
     add(exp(x_1), Dx - 1, x_1, 0, 1)
     add(log(x_1), Dx + x_1*Dx**2, x_1, 1, [0, 1])
+    add(erf(x_1), 2*x_1*Dx + Dx**2, x_1, 0, [0, 2/sqrt(pi)])
 
 
 def _mytype(f, x):

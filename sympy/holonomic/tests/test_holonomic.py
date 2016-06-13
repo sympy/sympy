@@ -431,3 +431,7 @@ def test_from_sympy():
     p = from_sympy(log(1 + x)**2 + 1)
     q = HolonomicFunction(Dx + (3*x + 3)*Dx**2 + (x**2 + 2*x + 1)*Dx**3, x, 0, [1, 0, 2])
     assert p == q
+    p = from_sympy(erf(x)**2 + x)
+    q = HolonomicFunction((32*x**4 - 8*x**2 + 8)*Dx**2 + (24*x**3 - 2*x)*Dx**3 + \
+        (4*x**2+ 1)*Dx**4, x, 0, [0, 1, 8/pi, 0])
+    assert p == q

@@ -49,6 +49,7 @@ def _euler(red, x0, x1, y0, a):
     Euler's method for numerical integration.
     From x0 to x1 with initial values given at x0 as vector y0.
     """
+
     A = sympify(x0)._to_mpmath(mp.prec)
     B = sympify(x1)._to_mpmath(mp.prec)
     y_0 = [sympify(i)._to_mpmath(mp.prec) for i in y0]
@@ -71,6 +72,7 @@ def _rk4(red, x0, x1, y0, a):
     """
     Runge-Kutta 4th order numerical method.
     """
+
     A = sympify(x0)._to_mpmath(mp.prec)
     B = sympify(x1)._to_mpmath(mp.prec)
     y_0 = [sympify(i)._to_mpmath(mp.prec) for i in y0]
