@@ -28,20 +28,20 @@ class KanesMethod(object):
     """This class is used automatically form the equations of motion of a
     multibody system using Kane's method [Kane1985]_.
 
-    The dynamical equations of motion are provided in Kane's form::
+    The dynamic equations of motion are provided in Kane's form::
 
         fr + frstar = 0
 
     in the factored implicit form::
 
-        mass_matrix * speeds.diff() = forcing
+        mass_matrix * accelerations = forcing
 
-    and in the explicit form::
+    or in the explicit form::
 
-        speeds.diff() = mass_matrix.inv() * forcing
+        accelerations = mass_matrix.inv() * forcing
 
-    where fr, frstar, the mass matrix, M, and the right hand side vector, f,
-    are available as class attributes after Kane's equations are formed.
+    where fr, frstar, the mass matrix, and the right hand side vector are
+    available as class attributes after Kane's equations are formed.
 
     Attributes
     ==========
@@ -81,9 +81,9 @@ class KanesMethod(object):
     auxiliary : Matrix
         If applicable, the set of auxiliary Kane's equations used to solve for
         non-contributing forces.
-    fr : Matrix, shape(n, 1)
+    fr, generalized_active_forces : Matrix, shape(n, 1)
         The generalized active forces acting on the system.
-    frstar : Matrix, shape(n, 1)
+    frstar, generalized_inertia_forces : Matrix, shape(n, 1)
         The genealized inertia forcies acting on the system.
     mass_matrix : Matrix, shape(n, n)
         The "mass matrix" of the implicit dynamic differential equations.
@@ -307,7 +307,7 @@ class KanesMethod(object):
 
         # Initialize configuration constraints
         config = _none_handler(config)
-        if len(config) != self.num_dep_coords:
+        if len(config) != self.num_dependent_coordinates:
             raise ValueError('There must be an equal number of dependent '
                              'coordinates and configuration constraints.')
         self._f_h = _none_handler(config)
@@ -880,6 +880,8 @@ class KanesMethod(object):
             or None which corresponds to a system with no loads.
 
         """
+        self._rhs = None
+
         if (bodies is None and loads is not None) or isinstance(bodies[0], tuple):
             # This switches the order if they use the old way.
             bodies, loads = loads, bodies
@@ -923,36 +925,57 @@ class KanesMethod(object):
 
         return (self._fr, self._frstar)
 
+    def _kanes_equations_not_called(self, attr):
+        if not self._fr or not self._frstar:
+            msg = 'kanes_equations() must be run before {} is available.'
+            raise AttributeError(msg.format(attr))
+
     def rhs(self, inv_method=None):
-        """Returns the system's equations of motion in first order form.
+        """Returns the right hand side of the explicit first order full
+        differential equations of motion where:
 
-        The output of this will be the right hand side of:
+            x' = M^-1 * f
 
-        [qdot, udot].T = f(q, u, t)
+        where x, the state vector, contains the independent and dependent
+        generalized coordinates and speeds::
 
-        Or, the equations of motion in first order form.  The right hand side
-        is what is needed by most numerical ODE integrators.
+            x = | q_s |
+                | q_r |
+                | u_s |
+                | u_r |
+
+        The right hand side of these equations is what is needed by most
+        numerical ODE/DAE integrators.
 
         Parameters
         ==========
 
-        inv_method : str
-            The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+        inv_method : str, {'CH', 'GE', 'LU', or 'ADJ'}, optional
+            If None LU decomposition is used to solve for x'. If `CH`, Cholesky
+            decomposition is used. Cholesky decomposition can almost always be
+            used, as long as the mass matrix is semi-positive definite. The
+            other methods are not recommended as they operate stricyly on the
+            mass matrix and attempt to compute the inverse. In general, these
+            are not computationally efficient and should only be used for very
+            small problems. The later three come from
+            :meth:`~sympy.matrices.matrices.MatrixBase.inv`.
 
         """
+        qdot = Matrix([self._qdot_u_map[qd] for qd in self.q])
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
+            udot = self.mass_matrix.LUsolve(self.forcing)
+        elif inv_method == 'CH':
+            udot = self.mass_matrix.cholesky_solve(self.forcing)
         else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
+            udot = (self.mass_matrix.inv(method=inv_method,
+                                         try_block_diag=True) * self.forcing)
+        self._rhs = qdot.col_join(udot)
         return self._rhs
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to functions of u."""
-        # TODO : This should be a property not a method since it is already
-        # computed.
+        # TODO : Shouldn't the kinematic differential equations be required by
+        # the user?
         if not self._qdot_u_map:
             msg = ('Create an instance of KanesMethod with kinematic '
                    'differential equations to use this method.')
@@ -970,38 +993,59 @@ class KanesMethod(object):
 
     @property
     def mass_matrix(self):
-        """The mass matrix of the following dynamic differential equations::
+        """The mass matrix, M,  of the following dynamic differential
+        equations::
 
             M * u' = f
 
         where u contains the independent and dependent generalized speeds::
 
-            u = [u_ind]
-                [u_dep]
+            u = | u_s |
+                | u_r |
 
         The equations can be formed with these class attributes::
 
-            >>> lhs = mass_matrix * generalized_accelerations
+            >>> lhs = mass_matrix * accelerations
             >>> rhs = forcing
             >>> Eq(lhs, rhs)
 
         """
-        if not self._fr or not self._frstar:
-            msg = ('kanes_equations() must be run before the mass matrix is '
-                   'available.')
-            raise ValueError(msg)
+        # TODO : Does this deal with auxiliary equations correctly?
+        self._kanes_equations_not_called('mass_matrix')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        o = len(self.u)
-        n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
-                n)).row_join(self.mass_matrix))
+        """The matrix, M,  of the following first order differential
+        equations::
+
+            M * x' = f
+
+        where x, the state vector, contains the independent and dependent
+        generalized coordinates and speeds::
+
+            x = | q_s |
+                | q_r |
+                | u_s |
+                | u_r |
+
+        The equations can be formed with these class attributes::
+
+            >>> lhs = mass_matrix_full * states.diff()
+            >>> rhs = forcing_full
+            >>> Eq(lhs, rhs)
+
+        """
+        self._kanes_equations_not_called('mass_matrix_full')
+
+        # col_join adds a row
+        # row_join adds a col
+        # [k_kqdot, 0          ]
+        # [0,       mass_matrix]
+
+        row1 = self._k_kqdot.row_join(zeros(self.num_coordinates, self.n))
+        row2 = zeros(self.n, self.num_coordinates).row_join(self.mass_matrix)
+        return row1.col_join(row2)
 
     @property
     def forcing(self):
@@ -1011,30 +1055,49 @@ class KanesMethod(object):
 
         where u contains the independent and dependent generalized speeds:
 
-            u = [u_ind]
-                [u_dep]
+            u = | u_s |
+                | u_r |
 
         The equations can be formed with these class attributes::
 
-            >>> lhs = mass_matrix * generalized_accelerations
+            >>> lhs = mass_matrix * accelerations
             >>> rhs = forcing
             >>> Eq(lhs, rhs)
 
         """
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
+        self._kanes_equations_not_called('forcing')
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
     def forcing_full(self):
-        """The forcing vector of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
+        """The right hand side, f, of the following first order differential
+        equation::
+
+            M * x' = f
+
+        where x, the state vector, contains the independent and dependent
+        generalized coordinates and speeds::
+
+            x = | q_s |
+                | q_r |
+                | u_s |
+                | u_r |
+
+        The equations can be formed with these class attributes::
+
+            >>> lhs = mass_matrix_full * states.diff()
+            >>> rhs = forcing_full
+            >>> Eq(lhs, rhs)
+
+        """
+        self._kanes_equations_not_called('forcing_full')
         f1 = self._k_ku * Matrix(self.u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
 
-    # Read only attributes are below.
+    @property
+    def inertial_frame(self):
+        """Returns the system's primary inertial reference frame."""
+        return self._inertial
 
     @property
     def num_coordinates(self):
@@ -1052,14 +1115,42 @@ class KanesMethod(object):
         return self._q
 
     @property
-    def num_dep_coords(self):
+    def num_independent_coordinates(self):
+        """Returns the number of independent generalized coordinates."""
+        return self.num_coordinates - self._o
+
+    @property
+    def q_s(self):
+        """Returns a column matrix of the independent generalized
+        coordinates."""
+        return self._qind
+
+    @property
+    def independent_coordinates(self):
+        """Returns a column matrix of the independent generalized
+        coordinates."""
+        return self._qind
+
+    @property
+    def o(self):
         """Returns the number of dependent generalized coordinates."""
         return self._o
 
     @property
-    def num_ind_coords(self):
-        """Returns the number of independent generalized coordinates."""
-        return self._n - self._o
+    def num_dependent_coordinates(self):
+        """Returns the number of dependent generalized coordinates."""
+        return self._o
+
+    @property
+    def q_r(self):
+        """Returns a column matrix of the dependent generalized coordinates."""
+        return self._qdep
+
+    @property
+    def kinematic_differential_equations(self):
+        """Returns a dictionary that maps the derivatives of the coordinates to
+        functions of the generalized speeds and coordinates."""
+        return self._qdot_u_map
 
     @property
     def n(self):
@@ -1091,9 +1182,19 @@ class KanesMethod(object):
         return self._p
 
     @property
+    def u_s(self):
+        """Returns a matrix of independent generalized speeds."""
+        return self._uind
+
+    @property
     def independent_speeds(self):
         """Returns a matrix of independent generalized speeds."""
         return self._uind
+
+    @property
+    def m(self):
+        """Returns the number of dependent generalized speeds."""
+        return self._m
 
     @property
     def num_dependent_speeds(self):
@@ -1101,9 +1202,27 @@ class KanesMethod(object):
         return self._m
 
     @property
+    def u_r(self):
+        """Returns a matrix of dependent generalized speeds."""
+        return self._udep
+
+    @property
     def dependent_speeds(self):
         """Returns a matrix of dependent generalized speeds."""
         return self._udep
+
+    @property
+    def holonomic(self):
+        """Returns True if the system is holonomic."""
+        if self.num_dependent_speeds > 0:
+            return False
+        else:
+            return True
+
+    @property
+    def nonholonomic(self):
+        """Returns True if the system is nonholonomic."""
+        return not self.holonomic
 
     @property
     def num_auxiliary_speeds(self):
@@ -1116,32 +1235,61 @@ class KanesMethod(object):
         return self._uaux
 
     @property
+    def accelerations(self):
+        """Returns a matrix of the generalized accelerations."""
+        return self.u.diff(dynamicsymbols._t)
+
+    @property
+    def states(self):
+        """Returns a matrix of the system's state variables."""
+        return self.q.col_join(self.u)
+
+    @property
     def bodylist(self):
         """Returns a list of the Partical and Body objects."""
+        # TODO : Deprecate.
+        self._kanes_equations_not_called('bodylist')
         return self._bodylist
 
     @property
     def bodies(self):
         """Returns a list of the Particle and Body objects."""
+        self._kanes_equations_not_called('bodies')
         return self._bodylist
 
     @property
     def forcelist(self):
         """Returns a list of the load tuples."""
+        # TODO : Deprecate.
+        self._kanes_equations_not_called('forcelist')
         return self._forcelist
 
     @property
     def loads(self):
         """Returns a list of the load tuples."""
+        self._kanes_equations_not_called('loads')
         return self._forcelist
 
     @property
-    def holonomic(self):
-        if self.num_dependent_speeds > 0:
-            return False
-        else:
-            return True
+    def fr(self):
+        """Returns the generalized active forces."""
+        self._kanes_equations_not_called('fr')
+        return self._fr
 
     @property
-    def nonholonomic(self):
-        return not self.holonomic
+    def frstar(self):
+        """Returns the generalized inertia forces."""
+        self._kanes_equations_not_called('frstar')
+        return self._frstar
+
+    @property
+    def generalized_active_forces(self):
+        """Returns the generalized active forces."""
+        self._kanes_equations_not_called('generalized_active_forces')
+        return self._fr
+
+    @property
+    def generalized_inertia_forces(self):
+        """Returns the generalized inertia forces."""
+        self._kanes_equations_not_called('generalized_inertia_forces')
+        return self._frstar
