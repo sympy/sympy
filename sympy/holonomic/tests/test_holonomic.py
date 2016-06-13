@@ -46,6 +46,16 @@ def test_HolonomicFunction_addition():
         1)*Dx**6, x)
     assert p+q == r
 
+    p = x**2 + 3*x + 8
+    q = x**3 - 7*x + 5
+    p = p*Dx - p.diff()
+    q = q*Dx - q.diff()
+    r = HolonomicFunction(p, x) + HolonomicFunction(q, x)
+    s = HolonomicFunction((6*x**2 + 18*x + 14) + (-4*x**3 - 18*x**2 - 62*x + 10)*Dx +\
+        (x**4 + 6*x**3 + 31*x**2 - 10*x - 71)*Dx**2, x)
+    assert r == s
+
+
 def test_HolonomicFunction_multiplication():
     x = symbols('x')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
