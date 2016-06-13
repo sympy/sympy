@@ -1260,7 +1260,7 @@ def from_sympy(func, x=None, initcond=True,):
     >>> from sympy import sin, exp, symbols
     >>> x = symbols('x')
     >>> from_sympy(sin(x))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0 , f'(0) = 1
+    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
     >>> from_sympy(exp(x))
     HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
