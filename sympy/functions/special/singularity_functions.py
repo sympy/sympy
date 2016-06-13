@@ -88,13 +88,13 @@ class SingularityFunction(Function):
         """
         x = self.args[0]
         a = self.args[1]
-        n = self.args[2]
+        n = sympify(self.args[2])
 
         if n == -2:
             return diff(Heaviside(x - a), x, 2)
         if n == -1:
             return diff(Heaviside(x - a), x, 1)
-        if n >= 0:
+        if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a)
 
     _eval_rewrite_as_DiracDelta = _eval_rewrite_as_Heaviside

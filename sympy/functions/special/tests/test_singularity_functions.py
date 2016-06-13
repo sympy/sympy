@@ -1,5 +1,5 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta,
+    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol,
     Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside, Derivative
 )
 
@@ -61,6 +61,13 @@ def test_rewrite():
 
     expr_in = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     expr_out = (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    assert expr_in.rewrite(Heaviside) == expr_out
+    assert expr_in.rewrite(DiracDelta) == expr_out
+    assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
+
+    n = Symbol('n', nonnegative=True)
+    expr_in = SingularityFunction(x, 4, n) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
+    expr_out = (x - 4)**n*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
