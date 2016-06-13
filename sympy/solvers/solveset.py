@@ -889,13 +889,31 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
+<<<<<<< HEAD
 def solvify(f, symbol, domain):
     """Solves an equation using solveset and returns the solution in accordance
     with the `solve` output API.
+=======
+def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
+    r"""Solves a given equation in domain S.Integers. `diophantine`, defined in
+    solvers/diophantine.py; is used to get the integer solution..
+
+    Parameters
+    ==========
+
+    f : Expr or a relational.
+        The target equation
+    symbols : list of Symbol
+        The variable for which the equation is solved. The order of
+        symbols in input `symbols` will determine the order of values
+        in the solution tuple.
+    param : symbol that should be used in integer solution
+>>>>>>> solveset_integers function added
 
     Returns
     =======
 
+<<<<<<< HEAD
     We classify the output based on the type of solution returned by `solveset`.
 
     Solution    |    Output
@@ -967,6 +985,71 @@ def solvify(f, symbol, domain):
                 result += solution
 
     return result
+=======
+    Set
+        A FiniteSet, if finite number of solution is present otherwise
+        a imageset of FiniteSet tuples for `symbols` for which `f` is
+        True or is equal to zero and base set is S.Integers for free_symbols
+        present in the solution.
+        An `EmptySet` is returned if `f` no Integers solution is found..
+
+    Note
+    =====
+
+    symbols should contain all the symbols in the equation. We are free to
+    choose the order.
+
+    See Also
+    ========
+
+    solveset_real: solver for real domain
+    solveset_complex: solver for complex domain
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import solveset_integers
+    >>> from sympy import symbols, pprint, Symbol
+    >>> k = Symbol('k', integer=True)
+    >>> x, y, z, t_0, k_0, n1 = symbols('x, y, z, t_0, k_0, n1')
+    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x), use_unicode = False)
+    {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [x, y]), use_unicode = False)
+    {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x]), use_unicode = False)
+    {{(n1, 0), (-t_0, 3*t_0 - 4)} | n1, t_0 in Integers()}
+
+    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x], k), use_unicode = False)
+    {{(-k_0, 3*k_0 - 4), (n1, 0)} | k_0, n1 in Integers()}
+
+    >>> pprint(solveset_integers(2*x + 1), use_unicode = False)
+    EmptySet()
+
+    >>> pprint(solveset_integers(x + 1), use_unicode = False)
+    {(-1,)}
+
+    """
+    from sympy.solvers.diophantine import diophantine
+    # solution is in set
+    solution = diophantine(f, param, symbols)
+
+    # soln in Imageset
+    var_int = S.EmptySet
+    expr = S.EmptySet
+    for s in solution:
+        for s2 in s:
+            if not s2.is_Integer:
+                var_int += FiniteSet(*[s3 for s3 in s2.free_symbols])
+        expr += FiniteSet(s) if s is not None else S.EmptySet
+
+    if expr is S.EmptySet:
+        return S.EmptySet
+    if var_int is S.EmptySet:
+        return expr
+    return imageset(Lambda(var_int, expr), S.Integers)
+>>>>>>> solveset_integers function added
 
 
 ###############################################################################
