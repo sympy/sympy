@@ -28,7 +28,7 @@ class SingularityFunction(Function):
             n = sympify(self.args[2])
             if n == 0 or n == -1:
                 return self.func(x, a, n-1)
-            elif n > 0:
+            elif n.is_positive:
                 return n*self.func(x, a, n-1)
         else:
             raise ArgumentIndexError(self, argindex)
@@ -57,7 +57,7 @@ class SingularityFunction(Function):
             raise ValueError("Singularity Functions are not defined for exponents less than -2.")
         if shift.is_negative:
             return S.Zero
-        if not n.is_negative and (shift.is_positive or shift.is_zero):
+        if n.is_nonnegative and shift.is_nonnegative:
             return (x - a)**n
         if n == -1 or n == -2:
             if shift.is_negative or shift.is_positive:
@@ -72,13 +72,11 @@ class SingularityFunction(Function):
         """
         x = self.args[0]
         a = self.args[1]
-        n = self.args[2]
+        n = sympify(self.args[2])
 
         if n == -1 or n == -2:
             return Piecewise((oo, Eq((x - a), 0)), (0, True))
-        elif n == 0:
-            return Piecewise((S(1), (x - a) > 0), (0, True))
-        elif n > 0:
+        elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, *args):
