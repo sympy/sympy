@@ -20,6 +20,10 @@ def test_fdiff():
     assert SingularityFunction(y, 4, 0).diff(y) == SingularityFunction(y, 4, -1)
     assert SingularityFunction(y, 4, 0).diff(y, 2) == SingularityFunction(y, 4, -2)
 
+    n = Symbol('n', positive=True)
+    assert SingularityFunction(x, a, n).fdiff() == n*SingularityFunction(x, a, n - 1)
+    assert SingularityFunction(y, a, n).diff(y) == n*SingularityFunction(y, a, n - 1)
+
     assert SingularityFunction(x, -10, 5).diff(evaluate=False) == (
         Derivative(SingularityFunction(x, -10, 5), x))
 
@@ -59,15 +63,18 @@ def test_rewrite():
     assert SingularityFunction(x, 0, -2).rewrite(Piecewise) == (
         Piecewise((oo, Eq(x, 0)), (0, True)))
 
+    n = Symbol('n', nonnegative=True)
+    assert SingularityFunction(x, a, n).rewrite(Piecewise) == (
+        Piecewise(((x - a)**n, x - a > 0), (0, True)))
+
     expr_in = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     expr_out = (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
 
-    n = Symbol('n', nonnegative=True)
-    expr_in = SingularityFunction(x, 4, n) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
-    expr_out = (x - 4)**n*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    expr_in = SingularityFunction(x, a, n) + SingularityFunction(x, a, -1) - SingularityFunction(x, a, -2)
+    expr_out = (x - a)**n*Heaviside(x - a) + DiracDelta(x - a) - DiracDelta(x - a, 1)
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
