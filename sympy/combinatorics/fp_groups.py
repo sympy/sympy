@@ -70,6 +70,15 @@ class FpGroup(DefaultPrinting):
         """Returns the generators of the associated free group."""
         return self.free_group.generators
 
+    def __str__(self):
+        if self.free_group.rank > 30:
+            str_form = "<fp group with %s generators>" % self.free_group.rank
+        else:
+            str_form = "<fp group on the generators %s>" % str(self.generators)
+        return str_form
+
+    __repr__ = __str__
+
 
 # sets the upper limit on the number of cosets generated during
 # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
@@ -106,6 +115,7 @@ class CosetTable(DefaultPrinting):
     def __init__(self, fp_grp, subgroup):
         self.fp_group = fp_grp
         self.subgroup = subgroup
+        # "p" is setup independent of Ω and n
         self.p = [0]
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
@@ -125,6 +135,18 @@ class CosetTable(DefaultPrinting):
         """
         return [coset for coset in range(len(self.p)) if self.p[coset] == coset]
 
+    def copy(self):
+        self_copy = self.__class__(self.fp_group, self.subgroup)
+        self_copy.table = self.table.copy()
+        self_copy.p = self.p.copy()
+        return self_copy
+
+    def __str__(self):
+        return "Coset Table on %s with %s as subgroup generators" \
+                % (self.fp_group, self.subgroup)
+
+    __repr__ = __str__
+
     @property
     def n(self):
         """The number 'n' represents the length of the sublist containing the
@@ -132,9 +154,12 @@ class CosetTable(DefaultPrinting):
         """
         return max(self.omega) + 1
 
-    # checks whether the Coset Table is complete or not
     def is_complete(self):
-        return not None in flatten(self.table)
+        """
+        It checks whether "C" is complete; that is, whether α^x is defined
+        for all α ∈ Ω and x ∈ A.
+        """
+        return not any([None in self.table[coset] for coset in self.omega])
 
     # Pg. 153
     def define(self, alpha, x):
@@ -258,6 +283,53 @@ class CosetTable(DefaultPrinting):
             self.table[f][A_dict[word[i]]] = b
             self.table[b][A_dict_inv[word[i]]] = f
         # otherwise scan is incomplete and yields no information
+
+    def scan_check(self, alpha, word):
+        """
+        Another version of "scan" routine, it checks whether α scans correctly
+        under w, it is a straightforward modification of "scan". "scan_check"
+        return false (rather than calling "coincidence") if the scan completes
+        incorrectly; otherwise it returns true.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.fp_groups import FpGroup, scan_check
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+        >>> C = CosetTable
+        >>> scan_check()
+
+        """
+        # alpha is an integer representing a "coset"
+        # since scanning can be in two cases
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in omega (set of live cosets), w in R (relators)
+        A_dict = self.A_dict
+        A_dict_inv = self.A_dict_inv
+        f = alpha
+        i = 0
+        r = len(word)
+        b = alpha
+        j = r - 1
+        # list of union of generators and their inverses
+        while i <= j and self.table[f][A_dict[word[i]]] is not None:
+            f = self.table[f][A_dict[word[i]]]
+            i += 1
+        if i > j:
+            if f != b:
+                return False
+            return True
+        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
+            b = self.table[b][A_dict_inv[word[j]]]
+            j -= 1
+        if j < i:
+            # we have an incorrect completed scan with coincidence f ~ b
+            # return False, instead of calling coincidence routine
+            return False
+        # return True otherwise
+        return True
 
     def merge(self, k, lamda, q):
         p = self.p
@@ -406,6 +478,33 @@ class CosetTable(DefaultPrinting):
                     self.scan_f(beta, w)
                     if p[beta] < beta:
                         break
+
+    # Pg. 166
+    def process_deductions_check(self, R_c_x, R_c_x_inv):
+        """
+        A variation of "process_deductions", this calls "scan_check" wherever
+        "process_deductions" calls "scan".
+        """
+        p = self.p
+        while len(self.deduction_stack) > 0:
+            if len(self.deduction_stack) >= max_stack_size:
+                self.lookahead()
+                del self.deduction_stack[:]
+            else:
+                alpha, x = self.deduction_stack.pop()
+                if p[alpha] == alpha:
+                    for w in R_c_x:
+                        self.scan_check(alpha, w)
+                        if p[alpha] < alpha:
+                            break
+            beta = self.table[alpha][self.A_dict[x]]
+            if beta is not None and p[beta] == beta:
+                for w in R_c_x_inv:
+                    self.scan_check(beta, w)
+                    if p[beta] < beta:
+                        break
+
+
 
     def switch(self, beta, gamma):
         """
@@ -686,6 +785,130 @@ def coset_enumeration_c(fp_grp, Y):
                 C.define_f(alpha, x)
                 C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     return C
+
+
+def low_index_subgroups(G, N):
+    """
+    Implements the Low Index Subgroups algorithm, i.e find all subgroups of
+    "G" upto a given index "N". This implements the method described in
+    [Sim94].
+
+    G: An FpGroup < X|R >
+    N: positive integer, representing the maximun index value for subgroups
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of Computational Group Theory"
+    Section 5.4
+
+    [2] Marston Conder and Peter Dobcsanyi
+    "Applications and Adaptions of the Low Index Subgroups Procedure"
+
+    """
+    C = CosetTable(G, [])
+    R = G.relators()
+    # length chosen for the length of the short relators
+    len_short_rel = 5
+    # elements of R2 only checked at the last step for complete
+    # coset tables
+    R2 = set([rel for rel in R if len(rel) > len_short_rel])
+    # elements of R1 are used in inner parts of the process to prune
+    # branches of the search tree,
+    R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
+    R1_c = list(chain.from_iterable((rel.cyclic_conjugates(), \
+            (rel**-1).cyclic_conjugates()) for rel in R1))
+    R1_set = set()
+    for conjugate in R1_c:
+        R1_set = R1_set.union(conjugate)
+    R1_c_list = []
+    for x in C.A:
+        r = set([word for word in R1_set if word[0] == x])
+        R1_c_list.append(r)
+        R1_set.difference_update(r)
+    S = []
+    for x in C.A:
+        descendant_subgroups(S, C, R1_c_list[C.A_dict[x]], \
+                R1_c_list[C.A_dict_inv[x]], R2, N)
+    return S
+
+
+def descendant_subgroups(S, C, R1_x_c, R1_x_c_inv, R2, N):
+    A_dict = C.A_dict
+    A_dict_inv = C.A_dict_inv
+    if C.is_complete():
+        # check whether the relators in R2 are satisfied
+        for w in R2:
+            for alpha in C.omega:
+                if not C.scan_check(alpha, w):
+                    return
+        # relators in R2 are satisfied, append the table to list
+        S.append(C)
+    else:
+        j = 0
+        for alpha in range(len(C.table)):
+            for x in C.A:
+                alpha_c_x = C.table[alpha][A_dict[x]]
+                if alpha_c_x is None:
+                    # this is "x" in pseudo-code (using "y" makes it clear)
+                    y = x
+                    j = 1
+                    break
+            if j == 1:
+                break
+        reach = C.omega + [C.n]
+        for beta in reach:
+            if beta < N and C.table[beta][A_dict_inv[y]] is None:
+                try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, y, beta)
+
+
+def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
+    D = C.copy()
+    A_dict = D.A_dict
+    if beta == D.n:
+        D.n += 1
+    D.table[alpha][D.A_dict[x]] = beta
+    D.table[beta][D.A_dict_inv[x]] = alpha
+    D.deduction_stack.append((alpha, x))
+    D.process_deductions_check(R1_x_c, R1_x_c_inv)
+    if D.n == 0:
+        return
+    if first_int_class(D):
+        descendant_subgroups(S, D, R1_x_c, R1_x_c_inv, R2, N)
+
+
+def first_int_class(C):
+    n = C.n
+    lamda = -1
+    nu = [None]*n
+    for alpha in range(1, n):
+        # reset ν to "None" after previous value of alpha
+        for beta in range(lamda):
+            nu[mu[beta]] = None
+        # try α as the new point 0 in Ω_C_α
+        mu[0] = alpha
+        nu[alpha] = 0
+        lamda = 0
+        # compare entries in C and C_α
+        for beta in range(n):
+            for x in C.A:
+                if C.table[beta][x] is None or mu[beta] is None:
+                    # continue with α
+                    continue
+                gamma = C.table[beta][x]
+                delta = mu[beta]
+                if nu[delta] is None:
+                    # delta becomes the next point in Ω_C_α
+                    lamda += 1
+                    nu[delta] = lamda
+                    mu[lamda] = delta
+                if nu[delta] < gamma:
+                    return False
+                if nu[delta]:
+                    # continue with α
+                    continue
+    return True
 
 
 FpGroupElement = FreeGroupElement
