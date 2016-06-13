@@ -417,4 +417,7 @@ def test_from_sympy():
     q = HolonomicFunction(Dx - 2*Dx**2 + 2*Dx**3 - 2*Dx**4 + Dx**5, x, \
         0, [2, 1, 1, 3, 5])
     assert p == q
-    assert (x*exp(x)+cos(x)+1).series(n=100) == p.series(n=100)
+    assert (x*exp(x)+cos(x)+1).series(n=10) == p.series(n=10)
+    p = from_sympy(log(1 + x)**2 + 1)
+    q = HolonomicFunction(Dx + (3*x + 3)*Dx**2 + (x**2 + 2*x + 1)*Dx**3, x, 0, [1, 0, 2])
+    assert p == q

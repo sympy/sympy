@@ -1274,6 +1274,9 @@ def from_sympy(func, x=None, initcond=True,):
         t = _mytype(f, x_1)
         if t in _lookup_table:
             l = _lookup_table[t]
+        else:
+            return _convert_meijerint(func, x)
+
         sol = l[0][1]._subs(x)
 
         if not initcond:
@@ -1313,8 +1316,6 @@ def from_sympy(func, x=None, initcond=True,):
         y0 = _find_conditions(func, x, x0, sol.annihilator.order)
 
     return HolonomicFunction(sol.annihilator, x, x0, y0)
-
-    return _convert_meijerint(func, x)
 
 
 def _extend_y0(Holonomic, n):
@@ -1479,7 +1480,8 @@ def _convert_meijerint(func, x):
 
 def _create_table(table):
     """
-    Create the lookup table.
+    Creates the look-up table. For a similar implementation
+    see meijerint._create_lookup_table.
     """
 
     def add(formula, annihilator, arg, x0=0, y0=[]):
@@ -1502,7 +1504,11 @@ def _create_table(table):
 
 
 def _mytype(f, x):
-    """ Create a hashable entity describing the type of f. """
+    """
+    Originally defined in meijerint._mytype. Returns type
+    of f.
+    """
+
     if x not in f.free_symbols:
         return ()
     elif f.is_Function:
