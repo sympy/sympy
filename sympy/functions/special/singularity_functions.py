@@ -16,8 +16,6 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 class SingularityFunction(Function):
     """
 
-    Examples
-    ========
 
     """
 
@@ -70,8 +68,6 @@ class SingularityFunction(Function):
     def _eval_rewrite_as_Piecewise(self, *args):
         """
 
-        Examples
-        ========
 
         """
         x = self.args[0]
@@ -88,8 +84,6 @@ class SingularityFunction(Function):
     def _eval_rewrite_as_Heaviside(self, *args):
         """
 
-        Examples
-        ========
 
         """
         x = self.args[0]
@@ -103,11 +97,5 @@ class SingularityFunction(Function):
         if n >= 0:
             return (x - a)**n*Heaviside(x - a)
 
-    def _eval_rewrite_as_DiracDelta(self, *args):
-        """
-
-        Examples
-        ========
-
-        """
-        return self.rewrite(Heaviside)
+    _eval_rewrite_as_DiracDelta = _eval_rewrite_as_Heaviside
+    _eval_rewrite_as_HeavisideDiracDelta = _eval_rewrite_as_Heaviside
