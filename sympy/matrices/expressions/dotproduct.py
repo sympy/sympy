@@ -39,7 +39,7 @@ class DotProduct(MatrixExpr):
             raise TypeError("Argument 2 of DotProduct is not a vector")
 
         if set(arg1.shape) != set(arg2.shape):
-            raise TypeError("DotProduct arguments are not the same length" % (str(arg1), str(arg2)))
+            raise TypeError("DotProduct arguments are not the same length")
 
         return Basic.__new__(cls, arg1, arg2)
 
