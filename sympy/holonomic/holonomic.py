@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint
+from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -1478,13 +1478,12 @@ def _convert_meijerint(func, x, initcond=True):
     # finds meijerg representation of x**s * meijerg(a1 ... ap, b1 ... bq, z)
     def _shift(func, s):
         z = func.args[-1]
+        if z.has(I):
+            z = z.subs(exp_polar, exp)
+
         d = z.collect(x, evaluate=False)
         b = list(d)[0]
         a = d[b]
-
-        if isinstance(a, exp_polar):
-            a = exp(a.as_base_exp()[1])
-            z = a * b
 
         t = b.as_base_exp()
         b = t[1] if t[0] is x else S(0)
@@ -1524,17 +1523,27 @@ def _create_table(table):
     _, Dx = DifferentialOperators(R, 'Dx')
 
     from sympy import (sin, cos, exp, log, erf, sqrt, pi,
-        sinh, cosh, sinc)
+        sinh, cosh, sinc, erfc, Si, Ci, Shi, erfi)
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])
     add(cos(x_1), Dx**2 + 1, x_1, 0, [1, 0])
     add(exp(x_1), Dx - 1, x_1, 0, 1)
     add(log(x_1), Dx + x_1*Dx**2, x_1, 1, [0, 1])
+
     add(erf(x_1), 2*x_1*Dx + Dx**2, x_1, 0, [0, 2/sqrt(pi)])
+    add(erfc(x_1), 2*x_1*Dx + Dx**2, x_1, 0, [1, -2/sqrt(pi)])
+    add(erfi(x_1), -2*x_1*Dx + Dx**2, x_1, 0, [0, 2/sqrt(pi)])
+
     add(sinh(x_1), Dx**2 - 1, x_1, 0, [0, 1])
     add(cosh(x_1), Dx**2 - 1, x_1, 0, [1, 0])
+
     add(sinc(x_1), x_1 + 2*Dx + x_1*Dx**2, x_1)
+
+    add(Si(x_1), x_1*Dx + 2*Dx**2 + x_1*Dx**3, x_1)
+    add(Ci(x_1), x_1*Dx + 2*Dx**2 + x_1*Dx**3, x_1)
+
+    add(Shi(x_1), -x_1*Dx + 2*Dx**2 + x_1*Dx**3, x_1)
 
 
 def _find_conditions(func, x, x0, order):
