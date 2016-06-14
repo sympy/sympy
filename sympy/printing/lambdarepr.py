@@ -163,6 +163,14 @@ class NumPyPrinter(LambdaPrinter):
     def _print_Max(self, expr):
         return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
 
+    def _print_DotProduct(self, expr):
+        arg1, arg2 = expr.args
+        if arg1.shape[0] != 1:
+            arg1 = arg1.T
+        if arg2.shape[1] != 1:
+            arg2 = arg2.T
+        return "dot(%s, %s)" % (self._print(arg1), self._print(arg2))
+
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
