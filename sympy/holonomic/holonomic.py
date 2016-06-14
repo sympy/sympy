@@ -1167,7 +1167,7 @@ def from_hyper(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
-def from_meijerg(func, x0=0, evalf=False):
+def from_meijerg(func, x0=0, evalf=False, initcond=True):
     """
     Converts a Meijer G-function to Holonomic.
     func is the Hypergeometric Function and x0 be the point at
@@ -1206,6 +1206,9 @@ def from_meijerg(func, x0=0, evalf=False):
         r2 *= x * Dx - b[i]
 
     sol = r1 - r2
+
+    if not initcond:
+        return HolonomicFunction(sol, x).composition(z)
 
     simp = hyperexpand(func)
 
@@ -1251,7 +1254,7 @@ _lookup_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def from_sympy(func, x=None, initcond=True,):
+def from_sympy(func, x=None, initcond=True):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
     to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
@@ -1274,7 +1277,7 @@ def from_sympy(func, x=None, initcond=True,):
 
     meijerint._rewrite1, _convert_poly_rat, _create_table
     """
-
+    func = sympify(func)
     if not x:
         x = func.atoms(Symbol).pop()
 
@@ -1295,10 +1298,15 @@ def from_sympy(func, x=None, initcond=True,):
         t = _mytype(f, x_1)
         if t in _lookup_table:
             l = _lookup_table[t]
+            sol = l[0][1]._subs(x)
         else:
-            return _convert_meijerint(func, x)
-
-        sol = l[0][1]._subs(x)
+            sol = _convert_meijerint(func, x, initcond=False)
+            x0 = 0
+            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            while not y0:
+                x0 += 1
+                y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            return HolonomicFunction(sol.annihilator, x, x0, y0)
 
         if not initcond:
             return sol.composition(func.args[0])
@@ -1429,9 +1437,9 @@ def _convert_poly_rat(func, x, initcond=True):
     _, Dx = DifferentialOperators(R, 'Dx')
 
     if ispoly:
-        order = len(R.from_sympy(sympify(func)).rep)
         # differential equation satisfied by polynomial
-        sol = Dx**(order)
+        sol = func * Dx - func.diff()
+        sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
     elif israt:
         order = 1
@@ -1452,7 +1460,7 @@ def _convert_poly_rat(func, x, initcond=True):
     return HolonomicFunction(sol, x, x0, y0)
 
 
-def _convert_meijerint(func, x):
+def _convert_meijerint(func, x, initcond=True):
     args = meijerint._rewrite1(func, x)
 
     if args:
@@ -1489,12 +1497,12 @@ def _convert_meijerint(func, x):
         return a**-r, meijerg((an, ap), (bm, bq), z)
 
     coeff, m = _shift(G_list[0], po_list[0])
-    sol = fac_list[0] * coeff * from_meijerg(m)
+    sol = fac_list[0] * coeff * from_meijerg(m, initcond=initcond)
 
     # add all the meijerg functions after converting to holonomic
     for i in range(1, len(G_list)):
         coeff, m = _shift(G_list[i], po_list[i])
-        sol += fac_list[i] * coeff * from_meijerg(m)
+        sol += fac_list[i] * coeff * from_meijerg(m, initcond=initcond)
 
     return sol
 
