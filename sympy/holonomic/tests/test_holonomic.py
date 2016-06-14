@@ -2,7 +2,7 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, from_sympy)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, sstr,
-    O, I, meijerg, sin, cos, log)
+    O, I, meijerg, sin, cos, log, cosh)
 from sympy import ZZ, QQ
 
 
@@ -434,4 +434,7 @@ def test_from_sympy():
     p = from_sympy(erf(x)**2 + x)
     q = HolonomicFunction((32*x**4 - 8*x**2 + 8)*Dx**2 + (24*x**3 - 2*x)*Dx**3 + \
         (4*x**2+ 1)*Dx**4, x, 0, [0, 1, 8/pi, 0])
+    assert p == q
+    p = from_sympy(cosh(x)*x)
+    q = HolonomicFunction(1 - 2*Dx**2 + Dx**4, x, 0, [0, 1, 0, 3])
     assert p == q

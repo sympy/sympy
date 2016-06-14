@@ -1515,7 +1515,8 @@ def _create_table(table):
     R = QQ.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import sin, cos, exp, log, erf, sqrt, pi
+    from sympy import (sin, cos, exp, log, erf, sqrt, pi,
+        sinh, cosh, sinc)
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])
@@ -1523,6 +1524,9 @@ def _create_table(table):
     add(exp(x_1), Dx - 1, x_1, 0, 1)
     add(log(x_1), Dx + x_1*Dx**2, x_1, 1, [0, 1])
     add(erf(x_1), 2*x_1*Dx + Dx**2, x_1, 0, [0, 2/sqrt(pi)])
+    add(sinh(x_1), Dx**2 - 1, x_1, 0, [0, 1])
+    add(cosh(x_1), Dx**2 - 1, x_1, 0, [1, 0])
+    add(sinc(x_1), x_1 + 2*Dx + x_1*Dx**2, x_1)
 
 
 def _find_conditions(func, x, x0, order):
