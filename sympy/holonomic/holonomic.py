@@ -1248,6 +1248,7 @@ def from_meijerg(func, x0=0, evalf=False):
 
 x_1 = Dummy('x_1')
 _lookup_table = None
+from sympy.integrals.meijerint import _mytype
 
 
 def from_sympy(func, x=None, initcond=True,):
@@ -1522,25 +1523,6 @@ def _create_table(table):
     add(exp(x_1), Dx - 1, x_1, 0, 1)
     add(log(x_1), Dx + x_1*Dx**2, x_1, 1, [0, 1])
     add(erf(x_1), 2*x_1*Dx + Dx**2, x_1, 0, [0, 2/sqrt(pi)])
-
-
-def _mytype(f, x):
-    """
-    Originally defined in meijerint._mytype. Returns type
-    of f.
-    """
-
-    if x not in f.free_symbols:
-        return ()
-    elif f.is_Function:
-        return (type(f),)
-    else:
-        types = [_mytype(a, x) for a in f.args]
-        res = []
-        for t in types:
-            res += list(t)
-        res.sort()
-        return tuple(res)
 
 
 def _find_conditions(func, x, x0, order):
