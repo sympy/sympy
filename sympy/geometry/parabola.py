@@ -158,7 +158,7 @@ class Parabola(GeometrySet):
         >>> from sympy import Parabola, Point, Line
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.axis_of_symmetry
-        Line(Point2D(0, 0), Point2D(0, 8))
+        Line(Point2D(0, 0), Point2D(0, 1))
 
         """
         return self.directrix.perpendicular_line(self.focus)

@@ -78,8 +78,8 @@ def test_line_geom():
     # Orthogonality
     p1_1 = Point(-x1, x1)
     l1_1 = Line(p1, p1_1)
-    assert l1.perpendicular_line(p1.args) == Line(Point(0, 0), Point(1, -1))
-    assert l1.perpendicular_line(p1) == Line(Point(0, 0), Point(1, -1))
+    assert l1.perpendicular_line(p1.args).equals( Line(Point(0, 0), Point(1, -1)) )
+    assert l1.perpendicular_line(p1).equals( Line(Point(0, 0), Point(1, -1)) )
     assert Line.is_perpendicular(l1, l1_1)
     assert Line.is_perpendicular(l1, l2) is False
     p = l1.random_point()
@@ -87,9 +87,9 @@ def test_line_geom():
 
     # Parallelity
     l2_1 = Line(p3, p5)
-    assert l2.parallel_line(p1_1) == Line(Point(-x1, x1), Point(-y1, 2*x1 - y1))
-    assert l2_1.parallel_line(p1.args) == Line(Point(0, 0), Point(0, -1))
-    assert l2_1.parallel_line(p1) == Line(Point(0, 0), Point(0, -1))
+    assert l2.parallel_line(p1_1).equals( Line(Point(-x1, x1), Point(-y1, 2*x1 - y1)) )
+    assert l2_1.parallel_line(p1.args).equals( Line(Point(0, 0), Point(0, -1)) )
+    assert l2_1.parallel_line(p1).equals( Line(Point(0, 0), Point(0, -1)) )
     assert Line.is_parallel(l1, l2)
     assert Line.is_parallel(l2, l3) is False
     assert Line.is_parallel(l2, l2.parallel_line(p1_1))
@@ -167,12 +167,11 @@ def test_line_geom():
     assert s1.midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
-    assert s1.perpendicular_bisector() == \
-        Line(Point(1/2, 1/2), Point(3/2, -1/2))
+    assert s1.perpendicular_bisector().equals(Line(Point(1/2, 1/2), Point(3/2, -1/2)))
     # intersections
     assert s1.intersection(Line(p6, p9)) == []
     s3 = Segment(Point(0.25, 0.25), Point(0.5, 0.5))
-    assert s1.intersection(s3) == [s1]
+    assert s1.intersection(s3) == [s3]
     assert s3.intersection(s1) == [s3]
     assert r4.intersection(s3) == [s3]
     assert r4.intersection(Segment(Point(2, 3), Point(3, 4))) == []
@@ -191,7 +190,7 @@ def test_line_geom():
     assert r4.intersection(r7) == r7.intersection(r4) == [r7]
 
     # Segment contains
-    a, b = symbols('a,b')
+    a, b = symbols('a,b', real=True)
     s = Segment((0, a), (0, b))
     assert Point(0, (a + b)/2) in s
     s = Segment((a, 0), (b, 0))
@@ -219,10 +218,10 @@ def test_line_geom():
     assert Line((0, 0), (0, 1)).distance(p2) == 1
     assert Line((0, 0), (1, 0)).distance(p1) == 0
     assert Line((0, 0), (1, 0)).distance(p2) == 1
-    m = symbols('m')
+    m = symbols('m', real=True)
     l = Line((0, 5), slope=m)
     p = Point(2, 3)
-    assert l.distance(p) == 2*abs(m + 1)/sqrt(m**2 + 1)
+    assert simplify(l.distance(p) - 2*abs(m + 1)/sqrt(m**2 + 1)).is_zero
     # Ray to point
     r = Ray(p1, p2)
     assert r.distance(Point(-1, -1)) == sqrt(2)
@@ -526,10 +525,10 @@ def test_line3d():
     assert intersection(s1, r1) == [s1]
 
     # check that temporary symbol is Dummy
-    assert Line3D((0, 0), (t, t)).perpendicular_line((0, 1)) == \
-        Line3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0))
-    assert Line3D((0, 0), (t, t)).perpendicular_segment((0, 1)) == \
-        Segment3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0))
+    assert Line3D((0, 0), (t, t)).perpendicular_line((0, 1)).equals( \
+        Line3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0)))
+    assert Line3D((0, 0), (t, t)).perpendicular_segment((0, 1)).equals( \
+        Segment3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0)))
     assert Line3D((0, 0), (t, t)).intersection(Line3D((0, 1), (t, t))) == \
         [Point3D(t, t, 0)]
     assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))

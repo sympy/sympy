@@ -174,7 +174,9 @@ class Point(GeometryEntity):
         """
 
         # Coincident points are irrelevant; use only unique points.
-        args = list(set(args))
+        # XXX: the current workaround for issue #11238 relies on the points
+        # being in a specific order, so don't let `set` change the order
+        # args = list(set(args))
         if not all(isinstance(p, Point) for p in args):
             raise TypeError('Must pass only Point objects')
 
@@ -183,12 +185,7 @@ class Point(GeometryEntity):
         if len(args) <= 2:
             return True
 
-        # translate our points
-        points = [p - args[0] for p in args[1:]]
-        for p in points[1:]:
-            if not Point.is_scalar_multiple(points[0], p):
-                return False
-        return True
+        return Point.affine_rank(*args) == 1
 
     def is_scalar_multiple(p1, p2):
         """Returns whether `p1` and `p2` are scalar multiples
@@ -233,6 +230,56 @@ class Point(GeometryEntity):
         I.e., if the point is in R^n, the ambient dimension
         will be n"""
         return len(self)
+
+    @property
+    def orthogonal_direction(self):
+        """Returns a non-zero point in a direction
+        orthogonal to `self`."""
+
+        dim = self.ambient_dimension
+        if dim == 1 and self[0] != S.Zero:
+            raise ValueError("No orthogonal direction")
+
+        # if a coordinate is zero, we can put a 1 there and zeros elsewhere
+        if self[0] == S.Zero:
+            return Point([1] + (dim - 1)*[0])
+        if self[1] == S.Zero:
+            return Point([0,1] + (dim - 2)*[0])
+        # if the first two coordinates aren't zero, we can create a non-zero
+        # orthogonal vector by swapping them, negating one, and padding with zeros
+        return Point([-self[1], self[0]] + (dim - 2)*[0])
+
+    @staticmethod
+    def affine_rank(*points):
+        """The affine rank of a set of points is the dimension
+        of the smallest affine space containing all the points.
+        For example, if the points lie on a line (and are not all
+        the same) their affine rank is 1.  If the points lie on a plane
+        but not a line, their affine rank is 2."""
+
+        if len(points) == 0:
+            raise TypeError("Must have at least one point")
+
+        # make sure we're genuinely points
+        # and translate to every point to the origin
+        # XXX: issue #11238 we need to pre-simplify otherwise
+        # the rank calculation will be incorrect
+        origin = simplify(Point(points[0]))
+        points = [Point(p) - origin for p in points[1:]]
+
+        m = Matrix([p.args for p in points])
+        # XXX: issue #9480 we need `simplify=True` otherwise the
+        # rank may be computed incorrectly
+        return m.rank(simplify=True)
+
+    @staticmethod
+    def project(a, b):
+        """Project the point `a` onto the non-zero point `b`."""
+        a, b = Point(a), Point(b)
+        if b.is_zero:
+            raise ValueError("Cannot project to the zero vector.")
+
+        return Point(b)*(a.dot(b) / b.dot(b))
 
     def distance(self, p):
         """The Euclidean distance from self to point p.

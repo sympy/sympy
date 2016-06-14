@@ -21,6 +21,8 @@ from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence
 from sympy.core.decorators import deprecated
+from sympy.sets import Intersection, EmptySet
+from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -154,6 +156,11 @@ class LinearEntity(GeometrySet):
                 self.p2.x - self.p1.x,
                 self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
+    @property
+    def direction(self):
+        """The direction vector of the LinearEntity"""
+        return self.p2 - self.p1
+
     @staticmethod
     def are_concurrent(*lines):
         """Is a sequence of linear entities concurrent?
@@ -258,12 +265,11 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        try:
-            a1, b1, c1 = l1.coefficients
-            a2, b2, c2 = l2.coefficients
-            return bool(simplify(a1*b2 - b1*a2) == 0)
-        except AttributeError:
-            return False
+
+        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+            raise TypeError('Must pass only LinearEntity objects')
+
+        return l1.direction.is_scalar_multiple(l2.direction)
 
     def is_perpendicular(l1, l2):
         """Are two linear entities perpendicular?
@@ -300,12 +306,10 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        try:
-            a1, b1, c1 = l1.coefficients
-            a2, b2, c2 = l2.coefficients
-            return bool(simplify(a1*a2 + b1*b2) == 0)
-        except AttributeError:
-            return False
+        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+            raise TypeError('Must pass only LinearEntity objects')
+
+        return l1.direction.dot(l2.direction) == S.Zero
 
     def angle_between(l1, l2):
         """The angle formed between the two linear entities.
@@ -347,8 +351,10 @@ class LinearEntity(GeometrySet):
         pi/2
 
         """
-        v1 = l1.p2 - l1.p1
-        v2 = l2.p2 - l2.p1
+        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+            raise TypeError('Must pass only LinearEntity objects')
+
+        v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
@@ -383,9 +389,8 @@ class LinearEntity(GeometrySet):
         True
 
         """
-        d = self.p1 - self.p2
         p = Point(p)
-        return Line(p, p + d)
+        return Line(p, p + self.direction)
 
     def perpendicular_line(self, p):
         """Create a new Line perpendicular to this linear entity which passes
@@ -420,16 +425,7 @@ class LinearEntity(GeometrySet):
 
         """
         p = Point(p)
-        d1, d2 = (self.p1 - self.p2).args
-        if d2 == 0:  # If a horizontal line
-            if p.y == self.p1.y:  # if p is on this linear entity
-                return Line(p, p + Point(0, 1))
-            else:
-                p2 = Point(p.x, self.p1.y)
-                return Line(p, p2)
-        else:
-            p2 = Point(p.x - d2, p.y + d1)
-            return Line(p, p2)
+        return Line(p, p + self.direction.orthogonal_direction)
 
     def perpendicular_segment(self, p):
         """Create a perpendicular line segment from `p` to this line.
@@ -476,20 +472,9 @@ class LinearEntity(GeometrySet):
         p = Point(p)
         if p in self:
             return p
-        a, b, c = self.coefficients
-        if a == 0:  # horizontal
-            p2 = Point(p.x, self.p1.y)
-        elif b == 0:  # vertical
-            p2 = Point(self.p1.x, p.y)
-        else:
-            # ax + by + c = 0
-            y = (-c - a*p.x)/b
-            m = self.slope
-            d2 = 1 + m**2
-            H = p.y - y
-            dx = m*H/d2
-            dy = m*dx
-            p2 = (p.x + dx, y + dy)
+        l = self.perpendicular_line(p)
+        p2, = Intersection(Line(self.p1, self.p2), l)
+
         return Segment(p, p2)
 
     @property
@@ -580,7 +565,7 @@ class LinearEntity(GeometrySet):
         ys = [p.y for p in verts]
         return (min(xs), min(ys), max(xs), max(ys))
 
-    def projection(self, o):
+    def projection(self, other):
         """Project a point, line, ray, or segment onto this linear entity.
 
         Parameters
@@ -631,36 +616,29 @@ class LinearEntity(GeometrySet):
         Segment(Point2D(5, 5), Point2D(13/2, 13/2))
 
         """
-        tline = Line(self.p1, self.p2)
 
-        def _project(p):
-            """Project a point onto the line representing self."""
-            if p in tline:
-                return p
-            l1 = tline.perpendicular_line(p)
-            return tline.intersection(l1)[0]
+        def proj_point(p):
+            return Point.project(p - self.p1, self.direction) + self.p1
 
-        projected = None
-        if isinstance(o, Point):
-            return _project(o)
-        elif isinstance(o, LinearEntity):
-            n_p1 = _project(o.p1)
-            n_p2 = _project(o.p2)
-            if n_p1 == n_p2:
-                projected = n_p1
-            else:
-                projected = o.__class__(n_p1, n_p2)
+        if isinstance(other, Point):
+            return proj_point(other)
+        elif isinstance(other, LinearEntity):
+            p1, p2 = proj_point(other.p1), proj_point(other.p2)
+            # test to see if we're degenerate
+            if p1 == p2:
+                return p1
+            projected = other.__class__(p1, p2)
+            projected = Intersection(self, projected)
+            # if we happen to have intersected in only a point, return that
+            if projected.is_FiniteSet and len(projected) == 1:
+                a, = projected
+                return a
+            return projected
 
-        # Didn't know how to project so raise an error
-        if projected is None:
-            n1 = self.__class__.__name__
-            n2 = o.__class__.__name__
-            raise GeometryError(
-                "Do not know how to project %s onto %s" % (n2, n1))
+        raise GeometryError(
+            "Do not know how to project %s onto %s" % (other, self))
 
-        return self.intersection(projected)[0]
-
-    def intersection(self, o):
+    def intersection(self, other):
         """The intersection with another geometrical entity.
 
         Parameters
@@ -698,129 +676,98 @@ class LinearEntity(GeometrySet):
         []
 
         """
-        if isinstance(o, Point):
-            if o in self:
-                return [o]
+        def intersect_parallel_rays(ray1, ray2):
+            if ray1.direction.dot(ray2.direction) > 0:
+                # rays point in the same direction
+                # so return the one that is "in front"
+                return [ray2] if ray1._span_test(ray2.p1) >= 0 else [ray1]
+            else:
+                # rays point in opposite directions
+                st = ray1._span_test(ray2.p1)
+                if st < 0:
+                    return []
+                elif st == 0:
+                    return [ray2.p1]
+                return [Segment(ray1.p1, ray2.p1)]
+
+        def intersect_parallel_ray_and_segment(ray, seg):
+            st1, st2 = ray._span_test(seg.p1), ray._span_test(seg.p2)
+            if st1 < 0 and st2 < 0:
+                return []
+            elif st1 >= 0 and st2 >= 0:
+                return [seg]
+            elif st1 >= 0 and st2 < 0:
+                return [Segment(ray.p1, seg.p1)]
+            elif st1 <= 0 and st2 > 0:
+                return [Segment(ray.p1, seg.p2)]
+
+        def intersect_parallel_segments(seg1, seg2):
+            if seg1.contains(seg2):
+                return [seg2]
+            if seg2.contains(seg1):
+                return [seg1]
+
+            # direct the segments so they're oriented the same way
+            if seg1.direction.dot(seg2.direction) < 0:
+                seg2 = Segment(seg2.p1, seg2.p2)
+            # order the segments so seg1 is "behind" seg2
+            if seg1._span_test(seg2.p1) < 0:
+                seg1, seg2 = seg2, seg1
+            if seg2._span_test(seg1.p2) < 0:
+                return []
+            return [Segment(seg2.p1, seg1.p2)]
+
+        if isinstance(other, Point):
+            if other in self:
+                return [other]
             else:
                 return []
 
-        elif isinstance(o, LinearEntity):
-            a1, b1, c1 = self.coefficients
-            a2, b2, c2 = o.coefficients
-            t = simplify(a1*b2 - a2*b1)
-            if t.equals(0) is not False:  # assume they are parallel
+        elif isinstance(other, LinearEntity):
+            # break into cases based on whether
+            # the lines are parallel, non-parallel intersecting, or skew
+            rank = Point.affine_rank(self.p1, self.p2, other.p1, other.p2)
+
+            if rank == 1:
+                # we're collinear
                 if isinstance(self, Line):
-                    if o.p1 in self:
-                        return [o]
-                    return []
-                elif isinstance(o, Line):
-                    if self.p1 in o:
-                        return [self]
-                    return []
-                elif isinstance(self, Ray):
-                    if isinstance(o, Ray):
-                        # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection and \
-                                self.ydirection == o.ydirection:
-                            return [self] if (self.source in o) else [o]
-                        # case 2, rays in the opposite directions
-                        else:
-                            if o.source in self:
-                                if self.source == o.source:
-                                    return [self.source]
-                                return [Segment(o.source, self.source)]
-                            return []
-                    elif isinstance(o, Segment):
-                        if o.p1 in self:
-                            if o.p2 in self:
-                                return [o]
-                            return [Segment(o.p1, self.source)]
-                        elif o.p2 in self:
-                            return [Segment(o.p2, self.source)]
-                        return []
-                elif isinstance(self, Segment):
-                    if isinstance(o, Ray):
-                        return o.intersection(self)
-                    elif isinstance(o, Segment):
-                        # A reminder that the points of Segments are ordered
-                        # in such a way that the following works. See
-                        # Segment.__new__ for details on the ordering.
-                        if self.p1 not in o:
-                            if self.p2 not in o:
-                                # Neither of the endpoints are in o so either
-                                # o is contained in this segment or it isn't
-                                if o in self:
-                                    return [self]
-                                return []
-                            else:
-                                # p1 not in o but p2 is. Either there is a
-                                # segment as an intersection, or they only
-                                # intersect at an endpoint
-                                if self.p2 == o.p1:
-                                    return [o.p1]
-                                return [Segment(o.p1, self.p2)]
-                        elif self.p2 not in o:
-                            # p2 not in o but p1 is. Either there is a
-                            # segment as an intersection, or they only
-                            # intersect at an endpoint
-                            if self.p1 == o.p2:
-                                return [o.p2]
-                            return [Segment(o.p2, self.p1)]
+                    return [other]
+                if isinstance(other, Line):
+                    return [self]
 
-                        # Both points of self in o so the whole segment
-                        # is in o
-                        return [self]
+                if isinstance(self, Ray) and isinstance(other, Ray):
+                    return intersect_parallel_rays(self, other)
+                if isinstance(self, Ray) and isinstance(other, Segment):
+                    return intersect_parallel_ray_and_segment(self, other)
+                if isinstance(self, Segment) and isinstance(other, Ray):
+                    return intersect_parallel_ray_and_segment(other, self)
+                if isinstance(self, Segment) and isinstance(other, Segment):
+                    return intersect_parallel_segments(self, other)
 
-                # Unknown linear entity
+            elif rank == 2:
+                # we're in the same plane
+
+                # find the intersection as if everything were lines
+                # by solving the equation t*d + p1 == s*d' + p1'
+                m = Matrix([self.direction, -other.direction]).transpose()
+                v = Matrix([other.p1 - self.p1]).transpose()
+
+                # we cannot use m.solve(v) because that only works for square matrices
+                m_rref, pivots = m.col_insert(2, v).rref(simplify=True)
+                # rank == 2 ensures we have 2 pivots, but let's check anyway
+                if len(pivots) != 2:
+                    raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m,v))
+                coeff = m_rref[0,2]
+                line_intersection = self.direction*coeff + self.p1
+
+                if self.contains(line_intersection) and other.contains(line_intersection):
+                    return [line_intersection]
+                return []
+            else:
+                # we're skew
                 return []
 
-            # Not parallel, so find the point of intersection
-            px = simplify((b1*c2 - c1*b2) / t)
-            py = simplify((a2*c1 - a1*c2) / t)
-            inter = Point(px, py)
-            # we do not use a simplistic 'inter in self and inter in o'
-            # because that requires an equality test that is fragile;
-            # instead we employ some diagnostics to see if the intersection
-            # is valid
-
-            def inseg(self):
-                def _between(a, b, c):
-                    return c >= a and c <= b or c <= a and c >= b
-                if _between(self.p1.x, self.p2.x, inter.x) and \
-                        _between(self.p1.y, self.p2.y, inter.y):
-                    return True
-
-            def inray(self):
-                if self.p1 == inter:
-                    return True
-                sray = Ray(self.p1, inter)
-                if sray.xdirection == self.xdirection and \
-                        sray.ydirection == self.ydirection:
-                    return True
-
-            prec = (Line, Ray, Segment)
-            expr = self
-            if prec.index(expr.func) > prec.index(o.func):
-                expr, o = o, expr
-            rv = [inter]
-            if isinstance(expr, Line):
-                if isinstance(o, Line):
-                    return rv
-                elif isinstance(o, Ray) and inray(o):
-                    return rv
-                elif isinstance(o, Segment) and inseg(o):
-                    return rv
-            elif isinstance(expr, Ray) and inray(expr):
-                if isinstance(o, Ray) and inray(o):
-                    return rv
-                elif isinstance(o, Segment) and inseg(o):
-                    return rv
-            elif isinstance(expr, Segment) and inseg(expr):
-                if isinstance(o, Segment) and inseg(o):
-                    return rv
-            return []
-
-        return o.intersection(self)
+        return other.intersection(self)
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -897,36 +844,19 @@ class LinearEntity(GeometrySet):
 
         """
         from random import randint
+        from sympy.functions import floor
 
         # The lower and upper
         lower, upper = -2**32 - 1, 2**32
 
-        if self.slope is S.Infinity:
-            if isinstance(self, Ray):
-                if self.ydirection is S.Infinity:
-                    lower = self.p1.y
-                else:
-                    upper = self.p1.y
-            elif isinstance(self, Segment):
-                lower = self.p1.y
-                upper = self.p2.y
+        if isinstance(self, Ray):
+            lower = 0
+        if isinstance(self, Segment):
+            lower = 0
+            upper = floor(self.length)
+        t = randint(lower, upper)
 
-            x = self.p1.x
-            y = randint(lower, upper)
-        else:
-            if isinstance(self, Ray):
-                if self.xdirection is S.Infinity:
-                    lower = self.p1.x
-                else:
-                    upper = self.p1.x
-            elif isinstance(self, Segment):
-                lower = self.p1.x
-                upper = self.p2.x
-
-            a, b, c = self.coefficients
-            x = randint(lower, upper)
-            y = (-c - a*x) / b
-        return Point(x, y)
+        return self.direction*t/abs(self.direction) + self.p1
 
     def is_similar(self, other):
         """
@@ -942,14 +872,8 @@ class LinearEntity(GeometrySet):
         >>> l1.is_similar(l2)
         True
         """
-        def _norm(a, b, c):
-            if a != 0:
-                return 1, b/a, c/a
-            elif b != 0:
-                return a/b, 1, c/b
-            else:
-                return c
-        return _norm(*self.coefficients) == _norm(*other.coefficients)
+        l = Line(self.p1, self.p2)
+        return l.contains(other)
 
     def __contains__(self, other):
         """Return a definitive answer or else raise an error if it cannot
@@ -968,6 +892,22 @@ class LinearEntity(GeometrySet):
             False if not on the boundaries of self;
             None if a determination cannot be made."""
         raise NotImplementedError()
+
+    def _span_test(self, other):
+        """Test whether the point `other` lies in the positive span of `self`.
+        A point x is 'in front' of a point y if x.dot(y) >= 0.  Return
+        -1 if `other` is behind `self.p1`, 0 if `other` is `self.p1` and
+        and 1 if `other` is in front of `self.p1`."""
+
+        if self.p1 == other:
+            return 0
+
+        rel_pos = other - self.p1
+        d = self.direction
+        if d.dot(rel_pos) > 0:
+            return 1
+        return -1
+
 
 class Line(LinearEntity):
     """An infinite line in space.
@@ -1121,9 +1061,9 @@ class Line(LinearEntity):
         a, b, c = self.coefficients
         return a*x + b*y + c
 
-    def contains(self, o):
+    def contains(self, other):
         """
-        Return True if o is on this Line, or False otherwise.
+        Return True if `other` is on this Line, or False otherwise.
 
         Examples
         ========
@@ -1138,27 +1078,15 @@ class Line(LinearEntity):
         >>> l.contains((0, 0))
         False
         """
-        if is_sequence(o):
-            o = Point(o)
-        if isinstance(o, Point):
-            o = o.func(*[simplify(i) for i in o.args])
-            x, y = Dummy(), Dummy()
-            eq = self.equation(x, y)
-            if not eq.has(y):
-                return (list(solveset(eq, x))[0] - o.x).equals(0)
-            if not eq.has(x):
-                return (list(solveset(eq, y))[0] - o.y).equals(0)
-            return (list(solveset(eq.subs(x, o.x), y))[0] - o.y).equals(0)
-        elif not isinstance(o, LinearEntity):
-            return False
-        elif isinstance(o, Line):
-            return self.equals(o)
-        elif not self.is_similar(o):
-            return False
-        else:
-            return o.p1 in self and o.p2 in self
+        if is_sequence(other):
+            other = Point(other)
+        if isinstance(other, Point):
+            return Point.is_collinear(other, self.p1, self.p2)
+        if isinstance(other, LinearEntity):
+            return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
+        return False
 
-    def distance(self, o):
+    def distance(self, other):
         """
         Finds the shortest distance between a line and a point.
 
@@ -1178,16 +1106,11 @@ class Line(LinearEntity):
         >>> s.distance((-1, 2))
         3*sqrt(2)/2
         """
-        if not isinstance(o, Point):
-            if is_sequence(o):
-                o = Point(o)
-        a, b, c = self.coefficients
-        if 0 in (a, b):
-            return self.perpendicular_segment(o).length
-        m = self.slope
-        x = o.x
-        y = m*x - c/b
-        return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
+        if is_sequence(other):
+            other = Point(other)
+        if not isinstance(other, Point):
+            raise TypeError("`other` must be a Point, not {}".format(other))
+        return self.perpendicular_segment(other).length
 
     @deprecated(useinstead="equals", deprecated_since_version="1.0")
     def equal(self, other):
@@ -1347,27 +1270,6 @@ class Ray(LinearEntity):
         return self.p1
 
     @property
-    def direction(self):
-        """The direction in which the ray emanates.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Ray
-        >>> p1, p2 = Point(0, 0), Point(4, 1)
-        >>> r1 = Ray(p1, p2)
-        >>> r1.direction
-        Point2D(4, 1)
-
-        """
-        return self.p2 - self.p1
-
-    @property
     def xdirection(self):
         """The x direction of the ray.
 
@@ -1432,7 +1334,7 @@ class Ray(LinearEntity):
             return S.NegativeInfinity
 
 
-    def distance(self, o):
+    def distance(self, other):
         """
         Finds the shortest distance between the ray and a point.
 
@@ -1452,21 +1354,15 @@ class Ray(LinearEntity):
         >>> s.distance((-1, 2))
         3*sqrt(2)/2
         """
-        if not isinstance(o, Point):
-            if is_sequence(o):
-                o = Point(o)
-        s = self.perpendicular_segment(o)
-        if isinstance(s, Point):
-            if self.contains(s):
-                return S.Zero
-        else:
-            # since arg-order is arbitrary, find the non-o point
-            non_o = s.p1 if s.p1 != o else s.p2
-            if self.contains(non_o):
-                return Line(self).distance(o)  # = s.length but simpler
-        # the following applies when neither of the above apply
-        return self.source.distance(o)
+        other = Point(other)
+        if self.contains(other):
+            return S.Zero
 
+        proj = Line(self.p1, self.p2).projection(other)
+        if self.contains(proj):
+            return abs(other - proj)
+        else:
+            return abs(other - self.source)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives
@@ -1503,7 +1399,7 @@ class Ray(LinearEntity):
             return False
         return self.source == other.source and other.p2 in self
 
-    def contains(self, o):
+    def contains(self, other):
         """
         Is other GeometryEntity contained in this Ray?
 
@@ -1532,32 +1428,22 @@ class Ray(LinearEntity):
         >>> r.contains(r1)
         False
         """
-        if isinstance(o, Ray):
-            return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2) and
-                    self.xdirection == o.xdirection and
-                    self.ydirection == o.ydirection)
-        elif isinstance(o, Segment):
-            return o.p1 in self and o.p2 in self
-        elif is_sequence(o):
-            o = Point(o)
-        if isinstance(o, Point):
-            if Point.is_collinear(self.p1, self.p2, o):
-                if self.xdirection is S.Infinity:
-                    rv = o.x >= self.source.x
-                elif self.xdirection is S.NegativeInfinity:
-                    rv = o.x <= self.source.x
-                elif self.ydirection is S.Infinity:
-                    rv = o.y >= self.source.y
-                else:
-                    rv = o.y <= self.source.y
-                if rv == True or rv == False:
-                    return bool(rv)
-                raise Undecidable(
-                    'Cannot determine if %s is in %s' % (o, self))
-            else:
-                # Points are not collinear, so the rays are not parallel
-                # and hence it is impossible for self to contain o
-                return False
+        if is_sequence(other):
+            other = Point(other)
+
+        if isinstance(other, Point):
+            if Point.is_collinear(self.p1, self.p2, other):
+                # if we're in the direction of the ray, our
+                # direction vector dot the ray's direction vector
+                # should be non-negative
+                return bool( (self.p2 - self.p1).dot(other - self.p1) >= S.Zero )
+            return False
+        elif isinstance(other, Ray):
+            if Point.is_collinear(self.p1, self.p2, other.p1, other.p2):
+                return bool( (self.p2 - self.p1).dot(other.p2 - other.p1) > S.Zero )
+            return False
+        elif isinstance(other, Segment):
+            return other.p1 in self and other.p2 in self
 
         # No other known entity can be contained in a Ray
         return False
@@ -1709,7 +1595,7 @@ class Segment(LinearEntity):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)
         >>> s1 = Segment(p1, p2)
         >>> s1.perpendicular_bisector()
-        Line(Point2D(3, 3), Point2D(9, -3))
+        Line(Point2D(3, 3), Point2D(-3, 9))
 
         >>> s1.perpendicular_bisector(p3)
         Segment(Point2D(3, 3), Point2D(5, 1))
@@ -1763,7 +1649,7 @@ class Segment(LinearEntity):
         """
         return Point.midpoint(self.p1, self.p2)
 
-    def distance(self, o):
+    def distance(self, other):
         """
         Finds the shortest distance between a line segment and a point.
 
@@ -1783,20 +1669,20 @@ class Segment(LinearEntity):
         >>> s.distance((0, 12))
         sqrt(73)
         """
-        if is_sequence(o):
-            o = Point(o)
-        if isinstance(o, Point):
-            seg_vector = self.p2 - self.p1
-            pt_vector = o - self.p1
-            t = seg_vector.dot(pt_vector)/self.length**2
-            if t >= 1:
-                distance = Point.distance(self.p2, o)
-            elif t <= 0:
-                distance = Point.distance(self.p1, o)
-            else:
-                distance = Point.distance(
-                    self.p1 + Point(t*seg_vector.x, t*seg_vector.y), o)
-            return distance
+        if is_sequence(other):
+            other = Point(other)
+        if isinstance(other, Point):
+            vp1 = other - self.p1
+            vp2 = other - self.p2
+
+            dot_prod_sign_1 = self.direction.dot(vp1) >= 0
+            dot_prod_sign_2 = self.direction.dot(vp2) <= 0
+            if dot_prod_sign_1 and dot_prod_sign_2:
+                return Line(self.p1, self.p2).distance(other)
+            if dot_prod_sign_1 and not dot_prod_sign_2:
+                return abs(vp2)
+            if not dot_prod_sign_1 and dot_prod_sign_2:
+                return abs(vp1)
         raise NotImplementedError()
 
     def contains(self, other):
@@ -1813,19 +1699,24 @@ class Segment(LinearEntity):
         >>> s.contains(s2)
         True
         """
+
+        if is_sequence(other):
+            other = Point(other)
+
+        if isinstance(other, Point):
+            if Point.is_collinear(other, self.p1, self.p2):
+                d1, d2 = other - self.p1, other - self.p2
+                d = self.direction
+                # without the call to simplify, sympy cannot tell that an expression
+                # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
+                # determined, raise an Undecidable error
+                try:
+                    # The unit tests assume contains returns a true bool, not a sympy bool
+                    return bool( simplify(d.dot(d1)) >= S.Zero and simplify((-d).dot(d2)) >= S.Zero )
+                except TypeError:
+                    raise Undecidable("Cannot determine if {} is in {}".format(other, self))
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
-        elif isinstance(other, Point):
-            if Point.is_collinear(self.p1, self.p2, other):
-                t = Dummy('t')
-                x, y = self.arbitrary_point(t).args
-                if self.p1.x != self.p2.x:
-                    ti = list(solveset(x - other.x, t))[0]
-                else:
-                    ti = list(solveset(y - other.y, t))[0]
-                if ti.is_number:
-                    return 0 <= ti <= 1
-                return None
 
         return False
 
