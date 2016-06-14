@@ -15,13 +15,13 @@ class DotProduct(MatrixExpr):
         arg1, arg2 = _sympify((arg1, arg2))
 
         if not arg1.is_Matrix:
-            raise TypeError("Argument 1 of DotProduct is not a matrix" % str(arg1))
+            raise TypeError("Argument 1 of DotProduct is not a matrix")
         if not arg2.is_Matrix:
-            raise TypeError("Argument 2 of DotProduct is not a matrix" % str(arg2))
+            raise TypeError("Argument 2 of DotProduct is not a matrix")
         if not (1 in arg1.shape):
-            raise TypeError("Argument 1 of DotProduct is not a vector" % str(arg1))
+            raise TypeError("Argument 1 of DotProduct is not a vector")
         if not (1 in arg2.shape):
-            raise TypeError("Argument 2 of DotProduct is not a vector" % str(arg1))
+            raise TypeError("Argument 2 of DotProduct is not a vector")
 
         if arg1.shape != arg2.shape:
             raise TypeError("Input to Dot Product, %s and %s, are not of same dimensions" % (str(arg1), str(arg2)))
