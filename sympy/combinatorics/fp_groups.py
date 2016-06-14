@@ -139,6 +139,7 @@ class CosetTable(DefaultPrinting):
         self_copy = self.__class__(self.fp_group, self.subgroup)
         self_copy.table = self.table.copy()
         self_copy.p = self.p.copy()
+        self_copy.deduction_stack = self.deduction_stack.copy()
         return self_copy
 
     def __str__(self):
@@ -841,6 +842,7 @@ def low_index_subgroups(G, N):
     for x in C.A:
         descendant_subgroups(S, C, R1_c_list[C.A_dict[x]], \
                 R1_c_list[C.A_dict_inv[x]], R2, N)
+        return C.table, C.deduction_stack
     return S
 
 
@@ -869,15 +871,21 @@ def descendant_subgroups(S, C, R1_x_c, R1_x_c_inv, R2, N):
                 break
         reach = C.omega + [C.n]
         for beta in reach:
+            if beta == C.n:
+                C.table.append([None]*len(C.A))
             if beta < N and C.table[beta][A_dict_inv[y]] is None:
                 try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, y, beta)
 
 
 def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
+    """
+    It solves the problem of trying out each individual possibility for α^x.
+    """
     D = C.copy()
     A_dict = D.A_dict
     if beta == D.n:
-        D.n += 1
+        D.table.append([None]*len(D.A))
+        D.p.append(beta)
     D.table[alpha][D.A_dict[x]] = beta
     D.table[beta][D.A_dict_inv[x]] = alpha
     D.deduction_stack.append((alpha, x))
@@ -892,32 +900,40 @@ def first_int_class(C):
     n = C.n
     lamda = -1
     nu = [None]*n
+    mu = []
     for alpha in range(1, n):
         # reset ν to "None" after previous value of α
         for beta in range(lamda):
             nu[mu[beta]] = None
         # try α as the new point 0 in Ω_C_α
+        try:
+            mu[0] = alpha
+        except IndexError:
+            mu.append(alpha)
         mu[0] = alpha
         nu[alpha] = 0
         lamda = 0
-        # compare entries in C and C_α
-        for beta in range(n):
-            for x in C.A:
-                if C.table[beta][x] is None or mu[beta] is None:
-                    #TODO: continue with α
-                    continue
-                gamma = C.table[beta][C.A_dict[x]]
-                delta = C.table[mu[beta]][C.A_dict[x]]
-                if nu[delta] is None:
-                    # delta becomes the next point in Ω_C_α
-                    lamda += 1
-                    nu[delta] = lamda
-                    mu[lamda] = delta
-                if nu[delta] < gamma:
-                    return False
-                if nu[delta] > gamma:
-                    # TODO: continue with α
-                    continue
+        # compare corresponding entries in C and C_α
+        def compare_entries():
+            beta = 0
+            for beta in range(C.n):
+                for x in C.A:
+                    if C.table[beta][C.A_dict[x]] is None or mu[beta] is None:
+                        # continue with α
+                        return
+                    gamma = C.table[beta][C.A_dict[x]]
+                    delta = C.table[mu[beta]][C.A_dict[x]]
+                    if nu[delta] is None:
+                        # delta becomes the next point in Ω_C_α
+                        lamda += 1
+                        nu[delta] = lamda
+                        mu[lamda] = delta
+                    if nu[delta] < gamma:
+                        return False
+                    if nu[delta] > gamma:
+                        # continue with α
+                        return
+        compare_entries()
     return True
 
 
