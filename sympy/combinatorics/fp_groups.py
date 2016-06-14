@@ -154,10 +154,12 @@ class CosetTable(DefaultPrinting):
         """
         return max(self.omega) + 1
 
+    # Pg 152 [1]
     def is_complete(self):
         """
-        It checks whether "C" is complete; that is, whether α^x is defined
-        for all α ∈ Ω and x ∈ A.
+        The coset table is called complete if it has no undefined entries
+        on the live cosets; that is, whether α^x is defined for all
+        α ∈ Ω and x ∈ A.
         """
         return not any([None in self.table[coset] for coset in self.omega])
 
