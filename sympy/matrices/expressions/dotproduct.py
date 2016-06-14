@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
+from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
@@ -11,6 +12,8 @@ class DotProduct(MatrixExpr):
     """
 
     def __new__(cls, arg1, arg2):
+        arg1, arg2 = _sympify((arg1, arg2))
+
         if not arg1.is_Matrix:
             raise TypeError("Argument 1 of DotProduct is not a matrix" % str(arg1))
         if not arg2.is_Matrix:
