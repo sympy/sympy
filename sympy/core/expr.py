@@ -178,6 +178,18 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rfloordiv__')
+    def __floordiv__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__floordiv__')
+    def __rfloordiv__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other)
+
     def __int__(self):
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
@@ -192,6 +204,8 @@ class Expr(Basic, EvalfMixin):
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
         from sympy import Dummy
+        if not self.is_number:
+            raise TypeError("can't convert symbols to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("can't convert complex to int")
@@ -606,7 +620,7 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = factor_terms((self - other).simplify(), radical=True)
+        diff = factor_terms(simplify(self - other), radical=True)
 
         if not diff:
             return True
@@ -2830,7 +2844,7 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 
@@ -3139,7 +3153,9 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import Float
         x = self
-        if x.is_number and not x.is_Atom:
+        if not x.is_number:
+            raise TypeError("can't round symbolic expression")
+        if not x.is_Atom:
             xn = x.n(2)
             if not pure_complex(xn, or_real=True):
                 raise TypeError('Expected a number but got %s:' %

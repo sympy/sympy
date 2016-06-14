@@ -1946,7 +1946,7 @@ class Poly(Expr):
         >>> Poly(x**3 + 2*x*y**2 + y**2, x, y).nth(1, 2)
         2
         >>> Poly(4*sqrt(x)*y)
-        Poly(4*y*sqrt(x), y, sqrt(x), domain='ZZ')
+        Poly(4*y*(sqrt(x)), y, sqrt(x), domain='ZZ')
         >>> _.nth(1, 1)
         4
 
@@ -5622,12 +5622,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (exp, len(rep), rep)
+            return (exp, len(rep), len(poly.gens), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (len(rep), exp, rep)
+            return (len(rep), len(poly.gens), exp, rep)
 
     return sorted(factors, key=key)
 

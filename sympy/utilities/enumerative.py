@@ -147,7 +147,7 @@ class PartComponent(object):
 # - flag variable x takes on values True/False instead of 1/0
 #
 def multiset_partitions_taocp(multiplicities):
-    """Enumerates partions of a multiset.
+    """Enumerates partitions of a multiset.
 
     Parameters
     ==========
@@ -204,7 +204,7 @@ def multiset_partitions_taocp(multiplicities):
     See Also
     ========
 
-    sympy.utilities.iterables.multiset_partititions: Takes a multiset
+    sympy.utilities.iterables.multiset_partitions: Takes a multiset
         as input and directly yields multiset partitions.  It
         dispatches to a number of functions, including this one, for
         implementation.  Most users will find it more convenient to

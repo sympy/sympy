@@ -173,7 +173,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class Dummy(Symbol):

@@ -50,24 +50,24 @@ def test_curve():
 
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
-    assert Point(a, b).free_symbols == set([a, b])
-    assert Line((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Ray((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Ray((a, b), angle=c).free_symbols == set([a, b, c])
-    assert Segment((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Line((a, b), slope=c).free_symbols == set([a, b, c])
-    assert Curve((a*s, b*s), (s, c, d)).free_symbols == set([a, b, c, d])
-    assert Ellipse((a, b), c, d).free_symbols == set([a, b, c, d])
+    assert Point(a, b).free_symbols == {a, b}
+    assert Line((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Ray((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Ray((a, b), angle=c).free_symbols == {a, b, c}
+    assert Segment((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Line((a, b), slope=c).free_symbols == {a, b, c}
+    assert Curve((a*s, b*s), (s, c, d)).free_symbols == {a, b, c, d}
+    assert Ellipse((a, b), c, d).free_symbols == {a, b, c, d}
     assert Ellipse((a, b), c, eccentricity=d).free_symbols == \
-        set([a, b, c, d])
+        {a, b, c, d}
     assert Ellipse((a, b), vradius=c, eccentricity=d).free_symbols == \
-        set([a, b, c, d])
-    assert Circle((a, b), c).free_symbols == set([a, b, c])
+        {a, b, c, d}
+    assert Circle((a, b), c).free_symbols == {a, b, c}
     assert Circle((a, b), (c, d), (e, f)).free_symbols == \
-        set([e, d, c, b, f, a])
+        {e, d, c, b, f, a}
     assert Polygon((a, b), (c, d), (e, f)).free_symbols == \
-        set([e, b, d, f, a, c])
-    assert RegularPolygon((a, b), c, d, e).free_symbols == set([e, a, b, c, d])
+        {e, b, d, f, a, c}
+    assert RegularPolygon((a, b), c, d, e).free_symbols == {e, a, b, c, d}
 
 
 def test_transform():

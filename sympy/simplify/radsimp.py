@@ -387,7 +387,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             # none of the patterns matched
             disliked += product
     # add terms now for each key
-    collected = dict([(k, Add(*v)) for k, v in collected.items()])
+    collected = {k: Add(*v) for k, v in collected.items()}
 
     if disliked is not S.Zero:
         collected[S.One] = disliked

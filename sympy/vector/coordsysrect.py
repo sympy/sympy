@@ -52,8 +52,8 @@ class CoordSysCartesian(Basic):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
 
-        #If orientation information has been provided, store
-        #the rotation matrix accordingly
+        # If orientation information has been provided, store
+        # the rotation matrix accordingly
         if rotation_matrix is None:
             parent_orient = Matrix(eye(3))
         else:
@@ -62,8 +62,8 @@ class CoordSysCartesian(Basic):
                                 "Matrix instance")
             parent_orient = rotation_matrix
 
-        #If location information is not given, adjust the default
-        #location as Vector.zero
+        # If location information is not given, adjust the default
+        # location as Vector.zero
         if parent is not None:
             if not isinstance(parent, CoordSysCartesian):
                 raise TypeError("parent should be a " +
@@ -73,8 +73,8 @@ class CoordSysCartesian(Basic):
             else:
                 if not isinstance(location, Vector):
                     raise TypeError("location should be a Vector")
-                #Check that location does not contain base
-                #scalars
+                # Check that location does not contain base
+                # scalars
                 for x in location.free_symbols:
                     if isinstance(x, BaseScalar):
                         raise ValueError("location should not contain" +
@@ -85,15 +85,15 @@ class CoordSysCartesian(Basic):
             location = Vector.zero
             origin = Point(name + '.origin')
 
-        #All systems that are defined as 'roots' are unequal, unless
-        #they have the same name.
-        #Systems defined at same orientation/position wrt the same
-        #'parent' are equal, irrespective of the name.
-        #This is true even if the same orientation is provided via
-        #different methods like Axis/Body/Space/Quaternion.
-        #However, coincident systems may be seen as unequal if
-        #positioned/oriented wrt different parents, even though
-        #they may actually be 'coincident' wrt the root system.
+        # All systems that are defined as 'roots' are unequal, unless
+        # they have the same name.
+        # Systems defined at same orientation/position wrt the same
+        # 'parent' are equal, irrespective of the name.
+        # This is true even if the same orientation is provided via
+        # different methods like Axis/Body/Space/Quaternion.
+        # However, coincident systems may be seen as unequal if
+        # positioned/oriented wrt different parents, even though
+        # they may actually be 'coincident' wrt the root system.
         if parent is not None:
             obj = super(CoordSysCartesian, cls).__new__(
                 cls, Symbol(name), location, parent_orient, parent)
@@ -102,7 +102,7 @@ class CoordSysCartesian(Basic):
                 cls, Symbol(name), location, parent_orient)
         obj._name = name
 
-        #Initialize the base vectors
+        # Initialize the base vectors
         if vector_names is None:
             vector_names = (name + '.i', name + '.j', name + '.k')
             latex_vects = [(r'\mathbf{\hat{i}_{%s}}' % name),
@@ -123,7 +123,7 @@ class CoordSysCartesian(Basic):
         obj._k = BaseVector(vector_names[2], 2, obj,
                             pretty_vects[2], latex_vects[2])
 
-        #Initialize the base scalars
+        # Initialize the base scalars
         if variable_names is None:
             variable_names = (name + '.x', name + '.y', name + '.z')
             latex_scalars = [(r"\mathbf{{x}_{%s}}" % name),
@@ -134,7 +134,7 @@ class CoordSysCartesian(Basic):
             _check_strings('variable_names', vector_names)
             variable_names = list(variable_names)
             latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
-                           x in variable_names]
+                             x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
 
         obj._x = BaseScalar(variable_names[0], 0, obj,
@@ -144,11 +144,11 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        #Assign a Del operator instance
+        # Assign a Del operator instance
         from sympy.vector.deloperator import Del
         obj._delop = Del(obj)
 
-        #Assign params
+        # Assign params
         obj._parent = parent
         if obj._parent is not None:
             obj._root = obj._parent._root
@@ -158,7 +158,7 @@ class CoordSysCartesian(Basic):
         obj._parent_rotation_matrix = parent_orient
         obj._origin = origin
 
-        #Return the instance
+        # Return the instance
         return obj
 
     def __str__(self, printer=None):
@@ -203,10 +203,10 @@ class CoordSysCartesian(Basic):
         return self._z
 
     def base_vectors(self):
-        return (self._i, self._j, self._k)
+        return self._i, self._j, self._k
 
     def base_scalars(self):
-        return (self._x, self._y, self._z)
+        return self._x, self._y, self._z
 
     @cacheit
     def rotation_matrix(self, other):
@@ -247,14 +247,14 @@ class CoordSysCartesian(Basic):
         if not isinstance(other, CoordSysCartesian):
             raise TypeError(str(other) +
                             " is not a CoordSysCartesian")
-        #Handle special cases
+        # Handle special cases
         if other == self:
             return eye(3)
         elif other == self._parent:
             return self._parent_rotation_matrix
         elif other._parent == self:
             return other._parent_rotation_matrix.T
-        #Else, use tree to calculate position
+        # Else, use tree to calculate position
         rootindex, path = _path(self, other)
         result = eye(3)
         i = -1
@@ -283,7 +283,7 @@ class CoordSysCartesian(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian
         >>> N = CoordSysCartesian('N')
         >>> N1 = N.locate_new('N1', 10 * N.i)
         >>> N.position_wrt(N1)
@@ -455,7 +455,7 @@ class CoordSysCartesian(Basic):
         return CoordSysCartesian(name, rotation_matrix=final_matrix,
                                  vector_names=vector_names,
                                  variable_names=variable_names,
-                                 location = location,
+                                 location=location,
                                  parent=self)
 
     def orient_new_axis(self, name, angle, axis, location=None,
@@ -699,8 +699,9 @@ class CoordSysCartesian(Basic):
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
-        #Dummy initializer for setting docstring
+        # Dummy initializer for setting docstring
         pass
+
     __init__.__doc__ = __new__.__doc__
 
 

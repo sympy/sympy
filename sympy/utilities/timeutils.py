@@ -8,7 +8,7 @@ import math
 from sympy.core.compatibility import u, range
 
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units = [u('s'), u('ms'), u('\N{GREEK SMALL LETTER MU}s'), u('ns')]
+_units = [u's', u'ms', u'\N{GREEK SMALL LETTER MU}s', u'ns']
 
 
 def timed(func, setup="pass", limit=None):

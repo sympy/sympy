@@ -8,6 +8,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Equality
 from sympy.core.symbol import Symbol
+from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
@@ -564,7 +565,7 @@ class PrettyPrinter(Printer):
         e, z, z0, dir = l.args
 
         E = self._print(e)
-        if isinstance(e, Add):
+        if precedence(e) <= PRECEDENCE["Mul"]:
             E = prettyForm(*E.parens('(', ')'))
         Lim = prettyForm('lim')
 
@@ -584,7 +585,7 @@ class PrettyPrinter(Printer):
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
         Lim = prettyForm(*Lim.below(LimArg))
-        Lim = prettyForm(*Lim.right(E))
+        Lim = prettyForm(*Lim.right(E), binding=prettyForm.MUL)
 
         return Lim
 
@@ -1168,6 +1169,25 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_DiracDelta(self, e):
+        if self._use_unicode:
+            if len(e.args) == 2:
+                a = prettyForm(greek_unicode['delta'])
+                b = self._print(e.args[1])
+                b = prettyForm(*b.parens())
+                c = self._print(e.args[0])
+                c = prettyForm(*c.parens())
+                pform = a**b
+                pform = stringPict(*pform.right(' '))
+                pform = stringPict(*pform.right(c))
+                return pform
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek_unicode['delta']))
+            return pform
+        else:
+            return self._print_Function(e)
+
     def _print_expint(self, e):
         from sympy import Function
         if e.args[0].is_Integer and self._use_unicode:
@@ -1228,6 +1248,16 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left(name))
         return pform
+
+    def _print_GoldenRatio(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('phi'))
+        return self._print(Symbol("GoldenRatio"))
+
+    def _print_EulerGamma(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('gamma'))
+        return self._print(Symbol("EulerGamma"))
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
@@ -1469,12 +1499,11 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if s.start is S.NegativeInfinity:
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = s.start, dots, s._last_element - s.step, s._last_element
-        elif s.stop is S.Infinity or len(s) > 4:
-            it = iter(s)
-            printset = next(it), next(it), dots, s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 
@@ -1704,6 +1733,9 @@ class PrettyPrinter(Printer):
 
     def _print_FracField(self, field):
         return prettyForm(sstr(field))
+
+    def _print_FreeGroupElement(self, elm):
+        return prettyForm(str(elm))
 
     def _print_PolyElement(self, poly):
         return prettyForm(sstr(poly))

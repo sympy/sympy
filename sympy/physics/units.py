@@ -51,7 +51,7 @@ will obtain Avogadro's number. To obtain the answer in moles you
 should divide by the unit ``avogadro``:
 
     >>> u.grams/u.amu
-    602214179000000000000000
+    602214085700000000000000
     >>> _/u.avogadro
     mol
 
@@ -68,9 +68,12 @@ If you need the number of atoms in a mol as a pure number you can use
 quantity.)
 
     >>> u.avogadro_number
-    602214179000000000000000
+    602214085700000000000000
     >>> u.avogadro_constant
-    602214179000000000000000/mol
+    602214085700000000000000/mol
+
+Values of constants are recommended by Committee on Data for Science and
+Technology (CODATA) as of 2014. See more at http://arxiv.org/pdf/1507.07956.pdf
 """
 
 from __future__ import print_function, division
@@ -154,6 +157,7 @@ yocto = ten**-24
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
 sr = steradian = steradians = 1
+mil = angular_mil = angular_mils = 2*pi/6400
 
 # Base units
 
@@ -201,7 +205,7 @@ ft = foot = feet = Rational('0.3048')*m
 inch = inches = Rational('25.4')*mm
 yd = yard = yards = 3*ft
 mi = mile = miles = 5280*ft
-
+nmi = nautical_mile = nautical_miles = 6076*ft
 
 # Common volume and area units
 
@@ -245,17 +249,18 @@ ug = microgram = micrograms = micro * g
 # Physical constants
 #
 c = speed_of_light = 299792458 * m/s
-G = gravitational_constant = Rational('6.67428') * ten**-11 * m**3 / kg / s**2
+G = gravitational_constant = Rational('6.67408') * ten**-11 * m**3 / kg / s**2
 u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2
 e0 = electric_constant = 1/(u0 * c**2)
 Z0 = vacuum_impedance = u0 * c
 
-planck = Rational('6.62606896') * ten**-34 * J*s
+planck = Rational('6.62607004') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
-avogadro_number = Rational('6.02214179') * 10**23
+avogadro_number = Rational('6.022140857') * 10**23
 avogadro = avogadro_constant = avogadro_number / mol
-boltzmann = Rational('1.3806505') * ten**-23 * J / K
+boltzmann = Rational('1.38064852') * ten**-23 * J / K
+atomic_mass_constant = Rational('1.660539040') * ten**-27 * kg
 
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
@@ -269,7 +274,7 @@ mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
 quart = quarts = Rational(231, 4) * inch**3
-eV = 1.602176487e-19 * J
+eV = Rational('1.6021766208') * ten**-19 * J
 
 # Other convenient units and magnitudes
 

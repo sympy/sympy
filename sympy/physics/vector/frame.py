@@ -141,9 +141,9 @@ class ReferenceFrame(object):
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(name.lower() + u("_") + indices[0]),
-                                (name.lower() + u("_") + indices[1]),
-                                (name.lower() + u("_") + indices[2])]
+            self.pretty_vecs = [(name.lower() + u"_" + indices[0]),
+                                (name.lower() + u"_" + indices[1]),
+                                (name.lower() + u"_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -153,9 +153,9 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [name.lower() + u("_x"),
-                                name.lower() + u("_y"),
-                                name.lower() + u("_z")]
+            self.pretty_vecs = [name.lower() + u"_x",
+                                name.lower() + u"_y",
+                                name.lower() + u"_z"]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
@@ -437,7 +437,7 @@ class ReferenceFrame(object):
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
-        >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
 
@@ -605,8 +605,8 @@ class ReferenceFrame(object):
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
-    def orientnew(self, newname, rot_type, amounts, rot_order='', variables=None,
-                  indices=None, latexs=None):
+    def orientnew(self, newname, rot_type, amounts, rot_order='',
+                  variables=None, indices=None, latexs=None):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
 
         See ReferenceFrame.orient() for acceptable rotation types, amounts,
@@ -624,27 +624,52 @@ class ReferenceFrame(object):
         rot_order : str
             If applicable, the order of a series of rotations.
 
-
         Examples
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
-        >>> q1 = symbols('q1')
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
+
+        Now we have a choice of how to implement the orientation. First is
+        Body. Body orientation takes this reference frame through three
+        successive simple rotations. Acceptable rotation orders are of length
+        3, expressed in XYZ or 123, and cannot have a rotation about about an
+        axis twice in a row.
+
+        >>> A = N.orientnew('A', 'Body', [q1, q2, q3], '123')
+        >>> A = N.orientnew('A', 'Body', [q1, q2, 0], 'ZXZ')
+        >>> A = N.orientnew('A', 'Body', [0, 0, 0], 'XYX')
+
+        Next is Space. Space is like Body, but the rotations are applied in the
+        opposite order.
+
+        >>> A = N.orientnew('A', 'Space', [q1, q2, q3], '312')
+
+        Next is Quaternion. This orients the new ReferenceFrame with
+        Quaternions, defined as a finite rotation about lambda, a unit vector,
+        by some amount theta.
+        This orientation is described by four parameters:
+        q0 = cos(theta/2)
+        q1 = lambda_x sin(theta/2)
+        q2 = lambda_y sin(theta/2)
+        q3 = lambda_z sin(theta/2)
+        Quaternion does not take in a rotation order.
+
+        >>> A = N.orientnew('A', 'Quaternion', [q0, q1, q2, q3])
+
+        Last is Axis. This is a rotation about an arbitrary, non-time-varying
+        axis by some angle. The axis is supplied as a Vector. This is how
+        simple rotations are defined.
+
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-
-
-        .orient() documentation:\n
-        ========================
 
         """
 
         newframe = self.__class__(newname, variables, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
-
-    orientnew.__doc__ += orient.__doc__
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.
@@ -732,6 +757,46 @@ class ReferenceFrame(object):
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
+
+    def partial_velocity(self, frame, *gen_speeds):
+        """Returns the partial angular velocities of this frame in the given
+        frame with respect to one or more provided generalized speeds.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame with which the angular velocity is defined in.
+        gen_speeds : functions of time
+            The generalized speeds.
+
+        Returns
+        =======
+        partial_velocities : tuple of Vector
+            The partial angular velocity vectors corresponding to the provided
+            generalized speeds.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> A.set_ang_vel(N, u1 * A.x + u2 * N.y)
+        >>> A.partial_velocity(N, u1)
+        A.x
+        >>> A.partial_velocity(N, u1, u2)
+        (A.x, N.y)
+
+        """
+
+        partials = [self.ang_vel_in(frame).diff(speed, frame, var_in_dcm=False)
+                    for speed in gen_speeds]
+
+        if len(partials) == 1:
+            return partials[0]
+        else:
+            return tuple(partials)
 
 
 def _check_frame(other):

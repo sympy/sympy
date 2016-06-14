@@ -156,7 +156,7 @@ class RaisingOp(SHOOp):
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u('\N{DAGGER}'))
+        pform = pform**prettyForm(u'\N{DAGGER}')
         return pform
 
     def _print_contents_latex(self, printer, *args):

@@ -57,7 +57,7 @@ import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-
+import collections
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -136,6 +136,22 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+    @property
+    def __signature__(self):
+        """
+        Allow Python 3's inspect.signature to give a useful signature for
+        Function subclasses.
+        """
+        # Python 3 only, but backports (like the one in IPython) still might
+        # call this.
+        try:
+            from inspect import signature
+        except ImportError:
+            return None
+
+        # TODO: Look at nargs
+        return signature(self.eval)
 
     @property
     def nargs(self):
@@ -466,7 +482,7 @@ class Function(Application, Expr):
         except (AttributeError, KeyError):
             try:
                 return Float(self._imp_(*self.args), prec)
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError, ValueError):
                 return
 
         # Convert all args to mpf or mpc
@@ -1089,8 +1105,9 @@ class Derivative(Expr):
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate:
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols):
+            from sympy import IndexedBase
+            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
+            if symbol_set.difference(expr.free_symbols).difference(expr.atoms(IndexedBase)):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
@@ -1314,31 +1331,18 @@ class Derivative(Expr):
         # equivalent to self or if old is a subderivative of self.
         if old.is_Derivative and old.expr == self.args[0]:
             # Check if canonnical order of variables is equal.
-            old_vars = Derivative._sort_variables(old.variables)
-            self_vars = Derivative._sort_variables(self.args[1:])
+            old_vars = collections.Counter(old.variables)
+            self_vars = collections.Counter(self.variables)
             if old_vars == self_vars:
                 return new
 
-            # Check if olf is a subderivative of self.
-            if len(old_vars) < len(self_vars):
-                self_vars_front = []
-                match = True
-                while old_vars and self_vars and match:
-                    if old_vars[0] == self_vars[0]:
-                        old_vars.pop(0)
-                        self_vars.pop(0)
-                    else:
-                        # If self_v does not match old_v, we need to check if
-                        # the types are the same (symbol vs non-symbol). If
-                        # they are, we can continue checking self_vars for a
-                        # match.
-                        if old_vars[0].is_Symbol != self_vars[0].is_Symbol:
-                            match = False
-                        else:
-                            self_vars_front.append(self_vars.pop(0))
-                if match:
-                    variables = self_vars_front + self_vars
-                    return Derivative(new, *variables)
+            # collections.Counter doesn't have __le__
+            def _subset(a, b):
+                return all(a[i] <= b[i] for i in a)
+
+            if _subset(old_vars, self_vars):
+                return Derivative(new, *(self_vars - old_vars).elements())
+
         return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
@@ -1543,7 +1547,7 @@ class Subs(Expr):
             p = CustomStrPrinter(settings)
             return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
+            s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -2479,14 +2483,14 @@ def nfloat(expr, n=15, exponent=False):
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
     # problems with evaluating at low precision (issue 6393)
-    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
+    rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
     rv = rv.n(n)
     if not exponent:
-        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
+        rv = rv.xreplace({d.exp: p.exp for p, d in reps})
     else:
         # Pow._eval_evalf special cases Integer exponents so if
         # exponent is suppose to be handled we have to do so here

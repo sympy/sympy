@@ -34,10 +34,10 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
+from itertools import combinations_with_replacement
 from sympy.simplify import simplify
 from sympy.core import Add, S
-from sympy.core.compatibility import (reduce, combinations_with_replacement,
-    is_sequence, range)
+from sympy.core.compatibility import (reduce, is_sequence, range)
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
@@ -752,7 +752,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         # The PDE reduces to b*(u.diff(x)) + d*u = e, which is a linear ODE in x
         plode = f(x).diff(x)*b + d*f(x) - e
         sol = dsolve(plode, f(x))
-        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
         return Eq(f(x, y), rhs)
 
@@ -761,7 +761,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         # The PDE reduces to c*(u.diff(y)) + d*u = e, which is a linear ODE in y
         plode = f(y).diff(y)*c + d*f(y) - e
         sol = dsolve(plode, f(y))
-        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
         return Eq(f(x, y), rhs)
 
@@ -770,7 +770,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     sol = dsolve(dummy(x).diff(x) - h, dummy(x))
     if isinstance(sol, list):
         sol = sol[0]
-    solsym = sol.free_symbols - h.free_symbols - set([x, y])
+    solsym = sol.free_symbols - h.free_symbols - {x, y}
     if len(solsym) == 1:
         solsym = solsym.pop()
         etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
@@ -779,7 +779,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         final = (dsolve(deq, f(x), hint='1st_linear')).rhs
         if isinstance(final, list):
             final = final[0]
-        finsyms = final.free_symbols - deq.free_symbols - set([x, y])
+        finsyms = final.free_symbols - deq.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(final, finsyms, solvefun, etat)
         return Eq(f(x, y), rhs)
 

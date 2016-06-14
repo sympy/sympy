@@ -103,6 +103,10 @@ invert_complex = _invert
 
 
 def invert_real(f_x, y, x, domain=S.Reals):
+    """
+    Inverts a real-valued function. Same as _invert, but sets
+    the domain to ``S.Reals`` before inverting.
+    """
     return _invert(f_x, y, x, domain)
 
 
@@ -297,7 +301,7 @@ def _is_finite_with_finite_vars(f, domain=S.Complexes):
         A.setdefault('real', domain.is_subset(S.Reals))
         return A
 
-    reps = dict([(s, Dummy(**assumptions(s))) for s in f.free_symbols])
+    reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
     return f.xreplace(reps).is_finite
 
 
@@ -363,7 +367,7 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 
-def _solve_real_trig(f, symbol):
+def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
@@ -379,8 +383,9 @@ def _solve_real_trig(f, symbol):
     solns = solveset_complex(g, y) - solveset_complex(h, y)
 
     if isinstance(solns, FiniteSet):
-        return Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
+        result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
+        return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
@@ -574,7 +579,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
-        result = _solve_real_trig(f, symbol)
+        result = _solve_trig(f, symbol, domain)
     elif f.is_Piecewise:
         dom = domain
         result = EmptySet()

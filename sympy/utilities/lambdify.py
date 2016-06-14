@@ -8,7 +8,8 @@ from __future__ import print_function, division
 import inspect
 import textwrap
 
-from sympy.core.compatibility import exec_, is_sequence, iterable, string_types, range, builtins
+from sympy.core.compatibility import (exec_, is_sequence, iterable,
+    NotIterable, string_types, range, builtins)
 from sympy.utilities.decorator import doctest_depends_on
 
 # These are the namespaces the lambda functions will use.
@@ -491,7 +492,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
 
     # Transform args
     def isiter(l):
-        return iterable(l, exclude=(str, DeferredVector))
+        return iterable(l, exclude=(str, DeferredVector, NotIterable))
 
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten

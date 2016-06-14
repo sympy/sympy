@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow,
 from sympy.core.compatibility import (iterable,
     ordered, range, as_int)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg
 from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
@@ -252,12 +252,12 @@ def posify(eq):
             reps.update(dict((v, k) for k, v in posify(s)[1].items()))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r, s) for s, r in reps.items()])
+        return f(eq), {r: s for s, r in reps.items()}
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.free_symbols if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.items()])
+    return eq, {r: s for s, r in reps.items()}
 
 
 def hypersimp(f, k):
@@ -377,7 +377,7 @@ def signsimp(expr, evaluate=None):
     if e.is_Add:
         return e.func(*[signsimp(a) for a in e.args])
     if evaluate:
-        e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
+        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
 
 
@@ -1257,3 +1257,50 @@ def _real_to_rational(expr, tolerance=None):
                     r = Integer(0)
         reps[key] = r
     return p.subs(reps, simultaneous=True)
+
+
+def clear_coefficients(expr, rhs=S.Zero):
+    """Return `p, r` where `p` is the expression obtained when Rational
+    additive and multiplicative coefficients of `expr` have been stripped
+    away in a naive fashion (i.e. without simplification). The operations
+    needed to remove the coefficients will be applied to `rhs` and returned
+    as `r`.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import clear_coefficients
+    >>> from sympy.abc import x, y
+    >>> from sympy import Dummy
+    >>> expr = 4*y*(6*x + 3)
+    >>> clear_coefficients(expr - 2)
+    (y*(2*x + 1), 1/6)
+
+    When solving 2 or more expressions like `expr = a`,
+    `expr = b`, etc..., it is advantageous to provide a Dummy symbol
+    for `rhs` and  simply replace it with `a`, `b`, etc... in `r`.
+
+    >>> rhs = Dummy('rhs')
+    >>> clear_coefficients(expr, rhs)
+    (y*(2*x + 1), _rhs/12)
+    >>> _[1].subs(rhs, 2)
+    1/6
+    """
+    was = None
+    free = expr.free_symbols
+    if expr.is_Rational:
+        return (S.Zero, rhs - expr)
+    while expr and was != expr:
+        was = expr
+        m, expr = (
+            expr.as_content_primitive()
+            if free else
+            factor_terms(expr).as_coeff_Mul(rational=True))
+        rhs /= m
+        c, expr = expr.as_coeff_Add(rational=True)
+        rhs -= c
+    expr = signsimp(expr, evaluate = False)
+    if _coeff_isneg(expr):
+        expr = -expr
+        rhs = -rhs
+    return expr, rhs

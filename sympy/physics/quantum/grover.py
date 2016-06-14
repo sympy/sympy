@@ -90,8 +90,8 @@ class OracleGate(Gate):
         |3>
     """
 
-    gate_name = u('V')
-    gate_name_latex = u('V')
+    gate_name = u'V'
+    gate_name_latex = u'V'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -195,8 +195,8 @@ class WGate(Gate):
 
     """
 
-    gate_name = u('W')
-    gate_name_latex = u('W')
+    gate_name = u'W'
+    gate_name_latex = u'W'
 
     @classmethod
     def _eval_args(cls, args):

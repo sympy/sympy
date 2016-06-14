@@ -7,8 +7,7 @@ import io
 from io import BytesIO
 
 try:
-    from subprocess import STDOUT, CalledProcessError
-    from sympy.core.compatibility import check_output
+    from subprocess import STDOUT, CalledProcessError, check_output
 except ImportError:
     pass
 
