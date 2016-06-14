@@ -684,3 +684,7 @@ def test_coset_enumeration():
     table4 = [[0, 0, 0, 0]]
     assert C_r.table == table4
     assert C_c.table == table4
+
+
+def test_scan_check():
+    pass

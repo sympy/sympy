@@ -263,7 +263,6 @@ class CosetTable(DefaultPrinting):
         r = len(word)
         b = alpha
         j = r - 1
-        # list of union of generators and their inverses
         while i <= j and self.table[f][A_dict[word[i]]] is not None:
             f = self.table[f][A_dict[word[i]]]
             i += 1
@@ -298,8 +297,18 @@ class CosetTable(DefaultPrinting):
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
-        >>> C = CosetTable
-        >>> scan_check()
+        >>> C = CosetTable(f, [x])
+
+        # scans correctly for (0, x)
+        >>> C.scan_check(0, x)
+        True
+        >>> C.scan(0, x)
+
+        # scans correctly under (0, x**2)
+        >>> C.scan(0, x); C.scan_check(0, x**2)
+        True
+        >>> C.scan(0, x**2); C.scan_check(0, y**3)
+        True
 
         """
         # alpha is an integer representing a "coset"
@@ -313,14 +322,11 @@ class CosetTable(DefaultPrinting):
         r = len(word)
         b = alpha
         j = r - 1
-        # list of union of generators and their inverses
         while i <= j and self.table[f][A_dict[word[i]]] is not None:
             f = self.table[f][A_dict[word[i]]]
             i += 1
         if i > j:
-            if f != b:
-                return False
-            return True
+            return f == b
         while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
             b = self.table[b][A_dict_inv[word[j]]]
             j -= 1
@@ -328,8 +334,9 @@ class CosetTable(DefaultPrinting):
             # we have an incorrect completed scan with coincidence f ~ b
             # return False, instead of calling coincidence routine
             return False
-        # return True otherwise
-        return True
+        else:
+            # return True otherwise
+            return True
 
     def merge(self, k, lamda, q):
         p = self.p
@@ -791,7 +798,8 @@ def low_index_subgroups(G, N):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     "G" upto a given index "N". This implements the method described in
-    [Sim94].
+    [Sim94]. This procedure involves a backtrack search over incomplete Coset
+    Tables, rather than over forced coincidences.
 
     G: An FpGroup < X|R >
     N: positive integer, representing the maximun index value for subgroups
@@ -883,7 +891,7 @@ def first_int_class(C):
     lamda = -1
     nu = [None]*n
     for alpha in range(1, n):
-        # reset ν to "None" after previous value of alpha
+        # reset ν to "None" after previous value of α
         for beta in range(lamda):
             nu[mu[beta]] = None
         # try α as the new point 0 in Ω_C_α
@@ -894,10 +902,10 @@ def first_int_class(C):
         for beta in range(n):
             for x in C.A:
                 if C.table[beta][x] is None or mu[beta] is None:
-                    # continue with α
+                    #TODO: continue with α
                     continue
-                gamma = C.table[beta][x]
-                delta = mu[beta]
+                gamma = C.table[beta][C.A_dict[x]]
+                delta = C.table[mu[beta]][C.A_dict[x]]
                 if nu[delta] is None:
                     # delta becomes the next point in Ω_C_α
                     lamda += 1
@@ -905,8 +913,8 @@ def first_int_class(C):
                     mu[lamda] = delta
                 if nu[delta] < gamma:
                     return False
-                if nu[delta]:
-                    # continue with α
+                if nu[delta] > gamma:
+                    # TODO: continue with α
                     continue
     return True
 
