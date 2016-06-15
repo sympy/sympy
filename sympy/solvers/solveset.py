@@ -32,6 +32,7 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.core.compatibility import ordered, default_sort_key
+from sympy.logic.boolalg import BooleanAtom
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -422,20 +423,20 @@ def _solve_trig(f, symbol, domain):
     # trigsimp is not defined for hyperbolic
     # TODO trigh function for Hyperbolic Functions if required
     f_orig = f
+    if f.is_number or isinstance(f, (bool, BooleanAtom)):
+        # S.Reals in solution
+        return ConditionSet(symbol, Eq(f, 0), domain)
+
     # factor_list isn't working for factor_list(sqrt(2)*sin(x))
     # so `.as_independent` is used. Fix issue => remove below line.
     # issue #11198
     if f.is_Mul:
         ind, f = f.as_independent(symbol)
-    fact_list = factor_list(f)[1]
-    if len(fact_list) == 0:
-        # means no symbol
-        # S.Reals in solution
-        return ConditionSet(symbol, Eq(f, 0), domain)
+    fact_list = factor_list(Poly(f))[1]
 
     soln = S.EmptySet
     for fact in fact_list:
-        f1 = fact[0]
+        f1 = fact[0].as_expr()
         f1 = f1.rewrite(exp)
         factors = S.EmptySet
         # factor the `exp` expression reduce the number of ImageSet
