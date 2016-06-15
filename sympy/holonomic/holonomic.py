@@ -1211,6 +1211,8 @@ def from_sympy(func, x=None, initcond=True):
             sol = l[0][1]._subs(x)
         else:
             sol = _convert_meijerint(func, x, initcond=False)
+            if not sol:
+                raise NotImplementedError
             x0 = 0
             y0 = _find_conditions(func, x, x0, sol.annihilator.order)
             while not y0:
@@ -1245,6 +1247,8 @@ def from_sympy(func, x=None, initcond=True):
     elif f is Pow:
         sol = sol**args[1]
 
+    if not sol:
+        raise NotImplementedError
     if not initcond:
         return sol
 
