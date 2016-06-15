@@ -108,14 +108,6 @@ class DifferentialOperatorAlgebra(object):
             return False
 
 
-def _add_lists(list1, list2):
-    if len(list1) <= len(list2):
-        sol = [a + b for a, b in zip(list1, list2)] + list2[len(list1):]
-    else:
-        sol = [a + b for a, b in zip(list1, list2)] + list1[len(list2):]
-    return sol
-
-
 class DifferentialOperator(object):
     """
     Differential Operators are elements of Weyl Algebra. The Operators
@@ -330,88 +322,6 @@ class DifferentialOperator(object):
                 return True
             else:
                 return False
-
-
-def _normalize(list_of, parent, negative=True):
-    """
-    Normalize a given annihilator
-    """
-
-    num = []
-    denom = []
-    base = parent.base
-    K = base.get_field()
-    R = ZZ.old_poly_ring(base.gens[0])
-    lcm_denom = R.from_sympy(S(1))
-    list_of_coeff = []
-
-    # convert polynomials to the elements of associated
-    # fraction field
-    for i, j in enumerate(list_of):
-        if isinstance(j, base.dtype):
-            list_of_coeff.append(K.new(j.rep))
-        elif not isinstance(j, K.dtype):
-            list_of_coeff.append(K.from_sympy(sympify(j)))
-        else:
-            list_of_coeff.append(j)
-
-        # corresponding numerators of the sequence of polynomials
-        num.append(base(list_of_coeff[i].num))
-
-        # corresponding denominators
-        den = list_of_coeff[i].den
-        if isinstance(den[0], PythonRational):
-            for i, j in enumerate(den):
-                den[i] = j.p
-
-        denom.append(R(den))
-
-    # lcm of denominators in the coefficients
-    for i in denom:
-        lcm_denom = i.lcm(lcm_denom)
-
-    if negative is True:
-        lcm_denom = -lcm_denom
-
-    lcm_denom = K.new(lcm_denom.rep)
-
-    # multiply the coefficients with lcm
-    for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = j * lcm_denom
-
-    gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
-
-    # gcd of numerators in the coefficients
-    for i in num:
-        gcd_numer = i.gcd(gcd_numer)
-
-    gcd_numer = K.new(gcd_numer.rep)
-
-    # divide all the coefficients by the gcd
-    for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = base.from_FractionField(j / gcd_numer, K)
-
-    return DifferentialOperator(list_of_coeff, parent)
-
-
-def _derivate_diff_eq(listofpoly):
-    """
-    Let a differential equation a0(x)y(x) + a1(x)y'(x) + ... = 0
-    where a0, a1,... are polynomials or rational functions. The function
-    returns b0, b1, b2... such that the differential equation
-    b0(x)y(x) + b1(x)y'(x) +... = 0 is formed after differentiating the
-    former equation.
-    """
-
-    sol = []
-    a = len(listofpoly) - 1
-    sol.append(DMFdiff(listofpoly[0]))
-
-    for i, j in enumerate(listofpoly[1:]):
-        sol.append(DMFdiff(j) + listofpoly[i])
-
-    sol.append(listofpoly[a])
-    return sol
 
 
 class HolonomicFunction(object):
@@ -1345,6 +1255,98 @@ def from_sympy(func, x=None, initcond=True):
         y0 = _find_conditions(func, x, x0, sol.annihilator.order)
 
     return HolonomicFunction(sol.annihilator, x, x0, y0)
+
+
+## Some helper functions ##
+
+def _normalize(list_of, parent, negative=True):
+    """
+    Normalize a given annihilator
+    """
+
+    num = []
+    denom = []
+    base = parent.base
+    K = base.get_field()
+    R = ZZ.old_poly_ring(base.gens[0])
+    lcm_denom = R.from_sympy(S(1))
+    list_of_coeff = []
+
+    # convert polynomials to the elements of associated
+    # fraction field
+    for i, j in enumerate(list_of):
+        if isinstance(j, base.dtype):
+            list_of_coeff.append(K.new(j.rep))
+        elif not isinstance(j, K.dtype):
+            list_of_coeff.append(K.from_sympy(sympify(j)))
+        else:
+            list_of_coeff.append(j)
+
+        # corresponding numerators of the sequence of polynomials
+        num.append(base(list_of_coeff[i].num))
+
+        # corresponding denominators
+        den = list_of_coeff[i].den
+        if isinstance(den[0], PythonRational):
+            for i, j in enumerate(den):
+                den[i] = j.p
+
+        denom.append(R(den))
+
+    # lcm of denominators in the coefficients
+    for i in denom:
+        lcm_denom = i.lcm(lcm_denom)
+
+    if negative is True:
+        lcm_denom = -lcm_denom
+
+    lcm_denom = K.new(lcm_denom.rep)
+
+    # multiply the coefficients with lcm
+    for i, j in enumerate(list_of_coeff):
+        list_of_coeff[i] = j * lcm_denom
+
+    gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
+
+    # gcd of numerators in the coefficients
+    for i in num:
+        gcd_numer = i.gcd(gcd_numer)
+
+    gcd_numer = K.new(gcd_numer.rep)
+
+    # divide all the coefficients by the gcd
+    for i, j in enumerate(list_of_coeff):
+        list_of_coeff[i] = base.from_FractionField(j / gcd_numer, K)
+
+    return DifferentialOperator(list_of_coeff, parent)
+
+
+def _derivate_diff_eq(listofpoly):
+    """
+    Let a differential equation a0(x)y(x) + a1(x)y'(x) + ... = 0
+    where a0, a1,... are polynomials or rational functions. The function
+    returns b0, b1, b2... such that the differential equation
+    b0(x)y(x) + b1(x)y'(x) +... = 0 is formed after differentiating the
+    former equation.
+    """
+
+    sol = []
+    a = len(listofpoly) - 1
+    sol.append(DMFdiff(listofpoly[0]))
+
+    for i, j in enumerate(listofpoly[1:]):
+        sol.append(DMFdiff(j) + listofpoly[i])
+
+    sol.append(listofpoly[a])
+    return sol
+
+
+def _add_lists(list1, list2):
+    if len(list1) <= len(list2):
+        sol = [a + b for a, b in zip(list1, list2)] + list2[len(list1):]
+    else:
+        sol = [a + b for a, b in zip(list1, list2)] + list1[len(list2):]
+    return sol
 
 
 def _extend_y0(Holonomic, n):
