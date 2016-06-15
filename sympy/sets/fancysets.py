@@ -363,6 +363,30 @@ class ImageSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
+    def at(self, n):
+        """To get value of ImageSet expr for certain `n` if `n` is in the base_set.
+
+        Examples
+        ========
+
+        >>> from sympy import pi, S, Dummy, Lambda
+        >>> from sympy.sets.sets import FiniteSet, Interval
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> n = Dummy('n')
+        >>> ImageSet(Lambda(n, n*pi), S.Integers).at(0)
+        0
+        >>> ImageSet(Lambda(n, n*pi), S.Integers).at(1)
+        pi
+
+        """
+        base = self.base_set
+        if n in base:
+            lamb = self.args[0]
+            return lamb(n)
+        else:
+            raise ValueError("%s  is not in %s" % (n, base))
+
+
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
         if self.base_set is S.Integers:

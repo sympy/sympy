@@ -486,6 +486,253 @@ def solve_univariate_inequality(expr, gen, relational=True):
     return rv if not relational else rv.as_relational(_gen)
 
 
+def solveset_univariate_trig_inequality(expr, gen):
+    """Solves a real  Trigonometric univariate inequality.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import solveset_univariate_trig_inequality
+    >>> from sympy.core.symbol import Symbol
+    >>> from sympy import pprint, tan, pi, Dummy
+    >>> n = Dummy('n')
+    >>> x = Symbol('x')
+    >>> pprint(solveset_univariate_trig_inequality(tan(x) > 0, x), use_unicode=False)
+                                       pi
+    ({n*pi | n in Integers()}, {n*pi + -- | n in Integers()})
+                                       2
+
+    """
+    from sympy.solvers.solveset import solveset_real
+    from sympy.calculus.singularities import singularities
+    from sympy.simplify.simplify import trigsimp
+    from sympy.sets import ImageSet
+    from sympy.core.function import Lambda
+
+    # This keeps the function independent of the assumptions about `gen`.
+    # `solveset` makes sure this function is called only when the domain is
+    # real.
+    def _extract_expr(imgs, n_new=None):
+        expr = []
+        expr_extended = {}
+        change_dummy = False
+        if n_new:
+            change_dummy = True
+        if isinstance(imgs, ImageSet):
+            # value at n = 0
+            val = imgs.at(0)
+            expr.append(val)
+            # there may be a problem when more than 1 Dummy is there
+            n_old = (imgs.lamda.expr).atoms(Dummy).pop()
+            if change_dummy:
+                expr_extended[val] = imgs.subs(n_old, n_new)
+            else:
+                expr_extended[val] = imgs
+        elif isinstance(imgs, Union):
+            img_len = len(imgs.args)
+            for i in range(0, img_len):
+                arg = imgs.args[i]
+                val = arg.at(0)
+                # list of  expr at n = 0
+                expr.append(val)
+                # there may be a problem when more than 1 Dummy is there
+                n_old = (arg.lamda.expr).atoms(Dummy).pop()
+                if change_dummy:
+                    expr_extended[val] = imgs.args[i].subs(n_old, n_new)
+                else:
+                    expr_extended[val] = imgs.args[i]
+        if not change_dummy:
+            n_new = n_old
+        return expr, expr_extended, n_new
+    # end of def _extract_expr
+
+    expr = trigsimp(expr)
+    if expr is S.true:
+        return S.Reals
+    elif expr is S.false:
+        return S.EmptySet
+    else:
+        e = expr.lhs - expr.rhs
+        solns_img = solveset_real(e, gen)
+        if solns_img is S.EmptySet:
+            return S.EmptySet
+        singul_img = solveset_real(1/e, gen)
+
+        # extract solution expr and singul expr
+        # using one dummy `n_new`
+        solns, solns_extended, n_new = _extract_expr(solns_img)
+        singul, singul_extended, _ = _extract_expr(singul_img, n_new)
+
+        include_x = expr.func(0, 0)
+
+        def valid(x):
+            v = e.subs(gen, x)
+            try:
+                r = expr.func(v, 0)
+            except TypeError:
+                r = S.false
+            if r in (S.true, S.false):
+                return r
+            if v.is_real is False:
+                return S.false
+            else:
+                v = v.n(2)
+                if v.is_comparable:
+                    return expr.func(v, 0)
+                return S.false
+
+        start = S.NegativeInfinity
+        sol_sets = []
+        used_reals = None
+        try:
+            reals = _nsort(set(solns + singul), separated=True)[0]
+            used_reals = dict(
+                zip(reals, [False for i in range(0, len(reals))])
+            )
+        except NotImplementedError:
+            raise NotImplementedError('sorting of these roots is not supported')
+        for x in reals:
+            end = x
+
+            if end in [S.NegativeInfinity, S.Infinity]:
+                if valid(S(0)):
+                    sol_sets.append(Interval(start, S.Infinity, True, True))
+                    break
+
+            pt = ((start + end)/2 if start is not S.NegativeInfinity else
+                (end/2 if end.is_positive else
+                (2*end if end.is_negative else
+                end - 1)))
+            if valid(pt):
+                # check  where start and end points are.
+                # True means in soln otherwise it is in singul
+                start_in_solns = start in solns
+                end_in_solns = end in solns
+
+                if start is S.NegativeInfinity:
+                    interval_start = start
+                elif start_in_solns:
+                    interval_start = solns_extended[start]
+                    used_reals[start] = True
+                else:
+                    interval_start = singul_extended[start]
+                    used_reals[start] = True
+                if end_in_solns:
+                    interval_end = solns_extended[end]
+                    used_reals[end] = True
+                else:
+                    interval_end = singul_extended[end]
+                    used_reals[end] = True
+                # if `end is in soln` and include_x is True
+                # then add end point in the sol_sets
+                # here `not end_in_soln` => False when
+                # it is in soln list.
+                if include_x:
+                    sol_sets.append(Interval(
+                        interval_start,
+                        interval_end,
+                        not start_in_solns,
+                        not end_in_solns
+                    ))
+                else:
+                    sol_sets.append(Interval(
+                        interval_start, interval_end, True, True))
+
+            if x in singul:
+                singul.remove(x)
+
+            start = end
+
+        end = S.Infinity
+
+        # in case start == -oo then there were no solutions so we just
+        # check a point between -oo and oo (e.g. 0) else pick a point
+        # past the last solution (which is start after the end of the
+        # for-loop above
+        pt = (0 if start is S.NegativeInfinity else
+            (start/2 if start.is_negative else
+            (2*start if start.is_positive else
+            start + 1)))
+        if valid(pt):
+            start_in_solns = start in solns
+            end_in_solns = end in solns
+            if start_in_solns:
+                interval_start = solns_extended[start]
+                used_reals[start] = True
+            else:
+                interval_start = singul_extended[start]
+                used_reals[start] = True
+            if end is S.Infinity:
+                interval_end = end
+            elif end_in_solns:
+                interval_end = solns_extended[end]
+                used_reals[end] = True
+            else:
+                interval_end = singul_extended[end]
+                used_reals[end] = True
+            sol_sets.append(Interval(interval_start, interval_end, True, True))
+
+        # unused values
+        unused = []
+        for k, v in used_reals.items():
+            if v is False:
+                unused.append(k)
+        # check for -oo and oo and replace with proper Imagset
+        first_interval_start = sol_sets[0].start
+        if first_interval_start is S.NegativeInfinity:
+            interval_end = sol_sets[0].end
+            for u in unused:
+                u_in_solns = u in solns
+                img = None
+                if u_in_solns:
+                    img = solns_extended[u]
+                    prev = img.at(-1)
+                    if prev < interval_end.args[0](0):
+                        unused.remove(u)
+                        exp = img.lamda.expr - u + prev
+                        base = img.base_set
+                        interval_start = ImageSet(Lambda(n_new, exp), base)
+                        sol_sets[0] = Interval(interval_start, interval_end)
+                else:
+                    img = singul_extended[u]
+                    prev = img.at(-1)
+                    if prev < interval_end.args[0](0):
+                        unused.remove(u)
+                        exp = img.lamda.expr - u + prev
+                        base = img.base_set
+                        interval_start = ImageSet(Lambda(n_new, exp), base)
+                        sol_sets[0] = Interval(interval_start, interval_end)
+
+        # similarly for oo at last Interval
+        last_interval_end = sol_sets[-1].end
+        if last_interval_end is S.Infinity:
+            interval_start = sol_sets[-1].start
+            for u in unused:
+                u_in_solns = u in solns
+                img = None
+                if u_in_solns:
+                    img = solns_extended[u]
+                    next = img.at(1)
+                    if next > interval_start.args[1](0):
+                        unused.remove(u)
+                        exp = img.lamda.expr - u + next
+                        base = img.base_set
+                        interval_end = ImageSet(Lambda(n_new, exp), base)
+                        sol_sets[-1] = Interval(interval_start, interval_end)
+                else:
+                    img = singul_extended[u]
+                    prev = img.at(1)
+                    if next > interval_start.args[1](0):
+                        unused.remove(u)
+                        exp = img.lamda.expr - u + next
+                        base = img.base_set
+                        interval_end = ImageSet(Lambda(n_new, exp), base)
+                        sol_sets[-1] = Interval(interval_start, interval_end)
+
+        rv = Union(*sol_sets)
+
+    return rv
+
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """

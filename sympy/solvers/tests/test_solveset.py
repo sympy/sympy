@@ -472,6 +472,29 @@ def test_solve_rational():
     assert solveset_real((x**2/(7 - x)).diff(x), x) == \
         FiniteSet(S(0), S(14))
 
+def test_solveset_inequalities():
+    soln = Interval(2, 3, True, True)
+    assert solveset((x - 3)/(x - 2) < 0, x, S.Reals) == soln
+
+    n = Dummy('n')
+    start = ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)
+    end = ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
+    soln = Interval(start, end, True, True)
+    assert solveset(sin(x) > S.Half, x, S.Reals) == soln
+
+    soln = Interval(-oo, -1, True, True)
+    assert solveset(x/(x + 1) > 1, x,S.Reals) == soln
+
+    start = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
+    end = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
+    soln = Interval(start, end, True, True)
+    assert solveset(sin(x) > 1/sqrt(2), x, S.Reals) == soln
+
+    start = ImageSet(Lambda(n, n*pi - pi/3), S.Integers)
+    end = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    soln = Interval(start, end, True, True)
+    assert solveset((2*cos(x)+1)/(2*cos(x)-1) > 0, x, S.Reals) == soln
+
 
 def test_solveset_real_gen_is_pow():
     assert solveset_real(sqrt(1) + 1, x) == EmptySet()
@@ -708,19 +731,16 @@ def test_solveset_complex_tan():
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
+        imageset(Lambda(n, pi*n), S.Integers)
 
     assert solveset_real(sin(x) - 1, x) == \
         imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
 
     assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
+        imageset(Lambda(n, n*pi + pi/2), S.Integers)
 
     assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
+        imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 

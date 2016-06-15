@@ -5,7 +5,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, Dummy, Lambda)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, z, t
@@ -667,6 +667,15 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_imageset_at():
+    n = Dummy('n')
+    assert ImageSet(Lambda(n, n*pi + pi/2), S.Integers).at(S.Zero) == pi/2
+    assert ImageSet(Lambda(n, n*pi + pi/2), S.Integers).at(S(1)) == 3*pi/2
+
+    raises(ValueError, lambda: ImageSet(Lambda(n, n*pi + pi/2), \
+        S.Integers).at(S(1)/2))
 
 
 def test_issue_9980():
