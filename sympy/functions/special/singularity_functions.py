@@ -15,17 +15,16 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 
 class SingularityFunction(Function):
     r"""
-    The Singularity functions are a class of discontinuous functions. It takes a
-    variable , an offset and an exponent as arguments. These functions are
-    represented using Macaulay brackets as :-
+    The Singularity functions are a class of discontinuous functions. They take a
+    variable, an offset and an exponent as arguments. These functions are
+    represented using Macaulay brackets as :
 
     .. math::
-        SingularityFunction(x, a, n) := {\langle x - a \rangle}^ n
+        SingularityFunction(x, a, n) := {\langle x - a \rangle}^n
 
-    It outputs ``(x - a)**n`` for ``x >= a`` and ``0`` for ``x < a`` for ``n`` being
-    nonnegative. For negative ``n``, it is not a conventional function but a distribution
-    or a limit of a sequence of functions such as if ``n == -1`` it represents a DiracDelta
-    Function and if ``n == -2`` it is a Doublet Function.
+    Returns ``Derivative(DiracDelta(x - a), x, n + 1)`` if ``n < 0``
+    Returns ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``
+
 
     Examples
     ========
@@ -47,8 +46,8 @@ class SingularityFunction(Function):
     oo
     >>> SingularityFunction(4, 1, 5)
     243
-    >>> diff(SingularityFunction(x, 1, 5), x)
-    5*SingularityFunction(x, 1, 4)
+    >>> diff(SingularityFunction(x, 1, 5) + SingularityFunction(x, 1, 4), x)
+    4*SingularityFunction(x, 1, 3) + 5*SingularityFunction(x, 1, 4)
     >>> diff(SingularityFunction(x, 4, 0), x, 2)
     SingularityFunction(x, 4, -2)
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
@@ -65,7 +64,15 @@ class SingularityFunction(Function):
     >>> expr.rewrite('HeavisideDiracDelta')
     (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
+    See Also
+    ========
 
+    DiracDelta, Heaviside
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Singularity_function
     """
 
     is_real = True
@@ -157,7 +164,6 @@ class SingularityFunction(Function):
                 return S.Infinity
 
     def _eval_rewrite_as_Piecewise(self, *args):
-
         '''
         Converts a Singularity Function expression into its Piecewise form.
 
