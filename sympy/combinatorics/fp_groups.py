@@ -604,7 +604,7 @@ class CosetTable(DefaultPrinting):
 
 
 # relator-based method
-def coset_enumeration_r(fp_grp, Y):
+def coset_enumeration_r(fp_grp, Y, C):
     """
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
@@ -729,7 +729,8 @@ def coset_enumeration_r(fp_grp, Y):
 
     """
     # 1. Initialize a coset table C for < X|R >
-    C = CosetTable(fp_grp, Y)
+    if not C:
+        C = CosetTable(fp_grp, Y)
     R = fp_grp.relators()
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
@@ -897,6 +898,37 @@ def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
 
 
 def first_int_class(C):
+    """
+    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c, coset_enumeration_r, CosetTable, first_int_class
+    >>> from sympy.combinatorics.free_group import FreeGroup, free_group
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3])
+    >>> C = CosetTable(f, [])
+    >>> C.table
+    [[None, None, None, None]]
+
+    # C1
+    >>> C.table[0][0] = 0; C.table[0][1] = 0
+    >>> C.table.append([None]*4)
+    >>> C.table[0][2] = 1; C.table[1][3] = 0 # C12
+    >>> C.table.append([None]*4)
+    >>> C.table[0][3] = 2; C.table[2][2] = 0 #C121
+    >>> C.scan(0, y**3) # makes deductions 2^y = 3; 3^(y^-1) = 2
+    >>> D = C.copy() # equals C121
+    >>> C.table[1][0] = 1; C.table[1][1] = 1 # C1211
+    >>> C.table.append([None]*4)
+    >>> C.table[2][0] = 3; C.table[3][1] = 2 # C12112
+    >>> C.table[3][2] = 3; C.table[3][3] = 3
+    >>> C.table[2][1] = C.table[2][0]
+    >>> C.table[3][0] = C.table[3][1] # this definition, since n=4
+    >>> C.p = [0, 1, 2, 3]
+    >>> first_int_class(C)
+    True
+
+    >>> D.table[1][0] = 2; D.table[1][1] = 2 # C1212
+    >>> D.table[2][0] = 1; D.table[2][1] = 1
+
+    """
     n = C.n
     lamda = -1
     nu = [None]*n
@@ -910,15 +942,15 @@ def first_int_class(C):
             mu[0] = alpha
         except IndexError:
             mu.append(alpha)
-        mu[0] = alpha
         nu[alpha] = 0
-        lamda = 0
         # compare corresponding entries in C and C_α
         def compare_entries():
+            lamda = 0
             beta = 0
             for beta in range(C.n):
                 for x in C.A:
-                    if C.table[beta][C.A_dict[x]] is None or mu[beta] is None:
+                    if C.table[beta][C.A_dict[x]] is None or \
+                            C.table[mu[beta]][C.A_dict[x]] is None:
                         # continue with α
                         return
                     gamma = C.table[beta][C.A_dict[x]]
@@ -927,13 +959,17 @@ def first_int_class(C):
                         # delta becomes the next point in Ω_C_α
                         lamda += 1
                         nu[delta] = lamda
-                        mu[lamda] = delta
+                        try:
+                            mu[lamda] = delta
+                        except:
+                            mu.append(delta)
                     if nu[delta] < gamma:
                         return False
                     if nu[delta] > gamma:
                         # continue with α
                         return
-        compare_entries()
+        if compare_entries() == False:
+            return False
     return True
 
 
