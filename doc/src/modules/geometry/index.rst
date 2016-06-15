@@ -53,9 +53,9 @@ geometry module.
     >>> t.area
     1/2
     >>> t.medians[x]
-    Segment(Point2D(0, 0), Point2D(1, 1/2))
+    Segment2D(Point2D(0, 0), Point2D(1, 1/2))
     >>> Segment(Point(1, S(1)/2), Point(0, 0))
-    Segment(Point2D(0, 0), Point2D(1, 1/2))
+    Segment2D(Point2D(0, 0), Point2D(1, 1/2))
     >>> m = t.medians
     >>> intersection(m[x], m[y], m[zp])
     [Point2D(2/3, 1/3)]
@@ -87,7 +87,7 @@ Intersection of medians
     a*b/2
 
     >>> t.medians[x]
-    Segment(Point2D(0, 0), Point2D(3*a/2, b/2))
+    Segment2D(Point2D(0, 0), Point2D(3*a/2, b/2))
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
     [Point2D(a, b/3)]

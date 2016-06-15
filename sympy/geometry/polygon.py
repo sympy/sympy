@@ -77,9 +77,9 @@ class Polygon(GeometrySet):
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
     >>> Polygon(p1, p2)
-    Segment(Point2D(0, 0), Point2D(1, 0))
+    Segment2D(Point2D(0, 0), Point2D(1, 0))
     >>> Polygon(p1, p2, p5)
-    Segment(Point2D(0, 0), Point2D(3, 0))
+    Segment2D(Point2D(0, 0), Point2D(3, 0))
 
     While the sides of a polygon are not allowed to cross implicitly, they
     can do so explicitly. For example, a polygon shaped like a Z with the top
@@ -416,9 +416,9 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.sides
-        [Segment(Point2D(0, 0), Point2D(1, 0)),
-        Segment(Point2D(1, 0), Point2D(5, 1)),
-        Segment(Point2D(0, 1), Point2D(5, 1)), Segment(Point2D(0, 0), Point2D(0, 1))]
+        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
+        Segment2D(Point2D(1, 0), Point2D(5, 1)),
+        Segment2D(Point2D(0, 1), Point2D(5, 1)), Segment2D(Point2D(0, 0), Point2D(0, 1))]
 
         """
         res = []
@@ -1937,7 +1937,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.altitudes[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2212,7 +2212,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medians[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2301,7 +2301,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.eulerline
-        Line(Point2D(0, 0), Point2D(1/2, 1/2))
+        Line2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         if self.is_equilateral():

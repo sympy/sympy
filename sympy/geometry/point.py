@@ -96,6 +96,8 @@ class Point(GeometryEntity):
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
+        if len(coords) == 0:
+            raise ValueError("A point must have at least one coordinate")
         if len(coords) == 2:
             return Point2D(coords, **kwargs)
         if len(coords) == 3:
@@ -832,11 +834,6 @@ class Point3D(Point):
         When trying to add or subtract points with different dimensions.
         When `intersection` is called with object other than a Point.
 
-    Notes
-    =====
-
-    Currently only 2-dimensional and 3-dimensional points are supported.
-
     Examples
     ========
 
@@ -998,7 +995,7 @@ class Point3D(Point):
         See Also
         ========
 
-        sympy.geometry.line3d.Line3D
+        sympy.geometry.line.Line3D
 
         Examples
         ========

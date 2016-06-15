@@ -17,8 +17,7 @@ from sympy.utilities.misc import filldedent
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
-from .line3d import Line3D, LinearEntity3D, Ray3D, Segment3D
-from .line import Line, Ray, Segment
+from .line import Line, Ray, Segment, Line3D, LinearEntity3D, Ray3D, Segment3D
 
 
 class Plane(GeometryEntity):
@@ -204,8 +203,7 @@ class Plane(GeometryEntity):
         Point3D(1, 1, 1)
 
         """
-        from sympy.geometry.line import LinearEntity
-        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity, LinearEntity3D
         if not isinstance(line, (LinearEntity, LinearEntity3D)):
             raise NotImplementedError('Enter a linear entity only')
         a, b = self.projection(line.p1), self.projection(line.p2)
@@ -244,7 +242,7 @@ class Plane(GeometryEntity):
         True
 
         """
-        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
             a = l.direction_ratio
             b = self.normal_vector
@@ -284,7 +282,7 @@ class Plane(GeometryEntity):
         True
 
         """
-        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
             a = Matrix(l.direction_ratio)
             b = Matrix(self.normal_vector)
@@ -336,7 +334,7 @@ class Plane(GeometryEntity):
         0
 
         """
-        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity3D
         x, y, z = map(Dummy, 'xyz')
         if self.intersection(o) != []:
             return S.Zero
@@ -394,7 +392,7 @@ class Plane(GeometryEntity):
         -asin(sqrt(21)/6)
 
         """
-        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity3D
         if isinstance(o, LinearEntity3D):
             a = Matrix(self.normal_vector)
             b = Matrix(o.direction_ratio)
@@ -661,8 +659,7 @@ class Plane(GeometryEntity):
         [Line3D(Point3D(78/23, -24/23, 0), Point3D(147/23, 321/23, 23))]
 
         """
-        from sympy.geometry.line3d import LinearEntity3D
-        from sympy.geometry.line import LinearEntity
+        from sympy.geometry.line import LinearEntity, LinearEntity3D
         if isinstance(o, (Point, Point3D)):
             if o in self:
                 return [Point3D(o)]
@@ -723,8 +720,7 @@ class Plane(GeometryEntity):
                     return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
 
     def __contains__(self, o):
-        from sympy.geometry.line3d import LinearEntity3D
-        from sympy.geometry.line import LinearEntity
+        from sympy.geometry.line import LinearEntity, LinearEntity3D
         x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
         if isinstance(o, Point):

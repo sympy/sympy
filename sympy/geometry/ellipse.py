@@ -702,7 +702,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
-        [Line(Point2D(3, 0), Point2D(3, -12))]
+        [Line2D(Point2D(3, 0), Point2D(3, -12))]
 
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
@@ -835,9 +835,9 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
-        [Line(Point2D(0, 0), Point2D(1, 0))]
+        [Line2D(Point2D(0, 0), Point2D(1, 0))]
         >>> e.normal_lines(c)
-        [Line(Point2D(0, 0), Point2D(0, 1)), Line(Point2D(0, 0), Point2D(1, 0))]
+        [Line2D(Point2D(0, 0), Point2D(0, 1)), Line2D(Point2D(0, 0), Point2D(1, 0))]
 
         Off-axis points require the solution of a quartic equation. This
         often leads to very large expressions that may be of little practical
@@ -845,8 +845,8 @@ class Ellipse(GeometrySet):
         passing in the desired value:
 
         >>> e.normal_lines((3, 3), prec=2)
-        [Line(Point2D(-38/47, -85/31), Point2D(9/47, -21/17)),
-        Line(Point2D(19/13, -43/21), Point2D(32/13, -8/3))]
+        [Line2D(Point2D(-38/47, -85/31), Point2D(9/47, -21/17)),
+        Line2D(Point2D(19/13, -43/21), Point2D(32/13, -8/3))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.

@@ -57,7 +57,7 @@ class Parabola(GeometrySet):
     >>> p1.focus
     Point2D(0, 0)
     >>> p1.directrix
-    Line(Point2D(5, 8), Point2D(7, 8))
+    Line2D(Point2D(5, 8), Point2D(7, 8))
 
     """
 
@@ -133,7 +133,7 @@ class Parabola(GeometrySet):
         >>> l1 = Line(Point(5, 8), Point(7, 8))
         >>> p1 = Parabola(Point(0, 0), l1)
         >>> p1.directrix
-        Line(Point2D(5, 8), Point2D(7, 8))
+        Line2D(Point2D(5, 8), Point2D(7, 8))
 
         """
         return self.args[1]
@@ -158,7 +158,7 @@ class Parabola(GeometrySet):
         >>> from sympy import Parabola, Point, Line
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.axis_of_symmetry
-        Line(Point2D(0, 0), Point2D(0, 1))
+        Line2D(Point2D(0, 0), Point2D(0, 1))
 
         """
         return self.directrix.perpendicular_line(self.focus)
