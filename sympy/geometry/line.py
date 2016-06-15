@@ -22,6 +22,7 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
+from sympy.utilities.iterables import subsets
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -157,10 +158,12 @@ class LinearEntity(GeometrySet):
 
     @staticmethod
     def are_concurrent(*lines):
-        """Is a sequence of linear entities concurrent?
+        """Is a sequence of LinearEntity objects concurrent?
 
-        Two or more linear entities are concurrent if they all
-        intersect at a single point.
+        Two or more LinearEntity objects are concurrent if they all
+        intersect transversely at a single point.  That is, the
+        LinearEntity objects intersect at a single point and no
+        pair of them is parallel.
 
         Parameters
         ==========
@@ -170,7 +173,7 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        True : if the set of linear entities intersect in one point
+        True : if the set of linear entities intersects transversely in one point
         False : otherwise.
 
         See Also
@@ -193,11 +196,15 @@ class LinearEntity(GeometrySet):
         False
 
         """
+        if len(lines) < 2:
+            return False
 
-        common_points = Intersection(*lines)
-        if common_points.is_FiniteSet and len(common_points) == 1:
-            return True
-        return False
+        # make sure no lines are parallel
+        if any(l1.is_parallel(l2) for (l1, l2) in subsets(lines, 2)):
+            return False
+
+        # no lines are parallel, so any intersection is either empty or has one point
+        return len(Intersection(*lines)) == 1
 
     def is_parallel(l1, l2):
         """Are two linear entities parallel?
