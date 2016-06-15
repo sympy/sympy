@@ -742,8 +742,8 @@ def test_solve_trig():
 
     eq = (2*cos(x)+1)/(2*cos(x)-1)
     soln = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) + \
-    ImageSet(Lambda(n, 2*n*pi + 4*pi/3), S.Integers)
-    assert solveset(eq, x, S.Reals) == soln
+        ImageSet(Lambda(n, 2*n*pi + 4*pi/3), S.Integers)
+    assert solveset_real(eq, x) == soln
 
 
 @XFAIL
