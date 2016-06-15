@@ -13,11 +13,12 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
+
+from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
+    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
-
-from sympy.printing.codeprinter import Assignment
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1078,6 +1079,67 @@ x := y\
     ucode_str = \
 u("""\
 x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_AugmentedAssignment():
+    expr = AddAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x += y\
+"""
+    ucode_str = \
+u("""\
+x += y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = SubAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x -= y\
+"""
+    ucode_str = \
+u("""\
+x -= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = MulAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x *= y\
+"""
+    ucode_str = \
+u("""\
+x *= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = DivAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x /= y\
+"""
+    ucode_str = \
+u("""\
+x /= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = ModAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x %= y\
+"""
+    ucode_str = \
+u("""\
+x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4375,6 +4437,15 @@ def test_gammas():
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+
+
+def test_deltas():
+    assert xpretty(DiracDelta(x), use_unicode=True) == u'δ(x)'
+    assert xpretty(DiracDelta(x, 1), use_unicode=True) == \
+u("""\
+ (1)    \n\
+δ    (x)\
+""")
 
 
 def test_hyper():
