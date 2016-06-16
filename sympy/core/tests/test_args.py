@@ -3454,6 +3454,25 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
+@SKIP("abstract class")
+def test_sympy__geometry__line__LinearEntity2D():
+    pass
+
+
+def test_sympy__geometry__line__Line2D():
+    from sympy.geometry.line import Line2D
+    assert _test_args(Line2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Ray2D():
+    from sympy.geometry.line import Ray2D
+    assert _test_args(Ray2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Segment2D():
+    from sympy.geometry.line import Segment2D
+    assert _test_args(Segment2D((0, 1), (2, 3)))
+
 
 @SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity3D():
