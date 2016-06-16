@@ -71,7 +71,11 @@ def test_heaviside():
     assert Heaviside(nan) == nan
 
     assert Heaviside(0, x) == x
-    assert Heaviside(0, S.NaN) == Heaviside(0)
+    assert Heaviside(0, nan) == nan
+    assert Heaviside(x, None) == Heaviside(x)
+    assert Heaviside(0, None) == Heaviside(0)
+    # we do not want None in the args:
+    assert None not in Heaviside(x, None).args
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
