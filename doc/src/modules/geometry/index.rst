@@ -187,10 +187,10 @@ extensive amount of work.
 Three Dimensions and Beyond
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently there are no plans for extending the module to three dimensions, but
-it certainly would be a good addition. This would probably involve a fair
-amount of work since many of the algorithms used are specific to two
-dimensions.
+Currently a limited subset of the geometry module has been extended to
+three dimensions, but it certainly would be a good addition to extend
+more. This would probably involve a fair amount of work since many of
+the algorithms used are specific to two dimensions.
 
 Geometry Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +209,6 @@ Submodules
     utils.rst
     points.rst
     lines.rst
-    line3d.rst
     curves.rst
     ellipses.rst
     polygons.rst
