@@ -893,13 +893,13 @@ def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
     D.process_deductions_check(R1_x_c, R1_x_c_inv)
     if D.n == 0:
         return
-    if first_int_class(D):
+    if first_in_class(D):
         descendant_subgroups(S, D, R1_x_c, R1_x_c_inv, R2, N)
 
 
-def first_int_class(C):
+def first_in_class(C):
     """
-    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c, coset_enumeration_r, CosetTable, first_int_class
+    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c, coset_enumeration_r, CosetTable, first_in_class
     >>> from sympy.combinatorics.free_group import FreeGroup, free_group
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3])
@@ -922,7 +922,7 @@ def first_int_class(C):
     >>> C.table[2][1] = C.table[2][0]
     >>> C.table[3][0] = C.table[3][1] # this definition, since n=4
     >>> C.p = [0, 1, 2, 3]
-    >>> first_int_class(C)
+    >>> first_in_class(C)
     True
 
     >>> D.table[1][0] = 2; D.table[1][1] = 2 # C1212
@@ -941,7 +941,7 @@ def first_int_class(C):
     >>> C11.table[0][2] = 0; C11.table[0][3] = 0
     >>> C11.table
     [[0, 0, 0, 0]]
-    >>> first_int_class(C11)
+    >>> first_in_class(C11)
     True
     >>> C12 = C1.copy()
     >>> C12.table.append([None]*4); C12.p = [0, 1]
@@ -975,7 +975,7 @@ def first_int_class(C):
     >>> C12111.table[2][0] = 2; C12111.table[2][1] = 2
     >>> C12111.table
     [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
-    >>> first_int_class(C12111)
+    >>> first_in_class(C12111)
     True
     >>> C12111.scan_check(0, (x*y)**4)
     False
@@ -993,7 +993,7 @@ def first_int_class(C):
     >>> C12112.table[3][2] = 3; C12112.table[3][3] = 3
     >>> C12112.table
     [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
-    >>> first_int_class(C12112) # giving the wrong-result
+    >>> first_in_class(C12112) # giving the wrong-result
     False
     >>> C12112.table
     [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
@@ -1021,7 +1021,7 @@ def first_int_class(C):
     >>> C12131.table[2][0] = 2; C12131.table[2][1] = 2;
     >>> C12131.table
     [[0, 0, 1, 2], [3, 3, 2, 0], [2, 2, 0, 1], [1, 1, None, None]]
-    >>> first_int_class(C12131)
+    >>> first_in_class(C12131)
     False
     >>> C2 = C.copy()
     >>> C2.table
@@ -1040,7 +1040,7 @@ def first_int_class(C):
     >>> C211.table[1][2] = 1; C211.table[1][3] = 1
     >>> C211.table
     [[1, 1, 0, 0], [0, 0, 1, 1]]
-    >>> first_int_class(C211)
+    >>> first_in_class(C211)
     True
     >>> C211.scan_check(0, (x*y)**4)
     True
@@ -1071,14 +1071,14 @@ def first_int_class(C):
     >>> new_C2121.table
     >>> new_C2121.table
     [[1, 1, 0, 0], [0, 0, 2, 3], [2, 2, 3, 1], [None, None, 1, 2]]
-    >>> first_int_class(new_C2121)
+    >>> first_in_class(new_C2121)
     False
     >>> C21211 = C2121.copy()
     >>> C21211.table[2][0] = 3; C21211.table[2][1] = 3;
     >>> C21211.table[3][0] = 2; C21211.table[3][1] = 2;
     >>> C21211.table
     [[1, 1, 0, 0], [0, 0, 2, 3], [3, 3, 3, 1], [2, 2, 1, 2]]
-    >>> first_int_class(C21211)  # gives wrong-result
+    >>> first_in_class(C21211)  # gives wrong-result
     False
     >>> C21211.scan_check(1, (x*y)**4)
     False
@@ -1096,13 +1096,13 @@ def first_int_class(C):
     >>> C221.table
     >>> C221.scan(2, y**3)
     [[1, 1, 1, 2], [0, 0, 2, 0], [None, None, 0, 1]]
-    >>> first_int_class(C221)
+    >>> first_in_class(C221)
     True
     >>> C221.table
     [[1, 1, 1, 2], [0, 0, 2, 0], [None, None, 0, 1]]
     >>> new_C221 = C221.copy()
     >>> new_C221.table[2][0] = 2; new_C221.table[2][1] = 2
-    >>> first_int_class(new_C221)
+    >>> first_in_class(new_C221)
     False
     >>> C2211 = C221.copy()
     >>> C2211.table.append([None]*4)
@@ -1116,7 +1116,7 @@ def first_int_class(C):
     >>> C2211.table[3][2] = 3; C2211.table[3][3] = 3
     >>> C2211.table
     [[1, 1, 1, 2], [0, 0, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
-    >>> first_int_class(C2211)
+    >>> first_in_class(C2211)
     False
     >>> C23 = C2.copy()
     >>> C23.table
@@ -1130,7 +1130,7 @@ def first_int_class(C):
     >>> C231.table[0][3] = 1; C231.table[1][2] = 0
     >>> C231.table
     [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
-    >>> first_int_class(C231)
+    >>> first_in_class(C231)
     False
     >>> C232 = C23.copy()
     >>> C232.table
@@ -1155,7 +1155,7 @@ def first_int_class(C):
     >>> C232.table[1][2] = 1; C232.table[1][3] = 1
     >>> C232.table
     [[1, 1, 2, 3], [0, 0, 1, 1], [None, None, 3, 0], [None, None, 0, 2]]
-    >>> first_int_class(C232)
+    >>> first_in_class(C232)
     False
 
     """
@@ -1166,7 +1166,7 @@ def first_int_class(C):
     breaker = False
     for alpha in range(1, n):
         # reset ν to "None" after previous value of α
-        for beta in range(lamda):
+        for beta in range(lamda+1):
             nu[mu[beta]] = None
         # try α as the new point 0 in Ω_C_α
         try:
@@ -1176,7 +1176,6 @@ def first_int_class(C):
         nu[alpha] = 0
         # compare corresponding entries in C and C_α
         lamda = 0
-        beta = 0
         for beta in range(C.n):
             if breaker:
                 break
