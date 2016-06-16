@@ -358,7 +358,7 @@ class Heaviside(Function):
            transform of a DiracDelta distribution.
 
     To specify the value of Heaviside at x=0, a second argument can be given.
-    Omit this 2nd argument or pass ``NaN`` to recover the default behavior.
+    Omit this 2nd argument or pass ``None`` to recover the default behavior.
 
     >>> from sympy import Heaviside, S
     >>> from sympy.abc import x
@@ -414,8 +414,10 @@ class Heaviside(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    # default of None would cause infinite recursion
+    _sentinel = object()
     @classmethod
-    def eval(cls, arg, H0=None):
+    def eval(cls, arg, H0=_sentinel):
         """
         Returns a simplified form or a value of Heaviside depending on the
         argument passed by the Heaviside object.
@@ -460,15 +462,17 @@ class Heaviside(Function):
         1
 
         """
-        H0 = sympify(H0)
-        if H0 == S.NaN:
-            return Heaviside(arg)
         arg = sympify(arg)
+        if H0 is None:
+            return Heaviside(arg)
         if arg.is_negative:
             return S.Zero
         elif arg.is_positive:
             return S.One
         elif arg.is_zero:
+            if H0 is cls._sentinel:
+                return
+            H0 = sympify(H0)
             return H0
         elif arg is S.NaN:
             return S.NaN
