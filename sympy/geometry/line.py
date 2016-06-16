@@ -1652,8 +1652,6 @@ class Segment(LinearEntity):
 
         if hasattr(other, 'ambient_dimension') and other.ambient_dimension != self.ambient_dimension:
             warnings.warn("Testing containment for objects of different ambient dimensions", RuntimeWarning)
-
-            raise Exception()
             return False
 
         if isinstance(other, Point):
