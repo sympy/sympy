@@ -4,7 +4,7 @@ from sympy import (
     asin, acos, acsc, asec, atan, atanh, cos, csc, erf, erfinv, erfc, erfcinv,
     exp, log, pi, sin, sinh, sec, sqrt, symbols,
     tan, tanh, atan2, arg,
-    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
+    Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection, ln,
     oo)
 
 from sympy.core.function import nfloat
@@ -1086,3 +1086,13 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+def test_issue_10876():
+    assert solveset((x-1)/sqrt(x) , x ,S.Reals) == FiniteSet(1)
+    assert solveset(1/sqrt(x), x, S.Reals) == S.EmptySet
+    assert solveset(1/sqrt(x), x) == S.EmptySet
+
+def test_issue_11047():
+    assert ln(0) == S.NegativeInfinity
+    assert 1/ln(0) == S.Zero
+    assert solveset(1/ln(x), x, S.Reals) == S.Zero

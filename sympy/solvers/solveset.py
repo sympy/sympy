@@ -285,26 +285,6 @@ def _domain_check(f, symbol, p):
                     for g in f.args])
 
 
-def _is_finite_with_finite_vars(f, domain=S.Complexes):
-    """
-    Return True if the given expression is finite. For symbols that
-    don't assign a value for `complex` and/or `real`, the domain will
-    be used to assign a value; symbols that don't assign a value
-    for `finite` will be made finite. All other assumptions are
-    left unmodified.
-    """
-    def assumptions(s):
-        A = s.assumptions0
-        if A.get('finite', None) is None:
-            A['finite'] = True
-        A.setdefault('complex', True)
-        A.setdefault('real', domain.is_subset(S.Reals))
-        return A
-
-    reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
-    return f.xreplace(reps).is_finite
-
-
 def _is_function_class_equation(func_class, f, symbol):
     """ Tests whether the equation is an equation of the given function class.
 
@@ -544,6 +524,7 @@ def _solveset(f, symbol, domain, _check=False):
     # _check controls whether the answer is checked or not
 
     from sympy.simplify.simplify import signsimp
+    from sympy.solvers.solvers import solve
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -552,10 +533,22 @@ def _solveset(f, symbol, domain, _check=False):
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
         f = a/m + h  # XXX condition `m != 0` should be added to soln
+    numer, denom = f.as_numer_denom()
     f = piecewise_fold(f)
 
     # assign the solvers to use
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
+    if numer is S.One:
+        try:
+            zero_sol = []
+            for inf in [S.NegativeInfinity, S.Infinity]:
+                zero_sol += solve(denom - inf, symbol, evaluate = False)
+            if zero_sol:
+                result = FiniteSet(*[s for s in zero_sol])
+                return Intersection(result, domain)
+        except:
+            pass
+        return S.EmptySet
     if domain.is_subset(S.Reals):
         inverter_func = invert_real
     else:
@@ -568,15 +561,13 @@ def _solveset(f, symbol, domain, _check=False):
         return domain
     elif not f.has(symbol):
         return EmptySet()
-    elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
-            for m in f.args):
-        # if f(x) and g(x) are both finite we can say that the solution of
-        # f(x)*g(x) == 0 is same as Union(f(x) == 0, g(x) == 0) is not true in
-        # general. g(x) can grow to infinitely large for the values where
-        # f(x) == 0. To be sure that we are not silently allowing any
-        # wrong solutions we are using this technique only if both f and g are
-        # finite for a finite input.
-        result = Union(*[solver(m, symbol) for m in f.args])
+    elif f.is_Mul:
+        if denom.has(symbol):
+            num_sol = solver(numer, symbol)
+            denom_sol = solver(denom, symbol)
+            result = num_sol - denom_sol
+        else:
+            result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
@@ -733,7 +724,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
