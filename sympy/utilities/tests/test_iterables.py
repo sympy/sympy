@@ -775,25 +775,31 @@ def test_seq_replace():
 
 def test_longest_repetition():
     lr = longest_repetition
-    assert lr('a') == ''
-    assert lr('aaa') == 'a'
-    assert lr('aaaa') == 'aa'
-    assert lr('aaaac') == 'aa'
-    assert lr('babab') == 'ab'
-    assert lr('bcbcb') == 'bc'
-    assert lr('abcabd') == 'ab'
-    assert lr('aabaabc') == 'aab'
-    assert lr('abcxxabcxxabc') == 'abcxx'
-    assert lr('aba$bxa$bab') == 'a$b'
-    assert lr(*'aba$bxa$bab'.split('$')) == 'ab'
-    assert lr('a$$$$$$aaaa') == '$$$'
-    assert lr(*'a$$$$$$aaaa'.split('$')) == 'aa'
-    assert lr(*split(list('a$$$$$$aaaabb'), list('a$'))) == ['b']
-    assert lr(*'ab$aa$abba$'.split('$')) == 'ab'
-    assert lr(*'baaabaaaa'.split('b')) == 'aaa'
+    assert lr(['a']) == []
+    assert lr(['aaa']) == ['a']
+    assert lr(['aaaa']) == ['aa']
+    assert lr(['aaaac']) == ['aa']
+    assert lr(['babab']) == ['ab', 'ba']
+    assert lr(['bcbcb']) == ['bc', 'cb']
+    assert lr(['abcabd']) == ['ab']
+    assert lr(['aabaabc']) == ['aab']
+    assert lr(['abcxxabcxxabc']) == ['abcxx', 'bcxxa', 'cxxab', 'xxabc']
+    assert lr(['aba$bxa$bab']) == ['a$b']
+    assert lr('aba$bxa$bab'.split('$')) == ['ab', 'ba']
+    assert lr(['a$$$$$$aaaa']) == ['$$$']
+    assert lr('a$$$$$$aaaa'.split('$')) == ['aa']
+    assert lr(split(list('a$$$$$$aaaabb'), list('a$'))) == [['b']]
+    assert lr('ab$aa$abba$'.split('$')) == ['ab']
+    assert lr('baaabaaaa'.split('b')) == ['aaa']
     s = [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1]
-    assert longest_repetition(s, all=True, max=2) == \
+    assert longest_repetition([s], limit=2) == \
         [[0, 1], [1, 0], [1, 1]]
+    # for mixed input (rare case, likely) strings are returned as lists
+    assert extract_repetitions(
+        'ABC',
+        ['abab', [1, 2, 1, 2, 'a', 'c', 'a', 'c']]) == (
+        [('C', ['a', 'c']), ('B', [1, 2]), ('A', ['a', 'b'])],
+        [['A', 'A'], ['B', 'B', 'C', 'C']])
 
 
 def test_split():
@@ -834,7 +840,7 @@ def test_extract_repetitions():
         'dcaabededb', 'aaacdddaba', 'dcaceacdcb', 'ecabcedbad',
         'eebeabdebb', 'ebbdabdbbc', 'ddeadbeadb', 'decedceced',
         'edddbcceea', 'eeddacdcac']
-    a, b = extract_repetitions(U, *s)
+    a, b = extract_repetitions(U, s)
     assert a == \
         [('P', 'dd'), ('O', 'ce'), ('N', 'bb'), ('M', 'ad'), ('L', 'ac'),
         ('K', 'ed'), ('J', 'ab'), ('I', 'Kd'), ('H', 'eN'), ('G', 'dca'),
@@ -849,14 +855,14 @@ def test_extract_repetitions():
     assert s == b
 
     s = [list(i) for i in ('abc','abcd','abcde')]
-    re = extract_repetitions(U, *s)
+    re = extract_repetitions(U, s)
     assert re == ([('B', ['a', 'b', 'c']), ('A', ['B', 'd'])],
         [['B'], ['A'], ['A', 'e']])
     s = [[ord(i) for i in i] for i in ('abc','abcd','abcde')]
     ans = ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
-    assert extract_repetitions([-1, -2], *s) == ans
-    assert extract_repetitions(Range(-1, -oo, -1), *s) == \
+    assert extract_repetitions([-1, -2], s) == ans
+    assert extract_repetitions(Range(-1, -oo, -1), s) == \
         ([(-2, [97, 98, 99]), (-1, [-2, 100])], [[-2], [-1], [-1, 101]])
     x0, x1 = take(numbered_symbols(), 2)
-    assert extract_repetitions(numbered_symbols(), *s) == \
+    assert extract_repetitions(numbered_symbols(), s) == \
         ([(x1, [97, 98, 99]), (x0, [x1, 100])], [[x1], [x0], [x0, 101]])

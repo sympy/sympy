@@ -576,6 +576,7 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
+
 def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
@@ -2425,7 +2426,11 @@ def split(seq, ignore=[]):
     i = 0
     ignoring = False
     for j in range(len(seq)):
-        if seq[j] in ignore:
+        try:
+            skip = seq[j] in ignore  # '1' in '12'
+        except TypeError:
+            skip = False  # 1 in '12'
+        if skip:
             if ignoring:
                 i = j
             else:
@@ -2441,29 +2446,29 @@ def split(seq, ignore=[]):
     return rv
 
 
-def longest_repetition(*seq, **kwargs):
-    """Returns the longest, continguous repeated subsequence
-    in `seq` that is lexically smaller than any other
-    subsequences of the same length, else returns None. To
-    obtain all sequences of maximal length set keyword `all`
-    to True. If the keyword `max` is set to an integer, no
-    sequence longer that `max` will be returned.
+def longest_repetition(seq_list, limit=None):
+    """Returns a list of contiguous, nonoverlapping subsequences 
+    that are repeated within the sequences given in `seq_list`. By 
+    default the longest subsequences are returned but if the 
+    keyword `limit` is given, no sequence longer than `limit` will 
+    be returned.
+
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import longest_repetition as lr
-    >>> lr('ba')
-    ''
-    >>> lr('bab')
-    'b'
-    >>> lr('babab')
-    'ab'
-    >>> lr('abdc', 'bca', 'bcdc')
-    'bc'
-    >>> lr('abdc', 'bca', 'bcdc', all=True)
+    >>> lr(['ba'])
+    ['']
+    >>> lr(['bab'])
+    ['b']
+    >>> lr(['babab'])
+    ['ab', 'ba']
+    >>> lr(['banana'])
+    ['an', 'na']
+    >>> lr(['abdc', 'bca', 'bcdc'])
     ['bc', 'dc']
-    >>> lr('abdc', 'bca', 'bcdce', all=True, max=1)
+    >>> lr(['abdc', 'bca', 'bcdce'], limit=1)
     ['a', 'b', 'c', 'd']
 
     If there are characters that should be ignored,
@@ -2471,8 +2476,8 @@ def longest_repetition(*seq, **kwargs):
 
     With strings, the `split` method can be used:
 
-    >>> lr(*'ab$bca$bc'.split('$'))
-    'bc'
+    >>> lr('ab$bca$bc'.split('$'))
+    ['bc']
 
     With sequences, the split function can be used:
 
@@ -2480,63 +2485,70 @@ def longest_repetition(*seq, **kwargs):
     >>> seq = [(1, 2, -1, 2, 3, 4), (2, 3, 5, 0, 1, 2, 3, 0, 1, 2)]
     >>> pieces = [i for si in seq for i in split(si, [0, -1])]; pieces
     [(1, 2), (2, 3, 4), (2, 3, 5), (1, 2, 3), (1, 2)]
-    >>> lr(*pieces)
-    (1, 2)
+    >>> lr(pieces)
+    [(1, 2), (2, 3)]
     """
-    all_hits = kwargs.get('all', False)
-    big = kwargs.get('max', max(len(i) for i in seq))
     # sort the indices by suffix from index j in sequence i
-    ix = [(i, j) for i in range(len(seq)) for j in range(len(seq[i]))]
-    ix.sort(key=lambda ij: seq[ij[0]][ij[1]:])
+    try:
+        ix = [(i, j) for i in range(len(seq_list)) for j in range(len(seq_list[i]))]
+        ix.sort(key=lambda ij: seq_list[ij[0]][ij[1]:])
+    except TypeError:
+        # handle items that can't be sorted
+        u = list(uniq([j for i in seq_list for j in i]))
+        uu = dict(zip(range(len(u)), u))
+        try:
+            u = dict(zip(u, range(len(u))))
+            ints = [[u[j] for j in i] for i in seq_list]
+        except:
+            ints = [[u.index(j) for j in i] for i in seq_list]
+        lr = longest_repetition(ints, limit)
+        return [[uu[j] for j in i] for i in lr]
+    # default limit (no limit)
+    limit = max(len(i) for i in seq_list) if limit is None else limit
+    # begin subsequence identification and collection
     start, length = (0, 0), 0
     hits = []
     # the find the longest prefix shared by pairs of suffixes
     for (i, a), (j, b) in zip(ix, ix[1:]):
         # find common prefix
-        la = len(seq[i]) - a
-        lb = len(seq[j]) - b
-        for m in range(min(la, lb, big)):
-            if seq[i][a + m] != seq[j][b + m]:
+        la = len(seq_list[i]) - a
+        lb = len(seq_list[j]) - b
+        for m in range(min(la, lb, limit)):
+            if seq_list[i][a + m] != seq_list[j][b + m]:
                 break
         else:
             # they all matched
             m += 1
-        if i == j and m > abs(b - a):  # matches overlap in seq[i]
+        if i == j and m > abs(b - a):  # matches overlap in seq_list[i]
             # mark the position of the middle of the longer subsequence
             if la > lb:
                 m = la//2
             else:
                 a = b
                 m = lb//2
-            m = min(m, big)
+            m = min(m, limit)
             # trim the subsequence until it appears as a match in the
             # latter half of the longer subsequence
             while m and m > length:
-                if find(seq[i], seq[i][a: a + m], a + m) != -1:
+                if find(seq_list[i], seq_list[i][a: a + m], a + m) != -1:
                     break
                 m -= 1
-        # if it'seq the longest so far, store it
-        hit = seq[i][a: a + m]
+        hit = seq_list[i][a: a + m]
+        # if it's the longest so far, store it
         if m > length:
             start, length = (i, a), m
             hits = [hit]
-        elif all_hits and m == length and hit not in hits:
+        elif m == length and hit not in hits:
             hits.append(hit)
-    if not all_hits:
-        i, a = start
-        return seq[i][a: a + length]
-    else:
-        return hits
+    return hits
 
 
-def extract_repetitions(replacements, *seq):
+def extract_repetitions(replacements, seq_list):
     """Return a replacement list and sequences that have been modified
     by recursively removing repeated subsequences so as to minimize the
     metric ``R + S`` where ``R`` is the combined length of the
     computed subsequences and ``S`` is the length of the modified
-    original sequences. If the elements of the sequences represent
-    factors that are multiplied together then this metric corresponds
-    to minimizing the number of multiplications and assignments.
+    original sequences.
 
     Examples
     ========
@@ -2545,37 +2557,18 @@ def extract_repetitions(replacements, *seq):
     >>> import string
     >>> s = ['cbedbbcebc', 'baebbcaabb', 'bdeaaddcdc']
     >>> U = string.ascii_uppercase
-    >>> r, c = extract_repetitions(U, *s)
+    >>> r, c = extract_repetitions(U, s)
     >>> r
     [('D', 'dc'), ('C', 'bb'), ('B', 'aa'), ('A', 'Cc')]
     >>> c
     ['cbedAebc', 'baeABC', 'bdeBdDD']
 
-    If each letter represented a number then the original number of
-    multiplications and assignments is
-
-    >>> len(''.join(s))
-    30
-
-    After the extraction there are fewer multiplications in the
-    modified sequences:
-
-    >>> len(''.join(c))
-    21
-
-    But there are new assignments and multiplications:
-
-    >>> len(''.join([j for i, j in r]))
-    8
-
-    The multiplications and assignments have decreased from 30 to 29.
-
     Although examples have used strings, the sequences may contain
-    orderable elements, e.g. integers:
+    any elements:
 
     >>> s = [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
     >>> from sympy import numbered_symbols
-    >>> extract_repetitions(numbered_symbols(), *s)
+    >>> extract_repetitions(numbered_symbols(), s)
     ([(x1, [1, 2]), (x0, [1, x1])], [[x1, 3], [x0], [x0, 3]])
     >>> r, c = _
 
@@ -2590,13 +2583,13 @@ def extract_repetitions(replacements, *seq):
     >>> c
     [[1, 2, 3], [1, 1, 2], [1, 1, 2, 3]]
     """
-    if not seq:
+    if not seq_list:
         return [], []
-    string = isinstance(seq[0], string_types)
+    string = all(isinstance(i, string_types) for i in seq_list)
     if string:
-        snew = list(seq)
+        snew = list(seq_list)
     else:
-        snew = [list(i) for i in seq]  # leave original unchanged
+        snew = [list(i) for i in seq_list]  # leave original unchanged
     out = snew[:]
     # more terms will be appended, so keep track of the original length
     N = len(snew)
@@ -2606,7 +2599,7 @@ def extract_repetitions(replacements, *seq):
     # record the replacement symbols that are introduced
     reps = []
     while True:
-        long_reps = longest_repetition(*snew, all=True)
+        long_reps = longest_repetition(snew)
         if not long_reps or len(long_reps[0]) <= 1:
             # there was no nontrivial repetition
             break
