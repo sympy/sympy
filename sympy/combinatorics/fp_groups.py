@@ -1163,6 +1163,7 @@ def first_int_class(C):
     lamda = -1
     nu = [None]*n
     mu = []
+    breaker = False
     for alpha in range(1, n):
         # reset ν to "None" after previous value of α
         for beta in range(lamda):
@@ -1174,32 +1175,33 @@ def first_int_class(C):
             mu.append(alpha)
         nu[alpha] = 0
         # compare corresponding entries in C and C_α
-        def compare_entries():
-            lamda = 0
-            beta = 0
-            for beta in range(C.n):
-                for x in C.A:
-                    if C.table[beta][C.A_dict[x]] is None or \
-                            C.table[mu[beta]][C.A_dict[x]] is None:
-                        # continue with α
-                        return
-                    gamma = C.table[beta][C.A_dict[x]]
-                    delta = C.table[mu[beta]][C.A_dict[x]]
-                    if nu[delta] is None:
-                        # delta becomes the next point in Ω_C_α
-                        lamda += 1
-                        nu[delta] = lamda
-                        try:
-                            mu[lamda] = delta
-                        except:
-                            mu.append(delta)
-                    if nu[delta] < gamma:
-                        return False
-                    if nu[delta] > gamma:
-                        # continue with α
-                        return
-        if compare_entries() == False:
-            return False
+        lamda = 0
+        beta = 0
+        for beta in range(C.n):
+            if breaker:
+                break
+            for x in C.A:
+                if C.table[beta][C.A_dict[x]] is None or \
+                        C.table[mu[beta]][C.A_dict[x]] is None:
+                    # continue with α
+                    breaker = True
+                    break
+                gamma = C.table[beta][C.A_dict[x]]
+                delta = C.table[mu[beta]][C.A_dict[x]]
+                if nu[delta] is None:
+                    # delta becomes the next point in Ω_C_α
+                    lamda += 1
+                    nu[delta] = lamda
+                    try:
+                        mu[lamda] = delta
+                    except:
+                        mu.append(delta)
+                if nu[delta] < gamma:
+                    return False
+                if nu[delta] > gamma:
+                    # continue with α
+                    breaker = True
+                    break
     return True
 
 
