@@ -362,6 +362,7 @@ class Heaviside(Function):
     behavior.
 
     >>> from sympy import Heaviside, S
+    >>> from sympy.abc import x
     >>> Heaviside(9)
     1
     >>> Heaviside(-9)
@@ -370,6 +371,8 @@ class Heaviside(Function):
     Heaviside(0)
     >>> Heaviside(0, S.Half)
     1/2
+    >>> (Heaviside(x) + 1).replace(Heaviside(x), Heaviside(x, 1))
+    Heaviside(x, 1) + 1
 
     See Also
     ========
@@ -458,24 +461,22 @@ class Heaviside(Function):
         1
 
         """
-        if H0 == None:
-            H0 = S.NaN
+        H0 = sympify(H0)
+        if H0 is S.NaN:
+            return Heaviside(arg)
         arg = sympify(arg)
         if arg.is_negative:
             return S.Zero
         elif arg.is_positive:
             return S.One
         elif arg.is_zero:
-            if H0 == S.NaN:
-                return
-            elif H0 != None:
-                return H0
+            return H0
         elif arg is S.NaN:
             return S.NaN
         elif fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
 
-    def _eval_rewrite_as_Piecewise(self, arg, H0 = None):
+    def _eval_rewrite_as_Piecewise(self, arg, H0=None):
         """Represents Heaviside in a Piecewise form
 
            Examples
@@ -494,7 +495,7 @@ class Heaviside(Function):
            Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
 
         """
-        if H0 == None:
+        if H0 is None:
             return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
         if H0 == 0:
             return Piecewise((0, arg <= 0), (1, arg > 0))
@@ -502,10 +503,11 @@ class Heaviside(Function):
             return Piecewise((0, arg < 0), (1, arg >= 0))
         return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
 
-    def _eval_rewrite_as_sign(self, *args):
+    def _eval_rewrite_as_sign(self, arg, H0=None):
         """Represents the Heaviside function in the form of sign function.
-        The value of the second argument of Heaviside must be unspecified or 1/2
-        for rewritting as sign to be strictly equivalent
+        The value of the second argument of Heaviside must specify Heaviside(0)
+        as 1/2 for rewritting as sign to be strictly equivalent.  For easier
+        usage, we also allow this rewriting when Heaviside(0) is undefined.
 
         Examples
         ========
@@ -539,12 +541,8 @@ class Heaviside(Function):
         sign
 
         """
-        if len(args) == 2:
-            arg, H0 = args[0], args[1]
-        else:
-            arg, H0 = args[0], None
         if arg.is_real:
-            if H0 == None or H0 == S.Half:
+            if H0 is None or H0 == S.Half:
                 return (sign(arg)+1)/2
 
     def _sage_(self):
