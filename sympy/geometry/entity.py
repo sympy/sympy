@@ -157,7 +157,7 @@ class GeometryEntity(Basic):
         """
         from sympy.geometry.point import Point
         if pt:
-            pt = Point(pt)
+            pt = Point.pointify(pt, dimension=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return type(self)(*[a.scale(x, y) for a in self.args])  # if this fails, override this class
 
@@ -527,7 +527,7 @@ def scale(x, y, pt=None):
     rv[1, 1] = y
     if pt:
         from sympy.geometry.point import Point
-        pt = Point(pt)
+        pt = Point.pointify(pt, dimension=2)
         tr1 = translate(*(-pt).args)
         tr2 = translate(*pt.args)
         return tr1*rv*tr2

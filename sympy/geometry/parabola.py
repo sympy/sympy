@@ -63,14 +63,10 @@ class Parabola(GeometrySet):
 
     def __new__(cls, focus=None, directrix=None, **kwargs):
 
-        if focus is None:
-            focus = Point(0, 0)
+        if focus:
+            focus = Point.pointify(focus, dimension=2)
         else:
-            focus = Point(focus)
-
-        if len(focus) != 2:
-            raise ValueError('The focus must be a two dimensional'
-                             ' point')
+            focus = Point(0, 0)
 
         directrix = Line(directrix)
 

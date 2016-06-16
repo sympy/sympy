@@ -48,10 +48,10 @@ class Plane(GeometryEntity):
 
     """
     def __new__(cls, p1, a=None, b=None, **kwargs):
-        p1 = Point3D(p1)
+        p1 = Point3D.pointify(p1, dimension=3)
         if a and b:
-            p2 = Point3D(a)
-            p3 = Point3D(b)
+            p2 = Point.pointify(a, dimension=3)
+            p3 = Point.pointify(b, dimension=3)
             if Point3D.are_collinear(p1, p2, p3):
                 raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
@@ -149,7 +149,7 @@ class Plane(GeometryEntity):
         The projection is along the normal vector direction, not the z
         axis, so (1, 1) does not project to (1, 1, 2) on the plane A:
 
-        >>> b = Point(1, 1)
+        >>> b = Point3D(1, 1)
         >>> A.projection(b)
         Point3D(5/3, 5/3, 2/3)
         >>> _ in A
@@ -161,7 +161,7 @@ class Plane(GeometryEntity):
         >>> XY.projection((1, 1, 2))
         Point3D(1, 1, 0)
         """
-        rv = Point3D(pt)
+        rv = Point.pointify(pt, dimension=3)
         if rv in self:
             return rv
         return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
@@ -195,7 +195,7 @@ class Plane(GeometryEntity):
 
         >>> from sympy import Plane, Line, Line3D, Point, Point3D
         >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
-        >>> b = Line(Point(1, 1), Point(2, 2))
+        >>> b = Line(Point3D(1, 1), Point3D(2, 2))
         >>> a.projection_line(b)
         Line3D(Point3D(4/3, 4/3, 1/3), Point3D(5/3, 5/3, -1/3))
         >>> c = Line3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
@@ -556,7 +556,7 @@ class Plane(GeometryEntity):
                 dir = (0, 0, 1)
             pts.append(pts[0] + Point3D(*dir))
 
-        p1, p2 = [Point3D(i) for i in pts]
+        p1, p2 = [Point.pointify(i, dimension=3) for i in pts]
         l = Line3D(p1, p2)
         n = Line3D(p1, direction_ratio=self.normal_vector)
         if l in n:  # XXX should an error be raised instead?
@@ -662,7 +662,7 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity, LinearEntity3D
         if isinstance(o, (Point, Point3D)):
             if o in self:
-                return [Point3D(o)]
+                return [Point.pointify(o, dimension=3)]
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
@@ -723,8 +723,7 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity, LinearEntity3D
         x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
-        if isinstance(o, Point):
-            o = Point3D(o)
+        o = Point.pointify(o, dimension=3, ensure_point=False)
         if isinstance(o, Point3D):
             d = k.xreplace(dict(zip((x, y, z), o.args)))
             return d.equals(0)

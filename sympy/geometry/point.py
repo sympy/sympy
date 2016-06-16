@@ -11,6 +11,7 @@ Point3D
 from __future__ import division, print_function
 
 from sympy.core import S, sympify
+from sympy.core.numbers import Number
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
@@ -266,8 +267,8 @@ class Point(GeometryEntity):
         # and translate to every point to the origin
         # XXX: issue #11238 we need to pre-simplify otherwise
         # the rank calculation will be incorrect
-        origin = simplify(Point(points[0]))
-        points = [Point(p) - origin for p in points[1:]]
+        origin = simplify(Point.pointify(points[0]))
+        points = [Point.pointify(p, dimension=origin.ambient_dimension) - origin for p in points[1:]]
 
         m = Matrix([p.args for p in points])
         # XXX: issue #9480 we need `simplify=True` otherwise the
@@ -277,11 +278,47 @@ class Point(GeometryEntity):
     @staticmethod
     def project(a, b):
         """Project the point `a` onto the non-zero point `b`."""
-        a, b = Point(a), Point(b)
+        a, b = Point.pointify(a), Point.pointify(b)
         if b.is_zero:
             raise ValueError("Cannot project to the zero vector.")
+        if a.ambient_dimension != b.ambient_dimension:
+            raise ValueError("Points must be of the same dimension")
 
-        return Point(b)*(a.dot(b) / b.dot(b))
+        return b*(a.dot(b) / b.dot(b))
+
+    @staticmethod
+    def pointify(a, dimension=None, ensure_geometry_entity=True, ensure_point=True, **kwargs):
+        """If `a` is a `Point` or a non-iterable, it is left alone.
+        Otherwise, it is converted to a point with `kwargs` passed along
+        to `Point()`. If `dimension` is set (default `None`), a dimension check is carried out.
+        If `ensure_geometry_entity` is set (default `True`), a type check for GeometryEntity
+        is carried out and the return value will be a GeometryEntity.
+        If `ensure_point` is set (default `True`), a type check for Point is carried out
+        and the return value will be a Point."""
+
+        if isinstance(a, Point):
+            if dimension and a.ambient_dimension != dimension:
+                raise ValueError("Point {} must be of dimension {}.".format(a, dimension))
+            return a
+
+        if iterable(a):
+            # in the special case of 2 and 3 dimensions, let the constructor
+            # ensure the dimension is correct.  In particular, the convention
+            # for Point3D is to allow being called with only two arguments
+            # and silently add a zero as the last coordinate.
+            if dimension == 2:
+                return Point.pointify(Point2D(a, **kwargs))
+            elif dimension == 3:
+                return Point.pointify(Point3D(a, **kwargs))
+            return Point.pointify(Point(a, **kwargs), dimension)
+
+        if ensure_geometry_entity and not isinstance(a, GeometryEntity):
+            raise TypeError("{} must be a GeometryEntity".format(a))
+        if ensure_point and not isinstance(a, Point):
+            raise TypeError("{} must be a Point".format(a))
+
+        return a
+
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
@@ -348,7 +385,7 @@ class Point(GeometryEntity):
         7
 
         """
-        p = Point(p)
+        p = Point.pointify(p, dimension=self.ambient_dimension)
         return sum(abs(a - b) for a, b in zip(self.args, p.args))
 
     def midpoint(self, p):
@@ -454,8 +491,10 @@ class Point(GeometryEntity):
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
-        p2 = Point(p2)
-        return Add(*[a*b for a,b in zip(self, p2)])
+        p2 = Point.pointify(p2, dimension=self.ambient_dimension)
+        # sum could return native python floats, we'd like to ensure the
+        # return value is a sympy object, so wrap in S()
+        return S(sum(a*b for a,b in zip(self, p2)))
 
     def equals(self, other):
         """Returns whether the coordinates of self and other agree."""
@@ -492,7 +531,10 @@ class Point(GeometryEntity):
         """
 
         if iterable(other) and len(other) == len(self):
-            return Point([simplify(a + b) for a, b in zip(self, other)])
+            coords = [simplify(a + b) for a, b in zip(self, other)]
+            if all(isinstance(c, Number) for c in coords):
+                return Point(coords, evaluate=False)
+            return Point(coords)
         else:
             raise ValueError(
                 "Points must have the same number of dimensions")
@@ -505,18 +547,27 @@ class Point(GeometryEntity):
     def __mul__(self, factor):
         """Multiply point's coordinates by a factor."""
         factor = sympify(factor)
-        return Point([simplify(x*factor) for x in self.args])
+        coords = [simplify(x*factor) for x in self.args]
+        if all(isinstance(c, Number) for c in coords):
+            return Point(coords, evaluate=False)
+        return Point(coords)
 
     def __div__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
-        return Point([simplify(x/divisor) for x in self.args])
+        coords = [simplify(x/divisor) for x in self.args]
+        if all(isinstance(c, Number) for c in coords):
+            return Point(coords, evaluate=False)
+        return Point(coords)
 
     __truediv__ = __div__
 
     def __neg__(self):
         """Negate the point."""
-        return Point([-x for x in self.args])
+        coords = [-x for x in self.args]
+        if all(isinstance(c, Number) for c in coords):
+            return Point(coords, evaluate=False)
+        return Point(coords)
 
     def __abs__(self):
         """Returns the distance between this point and the origin."""
@@ -689,7 +740,7 @@ class Point2D(Point):
             return False
         if len(points) <= 2:
             return True
-        points = [Point(p) for p in points]
+        points = [Point.pointify(p) for p in points]
         if len(points) == 3:
             return (not Point.is_collinear(*points))
 
@@ -731,7 +782,7 @@ class Point2D(Point):
 
         rv = self
         if pt is not None:
-            pt = Point(pt)
+            pt = Point.pointify(pt)
             rv -= pt
         x, y = rv.args
         rv = Point(c*x - s*y, s*x + c*y)
@@ -762,7 +813,7 @@ class Point2D(Point):
 
         """
         if pt:
-            pt = Point(pt)
+            pt = Point.pointify(pt)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return Point(self.x*x, self.y*y)
 
