@@ -8,6 +8,8 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.decorators import deprecated
+from sympy.utilities import filldedent
+
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -325,6 +327,26 @@ class DiracDelta(Function):
         """
         if len(args) == 1:
             return Piecewise((DiracDelta(0), Eq(args[0], 0)), (0, True))
+
+    def _eval_rewrite_as_SingularityFunction(self, *args):
+        """
+        Returns the DiracDelta expression written in the form of Singularity Functions.
+
+        """
+        from sympy.solvers import solve
+        from sympy.functions import SingularityFunction
+        free = self.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+            if len(args) == 1:
+                return SingularityFunction(x, solve(args[0], x)[0], -1)
+            return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
+        else:
+            # I dont know how to handle the case for DiracDelta expressions
+            # having arguments with more than one variable.
+            raise TypeError(filldedent('''
+                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+
 
     @staticmethod
     def _latex_no_arg(printer):
