@@ -17,7 +17,7 @@ for:
 
 """
 
-from sympy import S
+from sympy import S, Derivative
 from sympy.core.compatibility import iterable, range
 
 
@@ -352,7 +352,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
     >>> as_finite_diff(d2fdxdy, wrt=x)
-    -f(x - 1/2, y) + f(x + 1/2, y)
+    -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
 
     See also
     ========
@@ -385,7 +385,12 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
             points = [x0 + points*i/S(2) for i
                       in range(-order, order + 1, 2)]
 
+    expression = derivative.expr
+    if len(derivative.variables) > 1:
+        variables = [i for i in derivative.variables if i != wrt]
+        for i in variables:
+            expression = expression.diff(i)
     if len(points) < order+1:
         raise ValueError("Too few points for order %d" % order)
     return apply_finite_diff(order, points, [
-        derivative.expr.subs({wrt: x}) for x in points], x0)
+        expression.subs({wrt: x}) for x in points], x0)
