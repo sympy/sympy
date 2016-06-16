@@ -1,6 +1,6 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo
+    symbols, transpose, Symbol, Piecewise, I, S, Eq, oo, SingularityFunction
 )
 
 from sympy.utilities.pytest import raises
@@ -115,3 +115,6 @@ def test_rewrite():
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)
     assert DiracDelta(x - 5).rewrite(Piecewise) == (
         Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True)))
+
+    assert (x*DiracDelta(x - 10)).rewrite(SingularityFunction) == x*SingularityFunction(x, 10, -1)
+    assert 5*x*y*DiracDelta(y, 1).rewrite(SingularityFunction) == 5*x*y*SingularityFunction(y, 0, -2)
