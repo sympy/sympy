@@ -524,6 +524,26 @@ class Heaviside(Function):
         if arg.is_real:
             return (sign(arg)+1)/2
 
+    def _eval_rewrite_as_SingularityFunction(self, args):
+        """
+        Returns the Heaviside expression written in the form of Singularity Functions.
+
+        """
+        from sympy.solvers import solve
+        from sympy.functions import SingularityFunction
+        free = self.free_symbols
+        if len(free) == 1:
+            x = free.pop()
+            return SingularityFunction(x, solve(args, x)[0], 0)
+            # TODO
+            # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
+            # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
+        else:
+            # I dont know how to handle the case for Heaviside expressions
+            # having arguments with more than one variable.
+            raise TypeError(filldedent('''
+                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+
     def _sage_(self):
         import sage.all as sage
         return sage.heaviside(self.args[0]._sage_())
