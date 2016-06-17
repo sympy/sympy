@@ -1344,7 +1344,7 @@ def _normalize(list_of, parent, negative=True):
     for i in denom:
         lcm_denom = i.lcm(lcm_denom)
 
-    if negative is True:
+    if negative:
         lcm_denom = -lcm_denom
 
     lcm_denom = K.new(lcm_denom.rep)
@@ -1389,6 +1389,9 @@ def _derivate_diff_eq(listofpoly):
 
 
 def _add_lists(list1, list2):
+    """Takes polynomial sequences of two annihilators a and b and returns
+    the list of polynomials of sum of a and b.
+    """
     if len(list1) <= len(list2):
         sol = [a + b for a, b in zip(list1, list2)] + list2[len(list1):]
     else:
@@ -1434,7 +1437,7 @@ def _extend_y0(Holonomic, n):
 
 
 def DMFdiff(frac):
-    # differentiate a p/q DMF object
+    # differentiate a DMF object represented as p/q
     if not isinstance(frac, DMF):
         return frac.diff()
 
