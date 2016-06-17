@@ -2558,11 +2558,11 @@ def longest_repetition(seq_list, limit=None, sort=False):
 
 
 def extract_repetitions(replacements, seq_list):
-    """Return a replacement list and sequences that have been modified
-    by recursively removing repeated subsequences so as to minimize the
-    metric ``R + S`` where ``R`` is the combined length of the
-    computed subsequences and ``S`` is the length of the modified
-    original sequences.
+    """Return a replacement list and sequences that have been
+    modified by recursively removing repeated subsequences from the
+    sequences in `seq_list` and assigning them (in the order found)
+    to the replacements given by `replacements`.
+
 
     Examples
     ========
