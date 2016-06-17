@@ -159,12 +159,11 @@ class CosetTable(DefaultPrinting):
     def is_complete(self):
         """
         The coset table is called complete if it has no undefined entries
-        on the live cosets; that is, whether α^x is defined for all
-        α ∈ Ω and x ∈ A.
+        on the live cosets; that is, α^x is defined for all α ∈ Ω and x ∈ A.
         """
         return not any([None in self.table[coset] for coset in self.omega])
 
-    # Pg. 153
+    # Pg. 153 [1]
     def define(self, alpha, x):
         A = self.A
         if len(self.table) == CosetTableDefaultMaxLimit:
@@ -286,6 +285,7 @@ class CosetTable(DefaultPrinting):
             self.table[b][A_dict_inv[word[i]]] = f
         # otherwise scan is incomplete and yields no information
 
+    # used in the low-index subgroups algorithm
     def scan_check(self, alpha, word):
         """
         Another version of "scan" routine, it checks whether α scans correctly
@@ -337,8 +337,11 @@ class CosetTable(DefaultPrinting):
             # we have an incorrect completed scan with coincidence f ~ b
             # return False, instead of calling coincidence routine
             return False
-        else:
+        elif i == j:
             # return True otherwise
+            self.table[f][A_dict[word[i]]] = b
+            self.table[b][A_dict_inv[word[i]]] = f
+        else:
             return True
 
     def merge(self, k, lamda, q):
@@ -514,8 +517,6 @@ class CosetTable(DefaultPrinting):
                     if p[beta] < beta:
                         break
 
-
-
     def switch(self, beta, gamma):
         """
         Switch the elements β, γ of Ω in C
@@ -604,7 +605,7 @@ class CosetTable(DefaultPrinting):
 
 
 # relator-based method
-def coset_enumeration_r(fp_grp, Y, C):
+def coset_enumeration_r(fp_grp, Y):
     """
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
@@ -729,8 +730,7 @@ def coset_enumeration_r(fp_grp, Y, C):
 
     """
     # 1. Initialize a coset table C for < X|R >
-    if not C:
-        C = CosetTable(fp_grp, Y)
+    C = CosetTable(fp_grp, Y)
     R = fp_grp.relators()
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
@@ -874,6 +874,7 @@ def descendant_subgroups(S, C, R1_x_c, R1_x_c_inv, R2, N):
         for beta in reach:
             if beta == C.n:
                 C.table.append([None]*len(C.A))
+                C.p.append(len(C.A) - 1)
             if beta < N and C.table[beta][A_dict_inv[y]] is None:
                 try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, y, beta)
 
@@ -899,6 +900,24 @@ def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
 
 def first_in_class(C):
     """
+    Checks whether the subgroup H=G1 corresponding to the Coset Table could
+    possibly be the canonical representative of its conjugacy class.
+
+    Parameters
+    ==========
+
+    C: CosetTable
+
+    Returns
+    =======
+
+    bool: True/False
+
+    If this returns False, then no descendant of D can have that property, and
+    so we can abandon D. If it returns True, then we need to process further
+    the node of the search tree corresponding to D, and so we call
+    ``descendant_subgroups`` recursively on D.
+
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c, coset_enumeration_r, CosetTable, first_in_class
     >>> from sympy.combinatorics.free_group import FreeGroup, free_group
     >>> F, x, y = free_group("x, y")
@@ -906,6 +925,9 @@ def first_in_class(C):
     >>> C = CosetTable(f, [])
     >>> C.table
     [[None, None, None, None]]
+
+    Examples
+    ========
 
     # C1
     >>> C.table[0][0] = 0; C.table[0][1] = 0
@@ -1158,49 +1180,62 @@ def first_in_class(C):
     >>> first_in_class(C232)
     False
 
+    # TODO:: Sims points out in [Sim94] that performance can be improved by
+    # remembering some of the information computed by ``first_in_class``. If
+    # the ``continue α`` statement is executed at line 14, then the same thing
+    # will happen for that value of α in any descendant of the table C, and so
+    # the values the values of α for which this occurs could profitably be
+    # stored and passed through to the descendants of C. Of course this would
+    # make the code more complicated.
+
+    # The code below is taken directly from the function on page 208 of [Sim94]
+    # ν[α]
+
     """
     n = C.n
+    # lamda is the largest numbered point in Ω_c_α which is currently defined
     lamda = -1
+    # for α ∈ Ω_c, ν[α] is the point in Ω_c_α corresponding to α
     nu = [None]*n
-    mu = []
-    breaker = False
+    # for α ∈ Ω_c_α, μ[α] is the point in Ω_c corresponding to α
+    mu = [None]*n
+    # mutually ν and μ are the mutually-inverse equivalence maps between
+    # Ω_c_α and Ω_c
+    next_alpha = False
+    # For each 0≠α ∈ [0 .. nc-1], we start by constructing the equivalent
+    # standardized coset table C_α corresponding to H_α
     for alpha in range(1, n):
         # reset ν to "None" after previous value of α
         for beta in range(lamda+1):
             nu[mu[beta]] = None
         # try α as the new point 0 in Ω_C_α
-        try:
-            mu[0] = alpha
-        except IndexError:
-            mu.append(alpha)
+        mu[0] = alpha
         nu[alpha] = 0
         # compare corresponding entries in C and C_α
         lamda = 0
-        for beta in range(C.n):
-            if breaker:
-                break
+        for beta in range(n):
             for x in C.A:
-                if C.table[beta][C.A_dict[x]] is None or \
-                        C.table[mu[beta]][C.A_dict[x]] is None:
-                    # continue with α
-                    breaker = True
-                    break
                 gamma = C.table[beta][C.A_dict[x]]
                 delta = C.table[mu[beta]][C.A_dict[x]]
+                # if either of the entries is undefined,
+                # we move with next α
+                if gamma is None or delta is None:
+                    # continue with α
+                    next_alpha = True
+                    break
                 if nu[delta] is None:
                     # delta becomes the next point in Ω_C_α
                     lamda += 1
                     nu[delta] = lamda
-                    try:
-                        mu[lamda] = delta
-                    except:
-                        mu.append(delta)
+                    mu[lamda] = delta
                 if nu[delta] < gamma:
                     return False
                 if nu[delta] > gamma:
                     # continue with α
-                    breaker = True
+                    next_alpha = True
                     break
+            if next_alpha:
+                break
     return True
 
 
