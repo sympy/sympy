@@ -35,7 +35,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
 known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
-    "Chi": "cosint",
+    "Chi": "coshint",
     "Ci": "cosint",
     "conjugate": "conj",
     "DiracDelta": "dirac",
@@ -44,7 +44,7 @@ known_fcns_src2 = {
     "li": "logint",
     "loggamma": "gammaln",
     "polygamma": "psi",
-    "Shi": "sinint",
+    "Shi": "sinhint",
     "Si": "sinint",
 }
 
