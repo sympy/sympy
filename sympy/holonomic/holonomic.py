@@ -1002,6 +1002,49 @@ class HolonomicFunction(object):
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
 
+    def to_hyper(self):
+        """
+        Converts a Holonomic Function Hypergeometric if possible.
+        """
+
+        recurrence = self.to_sequence().recurrence
+        order = recurrence.order
+
+        # only recurrence relations with order 1 are implemented yet
+        if order is not 1:
+            raise NotImplementedError
+
+        a = recurrence.listofpoly[0]
+        b = recurrence.listofpoly[1]
+
+        # normalize the coefficients
+        k = -a.rep[0] / b.rep[0]
+        a = a * (a.rep[0])**-1
+        b = b * (b.rep[0])**-1
+
+        # roots of these polynomials gives us
+        # the parameters of hypergeometric function.
+        arg1 = roots(a.rep)
+        arg2 = roots(b.rep)
+        ap = []
+        bq = []
+
+        for i in arg1:
+            ap.extend([-i] * arg1[i])
+        for i in arg2:
+            bq.extend([-i] * arg2[i])
+
+        if 1 in bq:
+            bq.remove(1)
+        else:
+            ap.append(1)
+
+        # there is a convention of having the term (r+1)
+        # in the denominator
+        if self._have_init_cond and self.x0 == 0:
+            return self.y0[0] * hyper(ap, bq, k * self.x)
+        return hyper(ap, bq, k * self.x)
+
 
 def from_hyper(func, x0=0, evalf=False):
     """
