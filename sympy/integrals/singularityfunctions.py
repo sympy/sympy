@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.functions import SingularityFunction, DiracDelta
+from sympy.functions import SingularityFunction, DiracDelta, Heaviside
 from sympy.core import sympify
 
 
@@ -17,14 +17,12 @@ def singularityintegrate(f, x):
         n = sympify(f.args[2])
         if n.is_positive or n.is_zero:
             return SingularityFunction(x, a, n + 1)/(n + 1)
-        elif n == -1:
+        elif n == -1 or n == -2:
             # For this case I am using the inbuilt DiracDelta integration of Sympy.
             from sympy.integrals import integrate
 
             expr = f.rewrite(DiracDelta)
             expr = integrate(expr, x)
-            return expr
+            return expr.rewrite(SingularityFunction)
 
-        else:
-            return SingularityFunction(x, a, n + 1)
     return None
