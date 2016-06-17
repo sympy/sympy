@@ -161,7 +161,11 @@ class Plane(GeometryEntity):
         >>> XY.projection((1, 1, 2))
         Point3D(1, 1, 0)
         """
-        rv = Point.pointify(pt, dimension=3)
+        try:
+            rv = Point.pointify(pt, dimension=3)
+        except ValueError:
+            rv = Point3D(pt)
+
         if rv in self:
             return rv
         return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]

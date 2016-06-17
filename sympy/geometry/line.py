@@ -2273,9 +2273,15 @@ class Line3D(LinearEntity3D, Line):
         if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
-            p1 = Point.pointify(p1, dimension=3)
+            try:
+                p1 = Point.pointify(p1, dimension=3)
+            except ValueError:
+                p1 = Point3D(p1)
         if pt is not None and len(direction_ratio) == 0:
-            pt = Point.pointify(pt, dimension=3)
+            try:
+                pt = Point.pointify(pt, dimension=3)
+            except ValueError:
+                pt = Point3D(pt)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2373,9 +2379,15 @@ class Ray3D(LinearEntity3D, Ray):
         if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
-            p1 = Point.pointify(p1, dimension=3)
+            try:
+                p1 = Point.pointify(p1, dimension=3)
+            except ValueError:
+                p1 = Point3D(p1)
         if pt is not None and len(direction_ratio) == 0:
-            pt = Point.pointify(pt, dimension=3)
+            try:
+                pt = Point.pointify(pt, dimension=3)
+            except ValueError:
+                pt = Point3D(pt)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2529,8 +2541,12 @@ class Segment3D(LinearEntity3D, Segment):
         #   if p1.x != p2.x then p1.x < p2.x
         #   if p1.x == p2.x then p1.y < p2.y
         #   The z-coordinate will not come into picture while ordering
-        p1 = Point.pointify(p1, dimension=3)
-        p2 = Point.pointify(p2, dimension=3)
+        try:
+            p1 = Point.pointify(p1, dimension=3)
+            p2 = Point.pointify(p2, dimension=3)
+        except ValueError:
+            p1, p2 = Point3D(p1), Point3D(p2)
+
         if p1 == p2:
             return p1
         if (p1.x > p2.x) == True:
