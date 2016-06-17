@@ -181,9 +181,9 @@ class SingularityFunction(Function):
         n = sympify(self.args[2])
 
         if n == -2:
-            return diff(Heaviside(x - a), x, 2)
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
         if n == -1:
-            return diff(Heaviside(x - a), x, 1)
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a)
 
