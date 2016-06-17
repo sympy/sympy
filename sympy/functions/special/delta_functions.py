@@ -5,7 +5,7 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
-from sympy.functions.elementary.complexes import im, sign
+from sympy.functions.elementary.complexes import im, sign, Abs
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.decorators import deprecated
 from sympy.utilities import filldedent
@@ -309,7 +309,7 @@ class DiracDelta(Function):
            Examples
            ========
 
-           >>> from sympy import DiracDelta, Piecewise, Symbol
+           >>> from sympy import DiracDelta, Piecewise, Symbol, SingularityFunction
            >>> x = Symbol('x')
 
            >>> DiracDelta(x).rewrite(Piecewise)
@@ -335,9 +335,13 @@ class DiracDelta(Function):
         """
         from sympy.solvers import solve
         from sympy.functions import SingularityFunction
+        if self == DiracDelta(0):
+            return SingularityFunction(0, 0, -1)
+        if self == DiracDelta(0, 1):
+            return SingularityFunction(0, 0, -2)
         free = self.free_symbols
         if len(free) == 1:
-            x = free.pop()
+            x = (free.pop())
             if len(args) == 1:
                 return SingularityFunction(x, solve(args[0], x)[0], -1)
             return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
@@ -531,9 +535,11 @@ class Heaviside(Function):
         """
         from sympy.solvers import solve
         from sympy.functions import SingularityFunction
+        if self == Heaviside(0):
+            return SingularityFunction(0, 0, 0)
         free = self.free_symbols
         if len(free) == 1:
-            x = free.pop()
+            x = (free.pop())
             return SingularityFunction(x, solve(args, x)[0], 0)
             # TODO
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
