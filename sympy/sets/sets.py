@@ -155,29 +155,29 @@ class Set(Basic):
 
     def _union_simplify(self, other):
         """
-        Try to reduce number of imageset in the args.
-        It is mostly helper to _solve_trig method defined in
-        solvers/solveset.py.
+        Try to reduce number of imageset in the args. Helper method for
+        ImageSet `_union `. It helps to get simpler imageset or
+        union of imageset.
 
-        Helper method for `_union ` of ImageSet.
+        First extract the expression of imageset and store in separate list
+        (self_expr for self and final_list for other). If there is any expr in
+        self_list have difference of pi or -pi with any final_expr expr. then
+        club them into one expr( (2*n + 1)*pi and 2*n*pi  => n*pi). remove
+        previous expr from final_expr and self_expr. Add this new expr in
+        final_expr list. At the end final_list contains the minimum number of
+        expr that can generate all the expressions of `self` and  `other`.
 
-        First extract the expression of imageset and put in list in new_list
-        (for self) and final_list(for other). If there is any
-        expr in new_list have difference of pi or -pi with any final_list expr.
-        then club them into one expr( (2*n + 1)*pi and 2*n*pi  => n*pi) ,
-        add them and remove previous expr from final_list.
-        At the end final_list contains the minimum number of expr that can
-        generate all the expressions of self and  other.
+        * Note: This should be used when there is linear expr in ImageSet(s).
 
         Parameters
         ==========
 
-        self : S.EmptySet of imageset(s).
+        self : S.EmptySet or imageset(s).
         other : S.EmptySet or  imageset(s)
 .
         Returns
         =======
-        simplified imageset(s) if possible otherwise self + other .
+        Simplified imageset(s) if possible otherwise `self` union `other`.
 
         Examples
         ========
@@ -204,15 +204,23 @@ class Set(Basic):
         {n*pi | n in Integers()} U {2*n*pi + -- | n in Integers()}
                                              3
 
-
         """
 
         from sympy.sets.fancysets import ImageSet
         from sympy.core.function import Lambda
         from sympy.core import pi
+        from sympy.polys import Poly
 
+        # don't try to reduce imageset(s) from the same union.
+        # (`_solve_trig` function defined in `solveset.py`
+        # solves the factors of trig eq and union of these soln is final ans,
+        # soln of one factor (say f1) should be clubbed with soln of another
+        # factor(say f2) and so on. ImageSet(s) of f1 or f2 should not be
+        # reduced(clubbed) with it's args.
         if self is S.EmptySet:
             return other
+        elif other is S.EmptySet:
+            return self
 
         new_list = []
         # number of imageset
@@ -225,7 +233,7 @@ class Set(Basic):
                 # list of imageset
                 new_list.append(self.args[i])
 
-        new_expr = []
+        self_expr = []
         final_expr = []
         # soln list
         final_list = []
@@ -240,50 +248,85 @@ class Set(Basic):
                 # list of imageset
                 final_list.append(other.args[i])
 
-        # use one dummy variable n_final
-        n_self = (new_list[0].lamda.expr).atoms(Dummy).pop()
-        # there may be problem when inside expr we have more than one
-        # dummy variable
-        n_final = (final_list[0].lamda.expr).atoms(Dummy).pop()
+        # use one dummy variable n_self
+        n_self = (new_list[0].lamda.expr).atoms(Dummy)
+        if len(n_self) > 1:
+            raise NotImplementedError(
+                'Use symbols only. \
+                More than one dummy is present in ImageSet')
+        elif len(n_self) == 0:
+            raise NotImplementedError("use %s as Dummy" %
+                                      new_list[0].lamda.args[0][0])
+        n_self = n_self.pop()
+        base = final_list[0].base_set
+        n_final = (final_list[0].lamda.expr).atoms(Dummy)
+        if len(n_final) > 1:
+            raise NotImplementedError(
+                'Use symbols only. \
+                More than one dummy is present in ImageSet')
+        elif len(n_final) == 0:
+            raise NotImplementedError("use %s as Dummy" %
+                                      n_final[0].lamda.args[0][0])
+        n_final = n_final.pop()
 
         # Extracting expr
         for s in new_list:
             # lambda expression
-            lamb = s.lamda.expr
-            new_expr.append(lamb.subs(n_self, n_final))
-
+            lamb_expr = s.lamda.expr
+            base_2 = s.base_set
+            if Poly(lamb_expr, n_self).is_linear:
+                self_expr.append(lamb_expr)
+            else:
+                raise NotImplementedError('Implemented for linear ImageSet.\
+                    non linear expr found in imageSet')
+            if base_2.is_superset(base):
+                # take the bigger base set
+                base = base_2
         for s in final_list:
             # lambda expression
-            lamb = s.lamda.expr
-            final_expr.append(lamb)
+            lamb_expr = s.lamda.expr
+            base_2 = s.base_set
+            if Poly(lamb_expr, n_final).is_linear:
+                final_expr.append(lamb_expr.subs(n_final, n_self))
+            else:
+                raise NotImplementedError('Implemented for linear ImageSet.\
+                    non linear expr found in imageSet')
+            if base_2.is_superset(base):
+                # take the bigger base set
+                base = base_2
         final = S.EmptySet
         i = 0
 
-        # there may be problem when it is not linear
-        # but we don't get that case in _solve_trig.
+        # there may be problem when there is multiple dummy variables present
+        # in the imageset expr but we don't get that case in _solve_trig.
         while i < new_img_len:
             done = False
             for j in range(0, len(final_expr)):
-                if final_expr[j] - new_expr[i] == pi:
+                if final_expr[j] - self_expr[i] == pi:
                     # (2*x*pi + pi + expr1) -( 2*x*pi  + exp1) = pi
                     # can be => x*pi + expr1
-                    final_expr.extend([pi * n_final + new_expr[i].subs(n_final, 0)])
+                    final_expr.extend(
+                        [pi * n_self + self_expr[i].subs(n_self, 0)])
                     final_expr.remove(final_expr[j])
                     done = True
-                elif final_expr[j] - new_expr[i] == -pi:
+                elif final_expr[j] - self_expr[i] == -pi:
                     # (2*x*pi + expr1) -( 2*x*pi  + pi + exp1) = -pi
                     # can be => x*pi + expr1
-                    final_expr += [pi * n_final + final_expr[j].subs(n_final, 0)]
+                    final_expr += [
+                        pi * n_self + final_expr[j].subs(n_self, 0)
+                    ]
                     final_expr.remove(final_expr[j])
                     done = True
             if not done:
-                final_expr.append(new_expr[i])
+                final_expr.append(self_expr[i])
             i += 1
 
-        final = Union(*[ImageSet(Lambda(n_final, s), S.Integers) \
-                            for s in final_expr], evaluate=False)
+        final = Union(*[
+            ImageSet(Lambda(n_self, s), base)
+            for s in final_expr], evaluate=False)
+        del n_self
+        del n_final
         return final
-
 
     def _union(self, other):
         """
@@ -297,9 +340,36 @@ class Set(Basic):
 
         Used within the :class:`Union` class
         """
+        from sympy.polys.polyerrors import PolynomialError
+        from sympy.sets.fancysets import ImageSet
+
+        def _check_imageset(self):
+            # Returns True if all the args are ImageSet
+            # otherwise false
+            if isinstance(self, ImageSet):
+                return True
+            elif isinstance(self, Union):
+                for self_img in self.args:
+                    if not isinstance(self_img, ImageSet):
+                        return False
+                return True
+            else:
+                return False
         try:
-            return self._union_simplify(other)
-        except:
+            if _check_imageset(self) and _check_imageset(other):
+                return self._union_simplify(other)
+            else:
+                return None
+        except (
+            NotImplementedError,
+            PolynomialError
+        ):
+            # `_union_simplify` is for simplifying trigonometric eq. solution
+            # (Union of Imageset, solved from `_solve_trig` function present in
+            # solveset.py). So when it is not linear or contains more than one
+            # dummy variables, then just return None. Simplification of
+            # nonlinear imageset is not implemented. PolynomialError
+            #  when there is non polynomial imageset present.
             return None
 
     def complement(self, universe):

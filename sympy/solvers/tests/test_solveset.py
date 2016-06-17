@@ -707,6 +707,7 @@ def test_solve_complex_sqrt():
 
 
 def test_solveset_complex_tan():
+    n = Dummy('n')
     s = solveset_complex(tan(x).rewrite(exp), x)
     assert s == imageset(Lambda(n, n*pi), S.Integers)
 
@@ -716,7 +717,7 @@ def test_solveset_complex_tan():
 
 
 def test_solve_trig():
-    from sympy.abc import n
+    n = Dummy('n')
     assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
     assert solveset_real(tan(x), x) == \
@@ -727,7 +728,6 @@ def test_solve_trig():
     assert solveset_real(cos(x), x) == \
         imageset(Lambda(n, n*pi + pi/2), S.Integers)
 
-    # using imageset this testcase returns error
     assert solveset_real(cos(x) + sin(x), x) == \
         ImageSet(Lambda(n, n*pi - pi/4), S.Integers)
 
@@ -739,10 +739,15 @@ def test_solve_trig():
     assert solveset_complex(cos(x) - S.Half, x) == \
         Union(ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers),
               ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers))
-
-    eq = (2*cos(x)+1)/(2*cos(x)-1)
+    eq = (2*cos(x) + 1)/(2*cos(x) - 1)
     soln = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) + \
         ImageSet(Lambda(n, 2*n*pi + 4*pi/3), S.Integers)
+    assert solveset_real(eq, x) == soln
+
+    eq = 2*cos(2*x + pi/4) - 1
+    lamb_expr1 = Lambda(n, n*pi + pi/24)
+    lamb_expr2 = Lambda(n, n*pi + 17*pi/24)
+    soln = ImageSet(lamb_expr1, S.Integers) + ImageSet(lamb_expr2, S.Integers)
     assert solveset_real(eq, x) == soln
 
 
@@ -909,7 +914,8 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq(exp(2/x**2)*exp(2*x) + exp(x**(-2))*exp(x), 0), S.Reals)
+    unsolved_object = ConditionSet(
+        x, Eq(exp(2/x**2)*exp(2*x) + exp(x**(-2))*exp(x), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
@@ -1512,7 +1518,7 @@ def test_issue_10671():
 
 
 def test_simplifed_trig_solution():
-    n = Dummy('n', real = True)
+    n = Dummy('n', real=True)
     assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == \
     ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers) + \
     ImageSet(Lambda(n, n*pi + pi/6), S.Integers) + \
@@ -1527,11 +1533,11 @@ def test_simplifed_trig_solution():
     assert solveset((sin(x)+1)**2, x, S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
 
-    # `factor_list` is helpful for these types of case
+    # `factor_list` is used in _solve_trig for these types of case
     n = Dummy('n')
-    soln = ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers) +\
-    ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers) + \
-    ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers)
+    soln = ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers) + \
+    ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers) + \
+    ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers)
     assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == soln
 
     assert solveset_real(tan(x)**2 - 3, x) == \

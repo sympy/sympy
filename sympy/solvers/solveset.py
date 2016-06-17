@@ -410,10 +410,11 @@ def _solve_trig(f, symbol, domain):
     from sympy import factor, factor_list
 
     def good_for_factor(trig_eq):
+        # if there is more than 1 Trig function present then only do
+        # factorization.
         i = 0
         for a in trig_eq.args:
-            if isinstance(a, TrigonometricFunction) or \
-                                isinstance(a, HyperbolicFunction):
+            if isinstance(a, (TrigonometricFunction, HyperbolicFunction)):
                 i += 1
                 if i >= 2:
                     return True
@@ -421,15 +422,15 @@ def _solve_trig(f, symbol, domain):
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
-    # TODO trigh function for Hyperbolic Functions if required
+    # TODO trighsimp function for Hyperbolic Functions if required
     f_orig = f
     if f.is_number or isinstance(f, (bool, BooleanAtom)):
-        # S.Reals in solution
+        # f is True in S.Reals
         return ConditionSet(symbol, Eq(f, 0), domain)
 
-    # factor_list isn't working for factor_list(sqrt(2)*sin(x))
-    # so `.as_independent` is used. Fix issue => remove below line.
-    # issue #11198
+    # factor_list doesn't work for factor_list(func*sin(x)), where func
+    # is function in `pi` or any non number.
+    # so `.as_independent` is used.
     if f.is_Mul:
         ind, f = f.as_independent(symbol)
     fact_list = factor_list(Poly(f))[1]
@@ -439,29 +440,26 @@ def _solve_trig(f, symbol, domain):
         f1 = fact[0].as_expr()
         f1 = f1.rewrite(exp)
         factors = S.EmptySet
-        # factor the `exp` expression reduce the number of ImageSet
-        # eg. f = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1
-        # compare soln of solveset(f) and solveset(factor(f.rewrite(exp)))
-        if not len(fact_list) == 1 or good_for_factor(fact[0]):
-            # if only one term then it is over factorization
-            # no need at that time eg. f = sin(x) can directly give n*pi by
-            # exp(I*x) - exp(-I*x)
+        # factor the `exp` expression reduces the number of ImageSet
+        # eg. f = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, one can check by
+        # comparing soln of solveset(f) and solveset(factor(f.rewrite(exp)))
+        if len(fact_list) != 1 or good_for_factor(fact[0]):
+            # if only one term then no need of factorization
             f1 = factor(f1)
-        # If factor_list would be for exp(I*x) types of expression then we can
-        # directly use the factor_list here.
         if f1.is_Mul:
+            # exp form have multiplications
+            # store each terms
             for fact in f1.args:
                 # dont add numbers
                 if not fact.is_number:
-                    # sorted using FiniteSet
                     factors += FiniteSet(fact)
         else:
             factors = [f1]
 
         for f2 in factors:
             soln_fact = solveset_complex(f2, symbol)
-            # Inside sets.py _union_simplify tryies to
-            # reduce number of ImageSet
+            # Inside sets.py _union_simplify
+            # reduce number of ImageSet, if possible
             soln += soln_fact
 
     if isinstance(soln, ConditionSet):
