@@ -353,7 +353,7 @@ class Heaviside(Function):
 
     .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,
            but Maple uses ``H(0) = undefined``.  Different application areas
-           may have specific convensions.  For example, in control theory, it
+           may have specific conventions.  For example, in control theory, it
            is common practice to assume ``H(0) == 0`` to match the Laplace
            transform of a DiracDelta distribution.
 
