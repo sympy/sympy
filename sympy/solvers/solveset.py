@@ -563,6 +563,7 @@ def solve_decomposition(f, symbol, domain):
 
     """
     from sympy.solvers.decompogen import decompogen
+    from sympy.calculus.util import function_range
     # decompose the given function
     g_s = decompogen(f, symbol)
     # `y_s` represents the set of values for which the function `g` is to be
@@ -572,42 +573,36 @@ def solve_decomposition(f, symbol, domain):
     # As we are interested in solving the equation: f = 0
     y_s = FiniteSet(0)
     for g in g_s:
-        # initialise `results` as an empty set at the beginning of iteration
+        frange = function_range(g, symbol, domain)
+        y_s = Intersection(frange, y_s)
         result = S.EmptySet
         if isinstance(y_s, FiniteSet):
             for y in y_s:
                 solutions = solveset(Eq(g, y), symbol, domain)
                 if not isinstance(solutions, ConditionSet):
                     result += solutions
+
         else:
             solutions = solveset(g, symbol, domain)
-            # if isinstance(solutions, ConditionSet) or solutions is S.EmptySet:
-            #    return ConditionSet(symbol, Eq(f, 0), domain)
             if isinstance(solutions, FiniteSet):
                 if isinstance(y_s, ImageSet):
-                    foo = (y_s,)
+                    iter_iset = (y_s,)
+
                 elif isinstance(y_s, Union):
-                    foo = y_s.args
+                    iter_iset = y_s.args
+
                 for solution in solutions:
-                    for iset in foo:
-                        new_expr = iset.lamda.expr- solution
+                    for iset in iter_iset:
+                        new_expr = solveset(Eq(iset.lamda.expr, g), symbol, domain)
                         dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
                         base_set = iset.base_set
                         result += ImageSet(Lambda(dummy_var, new_expr), base_set)
-            else:
-                if isinstance(solutions, ImageSet):
-                    foo = (solutions,)
-                elif isinstance(solutions, Union):
-                    foo = solutions.args
-
-                frange = func_range(g, symbol, domain)
-                for y in y_s:
-                    if y in frange:
-                        results += Intersection(y, frange)
 
         if result is S.EmptySet:
             return ConditionSet(symbol, Eq(f, 0), domain)
+
         y_s = result
+
     return y_s
 
 
