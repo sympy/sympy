@@ -2446,11 +2446,11 @@ def split(seq, ignore=[]):
     return rv
 
 
-def longest_repetition(seq_list, limit=None):
-    """Returns a list of contiguous, nonoverlapping subsequences 
-    that are repeated within the sequences given in `seq_list`. By 
-    default the longest subsequences are returned but if the 
-    keyword `limit` is given, no sequence longer than `limit` will 
+def longest_repetition(seq_list, limit=None, sort=False):
+    """Returns a list of contiguous, nonoverlapping subsequences
+    that are repeated within the sequences given in `seq_list`. By
+    default the longest subsequences are returned but if the
+    keyword `limit` is given, no sequence longer than `limit` will
     be returned.
 
 
@@ -2463,13 +2463,13 @@ def longest_repetition(seq_list, limit=None):
     >>> lr(['bab'])
     ['b']
     >>> lr(['babab'])
-    ['ab', 'ba']
+    ['ba', 'ab']
     >>> lr(['banana'])
     ['an', 'na']
     >>> lr(['abdc', 'bca', 'bcdc'])
     ['bc', 'dc']
     >>> lr(['abdc', 'bca', 'bcdce'], limit=1)
-    ['a', 'b', 'c', 'd']
+    ['a', 'b', 'd', 'c']
 
     If there are characters that should be ignored,
     split those out and process the fragments.
@@ -2486,23 +2486,37 @@ def longest_repetition(seq_list, limit=None):
     >>> pieces = [i for si in seq for i in split(si, [0, -1])]; pieces
     [(1, 2), (2, 3, 4), (2, 3, 5), (1, 2, 3), (1, 2)]
     >>> lr(pieces)
-    [(1, 2), (2, 3)]
+    [[1, 2], [2, 3]]
+
+    Notes
+    =====
+
+    Use of the keyword `sort` is not necessary. By default, the elements of
+    sequences are mapped to integers in the order in which new elements are
+    encountered in traversing the sequences. If the elements of the sequences
+    can be sorted then `sort` can be set to True.
     """
-    # sort the indices by suffix from index j in sequence i
-    try:
+    if sort:
+        # sort the indices by suffix from index j in sequence i
         ix = [(i, j) for i in range(len(seq_list)) for j in range(len(seq_list[i]))]
         ix.sort(key=lambda ij: seq_list[ij[0]][ij[1]:])
-    except TypeError:
-        # handle items that can't be sorted
+    else:
+        # this handles unsortable items and makes output canonical
+        # across systems
+        strings = all(isinstance(i, string_types) for i in seq_list)
         u = list(uniq([j for i in seq_list for j in i]))
         uu = dict(zip(range(len(u)), u))
         try:
             u = dict(zip(u, range(len(u))))
             ints = [[u[j] for j in i] for i in seq_list]
-        except:
+        except TypeError:
+            # unhashable key?
             ints = [[u.index(j) for j in i] for i in seq_list]
-        lr = longest_repetition(ints, limit)
-        return [[uu[j] for j in i] for i in lr]
+        lr = longest_repetition(ints, limit, sort=True)
+        if strings:
+            return [''.join([uu[j] for j in i]) for i in lr]
+        else:
+            return [[uu[j] for j in i] for i in lr]
     # default limit (no limit)
     limit = max(len(i) for i in seq_list) if limit is None else limit
     # begin subsequence identification and collection
@@ -2559,9 +2573,9 @@ def extract_repetitions(replacements, seq_list):
     >>> U = string.ascii_uppercase
     >>> r, c = extract_repetitions(U, s)
     >>> r
-    [('D', 'dc'), ('C', 'bb'), ('B', 'aa'), ('A', 'Cc')]
+    [('D', 'aa'), ('C', 'dc'), ('B', 'bc'), ('A', 'bB')]
     >>> c
-    ['cbedAebc', 'baeABC', 'bdeBdDD']
+    ['cbedAeB', 'baeADbb', 'bdeDdCC']
 
     Although examples have used strings, the sequences may contain
     any elements:

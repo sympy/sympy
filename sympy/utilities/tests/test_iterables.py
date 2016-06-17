@@ -779,7 +779,7 @@ def test_longest_repetition():
     assert lr(['aaa']) == ['a']
     assert lr(['aaaa']) == ['aa']
     assert lr(['aaaac']) == ['aa']
-    assert lr(['babab']) == ['ab', 'ba']
+    assert lr(['babab']) == ['ba', 'ab']
     assert lr(['bcbcb']) == ['bc', 'cb']
     assert lr(['abcabd']) == ['ab']
     assert lr(['aabaabc']) == ['aab']
@@ -793,7 +793,7 @@ def test_longest_repetition():
     assert lr('baaabaaaa'.split('b')) == ['aaa']
     s = [1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1]
     assert longest_repetition([s], limit=2) == \
-        [[0, 1], [1, 0], [1, 1]]
+        [[1, 1], [1, 0], [0, 1]]
     # for mixed input (rare case, likely) strings are returned as lists
     assert extract_repetitions(
         'ABC',
@@ -842,13 +842,13 @@ def test_extract_repetitions():
         'edddbcceea', 'eeddacdcac']
     a, b = extract_repetitions(U, s)
     assert a == \
-        [('P', 'dd'), ('O', 'ce'), ('N', 'bb'), ('M', 'ad'), ('L', 'ac'),
-        ('K', 'ed'), ('J', 'ab'), ('I', 'Kd'), ('H', 'eN'), ('G', 'dca'),
-        ('F', 'cK'), ('E', 'Ld'), ('D', 'Jd'), ('C', 'eF'), ('B', 'eMb'),
-        ('A', 'Ec')]
+        [('Q', 'bb'), ('P', 'dc'), ('O', 'ec'), ('N', 'ee'), ('M',
+        'ad'), ('L', 'dd'), ('K', 'ac'), ('J', 'ed'), ('I', 'ab'),
+        ('H', 'Jb'), ('G', 'eQ'), ('F', 'Id'), ('E', 'Pa'), ('D',
+        'Ld'), ('C', 'eMb'), ('B', 'OJ'), ('A', 'Ec')]
     assert b == \
-        ['GJKKb', 'aaEPJa', 'GOAb', 'ecJFbM', 'eebeDH', 'HdDNc', 'PBB',
-        'dCcC', 'IdbcOea', 'eIAL']
+        ['EIJH', 'aaKDIa', 'AeKPb', 'OIcHM', 'NbeFG', 'GdFQc', 'LCC',
+        'dBcB', 'eDbccNa', 'eJdKA']
     for ai in a[::-1]:
         for i in range(len(b)):
             b[i] = b[i].replace(*ai)
