@@ -22,6 +22,21 @@ except ImportError:
 
 from sympy.release import __version__
 
+if 'dev' in __version__:
+    def enable_warnings():
+        import os
+        import warnings
+        action ='default'
+        travis = (os.environ.get('TRAVIS','') == 'true')
+        if travis:
+            action = 'error'
+        warnings.filterwarnings(action,   '.*',                      DeprecationWarning, module='sympy.*')
+        # let's not fail the test on that yet. 
+        warnings.filterwarnings('default', '.*inspect.getargspec.*', DeprecationWarning, module='sympy.*')
+    enable_warnings()
+    del enable_warnings
+
+
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
     raise ImportError("Python Version 2.6 or above is required for SymPy.")
@@ -79,3 +94,4 @@ evalf._create_evalf_table()
 #import abc
 
 from .deprecated import *
+
