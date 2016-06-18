@@ -1007,12 +1007,40 @@ class HolonomicFunction(object):
         """
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
+
+        Returns an answer of the form:
+        a1 * x**b1 * hyper() + a2 * x**b2 * hyper() ...
+
+        This is very useful as one can now use `hyperexpand` to find the
+        symbolic expressions/functions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+
+        # sin(x)
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).to_hyper()
+        x*hyper((), (3/2,), -x**2/4)
+
+        # exp(x)
+        >>> HolonomicFunction(Dx - 1, x, 0, 1).to_hyper()
+        hyper((), (), x)
+
         """
 
         recurrence = self.to_sequence()
         u0 = recurrence.u0
         r = recurrence.recurrence
+
+        # order of the recurrence relation
         m = r.order
+
+        # check if the recurrence represents a hypergeometric series
         is_hyper = True
         x = self.x
 
@@ -1022,38 +1050,50 @@ class HolonomicFunction(object):
                 break
 
         if not is_hyper:
-            raise TypeError("Can't convert to Hypergeometric")
+            raise TypeError("The series is not Hypergeometric")
 
         a = r.listofpoly[0]
         b = r.listofpoly[-1]
 
-        # normalize the coefficients
-        c = - (a.rep[0] * m**(a.degree())) / (b.rep[0] * m**(b.degree()))
-        a = a * (a.rep[0])**-1
-        b = b * (b.rep[0])**-1
+        # the constant multiple of argument of hypergeometric function
+        c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+
         sol = 0
+
         arg1 = roots(a.rep)
         arg2 = roots(b.rep)
 
-        for i, j in enumerate(u0):
-            if j is 0:
+        # iterate thorugh the initial conditions to find
+        # the hypergeometric representation of the given
+        # function.
+        # The answer will be a linear combination
+        # of different hypergeometric series which satisfies
+        # the recurrence.
+        for i in range(m):
+
+            # if the coefficient u0[i] is zero, then the
+            # independent hypergeomtric series starting with
+            # x**i is not a part of the answer.
+            if u0[i] is 0:
                 continue
 
             ap = []
             bq = []
 
+            # substitute m * n + i for n
             for k in arg1:
                 ap.extend([(i - k) / m] * arg1[k])
 
             for k in arg2:
                 bq.extend([(i - k) / m] * arg2[k])
 
+            # convention of (k + 1) in the denominator
             if 1 in bq:
                 bq.remove(1)
             else:
                 ap.append(1)
 
-            sol += j * hyper(ap, bq, c * x**m) * x**i
+            sol += u0[i] * hyper(ap, bq, c * x**m) * x**i
 
         return sol
 
