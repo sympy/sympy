@@ -6,7 +6,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_group import FreeGroupElement
-from itertools import chain
+from itertools import chain, product
 from bisect import bisect_left
 
 
@@ -153,6 +153,8 @@ class CosetTable(DefaultPrinting):
         """The number 'n' represents the length of the sublist containing the
         live cosets.
         """
+        if not self.table:
+            return 0
         return max(self.omega) + 1
 
     # Pg 152 [1]
@@ -337,8 +339,11 @@ class CosetTable(DefaultPrinting):
             # we have an incorrect completed scan with coincidence f ~ b
             # return False, instead of calling coincidence routine
             return False
-        else:
-            return True
+        elif j == i:
+            # deduction process
+            self.table[f][A_dict[word[i]]] = b
+            self.table[b][A_dict_inv[word[i]]] = f
+        return True
 
     def merge(self, k, lamda, q):
         p = self.p
@@ -459,9 +464,9 @@ class CosetTable(DefaultPrinting):
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
-        for beta in self.omega:
-            # complete scan all relators under all cosets(obviously live)
-            # without making new definitions
+        # complete scan all relators under all cosets(obviously live)
+        # without making new definitions
+        for beta, w in self.omega:
             for w in R:
                 self.scan(beta, w)
                 if p[beta] < beta:
@@ -496,22 +501,19 @@ class CosetTable(DefaultPrinting):
         """
         p = self.p
         while len(self.deduction_stack) > 0:
-            if len(self.deduction_stack) >= max_stack_size:
-                self.lookahead()
-                del self.deduction_stack[:]
-            else:
-                alpha, x = self.deduction_stack.pop()
-                if p[alpha] == alpha:
-                    for w in R_c_x:
-                        self.scan_check(alpha, w)
-                        if p[alpha] < alpha:
-                            break
+            alpha, x = self.deduction_stack.pop()
+            for w in R_c_x:
+                if not self.scan_check(alpha, w):
+                    self.table = []
+                    self.p = []
+                    return
             beta = self.table[alpha][self.A_dict[x]]
             if beta is not None and p[beta] == beta:
                 for w in R_c_x_inv:
-                    self.scan_check(beta, w)
-                    if p[beta] < beta:
-                        break
+                    if not self.scan_check(beta, w):
+                        self.table = []
+                        self.p = []
+                        return
 
     def switch(self, beta, gamma):
         """
@@ -562,15 +564,14 @@ class CosetTable(DefaultPrinting):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         gamma = 1
-        for alpha in range(self.n):
-            for x in A:
-                beta = self.table[alpha][A_dict[x]]
-                if beta >= gamma:
-                    if beta > gamma:
-                        self.switch(gamma, beta)
-                    gamma += 1
-                    if gamma == self.n:
-                        return
+        for alpha, x in product(range(self.n), A):
+            beta = self.table[alpha][A_dict[x]]
+            if beta >= gamma:
+                if beta > gamma:
+                    self.switch(gamma, beta)
+                gamma += 1
+                if gamma == self.n:
+                    return
 
     # Compression of a Coset Table
     # Pg. 167 5.2.3
@@ -599,6 +600,18 @@ class CosetTable(DefaultPrinting):
             for j in range(len(self.A)):
                 row[j] -= bisect_left(chi, row[j])
 
+    def conjugates(self, R):
+        R_c = list(chain.from_iterable((rel.cyclic_conjugates(), \
+                (rel**-1).cyclic_conjugates()) for rel in R))
+        R_set = set()
+        for conjugate in R_c:
+            R_set = R_set.union(conjugate)
+        R_c_list = []
+        for x in self.A:
+            r = set([word for word in R_set if word[0] == x])
+            R_c_list.append(r)
+            R_set.difference_update(r)
+        return R_c_list
 
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
@@ -825,57 +838,39 @@ def low_index_subgroups(G, N):
     # elements of R1 are used in inner parts of the process to prune
     # branches of the search tree,
     R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
-    R1_c = list(chain.from_iterable((rel.cyclic_conjugates(), \
-            (rel**-1).cyclic_conjugates()) for rel in R1))
-    R1_set = set()
-    for conjugate in R1_c:
-        R1_set = R1_set.union(conjugate)
-    R1_c_list = []
-    for x in C.A:
-        r = set([word for word in R1_set if word[0] == x])
-        R1_c_list.append(r)
-        R1_set.difference_update(r)
+    R1_c_list = C.conjugates(R1)
     S = []
     for x in C.A:
-        descendant_subgroups(S, C, R1_c_list[C.A_dict[x]], \
-                R1_c_list[C.A_dict_inv[x]], R2, N)
-        return C.table, C.deduction_stack
+        descendant_subgroups(S, C, R1_c_list, x, R2, N)
     return S
 
 
-def descendant_subgroups(S, C, R1_x_c, R1_x_c_inv, R2, N):
+def descendant_subgroups(S, C, R1_c_list, x, R2, N):
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
     if C.is_complete():
         # check whether the relators in R2 are satisfied
-        for w in R2:
-            for alpha in C.omega:
-                if not C.scan_check(alpha, w):
-                    return
+        for w, alpha in product(R2, C.omega):
+            if not C.scan_check(alpha, w):
+                return
         # relators in R2 are satisfied, append the table to list
         S.append(C)
     else:
-        j = 0
-        for alpha in range(len(C.table)):
-            for x in C.A:
-                alpha_c_x = C.table[alpha][A_dict[x]]
-                if alpha_c_x is None:
-                    # this is "x" in pseudo-code (using "y" makes it clear)
-                    y = x
-                    j = 1
-                    break
-            if j == 1:
+        for alpha, x in product(range(len(C.table)), C.A):
+            if C.table[alpha][A_dict[x]] is None:
+                # this is "x" in pseudo-code (using "y" makes it clear)
+                undefined_coset, undefined_gen = alpha, x
                 break
         reach = C.omega + [C.n]
         for beta in reach:
             if beta == C.n:
                 C.table.append([None]*len(C.A))
                 C.p.append(len(C.A) - 1)
-            if beta < N and C.table[beta][A_dict_inv[y]] is None:
-                try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, y, beta)
+            if beta < N and C.table[beta][A_dict_inv[undefined_gen]] is None:
+                try_descendant(S, C, R1_c_list, R2, N, undefined_coset, undefined_gen, beta)
 
 
-def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
+def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta):
     """
     It solves the problem of trying out each individual possibility for α^x.
     """
@@ -887,11 +882,11 @@ def try_descendant(S, C, R1_x_c, R1_x_c_inv, R2, N, alpha, x, beta):
     D.table[alpha][D.A_dict[x]] = beta
     D.table[beta][D.A_dict_inv[x]] = alpha
     D.deduction_stack.append((alpha, x))
-    D.process_deductions_check(R1_x_c, R1_x_c_inv)
+    D.process_deductions_check(R1_c_list[D.A_dict[x]], R1_c_list[D.A_dict_inv[x]])
     if D.n == 0:
         return
     if first_in_class(D):
-        descendant_subgroups(S, D, R1_x_c, R1_x_c_inv, R2, N)
+        descendant_subgroups(S, D, R1_c_list, x, R2, N)
 
 
 def first_in_class(C):
