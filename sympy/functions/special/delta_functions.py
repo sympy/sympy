@@ -357,9 +357,8 @@ class Heaviside(Function):
            is common practice to assume ``H(0) == 0`` to match the Laplace
            transform of a DiracDelta distribution.
 
-    To specify the value of Heaviside at x=0, a second argument
-    can be given.  Omit this 2nd argument or pass NaN to recover the default
-    behavior.
+    To specify the value of Heaviside at x=0, a second argument can be given.
+    Omit this 2nd argument or pass ``NaN`` to recover the default behavior.
 
     >>> from sympy import Heaviside, S
     >>> from sympy.abc import x
