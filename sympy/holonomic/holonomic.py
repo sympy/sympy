@@ -1005,46 +1005,57 @@ class HolonomicFunction(object):
 
     def to_hyper(self):
         """
-        Converts a Holonomic Function Hypergeometric if possible.
+        Returns a hypergeometric function (or linear combination of them)
+        representing the given holonomic function.
         """
 
-        recurrence = self.to_sequence().recurrence
-        order = recurrence.order
+        recurrence = self.to_sequence()
+        u0 = recurrence.u0
+        r = recurrence.recurrence
+        m = r.order
+        is_hyper = True
+        x = self.x
 
-        # only recurrence relations with order 1 are implemented yet
-        if order is not 1:
-            raise NotImplementedError
+        for i in range(1, len(r.listofpoly)-1):
+            if r.listofpoly[i] != r.parent.base.zero:
+                is_hyper = False
+                break
 
-        a = recurrence.listofpoly[0]
-        b = recurrence.listofpoly[1]
+        if not is_hyper:
+            raise TypeError("Can't convert to Hypergeometric")
+
+        a = r.listofpoly[0]
+        b = r.listofpoly[-1]
 
         # normalize the coefficients
-        k = -a.rep[0] / b.rep[0]
+        c = - (a.rep[0] * m**(a.degree())) / (b.rep[0] * m**(b.degree()))
         a = a * (a.rep[0])**-1
         b = b * (b.rep[0])**-1
-
-        # roots of these polynomials gives us
-        # the parameters of hypergeometric function.
+        sol = 0
         arg1 = roots(a.rep)
         arg2 = roots(b.rep)
-        ap = []
-        bq = []
 
-        for i in arg1:
-            ap.extend([-i] * arg1[i])
-        for i in arg2:
-            bq.extend([-i] * arg2[i])
+        for i, j in enumerate(u0):
+            if j is 0:
+                continue
 
-        if 1 in bq:
-            bq.remove(1)
-        else:
-            ap.append(1)
+            ap = []
+            bq = []
 
-        # there is a convention of having the term (r+1)
-        # in the denominator
-        if self._have_init_cond and self.x0 == 0:
-            return self.y0[0] * hyper(ap, bq, k * self.x)
-        return hyper(ap, bq, k * self.x)
+            for k in arg1:
+                ap.extend([(i - k) / m] * arg1[k])
+
+            for k in arg2:
+                bq.extend([(i - k) / m] * arg2[k])
+
+            if 1 in bq:
+                bq.remove(1)
+            else:
+                ap.append(1)
+
+            sol += j * hyper(ap, bq, c * x**m) * x**i
+
+        return sol
 
 
 def from_hyper(func, x0=0, evalf=False):
