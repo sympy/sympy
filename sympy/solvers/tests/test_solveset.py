@@ -1071,17 +1071,27 @@ def test_nonlinsolve_polysys():
 
 
 def test_nonlinsolve_using_solve_poly_and_substitution():
-    x, y, z = symbols('x, y, z', real = True)
+    x, y, z, n = symbols('x, y, z, n', real = True)
     system = [(x + y)*n - y**2 + 2]
     s1 = ((-n*y + y**2 - 2)/n, y)
     assert nonlinsolve(system, [x, y]) == FiniteSet(s1)
-    s1 = (log(sin(S(1)/3)), S(1)/3)
-    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == FiniteSet(s1)
+
+    n = Dummy('n')
+    real_soln = (log(sin(S(1)/3)), S(1)/3)
+    img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
+    complex_soln = ((ImageSet(img_lamda, S.Integers), S(1)/3))
+    soln = FiniteSet(real_soln, complex_soln)
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
 
     system = [z**2*x**2 - z**2*y**2/exp(x)]
-    soln = FiniteSet((y, x, 0), \
-        (-sqrt(x**2*exp(x)), x, z), (sqrt(x**2*exp(x)), x, z))
+    soln_real_1 = (y, x, 0)
+    soln_real_2 = (-exp(x/2)*Abs(x), x, z)
+    soln_real_3 = (exp(x/2)*Abs(x), x, z)
+    soln_complex_1 = (-x*exp(x/2), x, z)
+    soln_complex_2 = (x*exp(x/2), x, z)
     syms = [y, x, z]
+    soln = FiniteSet(soln_real_1, soln_complex_1, soln_complex_2,\
+        soln_real_2, soln_real_3)
     assert nonlinsolve(system,syms) == soln
 
 
@@ -1095,8 +1105,9 @@ def test_nonlinsolve_complex():
     system = [exp(x) - sin(y), y**2 - 4]
     s1 = (log(sin(2)), 2)
     s2 = (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2 )
-
-    assert nonlinsolve(system, [x, y]) == FiniteSet(s1, s2)
+    img = ImageSet(Lambda(n, 2*n*I*pi + Mod(log(sin(2)), 2*I*pi)), S.Integers)
+    s3 = (img, 2)
+    assert nonlinsolve(system, [x, y]) == FiniteSet(s1, s2, s3)
 
 def test_nonlinsolve_exp_real_soln():
     system = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
@@ -1123,9 +1134,13 @@ def test_solve_nonlinear_trans():
 def test_issue_5132():
     x, y, z, r, t = symbols('x, y, z, r, t', real=True)
     system = [r - x**2 - y**2, tan(t) - y/x]
-    soln_x= Intersection(S.Reals, FiniteSet(sqrt(r*sin(t)**2)/tan(t)))
-    soln_y =  Intersection(S.Reals, FiniteSet(sqrt(r*sin(t)**2)))
-    assert nonlinsolve(system, [x, y]) == FiniteSet((soln_x, soln_y))
+    s_x = Intersection(Interval(-oo, oo), FiniteSet(sqrt(r)*Abs(cos(t))))
+    s_y = Intersection(Interval(-oo, oo), FiniteSet(sqrt(r)*tan(t)*Abs(cos(t))))
+    soln_real= (s_x, s_y)
+    s_x =Intersection(Interval(-oo, oo), FiniteSet(sqrt(r)*Abs(sin(t))/tan(t)))
+    s_y =Intersection(Interval(-oo, oo), FiniteSet(sqrt(r)*Abs(sin(t))))
+    soln_complex = (s_x, s_y)
+    assert nonlinsolve(system, [x, y]) == FiniteSet(soln_real, soln_complex)
 
     system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
     assert nonlinsolve(system, [x, y]) == FiniteSet((1, 3), (3, 1))
