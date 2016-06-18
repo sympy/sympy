@@ -24,15 +24,11 @@ from sympy.release import __version__
 
 if 'dev' in __version__:
     def enable_warnings():
-        import os
         import warnings
-        action ='default'
-        travis = (os.environ.get('TRAVIS','') == 'true')
-        if travis:
-            action = 'error'
-        warnings.filterwarnings(action,   '.*',                      DeprecationWarning, module='sympy.*')
-        # let's not fail the test on that yet. 
+        warnings.filterwarnings('error',   '.*',                      DeprecationWarning, module='sympy.*')
+        # let's not fail the test on that yet.
         warnings.filterwarnings('default', '.*inspect.getargspec.*', DeprecationWarning, module='sympy.*')
+        del warnings
     enable_warnings()
     del enable_warnings
 
@@ -94,4 +90,3 @@ evalf._create_evalf_table()
 #import abc
 
 from .deprecated import *
-
