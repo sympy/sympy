@@ -470,6 +470,7 @@ def test_integrate_SingularityFunction():
     assert integrate(SingularityFunction(x, 0, -1), (x, -oo, oo)) == 1
     assert integrate(5*SingularityFunction(x, 5, -1), (x, -oo, oo)) == 5
     assert integrate(SingularityFunction(x, 5, -1) * f(x), (x, -oo, oo)) == f(5)
+    assert integrate(SingularityFunction(x, 0, -1)**2, (x, -oo, oo)) == SingularityFunction(0, 0, -1)
 
 
 def test_integrate_DiracDelta():
