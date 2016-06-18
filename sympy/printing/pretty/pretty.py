@@ -12,7 +12,7 @@ from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
