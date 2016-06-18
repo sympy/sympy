@@ -15,5 +15,6 @@ def test_singularityintegrate():
     assert singularityintegrate(x*SingularityFunction(x, 0, -1), x) == 0
     assert singularityintegrate((x - 5)*SingularityFunction(x, 5, -1), x) == 0
     assert singularityintegrate(SingularityFunction(x, 0, -1) * f(x), x) == f(0) * SingularityFunction(x, 0, 0)
+    assert singularityintegrate(SingularityFunction(x, 1, -1) * f(x), x) == f(1) * SingularityFunction(x, 1, 0)
     assert singularityintegrate(y*SingularityFunction(x, 0, -1)**2, x) == \
         y*SingularityFunction(0, 0, -1)*SingularityFunction(x, 0, 0)
