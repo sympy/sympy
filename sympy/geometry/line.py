@@ -27,7 +27,7 @@ from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, iterable
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection, EmptySet
 from sympy.matrices import Matrix
@@ -1028,6 +1028,8 @@ class Line(LinearEntity):
         if isinstance(p1, LinearEntity):
             ambient_dim = len(p1.p1)
         else:
+            if iterable(p1) and not hasattr(p1, '__len__'):
+                p1 = tuple(p1)
             ambient_dim = len(p1)
 
         if ambient_dim == 2:

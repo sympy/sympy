@@ -175,13 +175,12 @@ class Point(GeometryEntity):
         False
 
         """
+        args = [Point.pointify(p) for p in args]
 
         # Coincident points are irrelevant; use only unique points.
         # XXX: the current workaround for issue #11238 relies on the points
         # being in a specific order, so don't let `set` change the order
-        # args = list(set(args))
-        if not all(isinstance(p, Point) for p in args):
-            raise TypeError('Must pass only Point objects')
+        #args = list(set(args))
 
         if len(args) == 0:
             return False
@@ -194,6 +193,13 @@ class Point(GeometryEntity):
         """Returns whether `p1` and `p2` are scalar multiples
         of eachother.
         """
+        p1, p2 = Point.pointify(p1), Point.pointify(p2)
+
+        # 2d points happen a lot, so optimize this function call
+        if p1.ambient_dimension == 2:
+            (x1,y1), (x2,y2) = p1.args, p2.args
+            return simplify(x1*y2-x2*y1) == 0
+
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of eachother
         m = Matrix([p1.args, p2.args])
@@ -224,8 +230,23 @@ class Point(GeometryEntity):
 
     @property
     def is_zero(self):
-        """True if every coordinate is zero, otherwise False."""
-        return all(x == S.Zero for x in self.args)
+        """True if every coordinate is zero, False if any coordinate is not zero,
+        and None if it cannot be determined."""
+        nonzero = [x.is_nonzero for x in self.args]
+        if any(nonzero):
+            return False
+        if any(x is None for x in nonzero):
+            return None
+        return True
+
+    @property
+    def is_nonzero(self):
+        """True if any coordinate is nonzero, False if every coordinate is zero,
+        and None if it cannot be determined."""
+        is_zero = self.is_zero
+        if is_zero is None:
+            return None
+        return not is_zero
 
     @property
     def ambient_dimension(self):
@@ -385,7 +406,7 @@ class Point(GeometryEntity):
         7
 
         """
-        p = Point.pointify(p, dimension=self.ambient_dimension)
+        p = Point.pointify(p)
         return sum(abs(a - b) for a, b in zip(self.args, p.args))
 
     def midpoint(self, p):
@@ -415,6 +436,7 @@ class Point(GeometryEntity):
         Point2D(7, 3)
 
         """
+        p = Point.pointify(p)
         return Point([simplify((a + b)*S.Half) for a, b in zip(self.args, p.args)])
 
     def evalf(self, prec=None, **options):
@@ -450,7 +472,7 @@ class Point(GeometryEntity):
 
     n = evalf
 
-    def intersection(self, o):
+    def intersection(self, other):
         """The intersection between this point and another GeometryEntity.
 
         Parameters
@@ -480,14 +502,15 @@ class Point(GeometryEntity):
         [Point2D(0, 0)]
 
         """
-        if isinstance(o, Point):
-            if len(self) != len(o):
+        other = Point.pointify(other, ensure_point=False)
+        if isinstance(other, Point):
+            if len(self) != len(other):
                 raise ValueError("Points must be of the same dimension to intersect")
-            if self == o:
+            if self == other:
                 return [self]
             return []
 
-        return o.intersection(self)
+        return other.intersection(self)
 
     def dot(self, p2):
         """Return dot product of self with another Point."""
@@ -530,19 +553,19 @@ class Point(GeometryEntity):
 
         """
 
-        if iterable(other) and len(other) == len(self):
+        if iterable(other):
             coords = [simplify(a + b) for a, b in zip(self, other)]
+            if len(coords) != self.ambient_dimension:
+                raise ValueError("Points must have the same number of dimensions")
             if all(isinstance(c, Number) for c in coords):
                 return Point(coords, evaluate=False)
             return Point(coords)
-        else:
-            raise ValueError(
-                "Points must have the same number of dimensions")
+        raise GeometryError("Don't know how to add {} and a Point object".format(other))
 
     def __sub__(self, other):
         """Subtract two points, or subtract a factor from this point's
         coordinates."""
-        return self + (-other)
+        return self + (-x for x in other)
 
     def __mul__(self, factor):
         """Multiply point's coordinates by a factor."""
@@ -634,10 +657,10 @@ class Point2D(Point):
         else:
             if iterable(args[0]):
                 args = args[0]
-            if len(args) != 2:
-                raise ValueError(
-                    "Only two dimensional points currently supported")
         coords = Tuple(*args)
+        if len(coords) != 2:
+            raise ValueError(
+                "Only two dimensional points may be initialized with `Point2D`")
         if check:
             if any(a.is_number and im(a) for a in coords):
                 raise ValueError('Imaginary args not permitted.')
@@ -915,10 +938,10 @@ class Point3D(Point):
         else:
             if iterable(args[0]):
                 args = args[0]
-            if len(args) not in (2, 3):
-                raise TypeError(
-                    "Enter a 2 or 3 dimensional point")
         coords = Tuple(*args)
+        if len(coords) not in (2, 3):
+            raise TypeError(
+                "`Point3D` must be initilized with 2 or 3 components")
         if len(coords) == 2:
             coords += (S.Zero,)
         if eval:
@@ -1097,7 +1120,7 @@ class Point3D(Point):
 
         """
         from sympy.geometry.plane import Plane
-        points = list(set(points))
+        points = list(set(Point.pointify(p, dimension=3) for p in points))
         if len(points) < 3:
             raise ValueError('At least 3 points are needed to define a plane.')
         a, b = points[:2]
@@ -1111,7 +1134,7 @@ class Point3D(Point):
                 pass
         raise ValueError('At least 3 non-collinear points needed to define plane.')
 
-    def intersection(self, o):
+    def intersection(self, other):
         """The intersection between this point and another point.
 
         Parameters
@@ -1141,12 +1164,13 @@ class Point3D(Point):
         [Point3D(0, 0, 0)]
 
         """
-        if isinstance(o, Point3D):
-            if self == o:
+        other = Point.pointify(other, ensure_point=False)
+        if isinstance(other, Point3D):
+            if self == other:
                 return [self]
             return []
 
-        return o.intersection(self)
+        return other.intersection(self)
 
     def scale(self, x=1, y=1, z=1, pt=None):
         """Scale the coordinates of the Point by multiplying by

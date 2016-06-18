@@ -4,7 +4,7 @@ from sympy import Rational, Float, S, Symbol, cos, oo, pi, simplify, sin, sqrt, 
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray, Segment, Triangle, intersection, Point3D, Line3D,
-                            Ray3D, Segment3D, Plane)
+                            Ray3D, Segment3D, Plane, Point2D, Line2D, Ray2D, Segment2D)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
@@ -649,3 +649,50 @@ def test_symbolic_intersect():
     line = Line(Point(k, z), slope=0)
     assert line.intersection(circle) == [
         Point(x - sqrt(y**2 - z**2), z), Point(x + sqrt(y**2 - z**2), z)]
+
+
+def test_arguments():
+    """Functions accepting `Point` objects in `geometry`
+    should also accept tuples, lists, and generators and
+    automatically convert them to points."""
+    from sympy import subsets
+
+    class RepeatableGenerator(object):
+        """ this object has an `__iter__` but no `__len__`,
+        so it's just like a generator """
+        def __init__(self, l):
+            self.l = l
+        def __iter__(self):
+            return iter(self.l)
+
+    singles2d = ((1,2), [1,3], RepeatableGenerator((1,4)), Point(1,5))
+    doubles2d = subsets(singles2d, 2)
+    l2d = Line(Point2D(1,2), Point2D(2,3))
+    singles3d = ((1,2,3), [1,2,4], RepeatableGenerator((1,2,5)), Point(1,2,6))
+    doubles3d = subsets(singles3d, 2)
+    l3d = Line(Point3D(1,2,3), Point3D(1, 1, 2))
+    singles4d = ((1,2,3,4), [1,2,3,5], RepeatableGenerator((1,2,3,6)), Point(1,2,3,7))
+    doubles4d = subsets(singles4d, 2)
+    l4d = Line(Point(1,2,3,4), Point(2,2,2,2))
+
+    # test 2D
+    test_single = ['contains', 'distance', 'equals', 'parallel_line', 'perpendicular_line', 'perpendicular_segment', 'projection', 'intersection']
+    for p in doubles2d:
+        Line2D(*p)
+    for func in test_single:
+        for p in singles2d:
+            getattr(l2d, func)(p)
+
+    # test 3D
+    for p in doubles3d:
+        Line3D(*p)
+    for func in test_single:
+        for p in singles3d:
+            getattr(l3d, func)(p)
+
+    # test 4D
+    for p in doubles4d:
+        Line(*p)
+    for func in test_single:
+        for p in singles4d:
+            getattr(l4d, func)(p)

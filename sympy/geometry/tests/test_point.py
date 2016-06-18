@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import I, Rational, Symbol, pi, sqrt
+from sympy import I, Rational, Symbol, pi, sqrt, subsets
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
@@ -260,3 +260,61 @@ def test_concyclic_doctest_bug():
     p3, p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
+
+def test_arguments():
+    """Functions accepting `Point` objects in `geometry`
+    should also accept tuples, lists, and generators and
+    automatically convert them to points."""
+    class RepeatableGenerator(object):
+        """ this object has an `__iter__` but no `__len__`,
+        so it's just like a generator """
+        def __init__(self, l):
+            self.l = l
+        def __iter__(self):
+            return iter(self.l)
+
+    singles2d = ((1,2), [1,2], RepeatableGenerator((1,2)), Point(1,2))
+    doubles2d = subsets(singles2d, 2)
+    p2d = Point2D(1,2)
+    singles3d = ((1,2,3), [1,2,3], RepeatableGenerator((1,2,3)), Point(1,2,3))
+    doubles3d = subsets(singles3d, 2)
+    p3d = Point3D(1,2,3)
+    singles4d = ((1,2,3,4), [1,2,3,4], RepeatableGenerator((1,2,3,4)), Point(1,2,3,4))
+    doubles4d = subsets(singles4d, 2)
+    p4d = Point(1,2,3,4)
+
+    # test 2D
+    test_single = ['distance', 'is_scalar_multiple', 'taxicab_distance', 'midpoint', 'intersection', 'dot', 'equals', '__add__', '__sub__']
+    test_double = ['is_concyclic', 'is_collinear']
+    for p in singles2d:
+        Point2D(p)
+    for func in test_single:
+        for p in singles2d:
+            getattr(p2d, func)(p)
+    for func in test_double:
+        for p in doubles2d:
+            getattr(p2d, func)(*p)
+
+    # test 3D
+    test_double = ['is_collinear']
+    for p in singles3d:
+        Point3D(p)
+    for func in test_single:
+        for p in singles3d:
+            getattr(p3d, func)(p)
+    for func in test_double:
+        for p in doubles2d:
+            getattr(p3d, func)(*p)
+    p3d.are_coplanar((1,2,3), [1,2,2], RepeatableGenerator((3,3,2)))
+
+    # test 4D
+    test_double = ['is_collinear']
+    for p in singles4d:
+        Point(p)
+    for func in test_single:
+        for p in singles4d:
+            getattr(p4d, func)(p)
+    for func in test_double:
+        for p in doubles4d:
+            getattr(p4d, func)(*p)
