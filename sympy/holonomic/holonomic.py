@@ -1031,6 +1031,10 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(Dx - 1, x, 0, 1).to_hyper()
         hyper((), (), x)
 
+        See Also
+        ========
+
+        from_hyper, from_meijerg
         """
 
         recurrence = self.to_sequence()
@@ -1049,7 +1053,7 @@ class HolonomicFunction(object):
                 is_hyper = False
                 break
 
-        if not is_hyper:
+        if not is_hyper or m == 0:
             raise TypeError("The series is not Hypergeometric")
 
         a = r.listofpoly[0]
@@ -1069,7 +1073,7 @@ class HolonomicFunction(object):
         # The answer will be a linear combination
         # of different hypergeometric series which satisfies
         # the recurrence.
-        for i in range(m):
+        for i in range(len(u0)):
 
             # if the coefficient u0[i] is zero, then the
             # independent hypergeomtric series starting with
