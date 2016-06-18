@@ -696,8 +696,8 @@ class HolonomicFunction(object):
     def composition(self, expr, *args):
         """
         Returns the annihilator after composition of a holonomic function with
-        an algebraic function. Initial conditions for the annihilator after composition
-        can be also be provided to the function.
+        an algebraic function. Initial conditions for the annihilator after
+        composition can be also be provided to the function.
 
         Examples
         ========
@@ -949,8 +949,9 @@ class HolonomicFunction(object):
         (RK4 by default). A set of points (real or complex) must be provided
         which will be the path for the numerical integration.
 
-        The path should be given as a list [x1, x2, ... xn]. The numerical values
-        will be computed at each point in this order x1 --> x2 --> x3 ... --> xn.
+        The path should be given as a list [x1, x2, ... xn]. The numerical
+        values will be computed at each point in this order x1 --> x2 --> x3
+        ... --> xn.
 
         Returns values of the function at x1, x2, ... xn in a list.
 
@@ -1209,9 +1210,9 @@ from sympy.integrals.meijerint import _mytype
 
 def from_sympy(func, x=None, initcond=True):
     """
-    Uses `meijerint._rewrite1` to convert to `meijerg` function and then eventually
-    to Holonomic Functions. Only works when `meijerint._rewrite1` returns a `meijerg`
-    representation of the function provided.
+    Uses `meijerint._rewrite1` to convert to `meijerg` function and then
+    eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
+    returns a `meijerg` representation of the function provided.
 
     Examples
     ========
