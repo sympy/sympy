@@ -1,6 +1,6 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
                    eye, symbols, Dummy, ImmutableMatrix as Matrix)
-from sympy.core.compatibility import string_types, u, range
+from sympy.core.compatibility import string_types,range
 from sympy.physics.vector.vector import Vector, _check_vector
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']
