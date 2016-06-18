@@ -463,3 +463,10 @@ def test_to_hyper():
     p = hyperexpand(HolonomicFunction(2*x*Dx + Dx**2, x, 0, [1, -2/sqrt(pi)]).to_hyper())
     q = erfc(x)
     assert p.rewrite(erfc) == q
+    p =  hyperexpand(HolonomicFunction((x**2 - 1) + x*Dx + x**2*Dx**2,
+        x, 0, [0, S(1)/2]).to_hyper())
+    q = besselj(1, x)
+    assert p == q
+    p = hyperexpand(HolonomicFunction(x*Dx**2 + Dx + x, x, 0, [1, 0]).to_hyper())
+    q = besselj(0, x)
+    assert p == q

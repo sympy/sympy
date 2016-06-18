@@ -1097,7 +1097,7 @@ class HolonomicFunction(object):
             else:
                 ap.append(1)
 
-            sol += u0[i] * hyper(ap, bq, c * x**m) * x**i
+            sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
 
         return sol
 
