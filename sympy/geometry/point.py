@@ -189,11 +189,11 @@ class Point(GeometryEntity):
 
         return Point.affine_rank(*args) == 1
 
-    def is_scalar_multiple(p1, p2):
+    def is_scalar_multiple(self, p2):
         """Returns whether `p1` and `p2` are scalar multiples
         of eachother.
         """
-        p1, p2 = Point.pointify(p1), Point.pointify(p2)
+        p1, p2 = Point.pointify(self), Point.pointify(p2)
 
         # 2d points happen a lot, so optimize this function call
         if p1.ambient_dimension == 2:
@@ -339,7 +339,6 @@ class Point(GeometryEntity):
             raise TypeError("{} must be a Point".format(a))
 
         return a
-
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
