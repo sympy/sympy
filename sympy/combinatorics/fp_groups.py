@@ -295,26 +295,6 @@ class CosetTable(DefaultPrinting):
         return false (rather than calling "coincidence") if the scan completes
         incorrectly; otherwise it returns true.
 
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.fp_groups import FpGroup, scan_check
-        >>> from sympy.combinatorics.free_group import free_group
-        >>> F, x, y = free_group("x, y")
-        >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
-        >>> C = CosetTable(f, [x])
-
-        # scans correctly for (0, x)
-        >>> C.scan_check(0, x)
-        True
-        >>> C.scan(0, x)
-
-        # scans correctly under (0, x**2)
-        >>> C.scan(0, x); C.scan_check(0, x**2)
-        True
-        >>> C.scan(0, x**2); C.scan_check(0, y**3)
-        True
-
         """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
@@ -503,16 +483,13 @@ class CosetTable(DefaultPrinting):
             alpha, x = self.deduction_stack.pop()
             for w in R_c_x:
                 if not self.scan_check(alpha, w):
-                    self.table = []
-                    self.p = []
-                    return
+                    return False
             beta = self.table[alpha][self.A_dict[x]]
             if beta is not None:
                 for w in R_c_x_inv:
                     if not self.scan_check(beta, w):
-                        self.table = []
-                        self.p = []
-                        return
+                        return False
+        return True
 
     def switch(self, beta, gamma):
         """
@@ -826,6 +803,21 @@ def low_index_subgroups(G, N):
     [2] Marston Conder and Peter Dobcsanyi
     "Applications and Adaptions of the Low Index Subgroups Procedure"
 
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
+    >>> L = low_index_subgroups(f, 4)
+    >>> for coset_table in L:
+    ...     print(coset_table.table)
+    [[0, 0, 0, 0]]
+    [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
+    [[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]]
+    [[1, 1, 0, 0], [0, 0, 1, 1]]
+
     """
     C = CosetTable(G, [])
     R = G.relators()
@@ -839,8 +831,7 @@ def low_index_subgroups(G, N):
     R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
     R1_c_list = C.conjugates(R1)
     S = []
-    for x in C.A:
-        descendant_subgroups(S, C, R1_c_list, x, R2, N)
+    descendant_subgroups(S, C, R1_c_list, C.A[0], R2, N)
     return S
 
 
@@ -866,11 +857,10 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N):
         # of β ∈ Ω or β = n where β^(undefined_gen^-1) is undefined
         reach = C.omega + [C.n]
         for beta in reach:
-            if beta == C.n:
-                C.table.append([None]*len(C.A))
-                C.p.append(len(C.A) - 1)
-            if beta < N and C.table[beta][A_dict_inv[undefined_gen]] is None:
-                try_descendant(S, C, R1_c_list, R2, N, undefined_coset, undefined_gen, beta)
+            if beta < N:
+                if beta == C.n or C.table[beta][A_dict_inv[undefined_gen]] is None:
+                    try_descendant(S, C, R1_c_list, R2, N, undefined_coset, \
+                            undefined_gen, beta)
 
 
 def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta):
@@ -879,14 +869,14 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta):
     """
     D = C.copy()
     A_dict = D.A_dict
-    if beta == D.n:
+    if beta == D.n and beta < N:
         D.table.append([None]*len(D.A))
         D.p.append(beta)
     D.table[alpha][D.A_dict[x]] = beta
     D.table[beta][D.A_dict_inv[x]] = alpha
     D.deduction_stack.append((alpha, x))
-    D.process_deductions_check(R1_c_list[D.A_dict[x]], R1_c_list[D.A_dict_inv[x]])
-    if D.n == 0:
+    if not D.process_deductions_check(R1_c_list[D.A_dict[x]], \
+            R1_c_list[D.A_dict_inv[x]]):
         return
     if first_in_class(D):
         descendant_subgroups(S, D, R1_c_list, x, R2, N)
