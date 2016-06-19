@@ -887,7 +887,7 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
         descendant_subgroups(S, D, R1_c_list, x, R2, N, Y)
 
 
-def first_in_class(C, Y):
+def first_in_class(C, Y=[]):
     """
     Checks whether the subgroup H=G1 corresponding to the Coset Table could
     possibly be the canonical representative of its conjugacy class.
@@ -913,206 +913,20 @@ def first_in_class(C, Y):
     >>> from sympy.combinatorics.free_group import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
-    >>> f = FpGroup(F, [x**2, y**3])
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
     >>> C = CosetTable(f, [])
-
-    >>> C1 = C.copy()
-    >>> C1.table[0][0] = 0; C1.table[0][1] = 0
-
-    >>> C11 = C1.copy()
-    >>> C11.table[0][2] = 0; C11.table[0][3] = 0
-    >>> C11.table
-    [[0, 0, 0, 0]]
-
-    >>> C12 = C1.copy()
-    >>> C12.table.append([None]*4); C12.p = [0, 1]
-    >>> C12.table[0][2] = 1; C12.table[1][3] = 0
-    >>> C12.table
-    [[0, 0, 1, None], [None, None, None, 0]]
-
-    >>> C121 = C12.copy()
-    >>> C121.table.append([None]*4); C121.p = [0, 1, 2]
-    >>> C121.table[0][3] = 2; C121.table[2][2] = 0
-    >>> C121.scan(0, y**3)
-    >>> C121.table
-    [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1]]
-
-    >>> C1211 = C121.copy()
-    >>> C1211.table[1][0] = 1; C1211.table[1][1] = 1
-    >>> C1211.table
-    [[0, 0, 1, 2], [1, 1, 2, 0], [None, None, 0, 1]]
-
-    >>> C12111 = C1211.copy()
-    >>> C12111.table[2][0] = 2; C12111.table[2][1] = 2
-    >>> C12111.table
-    [[0, 0, 1, 2], [1, 1, 2, 0], [2, 2, 0, 1]]
-    >>> first_in_class(C12111)
+    >>> C.table = [[0, 0, None, None]]
+    >>> first_in_class(C)
     True
-    >>> C12111.scan_check(0, (x*y)**4)
+    >>> C.table = [[1, 1, 1, None], [0, 0, None, 1]]; C.p = [0, 1]
+    >>> first_in_class(C)
+    True
+    >>> C.table = [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
+    >>> C.p = [0, 1, 2]
+    >>> first_in_class(C)
     False
-
-    >>> C12112 = C1211.copy()
-    >>> C12112.table.append([None]*4); C12112.p = [0, 1, 2, 3]
-    >>> C12112.table[2][0] = 3; C12112.table[2][1] = 3
-    >>> C12112.table[3][0] = 2; C12112.table[3][1] = 2
-    >>> C12112.table
-    [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, None, None]]
-
-    >>> C121121 = C12112.copy()
-    >>> C121121.table[3][2] = 3; C121121.table[3][3] = 3;
-    >>> first_in_class(C121121)
-    True
-    >>> C121121.scan_check(0, (x*y)**4)
-    True
-    >>> C121121.table
-    [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
-
-    >>> C1212 = C121.copy()
-    >>> C1212.table[1][0] = 2; C1212.table[1][1] = 2;
-    >>> C1212.table[2][0] = 1; C1212.table[2][1] = 1
-    >>> C1212.table
-    [[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]]
-    >>> first_in_class(C1212)
-    True
-
-    >>> C1213 = C121.copy()
-    >>> C1213.table.append([None]*4); C1213.p = [0, 1, 2, 3]
-    >>> C1213.table
-    [[0, 0, 1, 2], [None, None, 2, 0], [None, None, 0, 1], [None, None, None, None]]
-    >>> C1213.table[1][0] = 3; C1213.table[1][1] = 3
-    >>> C1213.table[3][0] = 1; C1213.table[3][1] = 1
-    >>> C1213.table
-    [[0, 0, 1, 2], [3, 3, 2, 0], [None, None, 0, 1], [1, 1, None, None]]
-    >>> first_in_class(C1213)
-    True
-
-    >>> C12131 = C1213.copy()
-    >>> C12131.table[2][0] = 2; C12131.table[2][1] = 2
-    >>> first_in_class(C12131)
-    False
-    >>> C12131.table
-    [[0, 0, 1, 2], [3, 3, 2, 0], [2, 2, 0, 1], [1, 1, None, None]]
-
-    >>> C2 = C.copy()
-    >>> C2.table.append([None]*4); C2.p = [0, 1]
-    >>> C2.table[0][0] = 1; C2.table[0][1] = 1
-    >>> C2.table[1][0] = 0; C2.table[1][1] = 0
-
-    >>> C21 = C2.copy()
-    >>> C21.table[0][2] = 0; C21.table[0][3] = 0
-    >>> C21.table
-    [[1, 1, 0, 0], [0, 0, None, None]]
-
-    >>> C211 = C21.copy()
-    >>> C211.table[1][2] = 1; C211.table[1][3] = 1
-    >>> C211.table
-    [[1, 1, 0, 0], [0, 0, 1, 1]]
-    >>> first_in_class(C211)
-    True
-    >>> C211.scan_check(1, (x*y)**4)
-    True
-
-    >>> C212 = C21.copy()
-    >>> C212.table
-    [[1, 1, 0, 0], [0, 0, None, None]]
-    >>> C212.table.append([None]*4); C212.p = [0, 1, 2]
-    >>> C212.table[1][2] = 2; C212.table[2][3] = 1
-    >>> C212.table
-    [[1, 1, 0, 0], [0, 0, 2, None], [None, None, None, 1]]
-
-    >>> C2121 = C212.copy()
-    >>> C2121.table.append([None]*4); C2121.p = [0, 1, 2, 3]
-    >>> C2121.table[3][2] = 1; C2121.table[1][3] = 3;
-    >>> C2121.table
-    [[1, 1, 0, 0], [0, 0, 2, 3], [None, None, None, 1], [None, None, 1, None]]
-    >>> C2121.scan(1, y**3)
-    >>> C2121.table
-    [[1, 1, 0, 0], [0, 0, 2, 3], [None, None, 3, 1], [None, None, 1, 2]]
-
-    >>> C21211 = C2121.copy()
-    >>> C21211.table[2][0] = 2; C21211.table[2][1] = 2
-    >>> C21211.table
-    [[1, 1, 0, 0], [0, 0, 2, 3], [2, 2, 3, 1], [None, None, 1, 2]]
-    >>> first_in_class(C21211) # in-complete coset table appling of "first_in_class" (there in the book)
-    False
-
-    >>> C21211 = C2121.copy()
-    >>> C21211.table[2][0] = 3; C21211.table[2][1] = 3;
-    >>> C21211.table[3][0] = 2; C21211.table[3][1] = 2
-    >>> first_in_class(C21211)
-    True
-    >>> C21211.scan_check(1, (x*y)**4)
-    False
-    >>> C21211.table
-    [[1, 1, 0, 0], [0, 0, 2, 3], [3, 3, 3, 1], [2, 2, 1, 2]]
-
-    >>> C22 = C2.copy()
-    >>> C22.table[0][2] = 1; C22.table[1][3] = 0
-    >>> C22.table
-    [[1, 1, 1, None], [0, 0, None, 0]]
-
-    >>> C221 = C22.copy()
-    >>> C221.table.append([None]*4); C221.p = [0, 1, 2]
-    >>> C221.table[0][3] = 2; C221.table[2][2] = 0
-    >>> C221.table
-    [[1, 1, 1, 2], [0, 0, None, 0], [None, None, 0, None]]
-    >>> C221.scan(0, y**3)
-    >>> C221.table
-    [[1, 1, 1, 2], [0, 0, 2, 0], [None, None, 0, 1]]
-
-    >>> C2211 = C221.copy()
-    >>> C2211.table[2][0] = 2; C221.table[2][1] = 2;
-    >>> C2211.table
-    [[1, 1, 1, 2], [0, 0, 2, 0], [2, None, 0, 1]]
-    >>> first_in_class(C2211)
-    False
-
-    >>> C2211 = C221.copy()
-    >>> C2211.table.append([None]*4); C2211.p = [0, 1, 2, 3]
-    >>> C2211.table[2][0] = 3; C2211.table[2][1] = 3;
-    >>> C2211.table[3][0] = 2; C2211.table[3][1] = 2
-
-    >>> C22111 = C2211.copy()
-    >>> C22111.table[3][2] = 3; C22111.table[3][3] = 3
-    >>> C22111.table
-    [[1, 1, 1, 2], [0, 0, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
-    >>> first_in_class(C22111)
-    False
-
-    >>> C23 = C2.copy()
-    >>> C23.table
-    [[1, 1, None, None], [0, 0, None, None]]
-    >>> C23.table.append([None]*4); C23.p = [0, 1, 2]
-    >>> C23.table[0][2] = 2; C23.table[2][3] = 0
-    >>> C23.table
-    [[1, 1, 2, None], [0, 0, None, None], [None, None, None, 0]]
-
-    >>> C231 = C23.copy()
-    >>> C231.table
-    [[1, 1, 2, None], [0, 0, None, None], [None, None, None, 0]]
-    >>> C231.table[0][3] = 1; C231.table[1][2] = 0
-    >>> C231.table
-    [[1, 1, 2, 1], [0, 0, 0, None], [None, None, None, 0]]
-    >>> first_in_class(C231)
-    False
-
-    >>> C232 = C23.copy()
-    >>> C232.table
-    [[1, 1, 2, None], [0, 0, None, None], [None, None, None, 0]]
-    >>> C232.table.append([None]*4); C232.p = [0, 1, 2, 3]
-
-    >>> C232.table[0][3] = 3; C232.table[3][2] = 0
-    >>> C232.table
-    [[1, 1, 2, 3], [0, 0, None, None], [None, None, None, 0], [None, None, 0, None]]
-    >>> C232.scan(0, y**3)
-    >>> C232.table
-    [[1, 1, 2, 3], [0, 0, None, None], [None, None, 3, 0], [None, None, 0, 2]]
-
-    >>> C2321 = C232.copy()
-    >>> C2321.table[1][2] = 1; C2321.table[1][3] = 1
-    >>> C2321.table
-    [[1, 1, 2, 3], [0, 0, 1, 1], [None, None, 3, 0], [None, None, 0, 2]]
-    >>> first_in_class(C2321)
+    >>> C.table = [[1, 1, 1, 2], [0, 0, 2, 0], [2, None, 0, 1]]
+    >>> first_in_class(C)
     False
 
     # TODO:: Sims points out in [Sim94] that performance can be improved by

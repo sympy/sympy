@@ -697,7 +697,7 @@ def test_low_index_subgroups():
           [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]],
           [[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]],
           [[1, 1, 0, 0], [0, 0, 1, 1]]]
-    for i  in range(len(t1)):
+    for i in range(len(t1)):
         assert L[i].table == t1[i]
 
     f = FpGroup(F, [x**2, y**3, (x*y)**7])
