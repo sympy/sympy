@@ -1,7 +1,8 @@
 from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, from_sympy)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import symbols, hyper, S, sqrt, pi, exp, erf, sstr, O, I, meijerg, sin, cos
+from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, sstr,
+    O, I, meijerg, sin, cos, log, cosh, besselj)
 from sympy import ZZ, QQ
 
 
@@ -409,10 +410,37 @@ def test_from_sympy():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = from_sympy((sin(x)/x)**2)
-    q = HolonomicFunction(24*x + (24*x**2 + 12)*Dx + (4*x**3 + 24*x)*Dx**2 + \
-        10*x**2*Dx**3 + x**3*Dx**4, x, 1, [-cos(2)/2 + 1/2, -1 + cos(2) + sin(2), \
-        -4*sin(2) - cos(2) + 3, -12 + 14*sin(2)])
+    q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 1, \
+        [sin(1)**2, -2*sin(1)**2 + 2*sin(1)*cos(1), -8*sin(1)*cos(1) + 2*cos(1)**2 + 4*sin(1)**2]) 
     assert p == q
     p = from_sympy(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, 1)
+    assert p == q
+    p = from_sympy(exp(x)*sin(x)+x*log(1+x))
+    q = HolonomicFunction((4*x**3 + 20*x**2 + 40*x + 36) + (-4*x**4 - 20*x**3 - 40*x**2 \
+        - 36*x)*Dx + (4*x**5 + 12*x**4 + 14*x**3 + 16*x**2 + 20*x - 8)*Dx**2 + \
+        (-4*x**5 - 10*x**4 - 4*x**3 + 4*x**2 - 2*x + 8)*Dx**3 + (2*x**5 + 4*x**4 - 2*x**3 - \
+        7*x**2 + 2*x + 5)*Dx**4, x, 0, [0, 1, 4, -1])
+    assert p == q
+    p = from_sympy(x*exp(x)+cos(x)+1)
+    q = HolonomicFunction((-x - 3)*Dx + (x + 2)*Dx**2 + (-x - 3)*Dx**3 + (x + 2)*Dx**4, x, \
+        0, [2, 1, 1, 3])
+    assert p == q
+    assert (x*exp(x)+cos(x)+1).series(n=10) == p.series(n=10)
+    p = from_sympy(log(1 + x)**2 + 1)
+    q = HolonomicFunction(Dx + (3*x + 3)*Dx**2 + (x**2 + 2*x + 1)*Dx**3, x, 0, [1, 0, 2])
+    assert p == q
+    p = from_sympy(erf(x)**2 + x)
+    q = HolonomicFunction((32*x**4 - 8*x**2 + 8)*Dx**2 + (24*x**3 - 2*x)*Dx**3 + \
+        (4*x**2+ 1)*Dx**4, x, 0, [0, 1, 8/pi, 0])
+    assert p == q
+    p = from_sympy(cosh(x)*x)
+    q = HolonomicFunction((-x**2 + 2) -2*x*Dx + x**2*Dx**2, x, 0, [0, 1])
+    assert p == q
+    p = from_sympy(besselj(2, x))
+    q = HolonomicFunction((x**2 - 4) + x*Dx + x**2*Dx**2, x, 0, [0, 0])
+    assert p == q
+    p = from_sympy(besselj(0, x) + exp(x))
+    q = HolonomicFunction((-2*x**2 - x + 1) + (2*x**2 - x - 3)*Dx + (-2*x**2 + x + 2)*Dx**2 +\
+        (2*x**2 + x)*Dx**3, x, 0, [2, 1, 1/2])
     assert p == q
