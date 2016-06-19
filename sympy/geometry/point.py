@@ -48,7 +48,6 @@ class Point(GeometryEntity):
 
     TypeError
         When trying to add or subtract points with different dimensions.
-        When `intersection` is called with object other than a Point.
 
     See Also
     ========
@@ -111,14 +110,126 @@ class Point(GeometryEntity):
     def __contains__(self, item):
         return item in self.args
 
-    def is_concyclic(*args):
-        # Coincident points are irrelevant and can confuse this algorithm.
-        # Use only unique points.
-        args = list(set(args))
-        if not all(isinstance(p, Point) for p in args):
-            raise TypeError('Must pass only Point objects')
+    def contains(self, other):
+        return Point.pointify(other) == self
 
-        return args[0].is_concyclic(*args[1:])
+    def is_concyclic(*points):
+        """Is a sequence of points concyclic?
+
+        Test whether or not a sequence of points are concyclic (i.e., they lie
+        on a circle).
+
+        Parameters
+        ==========
+
+        points : sequence of Points
+
+        Returns
+        =======
+
+        is_concyclic : boolean
+            True if points are concyclic, False otherwise.
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Circle
+
+        Notes
+        =====
+
+        No points are not considered to be concyclic. One or two points
+        are definitely concyclic and three points are conyclic iff they
+        are not collinear.
+
+        For more than three points, create a circle from the first three
+        points. If the circle cannot be created (i.e., they are collinear)
+        then all of the points cannot be concyclic. If the circle is created
+        successfully then simply check the remaining points for containment
+        in the circle.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(-1, 0), Point(1, 0)
+        >>> p3, p4 = Point(0, 1), Point(-1, 2)
+        >>> Point.is_concyclic(p1, p2, p3)
+        True
+        >>> Point.is_concyclic(p1, p2, p3, p4)
+        False
+
+        """
+        if len(points) == 0:
+            return False
+        if Point.pointify(points[0]).ambient_dimension == 2:
+            return Point.is_cospherical(*points)
+        return Point.are_coplanar(*points) and Point.is_cospherical(*points)
+
+    def is_cospherical(*points):
+        """Is a sequence of points cospherical?
+
+        A set of poins is called cospherical if there exists
+        sphere on which every point lies.
+
+        Parameters
+        ==========
+
+        points : sequence of Points
+
+        Returns
+        =======
+
+        is_cospherical : boolean
+            True if points are cospherical, False otherwise.
+
+        Notes
+        =====
+
+        Subsets of size at most 2 are trivially cospherical.
+        Otherwise, the points (a,b,c,...) are cospherical
+        if there exists a point x so that |a-x|=|b-x|=|c-x|=....
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(-1, 0), Point(1, 0)
+        >>> p3, p4 = Point(0, 1), Point(-1, 2)
+        >>> Point.is_cospherical(p1, p2, p3)
+        True
+        >>> Point.is_cospherical(p1, p2, p3, p4)
+        False
+
+        """
+
+        points = [Point.pointify(p) for p in points]
+        # get unique points only
+        points = list(set(points))
+
+        if len(points) > 0 and any(p.ambient_dimension != points[0].ambient_dimension for p in points[1:]):
+            raise ValueError("Cospherical points must be of the same dimension")
+
+        if len(points) <= 2:
+            return True
+
+        # if we're here, we have at least 3 points.  This is a very common query
+        # so we'll do a quick test for collinearity to avoid potential matrix operations
+        if len(points) == 3:
+            return (not Point.is_collinear(*points))
+
+        # if x is the center of the sphere and r is the radius, then
+        # r**2 == (a-x).dot(a-x) == (b-x).dot(b-x) == ...
+        # If a == 0, then this simplifies to
+        # 0 == b.dot(b) - 2*b.dot(x) == c.dot(c) - 2*c.dot(x) == ...
+        # so let's test if there's a solution to this!
+        origin = points[0]
+        points = [p - origin for p in points[1:]]
+        m, v = Matrix([p*2 for p in points]), Matrix([[p.dot(p)] for p in points])
+        # solve the equation Mx=b by using the augmented matrix [M|b] and making
+        # sure the b column is not a pivot
+        m_rref, pivots = m.col_insert(m.cols, v).rref(simplify=True)
+        return m.cols not in pivots
 
     def is_collinear(*args):
         """Is a sequence of points collinear?
@@ -139,23 +250,9 @@ class Point(GeometryEntity):
         Notes
         =====
 
-        Slope is preserved everywhere on a line, so the slope between
-        any two points on the line should be the same. Take the first
-        two points, p1 and p2, and create a translated point v1
-        with p1 as the origin. Now for every other point we create
-        a translated point, vi with p1 also as the origin. Note that
-        these translations preserve slope since everything is
-        consistently translated to a new origin of p1. Since slope
-        is preserved then we have the following equality:
-
-              * v1_slope = vi_slope
-              * v1.y/v1.x = vi.y/vi.x (due to translation)
-              * v1.y*vi.x = vi.y*v1.x
-              * v1.y*vi.x - vi.y*v1.x = 0           (*)
-
-        Hence, if we have a vi such that the equality in (*) is False
-        then the points are not collinear. We do this test for every
-        point in the list, and if all pass then they are collinear.
+        A non-empty set set of points (a, b, c,...) is collinear if
+        (b-a, c-a,...) are all scalar multiples of each other. In
+        other words, the rank of the matrix [b-a|c-a|...] is one.
 
         See Also
         ========
@@ -339,6 +436,44 @@ class Point(GeometryEntity):
             raise TypeError("{} must be a Point".format(a))
 
         return a
+
+    @staticmethod
+    def are_coplanar(*points):
+        """Do all points lie on a plane?
+
+        A set of points is coplanar if there exists a plane
+        containing all the points.  This is trivially true
+        for 2d points.  For 3d and higher points, matrix operations
+        are used to compute the affine rank of the set of points.
+
+        Parameters
+        ==========
+
+        points: A sequence of points
+
+        Returns
+        =======
+
+        boolean
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p1 = Point3D(1, 2, 2)
+        >>> p2 = Point3D(2, 7, 2)
+        >>> p3 = Point3D(0, 0, 2)
+        >>> p4 = Point3D(1, 1, 2)
+        >>> Point3D.are_coplanar(p1, p2, p3, p4)
+        True
+        >>> p5 = Point3D(0, 1, 3)
+        >>> Point3D.are_coplanar(p1, p2, p3, p5)
+        False
+
+        """
+        if len(points) < 0:
+            return True
+        return Point.affine_rank(*points) <= 2
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
@@ -669,9 +804,6 @@ class Point2D(Point):
                 for f in coords.atoms(Float)]))
         return GeometryEntity.__new__(cls, *coords)
 
-    def __contains__(self, item):
-        return item == self
-
     @property
     def x(self):
         """
@@ -708,75 +840,7 @@ class Point2D(Point):
         rectangle for the geometric figure.
 
         """
-
         return (self.x, self.y, self.x, self.y)
-
-    def is_concyclic(*points):
-        """Is a sequence of points concyclic?
-
-        Test whether or not a sequence of points are concyclic (i.e., they lie
-        on a circle).
-
-        Parameters
-        ==========
-
-        points : sequence of Points
-
-        Returns
-        =======
-
-        is_concyclic : boolean
-            True if points are concyclic, False otherwise.
-
-        See Also
-        ========
-
-        sympy.geometry.ellipse.Circle
-
-        Notes
-        =====
-
-        No points are not considered to be concyclic. One or two points
-        are definitely concyclic and three points are conyclic iff they
-        are not collinear.
-
-        For more than three points, create a circle from the first three
-        points. If the circle cannot be created (i.e., they are collinear)
-        then all of the points cannot be concyclic. If the circle is created
-        successfully then simply check the remaining points for containment
-        in the circle.
-
-        Examples
-        ========
-
-        >>> from sympy.geometry import Point
-        >>> p1, p2 = Point(-1, 0), Point(1, 0)
-        >>> p3, p4 = Point(0, 1), Point(-1, 2)
-        >>> Point.is_concyclic(p1, p2, p3)
-        True
-        >>> Point.is_concyclic(p1, p2, p3, p4)
-        False
-
-        """
-        if len(points) == 0:
-            return False
-        if len(points) <= 2:
-            return True
-        points = [Point.pointify(p) for p in points]
-        if len(points) == 3:
-            return (not Point.is_collinear(*points))
-
-        try:
-            from .ellipse import Circle
-            c = Circle(points[0], points[1], points[2])
-            for point in points[3:]:
-                if point not in c:
-                    return False
-            return True
-        except GeometryError:
-            # Circle could not be created, because of collinearity of the
-            # three points passed in, hence they are not concyclic.
-            return False
 
     def rotate(self, angle, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
@@ -1019,6 +1083,7 @@ class Point3D(Point):
         >>> p1.direction_ratio(Point3D(2, 3, 5))
         [1, 1, 2]
         """
+        point = Point.pointify(point, dimension=3)
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
     def direction_cosine(self, point):
@@ -1043,6 +1108,7 @@ class Point3D(Point):
         >>> p1.direction_cosine(Point3D(2, 3, 5))
         [sqrt(6)/6, sqrt(6)/6, sqrt(6)/3]
         """
+        point = Point.pointify(point, dimension=3)
         a = self.direction_ratio(point)
         b = sqrt(sum(i**2 for i in a))
         return [(point.x - self.x) / b,(point.y - self.y) / b,
@@ -1083,93 +1149,6 @@ class Point3D(Point):
         False
         """
         return Point.is_collinear(*points)
-
-    @staticmethod
-    def are_coplanar(*points):
-        """
-
-        This function tests whether passed points are coplanar or not.
-        It uses the fact that the triple scalar product of three vectors
-        vanishes if the vectors are coplanar. Which means that the volume
-        of the solid described by them will have to be zero for coplanarity.
-
-        Parameters
-        ==========
-
-        A set of points 3D points
-
-        Returns
-        =======
-
-        boolean
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p1 = Point3D(1, 2, 2)
-        >>> p2 = Point3D(2, 7, 2)
-        >>> p3 = Point3D(0, 0, 2)
-        >>> p4 = Point3D(1, 1, 2)
-        >>> Point3D.are_coplanar(p1, p2, p3, p4)
-        True
-        >>> p5 = Point3D(0, 1, 3)
-        >>> Point3D.are_coplanar(p1, p2, p3, p5)
-        False
-
-        """
-        from sympy.geometry.plane import Plane
-        points = list(set(Point.pointify(p, dimension=3) for p in points))
-        if len(points) < 3:
-            raise ValueError('At least 3 points are needed to define a plane.')
-        a, b = points[:2]
-        for i, c in enumerate(points[2:]):
-            try:
-                p = Plane(a, b, c)
-                for j in (0, 1, i):
-                    points.pop(j)
-                return all(p.is_coplanar(i) for i in points)
-            except ValueError:
-                pass
-        raise ValueError('At least 3 non-collinear points needed to define plane.')
-
-    def intersection(self, other):
-        """The intersection between this point and another point.
-
-        Parameters
-        ==========
-
-        other : Point
-
-        Returns
-        =======
-
-        intersection : list of Points
-
-        Notes
-        =====
-
-        The return value will either be an empty list if there is no
-        intersection, otherwise it will contain this point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(0, 0, 0)
-        >>> p1.intersection(p2)
-        []
-        >>> p1.intersection(p3)
-        [Point3D(0, 0, 0)]
-
-        """
-        other = Point.pointify(other, ensure_point=False)
-        if isinstance(other, Point3D):
-            if self == other:
-                return [self]
-            return []
-
-        return other.intersection(self)
 
     def scale(self, x=1, y=1, z=1, pt=None):
         """Scale the coordinates of the Point by multiplying by
