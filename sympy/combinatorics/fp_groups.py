@@ -137,9 +137,9 @@ class CosetTable(DefaultPrinting):
 
     def copy(self):
         self_copy = self.__class__(self.fp_group, self.subgroup)
-        self_copy.table = [perm_rep.copy() for perm_rep in self.table]
-        self_copy.p = self.p.copy()
-        self_copy.deduction_stack = self.deduction_stack.copy()
+        self_copy.table = [list(perm_rep) for perm_rep in self.table]
+        self_copy.p = list(self.p)
+        self_copy.deduction_stack = list(self.deduction_stack)
         return self_copy
 
     def __str__(self):
@@ -897,10 +897,10 @@ def first_in_class(C):
 
     bool: True/False
 
-    If this returns False, then no descendant of D can have that property, and
-    so we can abandon D. If it returns True, then we need to process further
-    the node of the search tree corresponding to D, and so we call
-    ``descendant_subgroups`` recursively on D.
+    If this returns False, then no descendant of C can have that property, and
+    so we can abandon C. If it returns True, then we need to process further
+    the node of the search tree corresponding to C, and so we call
+    ``descendant_subgroups`` recursively on C.
 
     Examples
     ========
