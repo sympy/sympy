@@ -962,7 +962,7 @@ def first_in_class(C, Y=[]):
         # G_α corresponding to this preceding table definitely contains the
         # given subgroup
         for w in Y:
-            if C.table[alpha][w] != alpha:
+            if C.table[alpha][C.A_dict[w]] != alpha:
                 # continue with α
                 next_alpha = True
                 break
