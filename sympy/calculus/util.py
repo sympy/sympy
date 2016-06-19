@@ -45,12 +45,15 @@ def continuous_domain(f, symbol, domain):
                                                          symbol).as_set()
                 constrained_interval = Intersection(constraint,
                                                     constrained_interval)
+
         for atom in f.atoms(log):
             constraint = solve_univariate_inequality(atom.args[0] > 0,
                                                      symbol).as_set()
             constrained_interval = Intersection(constraint,
                                                 constrained_interval)
+
         domain = constrained_interval
+
     try:
         sings = S.EmptySet
         for atom in f.atoms(Pow):
@@ -60,6 +63,7 @@ def continuous_domain(f, symbol, domain):
                 break
         else:
             sings = Intersection(solveset(1/f, symbol), domain)
+
     except:
         raise NotImplementedError("Methods for determining the continuous domains"
                                   " of this function has not been developed.")
@@ -101,33 +105,36 @@ def function_range(f, symbol, domain):
     range_int = S.EmptySet
     if isinstance(intervals, Interval):
         interval_iter = (intervals,)
+
     else:
         interval_iter = intervals.args
 
     for interval in interval_iter:
-        cps = S.EmptySet
-        cvs = S.EmptySet
+        critical_points = S.EmptySet
+        critical_values = S.EmptySet
         bounds = ((interval.left_open, interval.inf, '+'),
                   (interval.right_open, interval.sup, '-'))
 
-        for i in bounds:
-            if i[0]:
-                cvs += FiniteSet(limit(f, symbol, i[1], i[2]))
-                vals += cvs
+        for is_open, limit_point, direction in bounds:
+            if is_open:
+                critical_values += FiniteSet(limit(f, symbol, limit_point, direction))
+                vals += critical_values
+
             else:
-                vals += FiniteSet(f.subs(symbol, i[1]))
+                vals += FiniteSet(f.subs(symbol, limit_point))
 
-        cps += solveset(f.diff(symbol), symbol, domain)
+        critical_points += solveset(f.diff(symbol), symbol, domain)
 
-        for cp in cps:
-            vals += FiniteSet(f.subs(symbol, cp))
+        for critical_point in critical_points:
+            vals += FiniteSet(f.subs(symbol, critical_point))
 
         left_open, right_open = False, False
 
-        if cvs is not S.EmptySet:
-            if cvs.inf == vals.inf:
+        if critical_values is not S.EmptySet:
+            if critical_values.inf == vals.inf:
                 left_open = True
-            if cvs.sup == vals.sup:
+
+            if critical_values.sup == vals.sup:
                 right_open = True
 
         range_int += Interval(vals.inf, vals.sup, left_open, right_open)
