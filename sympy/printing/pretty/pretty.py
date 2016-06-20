@@ -828,7 +828,7 @@ class PrettyPrinter(Printer):
                 vectstrs.append(k._pretty_form)
 
         #outstr = u("").join(o1)
-        if o1[0].startswith(u'' + u'')):
+        if o1[0].startswith(u'' + u''):
             o1[0] = o1[0][3:]
         elif o1[0].startswith(" "):
             o1[0] = o1[0][1:]
