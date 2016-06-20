@@ -187,8 +187,8 @@ class Point(GeometryEntity):
         =====
 
         Subsets of size at most 2 are trivially cospherical.
-        Otherwise, the points (a,b,c,...) are cospherical
-        if there exists a point x so that |a-x|=|b-x|=|c-x|=....
+        Otherwise, the points a,b,c, etc. are cospherical
+        if there exists a point x so that |a-x|=|b-x|=|c-x|= etc.
 
         Examples
         ========
@@ -451,7 +451,6 @@ class Point(GeometryEntity):
 
         return a
 
-<<<<<<< HEAD
     @staticmethod
     def are_coplanar(*points):
         """Do all points lie on a plane?
@@ -489,8 +488,6 @@ class Point(GeometryEntity):
         if len(points) < 0:
             return True
         return Point.affine_rank(*points) <= 2
-=======
->>>>>>> parent of 35cec38... Fix assignment to `self`
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
