@@ -615,6 +615,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
+            if ics:
+                constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
+                solved_constants = solve_ics(sols, func, constants, ics)
+                return [sol.subs(solved_constants) for sol in sols]
             return sols
     else:
         given_hint = hint  # hint given by the user
@@ -656,9 +660,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify)
+            return _helper_simplify(eq, hint, hints, simplify, ics=ics)
 
-def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
+def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -682,14 +686,26 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         free = eq.free_symbols
         cons = lambda s: s.free_symbols.difference(free)
         if isinstance(sols, Expr):
-            return odesimp(sols, func, order, cons(sols), hint)
-        return [odesimp(s, func, order, cons(s), hint) for s in sols]
+            rv =  odesimp(sols, func, order, cons(sols), hint)
+        else:
+            rv = [odesimp(s, func, order, cons(s), hint) for s in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order, match),
             func, order, hint)
-        return rv
+
+    if ics:
+        if isinstance(rv, Expr):
+            solved_constants = solve_ics([rv], [r['func']], cons(sols), ics)
+            rv = rv.subs(solved_constants)
+        else:
+            rv1 = []
+            for s in rv:
+                solved_constants = solve_ics([s], [r['func']], cons(s), ics)
+                rv1.append(s.subs(solved_constants))
+            rv = rv1
+    return rv
 
 def solve_ics(sols, funcs, constants, ics):
     # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
