@@ -927,9 +927,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     raise ValueError("Enter valid boundary conditions for Function")
 
             else:
-                raise ValueError("Enter boundary conditions of the form ics "
-                    " = {f(point}: value, f(point).diff(point, order).subs(arg, point) "
-                    ":value")
+                raise ValueError("Enter boundary conditions of the form ics={f(point}: value, f(x).diff(x, order).subs(x, point): value}")
 
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
