@@ -300,11 +300,11 @@ class Point(GeometryEntity):
 
         return Point.affine_rank(*args) == 1
 
-    def is_scalar_multiple(self, p2):
+    def is_scalar_multiple(p1, p2):
         """Returns whether `p1` and `p2` are scalar multiples
         of eachother.
         """
-        p1, p2 = Point.pointify(self), Point.pointify(p2)
+        p1, p2 = Point.pointify(p1), Point.pointify(p2)
 
         # 2d points happen a lot, so optimize this function call
         if p1.ambient_dimension == 2:
@@ -451,6 +451,7 @@ class Point(GeometryEntity):
 
         return a
 
+<<<<<<< HEAD
     @staticmethod
     def are_coplanar(*points):
         """Do all points lie on a plane?
@@ -488,6 +489,8 @@ class Point(GeometryEntity):
         if len(points) < 0:
             return True
         return Point.affine_rank(*points) <= 2
+=======
+>>>>>>> parent of 35cec38... Fix assignment to `self`
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
