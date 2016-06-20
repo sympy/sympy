@@ -250,23 +250,9 @@ class Point(GeometryEntity):
         Notes
         =====
 
-        Slope is preserved everywhere on a line, so the slope between
-        any two points on the line should be the same. Take the first
-        two points, p1 and p2, and create a translated point v1
-        with p1 as the origin. Now for every other point we create
-        a translated point, vi with p1 also as the origin. Note that
-        these translations preserve slope since everything is
-        consistently translated to a new origin of p1. Since slope
-        is preserved then we have the following equality:
-
-              * v1_slope = vi_slope
-              * v1.y/v1.x = vi.y/vi.x (due to translation)
-              * v1.y*vi.x = vi.y*v1.x
-              * v1.y*vi.x - vi.y*v1.x = 0           (*)
-
-        Hence, if we have a vi such that the equality in (*) is False
-        then the points are not collinear. We do this test for every
-        point in the list, and if all pass then they are collinear.
+        A non-empty set set of points `(a, b, c,...)` is collinear if
+        `(b-a, c-a,...)` are all scalar multiples of each other. In
+        other words, the rank of the matrix `[b-a|c-a|...]` is one.
 
         See Also
         ========
