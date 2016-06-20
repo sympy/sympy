@@ -691,6 +691,42 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
             func, order, hint)
         return rv
 
+def solve_ics(sol, func, constants, ics):
+    # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
+    # x0)): value (currently checked by classify_ode). To solve, replace x
+    # with x0, f(x0) with value, then solve for constants.
+    x = func.args[0]
+    eqs = []
+    for funcarg, value in ics.items():
+        if isinstance(funcarg, AppliedUndef):
+            x0 = funcarg.args[0]
+        elif isinstance(funcarg, Subs):
+            raise NotImplementedError("Derivative initial conditions are not yet implemented")
+        else:
+            raise ValueError("Unrecognized initial condition")
+
+        eq = sol
+        eq = eq.subs(x, x0)
+        eq = eq.subs(funcarg, value)
+        eqs.append(eq)
+
+    # TODO: Use solveset here
+    try:
+        solved_constants = solve(eqs, constants, dict=True)
+    except NotImplementedError:
+        solved_constants = []
+
+    if not solved_constants:
+        raise NotImplementedError("Couldn't solve for initial conditions")
+
+    if len(solved_constants) > 1:
+        raise NotImplementedError("Initial conditions produced too many solutions for constants")
+
+    if len(solved_constants[0]) != len(constants):
+        raise ValueError("Initial conditions did not produce solution for all constants. Perhaps they are under-specified.")
+
+    return sol.subs(solved_constants[0])
+
 def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r"""
     Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
