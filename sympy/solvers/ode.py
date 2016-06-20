@@ -691,24 +691,27 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
             func, order, hint)
         return rv
 
-def solve_ics(sol, func, constants, ics):
+def solve_ics(sols, funcs, constants, ics):
     # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
     # x0)): value (currently checked by classify_ode). To solve, replace x
     # with x0, f(x0) with value, then solve for constants.
-    x = func.args[0]
+    x = funcs[0].args[0]
     eqs = []
     for funcarg, value in ics.items():
         if isinstance(funcarg, AppliedUndef):
             x0 = funcarg.args[0]
+            matching_func = [f for f in funcs if f.func == funcarg.func][0]
         elif isinstance(funcarg, Subs):
             raise NotImplementedError("Derivative initial conditions are not yet implemented")
         else:
             raise ValueError("Unrecognized initial condition")
 
-        eq = sol
-        eq = eq.subs(x, x0)
-        eq = eq.subs(funcarg, value)
-        eqs.append(eq)
+        for sol in sols:
+            if sol.has(matching_func):
+                eq = sol
+                eq = eq.subs(x, x0)
+                eq = eq.subs(funcarg, value)
+                eqs.append(eq)
 
     # TODO: Use solveset here
     try:
@@ -725,7 +728,7 @@ def solve_ics(sol, func, constants, ics):
     if len(solved_constants[0]) != len(constants):
         raise ValueError("Initial conditions did not produce solution for all constants. Perhaps they are under-specified.")
 
-    return sol.subs(solved_constants[0])
+    return [sol.subs(solved_constants[0]) for sol in sols]
 
 def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r"""
