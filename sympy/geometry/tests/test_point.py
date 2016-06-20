@@ -21,8 +21,8 @@ def test_point():
     p4 = Point(1, 1)
     p5 = Point(0, 1)
 
-    assert p1.contains(p1)
-    assert not p1.contains(p2)
+    assert p1 in p1
+    assert p1 not in p2
     assert p2.y == y2
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
@@ -197,8 +197,10 @@ def test_point3D():
     planar3 = Point3D(-1, 1, 1)
     assert Point3D.are_coplanar(p, planar2, planar3) == True
     assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2))
     planar2 = Point3D(1, 1, 2)
     planar3 = Point3D(1, 1, 3)
+    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2, planar3))
 
     # Test Intersection
     assert planar2.intersection(Line3D(p, planar3)) == [Point3D(1, 1, 2)]
@@ -298,7 +300,7 @@ def test_arguments():
     test_double = ['is_collinear']
     for p in singles3d:
         Point3D(p)
-    for func in test_single + ['direction_ratio', 'direction_cosine']:
+    for func in test_single:
         for p in singles3d:
             getattr(p3d, func)(p)
     for func in test_double:
