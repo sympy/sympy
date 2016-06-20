@@ -728,7 +728,7 @@ def solve_ics(sols, funcs, constants, ics):
     if len(solved_constants[0]) != len(constants):
         raise ValueError("Initial conditions did not produce solution for all constants. Perhaps they are under-specified.")
 
-    return [sol.subs(solved_constants[0]) for sol in sols]
+    return solved_constants[0]
 
 def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r"""
