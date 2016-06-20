@@ -8,10 +8,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
-from sympy.core.backend import Matrix, USE_SYMENGINE
+from sympy import simplify
+from sympy.core.backend import (Matrix, USE_SYMENGINE, sympify, Derivative,
+                                sin, cos, tan, MulClass, Mul, AppliedUndef)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -536,7 +535,7 @@ def _smart_subs(expr, sub_dict):
 
 def _fraction_decomp(expr):
     """Return num, den such that expr = num/den"""
-    if not isinstance(expr, Mul):
+    if not isinstance(expr, MulClass):
         return expr, 1
     num = []
     den = []

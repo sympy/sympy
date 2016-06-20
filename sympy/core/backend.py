@@ -10,7 +10,8 @@ if USE_SYMENGINE:
         Lambdify as lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, UndefFunction as Function, symbols, var)
     from symengine.lib.symengine_wrapper import (Function as FunctionClass,
-        Add as AddClass, Mul as MulClass, add as Add, mul as Mul)
+        Add as AddClass, Mul as MulClass, add as Add, mul as Mul,
+        FunctionSymbol as AppliedUndef)
 else:
     import sympy as sm
     from sympy import (Symbol, Integer, sympify, S, SympifyError,
@@ -21,3 +22,4 @@ else:
         Function, symbols, var)
     from sympy import (Function as FunctionClass, Add as AddClass,
         Mul as MulClass)
+    from sympy.core.function import AppliedUndef
