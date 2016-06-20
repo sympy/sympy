@@ -250,9 +250,9 @@ class Point(GeometryEntity):
         Notes
         =====
 
-        A non-empty set set of points `(a, b, c,...)` is collinear if
-        `(b-a, c-a,...)` are all scalar multiples of each other. In
-        other words, the rank of the matrix `[b-a|c-a|...]` is one.
+        A non-empty set set of points (a, b, c,...) is collinear if
+        (b-a, c-a,...) are all scalar multiples of each other. In
+        other words, the rank of the matrix [b-a|c-a|...] is one.
 
         See Also
         ========
