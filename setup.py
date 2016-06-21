@@ -253,7 +253,7 @@ class run_benchmarks(Command):
         benchmarking.main(['sympy'])
 
 # Check that this list is uptodate against the result of the command:
-# $ python bin/generate_test_list.py
+# python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
