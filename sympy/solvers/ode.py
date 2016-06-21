@@ -695,7 +695,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         rv = _handle_Integral(solvefunc(eq, func, order, match),
             func, order, hint)
 
-    if ics:
+    if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
             solved_constants = solve_ics([rv], [r['func']], cons(sols), ics)
             rv = rv.subs(solved_constants)
