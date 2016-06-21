@@ -411,7 +411,7 @@ def test_from_sympy():
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = from_sympy((sin(x)/x)**2)
     q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 1, \
-        [sin(1)**2, -2*sin(1)**2 + 2*sin(1)*cos(1), -8*sin(1)*cos(1) + 2*cos(1)**2 + 4*sin(1)**2]) 
+        [sin(1)**2, -2*sin(1)**2 + 2*sin(1)*cos(1), -8*sin(1)*cos(1) + 2*cos(1)**2 + 4*sin(1)**2])
     assert p == q
     p = from_sympy(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, 1)
