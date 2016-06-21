@@ -52,7 +52,7 @@ def get_paths(level=15):
     p = ["sympy" + x + "__init__.py" for x in wildcards]
     return p
 
-def generate_modules_list():
+def generate_module_list():
     g = []
     for x in get_paths():
         g.extend(glob(x))
@@ -64,7 +64,7 @@ def generate_modules_list():
     return g
 
 if __name__ == '__main__':
-    g = generate_modules_list()
+    g = generate_module_list()
     print("modules = [")
     for x in g:
         print("    '%s'," % x)
