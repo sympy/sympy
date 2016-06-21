@@ -1102,6 +1102,26 @@ class HolonomicFunction(object):
         return sol
 
     def to_sympy(self):
+        """
+        Converts a Holonomic Function back to elementary functions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols, S
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
+        besselj(1, x)
+
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [0, 1, 1]).to_sympy().simplify()
+        (x + 1)*log(x + 1)
+
+        """
+
         return hyperexpand(self.to_hyper())
 
 
