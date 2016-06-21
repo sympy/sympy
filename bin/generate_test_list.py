@@ -63,4 +63,4 @@ g.sort()
 print("tests = [")
 for x in g:
     print("    '%s'," % x)
-print("    ]")
+print("]")
