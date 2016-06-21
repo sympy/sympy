@@ -512,6 +512,8 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
+    if isinstance(result, ConditionSet):
+        return result
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 
@@ -1250,12 +1252,35 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
     >>> from sympy.solvers.solveset import substitution
     >>> substitution([x +y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
+
+    * when you want soln should not satisfy eq `x + 1 = 0`
+
     >>> substitution([x +y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet()
     >>> substitution([x +y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
     {(-3, 4), (2, -1)}
+
+    * Returns both real and complex solution
+
+    >>> x, y, z = symbols('x, y, z')
+    >>> from sympy import exp, sin
+    >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
+    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
+        log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
+
+    >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
+    >>> substitution(eqs, [y, z])
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+    (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers()),
+    ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
+    Mod(-log(3), 2*I*pi)))), Integers())),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers()),
+    ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
+        Mod(-log(3), 2*I*pi)))), Integers()))}
 
     """
 
@@ -1309,11 +1334,20 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
         """
         # sort such that equation with the fewest potential symbols is first.
         # means eq with less variable first.
+        soln_imageset = None  # stores imageset if it finds.
         for eq in ordered(system, lambda _: len(_unsolved_syms(_))):
             newresult = []
             got_symbol = set()  # symbols solved in one iteration
             hit = False
+            original_imageset = {}
             for res in result:
+                if soln_imageset:
+                    # find the imageset and use it's expr.
+                    for key_res, value_res in res.items():
+                        if isinstance(value_res, ImageSet):
+                            res[key_res] = value_res.lamda.expr
+                            original_imageset[key_res] = value_res
+                soln_imageset = None
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res)
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
@@ -1323,7 +1357,6 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                     break  # skip as it's independent of desired symbols
                 for sym in unsolved_syms:
                     not_solvable = False
-                    soln_imageset = None
                     try:
                         soln = solver(eq2, sym)
                     except NotImplementedError:
@@ -1371,8 +1404,23 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                         # for check solve use imageset expr
                         if not any(checksol(d, rnew) for d in exclude):
                             # if sol was imageset then add imageset
-                            rnew[sym] = sol if not soln_imageset \
-                                else soln_imageset
+                            if soln_imageset:
+                                rnew[sym] = soln_imageset
+                            # restore original imageset
+                            restore_sym = set(rnew.keys()) & \
+                                set(original_imageset.keys())
+                            dummy_n = None
+                            base_img = None
+                            for key_sym in restore_sym:
+                                img = original_imageset[key_sym]
+                                rnew[key_sym] = img
+                                dummy_n = (img.lamda.expr).atoms(Dummy).pop()
+                                base_img = img.base_set
+                            if dummy_n and base_img:
+                                # also it means soln for `sym` contains
+                                # dummy `n`, put this expr in ImageSet
+                                lam = Lambda(dummy_n, rnew[sym])
+                                rnew[sym] = ImageSet(lam, base_img)
                             # now append this solution
                             newresult.append(rnew)
                     hit = True
@@ -1587,7 +1635,12 @@ def nonlinsolve(system, symbols):
     solution function `_solve_using_know_values` is used inside `substitution`
     function.(`substitution` function will be called when there is non
     polynomial equation(s) is present). When solution is valid then add its
-    general solution in the final result.
+    general solution in the final result. There may the case when
+    `solve_poly_system` will not give complex solution (only real solution)
+    then that soln will be missing.If we want to get complex solution in
+    general form then use `substitution` function.(it always returns all the
+    solutions).
+
 
     * Complements and Intersection will be added if any : nonlinsolve maintains
     dict for complements and Intersections. If solveset find complements or
