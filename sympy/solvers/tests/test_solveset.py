@@ -1252,7 +1252,7 @@ def test_issue_8828():
     # evalf(2) each tuple element and compare.
 
 
-def tets_substitution_basic():
+def test_substitution_basic():
     assert substitution([], [x, y]) == S.EmptySet
     assert substitution([], []) == S.EmptySet
     system = [2*x**2 + 3*y**2 - 30, 3*x**2 - 2*y**2 - 19]
