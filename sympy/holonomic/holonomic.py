@@ -1101,6 +1101,9 @@ class HolonomicFunction(object):
 
         return sol
 
+    def to_sympy(self):
+        return hyperexpand(self.to_hyper())
+
 
 def from_hyper(func, x0=0, evalf=False):
     """
