@@ -962,6 +962,8 @@ def first_in_class(C, Y=[]):
         # G_α corresponding to this preceding table definitely contains the
         # given subgroup
         for w in Y:
+            # TODO: this should support input of a list of general words
+            # not just the words which are in "A" (i.e gen and gen^-1)
             if C.table[alpha][C.A_dict[w]] != alpha:
                 # continue with α
                 next_alpha = True
