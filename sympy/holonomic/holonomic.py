@@ -1123,6 +1123,9 @@ class HolonomicFunction(object):
         # order of the recurrence relation
         m = r.order
 
+        if smallest_n + m > len(u0):
+            raise NotImplementedError("Can't compute sufficient Initial Conditions")
+
         # check if the recurrence represents a hypergeometric series
         is_hyper = True
         x = self.x
@@ -1204,12 +1207,12 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
         besselj(1, x)
 
-        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy().simplify()
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy()
         x*log(x + 1) + log(x + 1) + 1
 
         """
 
-        return hyperexpand(self.to_hyper())
+        return hyperexpand(self.to_hyper()).simplify()
 
 
 def from_hyper(func, x0=0, evalf=False):

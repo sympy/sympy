@@ -484,6 +484,6 @@ def test_to_sympy():
     q = cosh(x)
     assert p == q
     p = HolonomicFunction(2 + (4*x - 1)*Dx + \
-        (x**2 - x)*Dx**2, x, 0, [1, 2]).to_sympy().simplify()
+        (x**2 - x)*Dx**2, x, 0, [1, 2]).to_sympy()
     q = 1/(x**2 - 2*x + 1)
     assert p == q
