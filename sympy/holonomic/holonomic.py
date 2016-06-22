@@ -772,7 +772,7 @@ class HolonomicFunction(object):
         Finds the recurrence relation in power series expansion
         of the function.
 
-        Returns a tuple with recurrence relation and a value n0 such that
+        Returns a tuple of the recurrence relation and a value `n0` such that
         the recurrence relation holds for all n >= n0.
 
         Examples
@@ -784,8 +784,13 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
+        # exp(x), the recurrence relation holds for n >= 0
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
         (HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)
+
+        # log(1 + x), the recurrence relation holds for n >= 2
+        >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
+        (HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)
 
         See Also
         ========
@@ -795,35 +800,51 @@ class HolonomicFunction(object):
         References
         ==========
 
-        hal.inria.fr/inria-00070025/document
+        [1] hal.inria.fr/inria-00070025/document
+        [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
         """
+
 
         dict1 = {}
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
+        # substituting each term of the form `x^k Dx^j` in the
+        # annihilator, according to the formula below:
+        # x^k Dx^j = Sum(rf(n + 1 - k, j) * a(n + j - k) * x^n, (n, k, oo))
+        # for explanation see [2].
         for i, j in enumerate(self.annihilator.listofpoly):
+
             listofdmp = j.all_coeffs()
             degree = len(listofdmp) - 1
+
             for k in range(degree + 1):
                 coeff = listofdmp[degree - k]
+
                 if coeff == 0:
                     continue
+
                 if (i - k, k) in dict1:
                     dict1[(i - k, k)] += (coeff * rf(n - k + 1, i))
+
                 else:
                     dict1[(i - k, k)] = (coeff * rf(n - k + 1, i))
+
 
         sol = []
         keylist = [i[0] for i in dict1]
         lower = min(keylist)
         upper = max(keylist)
         degree = self.degree()
+
+        # the recurrence relation holds for all values of
+        # n greater than smallest_n, i.e. n >= smallest_n
         smallest_n = lower + degree
         dummys = {}
         eqs = []
 
+        # an appropriate shift of the recurrence
         for j in range(lower, upper + 1):
             if j in keylist:
                 temp = S(0)
@@ -834,7 +855,7 @@ class HolonomicFunction(object):
             else:
                 sol.append(S(0))
 
-        # recurrence relation
+        # the recurrence relation
         sol = RecurrenceOperator(sol, R)
 
         if not self._have_init_cond or self.x0 != 0:
@@ -861,6 +882,9 @@ class HolonomicFunction(object):
         for i, j in enumerate(y0):
             u0.append(j / factorial(i))
 
+        # if sufficient conditions can't be computed then
+        # try to use the series method i.e.
+        # equate the coefficients of x^k in series to zero.
         if len(u0) < order:
 
             for i in range(degree):
@@ -1129,6 +1153,11 @@ class HolonomicFunction(object):
         # of different hypergeometric series which satisfies
         # the recurrence.
         for i in range(len(u0)):
+
+            # if the recurrence relation doesn't hold for `n = i`,
+            # then a Hypergeometric representation doesn't exist.
+            # add the algebraic term a * x**i to the solution,
+            # where a is u0[i]
             if i < smallest_n:
                 sol += S(u0[i]) * x**i
                 continue
