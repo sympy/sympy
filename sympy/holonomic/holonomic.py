@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I
+from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I, solve
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -693,6 +693,13 @@ class HolonomicFunction(object):
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
 
+    def degree(self):
+        """
+        Returns the highest power of `x` in the annihilator.
+        """
+        sol = [i.degree() for i in self.annihilator.listofpoly]
+        return max(sol)
+
     def composition(self, expr, *args):
         """
         Returns the annihilator after composition of a holonomic function with
@@ -760,10 +767,13 @@ class HolonomicFunction(object):
             return HolonomicFunction(sol, self.x, args[0], args[1])
         return HolonomicFunction(sol, self.x)
 
-    def to_sequence(self):
+    def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
         of the function.
+
+        Returns a tuple with recurrence relation and a value n0 such that
+        the recurrence relation holds for all n >= n0.
 
         Examples
         ========
@@ -775,7 +785,7 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
-        HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1
+        (HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)
 
         See Also
         ========
@@ -800,42 +810,87 @@ class HolonomicFunction(object):
                 coeff = listofdmp[degree - k]
                 if coeff == 0:
                     continue
-                if i - k in dict1:
-                    dict1[i - k] += (coeff * rf(n - k + 1, i))
+                if (i - k, k) in dict1:
+                    dict1[(i - k, k)] += (coeff * rf(n - k + 1, i))
                 else:
-                    dict1[i - k] = (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] = (coeff * rf(n - k + 1, i))
 
         sol = []
-        lower = min(dict1.keys())
-        upper = max(dict1.keys())
+        keylist = [i[0] for i in dict1]
+        lower = min(keylist)
+        upper = max(keylist)
+        degree = self.degree()
+        smallest_n = lower + degree
+        dummys = {}
+        eqs = []
 
         for j in range(lower, upper + 1):
-            if j in dict1.keys():
-                sol.append(dict1[j].subs(n, n - lower))
+            if j in keylist:
+                temp = S(0)
+                for k in dict1.keys():
+                    if k[0] == j:
+                        temp += dict1[k].subs(n, n - lower)
+                sol.append(temp)
             else:
                 sol.append(S(0))
+
         # recurrence relation
         sol = RecurrenceOperator(sol, R)
 
-        if not self._have_init_cond:
-            return HolonomicSequence(sol)
-        if self.x0 != 0:
-            return HolonomicSequence(sol)
+        if not self._have_init_cond or self.x0 != 0:
+            if lb:
+                return (HolonomicSequence(sol), smallest_n)
+            else:
+                return HolonomicSequence(sol)
+
         # computing the initial conditions for recurrence
         order = sol.order
         all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
         all_roots = all_roots.keys()
 
         if all_roots:
-            max_root = max(all_roots)
-            if max_root >= 0:
-                order += max_root + 1
+            max_root = max(all_roots) + 1
+            order += max(max_root, smallest_n)
+        else:
+            order += smallest_n
 
         y0 = _extend_y0(self, order)
         u0 = []
+
         # u(n) = y^n(0)/factorial(n)
         for i, j in enumerate(y0):
             u0.append(j / factorial(i))
+
+        if len(u0) < order:
+
+            for i in range(degree):
+                eq = S(0)
+
+                for j in dict1:
+                    if i + j[0] < len(u0):
+                        dummys[i + j[0]] = u0[i + j[0]]
+
+                    elif not i + j[0] in dummys:
+                        dummys[i + j[0]] = Dummy('x_%s' %(i + j[0]))
+
+                    if j[1] <= i:
+                        eq += dict1[j].subs(n, i) * dummys[i + j[0]]
+
+                eqs.append(eq)
+
+            soleqs = solve(eqs)
+
+            for i in range(len(u0), order):
+                s = False
+                for j in soleqs:
+                    if dummys[i] in j:
+                        u0.append(j[dummys[i]])
+                        s = True
+                if not s:
+                    break
+
+        if lb:
+            return (HolonomicSequence(sol, u0), smallest_n)
 
         return HolonomicSequence(sol, u0)
 
@@ -864,7 +919,7 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence
         """
 
-        recurrence = self.to_sequence()
+        recurrence = self.to_sequence()[0]
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
         x = self.x
@@ -1037,7 +1092,7 @@ class HolonomicFunction(object):
         from_hyper, from_meijerg
         """
 
-        recurrence = self.to_sequence()
+        recurrence, smallest_n = self.to_sequence()
         u0 = recurrence.u0
         r = recurrence.recurrence
 
@@ -1074,6 +1129,9 @@ class HolonomicFunction(object):
         # of different hypergeometric series which satisfies
         # the recurrence.
         for i in range(len(u0)):
+            if i < smallest_n:
+                sol += S(u0[i]) * x**i
+                continue
 
             # if the coefficient u0[i] is zero, then the
             # independent hypergeomtric series starting with
@@ -1117,8 +1175,8 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
         besselj(1, x)
 
-        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [0, 1, 1]).to_sympy().simplify()
-        (x + 1)*log(x + 1)
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy().simplify()
+        x*log(x + 1) + log(x + 1) + 1
 
         """
 
