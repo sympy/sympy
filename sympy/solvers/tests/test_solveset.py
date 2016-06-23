@@ -1086,3 +1086,14 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+def test_issue_11174():
+    r, t = symbols('r t')
+    eq = z**2 + exp(2*x) - sin(y)
+    soln = Intersection(S.Reals, FiniteSet(log(-z**2 + sin(y))/2))
+    assert solveset(eq, x, S.Reals) == soln
+
+    eq = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
+    s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
+    soln = Intersection(S.Reals, FiniteSet(s))
+    assert solveset(eq, x, S.Reals) == soln

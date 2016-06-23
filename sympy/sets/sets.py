@@ -1532,14 +1532,15 @@ class Intersection(Set):
                     e = list(s)[0]
                     if e.free_symbols:
                         rhs = Dummy()
-                        e, r = clear_coefficients(e, rhs)
-                        if r != rhs:
-                            iargs = list(ivl.args)
-                            iargs[0] = r.subs(rhs, ivl.start)
-                            iargs[1] = r.subs(rhs, ivl.end)
-                            if iargs[0] > iargs[1]:
-                                iargs = iargs[:2][::-1] + iargs[-2:][::-1]
-                            rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
+                        if ivl != S.Reals:
+                            e, r = clear_coefficients(e, rhs)
+                            if r != rhs:
+                                iargs = list(ivl.args)
+                                iargs[0] = r.subs(rhs, ivl.start)
+                                iargs[1] = r.subs(rhs, ivl.end)
+                                if iargs[0] > iargs[1]:
+                                    iargs = iargs[:2][::-1] + iargs[-2:][::-1]
+                                rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
             return rv
 
         # If any of the sets are unions, return a Union of Intersections

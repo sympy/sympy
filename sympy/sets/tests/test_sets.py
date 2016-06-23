@@ -1053,3 +1053,11 @@ def test_issue_10285():
 def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
+
+
+def test_issue_11174():
+    soln = Intersection(S.Reals, FiniteSet(-x))
+    assert Intersection(FiniteSet(-x), S.Reals) == soln
+
+    soln = Intersection(S.Reals, FiniteSet(x))
+    assert Intersection(FiniteSet(x), S.Reals) == soln
