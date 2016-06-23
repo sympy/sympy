@@ -1068,30 +1068,29 @@ def test_nonlinsolve_polysys():
     s = (-y + 2, y)
     assert nonlinsolve([(x + y)**2 - 4, x + y - 2], [x, y]) == FiniteSet(s)
 
-    # this is completely solved under if polys block
     system = [x**2 - y**2]
-    assert nonlinsolve(system, [x, y]) == FiniteSet((-y, y), (y, y))
+    soln_real = FiniteSet((-y, y), (y, y))
+    soln_complex = FiniteSet((-Abs(y), y), (Abs(y), y))
+    soln =soln_real + soln_complex
+    assert nonlinsolve(system, [x, y]) == soln
 
     system = [x**2 - y**2]
-    assert nonlinsolve(system, [y, x]) == FiniteSet((-x, x), (x, x))
+    soln_real= FiniteSet((y, -y), (y, y))
+    soln_complex = FiniteSet((y, -Abs(y)), (y, Abs(y)))
+    soln = soln_real + soln_complex
+    assert nonlinsolve(system, [y, x]) == soln
 
     system = [x**2 + y - 3, x - y - 4]
     assert nonlinsolve(system, (x, y)) != nonlinsolve(system, (y, x))
 
 
 
-def test_nonlinsolve_using_solve_poly_and_substitution():
+def test_nonlinsolve_using_substitution():
     x, y, z, n = symbols('x, y, z, n', real = True)
     system = [(x + y)*n - y**2 + 2]
-    s1 = ((-n*y + y**2 - 2)/n, y)
-    assert nonlinsolve(system, [x, y]) == FiniteSet(s1)
-
-    n = Dummy('n')
-    real_soln = (log(sin(S(1)/3)), S(1)/3)
-    img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
-    complex_soln = ((ImageSet(img_lamda, S.Integers), S(1)/3))
-    soln = FiniteSet(real_soln, complex_soln)
-    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
+    s_x = (n*y - y**2 + 2)/n
+    soln = (-s_x, y)
+    assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
 
     system = [z**2*x**2 - z**2*y**2/exp(x)]
     soln_real_1 = (y, x, 0)
@@ -1106,16 +1105,22 @@ def test_nonlinsolve_using_solve_poly_and_substitution():
 
 
 def test_nonlinsolve_complex():
+    x, y, z = symbols('x, y, z')
     n = Dummy('n')
+    real_soln = (log(sin(S(1)/3)), S(1)/3)
+    img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
+    complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
+    soln = FiniteSet(real_soln, complex_soln)
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
+
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
-    soln = (soln_x, -log(S(3)))
-    assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
+    soln = FiniteSet((soln_x, -log(S(3))))
+    assert nonlinsolve(system, [x, y]) == soln
 
     system = [exp(x) - sin(y), y**2 - 4]
     s1 = (log(sin(2)), 2)
     s2 = (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2 )
-    # Mod is not there in wolfram
     img = ImageSet(Lambda(n, 2*n*I*pi + Mod(log(sin(2)), 2*I*pi)), S.Integers)
     s3 = (img, 2)
     assert nonlinsolve(system, [x, y]) == FiniteSet(s1, s2, s3)
@@ -1136,22 +1141,6 @@ def test_solve_nonlinear_trans():
 
 
 def test_issue_5132():
-    x, y, z, r, t = symbols('x, y, z, r, t')
-    # check : both soln seems equal
-    # 2 soln from solveset_real and other
-    # 2 soln from solveset_complex
-    # substitution(system, [x, y]) function returns correct
-    # solution.
-    system = [r - x**2 - y**2, tan(t) - y/x]
-    s_x = sqrt(r*cos(t)**2)
-    s_y = sqrt(r*cos(t)**2)*tan(t)
-    soln_real= FiniteSet((s_x, s_y), (-s_x, -s_y))
-    s_x = sqrt(r*sin(t)**2)/tan(t)
-    s_y = sqrt(r*sin(t)**2)
-    soln_complex = FiniteSet((s_x, s_y), (s_x, -s_y))
-    soln = soln_real + soln_complex
-    assert nonlinsolve(system, [x, y]) == soln
-
     system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
     assert nonlinsolve(system, [x, y]) == FiniteSet((1, 3), (3, 1))
 
@@ -1167,13 +1156,50 @@ def test_issue_5132():
     assert nonlinsolve(eqs, [y, z]) == soln
 
 
-def test_issue_6752():  #done
+@XFAIL
+def test_issue_5132_():
+    # comparison error.
+    # mostly because there is -ve(-ve term) inside log
+    # related to issue : #11174
+    x, y, z, r, t = symbols('x, y, z, r, t', real=True)
+    eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
+    n = Dummy('n')
+    soln_real = (log(-sqrt(-z - sin(log(3)))), z)
+    lam = Lambda( n, I*(2*n*pi + arg(-sqrt(-z - sin(log(3))))/2 + \
+        log(-sqrt(-z - sin(log(3))))/2))
+    img = ImageSet(lam, S.Integers)
+    soln_complex = (img, z)
+    soln = FiniteSet(soln_real, soln_complex)
+    assert nonlinsolve(eqs, [x, z]) == soln
+
+
+    # check : both soln seems equal
+    # 2 soln from solveset_real and other
+    # 2 soln from solveset_complex
+    # substitution(system, [x, y]) function returns correct
+    # solution.
+
+    # here one extra soln (s_x, -s_y) is coming
+    # because instead of Intersection(S.Reals, FiniteSet(-s_x))
+    # solveset returns  Intersection(S.Reals, FiniteSet(s_x))
+    system = [r - x**2 - y**2, tan(t) - y/x]
+    s_x = sqrt(r*cos(t)**2)
+    s_y = sqrt(r*cos(t)**2)*tan(t)
+    soln_real= FiniteSet((s_x, s_y), (-s_x, -s_y))
+    s_x = sqrt(r*sin(t)**2)/tan(t)
+    s_y = sqrt(r*sin(t)**2)
+    soln_complex = FiniteSet((s_x, s_y), (-s_x, -s_y))
+    soln = soln_real + soln_complex
+    assert nonlinsolve(system, [x, y]) == soln
+
+
+def test_issue_6752():
     a,b,c,d = symbols('a, b, c, d', real=True)
     assert nonlinsolve([a**2 + a, a - b], [a, b]) == {(-1, -1), (0, 0)}
 
 
 @SKIP("slow")
-def test_issue_5114():  #done
+def test_issue_5114():
     # slow testcase
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
@@ -1248,6 +1274,7 @@ def test_issue_8828():
 
     # both same soln
     A = nonlinsolve(F, v)
+    # if we remove sqrt from the expr then it is solvable
     B = nonlinsolve(G, v)  # fails
     # evalf(2) each tuple element and compare.
 
@@ -1261,7 +1288,7 @@ def test_substitution_basic():
 
 
 def test_issue_5132_substitution():
-    x, y, z, r, t = symbols('x, y, z, r, t')
+    x, y, z, r, t = symbols('x, y, z, r, t', real=True)
     system = [r - x**2 - y**2, tan(t) - y/x]
     s_x_1 = Complement(FiniteSet(-sqrt(r/(tan(t)**2 + 1))), FiniteSet(0))
     s_x_2 = Complement(FiniteSet(sqrt(r/(tan(t)**2 + 1))), FiniteSet(0))

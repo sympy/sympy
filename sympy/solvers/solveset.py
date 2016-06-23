@@ -1204,11 +1204,11 @@ def linsolve(system, *symbols):
 ##############################################################################
 
 
-def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[],
-                 all_symbols=None):
+def substitution(system, symbols=None, result=[{}], known_symbols=[],
+                 exclude=[], all_symbols=None):
     r""" Solves the `system` using substitution method.
-    A helper function for     `nonlinsolve`. This will be called from
-    `nonlinsolve` when any equation(s)     is non polynomial equation.
+    A helper function for `nonlinsolve`. This will be called from
+    `nonlinsolve` when any equation(s) is non polynomial equation.
 
     Parameters
     ==========
@@ -1250,14 +1250,14 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
     >>> from sympy.core.symbol import symbols
     >>> x, y = symbols('x, y', real = True)
     >>> from sympy.solvers.solveset import substitution
-    >>> substitution([x +y], [x], [{y: 1}], [y], set([]), [x, y])
+    >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
     * when you want soln should not satisfy eq `x + 1 = 0`
 
-    >>> substitution([x +y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
+    >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet()
-    >>> substitution([x +y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
+    >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
     {(-3, 4), (2, -1)}
@@ -1332,14 +1332,18 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
         (result contains the dict <symbol: value>).
         solver is `solveset_complex` or `solveset_real`.
         """
+        # stores imageset <expr: imageset(Lambda(n, expr), base)>.
+        soln_imageset = {}
         # sort such that equation with the fewest potential symbols is first.
-        # means eq with less variable first.
-        soln_imageset = None  # stores imageset if it finds.
-        for eq in ordered(system, lambda _: len(_unsolved_syms(_))):
+        # means eq with less variable first
+        for index, eq in enumerate(
+                ordered(system, lambda _: len(_unsolved_syms(_)))):
             newresult = []
             got_symbol = set()  # symbols solved in one iteration
             hit = False
             original_imageset = {}
+            # if imageset expr is used to solve other symbol
+            imgset_yes = False
             for res in result:
                 if soln_imageset:
                     # find the imageset and use it's expr.
@@ -1347,7 +1351,10 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                         if isinstance(value_res, ImageSet):
                             res[key_res] = value_res.lamda.expr
                             original_imageset[key_res] = value_res
-                soln_imageset = None
+                            dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
+                            base = value_res.base_set
+                            imgset_yes = (dummy_n, base)
+                soln_imageset = {}
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res)
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
@@ -1359,30 +1366,90 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                     not_solvable = False
                     try:
                         soln = solver(eq2, sym)
+                        soln_new = S.EmptySet
+                        if isinstance(soln, Complement):
+                            # extract solution and complement
+                            complements[sym] = soln.args[1]
+                            soln = soln.args[0]
+                            # complement will be added at the end
+                        if isinstance(soln, Intersection):
+                            # sometimes solveset returns Intersection with
+                            # S.Reals when #11174 is fixed,then
+                            # this if block should be removed
+
+                            # Interval will be at 0th index
+                            if soln.args[0] != Interval(-oo, oo):
+                                intersections[sym] = soln.args[0]
+                            soln_new += soln.args[1]
+                        soln = soln_new if soln_new else soln
+                        if index > 0 and solver == solveset_real:
+                            # 1 symbol's real soln , another symbol may have
+                            # corresponding complex soln.
+
+                            if not isinstance(soln, ImageSet):
+                                soln += solveset_complex(eq2, sym)
                     except NotImplementedError:
                         continue
+                    if isinstance(soln, ConditionSet):
+                            soln = S.EmptySet
+                            # dont do `continue` we may get soln
+                            # in terms of other symbol(s)
+                            not_solvable = True
                     if isinstance(soln, Complement):
-                        # extract solution and complement
-                        complements[sym] = soln.args[1]
-                        soln = soln.args[0]
-                        # complement should be added at the end
-                    if isinstance(soln, Intersection):
-                        # sometimes solveset returns Intersection with S.Real
-                        # when #11174 is fixed,then this line should be removed
-
-                        # Interval will be at 0th index
-                        if soln.args[0] != Interval(-oo, oo):
-                            intersections[sym] = soln.args[0]
-                        soln = soln.args[1]
+                            # extract solution and complement
+                            complements[sym] = soln.args[1]
+                            soln = soln.args[0]
+                            # complement will be added at the end
                     if isinstance(soln, ImageSet):
-                        soln_imageset = soln
-                        soln = FiniteSet(soln.lamda.expr)
-                    elif isinstance(soln, ConditionSet):
-                        soln = S.EmptySet
-                        # dont do `continue` we may get soln
-                        # in terms of other symbol(s)
-                        not_solvable = True
+                        soln_imagest = soln
+                        expr2 = soln.lamda.expr
+                        soln = FiniteSet(expr2)
+                        soln_imageset[expr2] = soln_imagest
+
+                    # if there is union of Imageset in soln
+                    # no testcase for this if block
+                    if isinstance(soln, Union):
+                        soln_args = soln.args
+                        soln = []
+                        # need to use list.
+                        # (finiteset union imageset).args is
+                        # (finiteset, Imageset). But we want only iteration
+                        # so append finteset elements and imageset.
+                        for soln_arg2 in soln_args:
+                            if isinstance(soln_arg2, FiniteSet):
+                                list_finiteset = list(
+                                    [sol_1 for sol_1 in soln_arg2])
+                                soln += list_finiteset
+                            else:
+                                # ImageSet, Intersection, complement
+                                # append directly
+                                soln.append(soln_arg2)
+
                     for sol in soln:
+                        # if there is union, then need to check
+                        # complement, intersection, Imageset
+                        # order should not be changed.
+                        if isinstance(soln, Complement):
+                            # extract solution and complement
+                            complements[sym] = soln.args[1]
+                            soln = soln.args[0]
+                            # complement will be added at the end
+                        if isinstance(sol, Intersection):
+                            # sometimes solveset returns Intersection with
+                            # S.Reals when #11174 is fixed,then
+                            # this if block should be removed
+
+                            # Interval will be at 0th index
+                            if sol.args[0] != Interval(-oo, oo):
+                                intersections[sym] = sol.args[0]
+                            sol = sol.args[1]
+                        # after intersection and complement Imageset should
+                        # be checked.
+                        if isinstance(sol, ImageSet):
+                            soln_imagest = sol
+                            sol = sol.lamda.expr
+                            soln_imageset[sol] = soln_imagest
+
                         free = sol.free_symbols
                         if got_symbol and any([
                             ss in free for ss in got_symbol
@@ -1404,8 +1471,17 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                         # for check solve use imageset expr
                         if not any(checksol(d, rnew) for d in exclude):
                             # if sol was imageset then add imageset
+                            local_n = None
+                            if imgset_yes:
+                                local_n = imgset_yes[0]
+                                base = imgset_yes[1]
+                                # use ImageSet, we have dummy in sol
+                                lam = Lambda(local_n, sol)
+                                rnew[sym] = ImageSet(lam, base)
                             if soln_imageset:
-                                rnew[sym] = soln_imageset
+                                rnew[sym] = soln_imageset[sol]
+                                img_expr = soln_imageset[sol].lamda.expr
+                                local_n = img_expr.atoms(Dummy).pop()
                             # restore original imageset
                             restore_sym = set(rnew.keys()) & \
                                 set(original_imageset.keys())
@@ -1414,12 +1490,18 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
                             for key_sym in restore_sym:
                                 img = original_imageset[key_sym]
                                 rnew[key_sym] = img
-                                dummy_n = (img.lamda.expr).atoms(Dummy).pop()
+                                expr = img.lamda.expr
+                                dummy_n = expr.atoms(Dummy).pop()
                                 base_img = img.base_set
-                            if dummy_n and base_img:
+                            if local_n and restore_sym:
                                 # also it means soln for `sym` contains
                                 # dummy `n`, put this expr in ImageSet
-                                lam = Lambda(dummy_n, rnew[sym])
+                                # use only one dummy
+                                img_expr = rnew[sym].lamda.expr
+                                lam = Lambda(
+                                    dummy_n,
+                                    img_expr.subs(local_n, dummy_n)
+                                )
                                 rnew[sym] = ImageSet(lam, base_img)
                             # now append this solution
                             newresult.append(rnew)
@@ -1463,20 +1545,6 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
             res = rcopy
         result_finiteset.append(res)
 
-    if complements:
-        # If solveset have returned some complements for any symbol
-        # Mostly complements are Set.
-        result = []
-        for res in result_finiteset:
-            res_copy = res
-            for key_res, value_res in res.items():
-                for key_complement, value_complement in complements.items():
-                    if key_complement == key_res:
-                        res_copy[key_res] = \
-                            FiniteSet(value_res) - value_complement
-            result.append(res_copy)
-        result_finiteset = result
-
     if intersections:
         # If solveset have returned some intersection for any symbol
         # mostly intersection is Interval or Set
@@ -1491,6 +1559,20 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
             result.append(res_copy)
         result_finiteset = result
 
+    if complements:
+        # If solveset have returned some complements for any symbol
+        # Mostly complements are Set.
+        result = []
+        for res in result_finiteset:
+            res_copy = res
+            for key_res, value_res in res.items():
+                for key_complement, value_complement in complements.items():
+                    if key_complement == key_res:
+                        res_copy[key_res] = \
+                            FiniteSet(value_res) - value_complement
+            result.append(res_copy)
+        result_finiteset = result
+
     # convert to ordered tuple
     result = S.EmptySet
     for r in result_finiteset:
@@ -1502,12 +1584,11 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[], exclude=[]
 def nonlinsolve(system, symbols):
     r"""
     Solve system of N non linear equations with M variables, which means both
-    under - and overdetermined systems are supported. Positive dimensional
+    under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
-    be dependent on at least one symbol. If system doesn't have real solution
-    then complex solution will be returned in general form (in terms of `_n`,
-    where `_n` is any real number). The possible number of solutions is zero,
+    be dependent on at least one symbol. Returns both real solution
+    and complex solution. The possible number of solutions is zero,
     one or infinite.
 
     Parameters
@@ -1558,11 +1639,11 @@ def nonlinsolve(system, symbols):
     >>> from sympy import pprint
     >>> from sympy.polys.polytools import is_zero_dimensional
     >>> a, b, c, d = symbols('a, b, c, d', real=True)
-    >>> foo =  a + b + c + d
-    >>> bar = a*b + b*c + c*d + d*a
-    >>> foo_bar = a*b*c + b*c*d + c*d*a + d*a*b
-    >>> bar_foo = a*b*c*d -1
-    >>> system = [foo, bar, foo_bar, bar_foo]
+    >>> eq1 =  a + b + c + d
+    >>> eq2 = a*b + b*c + c*d + d*a
+    >>> eq3 = a*b*c + b*c*d + c*d*a + d*a*b
+    >>> eq4 = a*b*c*d -1
+    >>> system = [eq1, eq2, eq3, eq4]
     >>> is_zero_dimensional(system)
     False
     >>> pprint(nonlinsolve(system, [a, b, c, d]), use_unicode=False)
@@ -1572,31 +1653,29 @@ def nonlinsolve(system, symbols):
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
     {(-y + 2, y)}
 
-    * If Non linear system having non polynomial equation have complex
-    solution for particular symbol and no real solution, then `nonlinsolve`
-    returns it's general solution.
+    * If some of the equations are non polynomial eq then `nonlinsolve`
+    will call `substitution` function and returns real and complex solutions .
 
     >>> from sympy import exp, sin
-    >>> _n = symbols('_n')
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
         log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
         Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
 
 
-    * If Non linear system have all the equations polynomial, then it
-    returns both real and complex solutions.
+    * If Non linear polynomial and zero dimensional system, then it returns
+    both real and complex solutions using `solve_poly_system`.
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
 
-    * If system is linear and positive dimensional system, `nonlinsolve` can
+    * `nonlinsolve` can solve some linear( zero or positive dimensional)system
     solve this system (because it is using `groebner` function to get the
-    groebner basis and then `substitution` function basis as system). But it is
-    not recommended to solve linear system using `nonlinsolve`, because
-    `linsolve` is better for all kind of linear system.
+    groebner basis and then `substitution` function basis as the system).
+    But it is not recommended to solve linear system using `nonlinsolve`,
+    because `linsolve` is better for all kind of linear system.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
     {(3*z - 5, -z + 4, z)}
@@ -1650,7 +1729,6 @@ def nonlinsolve(system, symbols):
 
     """
     from sympy.solvers.solvers import _invert as _invert_solver
-    from sympy.utilities.iterables import subsets
     from sympy.polys.polytools import is_zero_dimensional, groebner
 
     if not system:
@@ -1673,6 +1751,7 @@ def nonlinsolve(system, symbols):
                          'second argument, not type \
             %s: %s' % (type(symbols[0]), symbols[0]))
     polys = []
+    polys_expr = []
     nonpolys = []
     denominators = set()
     for eq in system:
@@ -1687,13 +1766,10 @@ def nonlinsolve(system, symbols):
         poly = eq.as_poly(*symbols, extension=True)
         if poly is not None:
             polys.append(poly)
+            polys_expr.append(poly.as_expr())
         else:
             nonpolys.append(eq)
 
-    # If none of the equation is Poly
-    if not polys:
-        solved_syms = []
-    result = None
     if len(symbols) == len(polys):
         # If all the equations in the system is poly
         if is_zero_dimensional(system):
@@ -1729,97 +1805,9 @@ def nonlinsolve(system, symbols):
 
     else:
         # If alll the equations are not polynomial.
-        result = []
-        depend_soln = {}
-        solved_syms = []
-        # first solve the polynomial equation(s) if present
-        if polys:
-            combinations = list(subsets(symbols, len(polys)))
-            # solving for combinations of symbols. So that we get
-            # solution in terms of other symbol(s).
-            for new_symbols in combinations:
-                try:
-                    # solution for new_symbols in terms of other symbols
-                    result_poly = solve_poly_system(polys, new_symbols)
-                    # TODO : improve the result code so that we
-                    # dont need to add r[unsolved symbols] = unsolved
-                    # at the end ie. if we got x value then do
-                    # FiniteSet(x_val, y) and update(dynamically update)
-                    # the `y` when got the
-                    # value otherwise return as it is(for +ve dimensional).
-                    for res in result_poly:
-                        skip = False
-                        # check tuples of res
-                        for res1 in res:
-                            if depend_soln and \
-                                any(
-                                    [k in res1.free_symbols
-                                        for k, v in depend_soln.items()]):
-                                # sol depends on previously
-                                # solved symbols: discard it
-                                # eg : depend_soln=> {x : -y} and
-                                # r1 = -x for y
-                                # so we dont want both {x: -y}, {y: -x}
-                                skip = True
-                        if not skip:
-                            for new_sym in new_symbols:
-                                for res1 in res:
-                                    depend_soln[new_sym] = res1
-                            # need to maintain dict <symbol : value>
-                            dict_sym_value = dict(list(zip(new_symbols, res)))
-                            result.append(dict_sym_value)
-                    result_update = []
-                    for res in result:
-                        # If length < len(symbols) means infinite soln
-                        # (one symbol soln is in terms of other symbol).
-                        # Some or all the soln is dependent on 1 symbol
-                        if len(res) < len(symbols):
-                            rcopy = res.copy()
-                            unsolved = FiniteSet(*[sym2 for sym2 in
-                                list(filter(lambda x: x not in res.keys(), symbols))
-                                ])
-                            for unsolv in unsolved:
-                                rcopy[unsolv] = unsolv
-                            # remove soln which is making denominator zero
-                            if not any(
-                                checksol(d, rcopy) for d in denominators
-                            ):
-                                result_update.append(rcopy)
-                        else:
-                            # add if res isn't making denominator expr zero
-                            if not any(
-                                checksol(d, res) for d in denominators
-                            ):
-                                result_update.append(res)
-                    result = result_update
-                except:
-                    pass
-            if depend_soln:
-                solved_syms = list(depend_soln)
-            # If we have solved all the symbols or can't solve further(no more
-            # eq), return that soln in ordered tuple
-            if not nonpolys:
-                # convert it to ordered tuple and return
-                result_tuple = S.EmptySet
-                for res in result:
-                    rcopy = res.copy()
-                    temp = [rcopy[s] for s in symbols]
-                    result_tuple += FiniteSet(tuple(temp))
-                return result_tuple
-        # Polynomial eqs done. Now use substitution method to get the solution
-        # for unsolved symbols if non polynomial eq is there..
-        if nonpolys:
-            # if non polynomail equation is present
-            if not result:
-                # because we are passing list of dict
-                result = [{}]
-            unsolved_syms = list(
-                filter(lambda x: x not in solved_syms, symbols))
-            # Use substitution method for nonpoly eq
-            result = substitution(
-                nonpolys, unsolved_syms, list(result),
-                solved_syms, denominators, symbols
-            )
+        # Use substitution method for nonpoly + polys eq
+        result = substitution(
+            polys_expr + nonpolys, symbols, exclude=denominators)
 
     if result:
         return result
