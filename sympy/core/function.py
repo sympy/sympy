@@ -1625,6 +1625,18 @@ class Subs(Expr):
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
 
+    def _eval_nseries(self, x, n, logx):
+        if x in self.args[1]:
+            raise NotImplementedError("series variable is substitution variable")
+        arg = self.args[0].nseries(x, n=n, logx=logx)
+        o = arg.getO()
+        other = self.args[1:]
+        #rv = [self.func(a, *other) for a in Add.make_args(arg.removeO())]
+        rv = list(Add.make_args(arg.removeO()))
+        # if o:
+        #     rv.append(o.subs(x, self.args[2]))
+        return Subs(Add(*rv), *other).doit()
+
 
 def diff(f, *symbols, **kwargs):
     """
