@@ -742,19 +742,31 @@ def solve_ics(sols, funcs, constants, ics):
     """
     # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
     # x0)): value (currently checked by classify_ode). To solve, replace x
-    # with x0, f(x0) with value, then solve for constants.
+    # with x0, f(x0) with value, then solve for constants. For f^(n)(x0),
+    # differentiate the solution n times, so that f^(n)(x) appears.
     x = funcs[0].args[0]
+    diff_sols = []
     subs_sols = []
+    diff_variables = set()
     for funcarg, value in ics.items():
         if isinstance(funcarg, AppliedUndef):
             x0 = funcarg.args[0]
             matching_func = [f for f in funcs if f.func == funcarg.func][0]
+            S = sols
         elif isinstance(funcarg, Subs):
-            raise NotImplementedError("Derivative initial conditions are not yet implemented")
+            x0 = funcarg.point[0]
+            variables = funcarg.expr.variables
+            if variables not in diff_variables:
+                for sol in sols:
+                    if sol.has(funcarg.expr.expr.func):
+                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            diff_variables.add(variables)
+            matching_func = funcarg.expr
+            S = diff_sols
         else:
             raise ValueError("Unrecognized initial condition")
 
-        for sol in sols:
+        for sol in S:
             if sol.has(matching_func):
                 sol2 = sol
                 sol2 = sol2.subs(x, x0)
