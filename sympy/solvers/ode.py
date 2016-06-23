@@ -779,6 +779,10 @@ def solve_ics(sols, funcs, constants, ics):
     except NotImplementedError:
         solved_constants = []
 
+    # XXX: We can't differentiate between the solution not existing because of
+    # invalid initial conditions, and not existing because solve is not smart
+    # enough. If we could use solveset, this might be improvable, but for now,
+    # we use NotImplementedError in this case.
     if not solved_constants:
         raise NotImplementedError("Couldn't solve for initial conditions")
 
