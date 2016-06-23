@@ -790,7 +790,7 @@ def solve_ics(sols, funcs, constants, ics):
         raise NotImplementedError("Initial conditions produced too many solutions for constants")
 
     if len(solved_constants[0]) != len(constants):
-        raise ValueError("Initial conditions did not produce solution for all constants. Perhaps they are under-specified.")
+        raise ValueError("Initial conditions did not produce a solution for all constants. Perhaps they are under-specified.")
 
     return solved_constants[0]
 
