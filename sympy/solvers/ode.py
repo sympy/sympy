@@ -706,6 +706,40 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     return rv
 
 def solve_ics(sols, funcs, constants, ics):
+    """
+    Solve for the constants given initial conditions
+
+    ``sols`` is a list of solutions.
+
+    ``funcs`` is a list of functions.
+
+    ``constants`` is a list of constants.
+
+    ``ics`` is the set of initial/boundary conditions for the differential
+    equation. It should be given in the form of ``{f(x0): x1,
+    f(x).diff(x).subs(x, x2):  x3}`` and so on.
+
+    Returns a dictionary mapping constants to values.
+    ``solution.subs(constants)`` will replace the constants in ``solution``.
+
+    Example
+    =======
+    >>> # From dsolve(f(x).diff(x) - f(x), f(x))
+    >>> from sympy import symbols, Eq, exp, Function
+    >>> from sympy.solvers.ode import solve_ics
+    >>> f = Function('f')
+    >>> x, C1 = symbols('x C1')
+    >>> sols = [Eq(f(x), C1*exp(x))]
+    >>> funcs = [f(x)]
+    >>> constants = [C1]
+    >>> ics = {f(0): 2}
+    >>> solved_constants = solve_ics(sols, funcs, constants, ics)
+    >>> solved_constants
+    {C1: 2}
+    >>> sols[0].subs(solved_constants)
+    Eq(f(x), 2*exp(x))
+
+    """
     # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
     # x0)): value (currently checked by classify_ode). To solve, replace x
     # with x0, f(x0) with value, then solve for constants.
