@@ -765,6 +765,10 @@ def test_classify_ode_ics():
     ics = {f(0, 0): 1}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
 
+    # Does not raise
+    ics = {f(0): 1}
+    classify_ode(eq, f(x), ics=ics)
+
     ############
     # f'(0) type
     ############
@@ -789,6 +793,9 @@ def test_classify_ode_ics():
     ics = {Derivative(f(x), x, y).subs(x, 0): 1}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
 
+    # Does not raise
+    ics = {f(x).diff(x).subs(x, 0): 1}
+    classify_ode(eq, f(x), ics=ics)
 
 def test_classify_sysode():
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
