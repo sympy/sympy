@@ -973,7 +973,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 old = funcarg.variables[0]
                 new = funcarg.point[0]
                 if isinstance(deriv, Derivative) and isinstance(deriv.args[0],
-                    AppliedUndef) and deriv.args[0].func == f and old == x and not new.has(x):
+                    AppliedUndef) and deriv.args[0].func == f and len(deriv.args[0].args) == 1 and old == x and not new.has(x) and all(i == x for i in deriv.variables):
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
