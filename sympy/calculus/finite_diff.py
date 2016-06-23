@@ -349,6 +349,10 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
 
     Partial derivatives are also supported:
 
+    The algorithm treats the input partial derivative expression as
+    derivative of ``wrt`` and applies finite difference method to remaining
+    function.
+
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
     >>> as_finite_diff(d2fdxdy, wrt=x)
