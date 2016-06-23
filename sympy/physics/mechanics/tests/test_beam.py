@@ -1,7 +1,16 @@
 from sympy import Symbol
-from sympy.physics.mechanics.beam import PointLoad, DistributedLoad
+from sympy.physics.mechanics.beam import Beam, PointLoad, DistributedLoad
 from sympy.physics.mechanics import Point
 from sympy.printing import sstr
+
+
+def test_Beam():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(1, E, I)
+    assert b.length == 1
+    assert b.E == E
+    assert b.I == I
 
 
 def test_PointLoad():

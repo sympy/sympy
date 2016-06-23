@@ -8,6 +8,49 @@ from __future__ import print_function, division
 from sympy.printing import sstr
 
 
+class Beam(object):
+
+    """
+    A Beam is a structural element that is capable of withstanding load
+    primarily by resisting against bending.
+    Beams are characterized by their profile (moment of Inertia), their length,
+    and their material.
+
+    Parameters
+    ==========
+    length : Sympifyable
+        A SymPy expression representing the Beam's length.
+    E : Sympifyable
+        A SymPy expression representing the Beam's Young's Modulus.
+        It is a measure of the stiffness of the Beam material.
+    I : Sympifyable
+        A SymPy expression representing the Beam's Moment of Inertia.
+        It determines the torque needed for a desired angular acceleration
+        about a rotational axis of the Beam.
+
+    Examples
+    ========
+    >>> from sympy.physics.mechanics.beam import Beam
+    >>> from sympy import Symbol
+    >>> E = Symbol('E')
+    >>> I = Symbol('I')
+    >>> Beam(1, E, I)
+    Beam(1, E, I)
+
+    """
+
+    def __init__(self, length, E, I):
+        self.length = length
+        self.E = E
+        self.I = I
+
+    def __str__(self):
+        str_sol = 'Beam(%s, %s, %s)' % (sstr(self.length), sstr(self.E), sstr(self.I))
+        return str_sol
+
+    __repr__ = __str__
+
+
 class PointLoad(object):
     """A Point Load.
 
