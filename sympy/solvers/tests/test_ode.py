@@ -741,6 +741,55 @@ def test_classify_ode():
         ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
 
 
+def test_classify_ode_ics():
+    # Dummy
+    eq = f(x).diff(x, x) - f(x)
+
+    # Not f(0) or f'(0)
+    ics = {x: 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    ###########
+    # f(0) type
+    ###########
+
+    # Wrong function
+    ics = {g(0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Contains x
+    ics = {f(x): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Too many args
+    ics = {f(0, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    ############
+    # f'(0) type
+    ############
+
+    # Wrong function
+    ics = {g(x).diff(x).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Contains x
+    ics = {f(y).diff(y).subs(y, x): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Wrong variable
+    ics = {f(y).diff(y).subs(y, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Too many args
+    ics = {f(x, y).diff(x).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Derivative wrt wrong vars
+    ics = {Derivative(f(x), x, y).subs(x, 0): 1}
+    raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+
 def test_classify_sysode():
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
