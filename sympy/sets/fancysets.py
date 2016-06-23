@@ -9,6 +9,7 @@ from sympy.core.function import Lambda, _coeff_isneg
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.sympify import _sympify, sympify, converter
+from sympy.functions.elementary.integers import floor
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet, imageset)
 from sympy.utilities.misc import filldedent, func_name
@@ -485,15 +486,22 @@ class Range(Set):
             raise ValueError("step cannot be 0")
 
         start, stop, step = slc.start or S(0), slc.stop, slc.step or S(1)
-        try:
-            start, stop, step = [
-                w if w in [S.NegativeInfinity, S.Infinity]
-                else sympify(as_int(w))
-                for w in (start, stop, step)]
-        except ValueError:
-            raise ValueError(filldedent('''
+        start, stop, step = [
+            w if w in [S.NegativeInfinity, S.Infinity]
+            else sympify(w)
+            for w in (start, stop, step)]
+
+        is_symbolic = False
+        for s in [start, stop, step]:
+            if s.is_infinite:
+                continue
+            if not s.is_number:
+                is_symbolic = True
+            else:
+                if not s.is_Integer:
+                    raise ValueError(filldedent('''
     Finite arguments to Range must be integers; `imageset` can define
-    other cases, e.g. use `imageset(i, i/10, Range(3))` to give
+    other cases, e.g., use `imageset(i, i/10, Range(3))` to give
     [0, 1/10, 1/5].'''))
 
         if not step.is_Integer:
@@ -513,13 +521,16 @@ class Range(Set):
         else:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
-            if n <= 0:
+            if n.is_nonpositive:
                 # null Range
                 start = end = S(0)
                 step = S(1)
             else:
                 end = ref + n*step
-        return Basic.__new__(cls, start, end, step)
+
+        obj = Basic.__new__(cls, start, end, step)
+        obj.is_symbolic = is_symbolic
+        return obj
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -694,27 +705,40 @@ class Range(Set):
             step = self.step
 
             while True:
-                if (step > 0 and not (self.start <= i < self.stop)) or \
-                   (step < 0 and not (self.stop < i <= self.start)):
-                    break
+                try:
+                    if (step > 0 and not (self.start <= i < self.stop)) or \
+                       (step < 0 and not (self.stop < i <= self.start)):
+                        break
+                except TypeError:
+                    # Use symbolic inequalities for readability. TypeError
+                    # means an inequality was symbolic, so assume it is true
+                    pass
                 yield i
                 i += step
 
     def __len__(self):
-        if not self:
-            return 0
-        dif = self.stop - self.start
-        if dif.is_infinite:
+        size = self.size
+        if size.is_infinite:
             raise ValueError(
                 "Use .size to get the length of an infinite Range")
-        return abs(dif//self.step)
+        if not size.is_number:
+            raise ValueError(
+                "Use .size to get the length of a symbolic Range")
+        return size
 
     @property
     def size(self):
-        try:
-            return _sympify(len(self))
-        except ValueError:
+        if not self:
+            return S(0)
+        dif = self.stop - self.start
+        if dif.is_infinite:
             return S.Infinity
+        # Symbolic integer division is not yet implemented
+        if self.is_symbolic:
+            # XXX: This is not true if dif is negative, e.g., if n is
+            # negative, Range(1, n) is empty, not size |n-1|.
+            return abs(floor(dif/self.step))
+        return abs(dif//self.step)
 
     def __nonzero__(self):
         return self.start != self.stop

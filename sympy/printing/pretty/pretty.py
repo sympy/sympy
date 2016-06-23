@@ -1501,7 +1501,7 @@ class PrettyPrinter(Printer):
 
         if s.start.is_infinite:
             printset = s.start, dots, s[-1] - s.step, s[-1]
-        elif s.stop.is_infinite or len(s) > 4:
+        elif s.stop.is_infinite or s.is_symbolic or len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
         else:
