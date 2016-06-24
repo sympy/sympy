@@ -38,3 +38,15 @@ def test_DistributedLoad():
     assert Load_1.start == P1
     assert Load_1.end == P2
     assert Load_1.value == -4*x**2
+
+    # Test the start setter
+    Load_1.start = P2
+    assert Load_1.start == P2
+
+    # Test the end setter
+    Load_1.end = P1
+    assert Load_1.end == P1
+
+    # Test the value setter
+    Load_1.value = 4*x**2 + x
+    assert Load_1.value == 4*x**2 + x

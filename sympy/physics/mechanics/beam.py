@@ -104,10 +104,11 @@ class DistributedLoad(object):
     >>> from sympy.physics.mechanics.beam import DistributedLoad
     >>> from sympy.physics.mechanics import Point
     >>> from sympy import Symbol
-    >>> p = Point('4')
+    >>> a = Point('4')
+    >>> b = Point('6')
     >>> x = Symbol('x')
-    >>> DistributedLoad(start = 3, end = 6, value = 2*x)
-    DistributedLoad(3, 6, 2*x)
+    >>> DistributedLoad(start = a, end = b, value = 2*x)
+    DistributedLoad(4, 6, 2*x)
 
     """
 
@@ -122,11 +123,33 @@ class DistributedLoad(object):
 
     __repr__ = __str__
 
+    @property
     def start(self):
+        """The starting point of the applied load."""
         return self._start
 
+    @start.setter
+    def start(self, s):
+        if not isinstance(s, Point):
+            raise TypeError("DistributedLoad start attribute must be a Point object.")
+        self._start = s
+
+    @property
     def end(self):
+        """The ending point of the applied load."""
         return self._end
 
+    @end.setter
+    def end(self, e):
+        if not isinstance(e, Point):
+            raise TypeError("DistributedLoad end attribute must be a Point object.")
+        self._end = e
+
+    @property
     def value(self):
+        """The value of the applied load."""
         return self._value
+
+    @value.setter
+    def value(self, v):
+        self._value = sympify(v)
