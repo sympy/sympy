@@ -949,6 +949,10 @@ def test_solveset_integers():
     soln = ImageSet(Lambda(t, FiniteSet((-t**2 + 3, -t))), S.Integers)
     assert solveset_integers(x + y**2 - 3) == soln
 
+    raises(TypeError, lambda: solveset_integers(sin(x)))
+    raises(TypeError, lambda: solveset_integers(3))
+    raises(TypeError, lambda: solveset_integers(x/pi - 3))
+
 
 
 def test_improve_coverage():

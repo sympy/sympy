@@ -1021,7 +1021,13 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x]), use_unicode = False)
     {{(n1, 0), (-t_0, 3*t_0 - 4)} | n1, t_0 in Integers()}
 
-    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x], k), use_unicode = False)
+<<<<<<< HEAD
+    >>> eq = x**2 + 3*x*y + 4*x
+    >>> pprint(solveset_integers(eq, [y, x], k), use_unicode = False)
+=======
+    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x], k), \
+        use_unicode = False)
+>>>>>>> 23a25c6... some more testcases
     {{(-k_0, 3*k_0 - 4), (n1, 0)} | k_0, n1 in Integers()}
 
     >>> pprint(solveset_integers(2*x + 1), use_unicode = False)
@@ -1032,7 +1038,8 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
 
     """
     from sympy.solvers.diophantine import diophantine
-    # solution is in set
+
+    # solution will be in set
     solution = diophantine(f, param, symbols)
 
     # soln in Imageset
