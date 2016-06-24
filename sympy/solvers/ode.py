@@ -676,13 +676,14 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     order = r['order']
     match = r[hint]
 
+    free = eq.free_symbols
+    cons = lambda s: s.free_symbols.difference(free)
+
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
-        free = eq.free_symbols
-        cons = lambda s: s.free_symbols.difference(free)
         if isinstance(sols, Expr):
             rv =  odesimp(sols, func, order, cons(sols), hint)
         else:
@@ -695,7 +696,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
-            solved_constants = solve_ics([rv], [r['func']], cons(sols), ics)
+            solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
         else:
             rv1 = []
