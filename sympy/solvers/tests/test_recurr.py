@@ -101,8 +101,9 @@ def test_rsolve_bulk():
             if p.is_polynomial(n):
                 assert rsolve_poly(c, q, n) == p
             # See issue 3956:
-            #if p.is_hypergeometric(n):
-            #    assert rsolve_hyper(c, q, n) == p
+            if p.is_hypergeometric(n) and len(c) <= 3:
+                assert rsolve_hyper(c, q, n).subs(zip(symbols('C:3'),
+                                                      [0, 0, 0])).expand() == p
 
 
 def test_rsolve():
@@ -266,3 +267,13 @@ def test_issue_8697():
 
     # From issue thread (but not related to the problem, fixed before):
     assert rsolve(a(n) - 2*a(n - 1) - n, a(n), {a(0): 1}) == 3*2**n - n - 2
+
+
+def test_diofantissue_294():
+    f = y(n) - y(n - 1) - 2*y(n - 2) - 2*n
+    assert rsolve(f, y(n)) == (-1)**n*C0 + 2**n*C1 - n - Rational(5, 2)
+    # issue sympy/sympy#11261
+    assert rsolve(f, y(n), {y(0): -1, y(1): 1}) == (-(-1)**n/2 + 2*2**n -
+                                                    n - Rational(5, 2))
+    # issue sympy/sympy#7055
+    assert rsolve(-2*y(n) + y(n + 1) + n - 1, y(n)) == 2**n*C0 + n

@@ -557,14 +557,19 @@ def rsolve_hyper(coeffs, f, n, **hints):
             for j in range(r + 1):
                 polys[j] *= Mul(*(denoms[:j] + denoms[j + 1:]))
 
-            R = rsolve_poly(polys, Mul(*denoms), n)
+            R = rsolve_ratio(polys, Mul(*denoms), n, symbols=True)
+            if R is not None:
+                R, syms = R
+                if syms:
+                    R = R.subs(zip(syms, [0]*len(syms)))
 
-            if not (R is None or R is S.Zero):
+            if R:
                 inhomogeneous[i] *= R
             else:
                 return None
 
             result = Add(*inhomogeneous)
+            result = simplify(result)
     else:
         result = S.Zero
 
