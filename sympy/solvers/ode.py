@@ -775,7 +775,7 @@ def solve_ics(sols, funcs, constants, ics):
             diff_variables.add(variables)
             S = diff_sols
         else:
-            raise ValueError("Unrecognized initial condition")
+            raise NotImplementedError("Unrecognized initial condition")
 
         for sol in S:
             if sol.has(matching_func):
