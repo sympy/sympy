@@ -156,9 +156,9 @@ class DistributedLoad(object):
     """
 
     def __init__(self, start, end, value):
-        self.start = start
-        self.end = end
-        self.value = value
+        self._start = start
+        self._end = end
+        self._value = value
 
     def __str__(self):
         str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.start), sstr(self.end), sstr(self.value))
