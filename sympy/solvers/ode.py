@@ -753,15 +753,26 @@ def solve_ics(sols, funcs, constants, ics):
             x0 = funcarg.args[0]
             matching_func = [f for f in funcs if f.func == funcarg.func][0]
             S = sols
-        elif isinstance(funcarg, Subs):
-            x0 = funcarg.point[0]
-            variables = funcarg.expr.variables
+        elif isinstance(funcarg, (Subs, Derivative)):
+            if isinstance(funcarg, Subs):
+                # Make sure it stays a subs. Otherwise subs below will produce
+                # a different looking term.
+                funcarg = funcarg.doit()
+            if isinstance(funcarg, Subs):
+                deriv = funcarg.expr
+                x0 = funcarg.point[0]
+                variables = funcarg.expr.variables
+                matching_func = deriv
+            elif isinstance(funcarg, Derivative):
+                deriv = funcarg
+                x0 = funcarg.variables[0]
+                variables = (x,)*len(funcarg.variables)
+                matching_func = deriv.subs(x0, x)
             if variables not in diff_variables:
                 for sol in sols:
-                    if sol.has(funcarg.expr.expr.func):
+                    if sol.has(deriv.expr.func):
                         diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
-            matching_func = funcarg.expr
             S = diff_sols
         else:
             raise ValueError("Unrecognized initial condition")
