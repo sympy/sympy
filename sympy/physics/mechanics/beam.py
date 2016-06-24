@@ -6,6 +6,8 @@ This module can be used to solve beam bending problems in mechanics.
 from __future__ import print_function, division
 
 from sympy.printing import sstr
+from sympy.physics.mechanics import Point
+from sympy import sympify
 
 
 class Beam(object):
@@ -80,9 +82,9 @@ class PointLoad(object):
     """
 
     def __init__(self, location, value, moment=False):
-        self.location = location
-        self.value = value
-        self.moment = moment
+        self._location = location
+        self._value = value
+        self._moment = moment
 
     def __str__(self):
         if self.moment:
@@ -93,14 +95,36 @@ class PointLoad(object):
 
     __repr__ = __str__
 
+    @property
     def location(self):
+        """Location of the applied Point Load."""
         return self._location
 
+    @location.setter
+    def location(self, l):
+        if not isinstance(l, Point):
+            raise TypeError("PointLoad location attribute must be a Point object.")
+        self._location = l
+
+    @property
     def value(self):
+        """Value of the applied Point Load. """
         return self._value
 
+    @value.setter
+    def value(self, v):
+        self._value = sympify(v)
+
+    @property
     def moment(self):
+        """Stores whether a Point Load is a load or a couple. """
         return self._moment
+
+    @moment.setter
+    def moment(self, m):
+        if not isinstance(m, bool):
+            raise TypeError("PointLoad moment attribute must be a bool object.")
+        self._moment = m
 
 
 class DistributedLoad(object):

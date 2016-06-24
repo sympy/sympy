@@ -21,6 +21,18 @@ def test_PointLoad():
     assert Load_1.value == -4
     assert Load_1.moment is False
 
+    # Test the location setter
+    Load_1.location = P2
+    assert Load_1.location == P2
+
+    # Test the value setter
+    Load_1.value = 4
+    assert Load_1.value == 4
+
+    # Test the moment setter
+    Load_1.moment = True
+    assert Load_1.moment is True
+
     Load_2 = PointLoad(location = P1, value = 5, moment=True)
     assert Load_2.location == P1
     assert Load_2.value == 5
