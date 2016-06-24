@@ -972,12 +972,21 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if ics is not None:
         for funcarg in ics:
             # Separating derivatives
-            if isinstance(funcarg, Subs):
-                deriv = funcarg.expr
-                old = funcarg.variables[0]
-                new = funcarg.point[0]
+            if isinstance(funcarg, (Subs, Derivative)):
+                # f(x).diff(x).subs(x, 0) is a Subs, but f(x).diff(x).subs(x,
+                # y) is a Derivative
+                if isinstance(funcarg, Subs):
+                    deriv = funcarg.expr
+                    old = funcarg.variables[0]
+                    new = funcarg.point[0]
+                elif isinstance(funcarg, Derivative):
+                    deriv = funcarg
+                    # No information on this. Just assume it was x
+                    old = x
+                    new = funcarg.variables[0]
+
                 if isinstance(deriv, Derivative) and isinstance(deriv.args[0],
-                    AppliedUndef) and deriv.args[0].func == f and len(deriv.args[0].args) == 1 and old == x and not new.has(x) and all(i == x for i in deriv.variables):
+                    AppliedUndef) and deriv.args[0].func == f and len(deriv.args[0].args) == 1 and old == x and not new.has(x) and all(i == deriv.variables[0] for i in deriv.variables):
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
