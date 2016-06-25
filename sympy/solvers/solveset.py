@@ -1012,22 +1012,17 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     >>> from sympy import symbols, pprint, Symbol
     >>> k = Symbol('k', integer=True)
     >>> x, y, z, t_0, k_0, n1 = symbols('x, y, z, t_0, k_0, n1')
-    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x), use_unicode = False)
+    >>> eq = x**2 + 3*x*y + 4*x
+    >>> pprint(solveset_integers(eq), use_unicode = False)
     {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
 
-    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [x, y]), use_unicode = False)
+    >>> pprint(solveset_integers(eq, [x, y]), use_unicode = False)
     {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
 
-    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x]), use_unicode = False)
+    >>> pprint(solveset_integers(eq, [y, x]), use_unicode = False)
     {{(n1, 0), (-t_0, 3*t_0 - 4)} | n1, t_0 in Integers()}
 
-<<<<<<< HEAD
-    >>> eq = x**2 + 3*x*y + 4*x
     >>> pprint(solveset_integers(eq, [y, x], k), use_unicode = False)
-=======
-    >>> pprint(solveset_integers(x**2 + 3*x*y + 4*x, [y, x], k), \
-        use_unicode = False)
->>>>>>> 23a25c6... some more testcases
     {{(-k_0, 3*k_0 - 4), (n1, 0)} | k_0, n1 in Integers()}
 
     >>> pprint(solveset_integers(2*x + 1), use_unicode = False)
