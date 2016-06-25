@@ -255,27 +255,49 @@ def not_empty_in(finset_intersection, *syms):
 
 def periodicity(f, symbol):
     """Returns the period of a given function, if possible.
+
+    Examples
+    ========
+    >>> from sympy import Symbol
+    >>> from sympy.calculus.util import periodicity
+    >>> f = sin(x) + sin(2*x) + sin(3*x)
+    >>> periodicity(f, x)
+    2*pi
+    >>> periodicity(sin(x)*cos(x), x)
+    pi
     """
     from sympy import simplify, lcm_list
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
-    f = simplify(f)
+    orig_f = f
+    f = simplify(orig_f)
+    period = None
+
     if isinstance(f, TrigonometricFunction):
-        return f.period(symbol)
+        period = f.period(symbol)
 
     if f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if coeff >= 0 and isinstance(g, TrigonometricFunction):
-            return g.period(symbol)
-
-    p = []
-    if f.is_Add:
-        for g in f.args:
+        if coeff < 0:
+            raise NotImplementedError("Periods of only certain trigonometric functions"
+                                      " can be calculated using this method.")
+        else:
             if isinstance(g, TrigonometricFunction):
-                p.append(periodicity(g, symbol))
-            period = lcm_list(p)
-            if f.subs(symbol, symbol+period) == f:
-                return period
+                period = g.period(symbol)
+
+    if f.is_Add:
+        periods = []
+        for g in f.args:
+            periods.append(periodicity(g, symbol))
+
+        period = lcm_fraction(periods)
+
+    if period is None:
+        raise NotImplementedError("Periods of only certain trigonometric functions"
+                              " can be calculated using this method.")
+
+    elif orig_f.subs(symbol, symbol + period) == orig_f:
+        return period
 
 
 def lcm_fraction(fractions):
