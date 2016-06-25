@@ -1112,6 +1112,8 @@ class HolonomicFunction(object):
         if not hasattr(points, "__iter__"):
             lp = True
             b = S(points)
+            if self.x0 == b:
+                return _evalf(self, [b], method=method, derivatives=derivatives)[-1]
 
             if not b.is_Number:
                 raise NotImplementedError
@@ -1278,6 +1280,37 @@ class HolonomicFunction(object):
         """
 
         return hyperexpand(self.to_hyper()).simplify()
+
+    def change_ics(self, b):
+        """
+        Changes the point `x0` to `b` for initial conditions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic import from_sympy
+        >>> from sympy import symbols, sin, cos, exp
+        >>> x = symbols('x')
+
+        >>> from_sympy(sin(x)).change_ics(1)
+        HolonomicFunction((1) + (1)Dx**2, x), f(1) = sin(1), f'(1) = cos(1)
+
+        >>> from_sympy(exp(x)).change_ics(2)
+        HolonomicFunction((-1) + (1)Dx, x), f(2) = exp(2)
+        """
+
+        symbolic = True
+
+        try:
+            sol = from_sympy(self.to_sympy(), x0=b)
+        except:
+            symbolic = False
+
+        if symbolic:
+            return sol
+
+        y0 = self.evalf(b, derivatives=True)
+        return HolonomicFunction(self.annihilator, self.x, b, y0)
 
 
 def from_hyper(func, x0=0, evalf=False):
