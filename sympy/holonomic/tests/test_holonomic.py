@@ -497,3 +497,22 @@ def test_to_sympy():
     p = from_sympy(sin(x)**2/x).integrate((x, 0, x)).to_sympy()
     q = (sin(x)**2/x).integrate((x, 0, x))
     assert p == q
+
+def test_integrate():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    p = from_sympy(sin(x)**2/x, x0=1).integrate((x, 2, 3))
+    q = '0.166270406994788'
+    assert sstr(p) == q
+    p = from_sympy(sin(x)).integrate((x, 0, x)).to_sympy()
+    q = 1 - cos(x)
+    assert p == q
+    p = from_sympy(sin(x)).integrate((x, 0, 3))
+    q = '1.98999246812687'
+    assert sstr(p) == q
+    p = from_sympy(sin(x)/x, x0=1).integrate((x, 1, 2))
+    q = '0.659329913368450'
+    assert sstr(p) == q
+    p = from_sympy(sin(x)**2/x, x0=1).integrate((x, 1, 0))
+    q = '-0.423690480850035'
+    assert sstr(p) == q

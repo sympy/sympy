@@ -534,17 +534,23 @@ class HolonomicFunction(object):
         HolonomicFunction((1)Dx + (1)Dx**3, x), f(0) = 0, f'(0) = 1, f''(0) = 0
         """
 
-        # just multiply by Dx from right
+        # to get the annihilator, just multiply by Dx from right
         D = self.annihilator.parent.derivative_operator
+
+        # for indefinite integration
         if (not limits) or (not self._have_init_cond):
             return HolonomicFunction(self.annihilator * D, self.x)
 
-        # definite integral if limits are (x0, x)
+        # definite integral
+        # initial conditions for the answer will be stored at point `a`,
+        # where `a` is the lower limit of the integrand
         if hasattr(limits, "__iter__"):
+
             if len(limits) == 3 and limits[0] == self.x:
                 x0 = self.x0
                 a = limits[1]
                 b = limits[2]
+
         else:
             x0 = self.x0
             a = self.x0
@@ -554,18 +560,21 @@ class HolonomicFunction(object):
             y0 = [S(0)]
             y0 += self.y0
 
+        # use evalf to get the values at `a`
         else:
             y0 = [S(0)]
             tempy0 = self.evalf(a, derivatives=True)
             y0 += tempy0
 
+        # if the upper limit is `x`, the answer will be a function
         if b == self.x:
             return HolonomicFunction(self.annihilator * D, self.x, a, y0)
+
+        # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
             return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
         return HolonomicFunction(self.annihilator * D, self.x)
-
 
     def __eq__(self, other):
         if self.annihilator == other.annihilator:
