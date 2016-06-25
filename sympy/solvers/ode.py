@@ -2810,7 +2810,6 @@ def _handle_Integral(expr, func, order, hint):
         sol = (expr.doit()).subs(y, f(x))
         del y
     elif hint == "1st_exact_Integral":
-        sol = expr.subs(y, f(x))
         del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
