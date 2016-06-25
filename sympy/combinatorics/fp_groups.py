@@ -2,10 +2,12 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
+from sympy.core import Symbol
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.combinatorics.free_group import FreeGroupElement
+
 from itertools import chain, product
 from bisect import bisect_left
 
@@ -1004,22 +1006,47 @@ def first_in_class(C, Y=[]):
 
 
 # Pg 175 [1]
-def define_schreier_generators(C, f):
+def define_schreier_generators(C):
     C.Y = set()
     gamma = 1
+    f = C.fp_group
     X = f.generators
     C.P = [[None]*len(C.A) for i in range(C.n)]
-    for alpha in C.omega:
-        for x in C.A:
-            beta = C.table[alpha][C.A_dict[x]]
-            if beta == gamma:
-                C.P[alpha][C.A_dict[x]] = f.dtype()
-                C.P[beta][C.A_dict_inv[x]] = f.dtype()
-                gamma += 1
-            elif x in X and C.P[alpha][C.A_dict[x]] is None:
-                C.Y = C.Y.add(y_alpha_x)
-                C.P[alpha][C.A_dict[x]] = y_alpha_x
-                C.P[beta][C.A_dict_inv[x]] = y_alpha_x**-1
+    for alpha, x in product(C.omega, C.A):
+        beta = C.table[alpha][C.A_dict[x]]
+        if beta == gamma:
+            C.P[alpha][C.A_dict[x]] = 1
+            C.P[beta][C.A_dict_inv[x]] = 1
+            gamma += 1
+        elif x in X and C.P[alpha][C.A_dict[x]] is None:
+            y_alpha_x = Symbol('%s_%s' % (x, alpha), commutative=False)
+            C.Y.add(y_alpha_x)
+            C.P[alpha][C.A_dict[x]] = y_alpha_x
+            C.P[beta][C.A_dict_inv[x]] = y_alpha_x**-1
+
+
+def rewrite(C, alpha, w):
+    """
+    Parameters
+    ==========
+
+    C: CosetTable
+    α: A live coset
+    w: A word in `A*`
+
+    Returns
+    =======
+
+    ρ(τ(α), w)
+
+    """
+    f = C.fp_group
+    v = 1
+    for i in range(len(w)):
+        x_i = w[i]
+        v = v*C.P[alpha][C.A_dict[x_i]]
+        alpha = C.table[alpha][C.A_dict[x_i]]
+    return v
 
 
 FpGroupElement = FreeGroupElement
