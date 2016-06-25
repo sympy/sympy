@@ -277,8 +277,26 @@ def periodicity(f, symbol):
             if f.subs(symbol, symbol+period) == f:
                 return period
 
-    raise NotImplementedError("Period of only trigonometric functions can be"
-                              "calculated using this method.")
+
+def lcm_fraction(fractions):
+    """Returns the LCM of a list of fractions.
+
+    Examples
+    ========
+    >>> from sympy.calculus.util import lcm_fraction
+    >>> lcm_fraction([S(1)/2, S(3)/4, S(5)/6]))
+    15/2
+    >>> lcm_fraction([2*pi, 3*pi, pi, pi/2])
+    6*pi
+    """
+    from sympy import lcm, gcd, fraction
+
+    if len(fractions) == 2:
+        a, b = fraction(fractions[0])
+        c, d = fraction(fractions[1])
+        return lcm(a, c)/ gcd(b, d)
+    else:
+        return lcm_fraction([fractions[0], lcm_fraction(fractions[1:])])
 
 
 class AccumulationBounds(AtomicExpr):
