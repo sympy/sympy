@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I
+from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I, solve
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -693,6 +693,13 @@ class HolonomicFunction(object):
                 powreduce = self**(n / 2)
                 return powreduce * powreduce
 
+    def degree(self):
+        """
+        Returns the highest power of `x` in the annihilator.
+        """
+        sol = [i.degree() for i in self.annihilator.listofpoly]
+        return max(sol)
+
     def composition(self, expr, *args):
         """
         Returns the annihilator after composition of a holonomic function with
@@ -760,10 +767,13 @@ class HolonomicFunction(object):
             return HolonomicFunction(sol, self.x, args[0], args[1])
         return HolonomicFunction(sol, self.x)
 
-    def to_sequence(self):
+    def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
         of the function.
+
+        Returns a tuple of the recurrence relation and a value `n0` such that
+        the recurrence relation holds for all n >= n0.
 
         Examples
         ========
@@ -774,8 +784,13 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
+        # exp(x), the recurrence relation holds for n >= 0
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
-        HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1
+        (HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)
+
+        # log(1 + x), the recurrence relation holds for n >= 2
+        >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
+        (HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)
 
         See Also
         ========
@@ -785,57 +800,121 @@ class HolonomicFunction(object):
         References
         ==========
 
-        hal.inria.fr/inria-00070025/document
+        [1] hal.inria.fr/inria-00070025/document
+        [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
         """
+
 
         dict1 = {}
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
+        # substituting each term of the form `x^k Dx^j` in the
+        # annihilator, according to the formula below:
+        # x^k Dx^j = Sum(rf(n + 1 - k, j) * a(n + j - k) * x^n, (n, k, oo))
+        # for explanation see [2].
         for i, j in enumerate(self.annihilator.listofpoly):
+
             listofdmp = j.all_coeffs()
             degree = len(listofdmp) - 1
+
             for k in range(degree + 1):
                 coeff = listofdmp[degree - k]
+
                 if coeff == 0:
                     continue
-                if i - k in dict1:
-                    dict1[i - k] += (coeff * rf(n - k + 1, i))
+
+                if (i - k, k) in dict1:
+                    dict1[(i - k, k)] += (coeff * rf(n - k + 1, i))
+
                 else:
-                    dict1[i - k] = (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] = (coeff * rf(n - k + 1, i))
+
 
         sol = []
-        lower = min(dict1.keys())
-        upper = max(dict1.keys())
+        keylist = [i[0] for i in dict1]
+        lower = min(keylist)
+        upper = max(keylist)
+        degree = self.degree()
 
+        # the recurrence relation holds for all values of
+        # n greater than smallest_n, i.e. n >= smallest_n
+        smallest_n = lower + degree
+        dummys = {}
+        eqs = []
+
+        # an appropriate shift of the recurrence
         for j in range(lower, upper + 1):
-            if j in dict1.keys():
-                sol.append(dict1[j].subs(n, n - lower))
+            if j in keylist:
+                temp = S(0)
+                for k in dict1.keys():
+                    if k[0] == j:
+                        temp += dict1[k].subs(n, n - lower)
+                sol.append(temp)
             else:
                 sol.append(S(0))
-        # recurrence relation
+
+        # the recurrence relation
         sol = RecurrenceOperator(sol, R)
 
-        if not self._have_init_cond:
-            return HolonomicSequence(sol)
-        if self.x0 != 0:
-            return HolonomicSequence(sol)
+        if not self._have_init_cond or self.x0 != 0:
+            if lb:
+                return (HolonomicSequence(sol), smallest_n)
+            else:
+                return HolonomicSequence(sol)
+
         # computing the initial conditions for recurrence
         order = sol.order
         all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
         all_roots = all_roots.keys()
 
         if all_roots:
-            max_root = max(all_roots)
-            if max_root >= 0:
-                order += max_root + 1
+            max_root = max(all_roots) + 1
+            order += max(max_root, smallest_n)
+        else:
+            order += smallest_n
 
         y0 = _extend_y0(self, order)
         u0 = []
+
         # u(n) = y^n(0)/factorial(n)
         for i, j in enumerate(y0):
             u0.append(j / factorial(i))
+
+        # if sufficient conditions can't be computed then
+        # try to use the series method i.e.
+        # equate the coefficients of x^k in series to zero.
+        if len(u0) < order:
+
+            for i in range(degree):
+                eq = S(0)
+
+                for j in dict1:
+                    if i + j[0] < len(u0):
+                        dummys[i + j[0]] = u0[i + j[0]]
+
+                    elif not i + j[0] in dummys:
+                        dummys[i + j[0]] = Dummy('x_%s' %(i + j[0]))
+
+                    if j[1] <= i:
+                        eq += dict1[j].subs(n, i) * dummys[i + j[0]]
+
+                eqs.append(eq)
+
+            soleqs = solve(eqs)
+
+            for i in range(len(u0), order):
+                s = False
+                for j in soleqs:
+                    if dummys[i] in j:
+                        u0.append(j[dummys[i]])
+                        s = True
+                if not s:
+                    break
+
+        if lb:
+            return (HolonomicSequence(sol, u0), smallest_n)
 
         return HolonomicSequence(sol, u0)
 
@@ -864,7 +943,7 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence
         """
 
-        recurrence = self.to_sequence()
+        recurrence = self.to_sequence()[0]
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
         x = self.x
@@ -1002,6 +1081,138 @@ class HolonomicFunction(object):
             sol.append(R(j.rep))
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
+
+    def to_hyper(self):
+        """
+        Returns a hypergeometric function (or linear combination of them)
+        representing the given holonomic function.
+
+        Returns an answer of the form:
+        a1 * x**b1 * hyper() + a2 * x**b2 * hyper() ...
+
+        This is very useful as one can now use `hyperexpand` to find the
+        symbolic expressions/functions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+
+        # sin(x)
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).to_hyper()
+        x*hyper((), (3/2,), -x**2/4)
+
+        # exp(x)
+        >>> HolonomicFunction(Dx - 1, x, 0, 1).to_hyper()
+        hyper((), (), x)
+
+        See Also
+        ========
+
+        from_hyper, from_meijerg
+        """
+
+        recurrence, smallest_n = self.to_sequence()
+        u0 = recurrence.u0
+        r = recurrence.recurrence
+
+        # order of the recurrence relation
+        m = r.order
+
+        if smallest_n + m > len(u0):
+            raise NotImplementedError("Can't compute sufficient Initial Conditions")
+
+        # check if the recurrence represents a hypergeometric series
+        is_hyper = True
+        x = self.x
+
+        for i in range(1, len(r.listofpoly)-1):
+            if r.listofpoly[i] != r.parent.base.zero:
+                is_hyper = False
+                break
+
+        if not is_hyper or m == 0:
+            raise TypeError("The series is not Hypergeometric")
+
+        a = r.listofpoly[0]
+        b = r.listofpoly[-1]
+
+        # the constant multiple of argument of hypergeometric function
+        c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+
+        sol = 0
+
+        arg1 = roots(a.rep)
+        arg2 = roots(b.rep)
+
+        # iterate thorugh the initial conditions to find
+        # the hypergeometric representation of the given
+        # function.
+        # The answer will be a linear combination
+        # of different hypergeometric series which satisfies
+        # the recurrence.
+        for i in range(len(u0)):
+
+            # if the recurrence relation doesn't hold for `n = i`,
+            # then a Hypergeometric representation doesn't exist.
+            # add the algebraic term a * x**i to the solution,
+            # where a is u0[i]
+            if i < smallest_n:
+                sol += S(u0[i]) * x**i
+                continue
+
+            # if the coefficient u0[i] is zero, then the
+            # independent hypergeomtric series starting with
+            # x**i is not a part of the answer.
+            if u0[i] is 0:
+                continue
+
+            ap = []
+            bq = []
+
+            # substitute m * n + i for n
+            for k in arg1:
+                ap.extend([(i - k) / m] * arg1[k])
+
+            for k in arg2:
+                bq.extend([(i - k) / m] * arg2[k])
+
+            # convention of (k + 1) in the denominator
+            if 1 in bq:
+                bq.remove(1)
+            else:
+                ap.append(1)
+
+            sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
+
+        return sol
+
+    def to_sympy(self):
+        """
+        Converts a Holonomic Function back to elementary functions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols, S
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+
+        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
+        besselj(1, x)
+
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy()
+        x*log(x + 1) + log(x + 1) + 1
+
+        """
+
+        return hyperexpand(self.to_hyper()).simplify()
 
 
 def from_hyper(func, x0=0, evalf=False):
@@ -1302,7 +1513,7 @@ def _normalize(list_of, parent, negative=True):
     for i in denom:
         lcm_denom = i.lcm(lcm_denom)
 
-    if negative is True:
+    if negative:
         lcm_denom = -lcm_denom
 
     lcm_denom = K.new(lcm_denom.rep)
@@ -1347,6 +1558,9 @@ def _derivate_diff_eq(listofpoly):
 
 
 def _add_lists(list1, list2):
+    """Takes polynomial sequences of two annihilators a and b and returns
+    the list of polynomials of sum of a and b.
+    """
     if len(list1) <= len(list2):
         sol = [a + b for a, b in zip(list1, list2)] + list2[len(list1):]
     else:
@@ -1392,7 +1606,7 @@ def _extend_y0(Holonomic, n):
 
 
 def DMFdiff(frac):
-    # differentiate a p/q DMF object
+    # differentiate a DMF object represented as p/q
     if not isinstance(frac, DMF):
         return frac.diff()
 
