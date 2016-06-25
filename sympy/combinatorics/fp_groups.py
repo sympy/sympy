@@ -56,7 +56,7 @@ class FpGroup(DefaultPrinting):
         obj._free_group = fr_grp
         obj._relators = relators
         obj.generators = obj._generators()
-        obj.dytype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+        obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
         return obj
 
     @property
@@ -1001,6 +1001,25 @@ def first_in_class(C, Y=[]):
                 next_alpha = False
                 break
     return True
+
+
+# Pg 175 [1]
+def define_schreier_generators(C, f):
+    C.Y = set()
+    gamma = 1
+    X = f.generators
+    C.P = [[None]*len(C.A) for i in range(C.n)]
+    for alpha in C.omega:
+        for x in C.A:
+            beta = C.table[alpha][C.A_dict[x]]
+            if beta == gamma:
+                C.P[alpha][C.A_dict[x]] = f.dtype()
+                C.P[beta][C.A_dict_inv[x]] = f.dtype()
+                gamma += 1
+            elif x in X and C.P[alpha][C.A_dict[x]] is None:
+                C.Y = C.Y.add(y_alpha_x)
+                C.P[alpha][C.A_dict[x]] = y_alpha_x
+                C.P[beta][C.A_dict_inv[x]] = y_alpha_x**-1
 
 
 FpGroupElement = FreeGroupElement
