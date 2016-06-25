@@ -2811,7 +2811,6 @@ def _handle_Integral(expr, func, order, hint):
         del y
     elif hint == "1st_exact_Integral":
         sol = expr
-        del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):

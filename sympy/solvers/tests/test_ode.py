@@ -1018,6 +1018,11 @@ def test_1st_exact1():
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
+def test_1st_exact_Integral():
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    sol = 'Eq(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), C1)'
+    assert str(dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')) == sol
+
 
 @slow
 @XFAIL
