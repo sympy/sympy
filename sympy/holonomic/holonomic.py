@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I, solve
+from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
+    solve, limit)
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -346,7 +347,7 @@ class HolonomicFunction(object):
     >>> var("x")
     x
     >>> r = np.linspace(1, 5, 100)
-    >>> y = sympy.holonomic.from_sympy(sin(x)**2/x).evalf(r)
+    >>> y = sympy.holonomic.from_sympy(sin(x)**2/x, x0=1).evalf(r)
     >>> plt.plot(r, y, label="holonomic function")
     [Line2D(holonomic function)]
     >>> plt.show()
@@ -1391,7 +1392,7 @@ _lookup_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def from_sympy(func, x=None, initcond=True):
+def from_sympy(func, x=None, initcond=True, x0=0):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1419,7 +1420,7 @@ def from_sympy(func, x=None, initcond=True):
         x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat(func, x, initcond=initcond)
+    solpoly = _convert_poly_rat(func, x, initcond=initcond, x0=x0)
     if solpoly:
         return solpoly
 
@@ -1440,7 +1441,6 @@ def from_sympy(func, x=None, initcond=True):
             sol = _convert_meijerint(func, x, initcond=False)
             if not sol:
                 raise NotImplementedError
-            x0 = 0
             y0 = _find_conditions(func, x, x0, sol.annihilator.order)
             while not y0:
                 x0 += 1
@@ -1450,7 +1450,6 @@ def from_sympy(func, x=None, initcond=True):
         if not initcond:
             return sol.composition(func.args[0])
 
-        x0 = 0
         y0 = _find_conditions(func, x, x0, sol.annihilator.order)
         while not y0:
             x0 += 1
@@ -1479,7 +1478,6 @@ def from_sympy(func, x=None, initcond=True):
     if not initcond:
         return sol
 
-    x0 = 0
     y0 = _find_conditions(func, x, x0, sol.annihilator.order)
     while not y0:
         x0 += 1
@@ -1656,7 +1654,7 @@ def DMFsubs(frac, x0):
     return sol_p / sol_q
 
 
-def _convert_poly_rat(func, x, initcond=True):
+def _convert_poly_rat(func, x, initcond=True, x0=0):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -1687,7 +1685,6 @@ def _convert_poly_rat(func, x, initcond=True):
     if not initcond:
         return HolonomicFunction(sol, x)
 
-    x0 = 0
     y0 = _find_conditions(func, x, x0, sol.order)
     while not y0:
         x0 += 1
@@ -1786,6 +1783,8 @@ def _find_conditions(func, x, x0, order):
     y0 = []
     for i in range(order):
         val = func.subs(x, x0)
+        if isinstance(val, NaN):
+            val = limit(func, x, x0)
         if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
             return None
         y0.append(val)

@@ -410,8 +410,8 @@ def test_from_sympy():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = from_sympy((sin(x)/x)**2)
-    q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 1, \
-        [sin(1)**2, -2*sin(1)**2 + 2*sin(1)*cos(1), -8*sin(1)*cos(1) + 2*cos(1)**2 + 4*sin(1)**2])
+    q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 0, \
+        [1, 0, -2/3])
     assert p == q
     p = from_sympy(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, 1)
@@ -443,6 +443,13 @@ def test_from_sympy():
     p = from_sympy(besselj(0, x) + exp(x))
     q = HolonomicFunction((-2*x**2 - x + 1) + (2*x**2 - x - 3)*Dx + (-2*x**2 + x + 2)*Dx**2 +\
         (2*x**2 + x)*Dx**3, x, 0, [2, 1, 1/2])
+    assert p == q
+    p = from_sympy(sin(x)**2/x)
+    q = HolonomicFunction(4 + 4*x*Dx + 3*Dx**2 + x*Dx**3, x, 0, [0, 1, 0])
+    assert p == q
+    p = from_sympy(sin(x)**2/x, x0=2)
+    q = HolonomicFunction((4) + (4*x)*Dx + (3)*Dx**2 + (x)*Dx**3, x, 2, [sin(2)**2/2,
+        sin(2)*cos(2) - sin(2)**2/4, -3*sin(2)**2/4 + cos(2)**2 - sin(2)*cos(2)])
     assert p == q
 
 def test_to_hyper():
@@ -486,4 +493,7 @@ def test_to_sympy():
     p = HolonomicFunction(2 + (4*x - 1)*Dx + \
         (x**2 - x)*Dx**2, x, 0, [1, 2]).to_sympy()
     q = 1/(x**2 - 2*x + 1)
+    assert p == q
+    p = from_sympy(sin(x)**2/x).integrate((x, 0, x)).to_sympy()
+    q = (sin(x)**2/x).integrate((x, 0, x))
     assert p == q
