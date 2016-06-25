@@ -253,6 +253,34 @@ def not_empty_in(finset_intersection, *syms):
         return _domain
 
 
+def periodicity(f, symbol):
+    """Returns the period of a given function, if possible.
+    """
+    from sympy import simplify, lcm_list
+    from sympy.functions.elementary.trigonometric import TrigonometricFunction
+
+    f = simplify(f)
+    if isinstance(f, TrigonometricFunction):
+        return f.period(symbol)
+
+    if f.is_Mul:
+        coeff, g = f.as_independent(symbol, as_Add=False)
+        if coeff >= 0 and isinstance(g, TrigonometricFunction):
+            return g.period(symbol)
+
+    p = []
+    if f.is_Add:
+        for g in f.args:
+            if isinstance(g, TrigonometricFunction):
+                p.append(periodicity(g, symbol))
+            period = lcm_list(p)
+            if f.subs(symbol, symbol+period) == f:
+                return period
+
+    raise NotImplementedError("Period of only trigonometric functions can be"
+                              "calculated using this method.")
+
+
 class AccumulationBounds(AtomicExpr):
     """
     # Note AccumulationBounds has an alias: AccumBounds
