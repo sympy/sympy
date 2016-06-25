@@ -336,6 +336,21 @@ class HolonomicFunction(object):
     Given two Holonomic Functions f and g, their sum, product,
     integral and derivative is also a Holonomic Function.
 
+    To plot a Holonomic Function, one can use `.evalf()` for numerical computation.
+    Here's an example on `sin(x)**2/x` using numpy and matplotlib.
+
+    >>> import sympy.holonomic
+    >>> from sympy import var, sin
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> var("x")
+    x
+    >>> r = np.linspace(1, 5, 100)
+    >>> y = sympy.holonomic.from_sympy(sin(x)**2/x).evalf(r)
+    >>> plt.plot(r, y, label="holonomic function")
+    [Line2D(holonomic function)]
+    >>> plt.show()
+
     Examples
     ========
 
