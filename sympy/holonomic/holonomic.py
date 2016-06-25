@@ -512,7 +512,7 @@ class HolonomicFunction(object):
 
         return HolonomicFunction(sol, self.x)
 
-    def integrate(self, *args):
+    def integrate(self, limits):
         """
         Integrate the given holonomic function. Limits can be provided,
         Initial conditions can only be computed when limits are (x0, x).
@@ -536,14 +536,33 @@ class HolonomicFunction(object):
 
         # just multiply by Dx from right
         D = self.annihilator.parent.derivative_operator
-        if (not args) or (not self._have_init_cond):
+        if (not limits) or (not self._have_init_cond):
             return HolonomicFunction(self.annihilator * D, self.x)
 
         # definite integral if limits are (x0, x)
-        if len(args) == 1 and len(args[0]) == 3 and args[0][1] == self.x0 and args[0][2] == self.x:
+        if hasattr(limits, "__iter__"):
+            if len(limits) == 3 and limits[0] == self.x:
+                x0 = self.x0
+                a = limits[1]
+                b = limits[2]
+        else:
+            x0 = self.x0
+            a = self.x0
+            b = self.x
+
+        if x0 == a:
             y0 = [S(0)]
             y0 += self.y0
-            return HolonomicFunction(self.annihilator * D, self.x, self.x0, y0)
+
+        else:
+            y0 = [S(0)]
+            tempy0 = self.evalf(a, derivatives=True)
+            y0 += tempy0
+
+        if b == self.x:
+            return HolonomicFunction(self.annihilator * D, self.x, a, y0)
+        elif S(b).is_Number:
+            return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
@@ -1038,7 +1057,7 @@ class HolonomicFunction(object):
             y *= x - i
         return roots(s.rep, filter='R').keys()
 
-    def evalf(self, points, method='RK4'):
+    def evalf(self, points, method='RK4', h=0.05, derivatives=False):
         """
         Finds numerical value of a holonomic function using numerical methods.
         (RK4 by default). A set of points (real or complex) must be provided
@@ -1078,10 +1097,31 @@ class HolonomicFunction(object):
         """
 
         from sympy.holonomic.numerical import _evalf
+        lp = False
+
+        # if a point `b` is given instead of a mesh
+        if not hasattr(points, "__iter__"):
+            lp = True
+            b = S(points)
+
+            if not b.is_Number:
+                raise NotImplementedError
+
+            a = self.x0
+            if a > b:
+                h = -h
+            n = int((b - a) / h)
+            points = [a + h]
+            for i in range(n - 1):
+                points.append(points[-1] + h)
+
         for i in roots(self.annihilator.listofpoly[-1].rep):
             if i == self.x0 or i in points:
                 raise TypeError("Provided path contains a singularity")
-        return _evalf(self, points, method=method)
+
+        if lp:
+            return _evalf(self, points, method=method, derivatives=derivatives)[-1]
+        return _evalf(self, points, method=method, derivatives=derivatives)
 
     def _subs(self, z):
         """
