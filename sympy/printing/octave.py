@@ -386,6 +386,9 @@ class OctaveCodePrinter(CodePrinter):
         return "gammainc(%s, %s, 'upper')" % (self._print(expr.args[1]),
                                               self._print(expr.args[0]))
 
+    def _print_sinc(self, expr):
+        return "sinc(%s/pi)" % self._print(expr.args[0])
+
 
     def _print_lowergamma(self, expr):
         return "gammainc(%s, %s, 'lower')" % (self._print(expr.args[1]),
