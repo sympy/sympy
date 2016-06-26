@@ -6,7 +6,7 @@ from sympy.core import Symbol
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElement
+from sympy.combinatorics.free_group import FreeGroupElement, free_group
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -1007,7 +1007,7 @@ def first_in_class(C, Y=[]):
 
 # Pg 175 [1]
 def define_schreier_generators(C):
-    C.Y = set()
+    C.Y = []
     gamma = 1
     f = C.fp_group
     X = f.generators
@@ -1015,33 +1015,58 @@ def define_schreier_generators(C):
     for alpha, x in product(C.omega, C.A):
         beta = C.table[alpha][C.A_dict[x]]
         if beta == gamma:
-            C.P[alpha][C.A_dict[x]] = 1
-            C.P[beta][C.A_dict_inv[x]] = 1
+            C.P[alpha][C.A_dict[x]] = ""
+            C.P[beta][C.A_dict_inv[x]] = ""
             gamma += 1
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
-            y_alpha_x = Symbol('%s_%s' % (x, alpha), commutative=False)
-            C.Y.add(y_alpha_x)
+            y_alpha_x = '%s_%s' % (x, alpha)
+            C.Y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
-            C.P[beta][C.A_dict_inv[x]] = y_alpha_x**-1
+    C.schreier_free_group = free_group(', '.join(C.Y))
+    # replace all elements of P by, free group elements
+    for i in range(len(C.P)):
+        for j in range(len(C.A)):
+            # if equals "", replace by identity element
+            if C.P[i][j] == "":
+                C.P[i][j] = C.schreier_free_group[0].identity
+            elif isinstance(C.P[i][j], str):
+                r = C.schreier_free_group[C.Y.index(C.P[i][j]) + 1]
+                C.P[i][j] = r
+                beta = C.table[i][j]
+                C.P[beta][j + 1] = r**-1
 
 
 def rewrite(C, alpha, w):
     """
     Parameters
-    ==========
+    ----------
 
     C: CosetTable
     α: A live coset
     w: A word in `A*`
 
     Returns
-    =======
+    -------
 
     ρ(τ(α), w)
 
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> F, x, y = free_group("x ,y")
+    >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
+    >>> C = CosetTable(f, [])
+    >>> C.table = [[1, 1, 2, 3], [0, 0, 4, 5], [4, 4, 3, 0], [5, 5, 0, 2], [2, 2, 5, 1], [3, 3, 1, 4]]
+    >>> C.p = [0, 1, 2, 3, 4, 5]
+    >>> define_schreier_generators(C)
+    >>> rewrite(C, 0, (x*y)**6)
+    x_4*y_2*x_3*x_1*x_2*y_4*x_5
+
     """
-    f = C.fp_group
-    v = 1
+    schreier_group = C.schreier_free_group[0]
+    v = schreier_group.identity
     for i in range(len(w)):
         x_i = w[i]
         v = v*C.P[alpha][C.A_dict[x_i]]
