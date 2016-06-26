@@ -730,7 +730,7 @@ def test_sympy__stats__rv__RandomSymbol():
     from sympy.stats.rv import RandomSymbol
     from sympy.stats.crv import SingleContinuousPSpace
     A = SingleContinuousPSpace(x, nd)
-    assert _test_args(RandomSymbol(A, x))
+    assert _test_args(RandomSymbol(x, A))
 
 
 def test_sympy__stats__rv__ProductPSpace():
@@ -1263,6 +1263,9 @@ def test_sympy__functions__elementary__hyperbolic__asech():
     from sympy.functions.elementary.hyperbolic import asech
     assert _test_args(asech(2))
 
+def test_sympy__functions__elementary__hyperbolic__acsch():
+    from sympy.functions.elementary.hyperbolic import acsch
+    assert _test_args(acsch(2))
 
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh

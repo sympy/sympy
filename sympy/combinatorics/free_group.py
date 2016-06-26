@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
@@ -11,6 +12,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
 from sympy.utilities.magic import pollute
+from sympy import sign
 
 
 @public
@@ -31,7 +33,7 @@ def free_group(symbols):
     >>> x**2*y**-1
     x**2*y**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -55,7 +57,7 @@ def xfree_group(symbols):
     >>> y**2*x**-2*z**-1
     y**2*x**-2*z**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -79,7 +81,7 @@ def vfree_group(symbols):
     >>> x**2*y**-2*z
     x**2*y**-2*z
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElm'>
+    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -140,8 +142,8 @@ class FreeGroup(DefaultPrinting):
             obj = object.__new__(cls)
             obj._hash = _hash
             obj._rank = rank
-            # dtype method is used to create new instances of FreeGroupElm
-            obj.dtype = type("FreeGroupElm", (FreeGroupElm,), {"group": obj})
+            # dtype method is used to create new instances of FreeGroupElement
+            obj.dtype = type("FreeGroupElement", (FreeGroupElement,), {"group": obj})
             obj.symbols = symbols
             obj.generators = obj._generators()
             obj._gens_set = set(obj.generators)
@@ -173,17 +175,14 @@ class FreeGroup(DefaultPrinting):
             gens.append(group.dtype(elm))
         return tuple(gens)
 
-    def __getitem__(self, i):
-        return self.generators[i]
-
     def clone(self, symbols=None):
         return self.__class__(symbols or self.symbols)
 
     def __contains__(self, i):
         """Return True if `i` is contained in FreeGroup.
         """
-        if not isinstance(i, FreeGroupElm):
-            raise TypeError("FreeGroup contains only FreeGroupElm as elements "
+        if not isinstance(i, FreeGroupElement):
+            raise TypeError("FreeGroup contains only FreeGroupElement as elements "
                         ", not elements of type %s" % type(i))
         group = i.group
         return self == group
@@ -302,7 +301,7 @@ class FreeGroup(DefaultPrinting):
         True
 
         """
-        if not isinstance(g, FreeGroupElm):
+        if not isinstance(g, FreeGroupElement):
             return False
         elif self != g.group:
             return False
@@ -321,17 +320,16 @@ class FreeGroup(DefaultPrinting):
 
 
 ############################################################################
-#                          FreeGroupElm                                    #
+#                          FreeGroupElement                                #
 ############################################################################
 
 
-class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
+class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     """Used to create elements of FreeGroup. It can not be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
 
     """
-    is_identity = None
     is_assoc_word = True
 
     def new(self, init):
@@ -367,7 +365,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         Since elements (i.e. words) don't commute, the indexing of tuple
         makes that property to stay.
 
-        The structure in `array_form` of `FreeGroupElm` is shown below,
+        The structure in `array_form` of `FreeGroupElement` is shown below,
 
         ( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )
 
@@ -392,7 +390,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
     @property
     def letter_form(self):
         """
-        The  letter  representation  of an `FreeGroupElm` is as a
+        The  letter  representation  of an `FreeGroupElement` is as a
         tuple of generator symbols, each entry corresponding to a group
         generator. Inverses of the generators are represented by
         negative generator symbols.
@@ -415,13 +413,29 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         array_form
 
         """
-        symbols = self.group.symbols
         return tuple(flatten([(i,)*j if j > 0 else (-i,)*(-j)
-                        for i, j in self.array_form]))
+                    for i, j in self.array_form]))
+
+    def __getitem__(self, i):
+        group = self.group
+        r = self.letter_form[i]
+        if r.is_Symbol:
+            return group.dtype(((r, 1),))
+        else:
+            return group.dtype(((-r, -1),))
+
+    @property
+    def letter_form_elm(self):
+        """
+        """
+        group = self.group
+        r = self.letter_form
+        return [group.dtype(((elm,1),)) if elm.is_Symbol \
+                else group.dtype(((-elm,-1),)) for elm in r]
 
     @property
     def ext_rep(self):
-        """This is called the External Representation of `FreeGroupElm`
+        """This is called the External Representation of `FreeGroupElement`
         """
         return tuple(flatten(self.array_form))
 
@@ -513,12 +527,11 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
     __rtruediv__ = __rdiv__
 
     def __add__(self, other):
-        raise TypeError("unsupported operand type(s) for + or add: '%s' and '%s'"
-                    % (self.__class__.__name__, other.__class__.__name__))
+        return NotImplemented
 
     def inverse(self):
         """
-        Returns the inverse of a `FreeGroupElm` element
+        Returns the inverse of a `FreeGroupElement` element
 
         Examples
         ========
@@ -536,7 +549,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         return group.dtype(r)
 
     def order(self):
-        """Find the order of a `FreeGroupElm`.
+        """Find the order of a `FreeGroupElement`.
 
         Examples
         ========
@@ -557,7 +570,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         """
         group = self.group
         if not isinstance(other, group.dtype):
-            raise ValueError("commutator of only `FreeGroupElm` of the same "
+            raise ValueError("commutator of only `FreeGroupElement` of the same "
                     "`FreeGroup` exists")
         else:
             return self.inverse()*other.inverse()*self*other
@@ -653,7 +666,6 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         True
         >>> swapnil0*swapnil1 == swapnil1*swapnil0
         False
-
         >>> swapnil1**0 == swap0**0
         False
 
@@ -794,6 +806,41 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
+    def cyclic_subword(self, from_i, to_j):
+        group = self.group
+        l = len(self)
+        letter_form = self.letter_form
+        period1 = int(from_i/l)
+        if from_i >= l:
+            from_i -= l*period1
+            to_j -= l*period1
+        diff = to_j - from_i
+        word = letter_form[from_i: to_j]
+        period2 = int(to_j/l) - 1
+        word += letter_form*period2 + letter_form[:diff-l+from_i-l*period2]
+        word = letter_form_to_array_form(word, group)
+        return group.dtype(word)
+
+    def cyclic_conjugates(self):
+        """Returns a words which are cyclic to the word `self`.
+
+        References
+        ==========
+
+        http://planetmath.org/cyclicpermutation
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x*y*x*y*x
+        >>> w.cyclic_conjugates()
+        set([x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x])
+        >>> s = x*y*x**2*y*x
+        >>> s.cyclic_conjugates()
+        set([x**2*y*x**2*y, y*x**2*y*x**2, x*y*x**2*y*x])
+
+        """
+        return set([self.cyclic_subword(i, i+len(self)) for i in range(len(self))])
+
     def number_syllables(self):
         """Returns the number of syllables of the associative word `self`.
 
@@ -853,7 +900,7 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
         ========
 
         >>> from sympy.combinatorics.free_group import free_group
-        >>> f, a, b = free_group("a b")
+        >>> f, a, b = free_group("a, b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
         b
@@ -888,6 +935,47 @@ class FreeGroupElm(CantSympify, DefaultPrinting, tuple):
             return self.subword(0, from_i - 1)*by;
         else:              # finally
             return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
+
+    def is_cyclically_reduced(self):
+        """Returns whether the word is cyclically reduced or not.
+        A word is cyclically reduced if by forming the cycle of the
+        word, the word is not reduced, i.e a word w = a_1 ... a_n
+        is called cyclically reduced if a_1 != a_n**−1.
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**-1*x**-1).is_cyclically_reduced()
+        False
+        >>> (y*x**2*y**2).is_cyclically_reduced()
+        True
+
+        """
+        return self[0] != self[-1]**-1
+
+    #TODO: should be moved to FpGroupElement
+    def identity_cyclic_reduction(self):
+        """Return a unique cyclically reduced version of the word.
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**2*y**2*x**-1).identity_cyclic_reduction()
+        x**3*y**2
+        >>> (x**-3*y**-1*x**2).identity_cyclic_reduction()
+        y**-1*x**5
+
+        """
+        if self.is_cyclically_reduced():
+            return self.copy()
+        group = self.group
+        exp1 = self.exponent_syllable(0)
+        exp2 = self.exponent_syllable(-1)
+        if exp1 > 0:
+            rep = ((self.generator_syllable(0), exp1 - exp2),) + \
+                    self.array_form[1: self.number_syllables() - 1]
+        else:
+            rep = self.array_form[1: self.number_syllables() - 1] + \
+                    ((self.generator_syllable(0), -exp1 + exp2),)
+        return group.dtype(rep)
 
 
 def letter_form_to_array_form(array_form, group):
