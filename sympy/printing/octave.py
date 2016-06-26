@@ -392,6 +392,10 @@ class OctaveCodePrinter(CodePrinter):
                                               self._print(expr.args[0]))
 
 
+    def _print_sinc(self, expr):
+        return "sinc(%s/pi)" % self._print(expr.args[0])
+
+
     def _print_hankel1(self, expr):
         return "besselh(%s, 1, %s)" % (self._print(expr.order),
                                        self._print(expr.argument))
