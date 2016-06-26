@@ -258,8 +258,9 @@ def periodicity(f, symbol):
 
     Examples
     ========
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, sin, cos
     >>> from sympy.calculus.util import periodicity
+    >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
     >>> periodicity(f, x)
     2*pi
@@ -308,8 +309,9 @@ def lcm_fraction(fractions):
 
     Examples
     ========
+    >>> from sympy import S, pi
     >>> from sympy.calculus.util import lcm_fraction
-    >>> lcm_fraction([S(1)/2, S(3)/4, S(5)/6]))
+    >>> lcm_fraction([S(1)/2, S(3)/4, S(5)/6])
     15/2
     >>> lcm_fraction([2*pi, 3*pi, pi, pi/2])
     6*pi
