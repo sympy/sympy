@@ -277,27 +277,30 @@ def periodicity(f, symbol):
         period = f.period(symbol)
 
     if f.is_Mul:
-        coeff, g = f.as_independent(symbol, as_Add=False)
-        if coeff < 0:
-            raise NotImplementedError("Periods of only certain trigonometric functions"
-                                      " can be calculated using this method.")
-        else:
-            if isinstance(g, TrigonometricFunction):
-                period = g.period(symbol)
+        _, g = f.as_independent(symbol, as_Add=False)
+        if isinstance(g, TrigonometricFunction):
+            period = g.period(symbol)
 
     if f.is_Add:
         periods = []
         for g in f.args:
+            if g.is_Mul:
+                coeff, _ = g.as_independent(symbol)
+                if coeff.is_number and coeff < 0:
+                    raise NotImplementedError("Periods of only certain "
+                                              "trigonometric functions can be "
+                                              "calculated using this method.")
+
             periods.append(periodicity(g, symbol))
 
         period = lcm_fraction(periods)
 
-    if period is None:
-        raise NotImplementedError("Periods of only certain trigonometric functions"
-                              " can be calculated using this method.")
-
-    elif orig_f.subs(symbol, symbol + period) == orig_f:
+    if period is not None and orig_f.subs(symbol, symbol + period) == orig_f:
         return period
+
+    else:
+        raise NotImplementedError("Periods of only certain trigonometric functions"
+                                  " can be calculated using this method.")
 
 
 def lcm_fraction(fractions):
@@ -316,7 +319,7 @@ def lcm_fraction(fractions):
     if len(fractions) == 2:
         a, b = fraction(fractions[0])
         c, d = fraction(fractions[1])
-        return lcm(a, c)/ gcd(b, d)
+        return lcm(a, c) / gcd(b, d)
     else:
         return lcm_fraction([fractions[0], lcm_fraction(fractions[1:])])
 
