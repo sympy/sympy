@@ -1015,8 +1015,8 @@ def define_schreier_generators(C):
     for alpha, x in product(C.omega, C.A):
         beta = C.table[alpha][C.A_dict[x]]
         if beta == gamma:
-            C.P[alpha][C.A_dict[x]] = ""
-            C.P[beta][C.A_dict_inv[x]] = ""
+            C.P[alpha][C.A_dict[x]] = "<identity>"
+            C.P[beta][C.A_dict_inv[x]] = "<identity>"
             gamma += 1
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
             y_alpha_x = '%s_%s' % (x, alpha)
@@ -1027,13 +1027,28 @@ def define_schreier_generators(C):
     for i in range(len(C.P)):
         for j in range(len(C.A)):
             # if equals "", replace by identity element
-            if C.P[i][j] == "":
+            if C.P[i][j] == "<identity>":
                 C.P[i][j] = C.schreier_free_group[0].identity
             elif isinstance(C.P[i][j], str):
                 r = C.schreier_free_group[C.Y.index(C.P[i][j]) + 1]
                 C.P[i][j] = r
                 beta = C.table[i][j]
                 C.P[beta][j + 1] = r**-1
+
+
+def reidemeister_relators(C):
+    R = C.fp_group.relators()
+    rels = list(set([rewrite(C, coset, word) for word in R for coset in range(C.n)]))
+    i = 0
+    while i < len(rels):
+        j = i + 1
+        while j < len(rels):
+            if rels[i].is_cyclic_conjugate(rels[j]):
+                del rels[j]
+            else:
+                j += 1
+        i += 1
+    return rels
 
 
 def rewrite(C, alpha, w):
