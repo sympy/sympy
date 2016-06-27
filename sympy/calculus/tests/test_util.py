@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, tan,
                    sin, pi)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 AccumBounds)
+                                 periodicity, AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -61,6 +61,18 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(1).intersect(Interval(3, 4)), x) == S.EmptySet
     assert not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x) == \
         Union(Interval(-2, -1, True, False), Interval(2, oo))
+
+
+def test_periodicity():
+    x = symbols('x')
+    assert periodicity(sin(2*x), x) == pi
+    assert periodicity((-2)*tan(4*x), x) == pi/4
+    assert periodicity(tan(x)*cos(x), x) == 2*pi
+    assert periodicity(sin(x) + cos(x), x) == 2*pi
+    assert periodicity(tan(x) + cot(x), x) == pi
+    assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
+    raises (NotImplementedError, lambda: periodicity(sin(x) - cos(x), x))
+    raises (NotImplementedError, lambda: periodicity(exp(x), x))
 
 
 def test_AccumBounds():
