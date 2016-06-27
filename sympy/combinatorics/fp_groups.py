@@ -1024,18 +1024,17 @@ def define_schreier_generators(C):
             C.P[alpha][C.A_dict[x]] = y_alpha_x
     grp_gens = list(free_group(', '.join(y)))
     C.schreier_free_group = grp_gens.pop(0)
-    C.Y = grp_gens
+    C.schreier_generators = grp_gens
     # replace all elements of P by, free group elements
-    for i in range(len(C.P)):
-        for j in range(len(C.A)):
-            # if equals "", replace by identity element
-            if C.P[i][j] == "<identity>":
-                C.P[i][j] = C.schreier_free_group.identity
-            elif isinstance(C.P[i][j], str):
-                r = C.Y[y.index(C.P[i][j])]
-                C.P[i][j] = r
-                beta = C.table[i][j]
-                C.P[beta][j + 1] = r**-1
+    for i, j in product(range(len(C.P)), range(len(C.A))):
+        # if equals "<identity>", replace by identity element
+        if C.P[i][j] == "<identity>":
+            C.P[i][j] = C.schreier_free_group.identity
+        elif isinstance(C.P[i][j], str):
+            r = C.schreier_generators[y.index(C.P[i][j])]
+            C.P[i][j] = r
+            beta = C.table[i][j]
+            C.P[beta][j + 1] = r**-1
 
 
 def reidemeister_relators(C):
