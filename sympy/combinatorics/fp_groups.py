@@ -1039,16 +1039,21 @@ def define_schreier_generators(C):
 
 def reidemeister_relators(C):
     R = C.fp_group.relators()
-    rels = list(set([rewrite(C, coset, word) for word in R for coset in range(C.n)]))
+    rels = set([rewrite(C, coset, word) for word in R for coset in range(C.n)])
+    identity = C.schreier_free_group.identity
+    order_1_gens = set([i for i in rels if len(i) == 1])
+    # remove all the order 1 generators from relators
+    rels.difference_update(order_1_gens)
+    order_2_gens = set([i for i in rels if len(i) == 2])
+    # replace order 1 generators by identity element in reidemeister relators
+    rels = [w.eliminate_word(x, identity) for w in rels for x in order_1_gens]
+    C.schreier_generators = [i for i in C.schreier_generators if i not in order_1_gens]
+    # remove cyclic conjugate elements from relators
     i = 0
     while i < len(rels):
-        r = rels[i]
-        if len(r) == 1:
-            del rels[i]; C.schreier_generators.remove(r)
-            continue
         j = i + 1
         while j < len(rels):
-            if r.is_cyclic_conjugate(rels[j]):
+            if rels[i].is_cyclic_conjugate(rels[j]):
                 del rels[j]
             else:
                 j += 1
