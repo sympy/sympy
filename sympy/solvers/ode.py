@@ -926,6 +926,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
+    ics = sympify(ics)
+
     prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 1:
@@ -997,8 +999,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     old = x
                     new = funcarg.variables[0]
 
-                if isinstance(deriv, Derivative) and isinstance(deriv.args[0],
-                    AppliedUndef) and deriv.args[0].func == f and len(deriv.args[0].args) == 1 and old == x and not new.has(x) and all(i == deriv.variables[0] for i in deriv.variables):
+                if (isinstance(deriv, Derivative) and isinstance(deriv.args[0],
+                    AppliedUndef) and deriv.args[0].func == f and
+                    len(deriv.args[0].args) == 1 and old == x and not
+                    new.has(x) and all(i == deriv.variables[0] for i in
+                    deriv.variables) and not ics[funcarg].has(f)):
+
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
@@ -1008,8 +1014,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
             # Separating functions
             elif isinstance(funcarg, AppliedUndef):
-                if funcarg.func == f and len(funcarg.args) == 1 and \
-                    not funcarg.args[0].has(x):
+                if (funcarg.func == f and len(funcarg.args) == 1 and
+                    not funcarg.args[0].has(x) and not ics[funcarg].has(f)):
                     boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
                 else:
                     raise ValueError("Enter valid boundary conditions for Function")
