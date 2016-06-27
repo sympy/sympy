@@ -1579,8 +1579,7 @@ def _normalize(list_of, parent, negative=True):
     denom = []
     base = parent.base
     K = base.get_field()
-    R = ZZ.old_poly_ring(base.gens[0])
-    lcm_denom = R.from_sympy(S(1))
+    lcm_denom = base.from_sympy(S(1))
     list_of_coeff = []
 
     # convert polynomials to the elements of associated
@@ -1594,15 +1593,10 @@ def _normalize(list_of, parent, negative=True):
             list_of_coeff.append(j)
 
         # corresponding numerators of the sequence of polynomials
-        num.append(base(list_of_coeff[i].num))
+        num.append(list_of_coeff[i].numer())
 
         # corresponding denominators
-        den = list_of_coeff[i].den
-        if isinstance(den[0], PythonRational):
-            for i, j in enumerate(den):
-                den[i] = j.p
-
-        denom.append(R(den))
+        denom.append(list_of_coeff[i].denom())
 
     # lcm of denominators in the coefficients
     for i in denom:
@@ -1617,7 +1611,7 @@ def _normalize(list_of, parent, negative=True):
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = j * lcm_denom
 
-    gcd_numer = base.from_FractionField(list_of_coeff[-1], K)
+    gcd_numer = base((list_of_coeff[-1].numer() / list_of_coeff[-1].denom()).rep)
 
     # gcd of numerators in the coefficients
     for i in num:
@@ -1627,7 +1621,8 @@ def _normalize(list_of, parent, negative=True):
 
     # divide all the coefficients by the gcd
     for i, j in enumerate(list_of_coeff):
-        list_of_coeff[i] = base.from_FractionField(j / gcd_numer, K)
+        frac_ans = j / gcd_numer
+        list_of_coeff[i] = base((frac_ans.numer() / frac_ans.denom()).rep)
 
     return DifferentialOperator(list_of_coeff, parent)
 
