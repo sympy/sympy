@@ -1708,7 +1708,7 @@ def DMFdiff(frac):
     return K((sol_num.rep, sol_denom.rep))
 
 
-def DMFsubs(frac, x0):
+def DMFsubs(frac, x0, mpm=False):
     # substitute the point x0 in DMF object of the form p/q
     if not isinstance(frac, DMF):
         return frac
@@ -1718,14 +1718,17 @@ def DMFsubs(frac, x0):
     sol_p = S(0)
     sol_q = S(0)
 
+    if mpm:
+        from mpmath import mp
+
     for i, j in enumerate(reversed(p)):
-        if isinstance(j, PythonRational):
-            j = sympify(j)
+        if mpm:
+            j = sympify(j)._to_mpmath(mp.prec)
         sol_p += j * x0**i
 
     for i, j in enumerate(reversed(q)):
-        if isinstance(j, PythonRational):
-            j = sympify(j)
+        if mpm:
+            j = sympify(j)._to_mpmath(mp.prec)
         sol_q += j * x0**i
 
     return sol_p / sol_q
