@@ -1115,7 +1115,15 @@ def test_nonlinsolve_complex():
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
-    soln = FiniteSet((soln_x, -log(S(3))))
+    soln_real = FiniteSet((soln_x, -log(S(3))))
+    # Mod(-log(3), 2*I*pi) is equal to -log(3).
+    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + Mod(-log(3), 2*I*pi)))) + \
+                log(Abs(sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    soln_x = ImageSet(Lambda(n, expr_x), S.Integers)
+    expr_y = 2*n*I*pi + Mod(-log(3), 2*I*pi)
+    soln_y = ImageSet(Lambda(n, expr_y), S.Integers)
+    soln_complex = FiniteSet((soln_x, soln_y))
+    soln = soln_real + soln_complex
     assert nonlinsolve(system, [x, y]) == soln
 
     system = [exp(x) - sin(y), y**2 - 4]
@@ -1144,22 +1152,27 @@ def test_issue_5132():
     system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
     assert nonlinsolve(system, [x, y]) == FiniteSet((1, 3), (3, 1))
 
+    n = Dummy('n')
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    soln_z = sqrt(-exp(2*x) - sin(log(3)))
-    soln_real_1 = (-log(3), -soln_z)
-    soln_real_2 = (-log(3), soln_z)
-    soln = FiniteSet(soln_real_1, soln_real_2)
-    # y = -log(3) from solve_poly_system then z from substitution method.
-    # complex soln didn't come from solve_poly_system.(one soln is missing)
-    # For all solution use substituiton function direcly
-    # substitution(eqs, [y, z])
+    s_real_y = -log(3)
+    s_real_z = sqrt(-exp(2*x) - sin(log(3)))
+    soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
+    lam = Lambda(n, 2*n*I*pi + Mod(-log(3), 2*I*pi))
+    s_complex_y = ImageSet(lam, S.Integers)
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    s_complex_z_1 = ImageSet(lam, S.Integers)
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    s_complex_z_2 = ImageSet(lam, S.Integers)
+    soln_complex = FiniteSet(
+                                            (s_complex_y, s_complex_z_1),
+                                            (s_complex_y, s_complex_z_2)
+                                        )
+    soln = soln_real + soln_complex
     assert nonlinsolve(eqs, [y, z]) == soln
 
 
 @XFAIL
 def test_issue_5132_():
-    # comparison error.
-    # mostly because there is -ve(-ve term) inside log
     # related to issue : #11174
     x, y, z, r, t = symbols('x, y, z, r, t', real=True)
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
@@ -1178,10 +1191,10 @@ def test_issue_5132_():
     # 2 soln from solveset_complex
     # substitution(system, [x, y]) function returns correct
     # solution.
-
-    # here one extra soln (s_x, -s_y) is coming
+    # nonlinsolve returns one extra soln (s_x, -s_y)
     # because instead of Intersection(S.Reals, FiniteSet(-s_x))
-    # solveset returns  Intersection(S.Reals, FiniteSet(s_x))
+    # solveset returns Intersection(S.Reals, FiniteSet(s_x))
+    # related to issue : #11174
     system = [r - x**2 - y**2, tan(t) - y/x]
     s_x = sqrt(r*cos(t)**2)
     s_y = sqrt(r*cos(t)**2)*tan(t)
@@ -1235,22 +1248,19 @@ def _test_issue_5335():
     assert len(nonlinsolve(eqs, sym)) == 2
 
 
-@XFAIL
 def test_issue_2777():
     # the equations represent two circles
     x, y = symbols('x y', real=True)
     e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
     a, b = 191/S(20), 3*sqrt(391)/20
     ans = {(a, -b), (a, b)}
-    assert nonlinsolve((e1, e2), (x, y)) == ans  # pass
-    # Some soln is coming. solveset_real bug #11184
+    assert nonlinsolve((e1, e2), (x, y)) == ans
     assert nonlinsolve((e1, e2/(x - a)), (x, y)) == S.EmptySet
     # make the 2nd circle's radius be -3
     e2 += 6
-    assert nonlinsolve((e1, e2), (x, y)) == S.EmptySet  # pass
+    assert nonlinsolve((e1, e2), (x, y)) == S.EmptySet
 
 
-@XFAIL
 def test_issue_8828():
     x1 = 0
     y1 = -620
@@ -1272,11 +1282,10 @@ def test_issue_8828():
     g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
     G = [g1, g2, g3]
 
-    # both same soln
+    # both soln same
     A = nonlinsolve(F, v)
-    # if we remove sqrt from the expr then it is solvable
-    B = nonlinsolve(G, v)  # fails
-    # evalf(2) each tuple element and compare.
+    B = nonlinsolve(G, v)
+    assert A == B
 
 
 def test_substitution_basic():
