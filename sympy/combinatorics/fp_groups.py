@@ -1007,7 +1007,7 @@ def first_in_class(C, Y=[]):
 
 # Pg 175 [1]
 def define_schreier_generators(C):
-    C.Y = []
+    y = []
     gamma = 1
     f = C.fp_group
     X = f.generators
@@ -1020,17 +1020,19 @@ def define_schreier_generators(C):
             gamma += 1
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
             y_alpha_x = '%s_%s' % (x, alpha)
-            C.Y.append(y_alpha_x)
+            y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
-    C.schreier_free_group = free_group(', '.join(C.Y))
+    grp_gens = list(free_group(', '.join(y)))
+    C.schreier_free_group = grp_gens.pop(0)
+    C.Y = grp_gens
     # replace all elements of P by, free group elements
     for i in range(len(C.P)):
         for j in range(len(C.A)):
             # if equals "", replace by identity element
             if C.P[i][j] == "<identity>":
-                C.P[i][j] = C.schreier_free_group[0].identity
+                C.P[i][j] = C.schreier_free_group.identity
             elif isinstance(C.P[i][j], str):
-                r = C.schreier_free_group[C.Y.index(C.P[i][j]) + 1]
+                r = C.Y[y.index(C.P[i][j])]
                 C.P[i][j] = r
                 beta = C.table[i][j]
                 C.P[beta][j + 1] = r**-1
@@ -1080,8 +1082,7 @@ def rewrite(C, alpha, w):
     x_4*y_2*x_3*x_1*x_2*y_4*x_5
 
     """
-    schreier_group = C.schreier_free_group[0]
-    v = schreier_group.identity
+    v = C.schreier_free_group.identity
     for i in range(len(w)):
         x_i = w[i]
         v = v*C.P[alpha][C.A_dict[x_i]]
