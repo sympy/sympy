@@ -29,12 +29,8 @@ from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence, iterable
 from sympy.core.decorators import deprecated
-<<<<<<< HEAD
 from sympy.sets import Intersection, EmptySet
 from sympy.matrices import Matrix
-=======
-from sympy.sets import Intersection
->>>>>>> upstream/master
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
