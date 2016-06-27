@@ -1747,6 +1747,10 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
     R = QQ.old_poly_ring(x)
     _, Dx = DifferentialOperators(R, 'Dx')
 
+    # if the function is constant
+    if not func.has(x):
+        return HolonomicFunction(Dx, Dx.parent, 0, func)
+
     if ispoly:
         # differential equation satisfied by polynomial
         sol = func * Dx - func.diff()
