@@ -1042,9 +1042,13 @@ def reidemeister_relators(C):
     rels = list(set([rewrite(C, coset, word) for word in R for coset in range(C.n)]))
     i = 0
     while i < len(rels):
+        r = rels[i]
+        if len(r) == 1:
+            del rels[i]; C.schreier_generators.remove(r)
+            continue
         j = i + 1
         while j < len(rels):
-            if rels[i].is_cyclic_conjugate(rels[j]):
+            if r.is_cyclic_conjugate(rels[j]):
                 del rels[j]
             else:
                 j += 1
