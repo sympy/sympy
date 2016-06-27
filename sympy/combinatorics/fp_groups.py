@@ -330,10 +330,10 @@ class CosetTable(DefaultPrinting):
     def merge(self, k, lamda, q):
         p = self.p
         phi = self.rep(k)
-        chi = self.rep(lamda)
-        if phi != chi:
-            mu = min(phi, chi)
-            v = max(phi, chi)
+        psi = self.rep(lamda)
+        if phi != psi:
+            mu = min(phi, psi)
+            v = max(phi, psi)
             p[v] = mu
             q.append(v)
 
@@ -1097,5 +1097,112 @@ def rewrite(C, alpha, w):
         alpha = C.table[alpha][C.A_dict[x_i]]
     return v
 
+
+def modified_define(C, alpha, x):
+    """
+    see also
+    ========
+    CosetTable.define
+
+    """
+    if len(C.table) == CosetTableDefaultMaxLimit:
+        return
+    C.table.append([None]*len(C.A))
+    beta = len(C.table) - 1
+    C.p.append(beta)
+    C.table[alpha][C.A_dict[x]] = beta
+    C.table[beta][C.A_dict_inv[x]] = alpha
+    C.P[alpha][C.A_dict[x]] = "<identity>"
+    C.p_p[beta] = "<identity>"
+
+def modified_scan(C, alpha, word, y):
+    table = C.table
+    f = alpha
+    f_p = "<identity>"
+    i = 0
+    r = len(word)
+    b = alpha
+    b_p = y
+    j = r - 1
+    while i <= j and table[f][C.A_dict[word[i]]] is not None:
+        f_p = f_p*C.P[f][C.A_dict[word[i]]]
+        i += 1
+    if i > j:
+        if f != b:
+            modified_coincidence(C, f, alpha, f_p**-1*y)
+        return
+    while j >= i and table[b][C.A_dict_inv[word[j]]] is not None:
+        b_p = b_p*C.P[b][C.A_dict_inv[word[i]]]
+        b = table[b][C.A_dict_inv[word[i]]]
+        j -= 1
+    if j < i:
+        modified_coincidence(C, f, b, f_p**-1*b_p)
+    elif j == i:
+        # deduction making
+        table[f][C.A_dict[word[i]]] = b; table[b][C.A_dict_inv[word[i]]] = f
+        C.P[f][C.A_dict[word[i]]] = f_p**-1*b_p
+        C.P[b][C.A_dict_inv[word[i]]] = b_p**-1*f_p
+    # otherwise scan is incomplete and yields no information
+
+def modified_rep(C, k):
+    p = C.p
+    p_p = C.p_p
+    lamda = k
+    rho = p[lamda]
+    # `s` is used to trace back the compression path
+    s = [None]*len(p)
+    while rho != lamda:
+        s[rho] = lamda
+        lamda = rho
+        rho = p[lamda]
+    rho = s[lamda]
+    while rho != k:
+        mu = rho
+        rho = s[mu]
+        p[rho] = lamda
+        p_p[rho] = p_p[rho]*p_p[mu]
+    return lamda
+
+def modified_merge(C, k, lamda, w, q):
+    p = C.p
+    p_p = C.p_p
+    phi = C.rep(k)
+    psi = C.rep(lamda)
+    # can't use `max/min` function as in `CosetTable.merge`
+    if phi > psi:
+        p[phi] = psi
+        p_p[phi] = p_p[k]**-1*w*p_p[lamda]
+        q.append(psi)
+    elif psi > phi:
+        p[psi] = phi
+        p_p[psi] = p_p[lamda]**-1*w**-1*p_p[k]
+        q.append(psi)
+
+def modified_coincidence(C, alpha, beta, w):
+    A_dict = C.A_dict
+    A_dict_inv = C.A_dict_inv
+    table = C.table
+    p_p = C.p_p
+    l = 0
+    q = []
+    modified_merge(C, alpha, beta, w, q)
+    while len(q) > 0:
+        gamma = q.pop(0)
+        for x in A_dict:
+            delta = table[gamma][A_dict[x]]
+            if delta is not None:
+                table[delta][A_dict_inv[x]] = None
+                mu = C.rep(gamma)
+                nu = C.rep(delta)
+                if table[mu][A_dict[x]] is not None:
+                    v = p_p[delta]**-1*C.P[gamma][A_dict[x]]**-1*p_p[gamma]*C.P[mu][A_dict[x]]
+                    modified_merge(C, nu, table[mu][A_dict[x]], v, q)
+                elif table[nu][A_dict_inv[x]] is not None:
+                    v = p_p[gamma]**-1*C.P[gamma][A_dict[x]]*p_p[delta]*C.P[mu][A_dict_inv[x]]
+                else:
+                    table[mu][A_dict[x]] = nu; table[nu][A_dict_inv[x]] = mu
+                    v = p_p[gamma]**-1*C.P[gamma][A_dict[x]]*p_p[delta]
+                    C.P[mu][A_dict[x]] = v
+                    C.P[nu][A_dict_inv[x]] = v**-1
 
 FpGroupElement = FreeGroupElement
