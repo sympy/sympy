@@ -1,7 +1,6 @@
-from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, tan,
-                   sin, pi)
+from sympy import Symbol, S, exp, log, sqrt, oo, E, zoo, tan, sin, cos, cot, pi
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, AccumBounds)
+                                 periodicity, lcm_fraction, AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -64,7 +63,8 @@ def test_not_empty_in():
 
 
 def test_periodicity():
-    x = symbols('x')
+    x = Symbol('x')
+
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
     assert periodicity(tan(x)*cos(x), x) == 2*pi
@@ -73,6 +73,14 @@ def test_periodicity():
     assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
     raises (NotImplementedError, lambda: periodicity(sin(x) - cos(x), x))
     raises (NotImplementedError, lambda: periodicity(exp(x), x))
+
+
+def test_lcm_fraction():
+    from sympy import pi
+
+    assert lcm_fraction([S(1)/2, S(2), S(3)]) == 6
+    assert lcm_fraction([pi/2, pi/4, pi]) == pi
+    assert lcm_fraction([2*pi, pi/2]) == 2*pi
 
 
 def test_AccumBounds():
