@@ -177,6 +177,17 @@ def test_FreeGroupElm_syllables():
     assert w.sub_syllables(3, 3) == F.identity
 
 
+def test_FreeGroup_exponents():
+    w1 = x**2*y**3
+    assert w1.exponent_sum_word(x) == 2
+    assert w1.exponent_sum_word(x**-1) == -2
+    assert w1.generator_exponent_sum(x) == 2
+
+    w2 = x**2*y**4*x**-3
+    assert w2.exponent_sum_word(x) == -1
+    assert w2.generator_exponent_sum(x) == 5
+
+
 def test_FreeGroupElm_words():
     w = x**5*y*x**2*y**-4*x
     assert w.subword(2, 6) == x**3*y

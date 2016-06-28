@@ -1098,6 +1098,8 @@ def rewrite(C, alpha, w):
     return v
 
 
+# routines for modified Todd Coxeter procedure
+# Section 5.3.2 from [1]
 def modified_define(C, alpha, x):
     """
     see also
@@ -1105,24 +1107,27 @@ def modified_define(C, alpha, x):
     CosetTable.define
 
     """
-    if len(C.table) == CosetTableDefaultMaxLimit:
-        return
-    C.table.append([None]*len(C.A))
-    beta = len(C.table) - 1
-    C.p.append(beta)
-    C.table[alpha][C.A_dict[x]] = beta
-    C.table[beta][C.A_dict_inv[x]] = alpha
+    C.define(alpha, x)
     C.P[alpha][C.A_dict[x]] = "<identity>"
     C.p_p[beta] = "<identity>"
 
 def modified_scan(C, alpha, word, y):
+    """"
+    See also
+    ========
+    CosetTable.scan
+
+    """
     table = C.table
     f = alpha
+    # f_p and b_p are words with coset numbers "f" and "b".
+    # f_p when we scan forward from beginning, while b_p when we scan backward
+    # from end.
     f_p = "<identity>"
+    b_p = y
     i = 0
     r = len(word)
     b = alpha
-    b_p = y
     j = r - 1
     while i <= j and table[f][C.A_dict[word[i]]] is not None:
         f_p = f_p*C.P[f][C.A_dict[word[i]]]
