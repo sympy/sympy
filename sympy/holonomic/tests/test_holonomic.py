@@ -235,6 +235,16 @@ def test_to_Sequence_Initial_Coniditons():
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
     q = (HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 3)
     assert p == q
+    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    p = from_sympy(log(1+x**2))
+    q = (HolonomicSequence(n**2 + (n**2 + 2*n)*Sn**2, [0, 0, C_2, 0]), 2)
+    assert p.to_sequence() == q
+    p = p.diff()
+    q = (HolonomicSequence((n + 1) + (n + 1)*Sn**2, [0, C_1, 0]), 1)
+    assert p.to_sequence() == q
+    p = from_sympy(erf(x) + x).to_sequence()
+    q = (HolonomicSequence((2*n**2 - 2*n) + (n**3 + 2*n**2 - n - 2)*Sn**2, [0, 1 + 2/sqrt(pi), 0, C_3]), 2)
+    assert p == q
 
 def test_series():
     x = symbols('x')
@@ -513,6 +523,16 @@ def test_to_sympy():
     assert p == q
     p = from_sympy(sin(x)**2/x).integrate((x, 0, x)).to_sympy()
     q = (sin(x)**2/x).integrate((x, 0, x))
+    assert p == q
+    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    p = from_sympy(log(1+x**2)).to_sympy()
+    q = C_2*log(x**2 + 1)
+    assert p == q
+    p = from_sympy(log(1+x**2)).diff().to_sympy()
+    q = C_1*x/(x**2 + 1)
+    assert p == q
+    p = from_sympy(erf(x) + x).to_sympy()
+    q = 3*C_3*x - 3*sqrt(pi)*C_3*erf(x)/2 + x + 2*x/sqrt(pi)
     assert p == q
 
 def test_integrate():

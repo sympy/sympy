@@ -600,6 +600,22 @@ class HolonomicFunction(object):
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
+    def diff(self, *args):
+        """
+        Differentiation of the given Holonomic function.
+        """
+
+        ann = self.annihilator
+        dx = ann.parent.derivative_operator
+        if ann == dx:
+            return S(0)
+        elif ann.listofpoly[0] == ann.parent.base.zero:
+            sol = DifferentialOperator(ann.listofpoly[1:], ann.parent)
+            if self._have_init_cond:
+                return HolonomicFunction(sol, self.x, self.x0, self.y0[1:])
+            else:
+                return HolonomicFunction(sol, self.x)
+
     def __eq__(self, other):
         if self.annihilator == other.annihilator:
             if self.x == other.x:
@@ -864,6 +880,10 @@ class HolonomicFunction(object):
         Returns a tuple of the recurrence relation and a value `n0` such that
         the recurrence relation holds for all n >= n0.
 
+        If it isn't possible to numerically compute a initial condition,
+        it is returned as a symbol C_j, denoting the coefficient of x^j
+        in the power series.
+
         Examples
         ========
 
@@ -980,11 +1000,15 @@ class HolonomicFunction(object):
                 eq = S(0)
 
                 for j in dict1:
-                    if i + j[0] < len(u0):
+
+                    if i + j[0] < 0:
+                        dummys[i + j[0]] = S(0)
+
+                    elif i + j[0] < len(u0):
                         dummys[i + j[0]] = u0[i + j[0]]
 
                     elif not i + j[0] in dummys:
-                        dummys[i + j[0]] = Dummy('x_%s' %(i + j[0]))
+                        dummys[i + j[0]] = Symbol('C_%s' %(i + j[0]))
 
                     if j[1] <= i:
                         eq += dict1[j].subs(n, i) * dummys[i + j[0]]
@@ -1000,7 +1024,7 @@ class HolonomicFunction(object):
                         u0.append(j[dummys[i]])
                         s = True
                 if not s:
-                    break
+                    u0.append(dummys[i])
 
         if lb:
             return (HolonomicSequence(sol, u0), smallest_n)
@@ -1235,6 +1259,18 @@ class HolonomicFunction(object):
         # order of the recurrence relation
         m = r.order
 
+        # when no recurrence exists, and the power series have finite terms
+        if m == 0:
+            nonzeroterms = roots(r.listofpoly[0].rep, filter='Z')
+            if max(nonzeroterms) >= len(u0):
+                raise NotImplementedError("Initial conditions aren't sufficient")
+            sol = S(0)
+            for i in nonzeroterms:
+                if i >= 0:
+                    sol += u0[i] * x**i
+            return sol
+
+
         if smallest_n + m > len(u0):
             raise NotImplementedError("Can't compute sufficient Initial Conditions")
 
@@ -1247,7 +1283,7 @@ class HolonomicFunction(object):
                 is_hyper = False
                 break
 
-        if not is_hyper or m == 0:
+        if not is_hyper:
             raise TypeError("The series is not Hypergeometric")
 
         a = r.listofpoly[0]
@@ -1797,7 +1833,7 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
 
     # if the function is constant
     if not func.has(x):
-        return HolonomicFunction(Dx, Dx.parent, 0, func)
+        return HolonomicFunction(Dx, x, 0, func)
 
     if ispoly:
         # differential equation satisfied by polynomial
