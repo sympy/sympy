@@ -318,12 +318,12 @@ closed form representation, or for which we don't know the functional
 values for yet. One approach would be to use a finite difference
 approach.
 
-You can use the ``as_finite_diff`` method of on any ``Derivative``
+You can use the ``Derivative_as_finite_diff`` method of on any ``Derivative``
 instance to generate approximations to derivatives of arbitrary order:
 
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
-    >>> as_finite_diff(dfdx)
+    >>> Derivative_as_finite_diff(dfdx)
     -f(x - 1/2) + f(x + 1/2)
 
 here the first order derivative was approximated around x using a
@@ -334,7 +334,7 @@ equidistantly using a step-size of 1. We can use arbitrary steps
     >>> f = Function('f')
     >>> d2fdx2 = f(x).diff(x, 2)
     >>> h = Symbol('h')
-    >>> as_finite_diff(d2fdx2, [-3*h,-h,2*h])
+    >>> Derivative_as_finite_diff(d2fdx2, [-3*h,-h,2*h])
     f(-3⋅h)   f(-h)   2⋅f(2⋅h)
     ─────── - ───── + ────────
          2        2        2
@@ -353,7 +353,7 @@ using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
 if using ``finite_diff_weights`` directly looks complicated and the
-``as_finite_diff`` function operating on ``Derivative`` instances
+``Derivative_as_finite_diff`` function operating on ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
 takes order, x_list, y_list and x0 as parameters:
 
