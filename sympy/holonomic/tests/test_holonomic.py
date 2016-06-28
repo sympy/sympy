@@ -553,3 +553,9 @@ def test_integrate():
     p = from_sympy(sin(x)**2/x, x0=1).integrate((x, 1, 0))
     q = '-0.423690480850035'
     assert sstr(p) == q
+
+def test_diff():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    p = HolonomicFunction(x*Dx**2 + 1, x, 0, [0, 1])
+    assert p.diff().to_sympy() == p.to_sympy().diff().simplify()

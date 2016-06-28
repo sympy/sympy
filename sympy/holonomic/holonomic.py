@@ -1071,6 +1071,17 @@ class HolonomicFunction(object):
 
             soleqs = solve(eqs)
 
+            if isinstance(soleqs, dict):
+                for i in range(len(u0), order):
+                    if dummys[i] in soleqs:
+                        u0.append(soleqs[dummys[i]])
+                    else:
+                        u0.append(dummys[i])
+
+                if lb:
+                    return (HolonomicSequence(sol, u0), smallest_n)
+                return HolonomicSequence(sol, u0)
+
             for i in range(len(u0), order):
                 s = False
                 for j in soleqs:
