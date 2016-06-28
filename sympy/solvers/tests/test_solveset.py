@@ -387,7 +387,7 @@ def test_solveset_sqrt_2():
     assert solveset_real(eq, x) == FiniteSet(16)
 
     assert solveset_real(sqrt(x) + sqrt(sqrt(x)) - 4, x) == \
-        FiniteSet((-S.Half + sqrt(17)/2)**4)
+        FiniteSet((S.One - sqrt(17))**4/16)
 
     eq = sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))
     assert solveset_real(eq, x) == FiniteSet()
@@ -430,13 +430,8 @@ def test_solve_sqrt_3():
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
 
-    assert sol == FiniteSet(*[S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
-        -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 + 40*re(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
-        sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
-        I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
-        sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)])
+    assert sol == FiniteSet(S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+ -4*sqrt(10)*sin((-2*atan(3*sqrt(111)/251) + pi)/6)/3 + S(5)/3)
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -457,7 +452,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
+        FiniteSet((b - y)/(a*y)) - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -655,7 +650,7 @@ def test_solveset_complex_rational():
     assert solveset_complex((x - y**3)/((y**2)*sqrt(1 - y**2)), x) == \
         FiniteSet(y**3)
     assert solveset_complex(-x**2 - I, x) == \
-        FiniteSet(-sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2)
+        FiniteSet(sqrt(2)*(-1 + I)/2, sqrt(2)*(1 - I)/2)
 
 
 def test_solve_quintics():
@@ -1041,8 +1036,9 @@ def test_issue_9557():
 def test_issue_9778():
     assert solveset(x**3 + 1, x, S.Reals) == FiniteSet(-1)
     assert solveset(x**(S(3)/5) + 1, x, S.Reals) == S.EmptySet
-    assert solveset(x**3 + y, x, S.Reals) == Intersection(Interval(-oo, oo), \
-        FiniteSet((-y)**(S(1)/3)*Piecewise((1, Ne(-im(y), 0)), ((-1)**(S(2)/3), -y < 0), (1, True))))
+    assert solveset(x**3 + y, x, S.Reals) == Intersection(S.Reals,
+        FiniteSet(Piecewise(((-1)**(S(2)/3)*(-y)**(S(1)/3), -y < 0),
+                            ((-y)**(S(1)/3), True))))
 
 
 @XFAIL
@@ -1060,8 +1056,8 @@ def test_issue_9953():
 
 def test_issue_9913():
     assert solveset(2*x + 1/(x - 10)**2, x, S.Reals) == \
-        FiniteSet(-(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)/3 - 100/
-                (3*(3*sqrt(24081)/4 + S(4027)/4)**(S(1)/3)) + S(20)/3)
+        FiniteSet(-(6*sqrt(24081) + 8054)**(S(1)/3)/6 - 100*2**(S(2)/3)/
+                 (3*(3*sqrt(24081) + 4027)**(S(1)/3)) + S(20)/3)
 
 
 def test_issue_10397():

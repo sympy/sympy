@@ -40,13 +40,12 @@ def test_single_normal():
     assert simplify(variance(Y)) == sigma**2
     pdf = density(Y)
     x = Symbol('x')
-    assert (pdf(x) ==
-            2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
+    assert (pdf(x) == sqrt(2)*exp(-(-mu + x)**2/(2*sigma**2))/
+                     (2*sqrt(pi)*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
     assert E(X, Eq(X, mu)) == mu
-
 
 @XFAIL
 def test_conditional_1d():
