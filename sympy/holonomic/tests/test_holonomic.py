@@ -105,6 +105,11 @@ def test_addition_initial_condition():
     r = HolonomicFunction((-x**2 - x + 1) + (x**2 + x)*Dx + (-x - 2)*Dx**3 + \
         (x + 1)*Dx**4, x, 2, [4, 1, 2, -5 ])
     assert p + q == r
+    p = from_sympy(sin(x))
+    q = from_sympy(1/x)
+    r = HolonomicFunction((x**2 + 6) + (x**3 + 2*x)*Dx + (x**2 + 6)*Dx**2 + (x**3 + 2*x)*Dx**3, \
+        x, 1, [sin(1) + 1, -1 + cos(1), -sin(1) + 2])
+    assert p + q == r
 
 def test_multiplication_initial_condition():
     x = symbols('x')
@@ -133,6 +138,10 @@ def test_multiplication_initial_condition():
     p = HolonomicFunction(Dx**2 - 1, x, 0, [1, 3])
     q = HolonomicFunction(Dx**3 + 1, x, 0, [1, 2, 1])
     r = HolonomicFunction(6*Dx + 3*Dx**2 + 2*Dx**3 - 3*Dx**4 + Dx**6, x, 0, [1, 5, 14, 17, 17, 2])
+    assert p * q == r
+    p = from_sympy(sin(x))
+    q = from_sympy(1/x)
+    r = HolonomicFunction(x + 2*Dx + x*Dx**2, x, 1, [sin(1), -sin(1) + cos(1)])
     assert p * q == r
 
 def test_HolonomicFunction_composition():

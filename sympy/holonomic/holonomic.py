@@ -324,6 +324,14 @@ class DifferentialOperator(object):
             else:
                 return False
 
+    def is_singular(self, x0=0):
+        """
+        Checks if the differential equation is singular at x0.
+        """
+
+        domain = str(self.parent.base.domain)[0]
+        return x0 in roots(self.listofpoly[-1].rep, filter=domain)
+
 
 class HolonomicFunction(object):
     """
@@ -498,6 +506,7 @@ class HolonomicFunction(object):
         sol = _normalize(sol.listofpoly, self.annihilator.parent, negative=False)
         # solving initial conditions
         if self._have_init_cond and other._have_init_cond:
+
             if self.x0 == other.x0:
                 # try to extended the initial conditions
                 # using the annihilator
@@ -505,10 +514,25 @@ class HolonomicFunction(object):
                 y0_other = _extend_y0(other, sol.order)
                 y0 = [a + b for a, b in zip(y0_self, y0_other)]
                 return HolonomicFunction(sol, self.x, self.x0, y0)
+
             else:
-                # initial conditions for different points
-                # to be implemented
-                pass
+
+                if self.x0 == 0 and not self.annihilator.is_singular() \
+                and not other.annihilator.is_singular():
+                    return self + other.change_ics(0)
+
+                elif other.x0 == 0 and not self.annihilator.is_singular() \
+                and not other.annihilator.is_singular():
+                    return self.change_ics(0) + other
+
+                else:
+
+                    if not self.annihilator.is_singular(x0=self.x0) and \
+                    not other.annihilator.is_singular(x0=self.x0):
+                        return self + other.change_ics(self.x0)
+
+                    else:
+                        return self.change_ics(other.x0) + other
 
         return HolonomicFunction(sol, self.x)
 
@@ -679,6 +703,8 @@ class HolonomicFunction(object):
         sol_ann = _normalize(sol[0][0:], self.annihilator.parent, negative=False)
 
         if self._have_init_cond and other._have_init_cond:
+
+            # if both the conditions are at same point
             if self.x0 == other.x0:
 
                 # try to find more inital conditions
@@ -701,9 +727,28 @@ class HolonomicFunction(object):
                             sol += coeff[j][k]* y0_self[j] * y0_other[k]
 
                     y0.append(sol)
+
                 return HolonomicFunction(sol_ann, self.x, self.x0, y0)
+
+            # if the points are different, consider one
             else:
-                raise NotImplementedError
+
+                if self.x0 == 0 and not ann_self.is_singular() \
+                and not ann_other.is_singular():
+                    return self * other.change_ics(0)
+
+                elif other.x0 == 0 and not ann_self.is_singular() \
+                and not ann_other.is_singular():
+                    return self.change_ics(0) * other
+
+                else:
+
+                    if not ann_self.is_singular(x0=self.x0) and \
+                    not ann_other.is_singular(x0=self.x0):
+                        return self * other.change_ics(self.x0)
+
+                    else:
+                        return self.change_ics(other.x0) * other
 
         return HolonomicFunction(sol_ann, self.x)
 
