@@ -232,7 +232,8 @@ class CCodePrinter(CodePrinter):
             return name
 
     def _print_sinc(self, expr):
-        return "sinc(%s / M_PI)" % self._print(expr.args[0])
+        
+        return "sin(%s)/%s" % (expr.args[0], expr.args[0]))
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
