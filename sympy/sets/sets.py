@@ -2076,6 +2076,7 @@ def imageset(*args):
     from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.geometry.util import _uniquely_named_symbol
+    from sympy.simplify import simplify
 
     if len(args) not in (2, 3):
         raise ValueError('imageset expects 2 or 3 args, got: %s' % len(args))
@@ -2116,6 +2117,9 @@ def imageset(*args):
             return imageset(Lambda(set.lamda.variables[0],
                                    f.expr.subs(f.variables[0], set.lamda.expr)),
                             set.base_set)
+
+    if isinstance(r, FiniteSet):
+        r = FiniteSet(*map(simplify, r))
 
     if r is not None:
         return r
