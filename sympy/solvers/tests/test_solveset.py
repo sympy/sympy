@@ -139,13 +139,20 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    h1 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
+
+    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
                       imageset(Lambda(n, n - a - 3), Interval(0, oo)))
 
-    h2 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
                       imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
 
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2))
+    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
+
+    soln = (x, Union(h1, h2, h3, h4))
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == soln
 
 
 def test_invert_complex():
