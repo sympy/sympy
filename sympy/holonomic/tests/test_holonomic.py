@@ -2,7 +2,7 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, from_sympy)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr,
-    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma)
+    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si)
 from sympy import ZZ, QQ
 
 
@@ -559,3 +559,7 @@ def test_diff():
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(x*Dx**2 + 1, x, 0, [0, 1])
     assert p.diff().to_sympy() == p.to_sympy().diff().simplify()
+    p = HolonomicFunction(Dx**2 - 1, x, 0, [1, 0])
+    assert p.diff().diff().to_sympy() == p.to_sympy()
+    p = from_sympy(Si(x))
+    assert p.diff().to_sympy() == sin(x)/x
