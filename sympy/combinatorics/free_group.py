@@ -753,31 +753,56 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def exponent_sum_word(self, gen):
         """
-        For an associative word `self` and a generator `gen`, ``exponent_sum_word``
-        returns the number of times `gen` appears in `self` minus the number of
-        times its inverse appears in `self`. If both `gen` and its inverse do
-        not occur in `self` then 0 is returned. `gen` may also be the inverse of
-        a generator.
+        For an associative word `self` and a generator `gen`,
+        ``exponent_sum_word`` returns the number of times `gen` appears in
+        `self` minus the number of times its inverse appears in `self`. If
+        both `gen` and its inverse do not occur in `self` then 0 is returned.
+        `gen` may also be the inverse of a generator.
 
         Examples
         ========
 
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x**2*y**3
+        >>> w.exponent_sum_word(x)
+        2
+        >>> w.exponent_sum_word(x**-1)
+        -2
+        >>> w = x**2*y**4*x**-3
+        >>> w.exponent_sum_word(x)
+        -1
+
         """
-        w = self.letter_form
-        gen = gen.letter_form
         if len(gen) != 1:
             raise ValueError("gen must be a generator or inverse of a generator")
-        n = 0
-        g = abs(gen[0])
-        for i in w:
-            if i == g:
-                n = n + 1
-            elif i == -g:
-                n = n - 1
+        s = gen.array_form[0]
+        return s[1]*sum([i[1] for i in self.array_form if i[0] == s[0]])
 
-        if gen[0] < 0:
-            n = -n
-        return n
+    def generator_exponent_sum(self, gen):
+        """
+        For an associative word `self` and a generator `gen`,
+        ``generator_exponent_sum`` returns the number of times `gen` or
+        `gen**-1` appears in `self` If both `gen` and its inverse do not
+        occur in `self` then 0 is returned.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x**2*y**3
+        >>> w.generator_exponent_sum(x)
+        2
+        >>> w = x**2*y**4*x**-3
+        >>> w.exponent_sum_word(x)
+        5
+
+        """
+        if len(gen) != 1 or gen.array_form[0][1] < 0:
+            raise ValueError("gen must be a generator")
+        s = gen.array_form[0]
+        return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
 
     def subword(self, from_i, to_j):
         """
