@@ -607,14 +607,33 @@ class HolonomicFunction(object):
 
         ann = self.annihilator
         dx = ann.parent.derivative_operator
-        if ann == dx:
+
+        if ann.listofpoly[0] == ann.parent.base.zero and ann.order == 1:
             return S(0)
+
         elif ann.listofpoly[0] == ann.parent.base.zero:
+
             sol = DifferentialOperator(ann.listofpoly[1:], ann.parent)
+
             if self._have_init_cond:
                 return HolonomicFunction(sol, self.x, self.x0, self.y0[1:])
+
             else:
                 return HolonomicFunction(sol, self.x)
+
+        R = ann.parent.base
+        K = R.get_field()
+        seq_dmf = [K.new(i.rep) for i in ann.listofpoly]
+
+        rhs = [i / seq_dmf[0] for i in seq_dmf[1:]]
+        rhs.insert(0, K.zero)
+        sol = _derivate_diff_eq(rhs)
+        sol = _add_lists(sol, [K.zero, K.one])
+        sol = _normalize(sol[1:], self.annihilator.parent, negative=False)
+        if not self._have_init_cond:
+            return HolonomicFunction(sol, self.x)
+        y0 = _extend_y0(self, sol.order + 1)[1:]
+        return HolonomicFunction(sol, self.x, self.x0, y0)
 
     def __eq__(self, other):
         if self.annihilator == other.annihilator:
