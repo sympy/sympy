@@ -603,14 +603,39 @@ class HolonomicFunction(object):
     def diff(self, *args):
         """
         Differentiation of the given Holonomic function.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy import symbols
+        >>> x = symbols('x')
+        >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
+
+        # derivative of sin(x)
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_sympy()
+        cos(x)
+
+        # derivative of e^2*x
+        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_sympy()
+        2*exp(2*x)
+
+        See Also
+        =======
+
+        .integrate()
         """
 
         ann = self.annihilator
         dx = ann.parent.derivative_operator
 
+        # if the function is constant.
         if ann.listofpoly[0] == ann.parent.base.zero and ann.order == 1:
             return S(0)
 
+        # if the coefficient of y in the differential equation is zero.
+        # a shifting is done to compute the answer in this case.
         elif ann.listofpoly[0] == ann.parent.base.zero:
 
             sol = DifferentialOperator(ann.listofpoly[1:], ann.parent)
@@ -621,17 +646,27 @@ class HolonomicFunction(object):
             else:
                 return HolonomicFunction(sol, self.x)
 
+        # the general algorithm
         R = ann.parent.base
         K = R.get_field()
+
         seq_dmf = [K.new(i.rep) for i in ann.listofpoly]
 
+        # -y = a1*y'/a0 + a2*y''/a0 ... + an*y^n/a0
         rhs = [i / seq_dmf[0] for i in seq_dmf[1:]]
         rhs.insert(0, K.zero)
+
+        # differentiate both lhs and rhs
         sol = _derivate_diff_eq(rhs)
+
+        # add the term y' in lhs to rhs
         sol = _add_lists(sol, [K.zero, K.one])
+
         sol = _normalize(sol[1:], self.annihilator.parent, negative=False)
+
         if not self._have_init_cond:
             return HolonomicFunction(sol, self.x)
+
         y0 = _extend_y0(self, sol.order + 1)[1:]
         return HolonomicFunction(sol, self.x, self.x0, y0)
 
@@ -899,7 +934,7 @@ class HolonomicFunction(object):
         Returns a tuple of the recurrence relation and a value `n0` such that
         the recurrence relation holds for all n >= n0.
 
-        If it isn't possible to numerically compute a initial condition,
+        If it's not possible to numerically compute a initial condition,
         it is returned as a symbol C_j, denoting the coefficient of x^j
         in the power series.
 
