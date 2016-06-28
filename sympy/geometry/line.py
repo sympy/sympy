@@ -738,7 +738,7 @@ class LinearEntity(GeometrySet):
             raise GeometryError("`other` must be a GeometricEntity, not {}".format(other))
 
         if isinstance(other, Point):
-            if other in self:
+            if self.contains(other):
                 return [other]
             else:
                 return []

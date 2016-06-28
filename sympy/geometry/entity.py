@@ -498,7 +498,12 @@ class GeometrySet(GeometryEntity, Set):
         from sympy.geometry import Point
 
         try:
-            inter = self.intersection(o)
+            # if o is a FiniteSet, find the intersection directly
+            # to avoid infinite recursion
+            if o.is_FiniteSet:
+                inter = FiniteSet(*(p for p in o if self.contains(p)))
+            else:
+                inter = self.intersection(o)
         except NotImplementedError:
             # sympy.sets.Set.reduce expects None if an object
             # doesn't know how to simplify

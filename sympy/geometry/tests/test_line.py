@@ -12,7 +12,6 @@ from sympy.utilities.pytest import raises
 
 import warnings
 
-
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t_float = Float("1.0E-10")
@@ -418,8 +417,8 @@ def test_line3d():
 
     # Concurrency
     assert Line3D.are_concurrent(l1) is False
-    assert Line3D.are_concurrent(l1, l2)
-    assert Line3D.are_concurrent(l1, l1_1, l3) is False
+    assert Line3D.are_concurrent(l1, l2) is False
+    assert Line3D.are_concurrent(l1, l1_1, l3) is True
     parallel_1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
     parallel_2 = Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))
     assert Line3D.are_concurrent(parallel_1, parallel_2) == False

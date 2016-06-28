@@ -22,6 +22,7 @@ from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
 from sympy.core.add import Add
+from sympy.sets import FiniteSet
 
 from .entity import GeometryEntity
 
@@ -104,6 +105,8 @@ class Point(GeometryEntity):
         if len(coords) == 3:
             return Point3D(coords, **kwargs)
 
+        if isinstance(coords[0], Point):
+            raise Exception("Yikes!, something went wrong!")
         return GeometryEntity.__new__(cls, *coords)
 
     is_Point = True
@@ -322,7 +325,11 @@ class Point(GeometryEntity):
                 raise ValueError("Point {} must be of dimension {}.".format(a, dimension))
             return a
 
-        if iterable(a):
+        # any interable that is traversed in a canonical way
+        # (which excludes things like FiniteSets) can be turned
+        # into a point.  This check can be made more general, but for now
+        # exclude known bad objects
+        if iterable(a) and not isinstance(a, (FiniteSet, set, dict)):
             # in the special case of 2 and 3 dimensions, let the constructor
             # ensure the dimension is correct.  In particular, the convention
             # for Point3D is to allow being called with only two arguments
