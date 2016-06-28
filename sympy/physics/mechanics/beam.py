@@ -42,15 +42,42 @@ class Beam(object):
     """
 
     def __init__(self, length, E, I):
-        self.length = length
-        self.E = E
-        self.I = I
+        self._length = length
+        self._E = E
+        self._I = I
 
     def __str__(self):
-        str_sol = 'Beam(%s, %s, %s)' % (sstr(self.length), sstr(self.E), sstr(self.I))
+        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._E), sstr(self._I))
         return str_sol
 
     __repr__ = __str__
+
+    @property
+    def length(self):
+        """Length of the Beam."""
+        return self._length
+
+    @length.setter
+    def length(self, l):
+        self._length = sympify(l)
+
+    @property
+    def E(self):
+        """Young's Modulus of the Beam. """
+        return self._E
+
+    @E.setter
+    def E(self, e):
+        self._E = sympify(e)
+
+    @property
+    def I(self):
+        """Moment of Inertia of the Beam. """
+        return self._I
+
+    @I.setter
+    def I(self, e):
+        self._I = sympify(e)
 
 
 class PointLoad(object):

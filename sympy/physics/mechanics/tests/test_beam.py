@@ -6,11 +6,25 @@ from sympy.printing import sstr
 
 def test_Beam():
     E = Symbol('E')
+    E_1 = Symbol('E_1')
     I = Symbol('I')
+    I_1 = Symbol('I_1')
     b = Beam(1, E, I)
-    assert b.length == 1
-    assert b.E == E
-    assert b.I == I
+    assert b._length == 1
+    assert b._E == E
+    assert b._I == I
+
+    # Test the length setter
+    b.length = 4
+    assert b.length == 4
+
+    # Test the E setter
+    b.E = E_1
+    assert b.E == E_1
+
+    # Test the I setter
+    b.I = I_1
+    assert b.I is I_1
 
 
 def test_PointLoad():
