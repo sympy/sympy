@@ -424,6 +424,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return group.dtype(((-r, -1),))
 
+    def index(self, gen):
+        if len(gen) != 1:
+            raise ValueError()
+        return (self.letter_form).index(gen.letter_form[0])
+
     @property
     def letter_form_elm(self):
         """
@@ -577,9 +582,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def eliminate_word(self, gen, by):
         """
-        For an associative word `self`, a generator `gen`, and an associative word
-        by, `eliminate_word` returns the associative word obtained by replacing
-        each occurrence of `gen` in `self` by `by`.
+        For an associative word `self`, a generator `gen`, and an associative
+        word by, `eliminate_word` returns the associative word obtained by
+        replacing each occurrence of `gen` in `self` by `by`.
 
         Examples
         ========
@@ -594,31 +599,23 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        e = self.ext_rep
-        gen = gen.generator_syllable(0)
-        l = []
-        for i in range(0, len(e) - 1, 2):
-            if e[i] == gen:
-                app = (by**e[i + 1]).ext_rep
-            else:
-                app = e[i: i + 2]
-            j = len(l) - 1
-            while j > 0 and len(app) > 0 and l[j - 1] == app[0]:
-                s = l[j] + app[1]
-                if s == 0:
-                    j = j - 2
+        r = Symbol(str(gen))
+        arr = self.array_form
+        array = []
+        for i in range(len(self.array_form)):
+            if arr[i][0] == r:
+                # TODO: this should be checked again and again
+                if len(by.array_form) == 1:
+                    array.append((by.array_form[0][0], by.array_form[0][1]*arr[i][1]))
+                    zero_mul_simp(array, len(array) - len(by.array_form) - 1)
                 else:
-                    l[j] = s
-                app = app[2: len(app)]
-
-            if j + 1 < len(l):
-                l = l[0: j + 1]
-
-            if len(app) > 0:
-                l.append(tuple(app))
-        # NOTE
-        # zero_mul_simp to be used
-        return group.dtype(l)
+                    for j in range(arr[i][1]):
+                        array.append(by.array_form)
+                        zero_mul_simp(array, len(array) - len(by.array_form) - 1)
+            else:
+                array.append(self.array_form[i])
+                zero_mul_simp(array, len(array) - len(by.array_form) - 1)
+        return group.dtype(tuple(array))
 
     def __len__(self):
         """
