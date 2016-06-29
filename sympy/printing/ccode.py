@@ -237,7 +237,7 @@ class CCodePrinter(CodePrinter):
         from sympy.functions import Piecewise
         _piecewise = Piecewise((sin(expr.args[0])/expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
-        
+
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.rel_op
