@@ -283,7 +283,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
     return derivative
 
 
-def Derivative_as_finite_diff(derivative, points=1, x0=None, wrt=None):
+def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     """
     Returns an approximation of a derivative of a function in
     the form of a finite difference formula. The expression is a
@@ -317,22 +317,22 @@ def Derivative_as_finite_diff(derivative, points=1, x0=None, wrt=None):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, exp, sqrt, Symbol, Derivative_as_finite_diff
+    >>> from sympy import symbols, Function, exp, sqrt, Symbol, as_finite_diff
     >>> x, h = symbols('x h')
     >>> f = Function('f')
-    >>> Derivative_as_finite_diff(f(x).diff(x))
+    >>> as_finite_diff(f(x).diff(x))
     -f(x - 1/2) + f(x + 1/2)
 
     The default step size and number of points are 1 and ``order + 1``
     respectively. We can change the step size by passing a symbol
     as a parameter:
 
-    >>> Derivative_as_finite_diff(f(x).diff(x), h)
+    >>> as_finite_diff(f(x).diff(x), h)
     -f(-h/2 + x)/h + f(h/2 + x)/h
 
     We can also specify the discretized values to be used in a sequence:
 
-    >>> Derivative_as_finite_diff(f(x).diff(x), [x, x+h, x+2*h])
+    >>> as_finite_diff(f(x).diff(x), [x, x+h, x+2*h])
     -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
     The algorithm is not restricted to use equidistant spacing, nor
@@ -341,7 +341,7 @@ def Derivative_as_finite_diff(derivative, points=1, x0=None, wrt=None):
 
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
-    >>> Derivative_as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
+    >>> as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
     2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/\
 ((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
 (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
@@ -355,7 +355,7 @@ def Derivative_as_finite_diff(derivative, points=1, x0=None, wrt=None):
 
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
-    >>> Derivative_as_finite_diff(d2fdxdy, wrt=x)
+    >>> as_finite_diff(d2fdxdy, wrt=x)
     -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
 
     See also
