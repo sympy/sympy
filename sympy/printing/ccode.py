@@ -232,7 +232,11 @@ class CCodePrinter(CodePrinter):
             return name
 
     def _print_sinc(self, expr):
-        return "sin(%s) / %s" % (expr.args[0], expr.args[0])
+        from sympy.functions.elementary.trigonometric import sin
+        from sympy.core.relational import Ne
+        from sympy.functions import Piecewise
+        return self._print(Piecewise((sin(expr.args[0])/expr.args[0], Ne(expr.args[0], 0)), (1, True)))
+        
         
 
     def _print_AugmentedAssignment(self, expr):
