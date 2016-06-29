@@ -1058,7 +1058,7 @@ def reidemeister_relators(C):
             else:
                 j += 1
         i += 1
-    return rels
+    C.reidemeister_relators = rels
 
 
 def rewrite(C, alpha, w):
@@ -1212,7 +1212,7 @@ def modified_coincidence(C, alpha, beta, w):
 
 
 def elimination_technique_1(C):
-    rels = list(C.schreier_relators)
+    rels = list(C.reidemeister_relators)
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
     rels.sort(reverse=True)
@@ -1221,19 +1221,46 @@ def elimination_technique_1(C):
     redundant_gens = {}
     # examine each relator in relator list for any generator occuring exactly
     # once
-    l1, l2 = len(rels), len(gens)
-    for i, j in product(range(l1 -1, -1, -1), range(l2 - 1, -1, -1)):
-        if rels[i].generator_exponent_sum(gens[j]) == 1:
-            gen_index = rels[i].index(gens[j])
-            bk = rels[i].subword(gen_index + 1, len(rels[i]))
-            fw = rels[i].subword(0, gen_index)
-            redundant_gens[gens[j]] = (bk*fw)**-1
-            del rels[i]; del gens[j]
+    for i in range(len(rels) -1, -1, -1):
+        j = 0
+        while j < len(gens):
+            if rels[i].generator_exponent_sum(gens[j]) == 1:
+                gen_index = rels[i].index(gens[j])
+                bk = rels[i].subword(gen_index + 1, len(rels[i]))
+                fw = rels[i].subword(0, gen_index)
+                redundant_gens[gens[j]] = (bk*fw)**-1
+                del rels[i]; del gens[j]
+            j += 1
     # eliminate the redundant generator from remaing relators
     for i in range(len(rels)):
         w = rels[i]
         for gen in redundant_gens:
             rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
+    return rels
+
+
+def reidemeister_presentation(fp_grp, H):
+    """
+    fp_group: A finitely presented group, an instance of FpGroup
+    H: A subgroup whose presentation is to be found, given as a list
+    of words in generators of `fp_grp`
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.free_group import free_group, FpGroup
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    >>> H = [x*y, x**-1*y**-1*x*y*x]
+    >>> reidemeister_relators(f, H)
+    [x_4**3, y_3**-3, y_2**-1*y_3**-1*y_2**-1*y_3**-1]
+
+    """
+    C = coset_enumeration_r(fp_grp, H)
+    C.compress(); C.standardize()
+    define_schreier_generators(C)
+    reidemeister_relators(C)
+    rels = elimination_technique_1(C)
     return rels
 
 
