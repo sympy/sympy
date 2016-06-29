@@ -209,13 +209,13 @@ def test_to_Sequence():
     q = (HolonomicSequence(1 + (n + 2)*Sn**2 + (n**4 + 6*n**3 + 11*n**2 + 6*n)*Sn**3), 1)
     assert p == q
     p = HolonomicFunction(x**2*Dx**4 + x**3 + Dx**2, x).to_sequence()
-    q = (HolonomicSequence(1 + (n**4 + 14*n**3 + 72*n**2 + 163*n + 140)*Sn**5, n), 0)
+    q = (HolonomicSequence(1 + (n**4 + 14*n**3 + 72*n**2 + 163*n + 140)*Sn**5), 0)
     assert p == q
     p = HolonomicFunction(x**3*Dx**4 + 1 + Dx**2, x).to_sequence()
-    q = (HolonomicSequence(1 + (n**4 - 2*n**3 - n**2 + 2*n)*Sn + (n**2 + 3*n + 2)*Sn**2, n), 3)
+    q = (HolonomicSequence(1 + (n**4 - 2*n**3 - n**2 + 2*n)*Sn + (n**2 + 3*n + 2)*Sn**2), 3)
     assert p == q
     p = HolonomicFunction(3*x**3*Dx**4 + 2*x*Dx + x*Dx**3, x).to_sequence()
-    q = (HolonomicSequence(2*n + (3*n**4 - 6*n**3 - 3*n**2 + 6*n)*Sn + (n**3 + 3*n**2 + 2*n)*Sn**2, n), 3)
+    q = (HolonomicSequence(2*n + (3*n**4 - 6*n**3 - 3*n**2 + 6*n)*Sn + (n**3 + 3*n**2 + 2*n)*Sn**2), 3)
     assert p == q
 
 def test_to_Sequence_Initial_Coniditons():
@@ -270,6 +270,10 @@ def test_series():
         (4-6*x**3+2*x**4)*Dx**2, x, 0, [1, 0]).series(n=7)
     q = 1 - 3*x**2/4 - x**3/4 - 5*x**4/32 - 3*x**5/40 - 17*x**6/384 + O(x**7)
     assert p == q
+    p = from_sympy(erf(x) + x).series(n=10)
+    C_3 = symbols('C_3')
+    q = (erf(x) + x).series(n=10)
+    assert p.subs(C_3, -2/(3*sqrt(pi))) == q
 
 def test_evalf_euler():
     x = symbols('x')
@@ -555,11 +559,17 @@ def test_integrate():
     assert sstr(p) == q
 
 def test_diff():
-    x = symbols('x')
+    x, y = symbols('x, y')
     R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     p = HolonomicFunction(x*Dx**2 + 1, x, 0, [0, 1])
     assert p.diff().to_sympy() == p.to_sympy().diff().simplify()
     p = HolonomicFunction(Dx**2 - 1, x, 0, [1, 0])
-    assert p.diff().diff().to_sympy() == p.to_sympy()
+    assert p.diff(x, 2).to_sympy() == p.to_sympy()
     p = from_sympy(Si(x))
     assert p.diff().to_sympy() == sin(x)/x
+    assert p.diff(y) == 0
+    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    q = Si(x)
+    assert p.diff(x).to_sympy() == q.diff()
+    assert p.diff(x, 2).to_sympy().subs(C_1, -S(1)/3) == q.diff(x, 2).simplify()
+    assert p.diff(x, 3).series().subs(C_2, S(1)/10) == q.diff(x, 3).series()

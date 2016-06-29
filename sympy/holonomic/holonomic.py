@@ -627,6 +627,15 @@ class HolonomicFunction(object):
         .integrate()
         """
 
+        if args:
+            if args[0] != self.x:
+                return S(0)
+            elif len(args) == 2:
+                sol = self
+                for i in range(args[1]):
+                    sol = sol.diff(args[0])
+                return sol
+
         ann = self.annihilator
         dx = ann.parent.derivative_operator
 
@@ -929,14 +938,15 @@ class HolonomicFunction(object):
     def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
-        of the function.
+        of the function about origin.
 
-        Returns a tuple of the recurrence relation and a value `n0` such that
-        the recurrence relation holds for all n >= n0.
+        Returns a tuple (R, n0), with R being the Recurrence relation
+        and a non-negative integer `n0` such that the recurrence relation
+        holds for all n >= n0.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol C_j, denoting the coefficient of x^j
-        in the power series.
+        in the power series about origin.
 
         Examples
         ========
@@ -1021,12 +1031,6 @@ class HolonomicFunction(object):
         # the recurrence relation
         sol = RecurrenceOperator(sol, R)
 
-        if not self._have_init_cond or self.x0 != 0:
-            if lb:
-                return (HolonomicSequence(sol), smallest_n)
-            else:
-                return HolonomicSequence(sol)
-
         # computing the initial conditions for recurrence
         order = sol.order
         all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
@@ -1047,7 +1051,8 @@ class HolonomicFunction(object):
 
         # if sufficient conditions can't be computed then
         # try to use the series method i.e.
-        # equate the coefficients of x^k in series to zero.
+        # equate the coefficients of x^k in the equation formed by
+        # substituting the series in differential equation, to zero.
         if len(u0) < order:
 
             for i in range(degree):
@@ -1069,12 +1074,19 @@ class HolonomicFunction(object):
 
                 eqs.append(eq)
 
+            # solve the system of equations formed
             soleqs = solve(eqs)
 
             if isinstance(soleqs, dict):
+
                 for i in range(len(u0), order):
+
+                    if i not in dummys:
+                        dummys[i] = Symbol('C_%s' %i)
+
                     if dummys[i] in soleqs:
                         u0.append(soleqs[dummys[i]])
+
                     else:
                         u0.append(dummys[i])
 
@@ -1083,6 +1095,10 @@ class HolonomicFunction(object):
                 return HolonomicSequence(sol, u0)
 
             for i in range(len(u0), order):
+
+                if i not in dummys:
+                    dummys[i] = Symbol('C_%s' %i)
+
                 s = False
                 for j in soleqs:
                     if dummys[i] in j:
