@@ -105,8 +105,6 @@ class Point(GeometryEntity):
         if len(coords) == 3:
             return Point3D(coords, **kwargs)
 
-        if isinstance(coords[0], Point):
-            raise Exception("Yikes!, something went wrong!")
         return GeometryEntity.__new__(cls, *coords)
 
     is_Point = True
