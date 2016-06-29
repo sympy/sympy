@@ -604,17 +604,20 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         array = []
         for i in range(len(self.array_form)):
             if arr[i][0] == r:
-                # TODO: this should be checked again and again
+                # TODO: this shouldn't be checked again and again, since `by`
+                # is fixed
                 if len(by.array_form) == 1:
                     array.append((by.array_form[0][0], by.array_form[0][1]*arr[i][1]))
                     zero_mul_simp(array, len(array) - len(by.array_form) - 1)
                 else:
-                    for j in range(arr[i][1]):
-                        array.append(by.array_form)
+                    k = arr[i][1]
+                    sig = sign(k)
+                    for j in range(sig*k):
+                        array.extend(list(by.array_form[::sig]))
                         zero_mul_simp(array, len(array) - len(by.array_form) - 1)
             else:
                 array.append(self.array_form[i])
-                zero_mul_simp(array, len(array) - len(by.array_form) - 1)
+                zero_mul_simp(array, len(array) - 2)
         return group.dtype(tuple(array))
 
     def __len__(self):

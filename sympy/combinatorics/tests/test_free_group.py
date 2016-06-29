@@ -187,6 +187,15 @@ def test_FreeGroup_exponents():
     assert w2.exponent_sum_word(x) == -1
     assert w2.generator_exponent_sum(x) == 5
 
+    w3 = x**2*y**3*x**-1*y
+    assert w3.eliminate_word(x, x**2) == x**4*y**3*x**-2*y
+    assert w3.eliminate_word(x, y) == y**5
+    assert w3.eliminate_word(x, y**4) == y**8
+    assert w3.eliminate_word(y, x**-1) == x**-3
+    assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z*y**2
+    assert w3.eliminate_word(x, y*x) == y*x*y*x**2*y*x*y*x*y*x*z**3
+    assert w3.eliminate_word(x, x*y) == x*y*x**2*y*x*y*x*y*x*y*z**3
+
 
 def test_FreeGroupElm_words():
     w = x**5*y*x**2*y**-4*x
