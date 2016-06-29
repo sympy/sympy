@@ -831,6 +831,22 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
+    def contains_generators(self):
+        """
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y, z = free_group("x, y, z")
+        >>> (x**2*y**-1).contains_generators()
+        {x, y}
+        >>> (x**3*z).contains_generators()
+        {x, z}
+
+        """
+        group = self.group
+        gens = set()
+        for syllable in self.array_form:
+            gens.add(group.dtype(((syllable[0], 1),)))
+        return set(gens)
+
     def cyclic_subword(self, from_i, to_j):
         group = self.group
         l = len(self)
