@@ -386,6 +386,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     namespace.update({'builtins':builtins, 'range':range})
 
     func = eval(lstr, namespace)
+    # For numpy lambdify, wrap all input arguments in arrays.
+    # This is a fix for gh-11306.
+    if module_provided and _module_present('numpy',namespaces):
+        def array_wrap(funcarg):
+            def wrapper(*argsx, **kwargsx):
+                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
+            return wrapper
+        func = array_wrap(func)
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
