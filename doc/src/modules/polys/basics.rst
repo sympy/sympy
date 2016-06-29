@@ -14,6 +14,117 @@ polynomials within SymPy. All code examples assume::
     >>> x, y, z = symbols('x,y,z')
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
+Basic concepts
+==============
+
+Polynomials
+-----------
+
+Given a family `(x_i)` of symbols, or other suitable objects,
+expressions derived from them by repeated addition, subtraction
+and multiplication are called *polynomial expressions in the
+generators* `x_i`.
+
+By the distributive law it is possible to do perform
+multiplications before additions and subtractions.
+The products of generators thus obtained are called
+*monomials*. They are usually written in the form
+`x_1^{\nu_1}x_2^{\nu_2}\cdots x_n^{\nu_n}` where the exponents `\nu_i`
+are nonnegative integers. It is often convenient to write this briefly
+as `x^\nu` where `x = (x_1, x_2, \ldots, x_n)` denotes the family of
+generators and `\nu = (\nu_1, \nu_2, \ldots, \nu_n)` is the
+family of exponents.
+
+When all monomials having the same exponents are combined, the polynomial
+becomes a sum of products `c_\nu x^\nu`, called the *terms* of the polynomial,
+where the *coefficients* `c_\nu` are integers.
+If some of the `x_i` are integers, they are incorporated
+in the coefficients and not regarded as generators.
+
+The set of all polynomials
+in the generators `x_i` is a *ring*, i.e., the sums, differences and
+products of its elements are again polynomials in the same generators.
+This ring is denoted `\mathbb{Z}[x_1, x_2, \ldots, x_n]`, or
+`\mathbb{Z}[(x_i)]`, and called
+the *ring of polynomials in the* `x_i` *with integer coefficients*.
+
+Polynomial expressions can be transformed into polynomials by the
+method :func:`as_poly`::
+
+    >>> e = (x + y)*(y - 2*z)
+    >>> e.as_poly()
+    Poly(x*y - 2*x*z + y**2 - 2*y*z, x, y, z, domain='ZZ')
+
+More generally, it is possible to construct polynomials with
+other types of coefficients.
+If a polynomial expression contains numbers that are not integers,
+they are regarded as coefficients and the coefficient ring is
+extended accordingly. In particular, division by integers
+leads to rational coefficients::
+
+    >>> e = (3*x/2 + y)*(z - 1)
+    >>> e.as_poly()
+    Poly(3/2*x*z - 3/2*x + y*z - y, x, y, z, domain='QQ')
+
+Symbolic numbers are considered generators unless they are explicitly
+excluded, in which case they are adjoined to the coefficient ring::
+
+    >>> e = (x + 2*pi)*y
+    >>> e.as_poly()
+    Poly(x*y + 2*y*pi, x, y, pi, domain='ZZ')
+    >>> e.as_poly(x, y)
+    Poly(x*y + 2*pi*y, x, y, domain='EX')
+
+Here ``EX`` denotes the domain of all expressions. Since operations
+in ``EX`` are slow, it is often advisable to define the coefficient
+ring explicitly::
+
+    >>> e = (x + 2*pi)*y
+    >>> e.as_poly(domain=ZZ[pi])
+    Poly(x*y + 2*pi*y, x, y, domain='ZZ[pi]')
+
+Note that the ring `\mathbb{Z}[\pi][x, y]` of polynomials in `x` and `y`
+with coefficients in `\mathbb{Z}[\pi]` is mathematically equivalent to
+`\mathbb{Z}[\pi, x, y]`, only their implementations differ.
+
+If an expression contains functions of the generators, other
+than their positive integer powers, these are interpreted as new
+generators::
+
+    >>> e = x*sin(y) - y
+    >>> e.as_poly()
+    Poly(x*(sin(y)) - y, x, y, sin(y), domain='ZZ')
+
+Since `y` and `\sin(y)` are algebraically independent they can both
+appear as generators in a polynomial. However, *polynomial expressions
+must not contain negative powers of generators*::
+
+    >>> e = x - 1/x
+    >>> e.as_poly()
+    Poly(x - (1/x), x, 1/x, domain='ZZ')
+
+It is important to realize that the generators `x` and `1/x = x^{-1}` are
+treated as algebraically independent variables. In particular, their product
+is not equal to 1. Hence *generators in denominators should be avoided even
+if they raise no error*. Similar problems emerge with
+rational powers of generators. So, for example, ``x`` and
+``sqrt(x) = x**(1/2)`` are not recognized as algebraically dependent.
+
+If there are algebraic numbers in an expression, it is possible to
+adjoin them to the coefficient ring by setting the keyword ``extension``::
+
+    >>> e = x + sqrt(2)
+    >>> e.as_poly()
+    Poly(x + (sqrt(2)), x, sqrt(2), domain='ZZ')
+    >>> e.as_poly(extension=True)
+    Poly(x + sqrt(2), x, domain='QQ<sqrt(2)>')
+
+With the default setting ``extension=False`` `x` and `\sqrt 2` are
+wrongly considered algebraically independent. With coefficients in
+the extension field `\mathbb{Q}(\sqrt 2)` the square root is treated
+properly as an algebraic number.
+
+
 Basic functionality
 ===================
 
