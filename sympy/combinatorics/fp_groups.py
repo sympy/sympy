@@ -1044,9 +1044,10 @@ def reidemeister_relators(C):
     order_1_gens = set([i for i in rels if len(i) == 1])
     # remove all the order 1 generators from relators
     rels.difference_update(order_1_gens)
-    order_2_gens = set([i for i in rels if len(i) == 2])
     # replace order 1 generators by identity element in reidemeister relators
-    rels = [w.eliminate_word(x, identity) for w in rels for x in order_1_gens]
+    rels = list(rels)
+    if order_1_gens:
+        rels = [w.eliminate_word(x, identity) for w in rels for x in order_1_gens]
     C.schreier_generators = [i for i in C.schreier_generators if i not in order_1_gens]
     # remove cyclic conjugate elements from relators
     i = 0
@@ -1222,6 +1223,9 @@ def elimination_technique_1(C):
     # examine each relator in relator list for any generator occuring exactly
     # once
     for i in range(len(rels) -1, -1, -1):
+        for gen in redundant_gens:
+            if any([gen.array_form[0][0] == r[0] for r in rels[i].array_form]):
+                break
         j = 0
         while j < len(gens):
             if rels[i].generator_exponent_sum(gens[j]) == 1:
@@ -1230,13 +1234,15 @@ def elimination_technique_1(C):
                 fw = rels[i].subword(0, gen_index)
                 redundant_gens[gens[j]] = (bk*fw)**-1
                 del rels[i]; del gens[j]
+                break
             j += 1
     # eliminate the redundant generator from remaing relators
     for i in range(len(rels)):
         w = rels[i]
         for gen in redundant_gens:
             rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
-    return rels
+    C.reidemeister_relators = rels
+    C.schreier_generators = gens
 
 
 def reidemeister_presentation(fp_grp, H):
@@ -1250,18 +1256,20 @@ def reidemeister_presentation(fp_grp, H):
 
     >>> from sympy.combinatorics.free_group import free_group, FpGroup
     >>> F, x, y = free_group("x, y")
+
+    # Example 5.6 from handbook
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
     >>> H = [x*y, x**-1*y**-1*x*y*x]
-    >>> reidemeister_relators(f, H)
-    [x_4**3, y_3**-3, y_2**-1*y_3**-1*y_2**-1*y_3**-1]
+    >>> reidemeister_presentation(f, H)
+    ([y_3, x_4], [x_4**3, y_3**-3, x_4*y_3**-1*x_4*y_3**-1])
 
     """
     C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    rels = elimination_technique_1(C)
-    return rels
+    elimination_technique_1(C)
+    return C.schreier_generators, C.reidemeister_relators
 
 
 FpGroupElement = FreeGroupElement
