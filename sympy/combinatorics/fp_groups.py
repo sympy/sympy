@@ -1212,32 +1212,29 @@ def modified_coincidence(C, alpha, beta, w):
 
 
 def elimination_technique_1(C):
-    # examine each relator in relator list for any generator occuring exactly
-    # once
     rels = list(C.schreier_relators)
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
-    rels.sort()
+    rels.sort(reverse=True)
     gens = list(C.schreier_generators)
     # TODO: redundant generator can also be present as inverse in relator
-    redundant_gen = {}
-    i = 0
-    while i < len(rels):
-        j = 0
-        while j < len(gens):
-            if rels[i].generator_exponent_sum(gen) == 1:
-                gen_index = rels[i].index(gen)
-                bk = rels[i].subword(gen_index + 1)
-                fw = rels[i].subword(0, gen_index)
-                redundant_gen[rels[i]] = (bk*fw)**-1
-                del rels[i]; gens.remove(gen)
-            j += 1
-        i += 1
+    redundant_gens = {}
+    # examine each relator in relator list for any generator occuring exactly
+    # once
+    l1, l2 = len(rels), len(gens)
+    for i, j in product(range(l1 -1, -1, -1), range(l2 - 1, -1, -1)):
+        if rels[i].generator_exponent_sum(gens[j]) == 1:
+            gen_index = rels[i].index(gens[j])
+            bk = rels[i].subword(gen_index + 1, len(rels[i]))
+            fw = rels[i].subword(0, gen_index)
+            redundant_gens[gens[j]] = (bk*fw)**-1
+            del rels[i]; del gens[j]
     # eliminate the redundant generator from remaing relators
     for i in range(len(rels)):
         w = rels[i]
-        for gen in redundant_gen:
-            rels[i] = rels[i].
+        for gen in redundant_gens:
+            rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
+    return rels
 
 
 FpGroupElement = FreeGroupElement
