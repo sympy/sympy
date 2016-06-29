@@ -235,7 +235,8 @@ class CCodePrinter(CodePrinter):
         from sympy.functions.elementary.trigonometric import sin
         from sympy.core.relational import Ne
         from sympy.functions import Piecewise
-        return self._print(Piecewise((sin(expr.args[0])/expr.args[0], Ne(expr.args[0], 0)), (1, True)))
+        _piecewise = Piecewise((sin(expr.args[0])/expr.args[0], Ne(expr.args[0], 0)), (1, True))
+        return self._print(_piecewise)
         
         
 
