@@ -1233,11 +1233,11 @@ def elimination_technique_1(C):
         if next_i:
             next_i = False
             continue
-        j = 0
-        while j < len(gens):
+        j = len(gens) - 1
+        while j >= 0:
             gen = gens[j]
             if rel.generator_exponent_sum(gen) == 1 and gen not in contained_gens:
-                k = gen.array_form[0][1]
+                k = rel.exponent_sum_word(gen)
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
@@ -1245,10 +1245,11 @@ def elimination_technique_1(C):
                 contained_gens.extend((bk*fw).contains_generators())
                 del rels[i]; del gens[j]
                 break
-            j += 1
+            j -= 1
     # eliminate the redundant generator from remaing relators
     for i, gen in product(range(len(rels)), redundant_gens):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
+    rels.sort()
     C.reidemeister_relators = rels
     C.schreier_generators = gens
 
@@ -1270,26 +1271,31 @@ def reidemeister_presentation(fp_grp, H):
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
     >>> H = [x*y, x**-1*y**-1*x*y*x]
     >>> reidemeister_presentation(f, H)
-    ([y_3, x_4], [x_4**3, y_3**-3, x_4*y_3**-1*x_4*y_3**-1])
+    ([y_1, y_2], [y_1**2, y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1])
 
     >>> f = FpGroup(F, [x**3, y**3, (x*y)**3])
     >>> H = [x*y, x*y**-1]
     >>> reidemeister_presentation(f, H)
-    ([x_0, y_0], [x_0*y_0*x_0*y_0*x_0*y_0, y_0**3, x_0**3])
+    ([x_0, y_0], [x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0])
 
     # Exercises Q2. Pg 187 from [1]
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ([x_1], [x_1**-8, x_1**-4])
+    ([x_1], [x_1**-4, x_1**-8])
+
+    >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
+    >>> H = [x]
+    >>> reidemeister_presentation(f, H)
+    ([x_0], [<identity>, x_0**-4, x_0**6, x_0**-12])
 
     """
     C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    for k in range(2):
-        elimination_technique_1(C)
+    elimination_technique_1(C)
+    elimination_technique_1(C)
     return C.schreier_generators, C.reidemeister_relators
 
 
