@@ -587,7 +587,7 @@ class HolonomicFunction(object):
         # use evalf to get the values at `a`
         else:
             y0 = [S(0)]
-            tempy0 = self.evalf(a, derivatives=True)
+            tempy0 = self.change_ics(a).y0
             y0 += tempy0
 
         # if the upper limit is `x`, the answer will be a function
@@ -596,7 +596,11 @@ class HolonomicFunction(object):
 
         # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
-            return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
+            try:
+                return HolonomicFunction(self.annihilator * D, self.x, a,\
+                    y0).to_sympy().subs(self.x, b)
+            except TypeError:
+                return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
@@ -1496,7 +1500,7 @@ class HolonomicFunction(object):
         except:
             symbolic = False
 
-        if symbolic:
+        if symbolic and sol.x0 == b:
             return sol
 
         y0 = self.evalf(b, derivatives=True)
