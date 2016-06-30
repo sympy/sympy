@@ -17,19 +17,16 @@ for:
 
 """
 
-from functools import reduce
-from operator import add
-
 from sympy import Derivative, S
 from sympy.core.compatibility import iterable, range
 from sympy.core.decorators import deprecated
 
 
-def finite_diff_weights(order, x_list, x0=S(0)):
+def finite_diff_weights(order, x_list, x0=S.One):
     """
     Calculates the finite difference weights for an arbitrarily spaced
     one-dimensional grid (``x_list``) for derivatives at ``x0`` of order
-    0, 1, ..., up to 'order' using a recursive formula. Order of accuracy
+    0, 1, ..., up to ``order`` using a recursive formula. Order of accuracy
     is at least ``len(x_list) - order``, if ``x_list`` is defined correctly.
 
 
@@ -41,11 +38,11 @@ def finite_diff_weights(order, x_list, x0=S(0)):
         0 corresponds to interpolation.
     x_list: sequence
         Sequence of (unique) values for the independent variable.
-        It is usefull (but not necessary) to order x_list from
-        nearest to farest from x0; see examples below.
+        It is usefull (but not necessary) to order ``x_list`` from
+        nearest to farest from ``x0``; see examples below.
     x0: Number or Symbol
         Root or value of the independent variable for which the finite
-        difference weights should be generated. Defaults to S(0).
+        difference weights should be generated. Default is ``S.One``.
 
     Returns
     =======
@@ -419,7 +416,7 @@ as_finite_diff = deprecated(useinstead="Derivative.as_finite_difference",
 def differentiate_finite(expr, *symbols,
                          # points=1, x0=None, wrt=None, evaluate=True, #Py2:
                          **kwargs):
-    """ Differentiate f and replace Derivatives with finite differences.
+    """ Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
     ==========

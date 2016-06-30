@@ -366,7 +366,7 @@ the function also generates weights for lower derivatives and
 using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
-if using ``finite_diff_weights`` directly looks complicated, and the
+If using ``finite_diff_weights`` directly looks complicated, and the
 ``as_finite_difference`` method of ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
 takes ``order``, ``x_list``, ``y_list`` and ``x0`` as parameters:
