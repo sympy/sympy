@@ -347,6 +347,11 @@ def test_numpy_old_matrix():
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+def test_python_div_zero_issue_11306():
+    if not numpy:
+        skip("numpy not installed.")
+    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
+    lambdify([x, y], p, modules='numpy')(0, 1)
 
 def test_issue9474():
     mods = [None, 'math']
