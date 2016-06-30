@@ -230,6 +230,11 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(name)
         else:
             return name
+    
+    def _print_Ne(arg1, arg2):
+         from sympy.core.relational import Rel 
+         name = Rel(arg1,arg2,'!=')
+         return name
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
