@@ -1267,7 +1267,8 @@ def reidemeister_presentation(fp_grp, H):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group, FpGroup
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 
     # Example 5.6 from handbook
