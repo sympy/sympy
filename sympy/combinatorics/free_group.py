@@ -595,7 +595,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> w.eliminate_word( x, x**2 )
         x**10*y*x**4*y**-4*x**2
         >>> w.eliminate_word( x, y**-1 )
-        y**-5*y*y**-2*y**-4*y**-1
+        y**-11
 
         """
         group = self.group
@@ -795,7 +795,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> w.generator_exponent_sum(x)
         2
         >>> w = x**2*y**4*x**-3
-        >>> w.exponent_sum_word(x)
+        >>> w.generator_exponent_sum(x)
         5
 
         """
@@ -836,9 +836,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> (x**2*y**-1).contains_generators()
-        {x, y}
+        set([x, y])
         >>> (x**3*z).contains_generators()
-        {x, z}
+        set([x, z])
 
         """
         group = self.group
