@@ -1220,13 +1220,14 @@ def elimination_technique_1(C):
     gens = list(C.schreier_generators)
     # TODO: redundant generator can also be present as inverse in relator
     redundant_gens = {}
+    contained_gens = []
     # examine each relator in relator list for any generator occuring exactly
     # once
     next_i = False
-    contained_generators = []
     for i in range(len(rels) -1, -1, -1):
+        rel = rels[i]
         for gen in redundant_gens:
-            if any([gen.array_form[0][0] == r[0] for r in rels[i].array_form]):
+            if any([gen.array_form[0][0] == r[0] for r in rel.array_form]):
                 next_i = True
                 break
         if next_i:
@@ -1234,26 +1235,20 @@ def elimination_technique_1(C):
             continue
         j = 0
         while j < len(gens):
-            if rels[i].generator_exponent_sum(gens[j]) == 1 and gens[j] not in contained_generators:
-                try:
-                    gen_index = rels[i].index(gens[j])
-                    bk = rels[i].subword(gen_index + 1, len(rels[i]))
-                    fw = rels[i].subword(0, gen_index)
-                    redundant_gens[gens[j]] = (bk*fw)**-1
-                except ValueError:
-                    gen_index = rels[i].index(gens[j]**-1)
-                    bk = rels[i].subword(gen_index + 1, len(rels[i]))
-                    fw = rels[i].subword(0, gen_index)
-                    redundant_gens[gens[j]] = bk*fw
-                contained_generators.extend((bk*fw).contains_generators())
+            gen = gens[j]
+            if rel.generator_exponent_sum(gen) == 1 and gen not in contained_gens:
+                k = gen.array_form[0][1]
+                gen_index = rel.index(gen**k)
+                bk = rel.subword(gen_index + 1, len(rel))
+                fw = rel.subword(0, gen_index)
+                redundant_gens[gen] = (bk*fw)**(-1*k)
+                contained_gens.extend((bk*fw).contains_generators())
                 del rels[i]; del gens[j]
                 break
             j += 1
     # eliminate the redundant generator from remaing relators
-    for i in range(len(rels)):
-        w = rels[i]
-        for gen in redundant_gens:
-            rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
+    for i, gen in product(range(len(rels)), redundant_gens):
+        rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
     C.reidemeister_relators = rels
     C.schreier_generators = gens
 
