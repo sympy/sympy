@@ -129,13 +129,7 @@ def test_ccode_sinc():
             ": (\n"
             "   1\n"
             "))")
-    assert ccode(expr, assign_to="c") == (
-            "if (x!=0) {\n"
-            "   c = sin(x)/x;\n"
-            "}\n"
-            "else {\n"
-            "   c = 1;\n"
-            "}")
+
     expr = sinc(x+3)
     assert ccode(expr) == (
             "((Ne(x + 3, 0)) ? (\n"
@@ -144,13 +138,6 @@ def test_ccode_sinc():
             ": (\n"
             "   1\n"
             "))")
-    assert ccode(expr, assign_to="c") == (
-            "if (x+3!=0) {\n"
-            "   c = sin(x+3)/(x+3);\n"
-            "}\n"
-            "else {\n"
-            "   c = 1;\n"
-            "}")
 
 def test_ccode_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
