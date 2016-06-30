@@ -355,7 +355,7 @@ class HolonomicFunction(object):
     import numpy as np
     var("x")
     r = np.linspace(1, 5, 100)
-    y = sympy.holonomic.from_sympy(sin(x)**2/x, x0=1).evalf(r)
+    y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r)
     plt.plot(r, y, label="holonomic function")
     plt.show()
     ``
@@ -598,7 +598,7 @@ class HolonomicFunction(object):
         elif S(b).is_Number:
             try:
                 return HolonomicFunction(self.annihilator * D, self.x, a,\
-                    y0).to_sympy().subs(self.x, b)
+                    y0).to_expr().subs(self.x, b)
             except TypeError:
                 return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
@@ -618,11 +618,11 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
         # derivative of sin(x)
-        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_sympy()
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_expr()
         cos(x)
 
         # derivative of e^2*x
-        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_sympy()
+        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_expr()
         2*exp(2*x)
 
         See Also
@@ -1452,7 +1452,7 @@ class HolonomicFunction(object):
 
         return sol
 
-    def to_sympy(self):
+    def to_expr(self):
         """
         Converts a Holonomic Function back to elementary functions.
 
@@ -1465,10 +1465,10 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
-        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
+        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_expr()
         besselj(1, x)
 
-        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy()
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_expr()
         x*log(x + 1) + log(x + 1) + 1
 
         """
@@ -1482,21 +1482,21 @@ class HolonomicFunction(object):
         Examples
         ========
 
-        >>> from sympy.holonomic import from_sympy
+        >>> from sympy.holonomic import expr_to_holonomic
         >>> from sympy import symbols, sin, cos, exp
         >>> x = symbols('x')
 
-        >>> from_sympy(sin(x)).change_ics(1)
+        >>> expr_to_holonomic(sin(x)).change_ics(1)
         HolonomicFunction((1) + (1)Dx**2, x), f(1) = sin(1), f'(1) = cos(1)
 
-        >>> from_sympy(exp(x)).change_ics(2)
+        >>> expr_to_holonomic(exp(x)).change_ics(2)
         HolonomicFunction((-1) + (1)Dx, x), f(2) = exp(2)
         """
 
         symbolic = True
 
         try:
-            sol = from_sympy(self.to_sympy(), x0=b)
+            sol = expr_to_holonomic(self.to_expr(), x0=b)
         except:
             symbolic = False
 
@@ -1668,7 +1668,7 @@ _lookup_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def from_sympy(func, x=None, initcond=True, x0=0):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1677,13 +1677,13 @@ def from_sympy(func, x=None, initcond=True, x0=0):
     Examples
     ========
 
-    >>> from sympy.holonomic.holonomic import from_sympy
+    >>> from sympy.holonomic.holonomic import expr_to_holonomic
     >>> from sympy import sin, exp, symbols
     >>> x = symbols('x')
-    >>> from_sympy(sin(x))
+    >>> expr_to_holonomic(sin(x))
     HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
-    >>> from_sympy(exp(x))
+    >>> expr_to_holonomic(exp(x))
     HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
 
     See Also
@@ -1736,15 +1736,15 @@ def from_sympy(func, x=None, initcond=True, x0=0):
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow
-    sol = from_sympy(args[0], x=x, initcond=False)
+    sol = expr_to_holonomic(args[0], x=x, initcond=False)
 
     if f is Add:
         for i in range(1, len(args)):
-            sol += from_sympy(args[i], x=x, initcond=False)
+            sol += expr_to_holonomic(args[i], x=x, initcond=False)
 
     elif f is Mul:
         for i in range(1, len(args)):
-            sol *= from_sympy(args[i], x=x, initcond=False)
+            sol *= expr_to_holonomic(args[i], x=x, initcond=False)
 
     elif f is Pow:
         sol = sol**args[1]
