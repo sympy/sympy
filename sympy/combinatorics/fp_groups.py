@@ -1253,6 +1253,9 @@ def elimination_technique_1(C):
     C.reidemeister_relators = rels
     C.schreier_generators = gens
 
+def elimination_technique_2(C):
+    pass
+
 
 def reidemeister_presentation(fp_grp, H):
     """
