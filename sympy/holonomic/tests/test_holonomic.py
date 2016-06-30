@@ -549,14 +549,21 @@ def test_integrate():
     q = 1 - cos(x)
     assert p == q
     p = from_sympy(sin(x)).integrate((x, 0, 3))
-    q = '1.98999246812687'
-    assert sstr(p) == q
+    q = 1 - cos(3)
+    assert p == q
     p = from_sympy(sin(x)/x, x0=1).integrate((x, 1, 2))
     q = '0.659329913368450'
     assert sstr(p) == q
     p = from_sympy(sin(x)**2/x, x0=1).integrate((x, 1, 0))
     q = '-0.423690480850035'
     assert sstr(p) == q
+    p = from_sympy(sin(x)/x)
+    assert p.integrate(x).to_sympy() == Si(x)
+    assert p.integrate((x, 0, 2)) == Si(2)
+    p = from_sympy(sin(x)**2/x)
+    q = p.to_sympy()
+    assert p.integrate(x).to_sympy() == q.integrate((x, 0, x))
+    assert p.integrate((x, 0, 1)) == q.integrate((x, 0, 1))
 
 def test_diff():
     x, y = symbols('x, y')
