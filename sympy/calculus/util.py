@@ -283,16 +283,20 @@ def periodicity(f, symbol):
             period = g.period(symbol)
 
     if f.is_Add:
+        k, g = f.as_independent(symbol)
+        if k is not S.Zero:
+            return periodicity(g, symbol)
+
         periods = []
-        for g in f.args:
-            if g.is_Mul:
-                coeff, _ = g.as_independent(symbol)
+        for h in g.args:
+            if h.is_Mul:
+                coeff, _ = h.as_independent(symbol)
                 if coeff.is_number and coeff < 0:
                     raise NotImplementedError("Periods of only certain "
                                               "trigonometric functions can be "
                                               "calculated using this method.")
 
-            periods.append(periodicity(g, symbol))
+            periods.append(periodicity(h, symbol))
 
         period = lcm_fraction(periods)
 

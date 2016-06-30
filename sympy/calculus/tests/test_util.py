@@ -64,6 +64,7 @@ def test_not_empty_in():
 
 def test_periodicity():
     x = Symbol('x')
+    y = Symbol('y')
 
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
@@ -71,6 +72,8 @@ def test_periodicity():
     assert periodicity(sin(x) + cos(x), x) == 2*pi
     assert periodicity(tan(x) + cot(x), x) == pi
     assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
+    assert periodicity(sin(x) - 1, x) == 2*pi
+    assert periodicity(sin(2*x)*cos(2*x) - y, x) == pi/2
     raises (NotImplementedError, lambda: periodicity(sin(x) - cos(x), x))
     raises (NotImplementedError, lambda: periodicity(exp(x), x))
 
