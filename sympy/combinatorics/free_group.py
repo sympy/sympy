@@ -444,6 +444,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         return tuple(flatten(self.array_form))
 
+    def __contains__(self, gen):
+        return gen.array_form[0][0] in tuple([r[0] for r in self.array_form])
+
     def __str__(self):
         if self.is_identity:
             return "<identity>"

@@ -1256,6 +1256,35 @@ def elimination_technique_1(C):
 def elimination_technique_2(C):
     pass
 
+def simplification_technique_1(C):
+    """
+    All relators are checked to see if they are of the form `gen^n`. If any
+    such relators are found then all other relators are processed for strings
+    in the `gen` known order.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> F, x, y = free_group("x, y")
+    >>> []
+
+    """
+    rels = list(C.reidemeister_relators)
+    one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
+    for i in range(len(rels)):
+        nw = list(rels[i].array_form)
+        nw = [(r[0], Mod(r[1], n)) for r in rels[i].array_form]
+        k = rels[i].array_form
+        for gen, j in product(one_syllable_rels, range(len(nw))):
+            if gen.array_form[0][0] == nw[j][0]:
+                n = gen.array_form[0][1]
+                t = Mod(nw[j][1], n)
+                if t < n/2:
+                    nw[j] = nw[j][0], Mod(nw[j][1], n)
+                elif t > n/2:
+                    nw[j] = nw[j][0], Mod(nw[j][1], n) - n
+
 
 def reidemeister_presentation(fp_grp, H):
     """
