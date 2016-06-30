@@ -481,7 +481,12 @@ def test_expr_to_holonomic():
     p = p.to_expr()
     q = log(x)/2 - Ci(2*x)/2 + Ci(2)/2
     assert p == q
-
+    p = expr_to_holonomic(x**(1/2), x0=1)
+    q = HolonomicFunction(x*Dx - 1/2, x, 1, 1)
+    assert p == q
+    p = expr_to_holonomic(sqrt(1 + x**2))
+    q = HolonomicFunction((-x) + (x**2 + 1)*Dx, x, 0, 1)
+    assert p == q
 
 def test_to_hyper():
     x = symbols('x')
@@ -538,6 +543,12 @@ def test_to_expr():
     p = expr_to_holonomic(erf(x) + x).to_expr()
     q = 3*C_3*x - 3*sqrt(pi)*C_3*erf(x)/2 + x + 2*x/sqrt(pi)
     assert p == q
+    p = expr_to_holonomic(sqrt(x), x0=1).to_expr()
+    assert p == sqrt(x)
+    p = expr_to_holonomic(sqrt(1 + x**2)).to_expr()
+    assert p == sqrt(1+x**2)
+    p = expr_to_holonomic((2*x**2 + 1)**(2/3)).to_expr()
+    assert p == (2*x**2 + 1)**(S(2)/3)
 
 def test_integrate():
     x = symbols('x')
