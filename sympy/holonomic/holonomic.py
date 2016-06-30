@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
-    solve, limit)
+    solve, limit, Float, nsimplify)
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -597,8 +597,13 @@ class HolonomicFunction(object):
         # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
             try:
-                return HolonomicFunction(self.annihilator * D, self.x, a,\
-                    y0).to_expr().subs(self.x, b)
+                s = HolonomicFunction(self.annihilator * D, self.x, a,\
+                    y0).to_expr()
+                indefinite = s.subs(self.x, b)
+                if not isinstance(indefinite, NaN):
+                    return indefinite
+                else:
+                    return s.limit(self.x, b)
             except TypeError:
                 return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
@@ -1689,14 +1694,14 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0):
     See Also
     ========
 
-    meijerint._rewrite1, _convert_poly_rat, _create_table
+    meijerint._rewrite1, _convert_poly_rat_alg, _create_table
     """
     func = sympify(func)
     if not x:
         x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat(func, x, initcond=initcond, x0=x0)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0)
     if solpoly:
         return solpoly
 
@@ -1928,7 +1933,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat(func, x, initcond=True, x0=0):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -1939,6 +1944,18 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
         israt = True
 
     if not (ispoly or israt):
+        basepoly, ratexp = func.as_base_exp()
+        if basepoly.is_polynomial() and ratexp.is_Number:
+            if isinstance(ratexp, Float):
+                ratexp = nsimplify(ratexp)
+            m, n = ratexp.p, ratexp.q
+            is_alg = True
+        else:
+            is_alg = False
+    else:
+        is_alg = True
+
+    if not (ispoly or israt or is_alg):
         return None
 
     R = QQ.old_poly_ring(x)
@@ -1959,6 +1976,10 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
         # differential equation satisfied by rational
         sol = p * q * Dx + p * q.diff() - q * p.diff()
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
+
+    elif is_alg:
+        sol = n * (x / m) * Dx - 1
+        sol = HolonomicFunction(sol, x).composition(basepoly).annihilator
 
     if not initcond:
         return HolonomicFunction(sol, x)
