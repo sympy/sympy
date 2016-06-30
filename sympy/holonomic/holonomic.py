@@ -849,6 +849,8 @@ class HolonomicFunction(object):
         return self.__div__(other)
 
     def __pow__(self, n):
+        if n < 0:
+            raise TypeError("Negative Power on Holonomic Function")
         if n == 0:
             return S(1)
         if n == 1:
@@ -938,7 +940,8 @@ class HolonomicFunction(object):
     def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
-        of the function about origin.
+        of the function about `x0`, where x0 is the point at which
+        initial conditions are given.
 
         Returns a tuple (R, n0), with R being the Recurrence relation
         and a non-negative integer `n0` such that the recurrence relation
@@ -946,7 +949,7 @@ class HolonomicFunction(object):
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol C_j, denoting the coefficient of x^j
-        in the power series about origin.
+        in the power series about x0.
 
         Examples
         ========
@@ -977,6 +980,8 @@ class HolonomicFunction(object):
         [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
         """
 
+        if self.x0 != 0:
+            return self.shift_x(self.x0).to_sequence()
 
         dict1 = {}
         n = symbols('n', integer=True)
@@ -1114,7 +1119,7 @@ class HolonomicFunction(object):
 
     def series(self, n=6, coefficient=False, order=True):
         """
-        Finds the power series expansion of given holonomic function.
+        Finds the power series expansion of given holonomic function about x0.
 
         Examples
         ========
@@ -1141,6 +1146,7 @@ class HolonomicFunction(object):
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
         x = self.x
+        x0 = self.x0
         seq_dmp = recurrence.recurrence.listofpoly
         R = recurrence.recurrence.parent.base
         K = R.get_field()
@@ -1175,9 +1181,10 @@ class HolonomicFunction(object):
         for i, j in enumerate(sol):
             ser += x**i * j
         if order:
-            return ser + Order(x**n, x)
-        else:
-            return ser
+            ser += Order(x**n, x)
+        if x0 != 0:
+            return ser.subs(x, x - x0)
+        return ser
 
     def _indicial(self):
         """Computes the roots of Indicial equation.
@@ -1284,7 +1291,7 @@ class HolonomicFunction(object):
             return _evalf(self, points, method=method, derivatives=derivatives)[-1]
         return _evalf(self, points, method=method, derivatives=derivatives)
 
-    def _subs(self, z):
+    def change_x(self, z):
         """
         Changes only the variable of Holonomic Function, for internal
         purposes. For composition use HolonomicFunction.composition()
@@ -1298,6 +1305,22 @@ class HolonomicFunction(object):
             sol.append(R(j.rep))
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
+
+    def shift_x(self, a):
+        """
+        Substitute `x + a` for `x`.
+        """
+
+        x = self.x
+        listaftershift = self.annihilator.listofpoly
+        base = self.annihilator.parent.base
+
+        sol = [base.from_sympy(base.to_sympy(i).subs(x, x + a)) for i in listaftershift]
+        sol = DifferentialOperator(sol, self.annihilator.parent)
+        if not self._have_init_cond:
+            return HolonomicFunction(sol, x)
+        x0 = self.x0 - a
+        return HolonomicFunction(sol, x, x0, self.y0)
 
     def to_hyper(self):
         """
@@ -1336,6 +1359,8 @@ class HolonomicFunction(object):
         recurrence, smallest_n = self.to_sequence()
         u0 = recurrence.u0
         r = recurrence.recurrence
+        x = self.x
+        x0 = self.x0
 
         # order of the recurrence relation
         m = r.order
@@ -1349,15 +1374,15 @@ class HolonomicFunction(object):
             for i in nonzeroterms:
                 if i >= 0:
                     sol += u0[i] * x**i
+            if x0 != 0:
+                return sol.subs(x, x - x0)
             return sol
-
 
         if smallest_n + m > len(u0):
             raise NotImplementedError("Can't compute sufficient Initial Conditions")
 
         # check if the recurrence represents a hypergeometric series
         is_hyper = True
-        x = self.x
 
         for i in range(1, len(r.listofpoly)-1):
             if r.listofpoly[i] != r.parent.base.zero:
@@ -1417,6 +1442,9 @@ class HolonomicFunction(object):
                 ap.append(1)
 
             sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
+
+        if x0 != 0:
+            return sol.subs(x, x - x0)
 
         return sol
 
@@ -1680,7 +1708,7 @@ def from_sympy(func, x=None, initcond=True, x0=0):
         t = _mytype(f, x_1)
         if t in _lookup_table:
             l = _lookup_table[t]
-            sol = l[0][1]._subs(x)
+            sol = l[0][1].change_x(x)
         else:
             sol = _convert_meijerint(func, x, initcond=False)
             if not sol:
