@@ -1035,21 +1035,14 @@ def test_issue_8257():
     assert FiniteSet(-oo) + Interval(-oo, oo) == reals_plus_negativeinfinity
 
 
-def test_issue_10285():
-    assert FiniteSet(-x - 1).intersect(Interval.Ropen(1, 2)) == \
-        FiniteSet(x).intersect(Interval.Lopen(-3, -2))
-    eq = -x - 2*(-x - y)
-    s = signsimp(eq)
-    ivl = Interval.open(0, 1)
-    assert FiniteSet(eq).intersect(ivl) == FiniteSet(s).intersect(ivl)
-    assert FiniteSet(-eq).intersect(ivl) == \
-        FiniteSet(s).intersect(Interval.open(-1, 0))
-    eq -= 1
-    ivl = Interval.Lopen(1, oo)
-    assert FiniteSet(eq).intersect(ivl) == \
-        FiniteSet(s).intersect(Interval.Lopen(2, oo))
-
-
 def test_issue_10931():
     assert S.Integers - S.Integers == EmptySet()
     assert S.Integers - S.Reals == EmptySet()
+
+
+def test_issue_11174():
+    soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
+    assert Intersection(FiniteSet(-x), S.Reals) == soln
+
+    soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
+    assert Intersection(FiniteSet(x), S.Reals) == soln
