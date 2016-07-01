@@ -566,6 +566,7 @@ def test_diop_general_sum_of_squares_quick():
     # issue 11016
     var = symbols(':5') + (symbols('6', negative=True),)
     eq = Add(*[i**2 for i in var]) - 112
+
     base_soln = set(
         [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4, 5, -7),
             (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3, 3, 5, -8),
@@ -576,6 +577,7 @@ def test_diop_general_sum_of_squares_quick():
             (0, 1, 5, 5, 5, -6)])
     assert diophantine(eq) == base_soln
     assert len(diophantine(eq, base_soln=False)) == 196800
+
     # handle negated squares with signsimp
     assert diophantine(12 - x**2 - y**2 - z**2) == set([(2, 2, 2)])
     # diophantine handles simplification, so classify_diop should
@@ -884,6 +886,7 @@ def test_diophantine_permute_sign():
     assert diophantine(eq) == base_sol
     complete_soln = set(signed_permutations(base_sol.pop()))
     assert diophantine(eq, base_soln=False) == complete_soln
+
     eq = a**2 + b**2 + c**2 + d**2 + e**2 - 234
     assert len(diophantine(eq)) == 35
     assert len(diophantine(eq, base_soln=False)) == 62000

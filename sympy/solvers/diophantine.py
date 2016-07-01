@@ -198,18 +198,14 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             len_var = len(v)
             permute_signs_for = [
                 'general_sum_of_squares',
-                'general_sum_of_even_powers',
-                'general_pythagorean']
+                'general_sum_of_even_powers']
             permute_signs_check = [
                 'homogeneous_ternary_quadratic',
                 'homogeneous_ternary_quadratic_normal',
                 'binary_quadratic']
             if t in permute_signs_for:
-                if t == 'general_pythagorean':
-                    do_permute_signs = True
-                else:
-                    do_permute_signs_var = True
-            elif t in permute_signs_check:
+                do_permute_signs_var = True
+            elif t in (permute_signs_check):
                 # if all the variables in eq have even powers
                 # then do_permute_sign = True
                 if len_var == 3:
@@ -253,7 +249,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     if not check_coeff:
                         # means only x**2, y**2 and const is present
                         do_permute_signs = True
-
         if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
