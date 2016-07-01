@@ -1276,6 +1276,10 @@ def _simplification_technique_1(rels):
     >>> _simplification_technique_1(w2)
     [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
 
+    >>> w3 = [x**6*y**4, x**4]
+    >>> _simplification_technique_1(w3)
+    [x**2*y**4, x**4]
+
     """
     group = rels[0].group
     one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
@@ -1286,7 +1290,7 @@ def _simplification_technique_1(rels):
             if gen.array_form[0][0] == k[j][0] and gen != rels[i]:
                 n = gen.array_form[0][1]
                 t = Mod(k[j][1], n)
-                if t < n/2:
+                if t <= n/2:
                     k[j] = k[j][0], Mod(k[j][1], n)
                 elif t > n/2:
                     k[j] = k[j][0], Mod(k[j][1], n) - n
