@@ -859,7 +859,8 @@ class HolonomicFunction(object):
 
     def __pow__(self, n):
         if n < 0:
-            raise TypeError("Negative Power on Holonomic Function")
+            from .holonomicerrors import NotHolonomicError
+            raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
             return S(1)
         if n == 1:
@@ -957,7 +958,7 @@ class HolonomicFunction(object):
         holds for all n >= n0.
 
         If it's not possible to numerically compute a initial condition,
-        it is returned as a symbol C_j, denoting the coefficient of x^j
+        it is returned as a symbol C_j, denoting the coefficient of (x - x0)^j
         in the power series about x0.
 
         Examples
@@ -991,6 +992,13 @@ class HolonomicFunction(object):
 
         if self.x0 != 0:
             return self.shift_x(self.x0).to_sequence()
+
+        # check whether a power series exists if the point is singular
+        if self.annihilator.is_singular(x0=self.x0):
+            indicialroots = self._indicial()
+            if all(i < 0 or not i.is_Integer for i in indicialroots):
+                from .holonomicerrors import NotPowerSeriesError
+                raise NotPowerSeriesError(self, self.x0)
 
         dict1 = {}
         n = symbols('n', integer=True)
@@ -1198,6 +1206,9 @@ class HolonomicFunction(object):
         """Computes the roots of Indicial equation.
         """
 
+        if self.x0 != 0:
+            return self.shift_x(self.x0)._indicial()
+
         list_coeff = self.annihilator.listofpoly
         R = self.annihilator.parent.base
         x = self.x
@@ -1217,16 +1228,14 @@ class HolonomicFunction(object):
 
         deg = lambda q: inf if q.is_zero else _pole_degree(q)
         b = deg(list_coeff[0])
-        print (b)
 
         for j in range(1, len(list_coeff)):
             b = min(b, deg(list_coeff[j]) - j)
-            print(b)
 
         for i, j in enumerate(list_coeff):
             listofdmp = j.all_coeffs()
             degree = len(listofdmp) - 1
-            if - i - b <= 0:
+            if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
         return roots(s.rep, filter='R').keys()
