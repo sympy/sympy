@@ -82,6 +82,10 @@ class FpGroup(DefaultPrinting):
     __repr__ = __str__
 
 
+###############################################################################
+#                           COSET TABLE                                       #
+###############################################################################
+
 # sets the upper limit on the number of cosets generated during
 # Coset Enumeration. "M" from Derek Holt's. It is supposed to be
 # user definable.
@@ -591,6 +595,11 @@ class CosetTable(DefaultPrinting):
             R_set.difference_update(r)
         return R_c_list
 
+
+###############################################################################
+#                           COSET ENUMERATION                                 #
+###############################################################################
+
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
     """
@@ -784,6 +793,10 @@ def coset_enumeration_c(fp_grp, Y):
                 C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     return C
 
+
+###############################################################################
+#                           LOW INDEX SUBGROUPS                               #
+###############################################################################
 
 def low_index_subgroups(G, N, Y=[]):
     """
@@ -1005,6 +1018,10 @@ def first_in_class(C, Y=[]):
     return True
 
 
+###############################################################################
+#                           SUBGROUP PRESENTATIONS                            #
+###############################################################################
+
 # Pg 175 [1]
 def define_schreier_generators(C):
     y = []
@@ -1212,13 +1229,13 @@ def modified_coincidence(C, alpha, beta, w):
                     C.P[nu][A_dict_inv[x]] = v**-1
 
 
+# Pg 350, section 2.5.1 from [2]
 def elimination_technique_1(C):
     rels = list(C.reidemeister_relators)
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
     rels.sort(reverse=True)
     gens = list(C.schreier_generators)
-    # TODO: redundant generator can also be present as inverse in relator
     redundant_gens = {}
     contained_gens = []
     # examine each relator in relator list for any generator occuring exactly
@@ -1253,8 +1270,52 @@ def elimination_technique_1(C):
     C.reidemeister_relators = rels
     C.schreier_generators = gens
 
+# Pg 350, section 2.5.2 from [2]
 def elimination_technique_2(C):
-    pass
+    """
+    This technique eliminates one generator at a time. Heuristically this
+    seems superior in that we may select for elimination the generator with
+    shortest equivalent string at each stage.
+
+    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import (FpGroup, coset_enumeration_r,
+            reidemeister_relators, define_schreier_generators, elimination_technique_2)
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**3, y**5, (x*y)**2]); H = [x*y, x**-1*y**-1*x*y*x]
+    >>> C = coset_enumeration_r(f, H)
+    >>> C.compress(); C.standardize()
+    >>> define_schreier_generators(C)
+    >>> reidemeister_relators(C)
+    >>> elimination_technique_2(C)
+    >>> [y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1, y_1**2]
+    ([y_1, y_2], [y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1, y_1**2])
+
+    """
+    rels = list(C.reidemeister_relators)
+    rels.sort(reverse=True)
+    gens = list(C.schreier_generators)
+    i = len(rels) - 1
+    while i >= 0:
+        rel = rels[i]
+        j = len(gens) - 1
+        while j >= 0:
+            gen = gens[j]
+            if rel.generator_exponent_sum(gen) == 1:
+                k = rel.exponent_sum_word(gen)
+                gen_index = rel.index(gen**k)
+                bk = rel.subword(gen_index + 1, len(rel))
+                fw = rel.subword(0, gen_index)
+                rep_by = (bk*fw)**(-1*k)
+                del rels[i]; del gens[j]
+                for l in range(len(rels)):
+                    rels[l] = rels[l].eliminate_word(gen, rep_by)
+                i = len(rels)
+                break
+            j -= 1
+        i -= 1
+    C.reidemeister_relators = rels
+    C.schreier_generators = gens
+    return C.schreier_generators, C.reidemeister_relators
 
 def _simplification_technique_1(rels):
     """
@@ -1296,7 +1357,6 @@ def _simplification_technique_1(rels):
                     k[j] = k[j][0], Mod(k[j][1], n) - n
 
     return [group.dtype(tuple(rel)) for rel in nw]
-
 
 def reidemeister_presentation(fp_grp, H):
     """
