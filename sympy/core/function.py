@@ -53,6 +53,8 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
+import sys
+
 import mpmath
 import mpmath.libmp as mlib
 
@@ -92,17 +94,16 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
-def _getevalargs(eval_):
-    import sys
-    old = _getevalargs_old(eval_)
-    if sys.version_info < (3, ):
-        return old
+def _getnargs(cls):
+    if hasattr(cls, 'eval'):
+        if sys.version_info < (3, ):
+            return _getnargs_old(cls.eval)
+        else:
+            return _getnargs_new(cls.eval)
     else:
-        new = _getevalargs_new(eval_)
-        assert new == old, "new: %s != old: %s (%s)" % (new, old, inspect.signature(eval_))
-        return new
+        return None
 
-def _getevalargs_old(eval_):
+def _getnargs_old(eval_):
     evalargspec = inspect.getargspec(eval_)
     if evalargspec.varargs:
         return None
@@ -117,7 +118,7 @@ def _getevalargs_old(eval_):
 
         return evalargs
 
-def _getevalargs_new(eval_):
+def _getnargs_new(eval_):
     parameters = inspect.signature(eval_).parameters.items()
     if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
         return None
@@ -142,13 +143,9 @@ class FunctionClass(ManagedProperties):
     _new = type.__new__
 
     def __init__(cls, *args, **kwargs):
-        if hasattr(cls, 'eval'):
-            evalargs = _getevalargs(cls.eval)
-        else:
-            evalargs = None
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', evalargs))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
