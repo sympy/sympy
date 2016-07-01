@@ -1052,9 +1052,8 @@ class HolonomicFunction(object):
 
         if all_roots:
             max_root = max(all_roots) + 1
-            order += max(max_root, smallest_n)
-        else:
-            order += smallest_n
+            smallest_n = max(max_root, smallest_n)
+        order += smallest_n
 
         y0 = _extend_y0(self, order)
         u0 = []
@@ -1418,7 +1417,7 @@ class HolonomicFunction(object):
         # The answer will be a linear combination
         # of different hypergeometric series which satisfies
         # the recurrence.
-        for i in range(len(u0)):
+        for i in range(smallest_n + m):
 
             # if the recurrence relation doesn't hold for `n = i`,
             # then a Hypergeometric representation doesn't exist.
@@ -1480,7 +1479,7 @@ class HolonomicFunction(object):
 
         return hyperexpand(self.to_hyper()).simplify()
 
-    def change_ics(self, b):
+    def change_ics(self, b, lenics=None):
         """
         Changes the point `x0` to `b` for initial conditions.
 
@@ -1500,8 +1499,11 @@ class HolonomicFunction(object):
 
         symbolic = True
 
+        if lenics == None and len(self.y0) > self.annihilator.order:
+            lenics = len(self.y0)
+
         try:
-            sol = expr_to_holonomic(self.to_expr(), x0=b)
+            sol = expr_to_holonomic(self.to_expr(), x0=b, lenics=lenics)
         except:
             symbolic = False
 
@@ -1673,7 +1675,7 @@ _lookup_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1701,7 +1703,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0):
         x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics)
     if solpoly:
         return solpoly
 
@@ -1722,19 +1724,23 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0):
             sol = _convert_meijerint(func, x, initcond=False)
             if not sol:
                 raise NotImplementedError
-            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            if not lenics:
+                lenics = sol.annihilator.order
+            y0 = _find_conditions(func, x, x0, lenics)
             while not y0:
                 x0 += 1
-                y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+                y0 = _find_conditions(func, x, x0, lenics)
             return HolonomicFunction(sol.annihilator, x, x0, y0)
 
         if not initcond:
             return sol.composition(func.args[0])
+        if not lenics:
+            lenics = sol.annihilator.order
 
-        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        y0 = _find_conditions(func, x, x0, lenics)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, y0)
 
     # iterate though the expression recursively
@@ -1758,11 +1764,12 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0):
         raise NotImplementedError
     if not initcond:
         return sol
-
-    y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+    if not lenics:
+        lenics = sol.annihilator.order
+    y0 = _find_conditions(func, x, x0, lenics)
     while not y0:
         x0 += 1
-        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        y0 = _find_conditions(func, x, x0, lenics)
 
     return HolonomicFunction(sol.annihilator, x, x0, y0)
 
@@ -1933,7 +1940,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat_alg(func, x, initcond=True, x0=0):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -1984,10 +1991,13 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0):
     if not initcond:
         return HolonomicFunction(sol, x)
 
-    y0 = _find_conditions(func, x, x0, sol.order)
+    if not lenics:
+        lenics = sol.order
+
+    y0 = _find_conditions(func, x, x0, lenics)
     while not y0:
         x0 += 1
-        y0 = _find_conditions(func, x, x0, sol.order)
+        y0 = _find_conditions(func, x, x0, lenics)
 
     return HolonomicFunction(sol, x, x0, y0)
 
