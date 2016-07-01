@@ -109,7 +109,7 @@ class CCodePrinter(CodePrinter):
         self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
-        return p*5
+        return p * 5
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -150,7 +150,7 @@ class CCodePrinter(CodePrinter):
             return 'sqrt(%s)' % self._print(expr.base)
         else:
             return 'pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
+                                    self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -162,7 +162,7 @@ class CCodePrinter(CodePrinter):
         elem = S.Zero
         offset = S.One
         for i in reversed(range(expr.rank)):
-            elem += expr.indices[i]*offset
+            elem += expr.indices[i] * offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
@@ -195,7 +195,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
+                elif i == len(expr.args) - 1 and c:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -209,18 +209,20 @@ class CCodePrinter(CodePrinter):
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
             ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
-                    for e, c in expr.args[:-1]]
+                       for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
-            return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
+            return ": ".join(ecpairs) + last_line + \
+                " ".join([")" * len(ecpairs)])
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
+        _piecewise = Piecewise(
+            (expr.args[1], expr.args[0]), (expr.args[2], True))
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
         return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+                                 expr.i * expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
 
@@ -230,17 +232,18 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(name)
         else:
             return name
-    
+
     def _print_Ne(arg1, arg2):
-         from sympy.core.relational import Rel 
-         name = Rel(arg1,arg2,'!=')
-         return name
+        from sympy.core.relational import Rel
+        name = Rel(arg1, arg2, '!=')
+        return name
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
         from sympy.core.relational import Ne
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((sin(expr.args[0])/expr.args[0], Ne(expr.args[0], 0)), (1, True))
+        _piecewise = Piecewise(
+            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
         return self._print(_piecewise)
 
     def _print_AugmentedAssignment(self, expr):
@@ -254,11 +257,17 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.iterable, Range):
             start, stop, step = expr.iterable.args
         else:
-            raise NotImplementedError("Only iterable currently supported is Range")
+            raise NotImplementedError(
+                "Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+        return (
+            'for ({target} = {start}; {target} < {stop}; {target} += '
+            '{step}) {{\n{body}\n}}').format(
+            target=target,
+            start=start,
+            stop=stop,
+            step=step,
+            body=body)
 
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
@@ -274,11 +283,11 @@ class CCodePrinter(CodePrinter):
         inc_token = ('{', '(', '{\n', '(\n')
         dec_token = ('}', ')')
 
-        code = [ line.lstrip(' \t') for line in code ]
+        code = [line.lstrip(' \t') for line in code]
 
-        increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token)))
-                     for line in code ]
+        increase = [int(any(map(line.endswith, inc_token))) for line in code]
+        decrease = [int(any(map(line.startswith, dec_token)))
+                    for line in code]
 
         pretty = []
         level = 0
@@ -287,7 +296,7 @@ class CCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("%s%s" % (tab * level, line))
             level += increase[n]
         return pretty
 
