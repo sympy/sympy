@@ -260,6 +260,7 @@ class ImageSet(Set):
     ========
     sympy.sets.sets.imageset
     """
+
     def __new__(cls, lamda, base_set):
         if not isinstance(lamda, Lambda):
             raise ValueError('first argument must be a Lambda')
@@ -483,6 +484,127 @@ class ImageSet(Set):
             else:
                 return
 
+<<<<<<< HEAD
+=======
+    def _union(self, other):
+        """
+
+        This function should only be used internally.
+        See Set._union for docstring
+
+        Used within the :class:`Union` class
+
+        This function club imageset `other` with `self` if there is difference
+        of `pi` or `2*pi` and returns this new imageset otherwise None.
+
+        Returns
+        =======
+        self._union(other) returns a new, joined set if self knows how
+        to join itself with other, otherwise it returns ``None``.
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> from sympy import pprint, Union
+        >>> from sympy.core import Dummy, pi, S, Symbol
+        >>> n = Dummy('n')
+        >>> img1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
+        >>> img2 = ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)
+        >>> pprint(img1._union(img2), use_unicode=False)
+                3*pi
+        {n*pi + ---- | n in Integers()}
+                 4
+        >>> img1 = ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
+        >>> img2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
+        >>> img3 = ImageSet(Lambda(n, 2*n*pi), S.Reals)
+        >>> pprint(Union(img1, img2, img3), use_unicode=False)
+                                            pi
+        {n*pi | n in (-oo, oo)} U {2*n*pi + -- | n in Integers()}
+                                            3
+
+        """
+
+        from sympy.core import pi
+        from sympy.polys import Poly
+        from sympy.simplify import simplify
+        from sympy.polys.polyerrors import PolynomialError
+
+        if other is S.EmptySet:
+            return self
+        if other.is_ImageSet:
+            try:
+                # use one dummy variable n_self
+                n_self = (self.lamda.expr).atoms(Dummy)
+                if len(n_self) > 1:
+                    raise NotImplementedError(
+                        'Try to use symbols only. \
+                        More than one dummy is present in ImageSet')
+                elif len(n_self) == 0:
+                    raise ValueError("use %s as Dummy" %
+                                     self.lamda.args[0][0])
+                n_self = n_self.pop()
+                base = other.base_set
+                n_final = (other.lamda.expr).atoms(Dummy)
+                if len(n_final) > 1:
+                    raise NotImplementedError(
+                        'Use symbols only. \
+                        More than one dummy is present in ImageSet')
+                elif len(n_final) == 0:
+                    raise ValueError("use %s as Dummy" %
+                                     other.lamda.args[0][0])
+                n_final = n_final.pop()
+
+                # Extracting expr
+                lamb_expr = self.lamda.expr
+                base_2 = self.base_set
+                if Poly(lamb_expr, n_self).is_linear:
+                    self_expr = lamb_expr
+                else:
+                    raise NotImplementedError('Implemented for linear ImageSet.\
+                        non linear expr found in imageSet')
+                if base_2.is_superset(base):
+                    # take the bigger base set
+                    base = base_2
+
+                lamb_expr = other.lamda.expr
+                base_2 = other.base_set
+                if Poly(lamb_expr, n_final).is_linear:
+                    final_expr = lamb_expr.subs(n_final, n_self)
+                else:
+                    raise NotImplementedError('Implemented for linear ImageSet.\
+                        non linear expr found in imageSet')
+                if base_2.is_superset(base):
+                    # take the bigger base set
+                    base = base_2
+
+                if simplify(
+                        final_expr - self_expr) % (2 * pi) == pi:
+                    # (2*x*pi + pi + expr1) -( 2*x*pi  + exp1) = pi
+                    # can be => x*pi + expr1
+                    final_expr = pi * n_self + self_expr.subs(n_self, 0)
+                    ans = ImageSet(Lambda(n_self, final_expr), base)
+                elif simplify(
+                        final_expr - self_expr) % (2 * pi) == 0:
+                    # (2*x*pi + expr1) - ( 2*x*pi  + 2*pi + exp1)= -2*pi
+                    # can be => 2*x*pi + expr1
+                    final_expr = 2 * pi * n_self + final_expr.subs(n_self, 0)
+                    ans = ImageSet(Lambda(n_self, final_expr), base)
+                else:
+                    return None
+                del n_self, n_final
+                return ans
+
+            except (
+                NotImplementedError,
+                ValueError, PolynomialError
+            ):
+                return None
+        else:
+            return None
+
+>>>>>>> minor changes
 
 class Range(Set):
     """

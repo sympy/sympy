@@ -708,16 +708,16 @@ def test_solve_complex_sqrt():
 
 def test_solveset_complex_tan():
     n = Dummy('n')
-    s = solveset_complex(tan(x).rewrite(exp), x)
-    assert s == imageset(Lambda(n, n*pi), S.Integers)
-
-    s = solveset((tan(x)**2 - 3).rewrite(exp), x)
-    assert s == ImageSet(Lambda(n, n*pi + pi/3), \
-        S.Integers) + ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    soln = solveset_complex(tan(x).rewrite(exp), x)
+    assert soln == ImageSet(Lambda(n, n*pi), S.Integers)
+    soln = solveset((tan(x)**2 - 3).rewrite(exp), x)
+    img1 = ImageSet(Lambda(n, n*pi + 4*pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    assert soln == Union(img1, img2)
 
 
 def test_solve_trig():
-    n = Dummy('n')
+    n = Dummy('n', real=True)
     assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
     assert solveset_real(tan(x), x) == \
@@ -1535,15 +1535,18 @@ def test_simplifed_trig_solution():
 
     # `factor_list` is used in _solve_trig for these types of case
     n = Dummy('n')
-    soln = ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers) + \
-    ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers) + \
-    ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers)
-    assert solveset(4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, x) == soln
+    eq = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1
+    img1 = ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers)
+    img2 = ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers)
+    img3 = ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers)
+    soln = Union(img1, img2, img3)
+    assert solveset(eq, x) == soln
 
-    assert solveset_real(tan(x)**2 - 3, x) == \
-    ImageSet(Lambda(n, pi*n + pi/3), S.Integers) + \
-        ImageSet(Lambda(n, pi*n + 2*pi/3), S.Integers)
+    img1 = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, pi*n + 2*pi/3), S.Integers)
+    assert solveset_real(tan(x)**2 - 3, x) == Union(img1, img2)
 
-    assert solveset_real(3*tan(x)**2 -1, x) == \
-    ImageSet(Lambda(n, pi*n + pi/6), S.Integers) + \
-    ImageSet(Lambda(n, pi*n + 5*pi/6), S.Integers)
+    img1 = ImageSet(Lambda(n, pi*n + pi/6), S.Integers)
+    img2 = ImageSet(Lambda(n, pi*n + 5*pi/6), S.Integers)
+    soln = Union(img1, img2)
+    assert solveset_real(3*tan(x)**2 -1, x) == soln

@@ -72,15 +72,15 @@ def _invert(f_x, y, x, domain=S.Complexes):
 
     When does exp(x) == y?
 
-    >>> pprint(invert_complex(exp(x), y, x), use_unicode = False)
-    (x, {I*(2*n*pi + arg(y)) + log(|y|) | n in Integers()})
+    >>> invert_complex(exp(x), y, x)
+    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
     >>> invert_real(exp(x), y, x)
     (x, Intersection((-oo, oo), {log(y)}))
 
     When does exp(x) == 1?
 
-    >>> pprint(invert_complex(exp(x), 1, x), use_unicode = False)
-    (x, {2*n*I*pi | n in Integers()})
+    >>> invert_complex(exp(x), 1, x)
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers()))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -587,7 +587,7 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    # If solution in ImageSet then return it as it is
+    # If solution in ImageSet then return it
     if isinstance(result, ImageSet) or any(isinstance(r, ImageSet) for r in result.args):
         return result
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
