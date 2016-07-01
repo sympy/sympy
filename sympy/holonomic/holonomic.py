@@ -596,6 +596,7 @@ class HolonomicFunction(object):
 
         # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
+            from .holonomicerrors import NotHyperSeriesError, NotPowerSeriesError
             try:
                 s = HolonomicFunction(self.annihilator * D, self.x, a,\
                     y0).to_expr()
@@ -604,7 +605,7 @@ class HolonomicFunction(object):
                     return indefinite
                 else:
                     return s.limit(self.x, b)
-            except TypeError:
+            except (NotHyperSeriesError, NotPowerSeriesError):
                 return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
         return HolonomicFunction(self.annihilator * D, self.x)
@@ -1302,7 +1303,8 @@ class HolonomicFunction(object):
 
         for i in roots(self.annihilator.listofpoly[-1].rep):
             if i == self.x0 or i in points:
-                raise TypeError("Provided path contains a singularity")
+                from .holonomicerrors import SingularityError
+                raise SingularityError(self, i)
 
         if lp:
             return _evalf(self, points, method=method, derivatives=derivatives)[-1]
@@ -1407,7 +1409,8 @@ class HolonomicFunction(object):
                 break
 
         if not is_hyper:
-            raise TypeError("The series is not Hypergeometric")
+            from .holonomicerrors import NotHyperSeriesError
+            raise NotHyperSeriesError(self, self.x0)
 
         a = r.listofpoly[0]
         b = r.listofpoly[-1]
@@ -1511,9 +1514,10 @@ class HolonomicFunction(object):
         if lenics == None and len(self.y0) > self.annihilator.order:
             lenics = len(self.y0)
 
+        from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError
         try:
             sol = expr_to_holonomic(self.to_expr(), x0=b, lenics=lenics)
-        except:
+        except (NotPowerSeriesError, NotHyperSeriesError):
             symbolic = False
 
         if symbolic and sol.x0 == b:
