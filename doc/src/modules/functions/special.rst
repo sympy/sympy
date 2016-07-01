@@ -13,6 +13,8 @@ Heaviside
 
 Singularity Function
 --------------------
+.. module:: sympy.functions.special.singularity_functions
+
 .. autoclass:: sympy.functions.special.singularity_functions.SingularityFunction
    :members:
 
