@@ -25,8 +25,7 @@ from sympy.release import __version__
 if 'dev' in __version__:
     def enable_warnings():
         import warnings
-        warnings.filterwarnings('error',   '.*',                      DeprecationWarning, module='sympy.*')
-        # let's not fail the test on that yet.
+        warnings.filterwarnings('error',   '.*',   DeprecationWarning, module='sympy.*')
         warnings.filterwarnings('default', '.*inspect.getargspec.*', DeprecationWarning, module='sympy.*')
         del warnings
     enable_warnings()

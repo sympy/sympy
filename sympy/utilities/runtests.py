@@ -494,6 +494,13 @@ def _test(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
+    # This specific deprecated feature is not fixed yet, don't fail test on it.
+    # we've got an issue to remind us to take care of it:
+    # https://github.com/sympy/sympy/issues/11255
+    # then we can turn it back into error to not reintroduce it.
+    warnings.filterwarnings('default', '.*inspect.getargspec.*',
+            DeprecationWarning, module='sympy.*')
+
     test_files = t.get_test_files('sympy')
 
     not_blacklisted = [f for f in test_files
