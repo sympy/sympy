@@ -54,7 +54,7 @@ class SingularityFunction(Function):
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
     Piecewise(((x - 4)**5, x - 4 > 0), (0, True))
 
-    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')
+    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')``
     returns the same output. One can use any of these methods according to their choice.
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
