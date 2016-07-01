@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core import Symbol
+from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
@@ -1256,7 +1256,7 @@ def elimination_technique_1(C):
 def elimination_technique_2(C):
     pass
 
-def simplification_technique_1(C):
+def _simplification_technique_1(rels):
     """
     All relators are checked to see if they are of the form `gen^n`. If any
     such relators are found then all other relators are processed for strings
@@ -1266,24 +1266,32 @@ def simplification_technique_1(C):
     ========
 
     >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
-    >>> []
+    >>> w1 = [x**2*y**4, x**3]
+    >>> _simplification_technique_1(w1)
+    [x**-1*y**4, x**3]
+
+    >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
+    >>> _simplification_technique_1(w2)
+    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
 
     """
-    rels = list(C.reidemeister_relators)
+    group = rels[0].group
     one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
+    nw = [list(i.array_form) for i in rels]
     for i in range(len(rels)):
-        nw = list(rels[i].array_form)
-        nw = [(r[0], Mod(r[1], n)) for r in rels[i].array_form]
-        k = rels[i].array_form
-        for gen, j in product(one_syllable_rels, range(len(nw))):
-            if gen.array_form[0][0] == nw[j][0]:
+        k = nw[i]
+        for gen, j in product(one_syllable_rels, range(len(k))):
+            if gen.array_form[0][0] == k[j][0] and gen != rels[i]:
                 n = gen.array_form[0][1]
-                t = Mod(nw[j][1], n)
+                t = Mod(k[j][1], n)
                 if t < n/2:
-                    nw[j] = nw[j][0], Mod(nw[j][1], n)
+                    k[j] = k[j][0], Mod(k[j][1], n)
                 elif t > n/2:
-                    nw[j] = nw[j][0], Mod(nw[j][1], n) - n
+                    k[j] = k[j][0], Mod(k[j][1], n) - n
+
+    return [group.dtype(tuple(rel)) for rel in nw]
 
 
 def reidemeister_presentation(fp_grp, H):
