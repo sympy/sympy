@@ -375,12 +375,21 @@ class For(Basic):
 
     @property
     def target(self):
+        """
+        Return the symbol
+        """
         return self._args[0]
 
     @property
     def iterable(self):
+        """
+        Return the iterable
+        """
         return self._args[1]
 
     @property
     def body(self):
+        """
+        Return the sympy expression
+        """
         return self._args[2]
