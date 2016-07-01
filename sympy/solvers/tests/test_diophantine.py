@@ -874,6 +874,17 @@ def test__can_do_sum_of_squares():
     assert _can_do_sum_of_squares(3, 2) is False
 
 
+def test_diophantine_permute_sign():
+    from sympy.abc import a, b, c, d, e, f
+    eq = a**4 + b**4 - (2**4 + 3**4)
+    soln = set([(-2, -3), (-2, 3), (2, -3), (2, 3)])
+    assert diophantine(eq, permute_sign=True) == soln
+    assert diophantine(eq) == set([(2, 3)])
+    eq = a**2 + b**2 + c**2 + d**2 + e**2 - 234
+    assert len(diophantine(eq)) == 35
+    assert len(diophantine(eq, permute_sign=True)) == 788
+
+
 def test_issue_9538():
     eq = x - 3*y + 2
     assert diophantine(eq, syms=[y,x]) == set([(t_0, 3*t_0 - 2)])
