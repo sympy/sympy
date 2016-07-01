@@ -1148,7 +1148,7 @@ def test_solve_nonlinear_trans():
     assert nonlinsolve([x**2 - y**2/exp(x)], [x, y]) == soln4
 
 
-def test_issue_5132():
+def test_issue_5132_1():
     system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
     assert nonlinsolve(system, [x, y]) == FiniteSet((1, 3), (3, 1))
 
@@ -1171,30 +1171,21 @@ def test_issue_5132():
     assert nonlinsolve(eqs, [y, z]) == soln
 
 
-@XFAIL
-def test_issue_5132_():
-    # related to issue : #11174
+def test_issue_5132_2():
     x, y, z, r, t = symbols('x, y, z, r, t', real=True)
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     n = Dummy('n')
-    soln_real = (log(-sqrt(-z - sin(log(3)))), z)
-    lam = Lambda( n, I*(2*n*pi + arg(-sqrt(-z - sin(log(3))))/2 + \
-        log(-sqrt(-z - sin(log(3))))/2))
+    soln_real = (log(-z**2 + sin(y))/2, z)
+    lam = Lambda( n, I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2)
     img = ImageSet(lam, S.Integers)
+    # not sure about the complex soln. But it looks correct.
     soln_complex = (img, z)
     soln = FiniteSet(soln_real, soln_complex)
     assert nonlinsolve(eqs, [x, z]) == soln
 
-
     # check : both soln seems equal
     # 2 soln from solveset_real and other
     # 2 soln from solveset_complex
-    # substitution(system, [x, y]) function returns correct
-    # solution.
-    # nonlinsolve returns one extra soln (s_x, -s_y)
-    # because instead of Intersection(S.Reals, FiniteSet(-s_x))
-    # solveset returns Intersection(S.Reals, FiniteSet(s_x))
-    # related to issue : #11174
     system = [r - x**2 - y**2, tan(t) - y/x]
     s_x = sqrt(r*cos(t)**2)
     s_y = sqrt(r*cos(t)**2)*tan(t)

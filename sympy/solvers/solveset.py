@@ -512,8 +512,6 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, ConditionSet):
-        return result
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 
@@ -1204,7 +1202,7 @@ def linsolve(system, *symbols):
 ##############################################################################
 
 
-def substitution(system, symbols=None, result=[{}], known_symbols=[],
+def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r""" Solves the `system` using substitution method.
     A helper function for `nonlinsolve`. This will be called from
@@ -1233,7 +1231,7 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[],
     A FiniteSet of ordered tuple of values of `all_symbols` for which the
     `system` has solution. Order of values in the tuple is same as symbols
     present in the parameter `all_symbols`. If parameter `all_symbols` is None
-    then  same as symbols present in the parameter `symbols`.
+    then same as symbols present in the parameter `symbols`.
 
     Please note that general FiniteSet is unordered, the solution returned
     here is not simply a FiniteSet of solutions, rather it is a FiniteSet of
@@ -1245,11 +1243,20 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[],
     significance except for the fact it is just used to maintain a consistent
     output format throughout the solveset.
 
+    Raises
+    ======
+
+    ValueError
+        The input is not valid.
+        The symbols are not given.
+    AttributeError
+        The input symbols are not `Symbol` type.
+
     Examples
     ========
 
     >>> from sympy.core.symbol import symbols
-    >>> x, y = symbols('x, y', real = True)
+    >>> x, y = symbols('x, y', real=True)
     >>> from sympy.solvers.solveset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
@@ -1294,9 +1301,6 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[],
     if not symbols:
         raise ValueError('Symbols must be given, for which solution of the '
                          'system is to be found.')
-
-    if hasattr(symbols[0], '__iter__'):
-        symbols = symbols[0]
 
     try:
         sym = symbols[0].is_Symbol
@@ -1565,15 +1569,15 @@ def substitution(system, symbols=None, result=[{}], known_symbols=[],
     return result
 
 
-def nonlinsolve(system, symbols):
+def nonlinsolve(system, *symbols):
     r"""
     Solve system of N non linear equations with M variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
     be dependent on at least one symbol. Returns both real solution
-    and complex solution. The possible number of solutions is zero,
-    one or infinite.
+    and complex solution(If system have). The possible number of solutions
+    is zero, one or infinite.
 
     Parameters
     ==========
@@ -1609,6 +1613,15 @@ def nonlinsolve(system, symbols):
     `system  = [x*y - 1, 4*x**2 + y**2 - 5]`
     `symbols = [x, y]`
 
+    Raises
+    ======
+
+    ValueError
+        The input is not valid.
+        The symbols are not given.
+    AttributeError
+        The input symbols are not `Symbol` type.
+
     Examples
     ========
 
@@ -1638,7 +1651,7 @@ def nonlinsolve(system, symbols):
     {(-y + 2, y)}
 
     * If some of the equations are non polynomial equation then `nonlinsolve`
-    will call `substitution` function and returns real and complex solutions .
+    will call `substitution` function and returns real and complex solutions.
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
@@ -1646,17 +1659,16 @@ def nonlinsolve(system, symbols):
         log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
         Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
 
-
-    * If Non linear polynomial and zero dimensional system, then it returns
-    both real and complex solutions using `solve_poly_system`.
+    * If system is Non linear polynomial zero dimensional then it returns
+    both solution (real and complex solutions, if present using)
+    `solve_poly_system`.
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-
-    * `nonlinsolve` can solve some linear( zero or positive dimensional)system
-    solve this system (because it is using `groebner` function to get the
+    * `nonlinsolve` can solve some linear(zero or positive dimensional)
+    system (because it is using `groebner` function to get the
     groebner basis and then `substitution` function basis as the new `system`).
     But it is not recommended to solve linear system using `nonlinsolve`,
     because `linsolve` is better for all kind of linear system.
@@ -1664,7 +1676,7 @@ def nonlinsolve(system, symbols):
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
     {(3*z - 5, -z + 4, z)}
 
-    * system having polynomial equations:
+    * System having polynomial equations and only real solution is present:
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
