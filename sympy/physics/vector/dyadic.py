@@ -1,4 +1,8 @@
-from sympy import sympify, Add, ImmutableMatrix as Matrix
+from sympy.core.backend import sympify, AddClass as Add, USE_SYMENGINE
+if USE_SYMENGINE:
+    from sympy.core.backend import Matrix
+else:
+    from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u, unicode
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)

@@ -1,7 +1,7 @@
 from sympy.core.backend import (USE_SYMENGINE, AddClass as Add, zeros, Integer,
      sqrt, expand, Matrix, S, sympify)
 if USE_SYMENGINE:
-    from symengine import Matrix
+    from sympy.core.backend import Matrix
 else:
     from sympy import ImmutableMatrix as Matrix
 

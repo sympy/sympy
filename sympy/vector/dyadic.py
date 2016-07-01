@@ -1,8 +1,11 @@
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
-from sympy.core import S, Pow
+from sympy.core.backend import S, pow, USE_SYMENGINE
 from sympy.core.expr import AtomicExpr
-from sympy import ImmutableMatrix as Matrix
+if USE_SYMENGINE:
+    from symengine import Matrix
+else:
+    from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
 import sympy.vector
 
@@ -270,7 +273,7 @@ def _dyad_div(one, other):
     if isinstance(one, Dyadic) and isinstance(other, Dyadic):
         raise TypeError("Cannot divide two dyadics")
     elif isinstance(one, Dyadic):
-        return DyadicMul(one, Pow(other, S.NegativeOne))
+        return DyadicMul(one, pow(other, S.NegativeOne))
     else:
         raise TypeError("Cannot divide by a dyadic")
 
