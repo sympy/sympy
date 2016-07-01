@@ -26,6 +26,9 @@ def test_Beam():
     b.I = I_1
     assert b.I is I_1
 
+    bcs = b.BoundaryConditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
+    assert bcs == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
+
 
 def test_PointLoad():
     P1 = Point('P1')
