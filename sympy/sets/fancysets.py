@@ -11,6 +11,7 @@ from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet, imageset)
+from sympy.sets.conditionset import ConditionSet
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -211,7 +212,9 @@ class ImageSet(Set):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, pi, Dummy, Lambda
+    >>> from sympy.sets.sets import FiniteSet, Interval
+    >>> from sympy.sets.fancysets import ImageSet
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -231,6 +234,12 @@ class ImageSet(Set):
     4
     9
     16
+
+    >>> n = Dummy('n')
+    >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
+    >>> dom = Interval(-1, 1)
+    >>> dom.intersect(solutions)
+    {0}
 
     See Also
     ========
@@ -404,6 +413,61 @@ class ImageSet(Set):
                             self.base_set.intersect(
                                 solveset_real(im, n_)))
 
+        elif isinstance(other, Interval):
+            from sympy.solvers.solveset import (invert_real, invert_complex,
+                                                solveset)
+
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+            base_set = self.base_set
+            new_inf, new_sup = None, None
+
+            if f.is_real:
+                inverter = invert_real
+            else:
+                inverter = invert_complex
+
+            g1, h1 = inverter(f, other.inf, n)
+            g2, h2 = inverter(f, other.sup, n)
+
+            if all(isinstance(i, FiniteSet) for i in (h1, h2)):
+                if g1 == n:
+                    if len(h1) == 1:
+                        new_inf = h1.args[0]
+                if g2 == n:
+                    if len(h2) == 1:
+                        new_sup = h2.args[0]
+                # TODO: Design a technique to handle multiple-inverse
+                # functions
+
+                # Any of the new boundary values cannot be determined
+                if any(i is None for i in (new_sup, new_inf)):
+                    return
+
+                range_set = S.EmptySet
+
+                if all(i.is_real for i in (new_sup, new_inf)):
+                    new_interval = Interval(new_inf, new_sup)
+                    range_set = base_set._intersect(new_interval)
+                else:
+                    if other.is_subset(S.Reals):
+                        solutions = solveset(f, n, S.Reals)
+                        if not isinstance(range_set, (ImageSet, ConditionSet)):
+                            range_set = solutions._intersect(other)
+                        else:
+                            return
+
+                if range_set is S.EmptySet:
+                    return S.EmptySet
+                elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
+                    range_set = FiniteSet(*list(range_set))
+
+                if range_set is not None:
+                    return imageset(Lambda(n, f), range_set)
+                return
+            else:
+                return
+
 
 class Range(Set):
     """
@@ -552,8 +616,12 @@ class Range(Set):
             if not all(i.is_number for i in other.args[:2]):
                 return
 
+            # In case of null Range, return an EmptySet.
+            if self.size == 0:
+                return S.EmptySet
+
             # trim down to self's size, and represent
-            # as a Range with step 1
+            # as a Range with step 1.
             start = ceiling(max(other.inf, self.inf))
             if start not in other:
                 start += 1

@@ -70,6 +70,7 @@ modules = [
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
+    'sympy.codegen',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
@@ -85,6 +86,7 @@ modules = [
     'sympy.functions.special',
     'sympy.functions.special.benchmarks',
     'sympy.geometry',
+    'sympy.holonomic',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
     'sympy.interactive',
@@ -253,11 +255,11 @@ class run_benchmarks(Command):
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
-
 tests = [
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
+    'sympy.codegen.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
@@ -269,6 +271,7 @@ tests = [
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
+    'sympy.holonomic.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',

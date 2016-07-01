@@ -103,6 +103,10 @@ invert_complex = _invert
 
 
 def invert_real(f_x, y, x, domain=S.Reals):
+    """
+    Inverts a real-valued function. Same as _invert, but sets
+    the domain to ``S.Reals`` before inverting.
+    """
     return _invert(f_x, y, x, domain)
 
 

@@ -7,7 +7,8 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
+    DotProduct)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -315,6 +316,21 @@ def test_numpy_transpose():
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
 
+def test_numpy_dotproduct():
+    if not numpy:
+        skip("numpy not installed")
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='numpy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='numpy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+
+    assert f1(1, 2, 3) == \
+           f2(1, 2, 3) == \
+           f3(1, 2, 3) == \
+           f4(1, 2, 3) == \
+           numpy.array([14])
+
 def test_numpy_inverse():
     if not numpy:
         skip("numpy not installed.")
@@ -331,6 +347,11 @@ def test_numpy_old_matrix():
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+def test_python_div_zero_issue_11306():
+    if not numpy:
+        skip("numpy not installed.")
+    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
+    lambdify([x, y], p, modules='numpy')(0, 1)
 
 def test_issue9474():
     mods = [None, 'math']

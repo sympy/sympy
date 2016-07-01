@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds)
+    AccumBounds, reduced_totient)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -355,6 +355,8 @@ def test_latex_functions():
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
 
+    assert latex(reduced_totient(n)) == r'\lambda\left( n \right)'
+
     assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
     assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
     assert latex(divisor_sigma(x, y)) == r"\sigma_y\left(x\right)"
@@ -657,7 +659,7 @@ def test_latex_Naturals():
 
 
 def test_latex_Naturals0():
-    assert latex(S.Naturals0) == r"\mathbb{N_0}"
+    assert latex(S.Naturals0) == r"\mathbb{N}_0"
 
 
 def test_latex_Integers():

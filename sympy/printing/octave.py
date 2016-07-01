@@ -14,26 +14,38 @@ from __future__ import print_function, division
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from re import search
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Octave.   This is almost certainly incomplete!
-known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
-                   "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-                   "log", "exp", "erf", "gamma", "sign", "floor", "csc",
-                   "sec", "cot", "coth", "acot", "acoth", "erfc",
-                   "besselj", "bessely", "besseli", "besselk",
-                   "erfinv", "erfcinv", "factorial" ]
+known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
+                   "asin", "acos", "acot", "atan", "atan2", "asec", "acsc",
+                   "sinh", "cosh", "tanh", "coth", "csch", "sech",
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+                   "erfc", "erfi", "erf", "erfinv", "erfcinv",
+                   "besseli", "besselj", "besselk", "bessely",
+                   "exp", "factorial", "floor", "fresnelc", "fresnels",
+                   "gamma", "log", "polylog", "sign", "zeta"]
+
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
     "ceiling": "ceil",
+    "Chi": "coshint",
+    "Ci": "cosint",
     "conjugate": "conj",
     "DiracDelta": "dirac",
     "Heaviside": "heaviside",
+    "laguerre": "laguerreL",
+    "li": "logint",
+    "loggamma": "gammaln",
+    "polygamma": "psi",
+    "Shi": "sinhint",
+    "Si": "sinint",
 }
 
 
@@ -368,6 +380,16 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_Identity(self, expr):
         return "eye(%s)" % self._print(expr.shape[0])
+
+
+    def _print_uppergamma(self, expr):
+        return "gammainc(%s, %s, 'upper')" % (self._print(expr.args[1]),
+                                              self._print(expr.args[0]))
+
+
+    def _print_lowergamma(self, expr):
+        return "gammainc(%s, %s, 'lower')" % (self._print(expr.args[1]),
+                                              self._print(expr.args[0]))
 
 
     def _print_hankel1(self, expr):
