@@ -1,11 +1,8 @@
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
-from sympy.core.backend import S, pow, USE_SYMENGINE
+from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
-if USE_SYMENGINE:
-    from symengine import Matrix
-else:
-    from sympy import ImmutableMatrix as Matrix
+from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
 import sympy.vector
 
