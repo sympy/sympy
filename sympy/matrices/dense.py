@@ -368,6 +368,7 @@ class DenseMatrix(MatrixBase):
 
     def __eq__(self, other):
         try:
+            other = sympify(other)
             if self.shape != other.shape:
                 return False
             if isinstance(other, Matrix):
