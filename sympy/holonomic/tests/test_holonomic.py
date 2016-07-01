@@ -576,6 +576,9 @@ def test_integrate():
     assert p.integrate(x).to_expr() == q.integrate((x, 0, x))
     assert p.integrate((x, 0, 1)) == q.integrate((x, 0, 1))
     assert expr_to_holonomic(1/x).integrate(x).to_expr() == log(x)
+    p = expr_to_holonomic((x + 1)**3*exp(-x), x0=-1, lenics=4).integrate(x).to_expr()
+    q = (-x**3 - 6*x**2 - 15*x + 6*exp(x + 1) - 16)*exp(-x)
+    assert p == q
 
 def test_diff():
     x, y = symbols('x, y')
