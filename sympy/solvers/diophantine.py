@@ -93,7 +93,7 @@ def _even(i):
     return i % 2 == 0
 
 
-def diophantine(eq, param=symbols("t", integer=True), syms=None):
+def diophantine(eq, param=symbols("t", integer=True), syms=None, permute_sign=False):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
@@ -142,6 +142,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
 
     diop_solve()
     """
+    from sympy.utilities.iterables import subsets
+    from sympy.utilities.iterables import permute_signs
+
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
 
@@ -177,11 +180,71 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
         raise TypeError(filldedent('''
     Equation should be a polynomial with Rational coefficients.'''))
 
+    do_permute_signs = False
     try:
         # if we know that factoring should not be attempted, skip
         # the factoring step
         v, c, t = classify_diop(eq)
-        if t  == 'general_sum_of_squares':
+        if permute_sign:
+            len_var = len(v)
+            permute_signs_for = [
+                'general_sum_of_squares',
+                'general_sum_of_even_powers',
+                'general_pythagorean']
+            permute_signs_check = [
+                'homogeneous_ternary_quadratic',
+                'homogeneous_ternary_quadratic_normal',
+                'binary_quadratic']
+            if t in permute_signs_for:
+                do_permute_signs = True
+            elif t in (permute_signs_check):
+                # if all the temrs of the eq have even powers
+                # then only permute the sign.
+                if len_var == 3:
+                    var_mul = list(subsets(v, 2))
+                    # here var_mul is like [(x, y), (x, z), (y, z)]
+                    check_coeff = True
+                    a, b = symbols('a, b')
+                    var1_mul_var2 = map(lambda a, b: a * b, var_mul)
+                    for v1_mul_v2 in var1_mul_var2:
+                        try:
+                            coefficint = c[v1_mul_v2]
+                        except KeyError:
+                            coefficint = 0
+                        # bool(True & coeff(y*z)) and so on
+                        # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
+                        # check_coeff will be True and do_permute_sign will
+                        #  remain False.
+                        check_coeff = bool(check_coeff & coefficint)
+                    if not check_coeff:
+                        # means only x**2, y**2, z**2 is present
+                        do_permute_signs = True
+                elif len_var == 2:
+                    var_mul = list(subsets(v, 2))
+                    # here var_mul is like [(x, y)]
+                    check_coeff = True
+                    x, y = symbols('x, y')
+                    global map
+                    var1_mul_var2 = map(lambda x, y: x * y, var_mul)
+                    for v1_mul_v2 in var1_mul_var2:
+                        try:
+                            coefficint = c[v1_mul_v2]
+                        except KeyError:
+                            coefficint = 0
+                        check_coeff = bool(check_coeff & coefficint)
+                    var_mul = list(subsets(v, 1))
+                    # here var_mul is like [(x,), (y, )]
+                    for v1_mul_v2 in var_mul:
+                        try:
+                            coefficint = c[v1_mul_v2[0]]
+                        except KeyError:
+                            coefficint = 0
+                        check_coeff = bool(check_coeff & coefficint)
+                    if not check_coeff:
+                        # means only x**2, y**2 is present
+                        do_permute_signs = True
+
+        if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
         else:
@@ -223,7 +286,16 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)) is S.Zero:
         sols.add(null)
-    return set([S(i) for i in sols])
+    # soln = set([S(i) for i in sols])
+    final_soln = set()
+    for sol in sols:
+        # if do_permute_signs and all(s in S.Integers for s in sol):
+        if do_permute_signs and all(_is_int(s) for s in sol):
+            permuted_sign = set(permute_signs(sol))
+            final_soln.update(permuted_sign)
+        else:
+            final_soln.add(sol)
+    return final_soln
 
 
 def merge_solution(var, var_t, solution):

@@ -486,7 +486,13 @@ def test_diophantine():
 
     assert diophantine(x - y) == diophantine(Eq(x, y))
     assert diophantine(3*x*pi - 2*y*pi) == set([(2*t_0, 3*t_0)])
-    assert diophantine(x**2 + y**2 + z**2 - 14) == set([(1, 2, 3)])
+    eq = x**2 + y**2 + z**2 - 14
+    soln = set([
+        (-1, -2, -3), (-1, -2, 3), (-1, 2, -3), (-1, 2, 3),
+        (1, -2, -3), (1, -2, 3), (1, 2, -3), (1, 2, 3)])
+    assert diophantine(eq, permute_sign=True) == soln
+    diophantine(eq)== set([(1, 2, 3)])
+
     assert diophantine(x**2 + 15*x/14 - 3) == set()
     # test issue 11049
     eq = 92*x**2 - 99*y**2 - z**2
@@ -566,6 +572,7 @@ def test_diop_general_sum_of_squares_quick():
         1, 2, 3, 4, -9), (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6),
         (1, 3, 4, 5, 5, -6), (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6,
         -7), (0, 2, 3, 5, 5, -7), (0, 1, 5, 5, 5, -6)])
+    assert len(diophantine(eq, permute_sign=True)) == 784
     # handle negated squares with signsimp
     assert diophantine(12 - x**2 - y**2 - z**2) == set([(2, 2, 2)])
     # diophantine handles simplification, so classify_diop should
