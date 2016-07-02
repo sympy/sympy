@@ -2,6 +2,9 @@ from sympy import Symbol
 from sympy.physics.mechanics.beam import Beam, PointLoad, DistributedLoad
 from sympy.physics.mechanics import Point
 from sympy.printing import sstr
+from sympy.utilities.pytest import XFAIL
+
+x = Symbol('x')
 
 
 def test_Beam():
@@ -29,6 +32,7 @@ def test_Beam():
     bcs = b.BoundaryConditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
     assert bcs == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
 
+
 @XFAIL
 def test_apply():
     E = Symbol('E')
@@ -39,6 +43,7 @@ def test_apply():
     Load_3 = DistributedLoad(start = 3, end = 4, value = x**2)
     p = b.apply(Load_1, Load_2, Load_3)
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) + SingularityFunction(x, 3, 2)
+    assert p == q
 
 
 def test_PointLoad():
