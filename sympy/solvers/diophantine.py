@@ -93,7 +93,7 @@ def _even(i):
     return i % 2 == 0
 
 
-def diophantine(eq, param=symbols("t", integer=True), syms=None, permute_sign=False):
+def diophantine(eq, param=symbols("t", integer=True), syms=None):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
@@ -157,9 +157,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute_sign=Fa
                     'syms should be given as a sequence, e.g. a list')
             syms = [i for i in syms if i in var]
             if syms != var:
-                map = dict(zip(syms, range(len(syms))))
-                return set([tuple([t[map[i]] for i in var])
-                    for t in diophantine(eq, param)])
+                dict_sym_index = dict(zip(syms, range(len(syms))))
+                return set([tuple([t[dict_sym_index[i]] for i in var])
+                            for t in diophantine(eq, param)])
         n, d = eq.as_numer_denom()
         if not n.free_symbols:
             return set()
@@ -185,63 +185,63 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute_sign=Fa
         # if we know that factoring should not be attempted, skip
         # the factoring step
         v, c, t = classify_diop(eq)
-        if permute_sign:
-            len_var = len(v)
-            permute_signs_for = [
-                'general_sum_of_squares',
-                'general_sum_of_even_powers',
-                'general_pythagorean']
-            permute_signs_check = [
-                'homogeneous_ternary_quadratic',
-                'homogeneous_ternary_quadratic_normal',
-                'binary_quadratic']
-            if t in permute_signs_for:
-                do_permute_signs = True
-            elif t in (permute_signs_check):
-                # if all the variables in eq have even powers
-                # then do_permute_sign = True
-                if len_var == 3:
-                    var_mul = list(subsets(v, 2))
-                    # here var_mul is like [(x, y), (x, z), (y, z)]
-                    check_coeff = True
-                    a, b = symbols('a, b')
-                    var1_mul_var2 = map(lambda a, b: a * b, var_mul)
-                    for v1_mul_v2 in var1_mul_var2:
-                        try:
-                            coefficint = c[v1_mul_v2]
-                        except KeyError:
-                            coefficint = 0
-                        # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
-                        # check_coeff will be True and do_permute_sign will
-                        #  remain False.
-                        check_coeff = bool(check_coeff & coefficint)
-                    if not check_coeff:
-                        # means only x**2, y**2, z**2, const is present
-                        do_permute_signs = True
-                elif len_var == 2:
-                    var_mul = list(subsets(v, 2))
-                    # here var_mul is like [(x, y)]
-                    check_coeff = True
-                    x, y = symbols('x, y')
-                    global map
-                    var1_mul_var2 = map(lambda x, y: x * y, var_mul)
-                    for v1_mul_v2 in var1_mul_var2:
-                        try:
-                            coefficint = c[v1_mul_v2]
-                        except KeyError:
-                            coefficint = 0
-                        check_coeff = bool(check_coeff & coefficint)
-                    var_mul = list(subsets(v, 1))
-                    # here var_mul is like [(x,), (y, )]
-                    for v1_mul_v2 in var_mul:
-                        try:
-                            coefficint = c[v1_mul_v2[0]]
-                        except KeyError:
-                            coefficint = 0
-                        check_coeff = bool(check_coeff & coefficint)
-                    if not check_coeff:
-                        # means only x**2, y**2 and const is present
-                        do_permute_signs = True
+
+        # check for permute sign
+        len_var = len(v)
+        permute_signs_for = [
+            'general_sum_of_squares',
+            'general_sum_of_even_powers',
+            'general_pythagorean']
+        permute_signs_check = [
+            'homogeneous_ternary_quadratic',
+            'homogeneous_ternary_quadratic_normal',
+            'binary_quadratic']
+        if t in permute_signs_for:
+            do_permute_signs = True
+        elif t in (permute_signs_check):
+            # if all the variables in eq have even powers
+            # then do_permute_sign = True
+            if len_var == 3:
+                var_mul = list(subsets(v, 2))
+                # here var_mul is like [(x, y), (x, z), (y, z)]
+                check_coeff = True
+                a, b = symbols('a, b')
+                var1_mul_var2 = map(lambda a, b: a * b, var_mul)
+                for v1_mul_v2 in var1_mul_var2:
+                    try:
+                        coefficint = c[v1_mul_v2]
+                    except KeyError:
+                        coefficint = 0
+                    # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
+                    # `check_coeff` will be True and do_permute_sign will
+                    #  remain False.
+                    check_coeff = bool(check_coeff & coefficint)
+                if not check_coeff:
+                    # means only x**2, y**2, z**2, const is present
+                    do_permute_signs = True
+            elif len_var == 2:
+                var_mul = list(subsets(v, 2))
+                # here var_mul is like [(x, y)]
+                check_coeff = True
+                x, y = symbols('x, y')
+                var1_mul_var2 = map(lambda x, y: x * y, var_mul)
+                for v1_mul_v2 in var1_mul_var2:
+                    try:
+                        coefficint = c[v1_mul_v2]
+                    except KeyError:
+                        coefficint = 0
+                    check_coeff = bool(check_coeff & coefficint)
+                var_mul = list(subsets(v, 1))
+                # here var_mul is like [(x,), (y, )]
+                for v1_mul_v2 in var_mul:
+                    try:
+                        coefficint = c[v1_mul_v2[0]]
+                    except KeyError:
+                        coefficint = 0
+                    check_coeff = bool(check_coeff & coefficint)
+                if not check_coeff:
+                    # means only x**2, y**2 and const is present
+                    do_permute_signs = True
 
         if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang

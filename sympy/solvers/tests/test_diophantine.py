@@ -490,8 +490,7 @@ def test_diophantine():
     soln = set([
         (-1, -2, -3), (-1, -2, 3), (-1, 2, -3), (-1, 2, 3),
         (1, -2, -3), (1, -2, 3), (1, 2, -3), (1, 2, 3)])
-    assert diophantine(eq, permute_sign=True) == soln
-    diophantine(eq)== set([(1, 2, 3)])
+    assert diophantine(eq) == soln
 
     assert diophantine(x**2 + 15*x/14 - 3) == set()
     # test issue 11049
@@ -564,15 +563,16 @@ def test_diop_general_sum_of_squares_quick():
     # issue 11016
     var = symbols(':5') + (symbols('6', negative=True),)
     eq = Add(*[i**2 for i in var]) - 112
-    assert diophantine(eq) == set(
-        [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4,
-        5, -7), (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3,
-        3, 5, -8), (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1,
-        3, 4, 6, -7), (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1,
-        1, 2, 3, 4, -9), (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6),
-        (1, 3, 4, 5, 5, -6), (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6,
-        -7), (0, 2, 3, 5, 5, -7), (0, 1, 5, 5, 5, -6)])
-    assert len(diophantine(eq, permute_sign=True)) == 784
+    # soln without sign permutation
+    # set(
+    #     [(0, 1, 1, 5, 6, -7), (1, 1, 1, 3, 6, -8), (2, 3, 3, 4,
+    #     5, -7), (0, 1, 1, 1, 3, -10), (0, 0, 4, 4, 4, -8), (1, 2, 3,
+    #     3, 5, -8), (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1,
+    #     3, 4, 6, -7), (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1,
+    #     1, 2, 3, 4, -9), (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6),
+    #     (1, 3, 4, 5, 5, -6), (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6,
+    #     -7), (0, 2, 3, 5, 5, -7), (0, 1, 5, 5, 5, -6)])
+    assert len(diophantine(eq)) == 784
     # handle negated squares with signsimp
     assert diophantine(12 - x**2 - y**2 - z**2) == set([(2, 2, 2)])
     # diophantine handles simplification, so classify_diop should
@@ -878,11 +878,9 @@ def test_diophantine_permute_sign():
     from sympy.abc import a, b, c, d, e, f
     eq = a**4 + b**4 - (2**4 + 3**4)
     soln = set([(-2, -3), (-2, 3), (2, -3), (2, 3)])
-    assert diophantine(eq, permute_sign=True) == soln
-    assert diophantine(eq) == set([(2, 3)])
+    assert diophantine(eq) == soln
     eq = a**2 + b**2 + c**2 + d**2 + e**2 - 234
-    assert len(diophantine(eq)) == 35
-    assert len(diophantine(eq, permute_sign=True)) == 788
+    assert len(diophantine(eq)) == 788
 
 
 def test_issue_9538():
