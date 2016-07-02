@@ -148,14 +148,17 @@ class DifferentialOperator(object):
         # the parent ring for this operator
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
+        base = self.parent.base
         # sequence of polynomials in x for each power of Dx
         # the list should not have trailing zeroes
         # represents the operator
         # convert the expressions into ring elements using from_sympy
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
-                if not isinstance(j, self.parent.base.dtype):
-                    list_of_poly[i] = self.parent.base.from_sympy(sympify(j))
+                if not isinstance(j, base.dtype):
+                    list_of_poly[i] = base.from_sympy(sympify(j))
+                elif isinstance(j, base.dtype):
+                    list_of_poly[i] = base.from_sympy(base.to_sympy(j))
 
             self.listofpoly = list_of_poly
         # highest power of `Dx`
@@ -421,7 +424,37 @@ class HolonomicFunction(object):
 
     __str__ = __repr__
 
+    def unify(self, other):
+        """
+        Unifies the ground domain of a given two Holonomic
+        Functions.
+        """
+
+        R1 = self.annihilator.parent.base
+        R2 = other.annihilator.parent.base
+
+        if R1 == R2:
+            return (self, other)
+
+        R = R1.unify(R2)
+
+        newparent, _ = DifferentialOperators(R, str(self.annihilator.parent.gen_symbol))
+
+        sol1 = [R(i.rep) for i in self.annihilator.listofpoly]
+        sol2 = [R(i.rep) for i in other.annihilator.listofpoly]
+
+        sol1 = DifferentialOperator(sol1, newparent)
+        sol2 = DifferentialOperator(sol2, newparent)
+
+        sol1 = HolonomicFunction(sol1, self.x, self.x0, self.y0)
+        sol2 = HolonomicFunction(sol2, other.x, other.x0, other.y0)
+
+        return (sol1, sol2)
+
     def __add__(self, other):
+        if self.annihilator.parent.base != other.annihilator.parent.base:
+            a, b = self.unify(other)
+            return a + b
         deg1 = self.annihilator.order
         deg2 = other.annihilator.order
         dim = max(deg1, deg2)
@@ -718,13 +751,21 @@ class HolonomicFunction(object):
             else:
                 y0 = _extend_y0(self, ann_self.order)
                 y1 = []
+
                 for j in y0:
                     y1.append(j * other)
+
                 return HolonomicFunction(ann_self, self.x, self.x0, y1)
 
+        if self.annihilator.parent.base != other.annihilator.parent.base:
+            a, b = self.unify(other)
+            return a * b
+
         ann_other = other.annihilator
+
         list_self = []
         list_other = []
+
         a = ann_self.order
         b = ann_other.order
 
@@ -1022,10 +1063,10 @@ class HolonomicFunction(object):
                     continue
 
                 if (i - k, k) in dict1:
-                    dict1[(i - k, k)] += (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] += (S(coeff) * rf(n - k + 1, i))
 
                 else:
-                    dict1[(i - k, k)] = (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] = (S(coeff) * rf(n - k + 1, i))
 
 
         sol = []
