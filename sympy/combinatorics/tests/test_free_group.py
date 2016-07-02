@@ -179,13 +179,13 @@ def test_FreeGroupElm_syllables():
 
 def test_FreeGroup_exponents():
     w1 = x**2*y**3
-    assert w1.exponent_sum_word(x) == 2
-    assert w1.exponent_sum_word(x**-1) == -2
-    assert w1.generator_exponent_sum(x) == 2
+    assert w1.exponent_sum(x) == 2
+    assert w1.exponent_sum(x**-1) == -2
+    assert w1.generator_count(x) == 2
 
     w2 = x**2*y**4*x**-3
-    assert w2.exponent_sum_word(x) == -1
-    assert w2.generator_exponent_sum(x) == 5
+    assert w2.exponent_sum(x) == -1
+    assert w2.generator_count(x) == 5
 
     w3 = x**2*y**3*x**-1*y
     assert w3.eliminate_word(x, x**2) == x**4*y**3*x**-2*y

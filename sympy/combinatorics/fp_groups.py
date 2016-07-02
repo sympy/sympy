@@ -1066,6 +1066,7 @@ def reidemeister_relators(C):
     if order_1_gens:
         rels = [w.eliminate_word(x, identity) for w in rels for x in order_1_gens]
     C.schreier_generators = [i for i in C.schreier_generators if i not in order_1_gens]
+    # Tietze transformation 1 i.e TT_1
     # remove cyclic conjugate elements from relators
     i = 0
     while i < len(rels):
@@ -1243,18 +1244,20 @@ def elimination_technique_1(C):
     next_i = False
     for i in range(len(rels) -1, -1, -1):
         rel = rels[i]
+        # don't look for a new generator occuring once in relator which
+        # has already found to posses a
         for gen in redundant_gens:
-            if any([gen.array_form[0][0] == r[0] for r in rel.array_form]):
+            gen_sym = gen.array_form[0][0]
+            if any([gen_sym == r[0] for r in rel.array_form]):
                 next_i = True
                 break
         if next_i:
             next_i = False
             continue
-        j = len(gens) - 1
-        while j >= 0:
+        for j in range(len(gens) - 1, -1, -1):
             gen = gens[j]
-            if rel.generator_exponent_sum(gen) == 1 and gen not in contained_gens:
-                k = rel.exponent_sum_word(gen)
+            if rel.generator_count(gen) == 1 and gen not in contained_gens:
+                k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
@@ -1262,7 +1265,6 @@ def elimination_technique_1(C):
                 contained_gens.extend((bk*fw).contains_generators())
                 del rels[i]; del gens[j]
                 break
-            j -= 1
     # eliminate the redundant generator from remaing relators
     for i, gen in product(range(len(rels)), redundant_gens):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
@@ -1278,8 +1280,7 @@ def elimination_technique_2(C):
     shortest equivalent string at each stage.
 
     >>> from sympy.combinatorics.free_group import free_group
-    >>> from sympy.combinatorics.fp_groups import (FpGroup, coset_enumeration_r,
-            reidemeister_relators, define_schreier_generators, elimination_technique_2)
+    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2]); H = [x*y, x**-1*y**-1*x*y*x]
     >>> C = coset_enumeration_r(f, H)
@@ -1287,7 +1288,6 @@ def elimination_technique_2(C):
     >>> define_schreier_generators(C)
     >>> reidemeister_relators(C)
     >>> elimination_technique_2(C)
-    >>> [y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1, y_1**2]
     ([y_1, y_2], [y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1, y_1**2])
 
     """
@@ -1300,8 +1300,8 @@ def elimination_technique_2(C):
         j = len(gens) - 1
         while j >= 0:
             gen = gens[j]
-            if rel.generator_exponent_sum(gen) == 1:
-                k = rel.exponent_sum_word(gen)
+            if rel.generator_count(gen) == 1:
+                k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
