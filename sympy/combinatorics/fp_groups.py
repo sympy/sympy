@@ -1376,31 +1376,31 @@ def reidemeister_presentation(fp_grp, H):
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
     >>> H = [x*y, x**-1*y**-1*x*y*x]
     >>> reidemeister_presentation(f, H)
-    ([y_1, y_2], [y_1**2, y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1])
+    ({y_1, y_2}, {y_1**2, y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1})
 
     >>> f = FpGroup(F, [x**3, y**3, (x*y)**3])
     >>> H = [x*y, x*y**-1]
     >>> reidemeister_presentation(f, H)
-    ([x_0, y_0], [x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0])
+    ({x_0, y_0}, {x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0})
 
     # Exercises Q2. Pg 187 from [1]
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ([x_1], [x_1**-4, x_1**-8])
+    ({x_1}, {x_1**-4, x_1**-8})
 
     >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ([x_0], [<identity>, x_0**-4, x_0**6, x_0**-12])
+    ({x_0}, {<identity>, x_0**6, x_0**18})
 
     """
     C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    for i in range(12):
-        elimination_technique_1(C)
+    elimination_technique_1(C)
+    elimination_technique_1(C)
     return C.schreier_generators, C.reidemeister_relators
 
 

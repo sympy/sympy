@@ -609,21 +609,23 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         r = Symbol(str(gen))
         arr = self.array_form
         array = []
-        for i in range(len(self.array_form)):
+        by_arr = list(by.array_form)
+        l_by = len(by_arr)
+        for i in range(len(arr)):
             if arr[i][0] == r:
                 # TODO: this shouldn't be checked again and again, since `by`
                 # is fixed
-                if len(by.array_form) == 1:
-                    array.append((by.array_form[0][0], by.array_form[0][1]*arr[i][1]))
-                    zero_mul_simp(array, len(array) - len(by.array_form) - 1)
+                if by_arr == 1:
+                    array.append((by_arr[0][0], by_arr[0][1]*arr[i][1]))
+                    zero_mul_simp(array, len(array) - l_by - 1)
                 else:
                     k = arr[i][1]
                     sig = sign(k)
                     for j in range(sig*k):
-                        array.extend(list(by.array_form[::sig]))
-                        zero_mul_simp(array, len(array) - len(by.array_form) - 1)
+                        array.extend(list((by**sig).array_form))
+                        zero_mul_simp(array, len(array) - l_by - 1)
             else:
-                array.append(self.array_form[i])
+                array.append(arr[i])
                 zero_mul_simp(array, len(array) - 2)
         return group.dtype(tuple(array))
 
