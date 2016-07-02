@@ -1063,8 +1063,8 @@ def reidemeister_relators(C):
     rels.difference_update(order_1_gens)
     # replace order 1 generators by identity element in reidemeister relators
     rels = list(rels)
-    if order_1_gens:
-        rels = [w.eliminate_word(x, identity) for w in rels for x in order_1_gens]
+    for i, gen in product(range(len(rels)), order_1_gens):
+        rels[i] = rels[i].eliminate_word(gen, identity)
     C.schreier_generators = [i for i in C.schreier_generators if i not in order_1_gens]
     # Tietze transformation 1 i.e TT_1
     # remove cyclic conjugate elements from relators
@@ -1269,8 +1269,8 @@ def elimination_technique_1(C):
     for i, gen in product(range(len(rels)), redundant_gens):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
     rels.sort()
-    C.reidemeister_relators = rels
-    C.schreier_generators = gens
+    C.reidemeister_relators = set(rels)
+    C.schreier_generators = set(gens)
 
 # Pg 350, section 2.5.2 from [2]
 def elimination_technique_2(C):
@@ -1317,7 +1317,7 @@ def elimination_technique_2(C):
     C.schreier_generators = gens
     return C.schreier_generators, C.reidemeister_relators
 
-def _simplification_technique_1(rels):
+def _simplification_technique_1(C):
     """
     All relators are checked to see if they are of the form `gen^n`. If any
     such relators are found then all other relators are processed for strings
@@ -1342,6 +1342,7 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
+    rels = C.reidemeister_relators
     group = rels[0].group
     one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
     nw = [list(i.array_form) for i in rels]
@@ -1356,7 +1357,7 @@ def _simplification_technique_1(rels):
                 elif t > n/2:
                     k[j] = k[j][0], Mod(k[j][1], n) - n
 
-    return [group.dtype(tuple(rel)) for rel in nw]
+    C.reidemeister_relators = [group.dtype(tuple(rel)) for rel in nw]
 
 def reidemeister_presentation(fp_grp, H):
     """
@@ -1398,8 +1399,8 @@ def reidemeister_presentation(fp_grp, H):
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    elimination_technique_1(C)
-    elimination_technique_1(C)
+    for i in range(12):
+        elimination_technique_1(C)
     return C.schreier_generators, C.reidemeister_relators
 
 
