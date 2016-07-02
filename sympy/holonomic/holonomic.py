@@ -1038,7 +1038,7 @@ class HolonomicFunction(object):
         # check whether a power series exists if the point is singular
         if self.annihilator.is_singular(x0=self.x0):
             indicialroots = self._indicial()
-            if all(i < 0 or not i.is_Integer for i in indicialroots):
+            if all(i < 0 or not int(i) == i for i in indicialroots):
                 from .holonomicerrors import NotPowerSeriesError
                 raise NotPowerSeriesError(self, self.x0)
 
@@ -1491,10 +1491,10 @@ class HolonomicFunction(object):
 
             # substitute m * n + i for n
             for k in arg1:
-                ap.extend([(i - k) / m] * arg1[k])
+                ap.extend([nsimplify((i - k) / m)] * arg1[k])
 
             for k in arg2:
-                bq.extend([(i - k) / m] * arg2[k])
+                bq.extend([nsimplify((i - k) / m)] * arg2[k])
 
             # convention of (k + 1) in the denominator
             if 1 in bq:
@@ -1642,7 +1642,7 @@ def from_hyper(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
-def from_meijerg(func, x0=0, evalf=False, initcond=True):
+def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     """
     Converts a Meijer G-function to Holonomic.
     func is the Hypergeometric Function and x0 be the point at
@@ -1665,7 +1665,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True):
     p = len(a)
     z = func.args[2]
     x = z.atoms(Symbol).pop()
-    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(domain.old_poly_ring(x), 'Dx')
 
     # compute the differential equation satisfied by the
     # Meijer G-function.
@@ -1726,10 +1726,11 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True):
 
 x_1 = Dummy('x_1')
 _lookup_table = None
+domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1757,15 +1758,20 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None):
         x = func.atoms(Symbol).pop()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain)
     if solpoly:
         return solpoly
 
     # create the lookup table
-    global _lookup_table
+    global _lookup_table, domain_for_table
     if not _lookup_table:
+        domain_for_table = domain
         _lookup_table = {}
-        _create_table(_lookup_table)
+        _create_table(_lookup_table, domain=domain)
+    elif domain != domain_for_table:
+        domain_for_table = domain
+        _lookup_table = {}
+        _create_table(_lookup_table, domain=domain)
 
     # use the table directly to convert to Holonomic
     if func.is_Function:
@@ -1775,7 +1781,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None):
             l = _lookup_table[t]
             sol = l[0][1].change_x(x)
         else:
-            sol = _convert_meijerint(func, x, initcond=False)
+            sol = _convert_meijerint(func, x, initcond=False, domain=domain)
             if not sol:
                 raise NotImplementedError
             if not lenics:
@@ -1801,15 +1807,15 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None):
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow
-    sol = expr_to_holonomic(args[0], x=x, initcond=False)
+    sol = expr_to_holonomic(args[0], x=x, initcond=False, domain=domain)
 
     if f is Add:
         for i in range(1, len(args)):
-            sol += expr_to_holonomic(args[i], x=x, initcond=False)
+            sol += expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
     elif f is Mul:
         for i in range(1, len(args)):
-            sol *= expr_to_holonomic(args[i], x=x, initcond=False)
+            sol *= expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
     elif f is Pow:
         sol = sol**args[1]
@@ -1994,7 +2000,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -2019,7 +2025,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None):
     if not (ispoly or israt or is_alg):
         return None
 
-    R = QQ.old_poly_ring(x)
+    R = domain.old_poly_ring(x)
     _, Dx = DifferentialOperators(R, 'Dx')
 
     # if the function is constant
@@ -2056,7 +2062,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None):
     return HolonomicFunction(sol, x, x0, y0)
 
 
-def _convert_meijerint(func, x, initcond=True):
+def _convert_meijerint(func, x, initcond=True, domain=QQ):
     args = meijerint._rewrite1(func, x)
 
     if args:
@@ -2097,12 +2103,12 @@ def _convert_meijerint(func, x, initcond=True):
     # add all the meijerg functions after converting to holonomic
     for i in range(1, len(G_list)):
         coeff, m = _shift(G_list[i], po_list[i])
-        sol += fac_list[i] * coeff * from_meijerg(m, initcond=initcond)
+        sol += fac_list[i] * coeff * from_meijerg(m, initcond=initcond, domain=domain)
 
     return sol
 
 
-def _create_table(table):
+def _create_table(table, domain=QQ):
     """
     Creates the look-up table. For a similar implementation
     see meijerint._create_lookup_table.
@@ -2115,7 +2121,7 @@ def _create_table(table):
         table.setdefault(_mytype(formula, x_1), []).append((formula,
             HolonomicFunction(annihilator, arg, x0, y0)))
 
-    R = QQ.old_poly_ring(x_1)
+    R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
     from sympy import (sin, cos, exp, log, erf, sqrt, pi,
