@@ -105,6 +105,18 @@ class Beam(object):
         """
         return bcs
 
+    def apply(self, *loads):
+        """
+        Takes PointLoad and DistributedLoad as input. This method would apply
+        the loads, that are passed as arguments, to the beam object. Internally
+        this method would represent the PointLoads and DistributedLoads using
+        Singularity Functions.
+
+        Examples
+        ========
+
+        """
+
 
 class PointLoad(object):
     """A Point Load.

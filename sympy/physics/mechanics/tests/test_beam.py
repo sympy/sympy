@@ -29,6 +29,17 @@ def test_Beam():
     bcs = b.BoundaryConditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
     assert bcs == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
 
+@XFAIL
+def test_apply():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(4, E, I)
+    Load_1 = PointLoad(location = 0, value = -3, moment = True)
+    Load_2 = PointLoad(location = 2, value = 4)
+    Load_3 = DistributedLoad(start = 3, end = 4, value = x**2)
+    p = b.apply(Load_1, Load_2, Load_3)
+    q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) + SingularityFunction(x, 3, 2)
+
 
 def test_PointLoad():
     P1 = Point('P1')
