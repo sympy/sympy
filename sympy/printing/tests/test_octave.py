@@ -9,6 +9,7 @@ from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
+from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
 from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import range
 
@@ -245,6 +246,12 @@ def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: mcode(expr))
 
+def test_octave_sinc():
+    expr = octave_code(sinc((x+3)))
+    assert expr == "sinc((x + 3)/pi)"
+    expr = octave_code(sinc(pi*(x+3)))
+    assert expr == "sinc(x + 3)"
+
 
 def test_octave_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x**2, True))
@@ -363,5 +370,7 @@ def test_specfun():
     assert octave_code(airyaiprime(x)) == 'airy(1, x)'
     assert octave_code(airybi(x)) == 'airy(2, x)'
     assert octave_code(airybiprime(x)) == 'airy(3, x)'
+    assert octave_code(uppergamma(n, x)) == 'gammainc(x, n, \'upper\')'
+    assert octave_code(lowergamma(n, x)) == 'gammainc(x, n, \'lower\')'
     assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
