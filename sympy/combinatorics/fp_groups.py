@@ -1273,12 +1273,6 @@ def elimination_technique_1(C):
         rels.remove(C.schreier_free_group.identity)
     except ValueError:
         pass
-    for i in range(len(rels) - 1, -1, -1):
-        w = rels[i]
-        if any([w.is_dependent(rels[j]) for j in range(i - 1, -1, -1)]):
-            del rels[i]
-        elif w.number_syllables() == 1 and w.array_form[0][1] < 0:
-            rels[i] = w**-1
     C.reidemeister_relators = set(rels)
     C.schreier_generators = set(gens)
 
@@ -1354,20 +1348,33 @@ def _simplification_technique_1(C):
     """
     rels = list(C.reidemeister_relators)
     group = C.schreier_free_group
-    one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
-    nw = [list(i.array_form) for i in rels]
+    l_rels = len(rels)
+    one_syllable_rels = []
+    nw = [None]*l_rels
     for i in range(len(rels)):
+        w = rels[i]
+        if w.number_syllables() == 1:
+            if w.array_form[0][1] < 0:
+                rels[i] = w**-1
+            one_syllable_rels.append(rels[i])
+        nw[i] = list(rels[i].array_form)
+    for i in range(l_rels):
         k = nw[i]
-        for gen, j in product(one_syllable_rels, range(len(k))):
-            if gen.array_form[0][0] == k[j][0] and gen != rels[i]:
-                n = gen.array_form[0][1]
-                t = Mod(k[j][1], n)
-                if t <= n/2:
-                    k[j] = k[j][0], Mod(k[j][1], n)
-                elif t > n/2:
-                    k[j] = k[j][0], Mod(k[j][1], n) - n
+        rels_i = rels[i]
+        for gen in one_syllable_rels:
+            n = gen.array_form[0][1]
+            gen_arr0 = gen.array_form[0][0]
+            for j in range(len(k) - 1, -1, -1):
+                if gen_arr0 == k[j][0] and gen != rels_i:
+                    t = Mod(k[j][1], n)
+                    if t == 0:
+                        del k[j]
+                    elif t <= n/2:
+                        k[j] = k[j][0], Mod(k[j][1], n)
+                    elif t > n/2:
+                        k[j] = k[j][0], Mod(k[j][1], n) - n
 
-    C.reidemeister_relators = [group.dtype(tuple(rel)) for rel in nw]
+    C.reidemeister_relators = [group.dtype(tuple(arr)) for arr in nw if arr]
 
 def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     """
