@@ -247,6 +247,7 @@ def test_octave_piecewise():
     raises(ValueError, lambda: mcode(expr))
 
 def test_octave_sinc():
+    from sympy import sinc
     expr = octave_code(sinc((x+3)))
     assert expr == "sinc((x + 3)/pi)"
     expr = octave_code(sinc(pi*(x+3)))
