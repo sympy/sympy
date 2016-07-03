@@ -1561,7 +1561,7 @@ class HolonomicFunction(object):
 
         from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError
         try:
-            sol = expr_to_holonomic(self.to_expr(), x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
+            sol = expr_to_holonomic(self.to_expr(), x=self.x, x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
         except (NotPowerSeriesError, NotHyperSeriesError):
             symbolic = False
 
