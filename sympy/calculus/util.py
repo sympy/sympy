@@ -277,6 +277,28 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, TrigonometricFunction):
         period = f.period(symbol)
 
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_sym = base.has(symbol)
+        expo_has_sym = expo.has(symbol)
+
+        try:
+            if base_has_sym and not expo_has_sym:
+                period = periodicity(base, symbol)
+
+            elif expo_has_sym and not base_has_sym:
+                period = periodicity(expo, symbol)
+
+            else:
+                periods = []
+                for expr in f.args:
+                    periods.append(periodicity(expr, symbol))
+
+                period = lcm_fraction(periods)
+
+        except NotImplementedError:
+            pass
+
     if f.is_Mul:
         _, g = f.as_independent(symbol, as_Add=False)
         if isinstance(g, TrigonometricFunction):
