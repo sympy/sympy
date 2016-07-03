@@ -19,11 +19,11 @@ class SingularityFunction(Function):
     variable, an offset and an exponent as arguments. These functions are
     represented using Macaulay brackets as :
 
-    .. math::
-        SingularityFunction(x, a, n) := {\langle x - a \rangle}^n
+    SingularityFunction(x, a, n) := <x - a>^n
 
-    Returns ``Derivative(DiracDelta(x - a), x, n + 1)`` if ``n < 0``
-    Returns ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``
+    The singularity function will automatically evaluate to
+    ``Derivative(DiracDelta(x - a), x, n + 1)`` if ``n < 0``
+    and ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``.
 
 
     Examples
