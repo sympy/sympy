@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.functions import SingularityFunction, DiracDelta, Heaviside
 from sympy.core import sympify
+from sympy.integrals import integrate
 
 
 def singularityintegrate(f, x):
@@ -19,8 +20,6 @@ def singularityintegrate(f, x):
             return SingularityFunction(x, a, n + 1)
 
     if f.is_Mul or f.is_Pow:
-
-        from sympy.integrals import integrate
 
         expr = f.rewrite(DiracDelta)
         expr = integrate(expr, x)
