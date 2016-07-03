@@ -253,7 +253,7 @@ def not_empty_in(finset_intersection, *syms):
         return _domain
 
 
-def periodicity(f, symbol):
+def periodicity(f, symbol, check=False):
     """Returns the period of a given function, if possible.
 
     Examples
@@ -300,7 +300,15 @@ def periodicity(f, symbol):
 
         period = lcm_fraction(periods)
 
-    if period is not None and orig_f.subs(symbol, symbol + period) == orig_f:
+    if period is not None:
+        if check:
+            if orig_f.subs(symbol, symbol + period) == orig_f:
+                return period
+
+            else:
+                raise NotImplementedError("Periods of only certain trigonometric functions"
+                                          " can be calculated using this method.")
+
         return period
 
     else:
