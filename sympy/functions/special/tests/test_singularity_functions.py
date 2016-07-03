@@ -46,7 +46,7 @@ def test_eval():
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
     assert SingularityFunction(4, 4, -2) == oo
-    assert float(SingularityFunction(6.1, 4, 5)) == 40.84100999999997
+    assert (SingularityFunction(6.1, 4, 5)).evalf(5) == 40.84100
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
     assert SingularityFunction(x, a, nan) == nan
     assert SingularityFunction(x, nan, 1) == nan
