@@ -120,10 +120,212 @@ adjoin them to the coefficient ring by setting the keyword ``extension``::
     Poly(x + sqrt(2), x, domain='QQ<sqrt(2)>')
 
 With the default setting ``extension=False`` `x` and `\sqrt 2` are
-wrongly considered algebraically independent. With coefficients in
+incorrectly considered algebraically independent. With coefficients in
 the extension field `\mathbb{Q}(\sqrt 2)` the square root is treated
 properly as an algebraic number.
 
+Divisibility
+------------
+
+The fourth rational operation, division, or inverted multiplication,
+is not generally possible in rings. If `a` and `b` are two elements
+of a ring `A`, then there may exist a third element `q` in `A` such
+that `a = bq`. In fact, there may exist several such elements.
+
+If also `a = bq'` for some `q'` in `A`, then `b(q - q') = 0`. Hence
+either `b` or `q - q'` is zero, or they are both *zero divisors*,
+nonzero elements whose product is zero.
+
+Integral domains
+````````````````
+Commutative rings with no zero divisors are called *integral domains*.
+Most of the commonly encountered rings, the ring of integers, fields,
+and polynomial rings over integral domains are integral domains.
+
+Assume now that `A` is an integral domain, and consider the set
+`P` of its nonzero elements, which is closed under multiplication.
+If `a` and `b` are in `P`, and there exists an element `q` in `P`
+such that `a = bq`, then `q` is unique and called the *quotient*,
+`a/b`, of `a`  by `b`. Moreover, it is said that
+
+- `a` is *divisible* by `b`,
+
+- `b` is a *divisor* of `a`,
+
+- `a` is a *multiple* of `b`,
+
+- `b` is a *factor* of `a`.
+
+An element `a` of `P` is a divisor of `1` if and only if it
+is *invertible* in `A`, with the inverse `a^{-1} = 1/a`. Such
+elements are called *units*. The units of the ring
+of integers are `1` and `-1`. The invertible elements
+in a polynomial ring over a field are the nonzero constant polynomials.
+
+If two elements of `P`, `a` and `b`, are divisible by each other, then
+the quotient `a/b` is invertible with inverse `b/a`, or equivalently,
+`b = ua` where `u` is a unit. Such elements are said to be *associated*
+with, or *associates* of, each other. The associates of an integer
+`n` are `n` and `-n`. In a polynomial ring over a field the associates
+of a polynomial are its constant multiples.
+
+Each element of `P` is divisible by its associates and the units. An
+element is *irreducible* if it has no other divisors and is not a unit.
+The irreducible elements in the ring of integers are the prime numbers
+`p` and their opposites `-p`. In a field, every nonzero element is
+invertible and there are no irreducible elements.
+
+Factorial domains
+`````````````````
+In the ring of integers, each nonzero element can be represented as
+a product irreducible elements and optionally a unit `\pm 1`. Moreover,
+any two such products have the same number of irreducible factors
+which are associated with each other in a suitable order.
+Integral domains having this property are called *factorial*,
+or *unique factorization domains*. In addition to the ring of
+integers, all polynomial rings over a field are factorial, and so are
+more generally polynomial rings over any factorial domain. Fields
+are trivially factorial since there are only units. The irreducible
+elements of a factorial domain are usually called *primes*.
+
+A family of integers has only a finite number of common divisors
+and the greatest of them is divisible by all of them. More generally,
+given a family of nonzero elements `(a_i)` in an integral domain,
+a common divisor `d` of the elements is is called a *greatest common
+divisor*, abbreviated *gcd*, of the the family if it is a multiple
+of all common divisors.
+A greatest common divisor, if it exists, is not unique in general;
+all of its associates have the same property. It is denoted by
+`d = \gcd(a_1,\ldots,a_n)` if there is no danger of confusion.
+A *least common multiple*, or *lcm*, of a family `(a_i)` is defined
+analogously as a common multiple `m` that divides all common multiples.
+It is denoted by `m = \operatorname{lcm}(a_1,\dots,a_n)`.
+
+In a factorial domain, greatest common divisors always exists. They can
+be found, at least in principle, by factoring each element of a family
+into a product of prime powers and an optional unit, and, for each prime,
+taking the least power that appears in the factorizations.
+The product of these prime powers is then a greatest common divisor.
+A least common multiple can be obtained from the same factorizations
+as the product of the greatest powers for each prime.
+
+Euclidean domains
+`````````````````
+A practical algorithm for computing a greatest common divisor can
+be implemented in *Euclidean domains*. They are integral domains that
+can be endowed with a function `w` assigning a nonnegative integer to
+each nonzero element of the domain and having the following property:
+
+    if `a` and `b` are nonzero, there are `q` and `r` that satisfy
+    the *division identity*
+
+        `a = qb + r`
+
+    and such that either `r = 0` or `w(r) < w(b)`.
+
+
+The ring of integers and all univariate polynomial rings over fields
+are Euclidean domains with `w(a) = |a|` resp. `w(a) = \deg(a)`.
+
+The division identity can be used to determine the divisibility
+of elements of a Euclidean domain.
+If `r = 0` in the division identity, then `a` is divisible by `b`.
+Conversely, if `a = cb` for some element `c`, then `(c - q)b = r`.
+It follows that `c = q` and `r = 0` if `w` has the additional property:
+
+    if `a` and `b` are nonzero, then `w(ab) \ge w(b)`.
+
+This is satisfied by the functions given above. (And it is always
+possible to redefine `w(a)` by taking the minimum of the values `w(xa)`
+for `x \ne 0`.)
+
+The principal application of the division identity is the efficient
+computation of a greatest common divisor by means of the
+`Euclidean algorithm <https://en.wikipedia.org/wiki/Euclidean_algorithm>`_.
+It applies to two elements of a Euclidean domain. A gcd of several
+elements can be obtained by iteration.
+
+Divisibility of polynomials
+```````````````````````````
+The ring `A = \mathbb{Z}[x]` of univariate polynomials over the ring of
+integers is not Euclidean but it is still factorial. To see this,
+consider the divisibility in `A`.
+
+Let `f` and `g` be two nonzero polynomials in `A`. If `f` is divisible
+by `g` in `A`, then it is also divisible in the ring `B = \mathbb{Q}[x]`
+of polynomials with rational coefficients. Since `B` is Euclidean, this
+can be determined by means of the division identity.
+
+Assume, conversely, that `f = gh` for some polynomial `h` in `B`.
+Then `f` is divisible by `g` in `A` if and only if the coefficients
+of `h` are integers. To find out when this is true it is necessary
+to consider the divisibility of the coefficients.
+
+For a polynomial `f` in `A`, let `c` be the greatest common
+divisor of its coefficients. Then `f` is divisible by the constant
+polynomial `c` in `A`, and the quotient `f/c= p` is a polynomial
+whose coefficients are integers that have no common divisor apart
+from the units. Such polynomials are called *primitive*. A polynomial
+with rational coefficients can also be written as `f = cp`, where `c`
+is a rational number and `p` is a primitive polynomial.
+The constant `c` is called the *content* of `f`, and `p` is
+its *primitive part*. These components can be found by the method
+:func:`as_content_primitive`::
+
+    >>> f = 6*x**2 - 3*x + 9
+    >>> c, p = f.as_content_primitive()
+    >>> c, p
+           2
+    (3, 2*x  - x + 3)
+    >>> f = x**2/3 - x/2 + 1
+    >>> c, p = f.as_content_primitive()
+    >>> c, p
+             2
+    (1/6, 2*x  - 3*x + 6)
+
+Let `f`, `f'` be polynomials with contents `c`, `c'` and primitive
+parts `p`, `p'`. Then `ff' = (cc')(pp')` where the product `pp'` is
+primitive by `Gauss's lemma
+<https://en.wikipedia.org/wiki/Gauss%27s_lemma_(polynomial)>`_.
+It follows that
+
+    the content of a product of polynomials is the product of their
+    contents and the primitive part of the product is the product
+    of the primitive parts.
+
+Returning to the divisibility in the ring `\mathbb{Z}[x]`, assume
+that `f` and `g` are two polynomials with integer coefficients such that
+the division identity in `\mathbb{Q}[x]` yields the equality `f = gh`
+for some polynomial `h` with rational coefficients. Then the content
+of `f` is equal to the content of `g` multiplied by the content of `h`.
+As `h` has integer coefficients if and only if its content is an integer,
+we get the following criterion:
+
+    `f` is divisible by `g` in the ring `\mathbb{Z}[x]` if and only if
+
+    i. `f` is divisible by `g` in `\mathbb{Q}[x]`, and
+    ii. the content of `f` is divisible by the content of `g` in
+	`\mathbb{Z}`.
+
+If `f = cp` is irreducible in `\mathbb{Z}[x]`, then either `c` or `p`
+must be a unit. If `p` is not a unit, it must be irreducible also in
+`\mathbb{Q}[x]`. For if it is a product of two polynomials, it is also
+the product of their primitive parts, and one of them must be a unit.
+Hence there are two kinds of irreducible elements in `\mathbb{Z}[x]`:
+
+i. prime numbers of `\mathbb{Z}`, and
+ii. primitive polynomials that are irreducible in `\mathbb{Q}[x]`.
+
+It follows that each polynomial in `\mathbb{Z}[x]` is a product
+of irreducible elements. It suffices to factor its content and
+primitive part separately. These products are essentially unique;
+hence `\mathbb{Z}[x]` is also factorial.
+
+Another important consequence is that a greatest common divisor
+of two polynomials in `\mathbb{Z}[x]` can be found efficiently
+by applying the Euclidean algorithm separately to their contents
+and primitive parts in the Euclidean domains `\mathbb{Z}` and
+`\mathbb{Q}[x]`.
 
 Basic functionality
 ===================
