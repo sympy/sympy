@@ -1082,6 +1082,7 @@ class HolonomicFunction(object):
         smallest_n = lower + degree
         dummys = {}
         eqs = []
+        unknowns = []
 
         # an appropriate shift of the recurrence
         for j in range(lower, upper + 1):
@@ -1133,6 +1134,7 @@ class HolonomicFunction(object):
 
                     elif not i + j[0] in dummys:
                         dummys[i + j[0]] = Symbol('C_%s' %(i + j[0]))
+                        unknowns.append(dummys[i + j[0]])
 
                     if j[1] <= i:
                         eq += dict1[j].subs(n, i) * dummys[i + j[0]]
@@ -1140,7 +1142,7 @@ class HolonomicFunction(object):
                 eqs.append(eq)
 
             # solve the system of equations formed
-            soleqs = solve(eqs)
+            soleqs = solve(eqs, *unknowns)
 
             if isinstance(soleqs, dict):
 
