@@ -104,7 +104,7 @@ def test_FreeGroupElm_eliminate_word():
     assert w3.eliminate_word(x, y) == y**5
     assert w3.eliminate_word(x, y**4) == y**8
     assert w3.eliminate_word(y, x**-1) == x**-3
-    assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z*y**2
+    assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z**-1
     assert (y**-3).eliminate_word(y, x**-1*z**-1) == z*x*z*x*z*x
     #assert w3.eliminate_word(x, y*x) == y*x*y*x**2*y*x*y*x*y*x*z**3
     #assert w3.eliminate_word(x, x*y) == x*y*x**2*y*x*y*x*y*x*y*z**3

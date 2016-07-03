@@ -1269,6 +1269,16 @@ def elimination_technique_1(C):
     for i, gen in product(range(len(rels)), redundant_gens):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
     rels.sort()
+    try:
+        rels.remove(C.schreier_free_group.identity)
+    except ValueError:
+        pass
+    for i in range(len(rels) - 1, -1, -1):
+        w = rels[i]
+        if any([w.is_dependent(rels[j]) for j in range(i - 1, -1, -1)]):
+            del rels[i]
+        elif w.number_syllables() == 1 and w.array_form[0][1] < 0:
+            rels[i] = w**-1
     C.reidemeister_relators = set(rels)
     C.schreier_generators = set(gens)
 
@@ -1317,7 +1327,7 @@ def elimination_technique_2(C):
     C.schreier_generators = gens
     return C.schreier_generators, C.reidemeister_relators
 
-def _simplification_technique_1(C):
+def _simplification_technique_1(rels):
     """
     All relators are checked to see if they are of the form `gen^n`. If any
     such relators are found then all other relators are processed for strings
@@ -1342,7 +1352,6 @@ def _simplification_technique_1(C):
     [x**2*y**4, x**4]
 
     """
-    rels = C.reidemeister_relators
     group = rels[0].group
     one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
     nw = [list(i.array_form) for i in rels]
@@ -1357,7 +1366,7 @@ def _simplification_technique_1(C):
                 elif t > n/2:
                     k[j] = k[j][0], Mod(k[j][1], n) - n
 
-    C.reidemeister_relators = [group.dtype(tuple(rel)) for rel in nw]
+    return [group.dtype(tuple(rel)) for rel in nw]
 
 def reidemeister_presentation(fp_grp, H):
     """
@@ -1372,27 +1381,29 @@ def reidemeister_presentation(fp_grp, H):
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 
-    # Example 5.6 from handbook
+    Example 5.6 Pg. 177 from [1]
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
     >>> H = [x*y, x**-1*y**-1*x*y*x]
     >>> reidemeister_presentation(f, H)
-    ({y_1, y_2}, {y_1**2, y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1})
+    (set([y_1, x_3]), set([y_1**2, x_3**3, x_3*y_1**-1*x_3*y_1**-1*x_3*y_1**-1]))
 
+    Example 5.8 Pg. 183 from [1]
     >>> f = FpGroup(F, [x**3, y**3, (x*y)**3])
     >>> H = [x*y, x*y**-1]
     >>> reidemeister_presentation(f, H)
-    ({x_0, y_0}, {x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0})
+    (set([x_0, y_0]), set([x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0]))
 
-    # Exercises Q2. Pg 187 from [1]
+    Exercises Q2. Pg 187 from [1]
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ({x_1}, {x_1**-4, x_1**-8})
+    (set([x_1]), set([x_1**4]))
 
+    Example 5.9 Pg. 183 from [1]
     >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ({x_0}, {<identity>, x_0**6, x_0**18})
+    (set([x_0]), set([x_0**6]))
 
     """
     C = coset_enumeration_r(fp_grp, H)
