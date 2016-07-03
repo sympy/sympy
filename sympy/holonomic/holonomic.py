@@ -1426,13 +1426,14 @@ class HolonomicFunction(object):
 
         # when no recurrence exists, and the power series have finite terms
         if m == 0:
-            nonzeroterms = roots(r.parent.base.to_sympy(r.listofpoly[0]), recurrence.n, filter='Z')
-            if max(nonzeroterms) >= len(u0):
-                raise NotImplementedError("Initial conditions aren't sufficient")
+            nonzeroterms = roots(r.parent.base.to_sympy(r.listofpoly[0]), recurrence.n, filter='R')
+
             sol = S(0)
-            for i in nonzeroterms:
-                if i >= 0:
-                    sol += u0[i] * x**i
+            for j, i in enumerate(nonzeroterms):
+                if int(i) == i and i >= 0 and int(i) < len(u0):
+                    sol += u0[int(i)] * x**int(i)
+                else:
+                    sol += Symbol('C_%s' %j) * x**i
             if x0 != 0:
                 return sol.subs(x, x - x0)
             return sol
@@ -1560,7 +1561,7 @@ class HolonomicFunction(object):
 
         from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError
         try:
-            sol = expr_to_holonomic(self.to_expr(), x0=b, lenics=lenics)
+            sol = expr_to_holonomic(self.to_expr(), x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
         except (NotPowerSeriesError, NotHyperSeriesError):
             symbolic = False
 
@@ -1758,7 +1759,11 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
     """
     func = sympify(func)
     if not x:
-        x = func.atoms(Symbol).pop()
+        syms = func.free_symbols
+        if len(syms) == 1:
+            x= syms.pop()
+        else:
+            raise ValueError("Specify the variable for the function")
 
     # try to convert if the function is polynomial or rational
     solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain)

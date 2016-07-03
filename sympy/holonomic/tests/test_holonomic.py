@@ -3,7 +3,7 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr,
     O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si)
-from sympy import ZZ, QQ
+from sympy import ZZ, QQ, RR
 
 
 def test_DifferentialOperator():
@@ -595,3 +595,22 @@ def test_diff():
     assert p.diff(x).to_expr() == q.diff()
     assert p.diff(x, 2).to_expr().subs(C_1, -S(1)/3) == q.diff(x, 2).simplify()
     assert p.diff(x, 3).series().subs(C_2, S(1)/10) == q.diff(x, 3).series()
+
+def test_extended_domain_in_expr_to_holonomic():
+    x = symbols('x')
+    p = expr_to_holonomic(1.2*cos(3.1*x), domain=RR)
+    assert p.to_expr() == 1.2*cos(3.1*x)
+    assert sstr(p.integrate(x).to_expr()) == '0.387096774193548*sin(3.1*x)'
+    _, Dx = DifferentialOperators(RR.old_poly_ring(x), 'Dx')
+    p = expr_to_holonomic(1.1329138213*x, domain=RR, lenics=2)
+    q = HolonomicFunction((-1.1329138213) + (1.1329138213*x)*Dx, x, 0, [0, 1.1329138213])
+    assert p == q
+    assert p.to_expr() == 1.1329138213*x
+    assert sstr(p.integrate((x, 1, 2))) == sstr((1.1329138213*x).integrate((x, 1, 2)))
+    y, z = symbols('y, z')
+    p = expr_to_holonomic(sin(x*y*z), x=x, domain=ZZ[y, z])
+    assert p.to_expr() == sin(x*y*z)
+    assert p.integrate(x).to_expr() == (-cos(x*y*z) + 1)/(y*z)
+    p = expr_to_holonomic(sin(x*y + z), x=x, domain=ZZ[y, z]).integrate(x).to_expr()
+    q = (cos(z) - cos(x*y + z))/y
+    assert p == q
