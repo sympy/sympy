@@ -5,7 +5,7 @@ from sympy.core.basic import sympify, cacheit
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Wild
 from sympy.core.logic import fuzzy_not
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
@@ -75,14 +75,19 @@ class TrigonometricFunction(Function):
             return general_period
 
         if symbol in f.free_symbols:
+            p, q = Wild('p'), Wild('q')
             if f.is_Mul:
                 g, h = f.as_independent(symbol)
-                return general_period/abs(g)
+                if h == symbol:
+                    return general_period/abs(g)
 
             if f.is_Add:
                 a, h = f.as_independent(symbol)
                 g, h = h.as_independent(symbol, as_Add=False)
-                return general_period/abs(g)
+                if h == symbol:
+                    return general_period/abs(g)
+
+            raise NotImplementedError("Use the periodicity function instead.")
 
         else:
             raise ValueError("The specified variable is not present in "

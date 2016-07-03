@@ -276,7 +276,11 @@ def periodicity(f, symbol, check=False):
     period = None
 
     if isinstance(f, TrigonometricFunction):
-        period = f.period(symbol)
+        arg = f.args[0]
+        try:
+            period = f.period(symbol)
+        except NotImplementedError:
+            period = periodicity(arg, symbol)
 
     if f.is_Pow:
         base, expo = f.args
