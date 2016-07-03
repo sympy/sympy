@@ -269,6 +269,7 @@ def periodicity(f, symbol, check=False):
     """
     from sympy import simplify, lcm_list
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    from sympy.solvers.decompogen import decompogen
 
     orig_f = f
     f = simplify(orig_f)
@@ -329,6 +330,16 @@ def periodicity(f, symbol, check=False):
             periods.append(periodicity(h, symbol))
 
         period = lcm_fraction(periods)
+
+    g_s = decompogen(f, symbol)
+    if len(g_s) > 1 and period is None:
+        for g in reversed(g_s):
+            try:
+                period = periodicity(g, symbol)
+            except NotImplementedError:
+                pass
+            else:
+                break
 
     if period is not None:
         if check:
