@@ -1,5 +1,5 @@
 from sympy.integrals.singularityfunctions import singularityintegrate
-from sympy import SingularityFunction, symbols, DiracDelta, Heaviside, Function
+from sympy import SingularityFunction, symbols, Function
 
 x, a, n, y = symbols('x a n y')
 f = Function('f')
