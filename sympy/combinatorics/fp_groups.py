@@ -1327,7 +1327,7 @@ def elimination_technique_2(C):
     C.schreier_generators = gens
     return C.schreier_generators, C.reidemeister_relators
 
-def _simplification_technique_1(rels):
+def _simplification_technique_1(C):
     """
     All relators are checked to see if they are of the form `gen^n`. If any
     such relators are found then all other relators are processed for strings
@@ -1352,7 +1352,8 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
-    group = rels[0].group
+    rels = list(C.reidemeister_relators)
+    group = C.schreier_free_group
     one_syllable_rels = tuple([rel for rel in rels if rel.number_syllables() == 1])
     nw = [list(i.array_form) for i in rels]
     for i in range(len(rels)):
@@ -1366,9 +1367,9 @@ def _simplification_technique_1(rels):
                 elif t > n/2:
                     k[j] = k[j][0], Mod(k[j][1], n) - n
 
-    return [group.dtype(tuple(rel)) for rel in nw]
+    C.reidemeister_relators = [group.dtype(tuple(rel)) for rel in nw]
 
-def reidemeister_presentation(fp_grp, H):
+def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
@@ -1410,8 +1411,10 @@ def reidemeister_presentation(fp_grp, H):
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    elimination_technique_1(C)
-    elimination_technique_1(C)
+    for i in range(elm_rounds):
+        elimination_technique_1(C)
+    for i in range(simp_rounds):
+        _simplification_technique_1(C)
     return C.schreier_generators, C.reidemeister_relators
 
 
