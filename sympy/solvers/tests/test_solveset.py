@@ -1084,7 +1084,6 @@ def test_nonlinsolve_polysys():
     assert nonlinsolve(system, (x, y)) != nonlinsolve(system, (y, x))
 
 
-
 def test_nonlinsolve_using_substitution():
     x, y, z, n = symbols('x, y, z, n', real = True)
     system = [(x + y)*n - y**2 + 2]
@@ -1172,7 +1171,7 @@ def test_issue_5132_1():
 
 
 def test_issue_5132_2():
-    x, y, z, r, t = symbols('x, y, z, r, t', real=True)
+    x, y = symbols('x, y', real=True)
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     n = Dummy('n')
     soln_real = (log(-z**2 + sin(y))/2, z)
@@ -1183,17 +1182,11 @@ def test_issue_5132_2():
     soln = FiniteSet(soln_real, soln_complex)
     assert nonlinsolve(eqs, [x, z]) == soln
 
-    # check : both soln seems equal
-    # 2 soln from solveset_real and other
-    # 2 soln from solveset_complex
+    r, t = symbols('r, t')
     system = [r - x**2 - y**2, tan(t) - y/x]
-    s_x = sqrt(r*cos(t)**2)
-    s_y = sqrt(r*cos(t)**2)*tan(t)
-    soln_real= FiniteSet((s_x, s_y), (-s_x, -s_y))
-    s_x = sqrt(r*sin(t)**2)/tan(t)
-    s_y = sqrt(r*sin(t)**2)
-    soln_complex = FiniteSet((s_x, s_y), (-s_x, -s_y))
-    soln = soln_real + soln_complex
+    s_x = sqrt(r/(tan(t)**2 + 1))
+    s_y = sqrt(r/(tan(t)**2 + 1))*tan(t)
+    soln = FiniteSet((s_x, s_y), (-s_x, -s_y))
     assert nonlinsolve(system, [x, y]) == soln
 
 
@@ -1277,6 +1270,21 @@ def test_issue_8828():
     A = nonlinsolve(F, v)
     B = nonlinsolve(G, v)
     assert A == B
+
+
+def test_nonlinsolve_conditionset():
+    # when solveset failed to solve all the eq
+    # return conditionset
+    f = Function('f')
+    f1 = f(x) - pi/2
+    f2 = f(x) - 3*pi/2
+    intermediate_system = FiniteSet(2*f(x) - 3*pi, 2*f(x) - pi)
+    symbols = FiniteSet(x, y)
+    soln = ConditionSet(
+        symbols,
+        intermediate_system,
+        S.Complexes)
+    assert nonlinsolve([f1, f2], [x,y]) == soln
 
 
 def test_substitution_basic():
