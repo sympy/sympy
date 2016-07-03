@@ -149,6 +149,7 @@ class DifferentialOperator(object):
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
         base = self.parent.base
+        self.x = base.gens[0] if isinstance(base.gens[0], Symbol) else base.gens[0][0]
         # sequence of polynomials in x for each power of Dx
         # the list should not have trailing zeroes
         # represents the operator
@@ -333,7 +334,8 @@ class DifferentialOperator(object):
         """
 
         domain = str(self.parent.base.domain)[0]
-        return x0 in roots(self.listofpoly[-1].rep, filter=domain)
+        base = self.parent.base
+        return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x, filter=domain)
 
 
 class HolonomicFunction(object):
@@ -806,7 +808,7 @@ class HolonomicFunction(object):
                     if isinstance(coeff_mul[i][j], K.dtype):
                         coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
                     else:
-                        coeff_mul[i][j] = coeff_mul[i][j].diff()
+                        coeff_mul[i][j] = coeff_mul[i][j].diff(self.x)
 
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
@@ -951,7 +953,7 @@ class HolonomicFunction(object):
 
         R = self.annihilator.parent
         a = self.annihilator.order
-        diff = expr.diff()
+        diff = expr.diff(self.x)
         listofpoly = self.annihilator.listofpoly
 
         for i, j in enumerate(listofpoly):
@@ -967,7 +969,7 @@ class HolonomicFunction(object):
         sol = S(0)
 
         while sol.is_zero:
-            coeffs_next = [p.diff() for p in coeffs]
+            coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):
                 coeffs_next[i + 1] += (coeffs[i] * diff)
 
@@ -1063,10 +1065,10 @@ class HolonomicFunction(object):
                     continue
 
                 if (i - k, k) in dict1:
-                    dict1[(i - k, k)] += (S(coeff) * rf(n - k + 1, i))
+                    dict1[(i - k, k)] += (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
                 else:
-                    dict1[(i - k, k)] = (S(coeff) * rf(n - k + 1, i))
+                    dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
 
         sol = []
@@ -1097,7 +1099,7 @@ class HolonomicFunction(object):
 
         # computing the initial conditions for recurrence
         order = sol.order
-        all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
+        all_roots = roots(R.base.to_sympy(sol.listofpoly[-1]), n, filter='Z')
         all_roots = all_roots.keys()
 
         if all_roots:
@@ -1210,11 +1212,6 @@ class HolonomicFunction(object):
         K = R.get_field()
         seq = []
 
-        if 0 in roots(seq_dmp[-1].rep, filter='Z').keys():
-            singular = True
-        else:
-            singular = False
-
         for i, j in enumerate(seq_dmp):
             seq.append(K.new(j.rep))
 
@@ -1258,7 +1255,7 @@ class HolonomicFunction(object):
         y = R.one
 
         def _pole_degree(poly):
-            root_all = roots(poly.rep, filter='Z')
+            root_all = roots(R.to_sympy(poly), x, filter='Z')
             if 0 in root_all.keys():
                 return root_all[0]
             else:
@@ -1280,7 +1277,7 @@ class HolonomicFunction(object):
             if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
-        return roots(s.rep, filter='R').keys()
+        return roots(R.to_sympy(s), x, filter='R').keys()
 
     def evalf(self, points, method='RK4', h=0.05, derivatives=False):
         """
@@ -1342,7 +1339,7 @@ class HolonomicFunction(object):
             for i in range(n - 1):
                 points.append(points[-1] + h)
 
-        for i in roots(self.annihilator.listofpoly[-1].rep):
+        for i in roots(self.annihilator.parent.base.to_sympy(self.annihilator.listofpoly[-1]), self.x):
             if i == self.x0 or i in points:
                 from .holonomicerrors import SingularityError
                 raise SingularityError(self, i)
@@ -1427,7 +1424,7 @@ class HolonomicFunction(object):
 
         # when no recurrence exists, and the power series have finite terms
         if m == 0:
-            nonzeroterms = roots(r.listofpoly[0].rep, filter='Z')
+            nonzeroterms = roots(r.parent.base.to_sympy(r.listofpoly[0]), recurrence.n, filter='Z')
             if max(nonzeroterms) >= len(u0):
                 raise NotImplementedError("Initial conditions aren't sufficient")
             sol = S(0)
@@ -1457,12 +1454,16 @@ class HolonomicFunction(object):
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+        from sympy.polys.rings import PolyElement
+        if isinstance(a.rep[0], PolyElement):
+            c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
+        else:
+            c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
 
         sol = 0
 
-        arg1 = roots(a.rep)
-        arg2 = roots(b.rep)
+        arg1 = roots(r.parent.base.to_sympy(a), recurrence.n)
+        arg2 = roots(r.parent.base.to_sympy(b), recurrence.n)
 
         # iterate thorugh the initial conditions to find
         # the hypergeometric representation of the given
@@ -1615,7 +1616,7 @@ def from_hyper(func, x0=0, evalf=False):
             if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
-            simp = simp.diff()
+            simp = simp.diff(x)
         return y0
 
     # if the function is known symbolically
@@ -1700,7 +1701,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
             if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
-            simp = simp.diff()
+            simp = simp.diff(x)
         return y0
 
     # computing initial conditions
@@ -1930,10 +1931,15 @@ def _extend_y0(Holonomic, n):
     value point in the differential equation.
     """
 
+    if Holonomic.annihilator.is_singular(x0=Holonomic.x0):
+        return Holonomic.y0
+
     annihilator = Holonomic.annihilator
     a = annihilator.order
     x = Holonomic.x
+
     listofpoly = []
+
     y0 = Holonomic.y0
     R = annihilator.parent.base
     K = R.get_field()
@@ -1952,8 +1958,14 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                if not r.is_finite:
-                    return y0
+                try:
+                    if not r.is_finite:
+                        return y0
+                except AttributeError:
+                    pass
+                from sympy.polys.rings import PolyElement
+                if isinstance(r, PolyElement):
+                    r = r.as_expr()
                 sol += a * r
             y1.append(sol)
             list_red = _derivate_diff_eq(list_red)
@@ -1997,6 +2009,12 @@ def DMFsubs(frac, x0, mpm=False):
             j = sympify(j)._to_mpmath(mp.prec)
         sol_q += j * x0**i
 
+    from sympy.polys.rings import PolyElement
+    if isinstance(sol_p, PolyElement):
+        sol_p = sol_p.as_expr()
+    if isinstance(sol_q, PolyElement):
+        sol_q = sol_q.as_expr()
+
     return sol_p / sol_q
 
 
@@ -2034,14 +2052,14 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ):
 
     if ispoly:
         # differential equation satisfied by polynomial
-        sol = func * Dx - func.diff()
+        sol = func * Dx - func.diff(x)
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
     elif israt:
         order = 1
         p, q = func.as_numer_denom()
         # differential equation satisfied by rational
-        sol = p * q * Dx + p * q.diff() - q * p.diff()
+        sol = p * q * Dx + p * q.diff(x) - q * p.diff(x)
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
     elif is_alg:
@@ -2157,5 +2175,5 @@ def _find_conditions(func, x, x0, order):
         if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
             return None
         y0.append(val)
-        func = func.diff()
+        func = func.diff(x)
     return y0
