@@ -304,6 +304,14 @@ def periodicity(f, symbol, check=False):
         if isinstance(g, TrigonometricFunction):
             period = g.period(symbol)
 
+        else:
+            g_s = g.args
+            periods = []
+            for g in g_s:
+                periods.append(periodicity(g, symbol))
+
+            period = lcm_fraction(periods)
+
     if f.is_Add:
         k, g = f.as_independent(symbol)
         if k is not S.Zero:
