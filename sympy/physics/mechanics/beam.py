@@ -15,15 +15,15 @@ class Beam(object):
     """
     A Beam is a structural element that is capable of withstanding load
     primarily by resisting against bending.
-    Beams are characterized by their profile (moment of Inertia), their length,
-    and their material.
+    Beams are characterized by their profile (Second moment of area),
+    their length, and their material.
 
     Parameters
     ==========
     length : Sympifyable
         A SymPy expression representing the Beam's length.
     elastic_modulus : Sympifyable
-        A SymPy expression representing the Beam's Young's Modulus.
+        A SymPy expression representing the Beam's Modulus of Elasticity.
         It is a measure of the stiffness of the Beam material.
     second_moment : Sympifyable
         A SymPy expression representing the Beam's Second moment of area.
