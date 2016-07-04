@@ -225,7 +225,7 @@ def test_ellipse_geom():
     assert e1.intersection(e2) == ans
     e2 = Ellipse(Point(x, y), 4, 8)
     c = sqrt(3991)
-    ans = [Point(c/68 + a, -2*c/17 + a/2), Point(-c/68 + a, 2*c/17 + a/2)]
+    ans = [Point(-c/68 + a, 2*c/17 + a/2), Point(c/68 + a, -2*c/17 + a/2)]
     assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
 
     # Combinations of above

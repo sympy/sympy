@@ -1075,10 +1075,8 @@ def test_unrad_fail():
 def test_checksol():
     x, y, r, t = symbols('x, y, r, t')
     eq = r - x**2 - y**2
-    dict_var_soln = {
-                                y: -sqrt(r)/sqrt(tan(t)**2 + 1),
-                                x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)
-                            }
+    dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
+                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
     assert checksol(eq, dict_var_soln) == True
 
 
