@@ -897,9 +897,9 @@ def pde_separate_add(eq, fun, sep):
     """
     Helper function for searching additive separable solutions.
 
-    Consider an equation of two independent variables x and t and a dependent
-    variable u, we look for the sum of two functions depending on different
-    arguments:
+    Consider a function, u, of two independent variables x and t. We
+    seek a sum of functions, each being dependent on one of the
+    variables:
 
     `u(x, t) = X(x) + T(t)`
 
@@ -922,9 +922,9 @@ def pde_separate_mul(eq, fun, sep):
     """
     Helper function for searching multiplicative separable solutions.
 
-    Consider an equation of two independent variables x and t and a dependent
-    variable u, we look for the product of two functions depending on different
-    arguments:
+    Consider a function, u, of two independent variables x and t.  We
+    seek a product of functions, each being dependent on one of the
+    variables:
 
     `u(x, t) = X(x)*T(t)`
 
