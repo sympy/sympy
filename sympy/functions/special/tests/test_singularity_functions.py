@@ -1,6 +1,7 @@
 from sympy import (
     adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
-    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside, Derivative
+    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
+    Derivative, Float
 )
 
 
@@ -46,7 +47,7 @@ def test_eval():
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
     assert SingularityFunction(4, 4, -2) == oo
-    assert (SingularityFunction(6.1, 4, 5)).evalf(5) == 40.84100
+    assert (SingularityFunction(6.1, 4, 5)).evalf(5) == Float('40.841', '5')
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
     assert SingularityFunction(x, a, nan) == nan
     assert SingularityFunction(x, nan, 1) == nan

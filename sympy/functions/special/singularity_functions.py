@@ -22,7 +22,7 @@ class SingularityFunction(Function):
     SingularityFunction(x, a, n) := <x - a>^n
 
     The singularity function will automatically evaluate to
-    ``Derivative(DiracDelta(x - a), x, n + 1)`` if ``n < 0``
+    ``Derivative(DiracDelta(x - a), x, -n - 1)`` if ``n < 0``
     and ``(x - a)**n*Heaviside(x - a)`` if ``n >= 0``.
 
 
