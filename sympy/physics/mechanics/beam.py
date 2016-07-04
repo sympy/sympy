@@ -25,10 +25,10 @@ class Beam(object):
     elastic_modulus : Sympifyable
         A SymPy expression representing the Beam's Young's Modulus.
         It is a measure of the stiffness of the Beam material.
-    I : Sympifyable
-        A SymPy expression representing the Beam's Moment of Inertia.
-        It determines the torque needed for a desired angular acceleration
-        about a rotational axis of the Beam.
+    second_moment : Sympifyable
+        A SymPy expression representing the Beam's Second moment of area.
+        It is a geometrical property of an area which reflects how its
+        points are distributed with regard to an arbitrary axis.
 
     Examples
     ========
@@ -41,13 +41,13 @@ class Beam(object):
 
     """
 
-    def __init__(self, length, elastic_modulus, I):
+    def __init__(self, length, elastic_modulus, second_moment):
         self._length = length
         self._elastic_modulus = elastic_modulus
-        self._I = I
+        self._second_moment = second_moment
 
     def __str__(self):
-        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._I))
+        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
 
     __repr__ = __str__
@@ -71,13 +71,13 @@ class Beam(object):
         self._elastic_modulus = sympify(e)
 
     @property
-    def I(self):
-        """Moment of Inertia of the Beam. """
-        return self._I
+    def second_moment(self):
+        """Second moment of area of the Beam. """
+        return self._second_moment
 
-    @I.setter
-    def I(self, e):
-        self._I = sympify(e)
+    @second_moment.setter
+    def second_moment(self, i):
+        self._second_moment = sympify(i)
 
     def BoundaryConditions(self, **bcs):
         """

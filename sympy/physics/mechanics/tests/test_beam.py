@@ -15,7 +15,7 @@ def test_Beam():
     b = Beam(1, E, I)
     assert b._length == 1
     assert b._elastic_modulus == E
-    assert b._I == I
+    assert b._second_moment == I
 
     # Test the length setter
     b.length = 4
@@ -26,8 +26,8 @@ def test_Beam():
     assert b.elastic_modulus == E_1
 
     # Test the I setter
-    b.I = I_1
-    assert b.I is I_1
+    b.second_moment = I_1
+    assert b.second_moment is I_1
 
     bcs = b.BoundaryConditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
     assert bcs == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
