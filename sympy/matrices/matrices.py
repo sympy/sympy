@@ -316,7 +316,6 @@ class MatrixBase(object):
         Trace(Matrix([[1,0,0],[0,1,0],[0,0,1]]))
 
         """
-        
         if not self.is_square:
             raise NonSquareMatrixError()
         return self._eval_trace()
