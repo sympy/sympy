@@ -79,7 +79,7 @@ class Beam(object):
     def second_moment(self, i):
         self._second_moment = sympify(i)
 
-    def BoundaryConditions(self, **bcs):
+    def boundary_conditions(self, **bcs):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
@@ -96,7 +96,7 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> bcs = b.BoundaryConditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
+        >>> bcs = b.boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
         >>> bcs
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
         >>> bcs['moment']
