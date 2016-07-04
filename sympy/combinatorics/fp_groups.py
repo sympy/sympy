@@ -1377,6 +1377,7 @@ def _simplification_technique_1(rels):
             if w.array_form[0][1] < 0:
                 rels[i] = w**-1
             one_syllable_rels.add(rels[i])
+
         # since modifies the array rep., so should be
         # added a list
         nw[i] = list(rels[i].array_form)
@@ -1390,7 +1391,7 @@ def _simplification_technique_1(rels):
             n = gen.array_form[0][1]
             gen_arr0 = gen.array_form[0][0]
             for j in range(len(k) - 1, -1, -1):
-                if gen_arr0 == k[j][0] and gen != rels_i:
+                if gen_arr0 == k[j][0] and gen is not rels_i:
                     t = Mod(k[j][1], n)
 
                     # multiple of one syllable relator
@@ -1440,7 +1441,7 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ((x_0,), (x_0**6, x_0**6))
+    ((x_0,), (x_0**6,))
 
     """
     C = coset_enumeration_r(fp_grp, H)
