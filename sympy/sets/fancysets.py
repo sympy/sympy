@@ -257,6 +257,7 @@ class ImageSet(Set):
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
+    lamda_vars = property(lambda self: self.lamda.variables)
 
     def __iter__(self):
         already_seen = set()
@@ -362,6 +363,35 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+    def put_values(self, symbol, sol=None):
+        """Returns ImageSet expr after substituting the given value for symbol.
+        """
+        if sol is not None:
+            sol = {symbol: sol}
+        elif isinstance(symbol, dict):
+            sol = symbol
+        else:
+            msg = 'Expecting (sym, val) or ({sym: val}, None) but got (%s, %s)'
+            raise ValueError(filldedent(msg % (symbol, sol)))
+
+        variabls = self.lamda_vars
+
+        if set(sol.keys()) & set(variabls):
+            # if variables present in the imageset lambda
+            # and variable value is in base_set, then only put values
+            baseset = self.base_set
+            if all(s in baseset for s in sol.values()):
+                # substitute the values
+                return self.lamda.expr.subs(sol)
+            else:
+                msg = 'All or some of the values %s, you want to put is not in \
+                base_set: %s '
+                raise ValueError(filldedent(msg % (sol, baseset)))
+        else:
+            msg = 'All or some of the symbols: %s, you want to replace is not \
+            present in ImageSet: %s '
+            raise ValueError(filldedent(msg % (sol.keys(), self)))
 
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
