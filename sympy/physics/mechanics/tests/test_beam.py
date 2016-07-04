@@ -14,7 +14,7 @@ def test_Beam():
     I_1 = Symbol('I_1')
     b = Beam(1, E, I)
     assert b._length == 1
-    assert b._E == E
+    assert b._elastic_modulus == E
     assert b._I == I
 
     # Test the length setter
@@ -22,8 +22,8 @@ def test_Beam():
     assert b.length == 4
 
     # Test the E setter
-    b.E = E_1
-    assert b.E == E_1
+    b.elastic_modulus = E_1
+    assert b.elastic_modulus == E_1
 
     # Test the I setter
     b.I = I_1

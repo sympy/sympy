@@ -22,7 +22,7 @@ class Beam(object):
     ==========
     length : Sympifyable
         A SymPy expression representing the Beam's length.
-    E : Sympifyable
+    elastic_modulus : Sympifyable
         A SymPy expression representing the Beam's Young's Modulus.
         It is a measure of the stiffness of the Beam material.
     I : Sympifyable
@@ -41,13 +41,13 @@ class Beam(object):
 
     """
 
-    def __init__(self, length, E, I):
+    def __init__(self, length, elastic_modulus, I):
         self._length = length
-        self._E = E
+        self._elastic_modulus = elastic_modulus
         self._I = I
 
     def __str__(self):
-        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._E), sstr(self._I))
+        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._I))
         return str_sol
 
     __repr__ = __str__
@@ -62,13 +62,13 @@ class Beam(object):
         self._length = sympify(l)
 
     @property
-    def E(self):
+    def elastic_modulus(self):
         """Young's Modulus of the Beam. """
-        return self._E
+        return self._elastic_modulus
 
-    @E.setter
-    def E(self, e):
-        self._E = sympify(e)
+    @elastic_modulus.setter
+    def elastic_modulus(self, e):
+        self._elastic_modulus = sympify(e)
 
     @property
     def I(self):
