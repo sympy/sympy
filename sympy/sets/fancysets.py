@@ -379,7 +379,7 @@ class ImageSet(Set):
 
         ValueError
             The input is not valid.
-            The symbol(s) are not present in lambda.
+            All symbols are not present in lambda.
             The value(s) are not in ImageSet base_set
 
         Examples
@@ -390,10 +390,10 @@ class ImageSet(Set):
         >>> n, m = symbols('n, m')
         >>> imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
         >>> imgset.put_values({n: 1, m: 2})
-        1
+        {1}
         >>> imgset = ImageSet(Lambda((n, m), n**2 + m), S.Reals)
         >>> imgset.put_values({n: 1, m: 2})
-        3
+        {3}
 
         """
         if val is not None:
@@ -412,15 +412,15 @@ class ImageSet(Set):
             baseset = self.base_set
             if all(v in baseset for v in val.values()):
                 # substitute the values
-                return self.lamda.expr.subs(val)
+                return FiniteSet(self.lamda.expr.subs(val))
             else:
                 msg = 'All or some of the values %s, you want to put is not in \
                 base_set: %s '
                 raise ValueError(filldedent(msg % (val, baseset)))
         else:
-            msg = 'All or some of the symbols: %s, you want to replace is not \
-            present in ImageSet: %s '
-            raise ValueError(filldedent(msg % (val.keys(), self)))
+            msg = 'All of the symbol(s): %s, you want to replace is not \
+            present in ImageSet lambda variables: %s '
+            raise ValueError(filldedent(msg % (val.keys(), variabls)))
 
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
