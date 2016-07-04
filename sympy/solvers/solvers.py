@@ -228,7 +228,7 @@ def checksol(f, symbol, sol=None, **flags):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
-                val = simplify(expand_mul(expand_multinomial(val)))
+                val = expand_mul(expand_multinomial(val))
         elif attempt == 2:
             if minimal:
                 return
@@ -237,7 +237,7 @@ def checksol(f, symbol, sol=None, **flags):
                     sol[k] = simplify(sol[k])
             # start over without the failed expanded form, possibly
             # with a simplified solution
-            val = f.subs(sol)
+            val = simplify(f.subs(sol))
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
