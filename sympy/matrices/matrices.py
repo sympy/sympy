@@ -302,11 +302,47 @@ class MatrixBase(object):
         return self._new(self.rows, self.cols, self._mat)
 
     def trace(self):
+        r"""
+        Represents the trace of a matrix expression.
+
+        Examples
+        ========
+
+        >>> from sympy import MatrixSymbol, Trace, eye
+        >>> A = MatrixSymbol('A', 3, 3)
+        >>> Trace(A)
+        Trace(A)
+        >>> Trace(eye(3))
+        Trace(Matrix([[1,0,0],[0,1,0],[0,0,1]]))
+
+        """
+        
         if not self.is_square:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
     def inv(self, method=None, **kwargs):
+        r"""
+        Returns the inverse of the matrix `K`, if it exists using the Gaussian elimination by default.
+        However we can specify it to be done by LU decomposition as well.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix(( [1, 2, 3], [3, 6, 2], [2, 0, 1] ))
+        >>> M.inv()
+        Matrix([
+        [-3/14, 1/14, 1/2],
+        [-1/28, 5/28, -1/4],
+        [3/7, -1/7, 0]])
+        >>> M.inv(method="LU")
+        Matrix([
+        [-3/14, 1/14, 1/2],
+        [-1/28, 5/28, -1/4],
+        [3/7, -1/7, 0]])
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
         if method is not None:
