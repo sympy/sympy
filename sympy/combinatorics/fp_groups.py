@@ -1298,11 +1298,9 @@ def elimination_technique_2(C):
     rels = list(C.reidemeister_relators)
     rels.sort(reverse=True)
     gens = list(C.schreier_generators)
-    i = len(rels) - 1
-    while i >= 0:
+    for i in range(len(gens) - 1, -1, -1):
         rel = rels[i]
-        j = len(gens) - 1
-        while j >= 0:
+        for j in range(len(gens) - 1, -1, -1):
             gen = gens[j]
             if rel.generator_count(gen) == 1:
                 k = rel.exponent_sum(gen)
@@ -1313,10 +1311,7 @@ def elimination_technique_2(C):
                 del rels[i]; del gens[j]
                 for l in range(len(rels)):
                     rels[l] = rels[l].eliminate_word(gen, rep_by)
-                i = len(rels)
                 break
-            j -= 1
-        i -= 1
     C.reidemeister_relators = rels
     C.schreier_generators = gens
     return C.schreier_generators, C.reidemeister_relators
@@ -1349,15 +1344,27 @@ def _simplification_technique_1(C):
     rels = list(C.reidemeister_relators)
     group = C.schreier_free_group
     l_rels = len(rels)
+
+    # all syllables with single syllable
     one_syllable_rels = []
+    # since "nw" has a max size = l_rels, only identity element
+    # removal can possibly happen
     nw = [None]*l_rels
-    for i in range(len(rels)):
+    for i in range(l_rels):
         w = rels[i]
         if w.number_syllables() == 1:
+
+            # replace one syllable relator with the corresponding inverse
+            # element, for ex. x**-4 -> x**4 in relator list
             if w.array_form[0][1] < 0:
                 rels[i] = w**-1
             one_syllable_rels.append(rels[i])
+        # since modifies the array rep., so should be
+        # added a list
         nw[i] = list(rels[i].array_form)
+
+    # bound the exponent of relators, making use of the single
+    # syllable relators
     for i in range(l_rels):
         k = nw[i]
         rels_i = rels[i]
@@ -1367,13 +1374,18 @@ def _simplification_technique_1(C):
             for j in range(len(k) - 1, -1, -1):
                 if gen_arr0 == k[j][0] and gen != rels_i:
                     t = Mod(k[j][1], n)
+
+                    # multiple of one syllable relator
                     if t == 0:
                         del k[j]
+
+                    # power should be bounded by (-n/2, n/2]
                     elif t <= n/2:
                         k[j] = k[j][0], Mod(k[j][1], n)
                     elif t > n/2:
                         k[j] = k[j][0], Mod(k[j][1], n) - n
 
+    # don't add "identity" element in relator list
     C.reidemeister_relators = [group.dtype(tuple(arr)) for arr in nw if arr]
 
 def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
