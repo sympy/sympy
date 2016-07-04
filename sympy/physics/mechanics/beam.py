@@ -83,8 +83,8 @@ class Beam(object):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
-        It is suggested to use ``moment``, ``shear`` and ``deflection`` as the keywords
-        while providing the boundary conditions of the moment curve, shear curve and the
+        It is suggested to use ``moment``, ``slope`` and ``deflection`` as the keywords
+        while providing the boundary conditions of the moment curve, slope curve and the
         deflection curve respectively as inputs.
 
         Outputs a dictionary.
@@ -96,9 +96,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> bcs = b.boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], shear = [(0, 1)])
+        >>> bcs = b.boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> bcs
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'shear': [(0, 1)]}
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> bcs['moment']
         [(0, 4), (4, 0)]
 
