@@ -376,20 +376,20 @@ class For(Basic):
     @property
     def target(self):
         """
-        Return the symbol
+        Return the symbol from the for-loop representation.
         """
         return self._args[0]
 
     @property
     def iterable(self):
         """
-        Return the iterable
+        Return the iterable from the for-loop representation.
         """
         return self._args[1]
 
     @property
     def body(self):
         """
-        Return the sympy expression
+        Return the sympy expression from the for-loop representation.
         """
         return self._args[2]
