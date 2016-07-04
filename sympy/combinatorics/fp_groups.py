@@ -1040,15 +1040,15 @@ def define_schreier_generators(C):
             y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
     grp_gens = list(free_group(', '.join(y)))
-    C.schreier_free_group = grp_gens.pop(0)
-    C.schreier_generators = grp_gens
+    C._schreier_free_group = grp_gens.pop(0)
+    C._schreier_generators = grp_gens
     # replace all elements of P by, free group elements
     for i, j in product(range(len(C.P)), range(len(C.A))):
         # if equals "<identity>", replace by identity element
         if C.P[i][j] == "<identity>":
-            C.P[i][j] = C.schreier_free_group.identity
+            C.P[i][j] = C._schreier_free_group.identity
         elif isinstance(C.P[i][j], str):
-            r = C.schreier_generators[y.index(C.P[i][j])]
+            r = C._schreier_generators[y.index(C.P[i][j])]
             C.P[i][j] = r
             beta = C.table[i][j]
             C.P[beta][j + 1] = r**-1
@@ -1057,7 +1057,7 @@ def define_schreier_generators(C):
 def reidemeister_relators(C):
     R = C.fp_group.relators()
     rels = [rewrite(C, coset, word) for word in R for coset in range(C.n)]
-    identity = C.schreier_free_group.identity
+    identity = C._schreier_free_group.identity
     order_1_gens = set([i for i in rels if len(i) == 1])
 
     # remove all the order 1 generators from relators
@@ -1070,7 +1070,7 @@ def reidemeister_relators(C):
             w = w.eliminate_word(gen, identity)
         rels[i] = w
 
-    C.schreier_generators = [i for i in C.schreier_generators if i not in order_1_gens]
+    C._schreier_generators = [i for i in C._schreier_generators if i not in order_1_gens]
 
     # Tietze transformation 1 i.e TT_1
     # remove cyclic conjugate elements from relators
@@ -1085,7 +1085,7 @@ def reidemeister_relators(C):
                 j += 1
         i += 1
 
-    C.reidemeister_relators = rels
+    C._reidemeister_relators = rels
 
 
 def rewrite(C, alpha, w):
@@ -1117,7 +1117,7 @@ def rewrite(C, alpha, w):
     x_4*y_2*x_3*x_1*x_2*y_4*x_5
 
     """
-    v = C.schreier_free_group.identity
+    v = C._schreier_free_group.identity
     for i in range(len(w)):
         x_i = w[i]
         v = v*C.P[alpha][C.A_dict[x_i]]
@@ -1240,11 +1240,11 @@ def modified_coincidence(C, alpha, beta, w):
 
 # Pg 350, section 2.5.1 from [2]
 def elimination_technique_1(C):
-    rels = list(C.reidemeister_relators)
+    rels = C._reidemeister_relators
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
     rels.sort(reverse=True)
-    gens = list(C.schreier_generators)
+    gens = C._schreier_generators
     redundant_gens = {}
     contained_gens = []
     # examine each relator in relator list for any generator occuring exactly
@@ -1278,11 +1278,11 @@ def elimination_technique_1(C):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
     rels.sort()
     try:
-        rels.remove(C.schreier_free_group.identity)
+        rels.remove(C._schreier_free_group.identity)
     except ValueError:
         pass
-    C.reidemeister_relators = set(rels)
-    C.schreier_generators = set(gens)
+    C._reidemeister_relators = rels
+    C._schreier_generators = gens
 
 # Pg 350, section 2.5.2 from [2]
 def elimination_technique_2(C):
@@ -1292,7 +1292,8 @@ def elimination_technique_2(C):
     shortest equivalent string at each stage.
 
     >>> from sympy.combinatorics.free_group import free_group
-    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, reidemeister_relators, define_schreier_generators, elimination_technique_2
+    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
+            reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2]); H = [x*y, x**-1*y**-1*x*y*x]
     >>> C = coset_enumeration_r(f, H)
@@ -1303,9 +1304,9 @@ def elimination_technique_2(C):
     ([y_1, y_2], [y_2**-3, y_2*y_1*y_2*y_1*y_2*y_1, y_1**2])
 
     """
-    rels = list(C.reidemeister_relators)
+    rels = C._reidemeister_relators
     rels.sort(reverse=True)
-    gens = list(C.schreier_generators)
+    gens = C._schreier_generators
     for i in range(len(gens) - 1, -1, -1):
         rel = rels[i]
         for j in range(len(gens) - 1, -1, -1):
@@ -1320,11 +1321,22 @@ def elimination_technique_2(C):
                 for l in range(len(rels)):
                     rels[l] = rels[l].eliminate_word(gen, rep_by)
                 break
-    C.reidemeister_relators = rels
-    C.schreier_generators = gens
-    return C.schreier_generators, C.reidemeister_relators
+    C._reidemeister_relators = rels
+    C._schreier_generators = gens
+    return C._schreier_generators, C._reidemeister_relators
 
-def _simplification_technique_1(C):
+def simplify_presentation(C):
+    """
+    Relies upon `_simplification_technique_1` for its functioning.
+    """
+    rels = C._reidemeister_relators
+    rels_arr = _simplification_technique_1(rels)
+    group = C._schreier_free_group
+
+    # don't add "identity" element in relator list
+    C._reidemeister_relators = [group.dtype(tuple(r)) for r in rels_arr if r]
+
+def _simplification_technique_1(rels):
     """
     All relators are checked to see if they are of the form `gen^n`. If any
     such relators are found then all other relators are processed for strings
@@ -1338,23 +1350,21 @@ def _simplification_technique_1(C):
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplification_technique_1(w1)
-    [x**-1*y**4, x**3]
+    [[(x, -1), (y, 4)], [(x, 3)]]
 
     >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
     >>> _simplification_technique_1(w2)
-    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
+    [[(x, -1), (y, 1), (x, -1)], [(x, 3)], [(x, -1), (y, -2)], [(y, 5)]]
 
     >>> w3 = [x**6*y**4, x**4]
     >>> _simplification_technique_1(w3)
-    [x**2*y**4, x**4]
+    [[(x, 2), (y, 4)], [(x, 4)]]
 
     """
-    rels = list(C.reidemeister_relators)
-    group = C.schreier_free_group
     l_rels = len(rels)
 
     # all syllables with single syllable
-    one_syllable_rels = []
+    one_syllable_rels = set()
     # since "nw" has a max size = l_rels, only identity element
     # removal can possibly happen
     nw = [None]*l_rels
@@ -1366,7 +1376,7 @@ def _simplification_technique_1(C):
             # element, for ex. x**-4 -> x**4 in relator list
             if w.array_form[0][1] < 0:
                 rels[i] = w**-1
-            one_syllable_rels.append(rels[i])
+            one_syllable_rels.add(rels[i])
         # since modifies the array rep., so should be
         # added a list
         nw[i] = list(rels[i].array_form)
@@ -1393,8 +1403,7 @@ def _simplification_technique_1(C):
                     elif t > n/2:
                         k[j] = k[j][0], Mod(k[j][1], n) - n
 
-    # don't add "identity" element in relator list
-    C.reidemeister_relators = [group.dtype(tuple(arr)) for arr in nw if arr]
+    return nw
 
 def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     """
@@ -1413,25 +1422,25 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
     >>> H = [x*y, x**-1*y**-1*x*y*x]
     >>> reidemeister_presentation(f, H)
-    (set([y_1, x_3]), set([y_1**2, x_3**3, x_3*y_1**-1*x_3*y_1**-1*x_3*y_1**-1]))
+    ((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))
 
     Example 5.8 Pg. 183 from [1]
     >>> f = FpGroup(F, [x**3, y**3, (x*y)**3])
     >>> H = [x*y, x*y**-1]
     >>> reidemeister_presentation(f, H)
-    (set([x_0, y_0]), set([x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0]))
+    ((x_0, y_0), (x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0))
 
     Exercises Q2. Pg 187 from [1]
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    (set([x_1]), set([x_1**4]))
+    ((x_1,), (x_1**4,))
 
     Example 5.9 Pg. 183 from [1]
     >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    (set([x_0]), set([x_0**6]))
+    ((x_0,), (x_0**6, x_0**6))
 
     """
     C = coset_enumeration_r(fp_grp, H)
@@ -1441,7 +1450,9 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     for i in range(elm_rounds):
         elimination_technique_1(C)
     for i in range(simp_rounds):
-        _simplification_technique_1(C)
+        simplify_presentation(C)
+    C.schreier_generators = tuple(C._schreier_generators)
+    C.reidemeister_relators = tuple(C._reidemeister_relators)
     return C.schreier_generators, C.reidemeister_relators
 
 
