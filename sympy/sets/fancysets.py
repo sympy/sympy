@@ -364,34 +364,63 @@ class ImageSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-    def put_values(self, symbol, sol=None):
-        """Returns ImageSet expr after substituting the given value for symbol.
+    def put_values(self, symbol, val=None):
         """
-        if sol is not None:
-            sol = {symbol: sol}
+        Returns ImageSet expr value after substituting the given `values` for
+        `symbol`.
+
+        Input can be either a single symbol and corresponding value
+        or a dictionary of symbols and values. If symbol(s) are present in
+        lambda variables and values are in the base_set, it returns
+        corresponding ImageSet value.
+
+        Raises
+        ======
+
+        ValueError
+            The input is not valid.
+            The symbol(s) are not present in lambda.
+            The value(s) are not in ImageSet base_set
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Lambda, S
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> n, m = symbols('n, m')
+        >>> imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
+        >>> imgset.put_values({n: 1, m: 2})
+        1
+        >>> imgset = ImageSet(Lambda((n, m), n**2 + m), S.Reals)
+        >>> imgset.put_values({n: 1, m: 2})
+        3
+
+        """
+        if val is not None:
+            val = {symbol: val}
         elif isinstance(symbol, dict):
-            sol = symbol
+            val = symbol
         else:
             msg = 'Expecting (sym, val) or ({sym: val}, None) but got (%s, %s)'
-            raise ValueError(filldedent(msg % (symbol, sol)))
+            raise ValueError(filldedent(msg % (symbol, val)))
 
         variabls = self.lamda_vars
 
-        if set(sol.keys()) & set(variabls):
+        if set(val.keys()) & set(variabls):
             # if variables present in the imageset lambda
             # and variable value is in base_set, then only put values
             baseset = self.base_set
-            if all(s in baseset for s in sol.values()):
+            if all(v in baseset for v in val.values()):
                 # substitute the values
-                return self.lamda.expr.subs(sol)
+                return self.lamda.expr.subs(val)
             else:
                 msg = 'All or some of the values %s, you want to put is not in \
                 base_set: %s '
-                raise ValueError(filldedent(msg % (sol, baseset)))
+                raise ValueError(filldedent(msg % (val, baseset)))
         else:
             msg = 'All or some of the symbols: %s, you want to replace is not \
             present in ImageSet: %s '
-            raise ValueError(filldedent(msg % (sol.keys(), self)))
+            raise ValueError(filldedent(msg % (val.keys(), self)))
 
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine
