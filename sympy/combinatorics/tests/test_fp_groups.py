@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
-        coset_enumeration_r, coset_enumeration_c)
+        coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
 from sympy.combinatorics.free_group import free_group
 
 """
@@ -773,3 +773,26 @@ def test_low_index_subgroups():
            [6, 6, 6, 3], [5, 5, 3, 5], [8, 8, 8, 4], [7, 7, 4, 7]]]
     for i in range(len(t3)):
         assert L[i].table == t3[i]
+
+
+def test_subgroup_presentations():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    H = [x*y, x**-1*y**-1*x*y*x]
+    p1 = reidemeister_presentation(f, H)
+    assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
+
+    f = FpGroup(F, [x**3, y**3, (x*y)**3])
+    H = [x*y, x*y**-1]
+    p2 = reidemeister_presentation(f, H)
+    assert str(p2) == "((x_0, y_0), (x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0))"
+
+    f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
+    H = [x]
+    p3 = reidemeister_presentation(f, H)
+    assert str(p3) == "((x_1,), (x_1**4,))"
+
+    f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
+    H = [x]
+    p4 = reidemeister_presentation(f, H)
+    assert str(p4) == "((x_0,), (x_0**6,))"
