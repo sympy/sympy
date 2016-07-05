@@ -2054,6 +2054,31 @@ class MatrixBase(object):
         return self.rows == self.cols
 
     @property
+    def is_empty(self):
+        """Checks if a matrix is an empty matrix.
+
+        A matrix is called empty if it has its number of columns or number of
+        rows or both as zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, zeros
+        >>> a = Matrix([])
+        >>> a.is_empty
+        True
+        >>> b = Matrix([0])
+        >>> b.is_empty
+        False
+        >>> c = Matrix([[1, 2], [3, 4]])
+        >>> c.is_empty
+        False
+        """
+        if not self.rows or not self.cols:
+            return True
+        return False
+
+    @property
     def is_zero(self):
         """Checks if a matrix is a zero matrix.
 
@@ -3079,14 +3104,18 @@ class MatrixBase(object):
 
     def eigenvals(self, **flags):
         """Return eigen values using the berkowitz_eigenvals routine.
-
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
+
+        if the matrix given is an empty matrix, then empty dict is returned.
         """
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+        if self.is_empty:
+            return {}
+
         mat = self
 
         if not mat:
@@ -3101,19 +3130,22 @@ class MatrixBase(object):
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
-
         The flag ``simplify`` has two effects:
             1) if bool(simplify) is True, as_content_primitive()
             will be used to tidy up normalization artifacts;
             2) if nullspace needs simplification to compute the
             basis, the simplify flag will be passed on to the
             nullspace routine which will interpret it there.
-
         If the matrix contains any Floats, they will be changed to Rationals
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
+
+        If the given matrix is an empty matrix, then empty list is returned
         """
+        if self.is_empty:
+            return []
+
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
