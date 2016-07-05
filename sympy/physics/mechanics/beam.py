@@ -130,14 +130,28 @@ class Beam(object):
         return self._boundary_conditions['moment']
 
 
-    def apply_slope_boundary_conditions(self):
+    def apply_slope_boundary_conditions(self, *s_bcs):
         """
         Takes only the slope boundary conditions as input.
 
         Examples
         ========
+        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> bcs = b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> bcs
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        >>> b.apply_slope_boundary_conditions((4, 3), (5, 0))
+        [(0, 1), (4, 3), (5, 0)]
 
         """
+        for bcs in s_bcs:
+            self._boundary_conditions['slope'].append(bcs)
+        return self._boundary_conditions['slope']
+
 
     def apply_deflection_boundary_conditions(self):
         """
