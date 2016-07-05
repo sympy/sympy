@@ -3087,6 +3087,10 @@ class MatrixBase(object):
         # roots doesn't like Floats, so replace them with Rationals
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
+
+        if not self:
+            return {}
+
         mat = self
 
         if not mat:
@@ -3114,6 +3118,10 @@ class MatrixBase(object):
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
         """
+
+        if not self:
+            return []
+
         from sympy.matrices import eye
 
         simplify = flags.get('simplify', True)
