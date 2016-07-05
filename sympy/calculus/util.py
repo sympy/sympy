@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit
+from sympy import Order, S, log, limit, lcm, pi
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -379,24 +379,33 @@ def _periodicity(args, symbol):
         return None
 
 
+def nlcm(numbers):
+    """Returns the LCM of a list of numbers.
 
     Examples
     ========
     >>> from sympy import S, pi
-    >>> from sympy.calculus.util import lcm_fraction
-    >>> lcm_fraction([S(1)/2, S(3)/4, S(5)/6])
+    >>> from sympy.calculus.util import nlcm
+    >>> nlcm([S(1)/2, S(3)/4, S(5)/6])
     15/2
-    >>> lcm_fraction([2*pi, 3*pi, pi, pi/2])
+    >>> nlcm([2*pi, 3*pi, pi, pi/2])
     6*pi
     """
-    from sympy import lcm, gcd, fraction
+    if all(num.is_irrational and num.has(pi) for num in numbers):
+        coeffs = []
+        for num in numbers:
+            coeff = num.as_independent(pi)[0]
+            coeffs.append(coeff)
 
-    if len(fractions) == 2:
-        a, b = fraction(fractions[0])
-        c, d = fraction(fractions[1])
-        return lcm(a, c) / gcd(b, d)
+        result = lcm(coeffs)*pi
+
+    elif all(num.is_rational for num in numbers):
+        result = lcm(numbers)
+
     else:
-        return lcm_fraction([fractions[0], lcm_fraction(fractions[1:])])
+        return None
+
+    return result
 
 
 class AccumulationBounds(AtomicExpr):

@@ -1,6 +1,6 @@
 from sympy import Symbol, S, exp, log, sqrt, oo, E, zoo, tan, sin, cos, cot, pi
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcm_fraction, AccumBounds)
+                                 periodicity, nlcm, AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -78,12 +78,13 @@ def test_periodicity():
     raises (NotImplementedError, lambda: periodicity(exp(x), x))
 
 
-def test_lcm_fraction():
+def test_nlcm():
     from sympy import pi
 
-    assert lcm_fraction([S(1)/2, S(2), S(3)]) == 6
-    assert lcm_fraction([pi/2, pi/4, pi]) == pi
-    assert lcm_fraction([2*pi, pi/2]) == 2*pi
+    assert nlcm([S(1)/2, S(2), S(3)]) == 6
+    assert nlcm([pi/2, pi/4, pi]) == pi
+    assert nlcm([2*pi, pi/2]) == 2*pi
+    assert nlcm([S(1), 2*pi]) is None
 
 
 def test_AccumBounds():
