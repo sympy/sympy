@@ -41,7 +41,6 @@ class Beam(object):
 
     """
 
-
     def __init__(self, length, elastic_modulus, second_moment):
         self._length = length
         self._elastic_modulus = elastic_modulus
@@ -85,9 +84,9 @@ class Beam(object):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
-        It is suggested to use ``moment``, ``slope`` and ``deflection`` as the keywords
-        while providing the boundary conditions of the moment curve, slope curve and the
-        deflection curve respectively as inputs.
+        It is suggested to use ``moment``, ``slope`` and ``deflection`` as the
+        keywords while providing the boundary conditions of the moment curve,
+        slope curve and the deflection curve respectively as inputs.
 
         Outputs a dictionary.
 
@@ -135,7 +134,6 @@ class Beam(object):
             self._boundary_conditions['moment'].append(bcs)
         return self._boundary_conditions['moment']
 
-
     def apply_slope_boundary_conditions(self, *s_bcs):
         """
         Takes only the slope boundary conditions as input.
@@ -157,7 +155,6 @@ class Beam(object):
         for bcs in s_bcs:
             self._boundary_conditions['slope'].append(bcs)
         return self._boundary_conditions['slope']
-
 
     def apply_deflection_boundary_conditions(self, *d_bcs):
         """
@@ -181,6 +178,11 @@ class Beam(object):
             self._boundary_conditions['deflection'].append(bcs)
         return self._boundary_conditions['deflection']
 
+    def boundary_conditions(self):
+        """
+        Returns a dictionary of boundary conditions applied on the beam.
+        """
+        return self._boundary_conditions
 
     def apply_loads(self, *loads):
         """
