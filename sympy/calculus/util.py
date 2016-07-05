@@ -280,7 +280,7 @@ def periodicity(f, symbol, check=False):
         try:
             period = f.period(symbol)
         except NotImplementedError:
-            period = periodicity(arg, symbol)
+            pass
 
     if f.is_Pow:
         base, expo = f.args
@@ -295,11 +295,7 @@ def periodicity(f, symbol, check=False):
                 period = periodicity(expo, symbol)
 
             else:
-                periods = []
-                for expr in f.args:
-                    periods.append(periodicity(expr, symbol))
-
-                period = lcm_fraction(periods)
+                period = _periodicity(f.args, symbol)
 
         except NotImplementedError:
             pass
@@ -307,43 +303,34 @@ def periodicity(f, symbol, check=False):
     if f.is_Mul:
         _, g = f.as_independent(symbol, as_Add=False)
         if isinstance(g, TrigonometricFunction):
-            period = g.period(symbol)
+            period = periodicity(g, symbol)
 
         else:
-            g_s = g.args
-            periods = []
-            for g in g_s:
-                periods.append(periodicity(g, symbol))
-
-            period = lcm_fraction(periods)
+            period = _periodicity(g.args, symbol)
 
     if f.is_Add:
         k, g = f.as_independent(symbol)
         if k is not S.Zero:
             return periodicity(g, symbol)
 
-        periods = []
-        for h in g.args:
-            if h.is_Mul:
-                coeff, _ = h.as_independent(symbol)
-                if coeff.is_number and coeff < 0:
-                    raise NotImplementedError("Periods of only certain "
-                                              "trigonometric functions can be "
-                                              "calculated using this method.")
+        period = _periodicity(g.args, symbol)
 
-            periods.append(periodicity(h, symbol))
+    if period is None:
+        from sympy.solvers.decompogen import compogen
+        g_s = decompogen(f, symbol)
+        num_of_gs = len(g_s)
+        if num_of_gs > 1:
+            for index, g in enumerate(reversed(g_s)):
+                try:
+                    start_index = num_of_gs - 1 - index
+                    g = compogen(g_s[start_index:], symbol)
+                    if g != f:
+                        period = periodicity(g, symbol)
 
-        period = lcm_fraction(periods)
-
-    g_s = decompogen(f, symbol)
-    if len(g_s) > 1 and period is None:
-        for g in reversed(g_s):
-            try:
-                period = periodicity(g, symbol)
-            except NotImplementedError:
-                pass
-            else:
-                break
+                except (ValueError, NotImplementedError):
+                    continue
+                else:
+                    break
 
     if period is not None:
         if check:
@@ -351,8 +338,9 @@ def periodicity(f, symbol, check=False):
                 return period
 
             else:
-                raise NotImplementedError("Periods of only certain trigonometric functions"
-                                          " can be calculated using this method.")
+                raise NotImplementedError("The period of the given function "
+                                          "cannot be verified. Set check=False"
+                                          " to obtain the value.")
 
         return period
 
