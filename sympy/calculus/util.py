@@ -361,8 +361,24 @@ def periodicity(f, symbol, check=False):
                                   " can be calculated using this method.")
 
 
-def lcm_fraction(fractions):
-    """Returns the LCM of a list of fractions.
+def _periodicity(args, symbol):
+    """Helper function to periodicity
+    """
+    periods = []
+    for f in args:
+        try:
+            period = periodicity(f, symbol)
+            periods.append(period)
+        except NotImplementedError:
+            return None
+
+    if len(periods) > 1:
+        return nlcm(periods)
+
+    elif not periods:
+        return None
+
+
 
     Examples
     ========
