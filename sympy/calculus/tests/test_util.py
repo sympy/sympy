@@ -1,4 +1,5 @@
-from sympy import Symbol, S, exp, log, sqrt, oo, E, zoo, tan, sin, cos, cot, pi
+from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
+                   cot, sec, csc)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, nlcm, AccumBounds)
 from sympy.core import Add, Mul, Pow
@@ -68,14 +69,34 @@ def test_periodicity():
 
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
+    assert periodicity(sin(x)**2, x) == 2*pi
+    assert periodicity(3**tan(3*x), x) == pi/3
     assert periodicity(tan(x)*cos(x), x) == 2*pi
-    assert periodicity(sin(x) + cos(x), x) == 2*pi
-    assert periodicity(tan(x) + cot(x), x) == pi
-    assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
-    assert periodicity(sin(x) - 1, x) == 2*pi
+    assert periodicity(sin(x)**(tan(x)), x) == 2*pi
+    assert periodicity(tan(x)*sec(x), x) == 2*pi
     assert periodicity(sin(2*x)*cos(2*x) - y, x) == pi/2
-    raises (NotImplementedError, lambda: periodicity(sin(x) - cos(x), x))
-    raises (NotImplementedError, lambda: periodicity(exp(x), x))
+    assert periodicity(tan(x) + cot(x), x) == pi
+    assert periodicity(sin(x) - cos(2*x), x) == 2*pi
+    assert periodicity(sin(x) - 1, x) == 2*pi
+    assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
+    assert periodicity(exp(sin(x)), x) == 2*pi
+    assert periodicity(log(cot(2*x)) - sin(cos(2*x)), x) == pi
+    assert periodicity(sin(2*x)*exp(tan(x) - csc(2*x)), x) == pi
+    assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
+    assert periodicity(tan(sin(2*x)), x) == pi
+    raises(NotImplementedError, lambda: periodicity(exp(x), x))
+    raises(NotImplementedError, lambda: periodicity(log(x), x))
+    raises(NotImplementedError, lambda: periodicity(exp(x)**sin(x), x))
+
+
+def test_periodicity_check():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert periodicity(tan(x), x, check=True) == pi
+    assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
+    raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
+    raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
 
 
 def test_nlcm():
