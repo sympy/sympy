@@ -105,6 +105,13 @@ def revolute():
     """This fucntion will return revolute joint information. This assumes
     standard link coordinates.
 
+    Parameters
+    ==========
+
+    q: SymPy symbol
+        This is the generalized angle that defines the position of the successor
+        link to the predecessor link (joint angle).
+
     Returns
     =======
 
@@ -123,8 +130,10 @@ def revolute():
     anything based on changing input conditions. It simply returns the matrices
     that define a revolute joint. ::
 
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics.joints import revolute
-        >>> [Xj, S, T] = revolute()
+        >>> theta = symbols('theta')
+        >>> [XJ, S, T] = revolute(theta)
     """
 
 
@@ -132,6 +141,12 @@ def prismatic():
     """This fucntion will return prismatic joint information. This assumes
     standard link coordinates.
 
+    Parameters
+    ==========
+
+    q: SymPy symbol
+        This is the generalized length that defines the position of the
+        successor link to the predecessor link (joint offset distance).
 
     Returns
     =======
@@ -151,8 +166,10 @@ def prismatic():
     anything based on changing input conditions. It simply returns the matrices
     that define a prismatic joint. ::
 
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics.joints import prismatic
-        >>> [Xj, S, T] = prismatic()
+        >>> L = symbols('L')
+        >>> [XJ, S, T] = prismatic(L)
     """
 
 
@@ -160,6 +177,16 @@ def helical(pitch=None):
     """This fucntion will return helical joint information. This assumes
     standard link coordinates. If a pitch is given it will be substituted into
     the returns.
+
+    Parameters
+    ==========
+
+    q: SymPy symbol
+        This is the generalized angle that defines the position of the successor
+        link to the predecessor link (joint angle).
+    pitch: SymPy symbol or numeric, optional
+        This represents the pitch of the helical joint. If not specified a sympy
+        symbol of 'h' will be used.
 
     Returns
     =======
@@ -180,7 +207,8 @@ def helical(pitch=None):
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics.joints import helical
-        >>> [XJ, S, T] = helical()
-        >>> [XJ, S, T] = helical(pitch=symbols('p'))
-        >>> [XJ, S, T] = helical(pitch=5)
+        >>> theta, p = symbols('theta p')
+        >>> [XJ, S, T] = helical(theta)
+        >>> [XJ, S, T] = helical(theta, pitch=p)
+        >>> [XJ, S, T] = helical(theta, pitch=5)
     """
