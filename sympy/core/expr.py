@@ -3066,10 +3066,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import radsimp
         return radsimp(self)
 
-    def powsimp(self, deep=False, combine='all'):
+    def powsimp(self, deep=False, combine='all', **kwargs):
         """See the powsimp function in sympy.simplify"""
         from sympy.simplify import powsimp
-        return powsimp(self, deep, combine)
+        return powsimp(self, deep, combine, **kwargs)
 
     def combsimp(self):
         """See the combsimp function in sympy.simplify"""
