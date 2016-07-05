@@ -36,6 +36,15 @@ def rx():
 
     E: Matrix, size(3, 3)
         This is the calculated transformation matrix
+
+    Examples
+    ========
+
+    Simply provide an angle and the function will return the rotation matrix. ::
+
+        >>> from sympy.physics.vector.spatial import rx
+        >>> theta = 35
+        >>> E = rx(theta)
     """
 
 
@@ -55,6 +64,15 @@ def ry():
 
     E: Matrix, size(3, 3)
         This is the calculated transformation matrix
+
+    Examples
+    ========
+
+    Simply provide an angle and the function will return the rotation matrix. ::
+
+        >>> from sympy.physics.vector.spatial import ry
+        >>> theta = 35
+        >>> E = ry(theta)
     """
 
 
@@ -74,6 +92,15 @@ def rz():
 
     E: Matrix, size(3, 3)
         This is the calculated transformation matrix
+
+    Examples
+    ========
+
+    Simply provide an angle and the function will return the rotation matrix. ::
+
+        >>> from sympy.physics.vector.spatial import rz
+        >>> theta = 35
+        >>> E = rz(theta)
     """
 
 
@@ -92,6 +119,20 @@ def rot():
 
     X: Matrix, size(6, 6)
         This is the 6x6 rotation matrix for spatial vectors
+
+    Examples
+    ========
+
+    A simple example would be a single rotation of theta degrees about the x
+    axis. ::
+
+        >>> from sympy.physics.vector.spatial import rx, rot
+        >>> theta = 35
+        >>> E = rx(theta)
+        >>> X = rot(E)
+
+    This takes the 3x3 rotation matrix and puts it in a form to be used with
+    spatial vectors.
     """
 
 
@@ -118,6 +159,17 @@ def xlt():
 
     X: Matrix, size(6,6)
         This is the 6x6 translation matrix for spatial vectors
+
+    Examples
+    ========
+
+    For a unit translation in the x direction the transformation matrix for
+    spatial vectors can be formed as follows::
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.vector.spatial import xlt
+        >>> r = Matrix([1, 0, 0])
+        >>> X = xlt(r)
     """
 
 
@@ -148,6 +200,17 @@ def cross_f():
         This is the result of the force cross product. It v was 6x1 the return
         is a 6x6 matrix otherwise it is a 3x3 matrix
 
+    Examples
+    ========
+
+    A simple example of the cross product of a vector v. ::
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.physics.vector.spatial import cross_f
+        >>> v1, v2, v3, v4, v5, v6 = symbols('v1 v2 v3 v4 v5 v6')
+        >>> v = Matrix([v1, v2, v3, v4, v5, v6])
+        >>> crossed_f = cross_f(v)
+
     Notes
     =====
 
@@ -174,6 +237,17 @@ def cross_m():
     crossed: Matrix, size(6, 6) or size(3, 3)
         This is the result of the motion cross product. It v was 6x1 the return
         is a 6x6 matrix otherwise it is a 3x3 matrix
+
+    Examples
+    ========
+
+    A simple example of the cross product of a vector v. ::
+
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.physics.vector.spatial import cross_m
+        >>> v1, v2, v3, v4, v5, v6 = symbols('v1 v2 v3 v4 v5 v6')
+        >>> v = Matrix([v1, v2, v3, v4, v5, v6])
+        >>> crossed_m = cross_m(v)
     """
 
 
@@ -199,4 +273,17 @@ def X_to_Xstar():
 
     Xstar: Matrix, size(6, 6)
         This is the transformation matrix for the force space of spatial vectors
+
+    Examples
+    ========
+
+    A transformation matrix for a rotation about the z direction in the force
+    space can be determined as follows::
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.vector.spatial import rz, rot, X_to_Xstar
+        >>> theta = symbols('theta')
+        >>> E = rz(theta)
+        >>> X = rot(E)
+        >>> Xstar = X_to_Xstar(X)
     """
