@@ -20,7 +20,7 @@ from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 from sympy.utilities.pytest import XFAIL, raises, skip, slow
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-
+from sympy import Derivative
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
@@ -343,6 +343,14 @@ def test__has_rational_power():
     assert _has_rational_power(x**2*sqrt(x), x) == (True, 2)
     assert _has_rational_power(sqrt(2)*x**(S(1)/3), x) == (True, 3)
     assert _has_rational_power(sqrt(x)*x**(S(1)/3), x) == (True, 6)
+
+
+def test_nonsymbol():
+    f = Function('f')
+    assert solveset((3 - 5*x/f(x))*f(x), f(x)) == FiniteSet(5*x/3)
+    assert solveset(f(x) + f(x).diff(x), f(x)) == FiniteSet(-Derivative(f(x), x))
+    assert solveset(f(x) - 3*f(x).diff(x), f(x)) == FiniteSet(3*Derivative(f(x), x))
+    assert solveset(x + exp(x)**2, exp(x)) == FiniteSet(-sqrt(-x), sqrt(-x))
 
 
 def test_solveset_sqrt_1():

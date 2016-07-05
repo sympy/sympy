@@ -28,6 +28,7 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy import NumberSymbol, Add
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -644,6 +645,126 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
+def check_noninverts(f, symbol):
+    """Substitute the non invertable terms Derivative ,Integral.
+
+    Parameters
+    ==========
+
+    f : Expression
+        The target equation
+    symbol : Symbol
+        The variable for which the equation is solved
+
+    Returns
+    =======
+
+    f, symbol, non_inverts
+
+    * `f` is equation after the substitution of temporary symbols
+    in place of Derivative, Integrals , etc.
+
+    * `symbol` is symbol for which equation `f` will be solved after the substitution
+
+    * `non_inverts` dict of swapped functions eg. {Derivative : D_0}
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols, Derivative
+    >>> from sympy.solvers.solveset import check_noninverts
+    >>> x, y, z, D_0 = symbols('x, y, z, D_0')
+    >>> f = Function('f')
+    >>> check_noninverts( f(x) + f(x).diff(x) , f(x))
+    (D_0 + f(x), f(x), {Derivative(f(x), x): 'D_0'})
+
+    """
+    from sympy import Derivative, Integral
+    from sympy.core.function import AppliedUndef
+    non_inverts = {}
+    if f.atoms(Derivative):
+        temp = "D"+ "_%i"
+        for i, d in enumerate(f.atoms(Derivative)):
+            s_new = temp % i
+            non_inverts[d] = s_new
+    elif f.atoms(Integral):
+        temp = "I"+ "_%i"
+        for i, ig in enumerate(f.atoms(Integrals)):
+            s_new = temp % i
+            non_inverts[ig] = s_new
+    # other new non_inverts will be added here
+    if non_inverts:
+        f = f.subs(non_inverts)
+        symbol = symbol.subs(non_inverts)
+    return f, symbol, non_inverts
+
+
+def swap_back(result, swapped_symbol, non_inverts):
+    """Replace temporary variable(if it is there) that were swapped.
+
+    Parameters
+    ==========
+
+    result : solution of the equation a FiniteSet
+
+    swapped_symbol : Symbols to be swapped a dict
+
+    non_inverts : dict of non invertable terms and corresponding replaced symbol
+
+    Returns
+    =======
+
+    result : result is final solution after replacing temporary variables.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, Derivative
+    >>> from sympy.solvers.solveset import swap_back
+    >>> from sympy.sets import FiniteSet
+    >>> x, y, z, temp = symbols('x y z temp')
+    >>> f = Function('f')
+    >>> swap_back( FiniteSet(temp + f(x)), {}, {Derivative(f(x), x) : temp})
+    {f(x) + Derivative(f(x), x)}
+    >>> swap_back( FiniteSet(temp + y + f(x)), {z : y}, {Derivative(f(x), x) : temp})
+    {z + f(x) + Derivative(f(x), x)}
+
+    """
+
+    if non_inverts:
+        # invert the dict
+        non_inverts = dict([(v, k) for k, v in non_inverts.items()])
+        if isinstance(result, ConditionSet):
+            result_sym = result.sym
+            result_condition = result.condition
+            result_sym = result_sym.subs(non_inverts)
+            result_condition = result_condition.subs(non_inverts)
+            result = ConditionSet(result_sym, result_condition, result.base_set)
+        elif isinstance(result, FiniteSet):
+            new_result = FiniteSet()
+            for s in result:
+                s = s.subs(non_inverts)
+                new_result = new_result + FiniteSet(s)
+            result = new_result
+
+    if swapped_symbol:
+        # invert dict
+        swapped_symbol = dict([(v, k) for k, v in swapped_symbol.items()])
+        if isinstance(result, ConditionSet):
+            result_sym = result.sym
+            result_condition = result.condition
+            result_sym = result_sym.subs(swapped_symbol)
+            result_condition = result_condition.subs(swapped_symbol)
+            result = ConditionSet(result_sym, result_condition, result.base_set)
+        elif isinstance(result, FiniteSet):
+            new_result = FiniteSet()
+            for s in result:
+                s = s.subs(swapped_symbol)
+                new_result = new_result + FiniteSet(s)
+            result = new_result
+    return result
+
+
 def solveset(f, symbol=None, domain=S.Complexes):
     """Solves a given inequality or equation with set as output
 
@@ -728,7 +849,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     The solution is mostly unaffected by assumptions on the symbol,
     but there may be some slight difference:
 
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
+    >>> pprint(solveset(sin(x)/x, x), use_unicode=False)
     ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
 
     >>> p = Symbol('p', positive=True)
@@ -740,6 +861,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> solveset(exp(x) > 1, x, R)
     (0, oo)
+
+    * We can also solve the equation for a non symbol :
+
+    >>> from sympy import symbols, Function
+    >>> x, y, z = symbols("x, y, z")
+    >>> f = Function('f')
+    >>> solveset(f(x) + f(x).diff(x), f(x))
+    {-Derivative(f(x), x)}
+    >>> solveset((3 - 5*x/f(x))*f(x), f(x))
+    {5*x/3}
+    >>> solveset(f(x, y) + 2, f(x, y))
+    {-2}
 
     """
     f = sympify(f)
@@ -765,6 +898,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
+    # now check for Derivative, Integrals, etc in the equation f
+    # can't put this line after swapping of non symbols because if user defined variable is inside
+    # Derivative(Dummy, x) or other function then replace/subs not working for Dummy at the end.
+    f, symbol, non_inverts = check_noninverts(f, symbol)
+    swapped_symbol = {}
     if symbol is None:
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
@@ -772,9 +910,29 @@ def solveset(f, symbol=None, domain=S.Complexes):
             raise ValueError(filldedent('''
                 The independent variable must be specified for a
                 multivariate equation.'''))
-    elif not getattr(symbol, 'is_Symbol', False):
+    elif isinstance(symbol, (Number, NumberSymbol, int)) or symbol.is_Mul or \
+    symbol.is_Relational or symbol.is_Matrix or symbol.is_Pow:
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
+    else:
+        # swapped_symbol is not put here because when symbol is not given
+        # then also checking swapped_symbol at the end
+        new_symbols = []
+        temp = "X" + "_%i"
+        # when we use list to write symbols.
+        # then need enumerate and s_new = temp % i
+        # eg. solveset(solveset((3 - 5*x/f(x))*f(x), [f(x)]))
+        s_new = symbol
+        if not (getattr(symbol, 'is_Symbol', False) or symbol.is_Symbol):
+            # substitute the non symbol
+            t = Symbol(temp % 0)
+            s_new = t
+            swapped_symbol[symbol] = s_new
+        new_symbols.append(s_new)
+
+        f = f.subs(swapped_symbol)
+        # right now only one symbol
+        symbol = new_symbols[0]
 
     if isinstance(f, Eq):
         from sympy.core import Add
@@ -793,7 +951,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    result = _solveset(f, symbol, domain, _check=True)
+
+    # replace Dummy variables with original
+    result = swap_back(result, swapped_symbol, non_inverts)
+    return result
 
 
 def _invalid_solutions(f, symbol, domain):
