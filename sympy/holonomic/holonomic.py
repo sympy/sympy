@@ -1040,7 +1040,7 @@ class HolonomicFunction(object):
         # check whether a power series exists if the point is singular
         if self.annihilator.is_singular(x0=self.x0):
             indicialroots = self._indicial()
-            if all(i < 0 or not int(i) == i for i in indicialroots):
+            if any(not int(i) == i for i in indicialroots):
                 from .holonomicerrors import NotPowerSeriesError
                 raise NotPowerSeriesError(self, self.x0)
 
@@ -1279,7 +1279,7 @@ class HolonomicFunction(object):
             if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
-        return roots(R.to_sympy(s), x, filter='R').keys()
+        return roots(R.to_sympy(s), x, filter='R')
 
     def evalf(self, points, method='RK4', h=0.05, derivatives=False):
         """
@@ -1792,6 +1792,8 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
             sol = _convert_meijerint(func, x, initcond=False, domain=domain)
             if not sol:
                 raise NotImplementedError
+            if not initcond:
+                return sol
             if not lenics:
                 lenics = sol.annihilator.order
             y0 = _find_conditions(func, x, x0, lenics)
