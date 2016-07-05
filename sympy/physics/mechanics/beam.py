@@ -46,6 +46,7 @@ class Beam(object):
         self._length = length
         self._elastic_modulus = elastic_modulus
         self._second_moment = second_moment
+        self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
 
     def __str__(self):
         str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
