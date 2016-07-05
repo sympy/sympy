@@ -12,7 +12,7 @@ from sympy.printing.precedence import PRECEDENCE, precedence
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.core.add import Add
 
 from sympy.printing.printer import Printer
@@ -811,11 +811,11 @@ class PrettyPrinter(Printer):
                 #if the coef of the basis vector is 1
                 #we skip the 1
                 if v == 1:
-                    o1.append(u("") +
+                    o1.append(u('') +
                               k._pretty_form)
                 #Same for -1
                 elif v == -1:
-                    o1.append(u("(-1) ") +
+                    o1.append(u('-1') +
                               k._pretty_form)
                 #For a general expr
                 else:
@@ -828,7 +828,7 @@ class PrettyPrinter(Printer):
                 vectstrs.append(k._pretty_form)
 
         #outstr = u("").join(o1)
-        if o1[0].startswith(u(" + ")):
+        if o1[0].startswith(u'' + u''):
             o1[0] = o1[0][3:]
         elif o1[0].startswith(" "):
             o1[0] = o1[0][1:]
