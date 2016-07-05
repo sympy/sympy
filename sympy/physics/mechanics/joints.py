@@ -74,7 +74,7 @@ def jcalc():
         >>> from sympy.physics.mechanics.joints import jcalc
         >>> [XJ, S, vJ, cJ] = jcalc('R', q)
         >>> [XJ, S, vJ, cJ] = jcalc('P', q)
-        >>> [XJ, S, vJ, cJ] = jcalc('H', q, pitch=3)
+        >>> [XJ, S, vJ, cJ] = jcalc('H', q, jparam={"pitch":3})
 
     Notes
     =====
