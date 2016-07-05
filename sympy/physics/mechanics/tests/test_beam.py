@@ -29,8 +29,10 @@ def test_Beam():
     b.second_moment = I_1
     assert b.second_moment is I_1
 
+    # Test for all boundary conditions.
     bcs = b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
     assert bcs == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+
 
 
 @XFAIL

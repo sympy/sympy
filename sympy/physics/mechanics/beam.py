@@ -105,7 +105,12 @@ class Beam(object):
         [(0, 4), (4, 0)]
 
         """
-        self._boundary_conditions = bcs
+        for m_bcs in bcs['moment']:
+            self._boundary_conditions['moment'].append(m_bcs)
+        for s_bcs in bcs['slope']:
+            self._boundary_conditions['slope'].append(s_bcs)
+        for d_bcs in bcs['deflection']:
+            self._boundary_conditions['deflection'].append(d_bcs)
         return self._boundary_conditions
 
     def apply_moment_boundary_conditions(self, *m_bcs):
