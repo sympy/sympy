@@ -29,7 +29,7 @@ def jcalc():
             'H' -> Helical
             'USER' -> User defined jcalc
     q: ordered interable of functions of time
-        The set of generalized coordinates
+        The set of generalized coordinates for the joint
     alpha: ordered iterable of functions of time, optional
         The set of generarlized speeds. If not specified it will be assumed
         qdot = alpha
@@ -38,7 +38,8 @@ def jcalc():
         (ex. helical joints need a pitch defined)
     user_func: function, optional
         This allows the user to define their own jcalc function and will return
-        the values produced by the input function
+        the values produced by the input function. When used all of the other
+        parameters will be passed to this function.
 
     Returns
     =======
@@ -61,8 +62,19 @@ def jcalc():
     Examples
     ========
 
-    TODO: Provide an example when I figure out how I'm going to implement the
-    spatial vectors
+    The first step for the examples is to form the vector of generalized
+    coordinates. ::
+
+        >>> from sympy import symbols
+        >>> the_x, the_y, the_z, x, y, z = symbols('the_x the_y the_z x y z')
+        >>> q = [the_x, the_y, the_z, x, y, z]
+
+    Now use the jcalc function to recieve the necessary joint parameters. ::
+
+        >>> from sympy.physics.mechanics.joints import jcalc
+        >>> [XJ, S, vJ, cJ] = jcalc('R', q)
+        >>> [XJ, S, vJ, cJ] = jcalc('P', q)
+        >>> [XJ, S, vJ, cJ] = jcalc('H', q, pitch=3)
 
     Notes
     =====
@@ -76,6 +88,9 @@ def jcalc():
        Springer
     """
 
+    # Reminder to use the correct coordinate for rotation and translation from
+    # the 6x1 vector of generalized coordinates.
+
 ################################################################################
 #
 # Joint Library
@@ -88,7 +103,7 @@ def jcalc():
 
 def revolute():
     """This fucntion will return revolute joint information. This assumes
-    standard link coordinates
+    standard link coordinates.
 
     Returns
     =======
@@ -100,12 +115,22 @@ def revolute():
         constraint
     T: Matrix, size(6, 5)
         The constraint force subspace matrix for the joint
+
+    Examples
+    ========
+
+    This function is pretty straight forward as it does not need to calculate
+    anything based on changing input conditions. It simply returns the matrices
+    that define a revolute joint. ::
+
+        >>> from sympy.physics.mechanics.joints import revolute
+        >>> [Xj, S, T] = revolute()
     """
 
 
 def prismatic():
     """This fucntion will return prismatic joint information. This assumes
-    standard link coordinates
+    standard link coordinates.
 
 
     Returns
@@ -118,6 +143,16 @@ def prismatic():
         constraint
     T: Matrix, size(6, 5)
         The constraint force subspace matrix for the joint
+
+    Examples
+    ========
+
+    This function is pretty straight forward as it does not need to calculate
+    anything based on changing input conditions. It simply returns the matrices
+    that define a prismatic joint. ::
+
+        >>> from sympy.physics.mechanics.joints import prismatic
+        >>> [Xj, S, T] = prismatic()
     """
 
 
@@ -136,4 +171,16 @@ def helical(pitch=None):
         constraint
     T: Matrix, size(6, 5)
         The constraint force subspace matrix for the joint
+
+    Examples
+    ========
+
+    This function will return the joint data for a helical joint and a specific
+    number or symbol can be used for the pitch. ::
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics.joints import helical
+        >>> [XJ, S, T] = helical()
+        >>> [XJ, S, T] = helical(pitch=symbols('p'))
+        >>> [XJ, S, T] = helical(pitch=5)
     """
