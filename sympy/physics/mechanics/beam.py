@@ -41,6 +41,7 @@ class Beam(object):
 
     """
 
+
     def __init__(self, length, elastic_modulus, second_moment):
         self._length = length
         self._elastic_modulus = elastic_modulus
@@ -103,16 +104,31 @@ class Beam(object):
         [(0, 4), (4, 0)]
 
         """
-        return bcs
+        self._boundary_conditions = bcs
+        return self._boundary_conditions
 
-    def apply_moment_boundary_conditions(self):
+    def apply_moment_boundary_conditions(self, *m_bcs):
         """
         Takes only the moment boundary conditions as input.
 
         Examples
         ========
+        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> bcs = b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> bcs
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        >>> b.apply_moment_boundary_conditions((4, 3), (5, 0))
+        [(0, 4), (4, 0), (4, 3), (5, 0)]
 
         """
+        for bcs in m_bcs:
+            self._boundary_conditions['moment'].append(bcs)
+        return self._boundary_conditions['moment']
+
 
     def apply_slope_boundary_conditions(self):
         """
