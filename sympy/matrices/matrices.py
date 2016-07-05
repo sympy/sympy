@@ -302,7 +302,7 @@ class MatrixBase(object):
         return self._new(self.rows, self.cols, self._mat)
 
     def trace(self):
-        r"""
+        """
         Represents the trace of a matrix expression.
 
         Examples
@@ -321,7 +321,7 @@ class MatrixBase(object):
         return self._eval_trace()
 
     def inv(self, method=None, **kwargs):
-        r"""
+        """
         Returns the inverse of the matrix `K`, if it exists using the Gaussian elimination by default.
         However we can specify it to be done by LU decomposition as well.
 
