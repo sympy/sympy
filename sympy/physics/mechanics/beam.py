@@ -105,7 +105,35 @@ class Beam(object):
         """
         return bcs
 
-    def apply(self, *loads):
+    def apply_moment_boundary_conditions(self):
+        """
+        Takes only the moment boundary conditions as input.
+
+        Examples
+        ========
+
+        """
+
+    def apply_slope_boundary_conditions(self):
+        """
+        Takes only the slope boundary conditions as input.
+
+        Examples
+        ========
+
+        """
+
+    def apply_deflection_boundary_conditions(self):
+        """
+        Takes only the slope boundary conditions as input.
+
+        Examples
+        ========
+
+        """
+
+
+    def apply_loads(self, *loads):
         """
         Takes PointLoad and DistributedLoad as input. This method would apply
         the loads, that are passed as arguments, to the beam object. Internally
