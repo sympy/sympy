@@ -505,7 +505,7 @@ def test_prime_omega():
     assert prime_omega(3 * 25) == prime_omega(3) + prime_omega(25)
     assert [prime_omega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
     assert prime_omega(fac(50)) == 108
-    assert prime_nu(2 ** 9941 - 1) == 1
+    assert prime_omega(2 ** 9941 - 1) == 1
     n = Symbol('n', integer=True)
     assert prime_omega(n)
     assert prime_omega(n).subs(n, 2 ** 31 - 1) == 1

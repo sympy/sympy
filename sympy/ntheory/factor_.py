@@ -1903,7 +1903,6 @@ class prime_omega(Function):
     .. math ::
         \Omega(n) = \sum_{i=1}^k m_i.
 
-
     References
     ==========
 
