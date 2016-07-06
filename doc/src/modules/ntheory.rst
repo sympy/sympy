@@ -75,9 +75,9 @@ Ntheory Functions Reference
 
 .. autofunction:: digits
 
-.. autofunction:: prime_nu
+.. autofunction:: primenu
 
-.. autofunction:: prime_omega
+.. autofunction:: primeomega
 
 .. module:: sympy.ntheory.modular
 
