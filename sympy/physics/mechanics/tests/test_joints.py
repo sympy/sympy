@@ -1,6 +1,7 @@
 from sympy import cos, Matrix, simplify, sin, symbols, zeros
 from sympy.physics.mechanics import dynamicsymbols
 import sympy.physics.mechanics.joints as joints
+from sympy.utilities.pytest import raises
 
 
 def test_jcalc():
@@ -63,6 +64,12 @@ def test_jcalc():
     assert simplify(XJ_H - XJ_exp_H) == zeros(6)
     assert simplify(S_H - S_exp_H) == zeros(6, 1)
     assert simplify(vJ_H - vJ_exp_H) == zeros(1)
+
+    # Test that jcalc raises the proper errors for incorrect inputs
+    with raises(TypeError):
+        joints.jcalc('USER', q)
+    with raises(ValueError):
+        joints.jcalc('revolute', q)
 
 
 def test_revolute():
