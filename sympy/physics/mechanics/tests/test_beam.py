@@ -65,9 +65,9 @@ def test_apply():
     b = Beam(4, E, I)
     Load_1 = PointLoad(location = 0, value = -3, moment = True)
     Load_2 = PointLoad(location = 2, value = 4)
-    Load_3 = DistributedLoad(start = 3, end = 4, value = x**2)
+    Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
     p = b.apply(Load_1, Load_2, Load_3)
-    q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) + SingularityFunction(x, 3, 2)
+    q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
     assert p == q
 
 

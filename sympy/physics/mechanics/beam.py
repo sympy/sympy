@@ -299,7 +299,11 @@ class DistributedLoad(object):
     """
 
     def __init__(self, start, order, value):
-        self._start = start
+
+        if isinstance(start, Point):
+            self._start = start
+        else:
+            raise TypeError("DistributedLoad start attribute must be a Point object.")
         self._order = order
         self._value = value
 
