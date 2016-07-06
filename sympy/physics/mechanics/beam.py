@@ -93,9 +93,9 @@ class DistributedLoad(object):
     Parameters
     ==========
     start : Point
-        The starting point of the applied load
-    end : Point
-        The ending point of the applied load
+        The starting point of the applied load.
+    order : Sympifyable
+        The order of the applied load.
     value : Sympifyable
         A SymPy expression representing the value of the applied load.
 
@@ -105,20 +105,19 @@ class DistributedLoad(object):
     >>> from sympy.physics.mechanics import Point
     >>> from sympy import Symbol
     >>> a = Point('4')
-    >>> b = Point('6')
-    >>> x = Symbol('x')
-    >>> DistributedLoad(start = a, end = b, value = 2*x)
-    DistributedLoad(4, 6, 2*x)
+    >>> b = 2
+    >>> DistributedLoad(start = a, order = b, value = 2)
+    DistributedLoad(4, 2, 2)
 
     """
 
-    def __init__(self, start, end, value):
+    def __init__(self, start, order, value):
         self._start = start
-        self._end = end
+        self._order = order
         self._value = value
 
     def __str__(self):
-        str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.start), sstr(self.end), sstr(self.value))
+        str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.start), sstr(self.order), sstr(self.value))
         return str_sol
 
     __repr__ = __str__
@@ -135,15 +134,13 @@ class DistributedLoad(object):
         self._start = s
 
     @property
-    def end(self):
-        """The ending point of the applied load."""
-        return self._end
+    def order(self):
+        """The order of the applied load."""
+        return self._order
 
-    @end.setter
-    def end(self, e):
-        if not isinstance(e, Point):
-            raise TypeError("DistributedLoad end attribute must be a Point object.")
-        self._end = e
+    @order.setter
+    def order(self, o):
+        self._order = sympify(o)
 
     @property
     def value(self):
