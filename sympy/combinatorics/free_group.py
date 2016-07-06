@@ -1095,6 +1095,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         True
 
         """
+        if not self:
+            return True
         return self[0] != self[-1]**-1
 
     #TODO: may be it should moved to FpGroupElement

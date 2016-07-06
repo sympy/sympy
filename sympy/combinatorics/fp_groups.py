@@ -6,7 +6,7 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElement, free_group
+from sympy.combinatorics.free_group import FreeGroupElement, free_group, zero_mul_simp
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -1068,6 +1068,7 @@ def reidemeister_relators(C):
         w = rels[i]
         for gen in order_1_gens:
             w = w.eliminate_word(gen, identity)
+            w = w.identity_cyclic_reduction()
         rels[i] = w
 
     C._schreier_generators = [i for i in C._schreier_generators if i not in order_1_gens]
@@ -1269,13 +1270,14 @@ def elimination_technique_1(C):
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
-                redundant_gens[gen] = (bk*fw)**(-1*k)
+                redundant_gens[gen] = ((bk*fw)**(-1*k)).identity_cyclic_reduction()
                 contained_gens.extend((bk*fw).contains_generators())
                 del rels[i]; del gens[j]
                 break
     # eliminate the redundant generator from remaing relators
     for i, gen in product(range(len(rels)), redundant_gens):
         rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
+        rels[i] = rels[i].identity_cyclic_reduction()
     rels.sort()
     try:
         rels.remove(C._schreier_free_group.identity)
@@ -1390,19 +1392,23 @@ def _simplification_technique_1(rels):
         for gen in one_syllable_rels:
             n = gen.array_form[0][1]
             gen_arr0 = gen.array_form[0][0]
-            for j in range(len(k) - 1, -1, -1):
+            j = len(k) - 1
+            while j >= 0:
                 if gen_arr0 == k[j][0] and gen is not rels_i:
                     t = Mod(k[j][1], n)
 
                     # multiple of one syllable relator
                     if t == 0:
                         del k[j]
+                        zero_mul_simp(k, j - 1)
+                        j = len(k)
 
                     # power should be bounded by (-n/2, n/2]
                     elif t <= n/2:
                         k[j] = k[j][0], Mod(k[j][1], n)
                     elif t > n/2:
                         k[j] = k[j][0], Mod(k[j][1], n) - n
+                j -= 1
 
     return nw
 
