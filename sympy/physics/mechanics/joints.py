@@ -4,8 +4,10 @@
 # TODO figure out if I'll completely leave out generalized speeds from
 # Featherstone implementation
 
+from sympy import cos, Matrix, sin, symbols
 
-def jcalc():
+
+def jcalc(jtype, q, alpha=None, jparam={}, user_func=None):
     """This function provides all the joint information needed to run
     Featherstone's different methods. Additional information on this function
     can be found in Chapter 4.4 of his book.
@@ -17,7 +19,11 @@ def jcalc():
         [2] [delta, T] = jcalc(jtype, sXp)
         [3] [qdot] = jcalc(jtype, q, alpha)
 
-    For now this version of jcalc will only perform operation [1].
+    For now this version of jcalc will only perform operation [1].  Also, this
+    function assumes there is no explicit time dependency of the joint. (TODO:
+        Should I completely get rid of return cJ which is zero when there is no
+        explicit time dependency? Could be left so that user functions can add
+        explicit time dependencies and the code will know how to handle them)
 
     Parameters
     ==========
@@ -29,7 +35,8 @@ def jcalc():
             'H' -> Helical
             'USER' -> User defined jcalc
     q: ordered interable of functions of time
-        The set of generalized coordinates for the joint
+        The set of generalized coordinates for the joint. It is expected that
+        the coordinates will be given in the order [w_x, w_y, w_z, x, y, z]
     alpha: ordered iterable of functions of time, optional
         The set of generarlized speeds. If not specified it will be assumed
         qdot = alpha
@@ -88,8 +95,27 @@ def jcalc():
        Springer
     """
 
-    # Reminder to use the correct coordinate for rotation and translation from
-    # the 6x1 vector of generalized coordinates.
+    # Pull data from the joint library based on the input joint type
+    jtype.upper()
+    if jtype == 'R':
+        [XJ, S, T] = revolute(q[2])
+    elif jtype == 'P':
+        [XJ, S, T] = prismatic(q[5])
+    elif jtype == 'H':
+        pitch = jparam.pop('pitch', None)
+        [XJ, S, T] = helical(q[2], pitch)
+    elif jtype == 'USER':
+        return user_func(q, alpha, jparam)
+    else:
+        raise ValueError("Argument %s for jtype is not a valid option" % jtype)
+
+    # Calculate the joint velocity
+    qdot = Matrix([i.diff() for i in q])
+    vJ = S.transpose() * qdot
+
+    return XJ, S, vJ, 0
+
+
 
 ################################################################################
 #
@@ -101,7 +127,7 @@ def jcalc():
 # be defined. These parameters are given in Table 4.1 on page 79 in the book.
 
 
-def revolute():
+def revolute(q):
     """This fucntion will return revolute joint information. This assumes
     standard link coordinates.
 
@@ -136,8 +162,26 @@ def revolute():
         >>> [XJ, S, T] = revolute(theta)
     """
 
+    XJ = Matrix([[cos(q),  sin(q), 0, 0,       0,      0],
+                 [-sin(q), cos(q), 0, 0,       0,      0],
+                 [0,           0,  1, 0,       0,      0],
+                 [0,           0,  0, cos(q),  sin(q), 0],
+                 [0,           0,  0, -sin(q), cos(q), 0],
+                 [0,           0,  0, 0,       0,      1]])
 
-def prismatic():
+    S = Matrix([0, 0, 1, 0, 0, 0])
+
+    T = Matrix([[1, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0],
+                [0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 1]])
+
+    return XJ, S, T
+
+
+def prismatic(q):
     """This fucntion will return prismatic joint information. This assumes
     standard link coordinates.
 
@@ -172,8 +216,26 @@ def prismatic():
         >>> [XJ, S, T] = prismatic(L)
     """
 
+    XJ = Matrix([[1,  0, 0, 0, 0, 0],
+                 [0,  1, 0, 0, 0, 0],
+                 [0,  0, 1, 0, 0, 0],
+                 [0,  q, 0, 1, 0, 0],
+                 [-q, 0, 0, 0, 1, 0],
+                 [0,  0, 0, 0, 0, 1]])
 
-def helical(pitch=None):
+    S = Matrix([0, 0, 0, 0, 0, 1])
+
+    T = Matrix([[1, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 1, 0, 0],
+                [0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0]])
+
+    return XJ, S, T
+
+
+def helical(q, pitch=None):
     """This fucntion will return helical joint information. This assumes
     standard link coordinates. If a pitch is given it will be substituted into
     the returns.
@@ -212,3 +274,37 @@ def helical(pitch=None):
         >>> [XJ, S, T] = helical(theta, pitch=p)
         >>> [XJ, S, T] = helical(theta, pitch=5)
     """
+
+    # Let the user have the ability to set the pitch to a specific
+    # variable/value and default to the symbol 'h' otherwise
+    if pitch is None:
+        h = symbols('h')
+    else:
+        h = pitch
+
+    rotate = Matrix([[cos(q),  sin(q), 0, 0,       0,      0],
+                     [-sin(q), cos(q), 0, 0,       0,      0],
+                     [0,           0,  1, 0,       0,      0],
+                     [0,           0,  0, cos(q),  sin(q), 0],
+                     [0,           0,  0, -sin(q), cos(q), 0],
+                     [0,           0,  0, 0,       0,      1]])
+
+    translate = Matrix([[1,    0,   0, 0, 0, 0],
+                        [0,    1,   0, 0, 0, 0],
+                        [0,    0,   1, 0, 0, 0],
+                        [0,    h*q, 0, 1, 0, 0],
+                        [-h*q, 0,   0, 0, 1, 0],
+                        [0,    0,   0, 0, 0, 1]])
+
+    XJ = rotate*translate
+
+    S = Matrix([0, 0, 1, 0, 0, h])
+
+    T = Matrix([[1, 0, 0, 0,  0],
+                [0, 1, 0, 0,  0],
+                [0, 0, 0, 0, -h],
+                [0, 0, 1, 0,  0],
+                [0, 0, 0, 1,  0],
+                [0, 0, 0, 0,  1]])
+
+    return XJ, S, T
