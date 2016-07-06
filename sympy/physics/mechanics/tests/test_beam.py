@@ -100,20 +100,19 @@ def test_PointLoad():
 def test_DistributedLoad():
     P1 = Point('P1')
     P2 = Point('P2')
-    x = Symbol('x')
-    Load_1 = DistributedLoad(start = P1, end = P2, value = -4*x**2)
+    Load_1 = DistributedLoad(start = P1, order = 2, value = -4)
     assert Load_1.start == P1
-    assert Load_1.end == P2
-    assert Load_1.value == -4*x**2
+    assert Load_1.order == 2
+    assert Load_1.value == -4
 
     # Test the start setter
     Load_1.start = P2
     assert Load_1.start == P2
 
-    # Test the end setter
-    Load_1.end = P1
-    assert Load_1.end == P1
+    # Test the order setter
+    Load_1.order = 4
+    assert Load_1.order == 4
 
     # Test the value setter
-    Load_1.value = 4*x**2 + x
-    assert Load_1.value == 4*x**2 + x
+    Load_1.value = 4
+    assert Load_1.value == 4
