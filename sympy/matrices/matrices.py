@@ -45,10 +45,8 @@ class NonSquareMatrixError(ShapeError):
 
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
-
     Examples
     ========
-
     >>> from sympy import DeferredVector, lambdify
     >>> X = DeferredVector( 'X' )
     >>> X
@@ -88,45 +86,31 @@ class MatrixBase(object):
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
-
         Examples
         ========
-
         >>> from sympy import Matrix, I
-
         Matrix can be constructed as follows:
-
         * from a nested list of iterables
-
         >>> Matrix( ((1, 2+I), (3, 4)) )
         Matrix([
         [1, 2 + I],
         [3,     4]])
-
         * from un-nested iterable (interpreted as a column)
-
         >>> Matrix( [1, 2] )
         Matrix([
         [1],
         [2]])
-
         * from un-nested iterable with dimensions
-
         >>> Matrix(1, 2, [1, 2] )
         Matrix([[1, 2]])
-
         * from no arguments (a 0 x 0 matrix)
-
         >>> Matrix()
         Matrix(0, 0, [])
-
         * from a rule
-
         >>> Matrix(2, 2, lambda i, j: i/(j + 1) )
         Matrix([
         [0,   0],
         [1, 1/2]])
-
         """
         from sympy.matrices.sparse import SparseMatrix
 
@@ -230,10 +214,8 @@ class MatrixBase(object):
 
     def _setitem(self, key, value):
         """Helper to set value at location given by key.
-
         Examples
         ========
-
         >>> from sympy import Matrix, I, zeros, ones
         >>> m = Matrix(((1, 2+I), (3, 4)))
         >>> m
@@ -246,10 +228,8 @@ class MatrixBase(object):
         [1, 2 + I],
         [9,     4]])
         >>> m[1, 0] = [[0, 1]]
-
         To replace row r you assign to position r*m where m
         is the number of columns:
-
         >>> M = zeros(4)
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
@@ -258,9 +238,7 @@ class MatrixBase(object):
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [2, 2, 2, 2]])
-
         And to replace column c you can assign to position c:
-
         >>> M[2] = ones(m, 1)*4; M
         Matrix([
         [0, 0, 4, 0],
@@ -299,22 +277,29 @@ class MatrixBase(object):
             return
 
     def copy(self):
+        """
+        Returns a copy of the matrix
+        Example
+        ========
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.copy
+        Matrix([
+        [1, 2],
+        [3, 4]])
+        """
         return self._new(self.rows, self.cols, self._mat)
 
     def trace(self):
         """
-        Represents the trace of a matrix expression.
-
-        Examples
+        Returns the trace of a matrix expression ie.. the sum of the
+        elements on the diagonal.
+        Example
         ========
-
-        >>> from sympy import MatrixSymbol, Trace, eye
-        >>> A = MatrixSymbol('A', 3, 3)
-        >>> Trace(A)
-        Trace(A)
-        >>> Trace(eye(3))
-        Trace(Matrix([[1,0,0],[0,1,0],[0,0,1]]))
-
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.trace()
+        5
         """
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -322,25 +307,18 @@ class MatrixBase(object):
 
     def inv(self, method=None, **kwargs):
         """
-        Returns the inverse of the matrix `K`, if it exists using the Gaussian elimination by default.
-        However we can specify it to be done by LU decomposition as well.
-
-        Examples
+        Returns the inverse of a matrix using Gaussian elimination by default.
+        Also, by setting method='LU' we can specify it to be done using LU decomposition.
+        However, if determinant of matrix is zero, a value error is returned as the inverse for that
+        matrix doesn't exist.
+        Example
         ========
-
         >>> from sympy import Matrix
-        >>> M = Matrix(( [1, 2, 3], [3, 6, 2], [2, 0, 1] ))
-        >>> M.inv()
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.inv()
         Matrix([
-        [-3/14, 1/14, 1/2],
-        [-1/28, 5/28, -1/4],
-        [3/7, -1/7, 0]])
-        >>> M.inv(method="LU")
-        Matrix([
-        [-3/14, 1/14, 1/2],
-        [-1/28, 5/28, -1/4],
-        [3/7, -1/7, 0]])
-
+        [-2, 1],
+        [3/2, -1/2]])
         """
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -348,21 +326,16 @@ class MatrixBase(object):
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
 
+
     def inv_mod(self, m):
         r"""
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
-
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
-
         * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
-
         * Compute `r = 1/\mathrm{det}(K) \pmod m`.
-
         * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
-
-        Examples
+        Example
         ========
-
         >>> from sympy import Matrix
         >>> A = Matrix(2, 2, [1, 2, 3, 4])
         >>> A.inv_mod(5)
@@ -373,7 +346,6 @@ class MatrixBase(object):
         Matrix([
         [1, 1],
         [0, 1]])
-
         """
         from sympy.ntheory import totient
         if not self.is_square:
@@ -389,11 +361,24 @@ class MatrixBase(object):
         return K_inv
 
     def transpose(self):
+        """
+        Returns the transpose of a matrix
+        Example
+        ========
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.transpose()
+        Matrix([
+        [1, 3],
+        [2, 4]])
+        """
         return self._eval_transpose()
 
     T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
+        """ Returns the
+        Conjugate of a matrix """
         return self._eval_conjugate()
 
     C = property(conjugate, None, None, "By-element conjugation.")
@@ -405,10 +390,8 @@ class MatrixBase(object):
     @property
     def H(self):
         """Return Hermite conjugate.
-
-        Examples
+        Example
         ========
-
         >>> from sympy import Matrix, I
         >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m
@@ -419,10 +402,8 @@ class MatrixBase(object):
         [    3]])
         >>> m.H
         Matrix([[0, 1 - I, 2, 3]])
-
         See Also
         ========
-
         conjugate: By-element conjugation
         D: Dirac conjugation
         """
@@ -431,10 +412,8 @@ class MatrixBase(object):
     @property
     def D(self):
         """Return Dirac conjugate (if self.rows == 4).
-
         Examples
         ========
-
         >>> from sympy import Matrix, I, eye
         >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m.D
@@ -447,18 +426,14 @@ class MatrixBase(object):
         [    0, 1 - I,      0,      0],
         [    0,     0, -1 + I,      0],
         [    2,     0,      0, -1 + I]])
-
         If the matrix does not have 4 rows an AttributeError will be raised
         because this property is only defined for matrices with 4 rows.
-
         >>> Matrix(eye(2)).D
         Traceback (most recent call last):
         ...
         AttributeError: Matrix has no attribute D.
-
         See Also
         ========
-
         conjugate: By-element conjugation
         H: Hermite conjugation
         """
@@ -477,7 +452,6 @@ class MatrixBase(object):
 
     def __len__(self):
         """Return the number of elements of self.
-
         Implemented mainly so bool(Matrix()) == False.
         """
         return self.rows*self.cols
@@ -485,10 +459,8 @@ class MatrixBase(object):
     @property
     def shape(self):
         """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
-
         Examples
         ========
-
         >>> from sympy.matrices import zeros
         >>> M = zeros(2, 3)
         >>> M.shape
@@ -509,10 +481,8 @@ class MatrixBase(object):
     def __mul__(self, other):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
@@ -527,10 +497,8 @@ class MatrixBase(object):
         ...
         ShapeError: Matrices size mismatch.
         >>>
-
         See Also
         ========
-
         matrix_multiply_elementwise
         """
         if getattr(other, 'is_Matrix', False):
@@ -627,20 +595,25 @@ class MatrixBase(object):
         return self + other
 
     def __div__(self, other):
+        """
+        Returns self*-1
+        """
         return self*(S.One / other)
 
     def __truediv__(self, other):
         return self.__div__(other)
 
     def __neg__(self):
+        """
+        Returns self*-1
+        """
         return -1*self
 
     def multiply(self, b):
-        """Returns self*b
-
+        """
+        Returns self*b
         See Also
         ========
-
         dot
         cross
         multiply_elementwise
@@ -655,27 +628,18 @@ class MatrixBase(object):
               colsep=', ', align='right'):
         r"""
         String form of Matrix as a table.
-
         ``printer`` is the printer to use for on the elements (generally
         something like StrPrinter())
-
         ``rowstart`` is the string used to start each row (by default '[').
-
         ``rowend`` is the string used to end each row (by default ']').
-
         ``rowsep`` is the string used to separate rows (by default a newline).
-
         ``colsep`` is the string used to separate columns (by default ', ').
-
         ``align`` defines how the elements are aligned. Must be one of 'left',
         'right', or 'center'.  You can also use '<', '>', and '^' to mean the
         same thing, respectively.
-
         This is used by the string printer for Matrix.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> from sympy.printing.str import StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
@@ -751,13 +715,10 @@ class MatrixBase(object):
     def cholesky(self):
         """Returns the Cholesky decomposition L of a matrix A
         such that L * L.T = A
-
         A must be a square, symmetric, positive-definite
         and non-singular matrix.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
         >>> A.cholesky()
@@ -770,10 +731,8 @@ class MatrixBase(object):
         [25, 15, -5],
         [15, 18,  0],
         [-5,  0, 11]])
-
         See Also
         ========
-
         LDLdecomposition
         LUdecomposition
         QRdecomposition
@@ -792,10 +751,8 @@ class MatrixBase(object):
         Further this ensures that all the diagonal entries of L are 1.
         A must be a square, symmetric, positive-definite
         and non-singular matrix.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
         >>> L, D = A.LDLdecomposition()
@@ -811,10 +768,8 @@ class MatrixBase(object):
         [ 0, 0, 9]])
         >>> L * D * L.T * A.inv() == eye(A.rows)
         True
-
         See Also
         ========
-
         cholesky
         LUdecomposition
         QRdecomposition
@@ -827,10 +782,8 @@ class MatrixBase(object):
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
-
         See Also
         ========
-
         upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
@@ -851,10 +804,8 @@ class MatrixBase(object):
 
     def upper_triangular_solve(self, rhs):
         """Solves Ax = B, where A is an upper triangular matrix.
-
         See Also
         ========
-
         lower_triangular_solve
         gauss_jordan_solve
         cholesky_solve
@@ -877,10 +828,8 @@ class MatrixBase(object):
         for a general square non-singular matrix.
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         gauss_jordan_solve
@@ -904,19 +853,15 @@ class MatrixBase(object):
     def diagonal_solve(self, rhs):
         """Solves Ax = B efficiently, where A is a diagonal Matrix,
         with non-zero diagonal entries.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> A = eye(2)*2
         >>> B = Matrix([[1, 2], [3, 4]])
         >>> A.diagonal_solve(B) == B/2
         True
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         gauss_jordan_solve
@@ -935,22 +880,17 @@ class MatrixBase(object):
     def LDLsolve(self, rhs):
         """Solves Ax = B using LDL decomposition,
         for a general square and non-singular matrix.
-
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> A = eye(2)*2
         >>> B = Matrix([[1, 2], [3, 4]])
         >>> A.LDLsolve(B) == B/2
         True
-
         See Also
         ========
-
         LDLdecomposition
         lower_triangular_solve
         upper_triangular_solve
@@ -975,14 +915,11 @@ class MatrixBase(object):
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
-
         By default the cholesky_solve routine is used (method='CH'); other
         methods of matrix inversion can be used. To find out which are
         available, see the docstring of the .inv() method.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, ones
         >>> A = Matrix([1, 2, 3])
         >>> B = Matrix([2, 3, 4])
@@ -992,26 +929,20 @@ class MatrixBase(object):
         [1, 2],
         [2, 3],
         [3, 4]])
-
         If each line of S represent coefficients of Ax + By
         and x and y are [2, 3] then S*xy is:
-
         >>> r = S*Matrix([2, 3]); r
         Matrix([
         [ 8],
         [13],
         [18]])
-
         But let's add 1 to the middle value and then solve for the
         least-squares value of xy:
-
         >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
         Matrix([
         [ 5/3],
         [10/3]])
-
         The error is given by S*xy - r:
-
         >>> S*xy - r
         Matrix([
         [1/3],
@@ -1019,13 +950,10 @@ class MatrixBase(object):
         [1/3]])
         >>> _.norm().n(2)
         0.58
-
         If a different xy is used, the norm will be higher:
-
         >>> xy += ones(2, 1)/10
         >>> (S*xy - r).norm().n(2)
         1.5
-
         """
         if method == 'CH':
             return self.cholesky_solve(rhs)
@@ -1034,7 +962,6 @@ class MatrixBase(object):
 
     def solve(self, rhs, method='GE'):
         """Return solution to self*soln = rhs using given inversion method.
-
         For a list of possible inversion methods, see the .inv() docstring.
         """
 
@@ -1061,10 +988,8 @@ class MatrixBase(object):
         """Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
         -n <= i < n where n is the number of rows or columns.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, range(12))
         >>> m
@@ -1078,25 +1003,19 @@ class MatrixBase(object):
         [0,  1],
         [3,  4],
         [9, 10]])
-
         Rows or columns can be repeated:
-
         >>> m.extract([0, 0, 1], [-1])
         Matrix([
         [2],
         [2],
         [5]])
-
         Every other row can be taken by using range to provide the indices:
-
         >>> m.extract(range(0, m.rows, 2), [-1])
         Matrix([
         [2],
         [8]])
-
         RowsList or colsList can also be a list of booleans, in which case
         the rows or columns corresponding to the True values will be selected:
-
         >>> m.extract([0, 1, 2, 3], [True, False, True])
         Matrix([
         [0,  2],
@@ -1122,10 +1041,8 @@ class MatrixBase(object):
         """Converts a key with potentially mixed types of keys (integer and slice)
         into a tuple of ranges and raises an error if any index is out of self's
         range.
-
         See Also
         ========
-
         key2ij
         """
 
@@ -1152,10 +1069,8 @@ class MatrixBase(object):
         """Converts key into canonical form, converting integers or indexable
         items into valid integers for self's range or returning slices
         unchanged.
-
         See Also
         ========
-
         key2bounds
         """
         if is_sequence(key):
@@ -1176,10 +1091,8 @@ class MatrixBase(object):
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
-
         Examples
         ========
-
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x]])
@@ -1201,10 +1114,8 @@ class MatrixBase(object):
     @property
     def free_symbols(self):
         """Returns the free symbols within the matrix.
-
         Examples
         ========
-
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x], [1]]).free_symbols
@@ -1215,10 +1126,8 @@ class MatrixBase(object):
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
-
         Examples
         ========
-
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
@@ -1232,10 +1141,8 @@ class MatrixBase(object):
 
     def xreplace(self, rule):  # should mirror core.basic.xreplace
         """Return a new matrix with xreplace applied to each entry.
-
         Examples
         ========
-
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
@@ -1250,17 +1157,14 @@ class MatrixBase(object):
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
-
         Examples
         ========
-
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
         Matrix([[x*(x + 1)]])
         >>> _.expand()
         Matrix([[x**2 + x]])
-
         """
         return self.applyfunc(lambda x: x.expand(
                               deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
@@ -1268,10 +1172,8 @@ class MatrixBase(object):
 
     def simplify(self, ratio=1.7, measure=count_ops):
         """Apply simplify to each element of the matrix.
-
         Examples
         ========
-
         >>> from sympy.abc import x, y
         >>> from sympy import sin, cos
         >>> from sympy.matrices import SparseMatrix
@@ -1285,10 +1187,8 @@ class MatrixBase(object):
 
     def refine(self, assumptions=True):
         """Apply refine to each element of the matrix.
-
         Examples
         ========
-
         >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
         >>> x = Symbol('x')
         >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
@@ -1299,7 +1199,6 @@ class MatrixBase(object):
         Matrix([
         [  x**2, Abs(x)],
         [Abs(x),   x**2]])
-
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
@@ -1308,10 +1207,8 @@ class MatrixBase(object):
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
@@ -1327,7 +1224,6 @@ class MatrixBase(object):
         [ x  ]
         [  x ]
         [   x]
-
         """
         s = []
         for i in range(self.rows):
@@ -1342,13 +1238,10 @@ class MatrixBase(object):
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
         """Solve the linear system Ax = rhs for x where A = self.
-
         This is for symbolic matrices, for real or complex ones use
         mpmath.lu_solve or mpmath.qr_solve.
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         gauss_jordan_solve
@@ -1381,10 +1274,8 @@ class MatrixBase(object):
 
     def LUdecomposition(self, iszerofunc=_iszero):
         """Returns the decomposition LU and the row swaps p.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1396,10 +1287,8 @@ class MatrixBase(object):
         Matrix([
         [4,    3],
         [0, -3/2]])
-
         See Also
         ========
-
         cholesky
         LDLdecomposition
         QRdecomposition
@@ -1423,10 +1312,8 @@ class MatrixBase(object):
     def LUdecomposition_Simple(self, iszerofunc=_iszero):
         """Returns A comprised of L, U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
-
         See Also
         ========
-
         LUdecomposition
         LUdecompositionFF
         LUsolve
@@ -1462,19 +1349,15 @@ class MatrixBase(object):
 
     def LUdecompositionFF(self):
         """Compute a fraction-free LU decomposition.
-
         Returns 4 matrices P, L, D, U such that PA = L D**-1 U.
         If the elements of the matrix belong to some integral domain I, then all
         elements of L, D and U are guaranteed to belong to I.
-
         **Reference**
             - W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
               for LU and QR factors". Frontiers in Computer Science in China,
               Vol 2, no. 1, pp. 67-80, 2008.
-
         See Also
         ========
-
         LUdecomposition
         LUdecomposition_Simple
         LUsolve
@@ -1511,10 +1394,8 @@ class MatrixBase(object):
 
     def cofactorMatrix(self, method="berkowitz"):
         """Return a matrix containing the cofactor of each element.
-
         See Also
         ========
-
         cofactor
         minorEntry
         minorMatrix
@@ -1526,10 +1407,8 @@ class MatrixBase(object):
 
     def minorEntry(self, i, j, method="berkowitz"):
         """Calculate the minor of an element.
-
         See Also
         ========
-
         minorMatrix
         cofactor
         cofactorMatrix
@@ -1541,10 +1420,8 @@ class MatrixBase(object):
 
     def minorMatrix(self, i, j):
         """Creates the minor matrix of a given element.
-
         See Also
         ========
-
         minorEntry
         cofactor
         cofactorMatrix
@@ -1559,10 +1436,8 @@ class MatrixBase(object):
 
     def cofactor(self, i, j, method="berkowitz"):
         """Calculate the cofactor of an element.
-
         See Also
         ========
-
         cofactorMatrix
         minorEntry
         minorMatrix
@@ -1574,19 +1449,14 @@ class MatrixBase(object):
 
     def jacobian(self, X):
         """Calculates the Jacobian matrix (derivative of a vectorial function).
-
         Parameters
         ==========
-
         self : vector of expressions representing functions f_i(x_1, ..., x_n).
         X : set of x_i's in order, it can be a list or a Matrix
-
         Both self and X can be a row or a column matrix in any order
         (i.e., jacobian() should always work).
-
         Examples
         ========
-
         >>> from sympy import sin, cos, Matrix
         >>> from sympy.abc import rho, phi
         >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
@@ -1601,10 +1471,8 @@ class MatrixBase(object):
         Matrix([
         [cos(phi), -rho*sin(phi)],
         [sin(phi),  rho*cos(phi)]])
-
         See Also
         ========
-
         hessian
         wronskian
         """
@@ -1631,12 +1499,9 @@ class MatrixBase(object):
 
     def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
-
         Examples
         ========
-
         This is the example from wikipedia:
-
         >>> from sympy import Matrix
         >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
         >>> Q, R = A.QRdecomposition()
@@ -1652,9 +1517,7 @@ class MatrixBase(object):
         [ 0,   0,  35]])
         >>> A == Q*R
         True
-
         QR factorization of an identity matrix:
-
         >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> Q, R = A.QRdecomposition()
         >>> Q
@@ -1667,10 +1530,8 @@ class MatrixBase(object):
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 1]])
-
         See Also
         ========
-
         cholesky
         LDLdecomposition
         LUdecomposition
@@ -1710,23 +1571,18 @@ class MatrixBase(object):
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
-
         'self' is the matrix 'A', the method argument is the vector
         'b'.  The method returns the solution vector 'x'.  If 'b' is a
         matrix, the system is solved for each column of 'b' and the
         return value is a matrix of the same shape as 'b'.
-
         This method is slower (approximately by a factor of 2) but
         more stable for floating-point arithmetic than the LUsolve method.
         However, LUsolve usually uses an exact arithmetic, so you don't need
         to use QRsolve.
-
         This is mainly for educational purposes and symbolic matrices, for real
         (or complex) matrices use mpmath.qr_solve.
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         gauss_jordan_solve
@@ -1759,10 +1615,8 @@ class MatrixBase(object):
         same type and shape as `self` will be returned. If `b` has the same
         shape as `self` then common identities for the cross product (like
         `a x b = - b x a`) will hold.
-
         See Also
         ========
-
         dot
         multiply
         multiply_elementwise
@@ -1785,10 +1639,8 @@ class MatrixBase(object):
         is a row or column vector, a scalar is returned. Otherwise, a list
         of results is returned (and in that case the number of columns in self
         must match the length of b).
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> v = [1, 1, 1]
@@ -1798,10 +1650,8 @@ class MatrixBase(object):
         12
         >>> M.dot(v)
         [6, 15, 24]
-
         See Also
         ========
-
         cross
         multiply
         multiply_elementwise
@@ -1835,10 +1685,8 @@ class MatrixBase(object):
 
     def multiply_elementwise(self, b):
         """Return the Hadamard product (elementwise product) of A and B
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
         >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
@@ -1846,10 +1694,8 @@ class MatrixBase(object):
         Matrix([
         [  0, 10, 200],
         [300, 40,   5]])
-
         See Also
         ========
-
         cross
         dot
         multiply
@@ -1866,8 +1712,6 @@ class MatrixBase(object):
         """Return the Norm of a Matrix or Vector.
         In the simplest case this is the geometric size of the vector
         Other norms can be specified by the ord parameter
-
-
         =====  ============================  ==========================
         ord    norm for matrices             norm for vectors
         =====  ============================  ==========================
@@ -1881,10 +1725,8 @@ class MatrixBase(object):
         -2     smallest singular value       as below
         other  - does not exist              sum(abs(x)**ord)**(1./ord)
         =====  ============================  ==========================
-
         Examples
         ========
-
         >>> from sympy import Matrix, Symbol, trigsimp, cos, sin, oo
         >>> x = Symbol('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
@@ -1903,10 +1745,8 @@ class MatrixBase(object):
         2
         >>> Matrix([-1, 2]).norm(-oo)
         1
-
         See Also
         ========
-
         normalized
         """
         # Row or Column Vector Norms
@@ -1951,10 +1791,8 @@ class MatrixBase(object):
 
     def normalized(self):
         """Return the normalized version of ``self``.
-
         See Also
         ========
-
         norm
         """
         if self.rows != 1 and self.cols != 1:
@@ -1965,10 +1803,8 @@ class MatrixBase(object):
 
     def project(self, v):
         """Return the projection of ``self`` onto the line containing ``v``.
-
         Examples
         ========
-
         >>> from sympy import Matrix, S, sqrt
         >>> V = Matrix([sqrt(3)/2, S.Half])
         >>> x = Matrix([[1, 0]])
@@ -1981,10 +1817,8 @@ class MatrixBase(object):
 
     def permuteBkwd(self, perm):
         """Permute the rows of the matrix with the given permutation in reverse.
-
         Examples
         ========
-
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.permuteBkwd([[0, 1], [0, 2]])
@@ -1992,10 +1826,8 @@ class MatrixBase(object):
         [0, 1, 0],
         [0, 0, 1],
         [1, 0, 0]])
-
         See Also
         ========
-
         permuteFwd
         """
         copy = self.copy()
@@ -2005,10 +1837,8 @@ class MatrixBase(object):
 
     def permuteFwd(self, perm):
         """Permute the rows of the matrix with the given permutation.
-
         Examples
         ========
-
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.permuteFwd([[0, 1], [0, 2]])
@@ -2016,10 +1846,8 @@ class MatrixBase(object):
         [0, 0, 1],
         [1, 0, 0],
         [0, 1, 0]])
-
         See Also
         ========
-
         permuteBkwd
         """
         copy = self.copy()
@@ -2067,14 +1895,11 @@ class MatrixBase(object):
     @property
     def is_square(self):
         """Checks if a matrix is square.
-
         A matrix is square if the number of rows equals the number of columns.
         The empty matrix is square by definition, since the number of rows and
         the number of columns are both zero.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -2091,15 +1916,12 @@ class MatrixBase(object):
     @property
     def is_zero(self):
         """Checks if a matrix is a zero matrix.
-
         A matrix is zero if every element is zero.  A matrix need not be square
         to be considered zero.  The empty matrix is zero by the principle of
         vacuous truth.  For a matrix that may or may not be zero (e.g.
         contains a symbol), this will be None
-
         Examples
         ========
-
         >>> from sympy import Matrix, zeros
         >>> from sympy.abc import x
         >>> a = Matrix([[0, 0], [0, 0]])
@@ -2125,18 +1947,14 @@ class MatrixBase(object):
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
-
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[0, 0, 0], [1, 0, 0], [1, 1, 0]])
         >>> a.is_nilpotent()
         True
-
         >>> a = Matrix([[1, 0, 1], [1, 0, 0], [1, 1, 0]])
         >>> a.is_nilpotent()
         False
@@ -2155,10 +1973,8 @@ class MatrixBase(object):
     def is_upper(self):
         """Check if matrix is an upper triangular matrix. True can be returned
         even if the matrix is not square.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, [1, 0, 0, 1])
         >>> m
@@ -2167,7 +1983,6 @@ class MatrixBase(object):
         [0, 1]])
         >>> m.is_upper
         True
-
         >>> m = Matrix(4, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5, 0, 0, 0])
         >>> m
         Matrix([
@@ -2177,7 +1992,6 @@ class MatrixBase(object):
         [0, 0, 0]])
         >>> m.is_upper
         True
-
         >>> m = Matrix(2, 3, [4, 2, 5, 6, 1, 1])
         >>> m
         Matrix([
@@ -2185,10 +1999,8 @@ class MatrixBase(object):
         [6, 1, 1]])
         >>> m.is_upper
         False
-
         See Also
         ========
-
         is_lower
         is_diagonal
         is_upper_hessenberg
@@ -2201,10 +2013,8 @@ class MatrixBase(object):
     def is_lower(self):
         """Check if matrix is a lower triangular matrix. True can be returned
         even if the matrix is not square.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, [1, 0, 0, 1])
         >>> m
@@ -2213,7 +2023,6 @@ class MatrixBase(object):
         [0, 1]])
         >>> m.is_lower
         True
-
         >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4 , 0, 6, 6, 5])
         >>> m
         Matrix([
@@ -2223,7 +2032,6 @@ class MatrixBase(object):
         [6, 6, 5]])
         >>> m.is_lower
         True
-
         >>> from sympy.abc import x, y
         >>> m = Matrix(2, 2, [x**2 + y, y**2 + x, 0, x + y])
         >>> m
@@ -2232,10 +2040,8 @@ class MatrixBase(object):
         [       0,    x + y]])
         >>> m.is_lower
         False
-
         See Also
         ========
-
         is_upper
         is_diagonal
         is_lower_hessenberg
@@ -2247,13 +2053,10 @@ class MatrixBase(object):
     @property
     def is_hermitian(self):
         """Checks if the matrix is Hermitian.
-
         In a Hermitian matrix element i,j is the complex conjugate of
         element j,i.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> from sympy import I
         >>> from sympy.abc import x
@@ -2286,13 +2089,10 @@ class MatrixBase(object):
     @property
     def is_upper_hessenberg(self):
         """Checks if the matrix is the upper-Hessenberg form.
-
         The upper hessenberg matrix has zero entries
         below the first subdiagonal.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1, 4, 2, 3], [3, 4, 1, 7], [0, 2, 3, 4], [0, 0, 1, 3]])
         >>> a
@@ -2303,10 +2103,8 @@ class MatrixBase(object):
         [0, 0, 1, 3]])
         >>> a.is_upper_hessenberg
         True
-
         See Also
         ========
-
         is_lower_hessenberg
         is_upper
         """
@@ -2317,13 +2115,10 @@ class MatrixBase(object):
     @property
     def is_lower_hessenberg(self):
         r"""Checks if the matrix is in the lower-Hessenberg form.
-
         The lower hessenberg matrix has zero entries
         above the first superdiagonal.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1, 2, 0, 0], [5, 2, 3, 0], [3, 4, 3, 7], [5, 6, 1, 1]])
         >>> a
@@ -2334,10 +2129,8 @@ class MatrixBase(object):
         [5, 6, 1, 1]])
         >>> a.is_lower_hessenberg
         True
-
         See Also
         ========
-
         is_upper_hessenberg
         is_lower
         """
@@ -2347,30 +2140,24 @@ class MatrixBase(object):
 
     def is_symbolic(self):
         """Checks if any elements contain Symbols.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.is_symbolic()
         True
-
         """
         return any(element.has(Symbol) for element in self.values())
 
     def is_symmetric(self, simplify=True):
         """Check if matrix is symmetric matrix,
         that is square matrix and is equal to its transpose.
-
         By default, simplifications occur before testing symmetry.
         They can be skipped using 'simplify=False'; while speeding things a bit,
         this may however induce false negatives.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, [0, 1, 1, 2])
         >>> m
@@ -2379,7 +2166,6 @@ class MatrixBase(object):
         [1, 2]])
         >>> m.is_symmetric()
         True
-
         >>> m = Matrix(2, 2, [0, 1, 2, 0])
         >>> m
         Matrix([
@@ -2387,7 +2173,6 @@ class MatrixBase(object):
         [2, 0]])
         >>> m.is_symmetric()
         False
-
         >>> m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
         >>> m
         Matrix([
@@ -2395,7 +2180,6 @@ class MatrixBase(object):
         [0, 0, 0]])
         >>> m.is_symmetric()
         False
-
         >>> from sympy.abc import x, y
         >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
         >>> m
@@ -2405,10 +2189,8 @@ class MatrixBase(object):
         [         y,              0, 3]])
         >>> m.is_symmetric()
         True
-
         If the matrix is already simplified, you may speed-up is_symmetric()
         test by using 'simplify=False'.
-
         >>> m.is_symmetric(simplify=False)
         False
         >>> m1 = m.expand()
@@ -2427,7 +2209,6 @@ class MatrixBase(object):
     def is_anti_symmetric(self, simplify=True):
         """Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
-
         When ``simplify=True`` (default), the sum M[i, j] + M[j, i] is
         simplified before testing to see if it is zero. By default,
         the SymPy simplify function is used. To use a custom function
@@ -2435,10 +2216,8 @@ class MatrixBase(object):
         returns a simplified expression. To skip simplification, set
         simplify to False but note that although this will be faster,
         it may induce false negatives.
-
         Examples
         ========
-
         >>> from sympy import Matrix, symbols
         >>> m = Matrix(2, 2, [0, 1, -1, 0])
         >>> m
@@ -2455,33 +2234,26 @@ class MatrixBase(object):
         [-y, 0, 0]])
         >>> m.is_anti_symmetric()
         False
-
         >>> from sympy.abc import x, y
         >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
         ...                   -(x + 1)**2 , 0, x*y,
         ...                   -y, -x*y, 0])
-
         Simplification of matrix elements is done by default so even
         though two elements which should be equal and opposite wouldn't
         pass an equality test, the matrix is still reported as
         anti-symmetric:
-
         >>> m[0, 1] == -m[1, 0]
         False
         >>> m.is_anti_symmetric()
         True
-
         If 'simplify=False' is used for the case when a Matrix is already
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
-
         >>> m.is_anti_symmetric(simplify=False)
         False
-
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine
         is not needed:
-
         >>> m = m.expand()
         >>> m.is_anti_symmetric(simplify=False)
         True
@@ -2514,10 +2286,8 @@ class MatrixBase(object):
     def is_diagonal(self):
         """Check if matrix is diagonal,
         that is matrix in which the entries outside the main diagonal are all zero.
-
         Examples
         ========
-
         >>> from sympy import Matrix, diag
         >>> m = Matrix(2, 2, [1, 0, 0, 2])
         >>> m
@@ -2526,7 +2296,6 @@ class MatrixBase(object):
         [0, 2]])
         >>> m.is_diagonal()
         True
-
         >>> m = Matrix(2, 2, [1, 1, 0, 2])
         >>> m
         Matrix([
@@ -2534,7 +2303,6 @@ class MatrixBase(object):
         [0, 2]])
         >>> m.is_diagonal()
         False
-
         >>> m = diag(1, 2, 3)
         >>> m
         Matrix([
@@ -2543,10 +2311,8 @@ class MatrixBase(object):
         [0, 0, 3]])
         >>> m.is_diagonal()
         True
-
         See Also
         ========
-
         is_lower
         is_upper
         is_diagonalizable
@@ -2560,15 +2326,12 @@ class MatrixBase(object):
 
     def det(self, method="bareis"):
         """Computes the matrix determinant using the method "method".
-
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
           det_LU ... det_LU_decomposition
-
         See Also
         ========
-
         det_bareis
         berkowitz_det
         det_LU
@@ -2597,13 +2360,10 @@ class MatrixBase(object):
         symbolic matrices and will result in a determinant with
         minimal number of fractions. It means that less term
         rewriting is needed on resulting formulae.
-
         TODO: Implement algorithm for sparse matrices (SFF),
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-
         See Also
         ========
-
         det
         berkowitz_det
         """
@@ -2656,17 +2416,13 @@ class MatrixBase(object):
 
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
-
         Note that this method fails if the LU decomposition itself
         fails. In particular, if the matrix has no inverse this method
         will fail.
-
         TODO: Implement algorithm for sparse matrices (SFF),
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-
         See Also
         ========
-
         det
         det_bareis
         berkowitz_det
@@ -2689,14 +2445,10 @@ class MatrixBase(object):
 
     def adjugate(self, method="berkowitz"):
         """Returns the adjugate matrix.
-
         Adjugate matrix is the transpose of the cofactor matrix.
-
         http://en.wikipedia.org/wiki/Adjugate
-
         See Also
         ========
-
         cofactorMatrix
         transpose
         berkowitz
@@ -2706,10 +2458,8 @@ class MatrixBase(object):
 
     def inverse_LU(self, iszerofunc=_iszero):
         """Calculates the inverse using LU decomposition.
-
         See Also
         ========
-
         inv
         inverse_GE
         inverse_ADJ
@@ -2725,10 +2475,8 @@ class MatrixBase(object):
 
     def inverse_GE(self, iszerofunc=_iszero):
         """Calculates the inverse using Gaussian elimination.
-
         See Also
         ========
-
         inv
         inverse_LU
         inverse_ADJ
@@ -2746,10 +2494,8 @@ class MatrixBase(object):
 
     def inverse_ADJ(self, iszerofunc=_iszero):
         """Calculates the inverse using the adjugate matrix and a determinant.
-
         See Also
         ========
-
         inv
         inverse_LU
         inverse_GE
@@ -2770,14 +2516,11 @@ class MatrixBase(object):
 
     def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
-
         To simplify elements before finding nonzero pivots set simplify=True
         (to use the default SymPy simplify function) or pass a custom
         simplify function.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> from sympy.abc import x
         >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
@@ -2820,7 +2563,6 @@ class MatrixBase(object):
     def rank(self, iszerofunc=_iszero, simplify=False):
         """
         Returns the rank of a matrix
-
         >>> from sympy import Matrix
         >>> from sympy.abc import x
         >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
@@ -2836,10 +2578,8 @@ class MatrixBase(object):
 
     def nullspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
         >>> m
@@ -2852,10 +2592,8 @@ class MatrixBase(object):
         [-3],
         [ 1],
         [ 0]])]
-
         See Also
         ========
-
         columnspace
         """
         from sympy.matrices import zeros
@@ -2893,10 +2631,8 @@ class MatrixBase(object):
 
     def columnspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span columnspace of self
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
         >>> m
@@ -2912,10 +2648,8 @@ class MatrixBase(object):
         [0],
         [0],
         [6]])]
-
         See Also
         ========
-
         nullspace
         """
         simpfunc = simplify if isinstance(
@@ -2931,59 +2665,42 @@ class MatrixBase(object):
 
     def berkowitz(self):
         """The Berkowitz algorithm.
-
            Given N x N matrix with symbolic content, compute efficiently
            coefficients of characteristic polynomials of 'self' and all
            its square sub-matrices composed by removing both i-th row
            and column, without division in the ground domain.
-
            This method is particularly useful for computing determinant,
            principal minors and characteristic polynomial, when 'self'
            has complicated coefficients e.g. polynomials. Semi-direct
            usage of this algorithm is also important in computing
            efficiently sub-resultant PRS.
-
            Assuming that M is a square matrix of dimension N x N and
            I is N x N identity matrix,  then the following following
            definition of characteristic polynomial is begin used:
-
                           charpoly(M) = det(t*I - M)
-
            As a consequence, all polynomials generated by Berkowitz
            algorithm are monic.
-
            >>> from sympy import Matrix
            >>> from sympy.abc import x, y, z
-
            >>> M = Matrix([[x, y, z], [1, 0, 0], [y, z, x]])
-
            >>> p, q, r, s = M.berkowitz()
-
            >>> p # 0 x 0 M's sub-matrix
            (1,)
-
            >>> q # 1 x 1 M's sub-matrix
            (1, -x)
-
            >>> r # 2 x 2 M's sub-matrix
            (1, -x, -y)
-
            >>> s # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
-
            For more information on the implemented algorithm refer to:
-
            [1] S.J. Berkowitz, On computing the determinant in small
                parallel time using a small number of processors, ACM,
                Information Processing Letters 18, 1984, pp. 147-150
-
            [2] M. Keber, Division-Free computation of sub-resultants
                using Bezout matrices, Tech. Report MPI-I-2006-1-006,
                Saarbrucken, 2006
-
         See Also
         ========
-
         berkowitz_det
         berkowitz_minors
         berkowitz_charpoly
@@ -3031,10 +2748,8 @@ class MatrixBase(object):
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
-
         See Also
         ========
-
         det
         berkowitz
         """
@@ -3048,10 +2763,8 @@ class MatrixBase(object):
 
     def berkowitz_minors(self):
         """Computes principal minors using Berkowitz method.
-
         See Also
         ========
-
         berkowitz
         """
         sign, minors = S.One, []
@@ -3064,38 +2777,29 @@ class MatrixBase(object):
 
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         """Computes characteristic polynomial minors using Berkowitz method.
-
         A PurePoly is returned so using different variables for ``x`` does
         not affect the comparison or the polynomials:
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> A = Matrix([[1, 3], [2, 0]])
         >>> A.berkowitz_charpoly(x) == A.berkowitz_charpoly(y)
         True
-
         Specifying ``x`` is optional; a Dummy with name ``lambda`` is used by
         default (which looks good when pretty-printed in unicode):
-
         >>> A.berkowitz_charpoly().as_expr()
         _lambda**2 - _lambda - 6
-
         No test is done to see that ``x`` doesn't clash with an existing
         symbol, so using the default (``lambda``) or your own Dummy symbol is
         the safest option:
-
         >>> A = Matrix([[1, 2], [x, 0]])
         >>> A.charpoly().as_expr()
         _lambda**2 - _lambda - 2*x
         >>> A.charpoly(x).as_expr()
         x**2 - 3*x
-
         See Also
         ========
-
         berkowitz
         """
         return PurePoly(list(map(simplify, self.berkowitz()[-1])), x)
@@ -3104,17 +2808,14 @@ class MatrixBase(object):
 
     def berkowitz_eigenvals(self, **flags):
         """Computes eigenvalues of a Matrix using Berkowitz method.
-
         See Also
         ========
-
         berkowitz
         """
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
     def eigenvals(self, **flags):
         """Return eigen values using the berkowitz_eigenvals routine.
-
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
         routine. If this is not desired, set flag ``rational`` to False.
@@ -3136,14 +2837,12 @@ class MatrixBase(object):
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
-
         The flag ``simplify`` has two effects:
             1) if bool(simplify) is True, as_content_primitive()
             will be used to tidy up normalization artifacts;
             2) if nullspace needs simplification to compute the
             basis, the simplify flag will be passed on to the
             nullspace routine which will interpret it there.
-
         If the matrix contains any Floats, they will be changed to Rationals
         for computation purposes, but the answers will be returned after being
         evaluated with evalf. If it is desired to removed small imaginary
@@ -3206,15 +2905,12 @@ class MatrixBase(object):
 
     def left_eigenvects(self, **flags):
         """Returns left eigenvectors and eigenvalues.
-
         This function returns the list of triples (eigenval, multiplicity,
         basis) for the left eigenvectors. Options are the same as for
         eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
         eigenvects().
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
         >>> M.eigenvects()
@@ -3231,7 +2927,6 @@ class MatrixBase(object):
         >>> M.left_eigenvects()
         [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
         1, [Matrix([[1, 1, 1]])])]
-
         """
         mat = self
         left_transpose = mat.transpose().eigenvects(**flags)
@@ -3244,19 +2939,15 @@ class MatrixBase(object):
 
     def singular_values(self):
         """Compute the singular values of a Matrix
-
         Examples
         ========
-
         >>> from sympy import Matrix, Symbol
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> A.singular_values()
         [sqrt(x**2 + 1), 1, 0]
-
         See Also
         ========
-
         condition_number
         """
         mat = self.as_mutable()
@@ -3274,20 +2965,15 @@ class MatrixBase(object):
 
     def condition_number(self):
         """Returns the condition number of a matrix.
-
         This is the maximum singular value divided by the minimum singular value
-
         Examples
         ========
-
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0, 0, S.One/10]])
         >>> A.condition_number()
         100
-
         See Also
         ========
-
         singular_values
         """
         if not self:
@@ -3307,10 +2993,8 @@ class MatrixBase(object):
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
@@ -3322,10 +3006,8 @@ class MatrixBase(object):
         Matrix([
         [2, 2*y],
         [2,   0]])
-
         See Also
         ========
-
         limit
         diff
         """
@@ -3334,10 +3016,8 @@ class MatrixBase(object):
 
     def limit(self, *args):
         """Calculate the limit of each element in the matrix.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
@@ -3345,10 +3025,8 @@ class MatrixBase(object):
         Matrix([
         [2, y],
         [1, 0]])
-
         See Also
         ========
-
         integrate
         diff
         """
@@ -3357,10 +3035,8 @@ class MatrixBase(object):
 
     def diff(self, *args):
         """Calculate the derivative of each element in the matrix.
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
@@ -3368,10 +3044,8 @@ class MatrixBase(object):
         Matrix([
         [1, 0],
         [0, 0]])
-
         See Also
         ========
-
         integrate
         limit
         """
@@ -3380,10 +3054,8 @@ class MatrixBase(object):
 
     def vec(self):
         """Return the Matrix converted into a one column matrix by stacking columns
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m=Matrix([[1, 3], [2, 4]])
         >>> m
@@ -3396,10 +3068,8 @@ class MatrixBase(object):
         [2],
         [3],
         [4]])
-
         See Also
         ========
-
         vech
         """
         return self.T.reshape(len(self), 1)
@@ -3407,14 +3077,11 @@ class MatrixBase(object):
     def vech(self, diagonal=True, check_symmetry=True):
         """Return the unique elements of a symmetric Matrix as a one column matrix
         by stacking the elements in the lower triangle.
-
         Arguments:
         diagonal -- include the diagonal cells of self or not
         check_symmetry -- checks symmetry of self but not completely reliably
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m=Matrix([[1, 2], [2, 3]])
         >>> m
@@ -3428,10 +3095,8 @@ class MatrixBase(object):
         [3]])
         >>> m.vech(diagonal=False)
         Matrix([[2]])
-
         See Also
         ========
-
         vec
         """
         from sympy.matrices import zeros
@@ -3460,14 +3125,11 @@ class MatrixBase(object):
 
     def get_diag_blocks(self):
         """Obtains the square sub-matrices on the main diagonal of a square matrix.
-
         Useful for inverting symbolic matrices or solving systems of
         linear equations which may be decoupled by having a block diagonal
         structure.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
@@ -3480,7 +3142,6 @@ class MatrixBase(object):
         Matrix([[x]])
         >>> a3
         Matrix([[0]])
-
         """
         sub_blocks = []
 
@@ -3509,14 +3170,10 @@ class MatrixBase(object):
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
         Return (P, D), where D is diagonal and
-
             D = P^-1 * M * P
-
         where M is current matrix.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3540,13 +3197,10 @@ class MatrixBase(object):
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-
         See Also
         ========
-
         is_diagonal
         is_diagonalizable
-
         """
         from sympy.matrices import diag
 
@@ -3576,15 +3230,11 @@ class MatrixBase(object):
 
     def is_diagonalizable(self, reals_only=False, clear_subproducts=True):
         """Check if matrix is diagonalizable.
-
         If reals_only==True then check that diagonalized matrix consists of the only not complex values.
-
         Some subproducts could be used further in other methods to avoid double calculations,
         By default (if clear_subproducts==True) they will be deleted.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
         >>> m
@@ -3610,10 +3260,8 @@ class MatrixBase(object):
         True
         >>> m.is_diagonalizable(True)
         False
-
         See Also
         ========
-
         is_diagonal
         diagonalize
         """
@@ -3829,18 +3477,12 @@ class MatrixBase(object):
 
     def jordan_form(self, calc_transformation=True):
         r"""Return Jordan form J of current matrix.
-
         Also the transformation P such that
-
             `J = P^{-1} \cdot M \cdot P`
-
         and the jordan blocks forming J
         will be calculated.
-
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix([
         ...        [ 6,  5, -2, -3],
@@ -3854,10 +3496,8 @@ class MatrixBase(object):
         [0, 2, 0, 0],
         [0, 0, 2, 1],
         [0, 0, 0, 2]])
-
         See Also
         ========
-
         jordan_cells
         """
         P, Jcells = self.jordan_cells()
@@ -3868,28 +3508,20 @@ class MatrixBase(object):
     def jordan_cells(self, calc_transformation=True):
         r"""Return a list of Jordan cells of current matrix.
         This list shape Jordan matrix J.
-
         If calc_transformation is specified as False, then transformation P such that
-
               `J = P^{-1} \cdot M \cdot P`
-
         will not be calculated.
-
         Notes
         =====
-
         Calculation of transformation P is not implemented yet.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [
         ...  6,  5, -2, -3,
         ... -3, -1,  3,  3,
         ...  2,  1, -2, -3,
         ... -1,  1,  5,  5])
-
         >>> P, Jcells = m.jordan_cells()
         >>> Jcells[0]
         Matrix([
@@ -3899,10 +3531,8 @@ class MatrixBase(object):
         Matrix([
         [2, 1],
         [0, 2]])
-
         See Also
         ========
-
         jordan_form
         """
         n = self.rows
@@ -3943,10 +3573,8 @@ class MatrixBase(object):
 
     def has(self, *patterns):
         """Test whether any subexpression matches any of the patterns.
-
         Examples
         ========
-
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
@@ -3961,15 +3589,12 @@ class MatrixBase(object):
 
     def dual(self):
         """Returns the dual of a matrix, which is:
-
         `(1/2)*levicivita(i, j, k, l)*M(k, l)` summed over indices `k` and `l`
-
         Since the levicivita method is anti_symmetric for any pairwise
         exchange of indices, the dual of a symmetric matrix is the zero
         matrix. Strictly speaking the dual defined here assumes that the
         'matrix' `M` is a contravariant anti_symmetric second rank tensor,
         so that the dual is a covariant second rank tensor.
-
         """
         from sympy import LeviCivita
         from sympy.matrices import zeros
@@ -4002,10 +3627,8 @@ class MatrixBase(object):
     def hstack(cls, *args):
         """Return a matrix formed by joining args horizontally (i.e.
         by repeated application of row_join).
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> Matrix.hstack(eye(2), 2*eye(2))
         Matrix([
@@ -4018,10 +3641,8 @@ class MatrixBase(object):
     def vstack(cls, *args):
         """Return a matrix formed by joining args vertically (i.e.
         by repeated application of col_join).
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix, eye
         >>> Matrix.vstack(eye(2), 2*eye(2))
         Matrix([
@@ -4034,10 +3655,8 @@ class MatrixBase(object):
 
     def row_join(self, rhs):
         """Concatenates two matrices along self's last and rhs's first column
-
         Examples
         ========
-
         >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(3, 1)
@@ -4046,10 +3665,8 @@ class MatrixBase(object):
         [0, 0, 0, 1],
         [0, 0, 0, 1],
         [0, 0, 0, 1]])
-
         See Also
         ========
-
         row
         col_join
         """
@@ -4068,10 +3685,8 @@ class MatrixBase(object):
 
     def col_join(self, bott):
         """Concatenates two matrices along self's last and bott's first row
-
         Examples
         ========
-
         >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(1, 3)
@@ -4081,10 +3696,8 @@ class MatrixBase(object):
         [0, 0, 0],
         [0, 0, 0],
         [1, 1, 1]])
-
         See Also
         ========
-
         col
         row_join
         """
@@ -4103,10 +3716,8 @@ class MatrixBase(object):
 
     def row_insert(self, pos, mti):
         """Insert one or more rows at the given row position.
-
         Examples
         ========
-
         >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(1, 3)
@@ -4116,10 +3727,8 @@ class MatrixBase(object):
         [1, 1, 1],
         [0, 0, 0],
         [0, 0, 0]])
-
         See Also
         ========
-
         row
         col_insert
         """
@@ -4150,10 +3759,8 @@ class MatrixBase(object):
 
     def col_insert(self, pos, mti):
         """Insert one or more columns at the given column position.
-
         Examples
         ========
-
         >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(3, 1)
@@ -4162,10 +3769,8 @@ class MatrixBase(object):
         [0, 1, 0, 0],
         [0, 1, 0, 0],
         [0, 1, 0, 0]])
-
         See Also
         ========
-
         col
         row_insert
         """
@@ -4195,10 +3800,8 @@ class MatrixBase(object):
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
-
         Examples
         ========
-
         >>> from sympy import symbols, Function, Matrix
         >>> F, G = symbols('F, G', cls=Function)
         >>> M = Matrix(2, 2, lambda i, j: F(i+j)) ; M
@@ -4217,32 +3820,24 @@ class MatrixBase(object):
 
     def pinv(self):
         """Calculate the Moore-Penrose pseudoinverse of the matrix.
-
         The Moore-Penrose pseudoinverse exists and is unique for any matrix.
         If the matrix is invertible, the pseudoinverse is the same as the
         inverse.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
         Matrix([
         [-17/18,  4/9],
         [  -1/9,  1/9],
         [ 13/18, -2/9]])
-
         See Also
         ========
-
         inv
         pinv_solve
-
         References
         ==========
-
         .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
-
         """
         A = self
         AH = self.H
@@ -4261,15 +3856,12 @@ class MatrixBase(object):
 
     def pinv_solve(self, B, arbitrary_matrix=None):
         """Solve Ax = B using the Moore-Penrose pseudoinverse.
-
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned.  If infinite solutions exist, one will
         be returned based on the value of arbitrary_matrix.  If no solutions
         exist, the least-squares solution is returned.
-
         Parameters
         ==========
-
         B : Matrix
             The right hand side of the equation to be solved for.  Must have
             the same number of rows as matrix A.
@@ -4282,17 +3874,13 @@ class MatrixBase(object):
             B.  If left as None, an appropriate matrix containing dummy
             symbols in the form of ``wn_m`` will be used, with n and m being
             row and column position of each symbol.
-
         Returns
         =======
-
         x : Matrix
             The matrix that will satisfy Ax = B.  Will have as many rows as
             matrix A has columns, and as many columns as matrix B.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> B = Matrix([7, 8])
@@ -4306,10 +3894,8 @@ class MatrixBase(object):
         [-55/18],
         [   1/9],
         [ 59/18]])
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         gauss_jordan_solve
@@ -4319,22 +3905,17 @@ class MatrixBase(object):
         LUsolve
         QRsolve
         pinv
-
         Notes
         =====
-
         This may return either exact solutions or least squares solutions.
         To determine which, check ``A * A.pinv() * B == B``.  It will be
         True if exact solutions exist, and False if only a least-squares
         solution exists.  Be aware that the left hand side of that equation
         may need to be simplified to correctly compare to the right hand
         side.
-
         References
         ==========
-
         .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse#Obtaining_all_solutions_of_a_linear_system
-
         """
         from sympy.matrices import eye
         A = self
@@ -4348,42 +3929,33 @@ class MatrixBase(object):
     def gauss_jordan_solve(self, b, freevar=False):
         """
         Solves Ax = b using Gauss Jordan elimination.
-
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned. If infinite solutions exist, it will
         be returned parametrically. If no solutions exist, It will throw
         ValueError.
-
         Parameters
         ==========
-
         b : Matrix
             The right hand side of the equation to be solved for.  Must have
             the same number of rows as matrix A.
-
         freevar : List
             If the system is underdetermined (e.g. A has more columns than
             rows), infinite solutions are possible, in terms of an arbitrary
             values of free variables. Then the index of the free variables
             in the solutions (column Matrix) will be returned by freevar, if
             the flag `freevar` is set to `True`.
-
         Returns
         =======
-
         x : Matrix
             The matrix that will satisfy Ax = B.  Will have as many rows as
             matrix A has columns, and as many columns as matrix B.
-
         params : Matrix
             If the system is underdetermined (e.g. A has more columns than
             rows), infinite solutions are possible, in terms of an arbitrary
             parameters. These arbitrary parameters are returned as params
             Matrix.
-
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
         >>> b = Matrix([7, 12, 4])
@@ -4398,7 +3970,6 @@ class MatrixBase(object):
         Matrix([
         [_tau0],
         [_tau1]])
-
         >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
         >>> b = Matrix([3, 6, 9])
         >>> sol, params = A.gauss_jordan_solve(b)
@@ -4409,10 +3980,8 @@ class MatrixBase(object):
         [ 0]])
         >>> params
         Matrix(0, 1, [])
-
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -4421,12 +3990,9 @@ class MatrixBase(object):
         LUsolve
         QRsolve
         pinv
-
         References
         ==========
-
         .. [1] http://en.wikipedia.org/wiki/Gaussian_elimination
-
         """
         from sympy.matrices import Matrix, zeros
 
@@ -4479,12 +4045,9 @@ class MatrixBase(object):
 def classof(A, B):
     """
     Get the type of the result when combining matrices of different types.
-
     Currently the strategy is that immutability is contagious.
-
     Examples
     ========
-
     >>> from sympy import Matrix, ImmutableMatrix
     >>> from sympy.matrices.matrices import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
