@@ -698,6 +698,17 @@ def test_ImageSet_put_values():
     raises(ValueError, lambda: imgeset.put_values((m, 1), (n, 2)))
 
 
+def test_ImageSet_finite_values():
+    n, m = symbols('n, m')
+    x = Symbol('x')
+    imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
+    assert imgset.finite_values({n: 1, m: 2}, {n: 2}) == (1, 4)
+    assert imgset.finite_values({n: 2, m: 2}, {n: 1}) == (4, 1)
+    raises(TypeError, lambda: imgset.finite_values({n: x}))
+    x = Symbol('x', real=True)
+    assert imgset.finite_values({n: x}) == (x**2,)
+
+
 def test_issue_9980():
     c1 = ComplexRegion(Interval(1, 2)*Interval(2, 3))
     c2 = ComplexRegion(Interval(1, 5)*Interval(1, 3))
