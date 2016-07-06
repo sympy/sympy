@@ -11,16 +11,18 @@
 #     [Featherstone2007] Roy Featherstone, Rigid Body Dynamics Algorithms. 2007
 #     Springer
 
+from sympy import cos, Matrix, sin, zeros
+
 ################################################################################
 #
 # Rotations
 #
 ################################################################################
 
-# Roations and nomenclature taken from table 2.2 on page 23
+# Rotations and nomenclature taken from table 2.2 on page 23
 
 
-def rx():
+def rx(theta):
     """This function returns the 3x3 rotation matrix for a rotation of theta
     degrees about the x axis.
 
@@ -47,8 +49,14 @@ def rx():
         >>> E = rx(theta)
     """
 
+    E = Matrix([[1,           0,          0],
+                [0,  cos(theta), sin(theta)],
+                [0, -sin(theta), cos(theta)]])
 
-def ry():
+    return E
+
+
+def ry(theta):
     """This function returns the 3x3 rotation matrix for a rotation of theta
     degrees about the y axis.
 
@@ -75,8 +83,14 @@ def ry():
         >>> E = ry(theta)
     """
 
+    E = Matrix([[cos(theta), 0, -sin(theta)],
+                [0,          1,           0],
+                [sin(theta), 0,  cos(theta)]])
 
-def rz():
+    return E
+
+
+def rz(theta):
     """This function returns the 3x3 rotation matrix for a rotation of theta
     degrees about the z axis.
 
@@ -103,8 +117,14 @@ def rz():
         >>> E = rz(theta)
     """
 
+    E = Matrix([[cos(theta),  sin(theta), 0],
+                [-sin(theta), cos(theta), 0],
+                [0,           0,          1]])
 
-def rot():
+    return E
+
+
+def rot(E):
     """This function returns the 6x6 rotation matrix for spatial vectors.
 
     Parameters
@@ -135,6 +155,10 @@ def rot():
     spatial vectors.
     """
 
+    X = E.row_join(zeros(3)).col_join(zeros(3).row_join(E))
+
+    return X
+
 
 ################################################################################
 #
@@ -144,7 +168,7 @@ def rot():
 
 # Formulas and nomeclature taken from table 2.2 on page 23
 
-def xlt():
+def xlt(r):
     """This function returns the 6x6 translation matrix for spatial vectors.
 
     Parameters
@@ -172,6 +196,15 @@ def xlt():
         >>> X = xlt(r)
     """
 
+    X = Matrix([[1,        0,     0, 0, 0, 0],
+                [0,        1,     0, 0, 0, 0],
+                [0,        0,     1, 0, 0, 0],
+                [0,     r[2], -r[1], 1, 0, 0],
+                [-r[2],    0,  r[0], 0, 1, 0],
+                [r[1], -r[0],     0, 0, 0, 1]])
+
+    return X
+
 
 ################################################################################
 #
@@ -180,25 +213,23 @@ def xlt():
 ################################################################################
 
 # The spatial cross product tables can be found in figure 2.5 on page 24
+# The table may be incorrect? Matrix is built based on Roy Featherstone's Matlab
+# code.
 
-def cross_f():
-    """This function returns the force cross product (vx*). If input v is a 3x1
-    vector a 3x3 matrix will be returned, otherwise a 6x6 matrix will be
-    returned.
+def cross_f(v):
+    """This function returns the force cross product (vx*).
 
     Parameters
     ==========
 
-    v: Matrix, size(6, 1) or size(3, 1)
-        This is the input vector for the cross product vx*. If v is not 6x1 it
-        will be assumed that it is 3x1.
+    v: Matrix, size(6, 1)
+        This is the input vector for the cross product vx*.
 
     Returns
     =======
 
-    crossed: Matrix, size(6, 6) or size(3, 3)
-        This is the result of the force cross product. It v was 6x1 the return
-        is a 6x6 matrix otherwise it is a 3x3 matrix
+    crossed: Matrix, size(6, 6)
+        This is the result of the force cross product.
 
     Examples
     ========
@@ -218,25 +249,25 @@ def cross_f():
     the motion cross product (vx* = -(vx)^T)
     """
 
+    crossed = -cross_m(v).transpose()
 
-def cross_m():
-    """This function returns the motion cross product (vx). If input v is a 3x1
-    vector a 3x3 matrix will be returned, otherwise a 6x6 matrix will be
-    returned.
+    return crossed
+
+
+def cross_m(v):
+    """This function returns the motion cross product (vx).
 
     Parameters
     ==========
 
-    v: Matrix, size(6, 1) or size(3, 1)
-        This is the input vector for the cross product vx. If v is not 6x1 it
-        will be assumed that it is 3x1.
+    v: Matrix, size(6, 1)
+        This is the input vector for the cross product vx.
 
     Returns
     =======
 
-    crossed: Matrix, size(6, 6) or size(3, 3)
-        This is the result of the motion cross product. It v was 6x1 the return
-        is a 6x6 matrix otherwise it is a 3x3 matrix
+    crossed: Matrix, size(6, 6)
+        This is the result of the motion cross product.
 
     Examples
     ========
@@ -250,6 +281,17 @@ def cross_m():
         >>> crossed_m = cross_m(v)
     """
 
+    v1, v2, v3, v4, v5, v6 = v
+
+    crossed = Matrix([[0,  -v3,  v2,  0,   0,   0],
+                      [v3,   0, -v1,  0,   0,   0],
+                      [-v2, v1,   0,  0,   0,   0],
+                      [0,  -v6,  v5,  0, -v3,  v2],
+                      [v6,   0, -v4, v3,   0, -v1],
+                      [-v5, v4,   0, -v2, v1,   0]])
+
+    return crossed
+
 
 ################################################################################
 #
@@ -257,7 +299,7 @@ def cross_m():
 #
 ################################################################################
 
-def X_to_Xstar():
+def X_to_Xstar(X):
     """This function will take a motion transformation matrix and change it to a
     force transformation matrix.
 
@@ -287,3 +329,7 @@ def X_to_Xstar():
         >>> X = rot(E)
         >>> Xstar = X_to_Xstar(X)
     """
+
+    Xstar = X.inv().transpose()
+
+    return Xstar
