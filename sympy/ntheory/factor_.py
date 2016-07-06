@@ -1844,8 +1844,8 @@ class udivisor_sigma(Function):
                 return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
 
 
-class prime_nu(Function):
-    """
+class primenu(Function):
+    r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
     If n's prime factorization is:
@@ -1853,10 +1853,10 @@ class prime_nu(Function):
     .. math ::
         n = \prod_{i=1}^k p_i^{m_i},
 
-    then ``prime_nu(n)`` or `\\nu(n)` is:
+    then ``primenu(n)`` or `\nu(n)` is:
 
     .. math ::
-        \\nu(n) = k.
+        \nu(n) = k.
 
     References
     ==========
@@ -1866,10 +1866,10 @@ class prime_nu(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import prime_nu
-    >>> prime_nu(1)
+    >>> from sympy.ntheory.factor_ import primenu
+    >>> primenu(1)
     0
-    >>> prime_nu(30)
+    >>> primenu(30)
     3
 
     See Also
@@ -1888,8 +1888,8 @@ class prime_nu(Function):
                 return len(factorint(n).keys())
 
 
-class prime_omega(Function):
-    """
+class primeomega(Function):
+    r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
 
@@ -1898,7 +1898,7 @@ class prime_omega(Function):
     .. math ::
         n = \prod_{i=1}^k p_i^{m_i},
 
-    then ``prime_omega(n)``  or `\Omega(n)` is:
+    then ``primeomega(n)``  or `\Omega(n)` is:
 
     .. math ::
         \Omega(n) = \sum_{i=1}^k m_i.
@@ -1911,10 +1911,10 @@ class prime_omega(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import prime_omega
-    >>> prime_omega(1)
+    >>> from sympy.ntheory.factor_ import primeomega
+    >>> primeomega(1)
     0
-    >>> prime_omega(20)
+    >>> primeomega(20)
     3
 
     See Also

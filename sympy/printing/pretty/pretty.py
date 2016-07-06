@@ -2054,6 +2054,24 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(')'))
         return pform
 
+    def _print_primenu(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['nu']))
+        else:
+            pform = prettyForm(*pform.left('nu'))
+        return pform
+
+    def _print_primeomega(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['Omega']))
+        else:
+            pform = prettyForm(*pform.left('Omega'))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

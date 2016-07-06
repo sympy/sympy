@@ -5445,3 +5445,25 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+
+def test_pretty_primenu():
+    from sympy.ntheory.factor_ import primenu
+
+    ascii_str1 = "nu(n)"
+    ucode_str1 = u("ν(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primenu(n)) == ascii_str1
+    assert upretty(primenu(n)) == ucode_str1
+
+
+def test_pretty_primeomega():
+    from sympy.ntheory.factor_ import primeomega
+
+    ascii_str1 = "Omega(n)"
+    ucode_str1 = u("Ω(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primeomega(n)) == ascii_str1
+    assert upretty(primeomega(n)) == ucode_str1

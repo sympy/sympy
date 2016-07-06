@@ -3682,17 +3682,17 @@ def test_sympy__ntheory__factor___udivisor_sigma():
     assert _test_args(t)
 
 
-def test_sympy__ntheory__factor___prime_nu():
-    from sympy.ntheory.factor_ import prime_nu
+def test_sympy__ntheory__factor___primenu():
+    from sympy.ntheory.factor_ import primenu
     n = symbols('n', integer=True)
-    t = prime_nu(n)
+    t = primenu(n)
     assert _test_args(t)
 
 
-def test_sympy__ntheory__factor___prime_omega():
-    from sympy.ntheory.factor_ import prime_omega
+def test_sympy__ntheory__factor___primeomega():
+    from sympy.ntheory.factor_ import primeomega
     n = symbols('n', integer=True)
-    t = prime_omega(n)
+    t = primeomega(n)
     assert _test_args(t)
 
 
