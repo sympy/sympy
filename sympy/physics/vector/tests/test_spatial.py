@@ -37,7 +37,7 @@ def test_rz():
 
     # Set up the expected return results
     E_exp = Matrix([[cos(theta),  sin(theta), 0],
-                    [-sin(theta), cos(theta), 0]
+                    [-sin(theta), cos(theta), 0],
                     [0,           0,          1]])
 
     # Test the obtained rsults against the expected return results
