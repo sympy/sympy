@@ -440,7 +440,6 @@ class CosetTable(DefaultPrinting):
             else:
                 self.define_f(f, word[i])
 
-    # currently not used anywhere
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
@@ -457,7 +456,7 @@ class CosetTable(DefaultPrinting):
         p = self.p
         while len(self.deduction_stack) > 0:
             if len(self.deduction_stack) >= max_stack_size:
-                self.lookahead()
+                self.look_ahead()
                 del self.deduction_stack[:]
             else:
                 alpha, x = self.deduction_stack.pop()
