@@ -8,6 +8,7 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.utilities import filldedent
 
 
 def continuous_domain(f, symbol, domain):
@@ -254,17 +255,49 @@ def not_empty_in(finset_intersection, *syms):
 
 
 def periodicity(f, symbol, check=False):
-    """Returns the period of a given function, if possible.
+    """
+    Returns the period of a given function, if possible.
+
+    Parameters
+    ==========
+
+    f : Expr.
+        The concerned function.
+    symbol : Symbol
+        The variable for which the period is to be determined.
+    check : Boolean
+        The flag to verify whether the value being returned is a period or not.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The period of function cannot be determined.
+        The value to be returned cannot be verified.
+
+
+    Currently, we can find the period of expressions involving trigonometric
+    functons. Note, that the value returned might not be the "fundamental"
+    period of the given function i.e. it may not be the smallest periodic value
+    of the function.
+
+    The verification of the period through the `check` flag is not reliable
+    due to internal simplification of the given expression. Hence, it is set
+    to `False` by default.
 
     Examples
     ========
-    >>> from sympy import Symbol, sin, cos
+    >>> from sympy import Symbol, sin, cos, tan, exp
     >>> from sympy.calculus.util import periodicity
     >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
     >>> periodicity(f, x)
     2*pi
     >>> periodicity(sin(x)*cos(x), x)
+    pi
+    >>> periodicity(exp(tan(2*x) - 1), x)
+    pi/2
+    >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
     """
     from sympy import simplify, lcm_list
@@ -338,19 +371,22 @@ def periodicity(f, symbol, check=False):
                 return period
 
             else:
-                raise NotImplementedError("The period of the given function "
-                                          "cannot be verified. Set check=False"
-                                          " to obtain the value.")
+                raise NotImplementedError(filldedent('''
+                    The period of the given function cannot be verified.
+                    Set check=False to obtain the value.'''))
 
         return period
 
     else:
-        raise NotImplementedError("Periods of only certain trigonometric functions"
-                                  " can be calculated using this method.")
+        raise NotImplementedError(filldedent('''Period of the given function
+            cannot be determined using this method. The function might be
+            non-periodic.'''))
 
 
 def _periodicity(args, symbol):
-    """Helper function to periodicity
+    """Helper for periodicity to find the period of a list of simpler
+    functions. It uses the `nlcm` method to find the least common period of
+    all the functions.
     """
     periods = []
     for f in args:
@@ -370,6 +406,9 @@ def _periodicity(args, symbol):
 def nlcm(numbers):
     """Returns the LCM of a list of numbers.
 
+    The numbers can be rational or irrational or a mixture of both.
+    `None` is returned for incommensurable numbers.
+
     Examples
     ========
     >>> from sympy import S, pi
@@ -378,12 +417,17 @@ def nlcm(numbers):
     15/2
     >>> nlcm([2*pi, 3*pi, pi, pi/2])
     6*pi
+    >>> nlcm([S(1), 2*pi])
     """
     if all(num.is_irrational and num.has(pi) for num in numbers):
         coeffs = []
         for num in numbers:
+            # seperate out the irrational part from the rational coefficients
             coeff = num.as_independent(pi)[0]
             coeffs.append(coeff)
+            # Since, this method was primarily designed for to assist in
+            # computing the period of an expression, `pi` has been used as
+            # the principal irrational value.
 
         result = lcm(coeffs)*pi
 
