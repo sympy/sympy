@@ -1109,9 +1109,14 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**2*y**2*x**-1).identity_cyclic_reduction()
-        x**3*y**2
-        >>> (x**-3*y**-1*x**2).identity_cyclic_reduction()
-        y**-1*x**5
+        x*y**2
+        >>> (x**-3*y**-1*x**5).identity_cyclic_reduction()
+        x**2*y**-1
+
+        References
+        ==========
+
+        http://planetmath.org/cyclicallyreduced
 
         """
         if self.is_cyclically_reduced():
@@ -1119,12 +1124,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         group = self.group
         exp1 = self.exponent_syllable(0)
         exp2 = self.exponent_syllable(-1)
-        if exp1 > 0:
-            rep = ((self.generator_syllable(0), exp1 - exp2),) + \
-                    self.array_form[1: self.number_syllables() - 1]
+        r = exp1 + exp2
+        if r == 0:
+            rep = self.array_form[1: self.number_syllables() - 1]
         else:
-            rep = self.array_form[1: self.number_syllables() - 1] + \
-                    ((self.generator_syllable(0), -exp1 + exp2),)
+            rep = ((self.generator_syllable(0), exp1 + exp2),) + \
+                    self.array_form[1: self.number_syllables() - 1]
         return group.dtype(rep)
 
 
