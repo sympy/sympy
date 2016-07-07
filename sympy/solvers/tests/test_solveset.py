@@ -1049,6 +1049,19 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([],[]) == S.EmptySet
     assert nonlinsolve([],[x, y]) == S.EmptySet
     assert nonlinsolve([x],[x, y]) == FiniteSet((0, y))
+    assert nonlinsolve([x, y - x - 5], [y]) == FiniteSet((x + 5,))
+    soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    assert nonlinsolve([sin(x) -1], [x]) == FiniteSet(tuple(soln))
+    assert nonlinsolve([x**2 -1], [x]) == FiniteSet((-1,), (1,))
+
+
+def test_raise_exception():
+    raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
+    raises(ValueError, lambda: nonlinsolve([x**2 -1]))
+
+
+def test_trig_system():
+    assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
 
 
 def test_nonlinsolve_positive_dimensional():
