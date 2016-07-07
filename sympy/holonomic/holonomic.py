@@ -19,6 +19,8 @@ from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.functions.elementary.exponential import exp_polar, exp
+from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError, SingularityError, NotHolonomicError
+from sympy.polys.rings import PolyElement
 
 
 def DifferentialOperators(base, generator):
@@ -631,7 +633,6 @@ class HolonomicFunction(object):
 
         # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
-            from .holonomicerrors import NotHyperSeriesError, NotPowerSeriesError
             try:
                 s = HolonomicFunction(self.annihilator * D, self.x, a,\
                     y0).to_expr()
@@ -903,7 +904,6 @@ class HolonomicFunction(object):
 
     def __pow__(self, n):
         if n < 0:
-            from .holonomicerrors import NotHolonomicError
             raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
             return S(1)
@@ -1041,7 +1041,6 @@ class HolonomicFunction(object):
         if self.annihilator.is_singular(x0=self.x0):
             indicialroots = self._indicial()
             if any(not int(i) == i for i in indicialroots):
-                from .holonomicerrors import NotPowerSeriesError
                 raise NotPowerSeriesError(self, self.x0)
 
         dict1 = {}
@@ -1343,7 +1342,6 @@ class HolonomicFunction(object):
 
         for i in roots(self.annihilator.parent.base.to_sympy(self.annihilator.listofpoly[-1]), self.x):
             if i == self.x0 or i in points:
-                from .holonomicerrors import SingularityError
                 raise SingularityError(self, i)
 
         if lp:
@@ -1450,14 +1448,12 @@ class HolonomicFunction(object):
                 break
 
         if not is_hyper:
-            from .holonomicerrors import NotHyperSeriesError
             raise NotHyperSeriesError(self, self.x0)
 
         a = r.listofpoly[0]
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        from sympy.polys.rings import PolyElement
         if isinstance(a.rep[0], PolyElement):
             c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
         else:
@@ -1559,7 +1555,6 @@ class HolonomicFunction(object):
         if lenics == None and len(self.y0) > self.annihilator.order:
             lenics = len(self.y0)
 
-        from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError
         try:
             sol = expr_to_holonomic(self.to_expr(), x=self.x, x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
         except (NotPowerSeriesError, NotHyperSeriesError):
@@ -1972,7 +1967,6 @@ def _extend_y0(Holonomic, n):
                         return y0
                 except AttributeError:
                     pass
-                from sympy.polys.rings import PolyElement
                 if isinstance(r, PolyElement):
                     r = r.as_expr()
                 sol += a * r
@@ -2018,7 +2012,6 @@ def DMFsubs(frac, x0, mpm=False):
             j = sympify(j)._to_mpmath(mp.prec)
         sol_q += j * x0**i
 
-    from sympy.polys.rings import PolyElement
     if isinstance(sol_p, PolyElement):
         sol_p = sol_p.as_expr()
     if isinstance(sol_q, PolyElement):
