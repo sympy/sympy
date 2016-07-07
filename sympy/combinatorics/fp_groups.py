@@ -1068,7 +1068,6 @@ def reidemeister_relators(C):
         w = rels[i]
         for gen in order_1_gens:
             w = w.eliminate_word(gen, identity)
-            w = w.identity_cyclic_reduction()
         rels[i] = w
 
     C._schreier_generators = [i for i in C._schreier_generators if i not in order_1_gens]
@@ -1270,14 +1269,14 @@ def elimination_technique_1(C):
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
-                redundant_gens[gen] = ((bk*fw)**(-1*k)).identity_cyclic_reduction()
-                contained_gens.extend((bk*fw).contains_generators())
+                chi = (bk*fw).identity_cyclic_reduction()
+                redundant_gens[gen] = chi**(-1*k)
+                contained_gens.extend(chi.contains_generators())
                 del rels[i]; del gens[j]
                 break
     # eliminate the redundant generator from remaing relators
     for i, gen in product(range(len(rels)), redundant_gens):
-        rels[i] = rels[i].eliminate_word(gen, redundant_gens[gen])
-        rels[i] = rels[i].identity_cyclic_reduction()
+        rels[i] = (rels[i].eliminate_word(gen, redundant_gens[gen])).identity_cyclic_reduction()
     rels.sort()
     try:
         rels.remove(C._schreier_free_group.identity)
@@ -1336,7 +1335,7 @@ def simplify_presentation(C):
     group = C._schreier_free_group
 
     # don't add "identity" element in relator list
-    C._reidemeister_relators = [group.dtype(tuple(r)) for r in rels_arr if r]
+    C._reidemeister_relators = [group.dtype(tuple(r)).identity_cyclic_reduction() for r in rels_arr if r]
 
 def _simplification_technique_1(rels):
     """
@@ -1363,6 +1362,7 @@ def _simplification_technique_1(rels):
     [[(x, 2), (y, 4)], [(x, 4)]]
 
     """
+    rels = list(set(rels))
     l_rels = len(rels)
 
     # all syllables with single syllable
@@ -1371,7 +1371,7 @@ def _simplification_technique_1(rels):
     # removal can possibly happen
     nw = [None]*l_rels
     for i in range(l_rels):
-        w = rels[i]
+        w = rels[i].identity_cyclic_reduction()
         if w.number_syllables() == 1:
 
             # replace one syllable relator with the corresponding inverse
@@ -1454,9 +1454,8 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    for i in range(elm_rounds):
+    for i in range(20):
         elimination_technique_1(C)
-    for i in range(simp_rounds):
         simplify_presentation(C)
     C.schreier_generators = tuple(C._schreier_generators)
     C.reidemeister_relators = tuple(C._reidemeister_relators)
