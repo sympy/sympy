@@ -3682,6 +3682,20 @@ def test_sympy__ntheory__factor___udivisor_sigma():
     assert _test_args(t)
 
 
+def test_sympy__ntheory__factor___primenu():
+    from sympy.ntheory.factor_ import primenu
+    n = symbols('n', integer=True)
+    t = primenu(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___primeomega():
+    from sympy.ntheory.factor_ import primeomega
+    n = symbols('n', integer=True)
+    t = primeomega(n)
+    assert _test_args(t)
+
+
 def test_sympy__ntheory__residue_ntheory__mobius():
     from sympy.ntheory import mobius
     assert _test_args(mobius(2))
