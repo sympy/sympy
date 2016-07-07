@@ -234,7 +234,8 @@ class CCodePrinter(CodePrinter):
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
-        return ("{0}!={1}").format(lhs_code, rhs_code)
+        op = expr.rel_op
+        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
