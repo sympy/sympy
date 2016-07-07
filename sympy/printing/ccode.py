@@ -231,9 +231,10 @@ class CCodePrinter(CodePrinter):
         else:
             return name
 
-    def _print_Ne(arg1, arg2):
-
-        return ("{0}!={1}").format(arg1, arg2)
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        return ("{0}!={1}").format(lhs_code, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
