@@ -123,7 +123,7 @@ def test_ccode_sinc():
     x = symbols('x')
     expr = sinc(x)
     assert ccode(expr) == (
-            "((Ne(x, 0)) ? (\n"
+            "((x!=0) ? (\n"
             "   sin(x)/x\n"
             ")\n"
             ": (\n"
@@ -132,7 +132,7 @@ def test_ccode_sinc():
 
     expr = sinc(x+3)
     assert ccode(expr) == (
-            "((Ne(x + 3, 0)) ? (\n"
+            "((x + 3!=0) ? (\n"
             "   sin(x + 3)/(x + 3)\n"
             ")\n"
             ": (\n"
