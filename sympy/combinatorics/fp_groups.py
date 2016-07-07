@@ -1351,18 +1351,19 @@ def _simplification_technique_1(rels):
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplification_technique_1(w1)
-    [[(x, -1), (y, 4)], [(x, 3)]]
+    [[(x, 3)], [(x, -1), (y, 4)]]
 
     >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
     >>> _simplification_technique_1(w2)
-    [[(x, -1), (y, 1), (x, -1)], [(x, 3)], [(x, -1), (y, -2)], [(y, 5)]]
+    [[(x, 3)], [(y, 5)], [(x, -1), (y, -2)], [(x, -1), (y, 1), (x, -1)]]
 
     >>> w3 = [x**6*y**4, x**4]
     >>> _simplification_technique_1(w3)
-    [[(x, 2), (y, 4)], [(x, 4)]]
+    [[(x, 4)], [(x, 2), (y, 4)]]
 
     """
     rels = list(set(rels))
+    rels.sort()
     l_rels = len(rels)
 
     # all syllables with single syllable
@@ -1441,7 +1442,7 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     >>> f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
     >>> H = [x]
     >>> reidemeister_presentation(f, H)
-    ((x_1,), (x_1**4,))
+    ((x_0,), (x_0**4,))
 
     Example 5.9 Pg. 183 from [1]
     >>> f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
