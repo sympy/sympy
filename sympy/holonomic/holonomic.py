@@ -330,14 +330,14 @@ class DifferentialOperator(object):
             else:
                 return False
 
-    def is_singular(self, x0=0):
+    def is_singular(self, x0=None):
         """
         Checks if the differential equation is singular at x0.
         """
-
-        domain = str(self.parent.base.domain)[0]
+        if x0 == None:
+            x0 = self.x0
         base = self.parent.base
-        return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x, filter=domain)
+        return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
 
 class HolonomicFunction(object):
@@ -554,12 +554,12 @@ class HolonomicFunction(object):
 
             else:
 
-                if self.x0 == 0 and not self.annihilator.is_singular() \
-                and not other.annihilator.is_singular():
+                if self.x0 == 0 and not self.annihilator.is_singular(x0=0) \
+                and not other.annihilator.is_singular(x0=0):
                     return self + other.change_ics(0)
 
-                elif other.x0 == 0 and not self.annihilator.is_singular() \
-                and not other.annihilator.is_singular():
+                elif other.x0 == 0 and not self.annihilator.is_singular(x0=0) \
+                and not other.annihilator.is_singular(x0=0):
                     return self.change_ics(0) + other
 
                 else:
@@ -866,12 +866,12 @@ class HolonomicFunction(object):
             # if the points are different, consider one
             else:
 
-                if self.x0 == 0 and not ann_self.is_singular() \
-                and not ann_other.is_singular():
+                if self.x0 == 0 and not ann_self.is_singular(x0=0) \
+                and not ann_other.is_singular(x0=0):
                     return self * other.change_ics(0)
 
-                elif other.x0 == 0 and not ann_self.is_singular() \
-                and not ann_other.is_singular():
+                elif other.x0 == 0 and not ann_self.is_singular(x0=0) \
+                and not ann_other.is_singular(x0=0):
                     return self.change_ics(0) * other
 
                 else:
@@ -1040,8 +1040,8 @@ class HolonomicFunction(object):
         # check whether a power series exists if the point is singular
         if self.annihilator.is_singular(x0=self.x0):
             indicialroots = self._indicial()
-            if any(not int(i) == i for i in indicialroots):
-                raise NotPowerSeriesError(self, self.x0)
+            if any(i.is_real and not int(i) == i for i in indicialroots):
+                return self._fobrenius(indicialroots, lb=lb)
 
         dict1 = {}
         n = symbols('n', integer=True)
@@ -1178,6 +1178,156 @@ class HolonomicFunction(object):
 
         return HolonomicSequence(sol, u0)
 
+    def _fobrenius(self, indicialroots, lb=True):
+        x = self.x
+        grp = []
+
+        for i in indicialroots:
+            intdiff = False
+            if len(grp) == 0:
+                grp.append({i:indicialroots[i]})
+            for j in grp:
+                if (list(j)[0] - i).is_real and int(list(j)[0] - i) == list(j)[0] - i:
+                    j[i] = indicialroots[i]
+                    intdiff = True
+                    break
+            if not intdiff:
+                grp.append({i:indicialroots[i]})
+        independent = True if all(len(i) == 1 for i in grp) else False
+
+        ratorneg = []
+        for i in indicialroots:
+            ratorneg.append(i)
+
+        n = symbols('n', integer=True)
+        dom = self.annihilator.parent.base.dom
+        R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
+        finalsol = []
+
+        for p in ratorneg:
+            dict1 = {}
+            for i, j in enumerate(self.annihilator.listofpoly):
+
+                listofdmp = j.all_coeffs()
+                degree = len(listofdmp) - 1
+
+                for k in range(degree + 1):
+                    coeff = listofdmp[degree - k]
+
+                    if coeff == 0:
+                        continue
+
+                    if (i - k, k-i) in dict1:
+                        dict1[(i - k, k-i)] += (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
+
+                    else:
+                        dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
+
+            sol = []
+            keylist = [i[0] for i in dict1]
+            lower = min(keylist)
+            upper = max(keylist)
+            degree = max([i[1] for i in dict1])
+            degree2 = min([i[1] for i in dict1])
+
+            smallest_n = lower + degree
+            dummys = {}
+            eqs = []
+            unknowns = []
+
+            for j in range(lower, upper + 1):
+                if j in keylist:
+                    temp = S(0)
+                    for k in dict1.keys():
+                        if k[0] == j:
+                            temp += dict1[k].subs(n, n - lower)
+                    sol.append(temp)
+                else:
+                    sol.append(S(0))
+
+            # the recurrence relation
+            sol = RecurrenceOperator(sol, R)
+
+            # computing the initial conditions for recurrence
+            order = sol.order
+            all_roots = roots(R.base.to_sympy(sol.listofpoly[-1]), n, filter='Z')
+            all_roots = all_roots.keys()
+
+            if all_roots:
+                max_root = max(all_roots) + 1
+                smallest_n = max(max_root, smallest_n)
+            order += smallest_n
+            u0 = []
+            if p >= 0 and int(p) == p:
+                y0 = _extend_y0(self, order+int(p))
+                # u(n) = y^n(0)/factorial(n)
+                if len(y0) > int(p):
+                    for i in range(int(p), len(y0)):
+                        u0.append(y0[i] / factorial(i))
+
+            if len(u0) < order:
+
+                for i in range(degree2, degree):
+                    eq = S(0)
+
+                    for j in dict1:
+                        if i + j[0] < 0:
+                            dummys[i + j[0]] = S(0)
+
+                        elif i + j[0] < len(u0):
+                            dummys[i + j[0]] = u0[i + j[0]]
+
+                        elif not i + j[0] in dummys:
+                            dummys[i + j[0]] = Symbol('C_%s' %(i + j[0]))
+                            unknowns.append(dummys[i + j[0]])
+
+                        if j[1] <= i:
+                            eq += dict1[j].subs(n, i) * dummys[i + j[0]]
+
+                    eqs.append(eq)
+
+                # solve the system of equations formed
+                soleqs = solve(eqs, *unknowns)
+
+                if isinstance(soleqs, dict):
+
+                    for i in range(len(u0), order):
+
+                        if i not in dummys:
+                            dummys[i] = Symbol('C_%s' %i)
+
+                        if dummys[i] in soleqs:
+                            u0.append(soleqs[dummys[i]])
+
+                        else:
+                            u0.append(dummys[i])
+
+                    if lb:
+                        finalsol.append((HolonomicSequence(sol, u0), smallest_n))
+                        continue
+                    else:
+                        finalsol.append(HolonomicSequence(sol, u0))
+                        continue
+
+                for i in range(len(u0), order):
+
+                    if i not in dummys:
+                        dummys[i] = Symbol('C_%s' %i)
+
+                    s = False
+                    for j in soleqs:
+                        if dummys[i] in j:
+                            u0.append(j[dummys[i]])
+                            s = True
+                    if not s:
+                        u0.append(dummys[i])
+            if lb:
+                finalsol.append((HolonomicSequence(sol, u0), smallest_n))
+
+            else:
+                finalsol.append(HolonomicSequence(sol, u0))
+        return finalsol
+
     def series(self, n=6, coefficient=False, order=True):
         """
         Finds the power series expansion of given holonomic function about x0.
@@ -1278,7 +1428,8 @@ class HolonomicFunction(object):
             if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
-        return roots(R.to_sympy(s), x, filter='R')
+
+        return roots(R.to_sympy(s), x)
 
     def evalf(self, points, method='RK4', h=0.05, derivatives=False):
         """
@@ -2118,7 +2269,7 @@ def _convert_meijerint(func, x, initcond=True, domain=QQ):
         return a**-r, meijerg((an, ap), (bm, bq), z)
 
     coeff, m = _shift(G_list[0], po_list[0])
-    sol = fac_list[0] * coeff * from_meijerg(m, initcond=initcond)
+    sol = fac_list[0] * coeff * from_meijerg(m, initcond=initcond, domain=domain)
 
     # add all the meijerg functions after converting to holonomic
     for i in range(1, len(G_list)):
