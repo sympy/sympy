@@ -122,12 +122,12 @@ def test_ccode_boolean():
 
 def test_ccode_Relational():
     from sympy import Eq, Ne, Le, Lt, Gt, Ge
-    assert ccode(Eq(x,y)) == "x == y"
-    assert ccode(Ne(x,y)) == "x != y"
-    assert ccode(Le(x,y)) == "x <= y"
-    assert ccode(Lt(x,y)) == "x < y"
-    assert ccode(Gt(x,y)) == "x > y"
-    assert ccode(Ge(x,y)) == "x >= y"
+    assert ccode(Eq(x, y)) == "x == y"
+    assert ccode(Ne(x, y)) == "x != y"
+    assert ccode(Le(x, y)) == "x <= y"
+    assert ccode(Lt(x, y)) == "x < y"
+    assert ccode(Gt(x, y)) == "x > y"
+    assert ccode(Ge(x, y)) == "x >= y"
 
 
 def test_ccode_Piecewise():
