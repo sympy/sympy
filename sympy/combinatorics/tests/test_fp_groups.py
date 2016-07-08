@@ -129,8 +129,6 @@ def test_coset_enumeration():
     F, a, b, c = free_group("a, b, c")
     f = FpGroup(F, [a**11, b**5, c**4, (a*c)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
     H = [c, b, c**2]
-    C_r = coset_enumeration_c(f, H)
-    C_r.compress(); C_r.standardize()
     C_c = coset_enumeration_c(f, H)
     C_c.compress(); C_c.standardize()
     table0 = [[1, 2, 0, 0, 0, 0],
@@ -529,9 +527,7 @@ def test_coset_enumeration():
              [321, 306, 350, 394, 284, 283],
              [291, 349, 393, 385, 383, 382],
              [376, 314, 322, 378, 365, 370]]
-    assert C_r.table == table0
     assert C_c.table == table0
-
     # Example 5.1 from [1]
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
