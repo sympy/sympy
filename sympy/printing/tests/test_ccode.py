@@ -119,23 +119,15 @@ def test_ccode_boolean():
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
 
+
 def test_ccode_Relational():
     from sympy import Eq, Ne, Le, Lt, Gt, Ge
-    x,y = symbols('x,y')
-    expr = Eq(x,y)
-    assert ccode(expr) == "x == y"
-    from sympy import Ne
-    expr = Ne(x,y)
-    assert ccode(expr) == "x != y"
-    expr = Le(x,y)
-    assert ccode(expr) == "x <= y"
-    expr = Lt(x,y)
-    assert ccode(expr) == "x < y"
-    expr = Gt(x,y)
-    assert ccode(expr) == "x > y"
-    x,y = symbols('x,y')
-    expr = Ge(x,y)
-    assert ccode(expr) == "x >= y"
+    assert ccode(Eq(x,y)) == "x == y"
+    assert ccode(Ne(x,y)) == "x != y"
+    assert ccode(Le(x,y)) == "x <= y"
+    assert ccode(Lt(x,y)) == "x < y"
+    assert ccode(Gt(x,y)) == "x > y"
+    assert ccode(Ge(x,y)) == "x >= y"
 
 
 def test_ccode_Piecewise():
