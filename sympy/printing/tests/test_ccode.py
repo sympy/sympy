@@ -118,6 +118,43 @@ def test_ccode_boolean():
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
 
+def test_ccode_Eq():
+    from sympy import Eq
+    from sympy import Le
+    x,y,z = symbols('x,y,z')
+    expr = Eq(x, Le(y,z))
+    assert ccode(expr) == "x == y <= z"
+
+def test_ccode_Ne():
+    from sympy import Ne
+    x,y = symbols('x,y')
+    expr = Ne(x,y)
+    assert ccode(expr) == "x != y"
+
+def test_ccode_Le():
+    from sympy import Le
+    x,y = symbols('x,y')
+    expr = Le(x,y)
+    assert ccode(expr) == "x <= y"
+
+def test_ccode_Lt():
+    from sympy import Lt
+    x,y = symbols('x,y')
+    expr = Lt(x,y)
+    assert ccode(expr) == "x < y"
+
+def test_ccode_Gt():
+    from sympy import Gt
+    x,y = symbols('x,y')
+    expr = Gt(x,y)
+    assert ccode(expr) == "x > y"
+
+def test_ccode_Ge():
+    from sympy import Ge
+    x,y = symbols('x,y')
+    expr = Ge(x,y)
+    assert ccode(expr) == "x >= y"
+
 def test_ccode_sinc():
     from sympy import sinc
     x = symbols('x')
