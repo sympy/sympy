@@ -174,7 +174,6 @@ def test_ccode_Piecewise():
 
 def test_ccode_sinc():
     from sympy import sinc
-    x = symbols('x')
     expr = sinc(x)
     assert ccode(expr) == (
             "((x != 0) ? (\n"
