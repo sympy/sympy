@@ -357,7 +357,7 @@ def test_sparse():
 def test_sinc():
     assert mcode(sinc(x)) == 'sinc(x/pi)'
     assert mcode(sinc((x + 3))) == 'sinc((x + 3)/pi)'
-    assert mcode(sinc(pi*(x + 3))) == 'sinc((x + 3))'
+    assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
 
 
 def test_specfun():
