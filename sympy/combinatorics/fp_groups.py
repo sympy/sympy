@@ -126,6 +126,7 @@ class CosetTable(DefaultPrinting):
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
         self.table = [[None]*len(self.A)]
+        self.P = [[None]*len(self.A)]
         self.A_dict = {x: self.A.index(x) for x in self.A}
         self.A_dict_inv = {}
         for x, index in self.A_dict.items():
@@ -1349,5 +1350,288 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     C.reidemeister_relators = tuple(C._reidemeister_relators)
     return C.schreier_generators, C.reidemeister_relators
 
+
+def modified_define(C, alpha, x):
+    """
+    See Also
+    ========
+    define
+    define_f
+
+    """
+    len_table = len(C.table)
+    H = C.subgroup
+    if len_table == CosetTableDefaultMaxLimit:
+        return
+    grp = list(free_group(', ' .join(["a_%d" % x for x in range(len(H))])))
+    C._grp = grp.pop(0)
+    C.table.append([None]*len(C.A))
+    C.P.append([None]*len(C.A))
+    beta = len_table
+    C.p.append(beta)
+    C.table[alpha][C.A_dict[x]] = beta
+    C.table[beta][C.A_dict_inv[x]] = alpha
+    C.P[alpha][C.A_dict[x]] = C._grp.identity
+    C.P[beta][C.A_dict_inv[x]] = C._grp.identity
+
+def modified_scan(C, alpha, w, y):
+    """
+    See Also
+    ========
+    scan
+    scan_f
+    scan_check
+
+    """
+    f = alpha
+    f_p = C._grp.identity
+    i = 0
+    r = len(w)
+    b = alpha
+    b_p = y
+    j = r - 1
+    while i <= j and C.table[f][C.A_dict[w[i]]] is not None:
+        x_i_index = C.A_dict[w[i]]
+        f_p = f_p*C.P[f][x_i_index]
+        f = C.table[f][x_i_index]
+        i += 1
+    if i > j:
+        if f != b:
+            modified_coincidence(C, f, alpha, f_p**-1*y)
+        return
+    while j >= i and C.table[b][C.A_dict_inv[w[j]]] is not None:
+        x_j_index = C.A_dict_inv[w[j]]
+        b_p = b_p*C.P[b][x_j_index]
+        b = C.table[b][x_j_index]
+        j -= 1
+    if j < i:
+        modified_coincidence(C, f, b, f_p**-1*b_p)
+    elif j == i:
+        x_i = w[i]
+        C.table[f][C.A_dict[x_i]] = b
+        C.table[b][C.A_dict_inv[x_i]] = f
+        C.P[f][C.A_dict[x_i]] = f_p**-1*b_p
+        C.P[b][C.A_dict_inv[x_i]] = b_p**-1*f_p
+
+def modified_scan_and_fill(C, alpha, w, y):
+    f = alpha
+    f_p = C._grp.identity
+    i = 0
+    r = len(w)
+    b = alpha
+    b_p = y
+    j = r - 1
+    while True:
+        while i <= j and C.table[f][A_dict[w[i]]] is not None:
+            x_i_index = C.A_dict[w[i]]
+            f_p = f_p*C.P[f][x_i_index]
+            f = C.table[f][x_i_index]
+            i += 1
+        if i > j:
+            if f != b:
+                modified_coincidence(C, f, alpha, f_p**-1*y)
+            return
+        while j >= i and C.table[b][C.A_dict_inv[w[j]]] is not None:
+            x_j_index = C.A_dict_inv[w[j]]
+            b_p = b_p*C.P[b][x_j_index]
+            b = C.table[b][x_i_index]
+            j -= 1
+        if j < i:
+            modified_coincidence(C, f, b, f_p**-1*b_p)
+        elif j == i:
+            x_i = w[i]
+            C.table[f][C.A_dict[x_i]] = b
+            C.table[b][c.A_dict_inv[x_i]] = f
+            C.P[f][C.A_dict[x_i]] = f_p**-1*b_p
+            C.P[f][C.A_dict_inv[x_i]] = b_p**-1*f_p
+        else:
+            modified_define(C, f, w[i])
+
+def modified_rep(C, k, p_p):
+    p = C.p
+    lamda = k
+    rho = p[lamda]
+    s = p[:]
+    while rho != lamda:
+        s[rho] = lamda
+        lamda = rho
+        rho = p[lamda]
+    rho = s[lamda]
+    while rho != k:
+        mu = rho
+        rho = s[mu]
+        p[rho] = lamda
+        p_p[rho] = p_p[rho]*p_p[mu]
+    return lamda
+
+def modified_merge(C, k, lamda, w, p_p, q, l):
+    phi = modified_rep(C, k, p_p)
+    psi = modified_rep(C, lamda, p_p)
+    print(p_p, phi, psi)
+    if phi > psi:
+        C.p[phi] = psi
+        p_p[phi] = p_p[k]**-1*w*p_p[lamda]
+        l += 1
+        q[l] = psi
+    elif phi < psi:
+        C.p[psi] = phi
+        p_p[psi] = p_p[lamda]**-1*w**-1*p_p[k]
+        l += 1
+        q[l] = psi
+
+def modified_coincidence(C, alpha, beta, w):
+    l = 0
+    q = []
+    p_p = []
+    table = C.table
+    modified_merge(C, alpha, beta, w, p_p, q, l)
+    while len(q) > 0:
+        gamma = q.pop(0)
+        for x in C.A_dict:
+            delta = table[gamma][C.A_dict[x]]
+            if delta is not None:
+                table[delta][C.A_dict_inv[x]] = None
+                mu = modified_rep(C, gamma, p_p)
+                nu = modified_rep(C, delta, p_p)
+                if table[mu][C.A_dict[x]] is not None:
+                    v = p_p[delta]**-1*C.P[gamma][C.A_dict[x]]**-1*p_p[gamma]*C.P[mu][C.A_dict[x]]
+                    modified_merge(C, nu, table[mu][C.A_dict[x]], v, p_p, q, l)
+                elif table[nu][C.A_dict_inv[x]] is not None:
+                    v = p_p[gamma]**-1*C.P[gamma][C.A_dict[x]]*p_p[delta]*C.P[mu][C.A_dict_inv[x]]
+                    modified_merge(C, mu, table[nu][C.A_dict_inv[x]], v, p_p, q, l)
+                else:
+                    table[mu][C.A_dict[x]] = nu
+                    table[nu][C.A_dict_inv[x]] = mu
+                    v = p_p[gamma]**-1*C.P[gamma][C.A_dict[x]]*p_p[delta]
+                    C.P[mu][C.A_dict[x]] = v
+                    C.P[nu][C.A_dict_inv[x]] = v**-1
+
+# relator-based method
+def modified_coset_enumeration_r(fp_grp, Y):
+    """
+    """
+    # 1. Initialize a coset table C for < X|R >
+    C = CosetTable(fp_grp, Y)
+    R = fp_grp.relators()
+    A_dict = C.A_dict
+    A_dict_inv = C.A_dict_inv
+    p = C.p
+    for w in Y:
+        modified_scan_and_fill(C, 0, w)
+    alpha = 0
+    while alpha < C.n:
+        if p[alpha] == alpha:
+            for w in R:
+                modified_scan_and_fill(C, alpha, w)
+                if p[alpha] < alpha:
+                    break
+            if p[alpha] >= alpha:
+                for x in A_dict:
+                    if C.table[alpha][A_dict[x]] is None:
+                        modified_define(C, alpha, x)
+        alpha += 1
+    return C
+
+def modified_rewrite(C, alpha, w):
+    """
+    """
+    v = C._grp.identity
+    for i in range(len(w)):
+        x_i = w[i]
+        v = v*C.P[alpha][C.A_dict[x_i]]
+        alpha = C.table[alpha][C.A_dict[x_i]]
+    return v
+
+def compute_relations(C):
+    """
+    >>> F, x, y = free_group("x, y")
+    >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    >>> H = [x*y, x**-1*y**-1*x*y*x]
+    >>> C = CosetTable(f, H)
+    >>> modified_define(C, 0, x)
+    >>> C.P
+    [[<identity>, None, None, None], [None, <identity>, None, None]]
+    >>> C.table
+    [[1, None, None, None], [None, 0, None, None]]
+    >>> modified_define(C, 1, x)
+    >>> C.table
+    [[1, None, None, None], [2, 0, None, None], [None, 1, None, None]]
+    >>> C.P
+    [[<identity>, None, None, None],
+     [<identity>, <identity>, None, None],
+     [None, <identity>, None, None]]
+    >>> modified_scan(C, 0, x**3, C._grp.identity)
+    >>> C.table
+    [[1, 2, None, None], [2, 0, None, None], [0, 1, None, None]]
+    >>> C.P
+    [[<identity>, <identity>, None, None],
+     [<identity>, <identity>, None, None],
+     [<identity>, <identity>, None, None]]
+    >>> modified_scan(C, 0, x*y, C._grp.generators[0])
+    >>> C.table
+    [[1, 2, None, 1], [2, 0, 0, None], [0, 1, None, None]]
+    >>> C.P
+    [[<identity>, <identity>, None, a_0**-1],
+     [<identity>, <identity>, a_0, None],
+     [<identity>, <identity>, None, None]]
+    >>> modified_define(C, 2, y**-1)
+    >>> C.P
+    [[<identity>, <identity>, None, a_0**-1],
+     [<identity>, <identity>, a_0, None],
+     [<identity>, <identity>, None, <identity>],
+     [None, None, <identity>, None]]
+    >>> C.table
+    [[1, 2, None, 1], [2, 0, 0, None], [0, 1, None, 3], [None, None, 2, None]]
+    >>> modified_scan(C, 0, x**-1*y**-1*x*y*x, C._grp.generators[1])
+    >>> C.table
+    [[1, 2, None, 1], [2, 0, 0, None], [0, 1, None, 3], [3, 3, 2, None]]
+    >>> C.P
+    [[<identity>, <identity>, None, a_0**-1],
+     [<identity>, <identity>, a_0, None],
+     [<identity>, <identity>, None, <identity>],
+     [a_1, a_1**-1, <identity>, None]]
+    >>> modified_scan(C, 2, (x*y)**2, C._grp.identity)
+    >>> C.table
+    [[1, 2, 3, 1], [2, 0, 0, None], [0, 1, None, 3], [3, 3, 2, 0]]
+    >>> C.P
+    [[<identity>, <identity>, a_1**-1, a_0**-1],
+     [<identity>, <identity>, a_0, None],
+     [<identity>, <identity>, None, <identity>],
+     [a_1, a_1**-1, <identity>, a_1]]
+    >>> modified_define(C, 2, y)
+    >>> C.table
+    [[1, 2, 3, 1],
+     [2, 0, 0, None],
+     [0, 1, 4, 3],
+     [3, 3, 2, 0],
+     [None, None, None, 2]]
+    >>> modified_scan(C, 0, y**5, C._grp.identity)
+    >>> C.table
+    [[1, 2, 3, 1], [2, 0, 0, 4], [0, 1, 4, 3], [3, 3, 2, 0], [None, None, 1, 2]]
+    >>> C.P
+    [[<identity>, <identity>, a_1**-1, a_0**-1],
+     [<identity>, <identity>, a_0, a_0*a_1**-1],
+     [<identity>, <identity>, <identity>, <identity>],
+     [a_1, a_1**-1, <identity>, a_1],
+     [None, None, a_1*a_0**-1, <identity>]]
+    >>> modified_scan(C, 1, (x*y)**2, C._grp.identity)
+    >>> C.table
+    >>> C.P
+    [[<identity>, <identity>, a_1**-1, a_0**-1],
+     [<identity>, <identity>, a_0, a_0*a_1**-1],
+     [<identity>, <identity>, <identity>, <identity>],
+     [a_1, a_1**-1, <identity>, a_1],
+     [a_0*a_1**-1, a_1*a_0**-1, a_1*a_0**-1, <identity>]]
+
+    """
+    H = C.subgroup
+    print(H)
+    R = C.fp_group.relators()
+    rels1 = set([modified_rewrite(C, coset, word) for word in R for coset in range(C.n)])
+    rels2 = set([modified_rewrite(C, 0, H[i])*C._grp.generators[i]**-1 for i in range(len(H))])
+    rels = rels1.union(rels2)
+    rels.remove(C._grp.identity)
+    rels = tuple(rels)
+    return C._grp.generators, rels
 
 FpGroupElement = FreeGroupElement
