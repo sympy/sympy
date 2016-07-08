@@ -1016,11 +1016,11 @@ class HolonomicFunction(object):
 
         # exp(x), the recurrence relation holds for n >= 0
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
-        (HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)
+        ((HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0),)
 
         # log(1 + x), the recurrence relation holds for n >= 2
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
-        (HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)
+        ((HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2),)
 
         See Also
         ========
@@ -1039,9 +1039,7 @@ class HolonomicFunction(object):
 
         # check whether a power series exists if the point is singular
         if self.annihilator.is_singular(x0=self.x0):
-            indicialroots = self._indicial()
-            if any(i.is_real and not int(i) == i for i in indicialroots):
-                return self._fobrenius(indicialroots, lb=lb)
+            return self._frobenius(lb=lb)
 
         dict1 = {}
         n = symbols('n', integer=True)
@@ -1157,8 +1155,8 @@ class HolonomicFunction(object):
                         u0.append(dummys[i])
 
                 if lb:
-                    return (HolonomicSequence(sol, u0), smallest_n)
-                return HolonomicSequence(sol, u0)
+                    return ((HolonomicSequence(sol, u0), smallest_n), )
+                return (HolonomicSequence(sol, u0), )
 
             for i in range(len(u0), order):
 
@@ -1174,11 +1172,18 @@ class HolonomicFunction(object):
                     u0.append(dummys[i])
 
         if lb:
-            return (HolonomicSequence(sol, u0), smallest_n)
+            return ((HolonomicSequence(sol, u0), smallest_n), )
 
-        return HolonomicSequence(sol, u0)
+        return (HolonomicSequence(sol, u0), )
 
-    def _fobrenius(self, indicialroots, lb=True):
+    def _frobenius(self, lb=True):
+        indicialroots = self._indicial()
+        reals = []
+
+        for i in indicialroots:
+            if i.is_real:
+                reals.extend([i]*indicialroots[i])
+
         x = self.x
         grp = []
 
@@ -1195,16 +1200,36 @@ class HolonomicFunction(object):
                 grp.append({i:indicialroots[i]})
         independent = True if all(len(i) == 1 for i in grp) else False
 
-        ratorneg = []
-        for i in indicialroots:
-            ratorneg.append(i)
+        allpos = all(i >= 0 for i in reals)
+        allint = all(int(i) == i for i in reals)
+
+        if allpos and allint:
+            rootstoconsider = [min(reals)]
+
+        elif not allint:
+            rootstoconsider = []
+            for i in reals:
+                if not int(i) == i:
+                    rootstoconsider.append(i)
+
+        elif not allpos:
+
+            if not self._have_init_cond or S(self.y0[0]).is_finite ==  False:
+                rootstoconsider = [min(reals)]
+
+            else:
+                posroots = []
+                for i in reals:
+                    if i >= 0:
+                        posroots.append(i)
+                rootstoconsider = [min(posroots)]
 
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
         finalsol = []
 
-        for p in ratorneg:
+        for p in rootstoconsider:
             dict1 = {}
             for i, j in enumerate(self.annihilator.listofpoly):
 
@@ -1217,11 +1242,11 @@ class HolonomicFunction(object):
                     if coeff == 0:
                         continue
 
-                    if (i - k, k-i) in dict1:
-                        dict1[(i - k, k-i)] += (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
+                    if (i - k, k - i) in dict1:
+                        dict1[(i - k, k - i)] += (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
 
                     else:
-                        dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
+                        dict1[(i - k, k - i)] = (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
 
             sol = []
             keylist = [i[0] for i in dict1]
@@ -1257,9 +1282,11 @@ class HolonomicFunction(object):
                 max_root = max(all_roots) + 1
                 smallest_n = max(max_root, smallest_n)
             order += smallest_n
+
             u0 = []
+
             if p >= 0 and int(p) == p:
-                y0 = _extend_y0(self, order+int(p))
+                y0 = _extend_y0(self, order + int(p))
                 # u(n) = y^n(0)/factorial(n)
                 if len(y0) > int(p):
                     for i in range(int(p), len(y0)):
@@ -1303,10 +1330,10 @@ class HolonomicFunction(object):
                             u0.append(dummys[i])
 
                     if lb:
-                        finalsol.append((HolonomicSequence(sol, u0), smallest_n))
+                        finalsol.append((HolonomicSequence(sol, u0), p, smallest_n))
                         continue
                     else:
-                        finalsol.append(HolonomicSequence(sol, u0))
+                        finalsol.append((HolonomicSequence(sol, u0), p))
                         continue
 
                 for i in range(len(u0), order):
@@ -1322,10 +1349,10 @@ class HolonomicFunction(object):
                     if not s:
                         u0.append(dummys[i])
             if lb:
-                finalsol.append((HolonomicSequence(sol, u0), smallest_n))
+                finalsol.append((HolonomicSequence(sol, u0), p, smallest_n))
 
             else:
-                finalsol.append(HolonomicSequence(sol, u0))
+                finalsol.append((HolonomicSequence(sol, u0), p))
         return finalsol
 
     def series(self, n=6, coefficient=False, order=True):
@@ -1353,7 +1380,14 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence
         """
 
-        recurrence = self.to_sequence()[0]
+        recurrence = self.to_sequence()
+        if len(recurrence) == 1 and len(recurrence[0]) == 2:
+            recurrence = recurrence[0][0]
+            constantpower = 0
+        elif len(recurrence) == 1 and len(recurrence[0]) == 3:
+            constantpower = recurrence[0][1]
+            recurrence = recurrence[0][0]
+        n = n - int(constantpower)
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
         x = self.x
@@ -1385,9 +1419,9 @@ class HolonomicFunction(object):
 
         ser = S(0)
         for i, j in enumerate(sol):
-            ser += x**i * j
+            ser += x**(i + constantpower) * j
         if order:
-            ser += Order(x**n, x)
+            ser += Order(x**(n + int(constantpower)), x)
         if x0 != 0:
             return ser.subs(x, x - x0)
         return ser
@@ -1564,7 +1598,15 @@ class HolonomicFunction(object):
         from_hyper, from_meijerg
         """
 
-        recurrence, smallest_n = self.to_sequence()
+        recurrence = self.to_sequence()
+        if len(recurrence) == 1 and len(recurrence[0]) == 2:
+            smallest_n = recurrence[0][1]
+            recurrence = recurrence[0][0]
+            constantpower = 0
+        elif len(recurrence) == 1 and len(recurrence[0]) == 3:
+            smallest_n = recurrence[0][2]
+            constantpower = recurrence[0][1]
+            recurrence = recurrence[0][0]
         u0 = recurrence.u0
         r = recurrence.recurrence
         x = self.x
@@ -1583,6 +1625,7 @@ class HolonomicFunction(object):
                     sol += u0[int(i)] * x**int(i)
                 else:
                     sol += Symbol('C_%s' %j) * x**i
+            sol = sol * x**constantpower
             if x0 != 0:
                 return sol.subs(x, x - x0)
             return sol
@@ -1654,7 +1697,7 @@ class HolonomicFunction(object):
                 ap.append(1)
 
             sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
-
+        sol = sol * x**constantpower
         if x0 != 0:
             return sol.subs(x, x - x0)
 

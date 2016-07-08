@@ -206,16 +206,16 @@ def test_to_Sequence():
     n = symbols('n', integer=True)
     _, Sn = RecurrenceOperators(ZZ.old_poly_ring(n), 'Sn')
     p = HolonomicFunction(x**2*Dx**4 + x + Dx, x).to_sequence()
-    q = (HolonomicSequence(1 + (n + 2)*Sn**2 + (n**4 + 6*n**3 + 11*n**2 + 6*n)*Sn**3), 1)
+    q = [(HolonomicSequence(1 + (n + 2)*Sn**2 + (n**4 + 6*n**3 + 11*n**2 + 6*n)*Sn**3), 0, 1)]
     assert p == q
     p = HolonomicFunction(x**2*Dx**4 + x**3 + Dx**2, x).to_sequence()
-    q = (HolonomicSequence(1 + (n**4 + 14*n**3 + 72*n**2 + 163*n + 140)*Sn**5), 0)
+    q = [(HolonomicSequence(1 + (n**4 + 14*n**3 + 72*n**2 + 163*n + 140)*Sn**5), 0, 0)]
     assert p == q
     p = HolonomicFunction(x**3*Dx**4 + 1 + Dx**2, x).to_sequence()
-    q = (HolonomicSequence(1 + (n**4 - 2*n**3 - n**2 + 2*n)*Sn + (n**2 + 3*n + 2)*Sn**2), 3)
+    q = [(HolonomicSequence(1 + (n**4 - 2*n**3 - n**2 + 2*n)*Sn + (n**2 + 3*n + 2)*Sn**2), 0, 0)]
     assert p == q
     p = HolonomicFunction(3*x**3*Dx**4 + 2*x*Dx + x*Dx**3, x).to_sequence()
-    q = (HolonomicSequence(2*n + (3*n**4 - 6*n**3 - 3*n**2 + 6*n)*Sn + (n**3 + 3*n**2 + 2*n)*Sn**2), 3)
+    q = [(HolonomicSequence(2*n + (3*n**4 - 6*n**3 - 3*n**2 + 6*n)*Sn + (n**3 + 3*n**2 + 2*n)*Sn**2), 0, 1)]
     assert p == q
 
 def test_to_Sequence_Initial_Coniditons():
@@ -224,26 +224,26 @@ def test_to_Sequence_Initial_Coniditons():
     n = symbols('n', integer=True)
     _, Sn = RecurrenceOperators(QQ.old_poly_ring(n), 'Sn')
     p = HolonomicFunction(Dx - 1, x, 0, 1).to_sequence()
-    q = (HolonomicSequence(-1 + (n + 1)*Sn, 1), 0)
+    q = ((HolonomicSequence(-1 + (n + 1)*Sn, 1), 0), )
     assert p == q
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).to_sequence()
-    q = (HolonomicSequence(1 + (n**2 + 3*n + 2)*Sn**2, [0, 1]), 0)
+    q = ((HolonomicSequence(1 + (n**2 + 3*n + 2)*Sn**2, [0, 1]), 0), )
     assert p == q
     p = HolonomicFunction(Dx**2 + 1 + x**3*Dx, x, 0, [2, 3]).to_sequence()
-    q = (HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -1/2, 1/12]), 1)
+    q = ((HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -1/2, 1/12]), 1), )
     assert p == q
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
-    q = (HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 3)
+    q = [(HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 0, 3)]
     assert p == q
-    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     p = expr_to_holonomic(log(1+x**2))
-    q = (HolonomicSequence(n**2 + (n**2 + 2*n)*Sn**2, [0, 0, C_2, 0]), 2)
+    q = [(HolonomicSequence(n**2 + (n**2 + 2*n)*Sn**2, [0, 0, C_2]), 0, 1)]
     assert p.to_sequence() == q
     p = p.diff()
-    q = (HolonomicSequence((n + 1) + (n + 1)*Sn**2, [0, C_1, 0]), 1)
+    q = [(HolonomicSequence((n + 2) + (n + 2)*Sn**2, [C_0, 0]), 1, 0)]
     assert p.to_sequence() == q
     p = expr_to_holonomic(erf(x) + x).to_sequence()
-    q = (HolonomicSequence((2*n**2 - 2*n) + (n**3 + 2*n**2 - n - 2)*Sn**2, [0, 1 + 2/sqrt(pi), 0, C_3]), 2)
+    q = [(HolonomicSequence((2*n**2 - 2*n) + (n**3 + 2*n**2 - n - 2)*Sn**2, [0, 1 + 2/sqrt(pi), 0, C_3]), 0, 2)]
     assert p == q
 
 def test_series():
@@ -527,18 +527,18 @@ def test_to_expr():
     q = cosh(x)
     assert p == q
     p = HolonomicFunction(2 + (4*x - 1)*Dx + \
-        (x**2 - x)*Dx**2, x, 0, [1, 2]).to_expr()
+        (x**2 - x)*Dx**2, x, 0, [1, 2]).to_expr().expand()
     q = 1/(x**2 - 2*x + 1)
     assert p == q
     p = expr_to_holonomic(sin(x)**2/x).integrate((x, 0, x)).to_expr()
     q = (sin(x)**2/x).integrate((x, 0, x))
     assert p == q
-    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     p = expr_to_holonomic(log(1+x**2)).to_expr()
     q = C_2*log(x**2 + 1)
     assert p == q
     p = expr_to_holonomic(log(1+x**2)).diff().to_expr()
-    q = C_1*x/(x**2 + 1)
+    q = C_0*x/(x**2 + 1)
     assert p == q
     p = expr_to_holonomic(erf(x) + x).to_expr()
     q = 3*C_3*x - 3*sqrt(pi)*C_3*erf(x)/2 + x + 2*x/sqrt(pi)
@@ -590,11 +590,11 @@ def test_diff():
     p = expr_to_holonomic(Si(x))
     assert p.diff().to_expr() == sin(x)/x
     assert p.diff(y) == 0
-    C_1, C_2, C_3 = symbols('C_1, C_2, C_3')
+    C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     q = Si(x)
     assert p.diff(x).to_expr() == q.diff()
-    assert p.diff(x, 2).to_expr().subs(C_1, -S(1)/3) == q.diff(x, 2).simplify()
-    assert p.diff(x, 3).series().subs(C_2, S(1)/10) == q.diff(x, 3).series()
+    assert p.diff(x, 2).to_expr().subs(C_0, -S(1)/3) == q.diff(x, 2).simplify()
+    assert p.diff(x, 3).series().subs({C_3:-S(1)/3, C_0:0}) == q.diff(x, 3).series()
 
 def test_extended_domain_in_expr_to_holonomic():
     x = symbols('x')
