@@ -260,7 +260,6 @@ class ImageSet(Set):
     ========
     sympy.sets.sets.imageset
     """
-
     def __new__(cls, lamda, base_set):
         if not isinstance(lamda, Lambda):
             raise ValueError('first argument must be a Lambda')
@@ -484,8 +483,6 @@ class ImageSet(Set):
             else:
                 return
 
-<<<<<<< HEAD
-=======
     def _union(self, other):
         """
 
@@ -516,13 +513,6 @@ class ImageSet(Set):
                 3*pi
         {n*pi + ---- | n in Integers()}
                  4
-        >>> img1 = ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers)
-        >>> img2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
-        >>> img3 = ImageSet(Lambda(n, 2*n*pi), S.Reals)
-        >>> pprint(Union(img1, img2, img3), use_unicode=False)
-                                            pi
-        {n*pi | n in (-oo, oo)} U {2*n*pi + -- | n in Integers()}
-                                            3
 
         """
 
@@ -533,67 +523,73 @@ class ImageSet(Set):
 
         if other is S.EmptySet:
             return self
-        if other.is_ImageSet:
+
+        def first_val(imgset):
+            base = imgset.base_set
+            if isinstance(base, Interval):
+                return imgset.lamda(base.start)
+            elif isinstance(base, Set):
+                iterable = iter(base)
+                return imgset.lamda(next(iterable))
+
+        if isinstance(other, ImageSet):
             try:
                 # use one dummy variable n_self
-                n_self = (self.lamda.expr).atoms(Dummy)
-                if len(n_self) > 1:
+                var_self = self.lamda.variables
+                if len(var_self) > 1:
+                    msg = 'Not Implemented for multiple lambda variables. \
+                    %s contains these lambda variables : %s'
                     raise NotImplementedError(
-                        'Try to use symbols only. \
-                        More than one dummy is present in ImageSet')
-                elif len(n_self) == 0:
-                    raise ValueError("use %s as Dummy" %
-                                     self.lamda.args[0][0])
-                n_self = n_self.pop()
+                        filldedent(msg % (self, var_self)))
+                var_self = var_self[0]
                 base = other.base_set
-                n_final = (other.lamda.expr).atoms(Dummy)
-                if len(n_final) > 1:
+                var_final = other.lamda.variables
+                if len(var_final) > 1:
+                    msg = 'Not Implemented for multiple lambda variables. \
+                    %s contains these lambda variables : %s'
                     raise NotImplementedError(
-                        'Use symbols only. \
-                        More than one dummy is present in ImageSet')
-                elif len(n_final) == 0:
-                    raise ValueError("use %s as Dummy" %
-                                     other.lamda.args[0][0])
-                n_final = n_final.pop()
+                        filldedent(msg % (other, var_final)))
+                var_final = var_final[0]
 
                 # Extracting expr
                 lamb_expr = self.lamda.expr
-                base_2 = self.base_set
-                if Poly(lamb_expr, n_self).is_linear:
+                base_self = self.base_set
+                if Poly(lamb_expr, var_self).is_linear:
                     self_expr = lamb_expr
                 else:
-                    raise NotImplementedError('Implemented for linear ImageSet.\
-                        non linear expr found in imageSet')
-                if base_2.is_superset(base):
-                    # take the bigger base set
-                    base = base_2
+                    msg = 'Not Implemented for non linear ImageSet. \
+                    %s contains these lambda expr : %s'
+                    raise NotImplementedError(
+                        filldedent(msg % (self, lamb_expr)))
+                if base_self.is_superset(base):
+                    # take the superset
+                    base = base_self
 
                 lamb_expr = other.lamda.expr
-                base_2 = other.base_set
-                if Poly(lamb_expr, n_final).is_linear:
-                    final_expr = lamb_expr.subs(n_final, n_self)
+                if Poly(lamb_expr, var_final).is_linear:
+                    final_expr = lamb_expr
                 else:
-                    raise NotImplementedError('Implemented for linear ImageSet.\
-                        non linear expr found in imageSet')
-                if base_2.is_superset(base):
-                    # take the bigger base set
-                    base = base_2
+                    msg = 'Not Implemented for non linear ImageSet. \
+                    %s contains these lambda expr : %s'
+                    raise NotImplementedError(
+                        filldedent(msg % (other, lamb_expr)))
 
                 if simplify(
-                        final_expr - self_expr) % (2 * pi) == pi:
-                    # (2*x*pi + pi + expr1) -( 2*x*pi  + exp1) = pi
+                        final_expr.subs(var_final, var_self) -
+                        self_expr) % (2 * pi) == pi:
+                    # (2*x*pi + pi + expr1) - ( 2*x*pi  + exp1) = pi
                     # can be => x*pi + expr1
-                    final_expr = pi * n_self + self_expr.subs(n_self, 0)
-                    ans = ImageSet(Lambda(n_self, final_expr), base)
+                    final_expr = pi * var_self + first_val(self)
+                    ans = ImageSet(Lambda(var_self, final_expr), base)
                 elif simplify(
-                        final_expr - self_expr) % (2 * pi) == 0:
+                        final_expr -
+                        self_expr) % (2 * pi) == 0:
                     # (2*x*pi + expr1) - ( 2*x*pi  + 2*pi + exp1)= -2*pi
                     # can be => 2*x*pi + expr1
-                    final_expr = 2 * pi * n_self + final_expr.subs(n_self, 0)
-                    ans = ImageSet(Lambda(n_self, final_expr), base)
+                    final_expr = 2 * pi * var_self + first_val(self)
+                    ans = ImageSet(Lambda(var_self, final_expr), base)
                 else:
                     return None
-                del n_self, n_final
                 return ans
 
             except (
@@ -604,7 +600,6 @@ class ImageSet(Set):
         else:
             return None
 
->>>>>>> minor changes
 
 class Range(Set):
     """

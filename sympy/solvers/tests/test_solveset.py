@@ -717,7 +717,7 @@ def test_solveset_complex_tan():
 
 
 def test_solve_trig():
-    n = Dummy('n', real=True)
+    from sympy.abc import n
     assert solveset_real(sin(x), x) == \
         imageset(Lambda(n, n*pi), S.Integers)
     assert solveset_real(tan(x), x) == \
@@ -736,12 +736,14 @@ def test_solve_trig():
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
 
-    assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers))
+def test_solve_trig_2():
+    img1 = imageset(Lambda(n, 2*n*pi + pi/3), S.Integers)
+    img2 = imageset(Lambda(n, 2*n*pi + 5*pi/3), S.Integers)
+    soln = Union(img2, img1, evaluate=False)
+    assert solveset_real(cos(x) - S.Half, x) == soln
     eq = (2*cos(x) + 1)/(2*cos(x) - 1)
-    soln = ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) + \
-        ImageSet(Lambda(n, 2*n*pi + 4*pi/3), S.Integers)
+    soln = Union(imageset(Lambda(n, 2*n*pi + 2*pi/3), S.Integers),
+        imageset(Lambda(n, 2*n*pi + 4*pi/3), S.Integers))
     assert solveset_real(eq, x) == soln
 
     eq = 2*cos(2*x + pi/4) - 1
@@ -749,6 +751,13 @@ def test_solve_trig():
     lamb_expr2 = Lambda(n, n*pi + 17*pi/24)
     soln = ImageSet(lamb_expr1, S.Integers) + ImageSet(lamb_expr2, S.Integers)
     assert solveset_real(eq, x) == soln
+
+
+def test_issue_10426():
+    y, a = symbols('y, a')
+    lamb_expr = Lambda(n, (-1)**n*asin(sin(y)) + n*pi - y)
+    soln = ImageSet(lamb_expr, S.Integers)
+    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == soln
 
 
 @XFAIL
@@ -1472,26 +1481,6 @@ def test_issue_10555():
         ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
 
 
-def test_issue_8715():
-    eq = x + 1/x > -2 + 1/x
-    assert solveset(eq, x, S.Reals) == \
-        (Interval.open(-2, oo) - FiniteSet(0))
-    assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
-        Interval.open(exp(-2), oo) - FiniteSet(1)
-
-
-def test_issue_11174():
-    r, t = symbols('r t')
-    eq = z**2 + exp(2*x) - sin(y)
-    soln = Intersection(S.Reals, FiniteSet(log(-z**2 + sin(y))/2))
-    assert solveset(eq, x, S.Reals) == soln
-
-    eq = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
-    s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
-    soln = Intersection(S.Reals, FiniteSet(s))
-    assert solveset(eq, x, S.Reals) == soln
-
-
 def test_issue_9824():
     assert solveset(sin(x)**2 - 2*sin(x) + 1, x, domain=S.Reals) ==\
      ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
@@ -1519,12 +1508,13 @@ def test_issue_10671():
 
 def test_simplifed_trig_solution():
     n = Dummy('n', real=True)
-    assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == \
-    ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers) + \
-    ImageSet(Lambda(n, n*pi + pi/6), S.Integers) + \
-    ImageSet(Lambda(n, n*pi + pi/3), S.Integers) + \
-    ImageSet(Lambda(n, n*pi + pi/2), S.Integers) + \
-    ImageSet(Lambda(n, n*pi + 5*pi/6), S.Integers)
+    img1 = ImageSet(Lambda(n, n*pi + 2*pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + pi/6), S.Integers)
+    img3 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img4 = ImageSet(Lambda(n, n*pi + pi/2), S.Integers)
+    img5 = ImageSet(Lambda(n, n*pi + 5*pi/6), S.Integers)
+    soln = Union(img1, img2, img3, img4, img5, evaluate=False)
+    assert solveset(cos(x) + cos(3*x) + cos(5*x), x, S.Reals) == soln
 
     assert solveset(sin(x)**2 - sin(x) -2, x, S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
@@ -1533,20 +1523,42 @@ def test_simplifed_trig_solution():
     assert solveset((sin(x)+1)**2, x, S.Reals) == \
     ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
 
+    img1 = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, pi*n + 2*pi/3), S.Integers)
+    assert solveset_real(tan(x)**2 - 3, x) == Union(img1, img2, evaluate=False)
+
+
+def test_simplifed_trig_solution_2():
     # `factor_list` is used in _solve_trig for these types of case
-    n = Dummy('n')
+    from sympy.abc import n
     eq = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1
     img1 = ImageSet(Lambda(n, 2*n*pi - 5*pi/6), S.Integers)
     img2 = ImageSet(Lambda(n, 2*n*pi - pi/6), S.Integers)
     img3 = ImageSet(Lambda(n, n*pi/2 + pi/4), S.Integers)
-    soln = Union(img1, img2, img3)
+    soln = Union(img1, img2, img3, evaluate=False)
     assert solveset(eq, x) == soln
-
-    img1 = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
-    img2 = ImageSet(Lambda(n, pi*n + 2*pi/3), S.Integers)
-    assert solveset_real(tan(x)**2 - 3, x) == Union(img1, img2)
 
     img1 = ImageSet(Lambda(n, pi*n + pi/6), S.Integers)
     img2 = ImageSet(Lambda(n, pi*n + 5*pi/6), S.Integers)
-    soln = Union(img1, img2)
+    soln = Union(img1, img2, evaluate=False)
     assert solveset_real(3*tan(x)**2 -1, x) == soln
+
+
+def test_issue_8715():
+    eq = x + 1/x > -2 + 1/x
+    assert solveset(eq, x, S.Reals) == \
+        (Interval.open(-2, oo) - FiniteSet(0))
+    assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
+        Interval.open(exp(-2), oo) - FiniteSet(1)
+
+
+def test_issue_11174():
+    r, t = symbols('r t')
+    eq = z**2 + exp(2*x) - sin(y)
+    soln = Intersection(S.Reals, FiniteSet(log(-z**2 + sin(y))/2))
+    assert solveset(eq, x, S.Reals) == soln
+
+    eq = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
+    s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
+    soln = Intersection(S.Reals, FiniteSet(s))
+    assert solveset(eq, x, S.Reals) == soln

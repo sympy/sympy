@@ -418,6 +418,7 @@ def _solve_trig(f, symbol, domain):
                 i += 1
                 if i >= 2:
                     return True
+    # end of def good_for_factor(trig_eq)
 
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
@@ -428,8 +429,8 @@ def _solve_trig(f, symbol, domain):
         # f is True in S.Reals
         return ConditionSet(symbol, Eq(f, 0), domain)
 
-    # factor_list doesn't work for factor_list(func*sin(x)), where func
-    # is function in `pi` or any non number.
+    # factor_list doesn't work `func*sin(x)` , where func
+    # is f(pi) or not a number.
     # so `.as_independent` is used.
     if f.is_Mul:
         ind, f = f.as_independent(symbol)
@@ -458,12 +459,10 @@ def _solve_trig(f, symbol, domain):
 
         for f2 in factors:
             soln_fact = solveset_complex(f2, symbol)
-            # Inside sets.py _union_simplify
-            # reduce number of ImageSet, if possible
-            soln += soln_fact
+            soln = Union(soln, soln_fact)
 
     if isinstance(soln, ConditionSet):
-        # try to solve without converting it into exp form
+        # try to solve without converting it into exp form.
         # In this time if ConditionSet is returned then it's
         # expression will be in Trigonometric Function.
         return _solve_as_poly(f_orig, symbol, domain)
