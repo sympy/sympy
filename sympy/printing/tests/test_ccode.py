@@ -97,6 +97,7 @@ def test_ccode_exceptions():
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
 
+
 def test_ccode_user_functions():
     x = symbols('x', integer=False)
     n = symbols('n', integer=True)
@@ -118,17 +119,16 @@ def test_ccode_boolean():
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
 
-def test_ccode_sinc():
-    from sympy import sinc
-    x = symbols('x')
-    expr = sinc(x)
-    assert ccode(expr) == (
-            "((x != 0) ? (\n"
-            "   sin(x)/x\n"
-            ")\n"
-            ": (\n"
-            "   1\n"
-            "))")
+
+def test_ccode_Relational():
+    from sympy import Eq, Ne, Le, Lt, Gt, Ge
+    assert ccode(Eq(x, y)) == "x == y"
+    assert ccode(Ne(x, y)) == "x != y"
+    assert ccode(Le(x, y)) == "x <= y"
+    assert ccode(Lt(x, y)) == "x < y"
+    assert ccode(Gt(x, y)) == "x > y"
+    assert ccode(Ge(x, y)) == "x >= y"
+
 
 def test_ccode_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
@@ -170,6 +170,19 @@ def test_ccode_Piecewise():
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: ccode(expr))
+
+
+def test_ccode_sinc():
+    from sympy import sinc
+    x = symbols('x')
+    expr = sinc(x)
+    assert ccode(expr) == (
+            "((x != 0) ? (\n"
+            "   sin(x)/x\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            "))")
 
 
 def test_ccode_Piecewise_deep():
