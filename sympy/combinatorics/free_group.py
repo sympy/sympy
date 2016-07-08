@@ -424,6 +424,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return group.dtype(((-r, -1),))
 
+    def index(self, gen):
+        if len(gen) != 1:
+            raise ValueError()
+        return (self.letter_form).index(gen.letter_form[0])
+
     @property
     def letter_form_elm(self):
         """
@@ -438,6 +443,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """This is called the External Representation of `FreeGroupElement`
         """
         return tuple(flatten(self.array_form))
+
+    def __contains__(self, gen):
+        return gen.array_form[0][0] in tuple([r[0] for r in self.array_form])
 
     def __str__(self):
         if self.is_identity:
@@ -577,9 +585,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def eliminate_word(self, gen, by):
         """
-        For an associative word `self`, a generator `gen`, and an associative word
-        by, `eliminate_word` returns the associative word obtained by replacing
-        each occurrence of `gen` in `self` by `by`.
+        For an associative word `self`, a generator `gen`, and an associative
+        word by, `eliminate_word` returns the associative word obtained by
+        replacing each occurrence of `gen` in `self` by `by`.
 
         Examples
         ========
@@ -590,35 +598,36 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> w.eliminate_word( x, x**2 )
         x**10*y*x**4*y**-4*x**2
         >>> w.eliminate_word( x, y**-1 )
-        y**-5*y*y**-2*y**-4*y**-1
+        y**-11
+
+        See Also
+        ========
+        substituted_word
 
         """
         group = self.group
-        e = self.ext_rep
-        gen = gen.generator_syllable(0)
-        l = []
-        for i in range(0, len(e) - 1, 2):
-            if e[i] == gen:
-                app = (by**e[i + 1]).ext_rep
-            else:
-                app = e[i: i + 2]
-            j = len(l) - 1
-            while j > 0 and len(app) > 0 and l[j - 1] == app[0]:
-                s = l[j] + app[1]
-                if s == 0:
-                    j = j - 2
+        r = Symbol(str(gen))
+        arr = self.array_form
+        array = []
+        by_arr = list(by.array_form)
+        l_by = len(by_arr)
+        for i in range(len(arr)):
+            if arr[i][0] == r:
+                # TODO: this shouldn't be checked again and again, since `by`
+                # is fixed
+                if by_arr == 1:
+                    array.append((by_arr[0][0], by_arr[0][1]*arr[i][1]))
+                    zero_mul_simp(array, len(array) - l_by - 1)
                 else:
-                    l[j] = s
-                app = app[2: len(app)]
-
-            if j + 1 < len(l):
-                l = l[0: j + 1]
-
-            if len(app) > 0:
-                l.append(tuple(app))
-        # NOTE
-        # zero_mul_simp to be used
-        return group.dtype(l)
+                    k = arr[i][1]
+                    sig = sign(k)
+                    for j in range(sig*k):
+                        array.extend(list((by**sig).array_form))
+                        zero_mul_simp(array, len(array) - l_by - 1)
+            else:
+                array.append(arr[i])
+                zero_mul_simp(array, len(array) - 2)
+        return group.dtype(tuple(array))
 
     def __len__(self):
         """
@@ -751,33 +760,64 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def __ge__(self, other):
         return not self < other
 
-    def exponent_sum_word(self, gen):
+    def exponent_sum(self, gen):
         """
-        For an associative word `self` and a generator `gen`, ``exponent_sum_word``
-        returns the number of times `gen` appears in `self` minus the number of
-        times its inverse appears in `self`. If both `gen` and its inverse do
-        not occur in `self` then 0 is returned. `gen` may also be the inverse of
-        a generator.
+        For an associative word `self` and a generator or inverse of generator
+        `gen`, ``exponent_sum`` returns the number of times `gen` appears in
+        `self` minus the number of times its inverse appears in `self`. If
+        neither `gen` nor its inverse occur in `self` then 0 is returned.
 
         Examples
         ========
 
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x**2*y**3
+        >>> w.exponent_sum(x)
+        2
+        >>> w.exponent_sum(x**-1)
+        -2
+        >>> w = x**2*y**4*x**-3
+        >>> w.exponent_sum(x)
+        -1
+
+        See Also
+        ========
+        generator_count
+
         """
-        w = self.letter_form
-        gen = gen.letter_form
         if len(gen) != 1:
             raise ValueError("gen must be a generator or inverse of a generator")
-        n = 0
-        g = abs(gen[0])
-        for i in w:
-            if i == g:
-                n = n + 1
-            elif i == -g:
-                n = n - 1
+        s = gen.array_form[0]
+        return s[1]*sum([i[1] for i in self.array_form if i[0] == s[0]])
 
-        if gen[0] < 0:
-            n = -n
-        return n
+    def generator_count(self, gen):
+        """
+        For an associative word `self` and a generator `gen`,
+        ``generator_count`` returns the multiplicity of generator
+        `gen` in `self`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w = x**2*y**3
+        >>> w.generator_count(x)
+        2
+        >>> w = x**2*y**4*x**-3
+        >>> w.generator_count(x)
+        5
+
+        See Also
+        ========
+        exponent_sum
+
+        """
+        if len(gen) != 1 or gen.array_form[0][1] < 0:
+            raise ValueError("gen must be a generator")
+        s = gen.array_form[0]
+        return s[1]*sum([abs(i[1]) for i in self.array_form if i[0] == s[0]])
 
     def subword(self, from_i, to_j):
         """
@@ -806,6 +846,60 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
+    def is_dependent(self, word):
+        """
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x**4*y**-3).is_dependent(x**4*y**-2)
+        True
+        >>> (x**2*y**-1).is_dependent(x*y)
+        False
+        >>> (x*y**2*x*y**2).is_dependent(x*y**2)
+        True
+        >>> (x**12).is_dependent(x**-4)
+        True
+
+        See Also
+        ========
+        is_independent
+
+        """
+        self_st = str(self.letter_form)[1: -1]
+        return str(word.letter_form)[1: -1] in self_st or \
+                str((word**-1).letter_form)[1: -1] in self_st
+
+    def is_independent(self, word):
+        """
+
+        See Also
+        ========
+        is_dependent
+
+        """
+        return not self.is_dependent
+
+    def contains_generators(self):
+        """
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y, z = free_group("x, y, z")
+        >>> (x**2*y**-1).contains_generators()
+        set([x, y])
+        >>> (x**3*z).contains_generators()
+        set([x, z])
+
+        """
+        group = self.group
+        gens = set()
+        for syllable in self.array_form:
+            gens.add(group.dtype(((syllable[0], 1),)))
+        return set(gens)
+
     def cyclic_subword(self, from_i, to_j):
         group = self.group
         l = len(self)
@@ -829,6 +923,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         http://planetmath.org/cyclicpermutation
 
+        Examples
+        ========
+
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> w = x*y*x*y*x
@@ -840,6 +937,39 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         return set([self.cyclic_subword(i, i+len(self)) for i in range(len(self))])
+
+    def is_cyclic_conjugate(self, w):
+        """
+        Checks whether words ``self``, ``w`` are cyclic conjugates.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> w1 = x**2*y**5
+        >>> w2 = x*y**5*x
+        >>> w1.is_cyclic_conjugate(w2)
+        True
+        >>> w3 = x**-1*y**5*x**-1
+        >>> w3.is_cyclic_conjugate(w2)
+        False
+
+        """
+        l1 = len(self)
+        l2 = len(w)
+        if l1 != l2:
+            return False
+        w1 = self.identity_cyclic_reduction()
+        w2 = w.identity_cyclic_reduction()
+        letter1 = w1.letter_form
+        letter2 = w2.letter_form
+        str1 = ' '.join(map(str, letter1))
+        str2 = ' '.join(map(str, letter2))
+        if len(str1) != len(str2):
+            return False
+
+        return str1 in str2 + ' ' + str2
 
     def number_syllables(self):
         """Returns the number of syllables of the associative word `self`.
@@ -919,6 +1049,18 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def substituted_word(self, from_i, to_j, by):
         """
+        Returns the associative word obtained by replacing the subword of
+        `self` that begins at position `from_i` and ends at position `to_j`
+        by the associative word `by`. `from_i` and `to_j` must be positive
+        integers, indexing is done with origin 0. In other words,
+        `w.substituted_word(w, from_i, to_j, by)` is the product of the three
+        words: `w.subword(0, from_i - 1)`, `by`, and
+        `w.subword(to_j + 1, len(w))`.
+
+        See Also
+        ========
+        eliminate_word
+
         """
         lw = len(self)
         if from_i > to_j or from_i > lw or to_j > lw:
@@ -942,6 +1084,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word, the word is not reduced, i.e a word w = a_1 ... a_n
         is called cyclically reduced if a_1 != a_n**−1.
 
+        Examples
+        ========
+
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**2*y**-1*x**-1).is_cyclically_reduced()
@@ -950,18 +1095,28 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         True
 
         """
+        if not self:
+            return True
         return self[0] != self[-1]**-1
 
-    #TODO: should be moved to FpGroupElement
+    #TODO: may be it should moved to FpGroupElement
     def identity_cyclic_reduction(self):
         """Return a unique cyclically reduced version of the word.
+
+        Examples
+        ========
 
         >>> from sympy.combinatorics.free_group import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**2*y**2*x**-1).identity_cyclic_reduction()
-        x**3*y**2
-        >>> (x**-3*y**-1*x**2).identity_cyclic_reduction()
-        y**-1*x**5
+        x*y**2
+        >>> (x**-3*y**-1*x**5).identity_cyclic_reduction()
+        x**2*y**-1
+
+        References
+        ==========
+
+        http://planetmath.org/cyclicallyreduced
 
         """
         if self.is_cyclically_reduced():
@@ -969,12 +1124,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         group = self.group
         exp1 = self.exponent_syllable(0)
         exp2 = self.exponent_syllable(-1)
-        if exp1 > 0:
-            rep = ((self.generator_syllable(0), exp1 - exp2),) + \
-                    self.array_form[1: self.number_syllables() - 1]
+        r = exp1 + exp2
+        if r == 0:
+            rep = self.array_form[1: self.number_syllables() - 1]
         else:
-            rep = self.array_form[1: self.number_syllables() - 1] + \
-                    ((self.generator_syllable(0), -exp1 + exp2),)
+            rep = ((self.generator_syllable(0), exp1 + exp2),) + \
+                    self.array_form[1: self.number_syllables() - 1]
         return group.dtype(rep)
 
 
