@@ -97,6 +97,7 @@ def test_ccode_exceptions():
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
 
+
 def test_ccode_user_functions():
     x = symbols('x', integer=False)
     n = symbols('n', integer=True)
@@ -118,54 +119,24 @@ def test_ccode_boolean():
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
 
-def test_ccode_Eq():
-    from sympy import Eq
-    from sympy import Le
-    x,y,z = symbols('x,y,z')
-    expr = Eq(x, Le(y,z))
-    assert ccode(expr) == "x == y <= z"
-
-def test_ccode_Ne():
-    from sympy import Ne
+def test_ccode_Relational():
+    from sympy import Eq, Ne, Le, Lt, Gt, Ge
     x,y = symbols('x,y')
+    expr = Eq(x,y)
+    assert ccode(expr) == "x == y"
+    from sympy import Ne
     expr = Ne(x,y)
     assert ccode(expr) == "x != y"
-
-def test_ccode_Le():
-    from sympy import Le
-    x,y = symbols('x,y')
     expr = Le(x,y)
     assert ccode(expr) == "x <= y"
-
-def test_ccode_Lt():
-    from sympy import Lt
-    x,y = symbols('x,y')
     expr = Lt(x,y)
     assert ccode(expr) == "x < y"
-
-def test_ccode_Gt():
-    from sympy import Gt
-    x,y = symbols('x,y')
     expr = Gt(x,y)
     assert ccode(expr) == "x > y"
-
-def test_ccode_Ge():
-    from sympy import Ge
     x,y = symbols('x,y')
     expr = Ge(x,y)
     assert ccode(expr) == "x >= y"
 
-def test_ccode_sinc():
-    from sympy import sinc
-    x = symbols('x')
-    expr = sinc(x)
-    assert ccode(expr) == (
-            "((x != 0) ? (\n"
-            "   sin(x)/x\n"
-            ")\n"
-            ": (\n"
-            "   1\n"
-            "))")
 
 def test_ccode_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
@@ -207,6 +178,19 @@ def test_ccode_Piecewise():
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: ccode(expr))
+
+
+def test_ccode_sinc():
+    from sympy import sinc
+    x = symbols('x')
+    expr = sinc(x)
+    assert ccode(expr) == (
+            "((x != 0) ? (\n"
+            "   sin(x)/x\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            "))")
 
 
 def test_ccode_Piecewise_deep():
