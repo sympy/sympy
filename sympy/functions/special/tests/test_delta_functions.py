@@ -70,6 +70,13 @@ def test_heaviside():
     assert Heaviside(1) == 1
     assert Heaviside(nan) == nan
 
+    assert Heaviside(0, x) == x
+    assert Heaviside(0, nan) == nan
+    assert Heaviside(x, None) == Heaviside(x)
+    assert Heaviside(0, None) == Heaviside(0)
+    # we do not want None in the args:
+    assert None not in Heaviside(x, None).args
+
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
     assert conjugate(Heaviside(x)) == Heaviside(x)
@@ -92,9 +99,17 @@ def test_rewrite():
         Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0)))
     assert Heaviside(y).rewrite(Piecewise) == (
         Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, y > 0)))
+    assert Heaviside(x, y).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, x > 0)))
+    assert Heaviside(x, 0).rewrite(Piecewise) == (
+        Piecewise((0, x <= 0), (1, x > 0)))
+    assert Heaviside(x, 1).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (1, x >= 0)))
 
     assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
+    assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
 
     assert DiracDelta(y).rewrite(Piecewise) == Piecewise((DiracDelta(0), Eq(y, 0)), (0, True))
     assert DiracDelta(y, 1).rewrite(Piecewise) == DiracDelta(y, 1)

@@ -108,6 +108,17 @@ class NumPyPrinter(LambdaPrinter):
         "Matrix multiplication printer"
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
+    def _print_DotProduct(self, expr):
+        # DotProduct allows any shape order, but numpy.dot does matrix
+        # multiplication, so we have to make sure it gets 1 x n by n x 1.
+        arg1, arg2 = expr.args
+        if arg1.shape[0] != 1:
+            arg1 = arg1.T
+        if arg2.shape[1] != 1:
+            arg2 = arg2.T
+
+        return "dot(%s, %s)" % (self._print(arg1), self._print(arg2))
+
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
         exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
