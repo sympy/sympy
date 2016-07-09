@@ -553,19 +553,20 @@ class HolonomicFunction(object):
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
+                selfat0 = self.annihilator.is_singular(x0=0)
+                otherat0 = other.annihilator.is_singular(x0=0)
 
-                if self.x0 == 0 and not self.annihilator.is_singular(x0=0) \
-                and not other.annihilator.is_singular(x0=0):
+                if self.x0 == 0 and not selfat0 and not otherat0:
                     return self + other.change_ics(0)
 
-                elif other.x0 == 0 and not self.annihilator.is_singular(x0=0) \
-                and not other.annihilator.is_singular(x0=0):
+                elif other.x0 == 0 and not selfat0 and not otherat0:
                     return self.change_ics(0) + other
 
                 else:
+                    selfatx0 = self.annihilator.is_singular(x0=self.x0)
+                    otheratx0 = other.annihilator.is_singular(x0=self.x0)
 
-                    if not self.annihilator.is_singular(x0=self.x0) and \
-                    not other.annihilator.is_singular(x0=self.x0):
+                    if not selfatx0 and not otheratx0:
                         return self + other.change_ics(self.x0)
 
                     else:
@@ -866,18 +867,20 @@ class HolonomicFunction(object):
             # if the points are different, consider one
             else:
 
-                if self.x0 == 0 and not ann_self.is_singular(x0=0) \
-                and not ann_other.is_singular(x0=0):
+                selfat0 = self.annihilator.is_singular(x0=0)
+                otherat0 = other.annihilator.is_singular(x0=0)
+
+                if self.x0 == 0 and not selfat0 and not otherat0:
                     return self * other.change_ics(0)
 
-                elif other.x0 == 0 and not ann_self.is_singular(x0=0) \
-                and not ann_other.is_singular(x0=0):
+                elif other.x0 == 0 and not selfat0 and not otherat0:
                     return self.change_ics(0) * other
 
                 else:
+                    selfatx0 = self.annihilator.is_singular(x0=self.x0)
+                    otheratx0 = other.annihilator.is_singular(x0=self.x0)
 
-                    if not ann_self.is_singular(x0=self.x0) and \
-                    not ann_other.is_singular(x0=self.x0):
+                    if not selfatx0 and not otheratx0:
                         return self * other.change_ics(self.x0)
 
                     else:
@@ -2151,7 +2154,10 @@ def _extend_y0(Holonomic, n):
     else:
         list_red = [-listofpoly[i] / listofpoly[a]
                     for i in range(a)]
-        y1 = [i for i  in y0]
+        if len(y0) > a:
+            y1 = [y0[i] for i in range(a)]
+        else:
+            y1 = [i for i  in y0]
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):

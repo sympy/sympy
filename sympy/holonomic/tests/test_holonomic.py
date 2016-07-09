@@ -274,6 +274,7 @@ def test_series():
     C_3 = symbols('C_3')
     q = (erf(x) + x).series(n=10)
     assert p.subs(C_3, -2/(3*sqrt(pi))) == q
+    assert expr_to_holonomic(sqrt(x**3 + x), lenics=2).series() == sqrt(x**3 + x).series(x0=1)
 
 def test_evalf_euler():
     x = symbols('x')
