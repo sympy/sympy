@@ -355,6 +355,7 @@ def test_sparse():
 
 
 def test_sinc():
+    #Note: Divide by pi because Octave implements normalized sinc function.
     assert mcode(sinc(x)) == 'sinc(x/pi)'
     assert mcode(sinc((x + 3))) == 'sinc((x + 3)/pi)'
     assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
