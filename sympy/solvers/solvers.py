@@ -1,4 +1,4 @@
-﻿"""
+"""
 This module contain solvers for all kinds of equations:
 
     - algebraic or transcendental, use solve()
@@ -237,7 +237,7 @@ def checksol(f, symbol, sol=None, **flags):
                     sol[k] = simplify(sol[k])
             # start over without the failed expanded form, possibly
             # with a simplified solution
-            val = f.subs(sol)
+            val = simplify(f.subs(sol))
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
@@ -245,16 +245,6 @@ def checksol(f, symbol, sol=None, **flags):
                 if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
-        elif attempt == 3:
-            val = powsimp(val)
-        elif attempt == 4:
-            val = cancel(val)
-        elif attempt == 5:
-            val = val.expand()
-        elif attempt == 6:
-            val = together(val)
-        elif attempt == 7:
-            val = powsimp(val)
         else:
             # if there are no radicals and no functions then this can't be
             # zero anymore -- can it?

@@ -1746,7 +1746,7 @@ class PrettyPrinter(Printer):
     def _print_FracField(self, field):
         return prettyForm(sstr(field))
 
-    def _print_FreeGroupElm(self, elm):
+    def _print_FreeGroupElement(self, elm):
         return prettyForm(str(elm))
 
     def _print_PolyElement(self, poly):
@@ -2064,6 +2064,24 @@ class PrettyPrinter(Printer):
         pform = self._print(p.args[0])
         pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
         pform = prettyForm(*pform.right(')'))
+        return pform
+
+    def _print_primenu(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['nu']))
+        else:
+            pform = prettyForm(*pform.left('nu'))
+        return pform
+
+    def _print_primeomega(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['Omega']))
+        else:
+            pform = prettyForm(*pform.left('Omega'))
         return pform
 
 

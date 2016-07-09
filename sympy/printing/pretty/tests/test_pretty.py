@@ -15,9 +15,10 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
+    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 
-from sympy.printing.codeprinter import Assignment
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1078,6 +1079,67 @@ x := y\
     ucode_str = \
 u("""\
 x := y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_AugmentedAssignment():
+    expr = AddAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x += y\
+"""
+    ucode_str = \
+u("""\
+x += y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = SubAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x -= y\
+"""
+    ucode_str = \
+u("""\
+x -= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = MulAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x *= y\
+"""
+    ucode_str = \
+u("""\
+x *= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = DivAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x /= y\
+"""
+    ucode_str = \
+u("""\
+x /= y\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = ModAugmentedAssignment(x, y)
+    ascii_str = \
+"""\
+x %= y\
+"""
+    ucode_str = \
+u("""\
+x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -5411,3 +5473,25 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+
+def test_pretty_primenu():
+    from sympy.ntheory.factor_ import primenu
+
+    ascii_str1 = "nu(n)"
+    ucode_str1 = u("ν(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primenu(n)) == ascii_str1
+    assert upretty(primenu(n)) == ucode_str1
+
+
+def test_pretty_primeomega():
+    from sympy.ntheory.factor_ import primeomega
+
+    ascii_str1 = "Omega(n)"
+    ucode_str1 = u("Ω(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primeomega(n)) == ascii_str1
+    assert upretty(primeomega(n)) == ucode_str1
