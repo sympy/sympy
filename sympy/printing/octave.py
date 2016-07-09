@@ -393,6 +393,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_sinc(self, expr):
+        #Note: Divide by pi because Octave implements normalized sinc function.
         return "sinc(%s)" % self._print(expr.args[0]/S.Pi)
 
 
