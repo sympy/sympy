@@ -1,5 +1,5 @@
 from sympy import Symbol
-from sympy.physics.mechanics.beam import Beam, PointLoad, DistributedLoad
+from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
 from sympy.physics.mechanics import Point
 from sympy.printing import sstr
 from sympy.utilities.pytest import XFAIL
