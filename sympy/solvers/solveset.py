@@ -1545,17 +1545,21 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
                             base = value_res.base_set
                             imgset_yes = (dummy_n, base)
+                soln_imageset_backup = soln_imageset
                 soln_imageset = {}
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res)
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
                 if not unsolved_syms:
                     if res:
+                        # if eq2 is not `zero` then `res` will be removed
+                        # from the result.
                         result = _append_new_soln(res, None, None,
                                                   imgset_yes, soln_imageset,
                                                   original_imageset,
                                                   result, eq2)
-                    break  # skip as it's independent of desired symbols
+                        soln_imageset = soln_imageset_backup
+                    continue  # skip as it's independent of desired symbols
 
                 for sym in unsolved_syms:
                     not_solvable = False
@@ -1580,7 +1584,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         if index > 0 and solver == solveset_real:
                             # one symbol's real soln , another symbol may have
                             # corresponding complex soln.
-                            if not isinstance(soln, ImageSet):
+                            if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)
                     except NotImplementedError:
                         # If sovleset not able to solver eq2. Next time we may
@@ -1636,7 +1640,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # solution got for sym
                     if not not_solvable:
                         got_symbol.add(sym)
-                # next time use this new soln
+            # next time use this new soln
+            if newresult:
                 result = newresult
         return result, total_solveset_call_inner, total_conditionset_inner
     # end def _solve_using_know_values()
@@ -1807,13 +1812,17 @@ def nonlinsolve(system, *symbols):
     (will be solved using `solve_poly_system`):
 
     >>> e1 = sqrt(x**2 + y**2) - 10
-    >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
+    >>> e2 = sqrt(y**2 + (- x + 10)**2) - 3
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
     {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 + sqrt(5), -sqrt(5) + 1), (-sqrt(5) + 2, 1 + sqrt(5))}
+
+    * It is better to use symbols instead of Trigonometric Function or Function
+    (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol and so on.
+    Get `nonlinsolve` soln and using `solveset` get the values of `x`).
 
     How nonlinsolve is better than old solver `_solve_system` :
     ===========================================================
