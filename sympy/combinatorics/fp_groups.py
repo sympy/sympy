@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
