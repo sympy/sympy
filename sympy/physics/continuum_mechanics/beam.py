@@ -32,7 +32,7 @@ class Beam(object):
 
     Examples
     ========
-    >>> from sympy.physics.mechanics.beam import Beam
+    >>> from sympy.physics.continuum_mechanics.beam import Beam
     >>> from sympy import Symbol
     >>> E = Symbol('E')
     >>> I = Symbol('I')
@@ -92,7 +92,7 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
@@ -118,7 +118,7 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
@@ -140,7 +140,7 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
@@ -162,7 +162,7 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.mechanics.beam import Beam
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
@@ -212,7 +212,7 @@ class PointLoad(object):
 
     Examples
     ========
-    >>> from sympy.physics.mechanics.beam import PointLoad
+    >>> from sympy.physics.continuum_mechanics.beam import PointLoad
     >>> from sympy.physics.mechanics import Point
     >>> p = Point('4')
     >>> PointLoad(location = p, value = -4)
@@ -288,7 +288,7 @@ class DistributedLoad(object):
 
     Examples
     ========
-    >>> from sympy.physics.mechanics.beam import DistributedLoad
+    >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
     >>> from sympy.physics.mechanics import Point
     >>> from sympy import Symbol
     >>> a = Point('4')
