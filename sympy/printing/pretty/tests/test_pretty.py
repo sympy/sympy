@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
@@ -31,7 +31,7 @@ from sympy.core.trace import Tr
 from sympy.core.compatibility import u_decode as u
 from sympy.core.compatibility import range
 
-a, b, x, y, z, k = symbols('a,b,x,y,z,k')
+a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
 th = Symbol('theta')
 ph = Symbol('phi')
 
@@ -4439,6 +4439,34 @@ def test_gammas():
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
 
 
+def test_SingularityFunction():
+    assert xpretty(SingularityFunction(x, 0, n), use_unicode=True) == (
+"""\
+   n\n\
+<x> \
+""")
+    assert xpretty(SingularityFunction(x, 1, n), use_unicode=True) == (
+"""\
+       n\n\
+<x - 1> \
+""")
+    assert xpretty(SingularityFunction(x, -1, n), use_unicode=True) == (
+"""\
+       n\n\
+<x + 1> \
+""")
+    assert xpretty(SingularityFunction(x, a, n), use_unicode=True) == (
+"""\
+        n\n\
+<-a + x> \
+""")
+    assert xpretty(SingularityFunction(x, y, n), use_unicode=True) == (
+"""\
+       n\n\
+<x - y> \
+""")
+
+
 def test_deltas():
     assert xpretty(DiracDelta(x), use_unicode=True) == u'δ(x)'
     assert xpretty(DiracDelta(x, 1), use_unicode=True) == \
@@ -5445,3 +5473,25 @@ def test_issue_9877():
     ucode_str2 = u'{x} ∩ {y} ∩ ({z} \ [1, 2])'
     d, e, f, g = FiniteSet(x), FiniteSet(y), FiniteSet(z), Interval(1, 2)
     assert upretty(Intersection(d, e, Complement(f, g))) == ucode_str2
+
+
+def test_pretty_primenu():
+    from sympy.ntheory.factor_ import primenu
+
+    ascii_str1 = "nu(n)"
+    ucode_str1 = u("ν(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primenu(n)) == ascii_str1
+    assert upretty(primenu(n)) == ucode_str1
+
+
+def test_pretty_primeomega():
+    from sympy.ntheory.factor_ import primeomega
+
+    ascii_str1 = "Omega(n)"
+    ucode_str1 = u("Ω(n)")
+
+    n = symbols('n', integer=True)
+    assert pretty(primeomega(n)) == ascii_str1
+    assert upretty(primeomega(n)) == ucode_str1

@@ -1437,6 +1437,12 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
+    def _print_SingularityFunction(self, expr):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
+        return tex
+
     def _print_Heaviside(self, expr, exp=None):
         tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
         if exp:
@@ -1883,6 +1889,19 @@ class LatexPrinter(Printer):
         if exp is not None:
             return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
         return r"\sigma^*%s" % tex
+
+    def _print_primenu(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\nu\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\nu\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_primeomega(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\Omega\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
 
 def translate(s):
     r'''

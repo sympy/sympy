@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -129,6 +129,13 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_SingularityFunction():
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^ 5"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^ 4"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^ 4"
+    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^ n"
 
 
 def test_latex_cycle():
@@ -366,6 +373,12 @@ def test_latex_functions():
     assert latex(udivisor_sigma(x)**2) == r"\sigma^*^{2}\left(x\right)"
     assert latex(udivisor_sigma(x, y)) == r"\sigma^*_y\left(x\right)"
     assert latex(udivisor_sigma(x, y)**2) == r"\sigma^*^{2}_y\left(x\right)"
+
+    assert latex(primenu(n)) == r'\nu\left(n\right)'
+    assert latex(primenu(n) ** 2) == r'\left(\nu\left(n\right)\right)^{2}'
+
+    assert latex(primeomega(n)) == r'\Omega\left(n\right)'
+    assert latex(primeomega(n) ** 2) == r'\left(\Omega\left(n\right)\right)^{2}'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
