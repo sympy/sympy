@@ -574,7 +574,7 @@ class HolonomicFunction(object):
 
         return HolonomicFunction(sol, self.x)
 
-    def integrate(self, limits):
+    def integrate(self, limits, initcond=False):
         """
         Integrate the given holonomic function. Limits can be provided,
         Initial conditions can only be computed when limits are (x0, x).
@@ -601,6 +601,8 @@ class HolonomicFunction(object):
 
         # for indefinite integration
         if (not limits) or (not self._have_init_cond):
+            if initcond:
+                return HolonomicFunction(self.annihilator * D, self.x, self.x0, [S(0)])
             return HolonomicFunction(self.annihilator * D, self.x)
 
         # definite integral
@@ -997,12 +999,13 @@ class HolonomicFunction(object):
     def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
-        of the function about `x0`, where x0 is the point at which
+        of the function about `x0`, where `x0` is the point at which
         initial conditions are given.
 
-        Returns a tuple (R, n0), with R being the Recurrence relation
-        and a non-negative integer `n0` such that the recurrence relation
-        holds for all n >= n0.
+        Let `R` be the recurrence relation, `p` be the root of indicial
+        equation and `n0` be the value of `n` such that the recurrence holds
+        for all n >= n0. If the point `x0` is ordinary, an answer of the form
+        ((R, n0), ) is returned, else [(R, p, n0)] for singular points.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol C_j, denoting the coefficient of (x - x0)^j
@@ -1180,14 +1183,17 @@ class HolonomicFunction(object):
         return (HolonomicSequence(sol, u0), )
 
     def _frobenius(self, lb=True):
+        # compute the roots of indicial equation
         indicialroots = self._indicial()
-        reals = []
 
+        reals = []
         for i in indicialroots:
             if i.is_real:
-                reals.extend([i]*indicialroots[i])
+                reals.extend([i] * indicialroots[i])
 
         x = self.x
+
+        # grouping the roots, roots that differ by an integer are put in the same group.
         grp = []
 
         for i in indicialroots:
@@ -1230,10 +1236,12 @@ class HolonomicFunction(object):
         n = symbols('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
+
         finalsol = []
 
         for p in rootstoconsider:
             dict1 = {}
+
             for i, j in enumerate(self.annihilator.listofpoly):
 
                 listofdmp = j.all_coeffs()
