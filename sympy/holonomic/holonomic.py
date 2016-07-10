@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
-    solve, limit)
+    solve, limit, Float, nsimplify)
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -19,6 +19,8 @@ from sympy.matrices import Matrix
 from sympy.polys.polyclasses import DMF
 from sympy.polys.polyroots import roots
 from sympy.functions.elementary.exponential import exp_polar, exp
+from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError, SingularityError, NotHolonomicError
+from sympy.polys.rings import PolyElement
 
 
 def DifferentialOperators(base, generator):
@@ -148,14 +150,18 @@ class DifferentialOperator(object):
         # the parent ring for this operator
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
+        base = self.parent.base
+        self.x = base.gens[0] if isinstance(base.gens[0], Symbol) else base.gens[0][0]
         # sequence of polynomials in x for each power of Dx
         # the list should not have trailing zeroes
         # represents the operator
         # convert the expressions into ring elements using from_sympy
         if isinstance(list_of_poly, list):
             for i, j in enumerate(list_of_poly):
-                if not isinstance(j, self.parent.base.dtype):
-                    list_of_poly[i] = self.parent.base.from_sympy(sympify(j))
+                if not isinstance(j, base.dtype):
+                    list_of_poly[i] = base.from_sympy(sympify(j))
+                elif isinstance(j, base.dtype):
+                    list_of_poly[i] = base.from_sympy(base.to_sympy(j))
 
             self.listofpoly = list_of_poly
         # highest power of `Dx`
@@ -330,7 +336,8 @@ class DifferentialOperator(object):
         """
 
         domain = str(self.parent.base.domain)[0]
-        return x0 in roots(self.listofpoly[-1].rep, filter=domain)
+        base = self.parent.base
+        return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x, filter=domain)
 
 
 class HolonomicFunction(object):
@@ -355,7 +362,7 @@ class HolonomicFunction(object):
     import numpy as np
     var("x")
     r = np.linspace(1, 5, 100)
-    y = sympy.holonomic.from_sympy(sin(x)**2/x, x0=1).evalf(r)
+    y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r)
     plt.plot(r, y, label="holonomic function")
     plt.show()
     ``
@@ -421,7 +428,37 @@ class HolonomicFunction(object):
 
     __str__ = __repr__
 
+    def unify(self, other):
+        """
+        Unifies the ground domain of a given two Holonomic
+        Functions.
+        """
+
+        R1 = self.annihilator.parent.base
+        R2 = other.annihilator.parent.base
+
+        if R1 == R2:
+            return (self, other)
+
+        R = R1.unify(R2)
+
+        newparent, _ = DifferentialOperators(R, str(self.annihilator.parent.gen_symbol))
+
+        sol1 = [R(i.rep) for i in self.annihilator.listofpoly]
+        sol2 = [R(i.rep) for i in other.annihilator.listofpoly]
+
+        sol1 = DifferentialOperator(sol1, newparent)
+        sol2 = DifferentialOperator(sol2, newparent)
+
+        sol1 = HolonomicFunction(sol1, self.x, self.x0, self.y0)
+        sol2 = HolonomicFunction(sol2, other.x, other.x0, other.y0)
+
+        return (sol1, sol2)
+
     def __add__(self, other):
+        if self.annihilator.parent.base != other.annihilator.parent.base:
+            a, b = self.unify(other)
+            return a + b
         deg1 = self.annihilator.order
         deg2 = other.annihilator.order
         dim = max(deg1, deg2)
@@ -587,7 +624,7 @@ class HolonomicFunction(object):
         # use evalf to get the values at `a`
         else:
             y0 = [S(0)]
-            tempy0 = self.evalf(a, derivatives=True)
+            tempy0 = self.change_ics(a).y0
             y0 += tempy0
 
         # if the upper limit is `x`, the answer will be a function
@@ -596,7 +633,16 @@ class HolonomicFunction(object):
 
         # if the upper limits is a Number, a numerical value will be returned
         elif S(b).is_Number:
-            return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
+            try:
+                s = HolonomicFunction(self.annihilator * D, self.x, a,\
+                    y0).to_expr()
+                indefinite = s.subs(self.x, b)
+                if not isinstance(indefinite, NaN):
+                    return indefinite
+                else:
+                    return s.limit(self.x, b)
+            except (NotHyperSeriesError, NotPowerSeriesError):
+                return HolonomicFunction(self.annihilator * D, self.x, a, y0).evalf(b)
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
@@ -614,11 +660,11 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
         # derivative of sin(x)
-        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_sympy()
+        >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_expr()
         cos(x)
 
         # derivative of e^2*x
-        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_sympy()
+        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_expr()
         2*exp(2*x)
 
         See Also
@@ -708,13 +754,21 @@ class HolonomicFunction(object):
             else:
                 y0 = _extend_y0(self, ann_self.order)
                 y1 = []
+
                 for j in y0:
                     y1.append(j * other)
+
                 return HolonomicFunction(ann_self, self.x, self.x0, y1)
 
+        if self.annihilator.parent.base != other.annihilator.parent.base:
+            a, b = self.unify(other)
+            return a * b
+
         ann_other = other.annihilator
+
         list_self = []
         list_other = []
+
         a = ann_self.order
         b = ann_other.order
 
@@ -755,7 +809,7 @@ class HolonomicFunction(object):
                     if isinstance(coeff_mul[i][j], K.dtype):
                         coeff_mul[i][j] = DMFdiff(coeff_mul[i][j])
                     else:
-                        coeff_mul[i][j] = coeff_mul[i][j].diff()
+                        coeff_mul[i][j] = coeff_mul[i][j].diff(self.x)
 
             # reduce the terms to lower power using annihilators of f, g
             for i in range(a + 1):
@@ -849,6 +903,8 @@ class HolonomicFunction(object):
         return self.__div__(other)
 
     def __pow__(self, n):
+        if n < 0:
+            raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
             return S(1)
         if n == 1:
@@ -897,7 +953,7 @@ class HolonomicFunction(object):
 
         R = self.annihilator.parent
         a = self.annihilator.order
-        diff = expr.diff()
+        diff = expr.diff(self.x)
         listofpoly = self.annihilator.listofpoly
 
         for i, j in enumerate(listofpoly):
@@ -913,7 +969,7 @@ class HolonomicFunction(object):
         sol = S(0)
 
         while sol.is_zero:
-            coeffs_next = [p.diff() for p in coeffs]
+            coeffs_next = [p.diff(self.x) for p in coeffs]
             for i in range(a - 1):
                 coeffs_next[i + 1] += (coeffs[i] * diff)
 
@@ -938,15 +994,16 @@ class HolonomicFunction(object):
     def to_sequence(self, lb=True):
         """
         Finds the recurrence relation in power series expansion
-        of the function about origin.
+        of the function about `x0`, where x0 is the point at which
+        initial conditions are given.
 
         Returns a tuple (R, n0), with R being the Recurrence relation
         and a non-negative integer `n0` such that the recurrence relation
         holds for all n >= n0.
 
         If it's not possible to numerically compute a initial condition,
-        it is returned as a symbol C_j, denoting the coefficient of x^j
-        in the power series about origin.
+        it is returned as a symbol C_j, denoting the coefficient of (x - x0)^j
+        in the power series about x0.
 
         Examples
         ========
@@ -977,6 +1034,14 @@ class HolonomicFunction(object):
         [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
         """
 
+        if self.x0 != 0:
+            return self.shift_x(self.x0).to_sequence()
+
+        # check whether a power series exists if the point is singular
+        if self.annihilator.is_singular(x0=self.x0):
+            indicialroots = self._indicial()
+            if any(not int(i) == i for i in indicialroots):
+                raise NotPowerSeriesError(self, self.x0)
 
         dict1 = {}
         n = symbols('n', integer=True)
@@ -999,10 +1064,10 @@ class HolonomicFunction(object):
                     continue
 
                 if (i - k, k) in dict1:
-                    dict1[(i - k, k)] += (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] += (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
                 else:
-                    dict1[(i - k, k)] = (coeff * rf(n - k + 1, i))
+                    dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
 
         sol = []
@@ -1016,6 +1081,7 @@ class HolonomicFunction(object):
         smallest_n = lower + degree
         dummys = {}
         eqs = []
+        unknowns = []
 
         # an appropriate shift of the recurrence
         for j in range(lower, upper + 1):
@@ -1033,14 +1099,13 @@ class HolonomicFunction(object):
 
         # computing the initial conditions for recurrence
         order = sol.order
-        all_roots = roots(sol.listofpoly[-1].rep, filter='Z')
+        all_roots = roots(R.base.to_sympy(sol.listofpoly[-1]), n, filter='Z')
         all_roots = all_roots.keys()
 
         if all_roots:
             max_root = max(all_roots) + 1
-            order += max(max_root, smallest_n)
-        else:
-            order += smallest_n
+            smallest_n = max(max_root, smallest_n)
+        order += smallest_n
 
         y0 = _extend_y0(self, order)
         u0 = []
@@ -1068,6 +1133,7 @@ class HolonomicFunction(object):
 
                     elif not i + j[0] in dummys:
                         dummys[i + j[0]] = Symbol('C_%s' %(i + j[0]))
+                        unknowns.append(dummys[i + j[0]])
 
                     if j[1] <= i:
                         eq += dict1[j].subs(n, i) * dummys[i + j[0]]
@@ -1075,7 +1141,7 @@ class HolonomicFunction(object):
                 eqs.append(eq)
 
             # solve the system of equations formed
-            soleqs = solve(eqs)
+            soleqs = solve(eqs, *unknowns)
 
             if isinstance(soleqs, dict):
 
@@ -1114,7 +1180,7 @@ class HolonomicFunction(object):
 
     def series(self, n=6, coefficient=False, order=True):
         """
-        Finds the power series expansion of given holonomic function.
+        Finds the power series expansion of given holonomic function about x0.
 
         Examples
         ========
@@ -1141,15 +1207,11 @@ class HolonomicFunction(object):
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
         x = self.x
+        x0 = self.x0
         seq_dmp = recurrence.recurrence.listofpoly
         R = recurrence.recurrence.parent.base
         K = R.get_field()
         seq = []
-
-        if 0 in roots(seq_dmp[-1].rep, filter='Z').keys():
-            singular = True
-        else:
-            singular = False
 
         for i, j in enumerate(seq_dmp):
             seq.append(K.new(j.rep))
@@ -1175,13 +1237,17 @@ class HolonomicFunction(object):
         for i, j in enumerate(sol):
             ser += x**i * j
         if order:
-            return ser + Order(x**n, x)
-        else:
-            return ser
+            ser += Order(x**n, x)
+        if x0 != 0:
+            return ser.subs(x, x - x0)
+        return ser
 
     def _indicial(self):
         """Computes the roots of Indicial equation.
         """
+
+        if self.x0 != 0:
+            return self.shift_x(self.x0)._indicial()
 
         list_coeff = self.annihilator.listofpoly
         R = self.annihilator.parent.base
@@ -1190,7 +1256,7 @@ class HolonomicFunction(object):
         y = R.one
 
         def _pole_degree(poly):
-            root_all = roots(poly.rep, filter='Z')
+            root_all = roots(R.to_sympy(poly), x, filter='Z')
             if 0 in root_all.keys():
                 return root_all[0]
             else:
@@ -1202,19 +1268,17 @@ class HolonomicFunction(object):
 
         deg = lambda q: inf if q.is_zero else _pole_degree(q)
         b = deg(list_coeff[0])
-        print (b)
 
         for j in range(1, len(list_coeff)):
             b = min(b, deg(list_coeff[j]) - j)
-            print(b)
 
         for i, j in enumerate(list_coeff):
             listofdmp = j.all_coeffs()
             degree = len(listofdmp) - 1
-            if - i - b <= 0:
+            if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
             y *= x - i
-        return roots(s.rep, filter='R').keys()
+        return roots(R.to_sympy(s), x, filter='R')
 
     def evalf(self, points, method='RK4', h=0.05, derivatives=False):
         """
@@ -1276,15 +1340,15 @@ class HolonomicFunction(object):
             for i in range(n - 1):
                 points.append(points[-1] + h)
 
-        for i in roots(self.annihilator.listofpoly[-1].rep):
+        for i in roots(self.annihilator.parent.base.to_sympy(self.annihilator.listofpoly[-1]), self.x):
             if i == self.x0 or i in points:
-                raise TypeError("Provided path contains a singularity")
+                raise SingularityError(self, i)
 
         if lp:
             return _evalf(self, points, method=method, derivatives=derivatives)[-1]
         return _evalf(self, points, method=method, derivatives=derivatives)
 
-    def _subs(self, z):
+    def change_x(self, z):
         """
         Changes only the variable of Holonomic Function, for internal
         purposes. For composition use HolonomicFunction.composition()
@@ -1298,6 +1362,22 @@ class HolonomicFunction(object):
             sol.append(R(j.rep))
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
+
+    def shift_x(self, a):
+        """
+        Substitute `x + a` for `x`.
+        """
+
+        x = self.x
+        listaftershift = self.annihilator.listofpoly
+        base = self.annihilator.parent.base
+
+        sol = [base.from_sympy(base.to_sympy(i).subs(x, x + a)) for i in listaftershift]
+        sol = DifferentialOperator(sol, self.annihilator.parent)
+        if not self._have_init_cond:
+            return HolonomicFunction(sol, x)
+        x0 = self.x0 - a
+        return HolonomicFunction(sol, x, x0, self.y0)
 
     def to_hyper(self):
         """
@@ -1336,28 +1416,31 @@ class HolonomicFunction(object):
         recurrence, smallest_n = self.to_sequence()
         u0 = recurrence.u0
         r = recurrence.recurrence
+        x = self.x
+        x0 = self.x0
 
         # order of the recurrence relation
         m = r.order
 
         # when no recurrence exists, and the power series have finite terms
         if m == 0:
-            nonzeroterms = roots(r.listofpoly[0].rep, filter='Z')
-            if max(nonzeroterms) >= len(u0):
-                raise NotImplementedError("Initial conditions aren't sufficient")
-            sol = S(0)
-            for i in nonzeroterms:
-                if i >= 0:
-                    sol += u0[i] * x**i
-            return sol
+            nonzeroterms = roots(r.parent.base.to_sympy(r.listofpoly[0]), recurrence.n, filter='R')
 
+            sol = S(0)
+            for j, i in enumerate(nonzeroterms):
+                if int(i) == i and i >= 0 and int(i) < len(u0):
+                    sol += u0[int(i)] * x**int(i)
+                else:
+                    sol += Symbol('C_%s' %j) * x**i
+            if x0 != 0:
+                return sol.subs(x, x - x0)
+            return sol
 
         if smallest_n + m > len(u0):
             raise NotImplementedError("Can't compute sufficient Initial Conditions")
 
         # check if the recurrence represents a hypergeometric series
         is_hyper = True
-        x = self.x
 
         for i in range(1, len(r.listofpoly)-1):
             if r.listofpoly[i] != r.parent.base.zero:
@@ -1365,18 +1448,21 @@ class HolonomicFunction(object):
                 break
 
         if not is_hyper:
-            raise TypeError("The series is not Hypergeometric")
+            raise NotHyperSeriesError(self, self.x0)
 
         a = r.listofpoly[0]
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+        if isinstance(a.rep[0], PolyElement):
+            c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
+        else:
+            c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
 
         sol = 0
 
-        arg1 = roots(a.rep)
-        arg2 = roots(b.rep)
+        arg1 = roots(r.parent.base.to_sympy(a), recurrence.n)
+        arg2 = roots(r.parent.base.to_sympy(b), recurrence.n)
 
         # iterate thorugh the initial conditions to find
         # the hypergeometric representation of the given
@@ -1384,7 +1470,7 @@ class HolonomicFunction(object):
         # The answer will be a linear combination
         # of different hypergeometric series which satisfies
         # the recurrence.
-        for i in range(len(u0)):
+        for i in range(smallest_n + m):
 
             # if the recurrence relation doesn't hold for `n = i`,
             # then a Hypergeometric representation doesn't exist.
@@ -1405,10 +1491,10 @@ class HolonomicFunction(object):
 
             # substitute m * n + i for n
             for k in arg1:
-                ap.extend([(i - k) / m] * arg1[k])
+                ap.extend([nsimplify((i - k) / m)] * arg1[k])
 
             for k in arg2:
-                bq.extend([(i - k) / m] * arg2[k])
+                bq.extend([nsimplify((i - k) / m)] * arg2[k])
 
             # convention of (k + 1) in the denominator
             if 1 in bq:
@@ -1418,9 +1504,12 @@ class HolonomicFunction(object):
 
             sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
 
+        if x0 != 0:
+            return sol.subs(x, x - x0)
+
         return sol
 
-    def to_sympy(self):
+    def to_expr(self):
         """
         Converts a Holonomic Function back to elementary functions.
 
@@ -1433,42 +1522,45 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
-        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_sympy()
+        >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_expr()
         besselj(1, x)
 
-        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_sympy()
+        >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_expr()
         x*log(x + 1) + log(x + 1) + 1
 
         """
 
         return hyperexpand(self.to_hyper()).simplify()
 
-    def change_ics(self, b):
+    def change_ics(self, b, lenics=None):
         """
         Changes the point `x0` to `b` for initial conditions.
 
         Examples
         ========
 
-        >>> from sympy.holonomic import from_sympy
+        >>> from sympy.holonomic import expr_to_holonomic
         >>> from sympy import symbols, sin, cos, exp
         >>> x = symbols('x')
 
-        >>> from_sympy(sin(x)).change_ics(1)
+        >>> expr_to_holonomic(sin(x)).change_ics(1)
         HolonomicFunction((1) + (1)Dx**2, x), f(1) = sin(1), f'(1) = cos(1)
 
-        >>> from_sympy(exp(x)).change_ics(2)
+        >>> expr_to_holonomic(exp(x)).change_ics(2)
         HolonomicFunction((-1) + (1)Dx, x), f(2) = exp(2)
         """
 
         symbolic = True
 
+        if lenics == None and len(self.y0) > self.annihilator.order:
+            lenics = len(self.y0)
+
         try:
-            sol = from_sympy(self.to_sympy(), x0=b)
-        except:
+            sol = expr_to_holonomic(self.to_expr(), x=self.x, x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
+        except (NotPowerSeriesError, NotHyperSeriesError):
             symbolic = False
 
-        if symbolic:
+        if symbolic and sol.x0 == b:
             return sol
 
         y0 = self.evalf(b, derivatives=True)
@@ -1522,7 +1614,7 @@ def from_hyper(func, x0=0, evalf=False):
             if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
-            simp = simp.diff()
+            simp = simp.diff(x)
         return y0
 
     # if the function is known symbolically
@@ -1549,7 +1641,7 @@ def from_hyper(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
-def from_meijerg(func, x0=0, evalf=False, initcond=True):
+def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     """
     Converts a Meijer G-function to Holonomic.
     func is the Hypergeometric Function and x0 be the point at
@@ -1572,7 +1664,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True):
     p = len(a)
     z = func.args[2]
     x = z.atoms(Symbol).pop()
-    R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    R, Dx = DifferentialOperators(domain.old_poly_ring(x), 'Dx')
 
     # compute the differential equation satisfied by the
     # Meijer G-function.
@@ -1607,7 +1699,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True):
             if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
                 return None
             y0.append(val)
-            simp = simp.diff()
+            simp = simp.diff(x)
         return y0
 
     # computing initial conditions
@@ -1633,10 +1725,11 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True):
 
 x_1 = Dummy('x_1')
 _lookup_table = None
+domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def from_sympy(func, x=None, initcond=True, x0=0):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1645,34 +1738,43 @@ def from_sympy(func, x=None, initcond=True, x0=0):
     Examples
     ========
 
-    >>> from sympy.holonomic.holonomic import from_sympy
+    >>> from sympy.holonomic.holonomic import expr_to_holonomic
     >>> from sympy import sin, exp, symbols
     >>> x = symbols('x')
-    >>> from_sympy(sin(x))
+    >>> expr_to_holonomic(sin(x))
     HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
-    >>> from_sympy(exp(x))
+    >>> expr_to_holonomic(exp(x))
     HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
 
     See Also
     ========
 
-    meijerint._rewrite1, _convert_poly_rat, _create_table
+    meijerint._rewrite1, _convert_poly_rat_alg, _create_table
     """
     func = sympify(func)
     if not x:
-        x = func.atoms(Symbol).pop()
+        syms = func.free_symbols
+        if len(syms) == 1:
+            x= syms.pop()
+        else:
+            raise ValueError("Specify the variable for the function")
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat(func, x, initcond=initcond, x0=x0)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain)
     if solpoly:
         return solpoly
 
     # create the lookup table
-    global _lookup_table
+    global _lookup_table, domain_for_table
     if not _lookup_table:
+        domain_for_table = domain
         _lookup_table = {}
-        _create_table(_lookup_table)
+        _create_table(_lookup_table, domain=domain)
+    elif domain != domain_for_table:
+        domain_for_table = domain
+        _lookup_table = {}
+        _create_table(_lookup_table, domain=domain)
 
     # use the table directly to convert to Holonomic
     if func.is_Function:
@@ -1680,39 +1782,45 @@ def from_sympy(func, x=None, initcond=True, x0=0):
         t = _mytype(f, x_1)
         if t in _lookup_table:
             l = _lookup_table[t]
-            sol = l[0][1]._subs(x)
+            sol = l[0][1].change_x(x)
         else:
-            sol = _convert_meijerint(func, x, initcond=False)
+            sol = _convert_meijerint(func, x, initcond=False, domain=domain)
             if not sol:
                 raise NotImplementedError
-            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            if not initcond:
+                return sol
+            if not lenics:
+                lenics = sol.annihilator.order
+            y0 = _find_conditions(func, x, x0, lenics)
             while not y0:
                 x0 += 1
-                y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+                y0 = _find_conditions(func, x, x0, lenics)
             return HolonomicFunction(sol.annihilator, x, x0, y0)
 
         if not initcond:
             return sol.composition(func.args[0])
+        if not lenics:
+            lenics = sol.annihilator.order
 
-        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        y0 = _find_conditions(func, x, x0, lenics)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+            y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, y0)
 
     # iterate though the expression recursively
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow
-    sol = from_sympy(args[0], x=x, initcond=False)
+    sol = expr_to_holonomic(args[0], x=x, initcond=False, domain=domain)
 
     if f is Add:
         for i in range(1, len(args)):
-            sol += from_sympy(args[i], x=x, initcond=False)
+            sol += expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
     elif f is Mul:
         for i in range(1, len(args)):
-            sol *= from_sympy(args[i], x=x, initcond=False)
+            sol *= expr_to_holonomic(args[i], x=x, initcond=False, domain=domain)
 
     elif f is Pow:
         sol = sol**args[1]
@@ -1721,11 +1829,12 @@ def from_sympy(func, x=None, initcond=True, x0=0):
         raise NotImplementedError
     if not initcond:
         return sol
-
-    y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+    if not lenics:
+        lenics = sol.annihilator.order
+    y0 = _find_conditions(func, x, x0, lenics)
     while not y0:
         x0 += 1
-        y0 = _find_conditions(func, x, x0, sol.annihilator.order)
+        y0 = _find_conditions(func, x, x0, lenics)
 
     return HolonomicFunction(sol.annihilator, x, x0, y0)
 
@@ -1826,10 +1935,15 @@ def _extend_y0(Holonomic, n):
     value point in the differential equation.
     """
 
+    if Holonomic.annihilator.is_singular(x0=Holonomic.x0):
+        return Holonomic.y0
+
     annihilator = Holonomic.annihilator
     a = annihilator.order
     x = Holonomic.x
+
     listofpoly = []
+
     y0 = Holonomic.y0
     R = annihilator.parent.base
     K = R.get_field()
@@ -1848,8 +1962,13 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                if not r.is_finite:
-                    return y0
+                try:
+                    if not r.is_finite:
+                        return y0
+                except AttributeError:
+                    pass
+                if isinstance(r, PolyElement):
+                    r = r.as_expr()
                 sol += a * r
             y1.append(sol)
             list_red = _derivate_diff_eq(list_red)
@@ -1893,10 +2012,15 @@ def DMFsubs(frac, x0, mpm=False):
             j = sympify(j)._to_mpmath(mp.prec)
         sol_q += j * x0**i
 
+    if isinstance(sol_p, PolyElement):
+        sol_p = sol_p.as_expr()
+    if isinstance(sol_q, PolyElement):
+        sol_q = sol_q.as_expr()
+
     return sol_p / sol_q
 
 
-def _convert_poly_rat(func, x, initcond=True, x0=0):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -1907,9 +2031,21 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
         israt = True
 
     if not (ispoly or israt):
+        basepoly, ratexp = func.as_base_exp()
+        if basepoly.is_polynomial() and ratexp.is_Number:
+            if isinstance(ratexp, Float):
+                ratexp = nsimplify(ratexp)
+            m, n = ratexp.p, ratexp.q
+            is_alg = True
+        else:
+            is_alg = False
+    else:
+        is_alg = True
+
+    if not (ispoly or israt or is_alg):
         return None
 
-    R = QQ.old_poly_ring(x)
+    R = domain.old_poly_ring(x)
     _, Dx = DifferentialOperators(R, 'Dx')
 
     # if the function is constant
@@ -1918,28 +2054,35 @@ def _convert_poly_rat(func, x, initcond=True, x0=0):
 
     if ispoly:
         # differential equation satisfied by polynomial
-        sol = func * Dx - func.diff()
+        sol = func * Dx - func.diff(x)
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
 
     elif israt:
         order = 1
         p, q = func.as_numer_denom()
         # differential equation satisfied by rational
-        sol = p * q * Dx + p * q.diff() - q * p.diff()
+        sol = p * q * Dx + p * q.diff(x) - q * p.diff(x)
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
+
+    elif is_alg:
+        sol = n * (x / m) * Dx - 1
+        sol = HolonomicFunction(sol, x).composition(basepoly).annihilator
 
     if not initcond:
         return HolonomicFunction(sol, x)
 
-    y0 = _find_conditions(func, x, x0, sol.order)
+    if not lenics:
+        lenics = sol.order
+
+    y0 = _find_conditions(func, x, x0, lenics)
     while not y0:
         x0 += 1
-        y0 = _find_conditions(func, x, x0, sol.order)
+        y0 = _find_conditions(func, x, x0, lenics)
 
     return HolonomicFunction(sol, x, x0, y0)
 
 
-def _convert_meijerint(func, x, initcond=True):
+def _convert_meijerint(func, x, initcond=True, domain=QQ):
     args = meijerint._rewrite1(func, x)
 
     if args:
@@ -1980,12 +2123,12 @@ def _convert_meijerint(func, x, initcond=True):
     # add all the meijerg functions after converting to holonomic
     for i in range(1, len(G_list)):
         coeff, m = _shift(G_list[i], po_list[i])
-        sol += fac_list[i] * coeff * from_meijerg(m, initcond=initcond)
+        sol += fac_list[i] * coeff * from_meijerg(m, initcond=initcond, domain=domain)
 
     return sol
 
 
-def _create_table(table):
+def _create_table(table, domain=QQ):
     """
     Creates the look-up table. For a similar implementation
     see meijerint._create_lookup_table.
@@ -1998,7 +2141,7 @@ def _create_table(table):
         table.setdefault(_mytype(formula, x_1), []).append((formula,
             HolonomicFunction(annihilator, arg, x0, y0)))
 
-    R = QQ.old_poly_ring(x_1)
+    R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
     from sympy import (sin, cos, exp, log, erf, sqrt, pi,
@@ -2034,5 +2177,5 @@ def _find_conditions(func, x, x0, order):
         if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
             return None
         y0.append(val)
-        func = func.diff()
+        func = func.diff(x)
     return y0
