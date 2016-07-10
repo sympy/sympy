@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 from sympy.printing import sstr
 from sympy.physics.mechanics import Point
+from sympy.functions import SingularityFunction
 from sympy import sympify
 
 
@@ -46,6 +47,7 @@ class Beam(object):
         self._elastic_modulus = elastic_modulus
         self._second_moment = second_moment
         self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
+        self._load = 0
 
     def __str__(self):
         str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
@@ -195,6 +197,11 @@ class Beam(object):
         ========
 
         """
+        for load in loads:
+            if isinstance(load, PointLoad) or isinstance(load, DistributedLoad):
+                self._load += self._load_as_SingularityFunction(load)
+            else:
+                raise TypeError("""apply_loads takes either PointLoad or DistributedLoad objects""")
 
 
 class PointLoad(object):
