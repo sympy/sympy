@@ -16,7 +16,11 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
+<<<<<<< HEAD
     AccumBounds, reduced_totient, primenu, primeomega)
+=======
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction)
+>>>>>>> 966ace9fc3d40cdcfbd2e4b9472b3114ab3ebe02
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -129,6 +133,13 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_SingularityFunction():
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^ 5"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^ 4"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^ 4"
+    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^ n"
 
 
 def test_latex_cycle():
