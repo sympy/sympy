@@ -904,6 +904,21 @@ class Basic(with_metaclass(ManagedProperties)):
             return rv.xreplace(reps)
         else:
             rv = self
+            if len(sequence) > 1:
+                try:
+                    from sympy.utilities.iterables import topological_sort
+                    substitution = args[0]
+                    topo_sorted_subs = topological_sort(((list(set(substitution.keys() +
+                                                                   substitution.values())),
+                                                          sequence)))
+                    sequence = [(item, substitution[item])
+                                for item in topo_sorted_subs
+                                if item in substitution.keys()]
+                except:
+                    # Graph of substitution can contain cycles.
+                    # In this case topological_sort() can't work and
+                    # sequence will not be changed
+                    pass
             for old, new in sequence:
                 rv = rv._subs(old, new, **kwargs)
                 if not isinstance(rv, Basic):

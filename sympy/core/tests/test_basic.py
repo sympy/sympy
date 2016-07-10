@@ -180,6 +180,13 @@ def test_call():
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
 
+
+def test_issue_6257():
+    x, y, z, t = symbols('x y z t')
+    assert (x*y).subs({y: z, z: 2}) == 2*x
+    assert (x*y).subs({y: z, z: t, t: 2}) == 2*x
+
+
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
     from sympy.core.symbol import symbols
