@@ -1718,7 +1718,7 @@ class HolonomicFunction(object):
             else:
                 ap.append(1)
             if as_list:
-                listofsol.append(((S(u0[i])*x**(i+constantpower)).subs(x, x-0), (hyper(ap, bq, c*x**m)).subs(x, x-x0)))
+                listofsol.append(((S(u0[i])*x**(i+constantpower)).subs(x, x-x0), (hyper(ap, bq, c*x**m)).subs(x, x-x0)))
             else:
                 sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
         if as_list:
@@ -1787,13 +1787,41 @@ class HolonomicFunction(object):
         return HolonomicFunction(self.annihilator, self.x, b, y0)
 
     def to_meijerg(self):
+        """
+        Returns a linear combination of Meijer G-functions.
+
+        Examples
+        ========
+
+        >>> from sympy.holonomic import expr_to_holonomic
+        >>> from sympy import sin, cos, hyperexpand, log, symbols
+        >>> x = symbols('x')
+
+        >>> hyperexpand(expr_to_holonomic(cos(x) + sin(x)).to_meijerg())
+        sin(x) + cos(x)
+
+        >>> hyperexpand(expr_to_holonomic(log(x)).to_meijerg()).simplify()
+        log(x)
+
+        See Also
+        ========
+
+        to_hyper()
+        """
+
+        # convert to hypergeometric first
         rep = self.to_hyper(as_list=True)
+
         sol = S(0)
+
         for i in rep:
+
             if len(i) == 1:
                 sol += i[0]
+
             elif len(i) == 2:
                 sol += i[0] * _hyper_to_meijerg(i[1])
+
         return sol
 
 
@@ -2149,22 +2177,33 @@ def _derivate_diff_eq(listofpoly):
 
 
 def _hyper_to_meijerg(func):
+    """
+    Converts a `hyper` to meijerg.
+    """
     ap = func.ap
     bq = func.bq
+
     p = len(ap)
     q = len(bq)
+
     z = func.args[2]
-    an = (1-i for i in ap)
+
+    # paramters of the `meijerg` function.
+    an = (1 - i for i in ap)
     anp = ()
     bm = (S(0), )
-    bmq = (1-i for i in bq)
+    bmq = (1 - i for i in bq)
+
     k = S(1)
+
     for i in bq:
         k = k * gamma(i)
+
     for i in ap:
         if i <= 0:
             raise NotImplementedError
         k = k / gamma(i)
+
     return k * meijerg(an, anp, bm, bmq, -z)
 
 
