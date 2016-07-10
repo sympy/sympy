@@ -9,10 +9,10 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorint, primefactors, divisors, randprime, nextprime, prevprime,
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
-    factorrat)
+    factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count)
+    udivisor_count, primenu, primeomega)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -295,6 +295,22 @@ def test_totient():
     n = Symbol("n", integer=True, positive=True)
     assert totient(n).is_integer
 
+def test_reduced_totient():
+    assert [reduced_totient(k) for k in range(1, 16)] == \
+        [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4]
+    assert reduced_totient(5005) == 60
+    assert reduced_totient(5006) == 2502
+    assert reduced_totient(5009) == 5008
+    assert reduced_totient(2**100) == 2**98
+
+    m = Symbol("m", integer=True)
+    assert reduced_totient(m)
+    assert reduced_totient(m).subs(m, 2**3*3**10) == 3**10 - 3**9
+    assert summation(reduced_totient(m), (m, 1, 16)) == 68
+
+    n = Symbol("n", integer=True, positive=True)
+    assert reduced_totient(n).is_integer
+
 
 def test_divisor_sigma():
     assert [divisor_sigma(k) for k in range(1, 12)] == \
@@ -466,3 +482,31 @@ def test_digits():
     assert digits(384753, 71) == [71, 1, 5, 23, 4]
     assert digits(93409) == [10, 9, 3, 4, 0, 9]
     assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
+
+
+def test_primenu():
+    assert primenu(2) == 1
+    assert primenu(2 * 3) == 2
+    assert primenu(2 * 3 * 5) == 3
+    assert primenu(3 * 25) == primenu(3) + primenu(25)
+    assert [primenu(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primenu(fac(50)) == 15
+    assert primenu(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primenu(n)
+    assert primenu(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primenu(n), (n, 2, 30)) == 43
+
+
+def test_primeomega():
+    assert primeomega(2) == 1
+    assert primeomega(2 * 2) == 2
+    assert primeomega(2 * 2 * 3) == 3
+    assert primeomega(3 * 25) == primeomega(3) + primeomega(25)
+    assert [primeomega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primeomega(fac(50)) == 108
+    assert primeomega(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primeomega(n)
+    assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primeomega(n), (n, 2, 30)) == 59

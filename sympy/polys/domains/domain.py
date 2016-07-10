@@ -278,6 +278,10 @@ class Domain(object):
             else:
                 cls = K1.__class__
 
+            from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+            if cls == GlobalPolynomialRing:
+                return cls(domain, symbols)
+
             return cls(domain, symbols, order)
 
         def mkinexact(cls, K0, K1):

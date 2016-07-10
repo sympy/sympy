@@ -443,7 +443,8 @@ def isprime(n):
     Negative numbers (e.g. -2) are not considered prime.
 
     The first step is looking for trivial factors, which if found enables
-    a quick return.  For small numbers, a set of deterministic Miller-Rabin
+    a quick return.  Next, if the sieve is large enough, use bisection search
+    on the sieve.  For small numbers, a set of deterministic Miller-Rabin
     tests are performed with bases that are known to have no counterexamples
     in their range.  Finally if the number is larger than 2^64, a strong
     BPSW test is performed.  While this is a probable prime test and we
@@ -501,6 +502,12 @@ def isprime(n):
                                                12801, 13741, 13747, 13981,
                                                14491, 15709, 15841, 16705,
                                                18705, 18721, 19951, 23001]
+
+    # bisection search on the sieve if the sieve is large enough
+    from sympy.ntheory.generate import sieve as s
+    if n <= s._list[-1]:
+        l, u = s.search(n)
+        return l == u
 
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
