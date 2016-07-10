@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
-    solve, limit, Float, nsimplify)
+    solve, limit, Float, nsimplify, gamma)
 from sympy.printing import sstr
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
@@ -1575,7 +1575,7 @@ class HolonomicFunction(object):
         x0 = self.x0 - a
         return HolonomicFunction(sol, x, x0, self.y0)
 
-    def to_hyper(self):
+    def to_hyper(self, as_list=False):
         """
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
@@ -1637,6 +1637,10 @@ class HolonomicFunction(object):
                 else:
                     sol += Symbol('C_%s' %j) * x**i
             sol = sol * x**constantpower
+            if as_list:
+                if x0 != 0:
+                    return [(sol.subs(x, x - x0), )]
+                return [(sol, )]
             if x0 != 0:
                 return sol.subs(x, x - x0)
             return sol
@@ -1675,14 +1679,21 @@ class HolonomicFunction(object):
         # The answer will be a linear combination
         # of different hypergeometric series which satisfies
         # the recurrence.
+        if as_list:
+            listofsol = []
         for i in range(smallest_n + m):
+            if S(u0[i]) == 0:
+                continue
 
             # if the recurrence relation doesn't hold for `n = i`,
             # then a Hypergeometric representation doesn't exist.
             # add the algebraic term a * x**i to the solution,
             # where a is u0[i]
             if i < smallest_n:
-                sol += S(u0[i]) * x**i
+                if as_list:
+                    listofsol.append(((S(u0[i]) * x**(i+constantpower)).subs(x, x-x0), ))
+                else:
+                    sol += S(u0[i]) * x**i
                 continue
 
             # if the coefficient u0[i] is zero, then the
@@ -1706,8 +1717,12 @@ class HolonomicFunction(object):
                 bq.remove(1)
             else:
                 ap.append(1)
-
-            sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
+            if as_list:
+                listofsol.append(((S(u0[i])*x**(i+constantpower)).subs(x, x-0), (hyper(ap, bq, c*x**m)).subs(x, x-x0)))
+            else:
+                sol += S(u0[i]) * hyper(ap, bq, c * x**m) * x**i
+        if as_list:
+            return listofsol
         sol = sol * x**constantpower
         if x0 != 0:
             return sol.subs(x, x - x0)
@@ -1770,6 +1785,16 @@ class HolonomicFunction(object):
 
         y0 = self.evalf(b, derivatives=True)
         return HolonomicFunction(self.annihilator, self.x, b, y0)
+
+    def to_meijerg(self):
+        rep = self.to_hyper(as_list=True)
+        sol = S(0)
+        for i in rep:
+            if len(i) == 1:
+                sol += i[0]
+            elif len(i) == 2:
+                sol += i[0] * _hyper_to_meijerg(i[1])
+        return sol
 
 
 def from_hyper(func, x0=0, evalf=False):
@@ -2121,6 +2146,26 @@ def _derivate_diff_eq(listofpoly):
 
     sol.append(listofpoly[a])
     return sol
+
+
+def _hyper_to_meijerg(func):
+    ap = func.ap
+    bq = func.bq
+    p = len(ap)
+    q = len(bq)
+    z = func.args[2]
+    an = (1-i for i in ap)
+    anp = ()
+    bm = (S(0), )
+    bmq = (1-i for i in bq)
+    k = S(1)
+    for i in bq:
+        k = k * gamma(i)
+    for i in ap:
+        if i <= 0:
+            raise NotImplementedError
+        k = k / gamma(i)
+    return k * meijerg(an, anp, bm, bmq, -z)
 
 
 def _add_lists(list1, list2):
