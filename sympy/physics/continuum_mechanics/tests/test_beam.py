@@ -1,5 +1,6 @@
 from sympy import Symbol
 from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
+from sympy.functions import SingularityFunction
 from sympy.physics.mechanics import Point
 from sympy.printing import sstr
 from sympy.utilities.pytest import XFAIL
@@ -58,15 +59,18 @@ def test_Beam():
                            'moment': [(0, 4), (4, 0), (4, 3), (5, 0)],
                             'slope': [(0, 1), (4, 3), (5, 0)]}
 
-@XFAIL
+
 def test_apply():
     E = Symbol('E')
     I = Symbol('I')
+    P1 = Point('0')
+    P2 = Point('2')
+    P3 = Point('3')
     b = Beam(4, E, I)
-    Load_1 = PointLoad(location = 0, value = -3, moment = True)
-    Load_2 = PointLoad(location = 2, value = 4)
-    Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-    p = b.apply(Load_1, Load_2, Load_3)
+    Load_1 = PointLoad(location = P1, value = -3, moment = True)
+    Load_2 = PointLoad(location = P2, value = 4)
+    Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+    p = b.apply_loads(Load_1, Load_2, Load_3)
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
     assert p == q
 

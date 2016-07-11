@@ -5,6 +5,7 @@ This module can be used to solve beam bending problems in mechanics.
 
 from __future__ import print_function, division
 
+from sympy.core import S, Symbol
 from sympy.printing import sstr
 from sympy.physics.mechanics import Point
 from sympy.functions import SingularityFunction
@@ -202,7 +203,18 @@ class Beam(object):
                  self._load += self._load_as_SingularityFunction(load)
              else:
                 raise TypeError("""apply_loads takes either PointLoad or DistributedLoad objects""")
-  
+        return self._load
+
+    def _load_as_SingularityFunction(self, load):
+        x = Symbol('x')
+        if isinstance(load, PointLoad):
+            if load.moment:
+                return load.value*SingularityFunction(x, load.location, S(-2))
+            return load.value*SingularityFunction(x, load.location, S(-1))
+        elif isinstance(load, DistributedLoad):
+            return load.value*SingularityFunction(x, load.start, load.order)
+
+
 
 class PointLoad(object):
     """A Point Load.
