@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
@@ -86,12 +85,6 @@ class FpGroup(DefaultPrinting):
 #                           COSET TABLE                                       #
 ###############################################################################
 
-# sets the upper limit on the number of cosets generated during
-# Coset Enumeration. "M" from Derek Holt's. It is supposed to be
-# user definable.
-CosetTableDefaultMaxLimit = 4096000
-max_stack_size = 500
-
 class CosetTable(DefaultPrinting):
     # coset_table: Mathematically a coset table
     #               represented using a list of lists
@@ -118,6 +111,13 @@ class CosetTable(DefaultPrinting):
     "Implementation and Analysis of the Todd-Coxeter Algorithm"
 
     """
+    # default limit for the number of cosets allowed in a
+    # coset enumeration.
+    coset_table_max_limit = 4096000
+    # maximun size of deduction stack above or equal to
+    # which it is emptied
+    max_stack_size = 500
+
     def __init__(self, fp_grp, subgroup):
         self.fp_group = fp_grp
         self.subgroup = subgroup
@@ -174,7 +174,7 @@ class CosetTable(DefaultPrinting):
     # Pg. 153 [1]
     def define(self, alpha, x):
         A = self.A
-        if len(self.table) == CosetTableDefaultMaxLimit:
+        if len(self.table) == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
@@ -186,7 +186,7 @@ class CosetTable(DefaultPrinting):
 
     def define_f(self, alpha, x):
         A = self.A
-        if self.table == CosetTableDefaultMaxLimit:
+        if len(self.table) == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
             return
         self.table.append([None]*len(A))
@@ -446,7 +446,6 @@ class CosetTable(DefaultPrinting):
             else:
                 self.define_f(f, word[i])
 
-    # currently not used anywhere
     def look_ahead(self):
         R = self.fp_group.relators()
         p = self.p
@@ -462,8 +461,8 @@ class CosetTable(DefaultPrinting):
     def process_deductions(self, R_c_x, R_c_x_inv):
         p = self.p
         while len(self.deduction_stack) > 0:
-            if len(self.deduction_stack) >= max_stack_size:
-                self.lookahead()
+            if len(self.deduction_stack) >= CosetTable.max_stack_size:
+                self.look_ahead()
                 del self.deduction_stack[:]
             else:
                 alpha, x = self.deduction_stack.pop()
