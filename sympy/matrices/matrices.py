@@ -317,7 +317,7 @@ class MatrixBase(object):
 
     def trace(self):
         """
-        Return the trace of a matrix expression ie.. the sum of the
+        Return the trace of a matrix expression ie. the sum of the
         elements on the diagonal.
 
         Examples
@@ -339,7 +339,7 @@ class MatrixBase(object):
 
         Also, by setting method='LU' we can specify it to be done using LU decomposition.
 
-        However, if determinant of matrix is zero, a value error is returned as the inverse for that
+        However, if determinant of matrix is zero, a ValueError is raised as the inverse for that
         matrix doesn't exist.
 
         See Also
