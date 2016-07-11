@@ -257,7 +257,6 @@ class ImageSet(Set):
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
-    lamda_vars = property(lambda self: self.lamda.variables)
 
     def __iter__(self):
         already_seen = set()
@@ -363,94 +362,6 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
-
-    def put_values(self, symbol, val=None):
-        """
-        Returns ImageSet expr value in FiniteSet after substituting the given
-        `values` for `symbol`.
-
-        Input can be either a single symbol and corresponding value
-        or a dictionary of symbols and values. If symbol(s) are present in
-        lambda variables and values are in the base_set, it returns
-        corresponding ImageSet value.
-
-        Raises
-        ======
-
-        ValueError
-            The input is not valid.
-            All symbols are not present in lambda.
-            The value(s) are not in ImageSet base_set
-
-        Examples
-        ========
-
-        >>> from sympy import symbols, Lambda, S
-        >>> from sympy.sets.fancysets import ImageSet
-        >>> n, m = symbols('n, m')
-        >>> imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
-        >>> imgset.put_values({n: 1, m: 2})
-        {1}
-        >>> imgset = ImageSet(Lambda((n, m), n**2 + m), S.Reals)
-        >>> imgset.put_values({n: 1, m: 2})
-        {3}
-
-        """
-        from sympy.core.sympify import SympifyError
-        if val is not None:
-            val = {symbol: val}
-        elif isinstance(symbol, dict):
-            val = symbol
-        else:
-            msg = 'Expecting (sym, val) or ({sym: val}, None) but got (%s, %s)'
-            raise ValueError(filldedent(msg % (symbol, val)))
-
-        variabls = self.lamda_vars
-
-        if set(val.keys()) & set(variabls):
-            # if variables present in the imageset lambda
-            # and variable value is in base_set, then only put values
-            baseset = self.base_set
-            try:
-                check_values = all(v in baseset for v in val.values())
-            except (TypeError, SympifyError):
-                msg = 'Base set: %s, doesn\'t contain the subset: %s '
-                raise TypeError(filldedent(msg % (baseset, val.values())))
-            if check_values:
-                # substitute the values
-                return FiniteSet(self.lamda.expr.subs(val))
-            else:
-                msg = 'All or some of the values %s, you want to put is not in \
-                base_set: %s '
-                raise ValueError(filldedent(msg % (val, baseset)))
-        else:
-            msg = 'All of the symbol(s): %s, you want to replace is not \
-            present in ImageSet lambda variables: %s '
-            raise ValueError(filldedent(msg % (val.keys(), variabls)))
-
-    def finite_values(self, *args):
-        """Each `args` contains dict of symbols and values to replace.
-        Returns a tuple with corresponding ImageSet values. Order
-        of the solution is same as order of `args`.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols, Lambda, S
-        >>> from sympy.sets.fancysets import ImageSet
-        >>> n, m = symbols('n, m')
-        >>> img = ImageSet(Lambda((n, m), n**2) , S.Reals)
-        >>> img.finite_values({n: 1}, {n: 2, m:3}, {n: 10})
-        (1, 4, 100)
-        >>> img.finite_values({n: 10}, {n: 1, m:3}, {n: 2})
-        (100, 1, 4)
-
-        """
-        length = len(args)
-        finite_values = ()
-        for i in range(0, length):
-            finite_values += (list(self.put_values(args[i]))[0], )
-        return finite_values
 
     def _intersect(self, other):
         from sympy.solvers.diophantine import diophantine

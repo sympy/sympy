@@ -669,46 +669,6 @@ def test_union_RealSubSet():
     assert (S.Complexes).union(S.Integers) == S.Complexes
 
 
-def test_ImageSet_put_values():
-    from sympy import Dummy
-    n, m = symbols('n, m')
-    imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
-    assert imgset.lamda_vars == (n, m)
-    assert imgset.put_values({n: 1, m: 2}) == FiniteSet(1)
-    assert imgset.put_values({n: 2}) == FiniteSet(4)
-    # x is not present in imageset lambda variables
-    raises(ValueError, lambda: imgset.put_values({x: 1}))
-    # base set is S.Reals. Can't replace with complex number
-    raises(ValueError, lambda: imgset.put_values({n: I}))
-
-    imgset = ImageSet(Lambda((n, m), n**2 + m), S.Reals)
-    assert imgset.put_values(n, 2) == FiniteSet(4 + m)
-
-    # test for dummy
-    n = Dummy('n')
-    m = Dummy('m')
-    imgeset = ImageSet(Lambda((n, m), n**2 + m), S.Reals)
-    assert imgeset.put_values(n, 1) == FiniteSet(1 + m)
-    assert imgeset.put_values(m, 1) == FiniteSet(n**2 + 1)
-    assert imgeset.put_values({m: 1, n: 2}) == FiniteSet(5)
-    n_old = n
-    n = Dummy('n')
-    assert imgeset.put_values({m: 1, n: 2}) == FiniteSet(n_old**2 + 1)
-    # invailid input
-    raises(ValueError, lambda: imgeset.put_values((m, 1), (n, 2)))
-
-
-def test_ImageSet_finite_values():
-    n, m = symbols('n, m')
-    x = Symbol('x')
-    imgset = ImageSet(Lambda((n, m), n**2), S.Reals)
-    assert imgset.finite_values({n: 1, m: 2}, {n: 2}) == (1, 4)
-    assert imgset.finite_values({n: 2, m: 2}, {n: 1}) == (4, 1)
-    raises(TypeError, lambda: imgset.finite_values({n: x}))
-    x = Symbol('x', real=True)
-    assert imgset.finite_values({n: x}) == (x**2,)
-
-
 def test_issue_9980():
     c1 = ComplexRegion(Interval(1, 2)*Interval(2, 3))
     c2 = ComplexRegion(Interval(1, 5)*Interval(1, 3))
