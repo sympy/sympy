@@ -100,6 +100,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.optics',
