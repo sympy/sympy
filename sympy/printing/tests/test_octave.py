@@ -246,6 +246,13 @@ def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: mcode(expr))
 
+def test_octave_sinc():
+    from sympy import sinc
+    expr = octave_code(sinc((x+3)))
+    assert expr == "sinc((x + 3)/pi)"
+    expr = octave_code(sinc(pi*(x+3)))
+    assert expr == "sinc(x + 3)"
+
 
 def test_octave_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x**2, True))
