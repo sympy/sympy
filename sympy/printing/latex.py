@@ -1605,7 +1605,7 @@ class LatexPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(' + \ldots')
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
