@@ -281,6 +281,7 @@ tests = [
     'sympy.matrices.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.optics.tests',
