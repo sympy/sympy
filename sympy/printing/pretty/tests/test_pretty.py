@@ -3430,20 +3430,32 @@ u("""\
 def test_pretty_FormalPowerSeries():
     f = fps(log(1 + x))
 
+
     ascii_str = \
 """\
-     2    3    4    5        \n\
-    x    x    x    x     / 6\\\n\
-x - -- + -- - -- + -- + O\\x /\n\
-    2    3    4    5         \
+  oo             \n\
+____             \n\
+\   `            \n\
+ \         -k  k \n\
+  \   -(-1)  *x  \n\
+  /   -----------\n\
+ /         k     \n\
+/___,            \n\
+k = 1            \
 """
 
     ucode_str = \
 u("""\
-     2    3    4    5        \n\
-    x    x    x    x     ⎛ 6⎞\n\
-x - ── + ── - ── + ── + O⎝x ⎠\n\
-    2    3    4    5         \
+  ∞              \n\
+ ____            \n\
+ ╲               \n\
+  ╲        -k  k \n\
+   ╲  -(-1)  ⋅x  \n\
+   ╱  ───────────\n\
+  ╱        k     \n\
+ ╱               \n\
+ ‾‾‾‾            \n\
+k = 1            \
 """)
 
     assert pretty(f) == ascii_str
