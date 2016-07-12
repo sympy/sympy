@@ -330,12 +330,11 @@ class DifferentialOperator(object):
             else:
                 return False
 
-    def is_singular(self, x0=None):
+    def is_singular(self, x0):
         """
         Checks if the differential equation is singular at x0.
         """
-        if x0 == None:
-            x0 = self.x0
+
         base = self.parent.base
         return x0 in roots(base.to_sympy(self.listofpoly[-1]), self.x)
 
@@ -388,7 +387,7 @@ class HolonomicFunction(object):
 
     _op_priority = 20
 
-    def __init__(self, annihilator, x, x0=0, y0=[]):
+    def __init__(self, annihilator, x, x0=0, y0=[], singular_ics=None):
         """
         Takes the annihilator and variable of the function.
         x0 is the point for which initial conditions are given and
@@ -411,10 +410,14 @@ class HolonomicFunction(object):
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
         self.x = x
+        self.singular_ics = singular_ics
 
     def __repr__(self):
         str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
-        if not self._have_init_cond:
+        if not self._have_init_cond and self.singular_ics == None:
+            return str_sol
+        elif self.singular_ics:
+            str_sol += ', ' + sstr(self.singular_ics)
             return str_sol
         else:
             cond_str = ''
@@ -553,8 +556,8 @@ class HolonomicFunction(object):
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
-                selfat0 = self.annihilator.is_singular(x0=0)
-                otherat0 = other.annihilator.is_singular(x0=0)
+                selfat0 = self.annihilator.is_singular(0)
+                otherat0 = other.annihilator.is_singular(0)
 
                 if self.x0 == 0 and not selfat0 and not otherat0:
                     return self + other.change_ics(0)
@@ -563,8 +566,8 @@ class HolonomicFunction(object):
                     return self.change_ics(0) + other
 
                 else:
-                    selfatx0 = self.annihilator.is_singular(x0=self.x0)
-                    otheratx0 = other.annihilator.is_singular(x0=self.x0)
+                    selfatx0 = self.annihilator.is_singular(self.x0)
+                    otheratx0 = other.annihilator.is_singular(self.x0)
 
                     if not selfatx0 and not otheratx0:
                         return self + other.change_ics(self.x0)
@@ -869,8 +872,8 @@ class HolonomicFunction(object):
             # if the points are different, consider one
             else:
 
-                selfat0 = self.annihilator.is_singular(x0=0)
-                otherat0 = other.annihilator.is_singular(x0=0)
+                selfat0 = self.annihilator.is_singular(0)
+                otherat0 = other.annihilator.is_singular(0)
 
                 if self.x0 == 0 and not selfat0 and not otherat0:
                     return self * other.change_ics(0)
@@ -879,8 +882,8 @@ class HolonomicFunction(object):
                     return self.change_ics(0) * other
 
                 else:
-                    selfatx0 = self.annihilator.is_singular(x0=self.x0)
-                    otheratx0 = other.annihilator.is_singular(x0=self.x0)
+                    selfatx0 = self.annihilator.is_singular(self.x0)
+                    otheratx0 = other.annihilator.is_singular(self.x0)
 
                     if not selfatx0 and not otheratx0:
                         return self * other.change_ics(self.x0)
@@ -929,7 +932,7 @@ class HolonomicFunction(object):
         sol = [i.degree() for i in self.annihilator.listofpoly]
         return max(sol)
 
-    def composition(self, expr, *args):
+    def composition(self, expr, *args, **kwargs):
         """
         Returns the annihilator after composition of a holonomic function with
         an algebraic function. Initial conditions for the annihilator after
@@ -993,8 +996,8 @@ class HolonomicFunction(object):
 
         # if initial conditions are given for the resulting function
         if args:
-            return HolonomicFunction(sol, self.x, args[0], args[1])
-        return HolonomicFunction(sol, self.x)
+            return HolonomicFunction(sol, self.x, args[0], args[1], **kwargs)
+        return HolonomicFunction(sol, self.x, **kwargs)
 
     def to_sequence(self, lb=True):
         """
@@ -1044,7 +1047,7 @@ class HolonomicFunction(object):
             return self.shift_x(self.x0).to_sequence()
 
         # check whether a power series exists if the point is singular
-        if self.annihilator.is_singular(x0=self.x0):
+        if self.annihilator.is_singular(self.x0):
             return self._frobenius(lb=lb)
 
         dict1 = {}
@@ -1212,7 +1215,10 @@ class HolonomicFunction(object):
         allpos = all(i >= 0 for i in reals)
         allint = all(int(i) == i for i in reals)
 
-        if allpos and allint:
+        if self.singular_ics and self.singular_ics[0] in reals:
+            rootstoconsider = [self.singular_ics[0]]
+
+        elif allpos and allint:
             rootstoconsider = [min(reals)]
 
         elif not allint:
@@ -1302,6 +1308,8 @@ class HolonomicFunction(object):
                 if len(y0) > int(p):
                     for i in range(int(p), len(y0)):
                         u0.append(y0[i] / factorial(i))
+            if self.singular_ics and rootstoconsider[0] == self.singular_ics[0]:
+                u0 = self.singular_ics[1]
 
             if len(u0) < order:
 
@@ -1987,7 +1995,7 @@ domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ, singular_ics=None):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -2019,7 +2027,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
             raise ValueError("Specify the variable for the function")
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain, singular_ics=singular_ics)
     if solpoly:
         return solpoly
 
@@ -2045,7 +2053,10 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
             sol = _convert_meijerint(func, x, initcond=False, domain=domain)
             if not sol:
                 raise NotImplementedError
-            if not initcond:
+            if singular_ics:
+                sol.singular_ics = singular_ics
+                sol.x0 = x0
+            if singular_ics or not initcond:
                 return sol
             if not lenics:
                 lenics = sol.annihilator.order
@@ -2055,8 +2066,12 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
                 y0 = _find_conditions(func, x, x0, lenics)
             return HolonomicFunction(sol.annihilator, x, x0, y0)
 
-        if not initcond:
-            return sol.composition(func.args[0])
+        if singular_ics or not initcond:
+            sol = sol.composition(func.args[0])
+            if singular_ics:
+                sol.singular_ics = singular_ics
+                sol.x0 = x0
+            return sol
         if not lenics:
             lenics = sol.annihilator.order
 
@@ -2085,7 +2100,10 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
 
     if not sol:
         raise NotImplementedError
-    if not initcond:
+    if singular_ics:
+        sol.singular_ics = singular_ics
+        sol.x0 = x0
+    if singular_ics or not initcond:
         return sol
     if not lenics:
         lenics = sol.annihilator.order
@@ -2224,7 +2242,7 @@ def _extend_y0(Holonomic, n):
     value point in the differential equation.
     """
 
-    if Holonomic.annihilator.is_singular(x0=Holonomic.x0):
+    if Holonomic.annihilator.is_singular(Holonomic.x0):
         return Holonomic.y0
 
     annihilator = Holonomic.annihilator
@@ -2312,7 +2330,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, singular_ics=None):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -2359,9 +2377,20 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ):
     elif is_alg:
         sol = n * (x / m) * Dx - 1
         sol = HolonomicFunction(sol, x).composition(basepoly).annihilator
+        is_singular = sol.is_singular(x0)
+        if singular_ics == None and x0 == 0 and is_singular:
+            rep = R.from_sympy(basepoly).rep
+            for i, j in enumerate(reversed(rep)):
+                if j == 0:
+                    continue
+                else:
+                    coeff = S(j)**ratexp
+                    indicial = S(i) * ratexp
+                    break
+            singular_ics = (indicial, [coeff])
 
-    if not initcond:
-        return HolonomicFunction(sol, x)
+    if singular_ics or not initcond:
+        return HolonomicFunction(sol, x, x0=x0, singular_ics=singular_ics)
 
     if not lenics:
         lenics = sol.order
