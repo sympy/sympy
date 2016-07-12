@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -1258,6 +1259,15 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             return prettyForm(pretty_symbol('gamma'))
         return self._print(Symbol("EulerGamma"))
+
+    def _print_Mod(self, expr):
+        pform = self._print(expr.args[0])
+        if pform.binding > prettyForm.MUL:
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right(' mod '))
+        pform = prettyForm(*pform.right(self._print(expr.args[1])))
+        pform.binding = prettyForm.OPEN
+        return pform
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':

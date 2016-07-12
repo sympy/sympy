@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega)
+    AccumBounds, reduced_totient, primenu, primeomega, Mod)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -372,6 +372,12 @@ def test_latex_functions():
 
     assert latex(primeomega(n)) == r'\Omega\left(n\right)'
     assert latex(primeomega(n) ** 2) == r'\left(\Omega\left(n\right)\right)^{2}'
+
+    assert latex(Mod(x, 7)) == r'x\ mod\ 7'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\ mod\ 7'
+    assert latex(Mod(2 * x, 7)) == r'2 x\ mod\ 7'
+    assert latex(Mod(x, 7) + 1) == r'\left(x\ mod\ 7\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x\ mod\ 7\right)'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')

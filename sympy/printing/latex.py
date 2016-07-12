@@ -4,7 +4,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Symbol
+from sympy.core import S, Add, Symbol, Mod
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
@@ -216,7 +216,8 @@ class LatexPrinter(Printer):
         elif expr.is_Mul:
             if not first and _coeff_isneg(expr):
                 return True
-
+        if any([expr.has(x) for x in (Mod,)]):
+            return True
         if (not last and
             any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
             return True
@@ -231,6 +232,8 @@ class LatexPrinter(Printer):
         things.
         """
         if expr.is_Relational:
+            return True
+        if any([expr.has(x) for x in (Mod,)]):
             return True
         return False
 
@@ -1379,6 +1382,13 @@ class LatexPrinter(Printer):
                 return r"\left(%s\right)" % self._print(x)
             return self._print(x)
         return ' '.join(map(parens, expr.args))
+
+    def _print_Mod(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(%s\ mod\ %s\right)^{%s}' % (self.parenthesize(expr.args[0],
+                    PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]), self._print(exp))
+        return r'%s\ mod\ %s' % (self.parenthesize(expr.args[0],
+                PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]))
 
     def _print_HadamardProduct(self, expr):
         from sympy import Add, MatAdd, MatMul
