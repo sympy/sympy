@@ -385,7 +385,7 @@ def periodicity(f, symbol, check=False):
 
 def _periodicity(args, symbol):
     """Helper for periodicity to find the period of a list of simpler
-    functions. It uses the `nlcm` method to find the least common period of
+    functions. It uses the `lcim` method to find the least common period of
     all the functions.
     """
     periods = []
@@ -397,14 +397,14 @@ def _periodicity(args, symbol):
             return None
 
     if len(periods) > 1:
-        return nlcm(periods)
+        return lcim(periods)
 
     elif not periods:
         return None
 
 
-def nlcm(numbers):
-    """Returns the LCM of a list of numbers.
+def lcim(numbers):
+    """Returns the least common integral multiple of a list of numbers.
 
     The numbers can be rational or irrational or a mixture of both.
     `None` is returned for incommensurable numbers.
@@ -412,12 +412,12 @@ def nlcm(numbers):
     Examples
     ========
     >>> from sympy import S, pi
-    >>> from sympy.calculus.util import nlcm
-    >>> nlcm([S(1)/2, S(3)/4, S(5)/6])
+    >>> from sympy.calculus.util import lcim
+    >>> lcim([S(1)/2, S(3)/4, S(5)/6])
     15/2
-    >>> nlcm([2*pi, 3*pi, pi, pi/2])
+    >>> lcim([2*pi, 3*pi, pi, pi/2])
     6*pi
-    >>> nlcm([S(1), 2*pi])
+    >>> lcim([S(1), 2*pi])
     """
     result = None
     if all(num.is_irrational for num in numbers):

@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, nlcm, AccumBounds)
+                                 periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -99,13 +99,14 @@ def test_periodicity_check():
     raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
 
 
-def test_nlcm():
+def test_lcim():
     from sympy import pi
 
-    assert nlcm([S(1)/2, S(2), S(3)]) == 6
-    assert nlcm([pi/2, pi/4, pi]) == pi
-    assert nlcm([2*pi, pi/2]) == 2*pi
-    assert nlcm([S(1), 2*pi]) is None
+    assert lcim([S(1)/2, S(2), S(3)]) == 6
+    assert lcim([pi/2, pi/4, pi]) == pi
+    assert lcim([2*pi, pi/2]) == 2*pi
+    assert lcim([S(1), 2*pi]) is None
+    assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
 
 
 def test_AccumBounds():
