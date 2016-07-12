@@ -2378,6 +2378,8 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
         sol = n * (x / m) * Dx - 1
         sol = HolonomicFunction(sol, x).composition(basepoly).annihilator
         is_singular = sol.is_singular(x0)
+
+        # try to compute the conditions for singular points
         if singular_ics == None and x0 == 0 and is_singular:
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
