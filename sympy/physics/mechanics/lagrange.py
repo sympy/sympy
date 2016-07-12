@@ -7,12 +7,13 @@ from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
         _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
+from sympy.physics.mechanics.eombase import EOMBase
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
 
-class LagrangesMethod(object):
+class LagrangesMethod(EOMBase):
     """Lagrange's method object.
 
     This object generates the equations of motion in a two step procedure. The
@@ -152,7 +153,7 @@ class LagrangesMethod(object):
         if not iterable(qs):
             raise TypeError('Generalized coordinates must be an iterable')
         self._q = Matrix(qs)
-        self._qdots = self.q.diff(dynamicsymbols._t)
+        self._qdots = self._u = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
 
         # Deal with constraint equations
@@ -223,39 +224,29 @@ class LagrangesMethod(object):
 
         # Form the EOM
         self.eom = without_lam - self._term3
-        return self.eom
 
-    @property
-    def mass_matrix(self):
-        """Returns the mass matrix, which is augmented by the Lagrange
-        multipliers, if necessary.
-
-        If the system is described by 'n' generalized coordinates and there are
-        no constraint equations then an n X n matrix is returned.
-
-        If there are 'n' generalized coordinates and 'm' constraint equations
-        have been supplied during initialization then an n X (n+m) matrix is
-        returned. The (n + m - 1)th and (n + m)th columns contain the
-        coefficients of the Lagrange multipliers.
-        """
-
-        if self.eom is None:
-            raise ValueError('Need to compute the equations of motion first')
+        # Form the mass matrix and forcing vector
         if self.coneqs:
-            return (self._m_d).row_join(self.lam_coeffs.T)
+            self._mass_matrix = (self._m_d).row_join(self.lam_coeffs.T)
         else:
-            return self._m_d
+            self._mass_matrix = self._m_d
+        self._forcing = self._f_d
+
+        # Form the kinematical equations as is expected by the base class
+        self._k_ku = eye(len(self._u))
+        self._k_kqdot = eye(len(self._q))
+        self._f_k = zeros(1, len(self._u))
+
+        return self.eom
 
     @property
     def mass_matrix_full(self):
         """Augments the coefficients of qdots to the mass_matrix."""
 
-        if self.eom is None:
-            raise ValueError('Need to compute the equations of motion first')
         n = len(self.q)
         m = len(self.coneqs)
-        row1 = eye(n).row_join(zeros(n, n + m))
         row2 = zeros(n, n).row_join(self.mass_matrix)
+        row1 = self._k_kqdot.row_join(zeros(n, n + m))
         if self.coneqs:
             row3 = zeros(m, n).row_join(self._m_cd).row_join(zeros(m, m))
             return row1.col_join(row2).col_join(row3)
@@ -263,23 +254,15 @@ class LagrangesMethod(object):
             return row1.col_join(row2)
 
     @property
-    def forcing(self):
-        """Returns the forcing vector from 'lagranges_equations' method."""
-
-        if self.eom is None:
-            raise ValueError('Need to compute the equations of motion first')
-        return self._f_d
-
-    @property
     def forcing_full(self):
         """Augments qdots to the forcing vector above."""
 
-        if self.eom is None:
-            raise ValueError('Need to compute the equations of motion first')
+        forcing = self.forcing
+
         if self.coneqs:
-            return self._qdots.col_join(self.forcing).col_join(self._f_cd)
+            return self._qdots.col_join(forcing).col_join(self._f_cd)
         else:
-            return self._qdots.col_join(self.forcing)
+            return self._qdots.col_join(forcing)
 
     def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None):
         """Returns an instance of the Linearizer class, initiated from the
@@ -450,15 +433,3 @@ class LagrangesMethod(object):
             self._rhs = (self.mass_matrix_full.inv(inv_method,
                          try_block_diag=True) * self.forcing_full)
         return self._rhs
-
-    @property
-    def q(self):
-        return self._q
-
-    @property
-    def u(self):
-        return self._qdots
-
-    @property
-    def forcelist(self):
-        return self._forcelist
