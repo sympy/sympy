@@ -203,9 +203,6 @@ class Beam(object):
         this method would represent the PointLoads and DistributedLoads using
         Singularity Functions.
 
-        Examples
-        ========
-
         """
         for load in loads:
             if isinstance(load, PointLoad) or isinstance(load, DistributedLoad):
@@ -216,7 +213,7 @@ class Beam(object):
     def load_distribution(self):
         """
         Returns a Singularity Function expression which represents
-        the load distribution curve of a Beam object.
+        the load distribution curve of the Beam object.
 
         Examples
         ========
@@ -238,6 +235,46 @@ class Beam(object):
 
         """
         return self._load
+
+    def shear_force(self):
+        """
+        Returns a Singularity Function expression which represents
+        the shear force curve of the Beam object.
+
+        Examples
+        ========
+
+        """
+
+    def bending_moment(self):
+        """
+        Returns a Singularity Function expression which represents
+        the bending moment curve of the Beam object.
+
+        Examples
+        ========
+
+        """
+
+    def slope(self):
+        """
+        Returns a Singularity Function expression which represents
+        the slope the elastic curve of the Beam object.
+
+        Examples
+        ========
+
+        """
+
+    def deflection(self):
+        """
+        Returns a Singularity Function expression which represents
+        the elastic curve or deflection of the Beam object.
+
+        Examples
+        ========
+
+        """
 
 
 class PointLoad(object):
