@@ -79,6 +79,21 @@ def test_issue_5223():
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
+
+def test_issue_11313():
+    assert Integral(cos(x), x).series(x) == sin(x).series(x)
+    assert Derivative(sin(x), x).series(x).doit() == cos(x).series(x)
+
+    assert Derivative(x ** 3, x).as_leading_term(x) == 3 * x ** 2
+    assert Derivative(x ** 3, y).as_leading_term(x) == 0
+
+    assert Derivative(exp(x), x).series(x).doit() == exp(x).series(x)
+    assert Integral(exp(x), x).series(x) == exp(x).series(x)
+
+    assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
+    assert 1 + Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+
+
 def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \

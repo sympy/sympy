@@ -975,6 +975,14 @@ class Integral(AddWithLimits):
             x=symb, n=n, logx=logx).as_coeff_add(Order)
         return integrate(terms, *expr.limits) + Add(*order)*x
 
+    def _eval_as_leading_term(self, x):
+        series_gen = self.args[0].lseries(x)
+        while True:
+            leading_term = series_gen.next()
+            if leading_term != 0:
+                break
+        return integrate(leading_term, *self.args[1:])
+
     def as_sum(self, n, method="midpoint"):
         """
         Approximates the definite integral by a sum.
