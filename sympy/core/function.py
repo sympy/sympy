@@ -1362,10 +1362,14 @@ class Derivative(Expr):
     def _eval_as_leading_term(self, x):
         series_gen = self.expr.lseries(x)
         while True:
-            leading_term = series_gen.next()
-            if leading_term != 0:
+            try:
+                leading_term = series_gen.next()
+            except StopIteration:
+                return S.Zero
+            d = diff(leading_term, *self.variables)
+            if d != 0:
                 break
-        return diff(leading_term, *self.variables)
+        return d
 
     def _sage_(self):
         import sage.all as sage

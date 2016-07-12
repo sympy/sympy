@@ -88,10 +88,10 @@ def test_issue_11313():
     assert Derivative(x ** 3, y).as_leading_term(x) == 0
 
     assert Derivative(exp(x), x).series(x).doit() == exp(x).series(x)
-    assert Integral(exp(x), x).series(x) == exp(x).series(x)
+    assert 1 + Integral(exp(x), x).series(x) == exp(x).series(x)
 
     assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
-    assert 1 + Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
 
 
 def test_issue_3978():
