@@ -300,7 +300,7 @@ class MatrixBase(object):
 
     def copy(self):
         """
-        Return the copy of a matrix expression.
+        Returns the copy of a matrix expression.
 
         Examples
         ========
@@ -317,8 +317,8 @@ class MatrixBase(object):
 
     def trace(self):
         """
-        Return the trace of a matrix expression ie. the sum of the
-        elements on the diagonal.
+        Returns the trace of a matrix expression i.e. the sum of the
+        diagonal elements.
 
         Examples
         ========
@@ -339,7 +339,7 @@ class MatrixBase(object):
 
         Also, by setting method='LU' we can specify it to be done using LU decomposition.
 
-        However, if determinant of matrix is zero, a ValueError is raised as the inverse for that
+        However, if determinant of the matrix is zero, a ``ValueError`` is raised as the inverse for that
         matrix doesn't exist.
 
         See Also
@@ -358,7 +358,7 @@ class MatrixBase(object):
 
     def inv_mod(self, m):
         """
-        Return the inverse of the matrix `K` (mod `m`), if it exists.
+        Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
 
@@ -398,7 +398,7 @@ class MatrixBase(object):
 
     def transpose(self):
         """
-        Return the transpose of a matrix.
+        Returns the transpose of the matrix.
 
         Examples
         ========
@@ -416,7 +416,7 @@ class MatrixBase(object):
     T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
-        """ Return the conjugate of a matrix."""
+        """ Returns the conjugate of the matrix."""
         return self._eval_conjugate()
 
     C = property(conjugate, None, None, "By-element conjugation.")
