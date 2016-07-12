@@ -187,6 +187,15 @@ class Beam(object):
         """
         return self._boundary_conditions
 
+    def _load_as_SingularityFunction(self, load):
+        x = Symbol('x')
+        if isinstance(load, PointLoad):
+            if load.moment:
+                return load.value*SingularityFunction(x, load.location, S(-2))
+            return load.value*SingularityFunction(x, load.location, S(-1))
+        elif isinstance(load, DistributedLoad):
+            return load.value*SingularityFunction(x, load.start, load.order)
+
     def apply_loads(self, *loads):
         """
         Takes PointLoad and DistributedLoad as input. This method would apply
@@ -199,21 +208,36 @@ class Beam(object):
 
         """
         for load in loads:
-             if isinstance(load, PointLoad) or isinstance(load, DistributedLoad):
-                 self._load += self._load_as_SingularityFunction(load)
-             else:
+            if isinstance(load, PointLoad) or isinstance(load, DistributedLoad):
+                self._load += self._load_as_SingularityFunction(load)
+            else:
                 raise TypeError("""apply_loads takes either PointLoad or DistributedLoad objects""")
+
+    def load_distribution(self):
+        """
+        Returns a Singularity Function expression which represents
+        the load distribution curve of a Beam object.
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> P1 = Point('0')
+        >>> P2 = Point('2')
+        >>> P3 = Point('3')
+        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = P2, value = 4)
+        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.load_distribution()
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
+
+        """
         return self._load
-
-    def _load_as_SingularityFunction(self, load):
-        x = Symbol('x')
-        if isinstance(load, PointLoad):
-            if load.moment:
-                return load.value*SingularityFunction(x, load.location, S(-2))
-            return load.value*SingularityFunction(x, load.location, S(-1))
-        elif isinstance(load, DistributedLoad):
-            return load.value*SingularityFunction(x, load.start, load.order)
-
 
 
 class PointLoad(object):

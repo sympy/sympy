@@ -59,10 +59,7 @@ def test_Beam():
                            'moment': [(0, 4), (4, 0), (4, 3), (5, 0)],
                             'slope': [(0, 1), (4, 3), (5, 0)]}
 
-
-def test_apply():
-    E = Symbol('E')
-    I = Symbol('I')
+    # Test for load distribution function.
     P1 = Point('0')
     P2 = Point('2')
     P3 = Point('3')
@@ -70,7 +67,8 @@ def test_apply():
     Load_1 = PointLoad(location = P1, value = -3, moment = True)
     Load_2 = PointLoad(location = P2, value = 4)
     Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
-    p = b.apply_loads(Load_1, Load_2, Load_3)
+    b.apply_loads(Load_1, Load_2, Load_3)
+    p = b.load_distribution()
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
     assert p == q
 
