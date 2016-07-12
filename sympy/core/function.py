@@ -1351,6 +1351,8 @@ class Derivative(Expr):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
+        if x in self.variables:
+            n += 1
         arg = self.args[0].nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.args[1:]
@@ -1360,7 +1362,14 @@ class Derivative(Expr):
         return Add(*rv)
 
     def _eval_as_leading_term(self, x):
-        return self.args[0].as_leading_term(x)
+        return self.func(self.args[0].as_leading_term(x), *self.args[1:])
+        ddone = self.doit()
+        if isinstance(ddone, Derivative):
+            counts = self.variables.count(x)
+            for lt in self.args[0].lseries(x):
+                pass
+            return self.args[0].as_leading_term(x)
+        return ddone.as_leading_term(x)
 
     def _sage_(self):
         import sage.all as sage
@@ -1625,16 +1634,28 @@ class Subs(Expr):
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
 
+    # def series(self, x=None, x0=0, n=6, dir="+", logx=None):
+    #     # Need to overload this function, as .subs( ) does not work for Subs in
+    #     # case of expansion in the variable being substituted.
+    #     if x in self.args[1]:
+    #         return self.func(self.args[0].series(x, x0, n, dir, logx), *self.args[1:])
+    #     return self.series(x, x0, n, dir, logx)
+
     def _eval_nseries(self, x, n, logx):
-        if x in self.args[1]:
-            raise NotImplementedError("series variable is substitution variable")
+        # if x in self.args[1]:
+        #     raise NotImplementedError("series variable is substitution variable")
+        if x in self.args[2]:
+            # x is the variable being substituted into
+            apos = self.args[2].index(x)
+            other = self.args[1][apos]
+            arg = self.args[0].nseries(other, n=n, logx=logx)
+            o = arg.getO()
+            subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+            return Add(*subs_args) + o.subs(other, x)
         arg = self.args[0].nseries(x, n=n, logx=logx)
         o = arg.getO()
         other = self.args[1:]
-        #rv = [self.func(a, *other) for a in Add.make_args(arg.removeO())]
         rv = list(Add.make_args(arg.removeO()))
-        # if o:
-        #     rv.append(o.subs(x, self.args[2]))
         return Subs(Add(*rv), *other).doit()
 
 
