@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm, pi
+from sympy import Order, S, log, limit, lcm_list, pi
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -419,23 +419,21 @@ def nlcm(numbers):
     6*pi
     >>> nlcm([S(1), 2*pi])
     """
-    if all(num.is_irrational and num.has(pi) for num in numbers):
-        coeffs = []
-        for num in numbers:
-            # seperate out the irrational part from the rational coefficients
-            coeff = num.as_independent(pi)[0]
-            coeffs.append(coeff)
-            # Since, this method was primarily designed for to assist in
-            # computing the period of an expression, `pi` has been used as
-            # the principal irrational value.
-
-        result = lcm(coeffs)*pi
+    result = None
+    if all(num.is_irrational for num in numbers):
+        factorized_nums = list(map(lambda num: num.factor(), numbers))
+        factors_num = list(map(lambda num: num.as_coeff_Mul(), factorized_nums))
+        term = factors_num[0][1]
+        if all(factor == term for coeff, factor in factors_num):
+            common_term = term
+            coeffs = [coeff for coeff, factor in factors_num]
+            result = lcm_list(coeffs)*common_term
 
     elif all(num.is_rational for num in numbers):
-        result = lcm(numbers)
+        result = lcm_list(numbers)
 
     else:
-        return None
+        pass
 
     return result
 
