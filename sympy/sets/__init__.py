@@ -4,6 +4,5 @@ from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
 from .conditionset import ConditionSet
 
-from sympy.core.singleton import S
-Reals = S.Reals
-del S
+from .fancysets import Reals, Complexes
+Reals = Reals()
