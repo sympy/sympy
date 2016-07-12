@@ -348,7 +348,7 @@ class MatrixBase(object):
         inverse_LU
         inverse_GE
         inverse_ADJ
-        
+
         """
         if not self.is_square:
             raise NonSquareMatrixError()
