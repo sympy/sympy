@@ -2554,7 +2554,8 @@ class Expr(Basic, EvalfMixin):
                 s1 = s1.removeO()
             else:
                 o = Order(x**n, x)
-                if (s1 + o).removeO() == s1:
+                s1done = s1.doit()
+                if (s1done + o).removeO() == s1done:
                     o = S.Zero
 
             try:

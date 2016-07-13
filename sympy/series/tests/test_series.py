@@ -52,7 +52,7 @@ def test_issue_5223():
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert next(D(cos(x), x).lseries()) == D(1, x)
     assert D(
-        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
+        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
@@ -82,10 +82,16 @@ def test_issue_5223():
 
 def test_issue_11313():
     assert Integral(cos(x), x).series(x) == sin(x).series(x)
-    assert Derivative(sin(x), x).series(x).doit() == cos(x).series(x)
+    assert Derivative(sin(x), x).series(x, n=3).doit() == cos(x).series(x, n=3)
 
-    assert Derivative(x ** 3, x).as_leading_term(x) == 3 * x ** 2
-    assert Derivative(x ** 3, y).as_leading_term(x) == 0
+    assert Derivative(x**3, x).as_leading_term(x) == 3*x**2
+    assert Derivative(x**3, y).as_leading_term(x) == 0
+    assert Derivative(sin(x), x).as_leading_term(x) == 1
+    assert Derivative(cos(x), x).as_leading_term(x) == -x
+
+    # This result is equivalent to zero, zero is not return because
+    # `Expr.series` doesn't currently detect an `x` in its `free_symbol`s.
+    assert Derivative(1, x).as_leading_term(x) == Derivative(1, x)
 
     assert Derivative(exp(x), x).series(x).doit() == exp(x).series(x)
     assert 1 + Integral(exp(x), x).series(x) == exp(x).series(x)

@@ -1329,7 +1329,7 @@ class Derivative(Expr):
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
-        if old.is_Derivative and old.expr == self.args[0]:
+        if old.is_Derivative and old.expr == self.expr:
             # Check if canonnical order of variables is equal.
             old_vars = collections.Counter(old.variables)
             self_vars = collections.Counter(self.variables)
@@ -1346,14 +1346,14 @@ class Derivative(Expr):
         return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
-        dx = self.args[1:]
-        for term in self.args[0].lseries(x, logx=logx):
+        dx = self.variables
+        for term in self.expr.lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
-        arg = self.args[0].nseries(x, n=n, logx=logx)
+        arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
-        dx = self.args[1:]
+        dx = self.variables
         rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
             rv.append(o/x)
@@ -1361,11 +1361,8 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         series_gen = self.expr.lseries(x)
-        while True:
-            try:
-                leading_term = series_gen.next()
-            except StopIteration:
-                return S.Zero
+        d = S.Zero
+        for leading_term in series_gen:
             d = diff(leading_term, *self.variables)
             if d != 0:
                 break

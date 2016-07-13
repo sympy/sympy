@@ -977,8 +977,7 @@ class Integral(AddWithLimits):
 
     def _eval_as_leading_term(self, x):
         series_gen = self.args[0].lseries(x)
-        while True:
-            leading_term = series_gen.next()
+        for leading_term in series_gen:
             if leading_term != 0:
                 break
         return integrate(leading_term, *self.args[1:])
