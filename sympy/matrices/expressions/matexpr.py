@@ -225,9 +225,20 @@ class MatrixExpr(Basic):
         if not isinstance(key, tuple) and isinstance(key, slice):
             from sympy.matrices.expressions.slice import MatrixSlice
             return MatrixSlice(self, key, (0, None, 1))
+        if key is Ellipsis:
+            i = j = slice(None, None, None)
+            from sympy.matrices.expressions.slice import MatrixSlice
+            return MatrixSlice(self, i, j)
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
+                from sympy.matrices.expressions.slice import MatrixSlice
+                return MatrixSlice(self, i, j)
+            if (i is Ellipsis) or (j is Ellipsis):
+                if i is Ellipsis:
+                    i = slice(None, None, None)
+                if j is Ellipsis:
+                    j = slice(None, None, None)
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
