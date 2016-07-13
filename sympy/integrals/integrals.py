@@ -733,7 +733,6 @@ class Integral(AddWithLimits):
 
         """
         from sympy.integrals.deltafunctions import deltaintegrate
-        from sympy.integrals.singularityfunctions import singularityintegrate
         from sympy.integrals.heurisch import heurisch, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
@@ -865,12 +864,6 @@ class Integral(AddWithLimits):
 
                 # g(x) has at least a DiracDelta term
                 h = deltaintegrate(g, x)
-                if h is not None:
-                    parts.append(coeff * h)
-                    continue
-
-                # g(x) has at least a Singularity Function term
-                h = singularityintegrate(g, x)
                 if h is not None:
                     parts.append(coeff * h)
                     continue
