@@ -1132,6 +1132,30 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> x.has(x)
         True
 
+        Note ``has`` is a structural algorithm with no knowledge of
+        mathematics. Assuming otherwise can lead to what seem to be
+        unintuitive results:
+
+        >>> sin(6*x).has(2*x)
+        False
+        >>> from sympy.sets import Interval
+        >>> i = Interval(0, 5, True, True)
+        >>> i.has(4)
+        False
+        >>> i.has(0)
+        True
+
+        Here ``6*x`` does not literally have ``2*x`` in it and ``0`` is
+        in ``i.args`` whereas ``4`` is not.  Perhaps one intended:
+
+        >>> sin(6*x).subs(2*x, y)
+        sin(3*y)
+        >>> i.contains(4)
+        True
+        >>> i.contains(0)
+        False
+
+
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
         returned when the list of patterns is empty.
