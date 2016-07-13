@@ -58,7 +58,7 @@ class SingularityFunction(Function):
     >>> expr.subs({x: y, a: -10, n: n})
     (y + 10)**n
 
-    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')
+    The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)`` and ``rewrite('HeavisideDiracDelta')``
     returns the same output. One can use any of these methods according to their choice.
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
@@ -192,9 +192,9 @@ class SingularityFunction(Function):
         n = sympify(self.args[2])
 
         if n == -2:
-            return diff(Heaviside(x - a), x, 2)
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
         if n == -1:
-            return diff(Heaviside(x - a), x, 1)
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a)
 
