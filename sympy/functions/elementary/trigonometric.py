@@ -65,11 +65,11 @@ class TrigonometricFunction(Function):
 
     def _period(self, general_period, symbol=None):
         f = self.args[0]
-        if f.is_number:
-            raise ValueError("The period of a constant is undefined.")
-
         if symbol is None:
             symbol = tuple(f.free_symbols)[0]
+
+        if not f.has(symbol):
+            return S.Zero
 
         if f == symbol:
             return general_period
@@ -87,11 +87,7 @@ class TrigonometricFunction(Function):
                 if h == symbol:
                     return general_period/abs(g)
 
-            raise NotImplementedError("Use the periodicity function instead.")
-
-        else:
-            raise ValueError("The specified variable is not present in "
-                             "the function.")
+        raise NotImplementedError("Use the periodicity function instead.")
 
 
 def _peeloff_pi(arg):

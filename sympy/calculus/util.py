@@ -308,6 +308,9 @@ def periodicity(f, symbol, check=False):
     f = simplify(orig_f)
     period = None
 
+    if not f.has(symbol):
+        return S.Zero
+
     if isinstance(f, TrigonometricFunction):
         arg = f.args[0]
         try:
@@ -334,8 +337,8 @@ def periodicity(f, symbol, check=False):
             pass
 
     if f.is_Mul:
-        _, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction):
+        coeff, g = f.as_independent(symbol, as_Add=False)
+        if isinstance(g, TrigonometricFunction) or coeff is not S.One:
             period = periodicity(g, symbol)
 
         else:
@@ -392,14 +395,18 @@ def _periodicity(args, symbol):
     for f in args:
         try:
             period = periodicity(f, symbol)
-            periods.append(period)
+            if period is not S.Zero:
+                periods.append(period)
         except NotImplementedError:
             return None
 
     if len(periods) > 1:
         return lcim(periods)
 
-    elif not periods:
+    elif len(periods) == 1:
+        return periods[0]
+
+    else: # no periodic argument in symbol found
         return None
 
 

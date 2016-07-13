@@ -1495,4 +1495,5 @@ def test_trig_period():
     assert cos((-3)*x).period() == 2*pi/3
     assert cos(x*y).period(x) == 2*pi/abs(y)
     assert sin(3*x*y + 2*pi).period(y) == 2*pi/abs(3*x)
-    raises(ValueError, lambda: tan(3*x).period(y))
+    assert tan(3*x).period(y) == S.Zero
+    raises(NotImplementedError, lambda: sin(x**2).period(x))

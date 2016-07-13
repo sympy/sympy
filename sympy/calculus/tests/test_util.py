@@ -84,6 +84,7 @@ def test_periodicity():
     assert periodicity(sin(2*x)*exp(tan(x) - csc(2*x)), x) == pi
     assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
     assert periodicity(tan(sin(2*x)), x) == pi
+    assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     raises(NotImplementedError, lambda: periodicity(exp(x), x))
     raises(NotImplementedError, lambda: periodicity(log(x), x))
     raises(NotImplementedError, lambda: periodicity(exp(x)**sin(x), x))
