@@ -5,11 +5,13 @@ This module can be used to solve beam bending problems in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol
+from sympy.core import S, Symbol, Eq, diff
+from sympy.solvers import solve
 from sympy.printing import sstr
 from sympy.physics.mechanics import Point
 from sympy.functions import SingularityFunction
 from sympy import sympify
+from sympy.integrals import integrate
 
 
 class Beam(object):
@@ -232,6 +234,10 @@ class Beam(object):
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.load_distribution()
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.shear_force()
+
+
 
         """
         return self._load
@@ -245,6 +251,11 @@ class Beam(object):
         ========
 
         """
+        x = Symbol('x')
+        if not self._boundary_conditions['moment']:
+            return integrate(self.load_distribution(), x)
+        return diff(self.bending_moment(), x)
+
 
     def bending_moment(self):
         """
@@ -255,6 +266,26 @@ class Beam(object):
         ========
 
         """
+        x = Symbol('x')
+        if not self._boundary_conditions['moment']:
+            return -1*integrate(self.shear_force(), x)
+
+        C1 = Symbol('C1')
+        C2 = Symbol('C2')
+        load_curve = self.load_distribution()
+        shear_curve = integrate(load_curve, x) + C1
+        moment_curve = -1*integrate(shear_curve, x) + C2
+
+        bc_eqs = []
+        for position, value in self._boundary_conditions['moment']:
+            eqs = Eq(moment_curve.subs(x, position), value)
+            bc_eqs.append(eqs)
+
+        constants = solve(bc_eqs, [C1, C2])
+        moment_curve = moment_curve.subs(constants)
+
+        return moment_curve
+
 
     def slope(self):
         """

@@ -59,18 +59,27 @@ def test_Beam():
                            'moment': [(0, 4), (4, 0), (4, 3), (5, 0)],
                             'slope': [(0, 1), (4, 3), (5, 0)]}
 
-    # Test for load distribution function.
     P1 = Point('0')
     P2 = Point('2')
     P3 = Point('3')
-    b = Beam(4, E, I)
+    b1 = Beam(2, E, I)
     Load_1 = PointLoad(location = P1, value = -3, moment = True)
     Load_2 = PointLoad(location = P2, value = 4)
     Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
-    b.apply_loads(Load_1, Load_2, Load_3)
-    p = b.load_distribution()
+    b1.apply_loads(Load_1, Load_2, Load_3)
+    b1.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+
+    
+    # Test for load distribution function.
+    p = b1.load_distribution()
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
     assert p == q
+
+    # Test for shear force distribution function
+    p = b1.shear_force()
+    q = 
+    assert p == q
+
 
 
 def test_PointLoad():
