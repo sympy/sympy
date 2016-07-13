@@ -78,10 +78,10 @@ class KanesMethod(object):
     assigned to it.
     Finally, a list of all bodies and particles needs to be created.
 
-    >>> kd = [qd - u]
-    >>> FL = [(P, (-k * q - c * u) * N.x)]
-    >>> pa = Particle('pa', P, m)
-    >>> BL = [pa]
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle('pa', P, m)
+        >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the KanesMethod object and supply an inertial frame,

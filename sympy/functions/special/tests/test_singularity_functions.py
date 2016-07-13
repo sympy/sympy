@@ -1,6 +1,7 @@
 from sympy import (
-    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol,
-    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside, Derivative
+    adjoint, conjugate, nan, pi, symbols, transpose, DiracDelta, Symbol, diff,
+    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
+    Derivative, Float
 )
 
 
@@ -24,6 +25,10 @@ def test_fdiff():
     assert SingularityFunction(x, a, n).fdiff() == n*SingularityFunction(x, a, n - 1)
     assert SingularityFunction(y, a, n).diff(y) == n*SingularityFunction(y, a, n - 1)
 
+    expr_in = 4*SingularityFunction(x, a, n) + 3*SingularityFunction(x, a, -1) + -10*SingularityFunction(x, a, 0)
+    expr_out = n*4*SingularityFunction(x, a, n - 1) + 3*SingularityFunction(x, a, -2) - 10*SingularityFunction(x, a, -1)
+    assert diff(expr_in, x) == expr_out
+
     assert SingularityFunction(x, -10, 5).diff(evaluate=False) == (
         Derivative(SingularityFunction(x, -10, 5), x))
 
@@ -42,7 +47,7 @@ def test_eval():
     assert SingularityFunction(5, 6, -2) == 0
     assert SingularityFunction(4, 2, -2) == 0
     assert SingularityFunction(4, 4, -2) == oo
-    assert float(SingularityFunction(6.1, 4, 5)) == 40.84100999999997
+    assert (SingularityFunction(6.1, 4, 5)).evalf(5) == Float('40.841', '5')
     assert SingularityFunction(6.1, pi, 2) == (-pi + 6.1)**2
     assert SingularityFunction(x, a, nan) == nan
     assert SingularityFunction(x, nan, 1) == nan
