@@ -300,6 +300,7 @@ class SeqBase(Basic):
         If d is specified, find shortest linear recurrence of order
         `\leq` min(d, n/2) if possible.
         Returns list of coefficients ``[b(1), b(2), ...]`` corresponding to the
+        recurrence relation ``x(n) = b(1)*x(n-1) + b(2)*x(n-2) + ...``
         Returns ``[]`` if no recurrence is found.
         If gfvar is specified, also returns ordinary generating function as a
         function of gfvar.
