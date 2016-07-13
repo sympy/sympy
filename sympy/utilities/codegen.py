@@ -174,6 +174,8 @@ class Routine(object):
                 raise ValueError("Unknown Routine result: %s" % r)
             symbols.update(r.expr.free_symbols)
 
+        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
+
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
@@ -358,6 +360,7 @@ class ResultBase(object):
 
     __repr__ = __str__
 
+
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
 
@@ -404,6 +407,7 @@ class OutputArgument(Argument, ResultBase):
 
     __repr__ = __str__
 
+
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
 
@@ -420,6 +424,7 @@ class InOutArgument(Argument, ResultBase):
             self.result_var)
 
     __repr__ = __str__
+
 
 class Result(Variable, ResultBase):
     """An expression for a return value.
@@ -531,6 +536,15 @@ class CodeGen(object):
 
         # symbols that should be arguments
         symbols = expressions.free_symbols - local_vars - global_vars
+        new_symbols = set([])
+        new_symbols.update(symbols)
+
+        for symbol in symbols:
+            if isinstance(symbol, Idx):
+                new_symbols.remove(symbol)
+                new_symbols.update(symbol.args[1].free_symbols)
+        symbols = new_symbols
+
         # Decide whether to use output argument or return value
         return_val = []
         output_args = []
@@ -1156,7 +1170,13 @@ class JuliaCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Julia supports multiple return values
         return_vals = []
@@ -1363,7 +1383,13 @@ class OctaveCodeGen(CodeGen):
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Octave supports multiple return values
         return_vals = []

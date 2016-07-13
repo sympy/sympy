@@ -139,13 +139,20 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    h1 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
+    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
+                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
+
+    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
                       imageset(Lambda(n, n - a - 3), Interval(0, oo)))
 
-    h2 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
+    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
                       imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
 
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == (x, Union(h1, h2))
+    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
+                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
+
+    soln = (x, Union(h1, h2, h3, h4))
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == soln
 
 
 def test_invert_complex():
@@ -1086,3 +1093,14 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
+def test_issue_11174():
+    r, t = symbols('r t')
+    eq = z**2 + exp(2*x) - sin(y)
+    soln = Intersection(S.Reals, FiniteSet(log(-z**2 + sin(y))/2))
+    assert solveset(eq, x, S.Reals) == soln
+
+    eq = sqrt(r)*Abs(tan(t))/sqrt(tan(t)**2 + 1) + x*tan(t)
+    s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
+    soln = Intersection(S.Reals, FiniteSet(s))
+    assert solveset(eq, x, S.Reals) == soln

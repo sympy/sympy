@@ -240,10 +240,9 @@ def apply_finite_diff(order, x_list, y_list, x0=S(0)):
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + \
-(-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) - \
-(x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
-
+    ((x[i + 1] - x[i])/(-x[i - 1] + x[i]) - 1)*y[i]/(x[i + 1] - x[i]) - \
+(x[i + 1] - x[i])*y[i - 1]/((x[i + 1] - x[i - 1])*(-x[i - 1] + x[i])) + \
+(-x[i - 1] + x[i])*y[i + 1]/((x[i + 1] - x[i - 1])*(x[i + 1] - x[i]))
 
     Notes
     =====

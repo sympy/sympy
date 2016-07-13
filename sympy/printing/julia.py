@@ -22,7 +22,7 @@ from re import search
 known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
-                   "asinh", "acosh", "atanh", "acoth", "asech",
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch"
                    "sinc", "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",

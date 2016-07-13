@@ -2,7 +2,7 @@ language: python
 sudo: false
 env:
   matrix:
-  - TEST_DOCTESTS="true" FASTCACHE="false"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   - SPLIT="1/4" TEST_SYMPY="true"
   - SPLIT="2/4" TEST_SYMPY="true"
   - SPLIT="3/4" TEST_SYMPY="true"
@@ -136,6 +136,7 @@ matrix:
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
+        - TEST_SETUP="true"
       addons:
         apt:
           sources:
@@ -216,6 +217,7 @@ matrix:
       env:
         - TEST_DOCTESTS="true"
         - FASTCACHE="false"
+        - TEST_SETUP="true"
       addons:
         apt:
           sources:

@@ -99,6 +99,15 @@ def test_FreeGroupElm_methods():
 def test_FreeGroupElm_eliminate_word():
     w = x**5*y*x**2*y**-4*x
     assert w.eliminate_word( x, x**2 ) == x**10*y*x**4*y**-4*x**2
+    w3 = x**2*y**3*x**-1*y
+    assert w3.eliminate_word(x, x**2) == x**4*y**3*x**-2*y
+    assert w3.eliminate_word(x, y) == y**5
+    assert w3.eliminate_word(x, y**4) == y**8
+    assert w3.eliminate_word(y, x**-1) == x**-3
+    assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z**-1
+    assert (y**-3).eliminate_word(y, x**-1*z**-1) == z*x*z*x*z*x
+    #assert w3.eliminate_word(x, y*x) == y*x*y*x**2*y*x*y*x*y*x*z**3
+    #assert w3.eliminate_word(x, x*y) == x*y*x**2*y*x*y*x*y*x*y*z**3
 
 
 def test_FreeGroupElm_array_form():
@@ -175,6 +184,22 @@ def test_FreeGroupElm_syllables():
     assert w.generator_syllable(3) == Symbol('y')
     assert w.sub_syllables(1, 2) == y
     assert w.sub_syllables(3, 3) == F.identity
+
+
+def test_FreeGroup_exponents():
+    w1 = x**2*y**3
+    assert w1.exponent_sum(x) == 2
+    assert w1.exponent_sum(x**-1) == -2
+    assert w1.generator_count(x) == 2
+
+    w2 = x**2*y**4*x**-3
+    assert w2.exponent_sum(x) == -1
+    assert w2.generator_count(x) == 5
+
+
+def test_FreeGroup_generators():
+    assert (x**2*y**4*z**-1).contains_generators() == {x, y, z}
+    assert (x**-1*y**3).contains_generators() == {x, y}
 
 
 def test_FreeGroupElm_words():
