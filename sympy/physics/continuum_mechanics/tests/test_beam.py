@@ -69,7 +69,6 @@ def test_Beam():
     b1.apply_loads(Load_1, Load_2, Load_3)
     b1.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
 
-    
     # Test for load distribution function.
     p = b1.load_distribution()
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
@@ -77,7 +76,12 @@ def test_Beam():
 
     # Test for shear force distribution function
     p = b1.shear_force()
-    q = 
+    q = -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
+    assert p == q
+
+    # Test for bending moment distribution function
+    p = b1.bending_moment()
+    q = -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
     assert p == q
 
 

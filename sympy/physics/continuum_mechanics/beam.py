@@ -232,13 +232,10 @@ class Beam(object):
         >>> Load_2 = PointLoad(location = P2, value = 4)
         >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.load_distribution()
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
-        >>> b.shear_force()
-
-
-
         """
         return self._load
 
@@ -249,7 +246,23 @@ class Beam(object):
 
         Examples
         ========
-
+        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> P1 = Point('0')
+        >>> P2 = Point('2')
+        >>> P3 = Point('3')
+        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = P2, value = 4)
+        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        >>> b.shear_force()
+        -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
         """
         x = Symbol('x')
         if not self._boundary_conditions['moment']:
@@ -264,7 +277,23 @@ class Beam(object):
 
         Examples
         ========
-
+        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> P1 = Point('0')
+        >>> P2 = Point('2')
+        >>> P3 = Point('3')
+        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = P2, value = 4)
+        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        >>> b.bending_moment()
+        -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
         """
         x = Symbol('x')
         if not self._boundary_conditions['moment']:
@@ -274,7 +303,7 @@ class Beam(object):
         C2 = Symbol('C2')
         load_curve = self.load_distribution()
         shear_curve = integrate(load_curve, x) + C1
-        moment_curve = -1*integrate(shear_curve, x) + C2
+        moment_curve = integrate(shear_curve, x) + C2
 
         bc_eqs = []
         for position, value in self._boundary_conditions['moment']:
