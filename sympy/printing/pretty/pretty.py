@@ -1641,7 +1641,7 @@ class PrettyPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(dots)
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:
