@@ -451,6 +451,9 @@ def test_slicing():
     m2 = Matrix([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
     assert m2[:, -1] == Matrix(4, 1, [3, 7, 11, 15])
     assert m2[-2:, :] == Matrix([[8, 9, 10, 11], [12, 13, 14, 15]])
+    assert m2[...] == m2
+    assert m2[-2:, ...] == Matrix([[8, 9, 10, 11], [12, 13, 14, 15]])
+    assert m2[..., -1] == Matrix(4, 1, [3, 7, 11, 15])
 
 
 def test_submatrix_assignment():

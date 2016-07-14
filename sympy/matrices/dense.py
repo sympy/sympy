@@ -68,8 +68,15 @@ class DenseMatrix(MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if isinstance(key, tuple):
-            i, j = key
+        if isinstance(key, tuple) or key is Ellipsis:
+            if key is Ellipsis:
+                i = j = slice(None, None, None)
+            else:
+                i, j = key
+            if i is Ellipsis:
+                i = slice(None, None, None)
+            if j is Ellipsis:
+                j = slice(None, None, None)
             try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
