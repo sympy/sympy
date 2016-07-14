@@ -1025,11 +1025,11 @@ class HolonomicFunction(object):
 
         # exp(x), the recurrence relation holds for n >= 0
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
-        ((HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0),)
+        [(HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)]
 
         # log(1 + x), the recurrence relation holds for n >= 2
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
-        ((HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2),)
+        [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
 
         See Also
         ========
@@ -1164,8 +1164,8 @@ class HolonomicFunction(object):
                         u0.append(dummys[i])
 
                 if lb:
-                    return ((HolonomicSequence(sol, u0), smallest_n), )
-                return (HolonomicSequence(sol, u0), )
+                    return [(HolonomicSequence(sol, u0), smallest_n)]
+                return [HolonomicSequence(sol, u0)]
 
             for i in range(len(u0), order):
 
@@ -1181,9 +1181,9 @@ class HolonomicFunction(object):
                     u0.append(dummys[i])
 
         if lb:
-            return ((HolonomicSequence(sol, u0), smallest_n), )
+            return [(HolonomicSequence(sol, u0), smallest_n)]
 
-        return (HolonomicSequence(sol, u0), )
+        return [HolonomicSequence(sol, u0)]
 
     def _frobenius(self, lb=True):
         # compute the roots of indicial equation
@@ -1196,30 +1196,38 @@ class HolonomicFunction(object):
 
         x = self.x
 
-        # grouping the roots, roots that differ by an integer are put in the same group.
+        # grouping the roots, roots differ by an integer are put in the same group.
         grp = []
 
-        for i in indicialroots:
+        for i in reals:
             intdiff = False
             if len(grp) == 0:
-                grp.append({i:indicialroots[i]})
+                grp.append([i])
+                continue
             for j in grp:
-                if (list(j)[0] - i).is_real and int(list(j)[0] - i) == list(j)[0] - i:
-                    j[i] = indicialroots[i]
+                if int(j[0] - i) == j[0] - i:
+                    j.append(i)
                     intdiff = True
                     break
             if not intdiff:
-                grp.append({i:indicialroots[i]})
+                grp.append([i])
+
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
         allint = all(int(i) == i for i in reals)
 
-        if self.singular_ics and self.singular_ics[0] in reals:
-            rootstoconsider = [self.singular_ics[0]]
+        if self.singular_ics:
+            rootstoconsider = []
+            for i in self.singular_ics:
+                if i[0] in reals:
+                    rootstoconsider.append(i[0])
 
         elif allpos and allint:
             rootstoconsider = [min(reals)]
+
+        elif independent:
+            rootstoconsider = [i[0] for i in grp]
 
         elif not allint:
             rootstoconsider = []
@@ -1244,6 +1252,7 @@ class HolonomicFunction(object):
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
         finalsol = []
+        char = ord('C')
 
         for p in rootstoconsider:
             dict1 = {}
@@ -1302,14 +1311,18 @@ class HolonomicFunction(object):
 
             u0 = []
 
-            if p >= 0 and int(p) == p:
+            if p >= 0 and int(p) == p and len(rootstoconsider) == 1:
                 y0 = _extend_y0(self, order + int(p))
                 # u(n) = y^n(0)/factorial(n)
                 if len(y0) > int(p):
                     for i in range(int(p), len(y0)):
                         u0.append(y0[i] / factorial(i))
-            if self.singular_ics and rootstoconsider[0] == self.singular_ics[0]:
-                u0 = self.singular_ics[1]
+
+            if self.singular_ics:
+                for i in self.singular_ics:
+                    if i[0] == p:
+                        u0 = i[1]
+                        break
 
             if len(u0) < order:
 
@@ -1324,7 +1337,7 @@ class HolonomicFunction(object):
                             dummys[i + j[0]] = u0[i + j[0]]
 
                         elif not i + j[0] in dummys:
-                            dummys[i + j[0]] = Symbol('C_%s' %(i + j[0]))
+                            dummys[i + j[0]] = Symbol(chr(char) + '_%s' %(i + j[0]))
                             unknowns.append(dummys[i + j[0]])
 
                         if j[1] <= i:
@@ -1340,7 +1353,7 @@ class HolonomicFunction(object):
                     for i in range(len(u0), order):
 
                         if i not in dummys:
-                            dummys[i] = Symbol('C_%s' %i)
+                            dummys[i] = Symbol(chr(char) + '_%s' %i)
 
                         if dummys[i] in soleqs:
                             u0.append(soleqs[dummys[i]])
@@ -1358,7 +1371,7 @@ class HolonomicFunction(object):
                 for i in range(len(u0), order):
 
                     if i not in dummys:
-                        dummys[i] = Symbol('C_%s' %i)
+                        dummys[i] = Symbol(chr(char) + '_%s' %i)
 
                     s = False
                     for j in soleqs:
@@ -1372,9 +1385,10 @@ class HolonomicFunction(object):
 
             else:
                 finalsol.append((HolonomicSequence(sol, u0), p))
+            char += 1
         return finalsol
 
-    def series(self, n=6, coefficient=False, order=True):
+    def series(self, n=6, coefficient=False, order=True, _recur=None):
         """
         Finds the power series expansion of given holonomic function about x0.
 
@@ -1399,13 +1413,30 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence
         """
 
-        recurrence = self.to_sequence()
-        if len(recurrence) == 1 and len(recurrence[0]) == 2:
+        if _recur == None:
+            recurrence = self.to_sequence()
+        else:
+            recurrence = _recur
+
+        if isinstance(recurrence, tuple) and len(recurrence) == 2:
+            recurrence = recurrence[0]
+            constantpower = 0
+        elif isinstance(recurrence, tuple) and len(recurrence) == 3:
+            constantpower = recurrence[1]
+            recurrence = recurrence[0]
+
+        elif len(recurrence) == 1 and len(recurrence[0]) == 2:
             recurrence = recurrence[0][0]
             constantpower = 0
         elif len(recurrence) == 1 and len(recurrence[0]) == 3:
             constantpower = recurrence[0][1]
             recurrence = recurrence[0][0]
+        else:
+            sol = []
+            for i in recurrence:
+                sol.append(self.series(_recur=i))
+            return sol
+
         n = n - int(constantpower)
         l = len(recurrence.u0) - 1
         k = recurrence.recurrence.order
@@ -1583,7 +1614,7 @@ class HolonomicFunction(object):
         x0 = self.x0 - a
         return HolonomicFunction(sol, x, x0, self.y0)
 
-    def to_hyper(self, as_list=False):
+    def to_hyper(self, as_list=False, _recur=None):
         """
         Returns a hypergeometric function (or linear combination of them)
         representing the given holonomic function.
@@ -1617,8 +1648,20 @@ class HolonomicFunction(object):
         from_hyper, from_meijerg
         """
 
-        recurrence = self.to_sequence()
-        if len(recurrence) == 1 and len(recurrence[0]) == 2:
+        if _recur == None:
+            recurrence = self.to_sequence()
+        else:
+            recurrence = _recur
+
+        if isinstance(recurrence, tuple) and len(recurrence) == 2:
+            smallest_n = recurrence[1]
+            recurrence = recurrence[0]
+            constantpower = 0
+        elif isinstance(recurrence, tuple) and len(recurrence) == 3:
+            smallest_n = recurrence[2]
+            constantpower = recurrence[1]
+            recurrence = recurrence[0]
+        elif len(recurrence) == 1 and len(recurrence[0]) == 2:
             smallest_n = recurrence[0][1]
             recurrence = recurrence[0][0]
             constantpower = 0
@@ -1626,6 +1669,11 @@ class HolonomicFunction(object):
             smallest_n = recurrence[0][2]
             constantpower = recurrence[0][1]
             recurrence = recurrence[0][0]
+        else:
+            sol = self.to_hyper(as_list=as_list, _recur=recurrence[0])
+            for i in recurrence[1:]:
+                sol += self.to_hyper(as_list=as_list, _recur=i)
+            return sol
         u0 = recurrence.u0
         r = recurrence.recurrence
         x = self.x
@@ -2391,7 +2439,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
                     coeff = S(j)**ratexp
                     indicial = S(i) * ratexp
                     break
-            singular_ics = (indicial, [coeff])
+            singular_ics = [(indicial, [coeff])]
 
     if singular_ics or not initcond:
         return HolonomicFunction(sol, x, x0=x0, singular_ics=singular_ics)
