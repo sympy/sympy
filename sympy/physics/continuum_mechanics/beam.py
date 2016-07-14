@@ -325,6 +325,22 @@ class Beam(object):
         ========
 
         """
+        x = Symbol('x')
+        if not self._boundary_conditions['slope']:
+            return diff(self.deflection(), x)
+
+        C3 = Symbol('C3')
+        slope_curve = integrate(self.bending_moment(), x) + C3
+
+        bc_eqs = []
+        for position, value in self._boundary_conditions['slope']:
+            eqs = Eq(slope_curve.subs(x, position), value)
+            bc_eqs.append(eqs)
+
+        constants = solve(bc_eqs, [C3])
+        slope_curve = slope_curve.subs(constants)
+        return slope_curve
+
 
     def deflection(self):
         """
@@ -335,6 +351,25 @@ class Beam(object):
         ========
 
         """
+        x = Symbol('x')
+        if not (self._boundary_conditions['deflection'] and self._boundary_conditions['slope']):
+            return integrate(integrate(self.bending_moment(), x), x)
+        elif not self._boundary_conditions['deflection']:
+            return integrate(self.slope(), x)
+
+        C4 = Symbol('C4')
+        deflection_curve = integrate(self.slope(), x) + C4
+
+        bc_eqs = []
+        for position, value in self._boundary_conditions['deflection']:
+            eqs = Eq(deflection_curve.subs(x, position), value)
+            bc_eqs.append(eqs)
+
+        constants = solve(bc_eqs, [C4])
+        deflection_curve = deflection_curve.subs(constants)
+        return deflection_curve
+
+
 
 
 class PointLoad(object):

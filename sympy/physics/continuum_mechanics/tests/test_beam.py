@@ -84,6 +84,15 @@ def test_Beam():
     q = -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
     assert p == q
 
+    # Test for slope distribution function
+    p = b1.slope()
+    q = -71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1
+    assert p == q
+
+    # Test for deflection distribution function
+    p = b1.deflection()
+    q = -71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2
+    assert p == q
 
 
 def test_PointLoad():
