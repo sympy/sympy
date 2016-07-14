@@ -2204,6 +2204,10 @@ def _hyper_to_meijerg(func):
     p = len(ap)
     q = len(bq)
 
+    ispoly = any(i <= 0 and int(i) == i for i in ap)
+    if ispoly:
+        return hyperexpand(func)
+
     z = func.args[2]
 
     # paramters of the `meijerg` function.
@@ -2218,8 +2222,6 @@ def _hyper_to_meijerg(func):
         k = k * gamma(i)
 
     for i in ap:
-        if i <= 0:
-            raise NotImplementedError
         k = k / gamma(i)
 
     return k * meijerg(an, anp, bm, bmq, -z)
