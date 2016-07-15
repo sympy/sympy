@@ -1218,6 +1218,7 @@ class HolonomicFunction(object):
         for i in indicialroots:
             if i.is_real:
                 reals.extend([i] * indicialroots[i])
+        reals.sort()
 
         x = self.x
 
