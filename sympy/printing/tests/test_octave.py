@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, LambertW
+from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
+                             sinc)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -352,6 +353,12 @@ def test_sparse():
     assert mcode(M) == (
         "sparse([4 2 3 1 2], [1 3 3 4 4], [x.*y 20 10 30 22], 5, 6)"
     )
+
+
+def test_sinc():
+    assert mcode(sinc(x)) == 'sinc(x/pi)'
+    assert mcode(sinc((x + 3))) == 'sinc((x + 3)/pi)'
+    assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
 
 
 def test_specfun():

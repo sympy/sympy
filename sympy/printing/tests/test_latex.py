@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -129,6 +129,13 @@ def test_latex_builtins():
     assert latex(None) == r"\mathrm{None}"
     assert latex(true) == r"\mathrm{True}"
     assert latex(false) == r'\mathrm{False}'
+
+
+def test_latex_SingularityFunction():
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^ 5"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^ 4"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^ 4"
+    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^ n"
 
 
 def test_latex_cycle():
@@ -353,9 +360,11 @@ def test_latex_functions():
     assert latex(polar_lift(
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
 
-    assert latex(totient(n)) == r'\phi\left( n \right)'
+    assert latex(totient(n)) == r'\phi\left(n\right)'
+    assert latex(totient(n) ** 2) == r'\left(\phi\left(n\right)\right)^{2}'
 
-    assert latex(reduced_totient(n)) == r'\lambda\left( n \right)'
+    assert latex(reduced_totient(n)) == r'\lambda\left(n\right)'
+    assert latex(reduced_totient(n) ** 2) == r'\left(\lambda\left(n\right)\right)^{2}'
 
     assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
     assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
@@ -600,7 +609,7 @@ def test_latex_FourierSeries():
 
 
 def test_latex_FormalPowerSeries():
-    latex_str = r'x - \frac{x^{2}}{2} + \frac{x^{3}}{3} - \frac{x^{4}}{4} + \frac{x^{5}}{5} + \mathcal{O}\left(x^{6}\right)'
+    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k}}{k} x^{k}'
     assert latex(fps(log(1 + x))) == latex_str
 
 
