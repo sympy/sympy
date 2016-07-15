@@ -1133,23 +1133,21 @@ class Basic(with_metaclass(ManagedProperties)):
         True
 
         Note ``has`` is a structural algorithm with no knowledge of
-        mathematics. Assuming otherwise can lead to what seem to be
-        unintuitive results:
+        mathematics. Consider the following half-open interval:
 
-        >>> sin(6*x).has(2*x)
-        False
         >>> from sympy.sets import Interval
-        >>> i = Interval(0, 5, True, True)
-        >>> i.has(4)
+        >>> i = Interval.Lopen(0, 5); i
+        (0, 5]
+        >>> i.args
+        (0, 5, True, False)
+        >>> i.has(4)  # there is no "4" in the arguments
         False
-        >>> i.has(0)
+        >>> i.has(0)  # there *is* a "0" in the arguments
         True
 
-        Here ``6*x`` does not literally have ``2*x`` in it and ``0`` is
-        in ``i.args`` whereas ``4`` is not.  Perhaps one intended:
+        Instead, use ``contains`` to determine whether a number is in the
+        interval or not:
 
-        >>> sin(6*x).subs(2*x, y)
-        sin(3*y)
         >>> i.contains(4)
         True
         >>> i.contains(0)
