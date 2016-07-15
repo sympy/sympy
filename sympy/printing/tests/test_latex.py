@@ -373,11 +373,11 @@ def test_latex_functions():
     assert latex(primeomega(n)) == r'\Omega\left(n\right)'
     assert latex(primeomega(n) ** 2) == r'\left(\Omega\left(n\right)\right)^{2}'
 
-    assert latex(Mod(x, 7)) == r'x\ mod\ 7'
-    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\ mod\ 7'
-    assert latex(Mod(2 * x, 7)) == r'2 x\ mod\ 7'
-    assert latex(Mod(x, 7) + 1) == r'\left(x\ mod\ 7\right) + 1'
-    assert latex(2 * Mod(x, 7)) == r'2 \left(x\ mod\ 7\right)'
+    assert latex(Mod(x, 7)) == r'x\bmod{7}'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
+    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
+    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
