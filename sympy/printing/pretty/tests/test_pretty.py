@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import (
     Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
@@ -31,7 +31,7 @@ from sympy.core.trace import Tr
 from sympy.core.compatibility import u_decode as u
 from sympy.core.compatibility import range
 
-a, b, x, y, z, k = symbols('a,b,x,y,z,k')
+a, b, x, y, z, k, n = symbols('a,b,x,y,z,k,n')
 th = Symbol('theta')
 ph = Symbol('phi')
 
@@ -3430,20 +3430,32 @@ u("""\
 def test_pretty_FormalPowerSeries():
     f = fps(log(1 + x))
 
+
     ascii_str = \
 """\
-     2    3    4    5        \n\
-    x    x    x    x     / 6\\\n\
-x - -- + -- - -- + -- + O\\x /\n\
-    2    3    4    5         \
+  oo             \n\
+____             \n\
+\   `            \n\
+ \         -k  k \n\
+  \   -(-1)  *x  \n\
+  /   -----------\n\
+ /         k     \n\
+/___,            \n\
+k = 1            \
 """
 
     ucode_str = \
 u("""\
-     2    3    4    5        \n\
-    x    x    x    x     ⎛ 6⎞\n\
-x - ── + ── - ── + ── + O⎝x ⎠\n\
-    2    3    4    5         \
+  ∞              \n\
+ ____            \n\
+ ╲               \n\
+  ╲        -k  k \n\
+   ╲  -(-1)  ⋅x  \n\
+   ╱  ───────────\n\
+  ╱        k     \n\
+ ╱               \n\
+ ‾‾‾‾            \n\
+k = 1            \
 """)
 
     assert pretty(f) == ascii_str
@@ -4437,6 +4449,34 @@ def test_gammas():
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+
+
+def test_SingularityFunction():
+    assert xpretty(SingularityFunction(x, 0, n), use_unicode=True) == (
+"""\
+   n\n\
+<x> \
+""")
+    assert xpretty(SingularityFunction(x, 1, n), use_unicode=True) == (
+"""\
+       n\n\
+<x - 1> \
+""")
+    assert xpretty(SingularityFunction(x, -1, n), use_unicode=True) == (
+"""\
+       n\n\
+<x + 1> \
+""")
+    assert xpretty(SingularityFunction(x, a, n), use_unicode=True) == (
+"""\
+        n\n\
+<-a + x> \
+""")
+    assert xpretty(SingularityFunction(x, y, n), use_unicode=True) == (
+"""\
+       n\n\
+<x - y> \
+""")
 
 
 def test_deltas():
