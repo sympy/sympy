@@ -351,8 +351,15 @@ class HolonomicFunction(object):
     Given two Holonomic Functions f and g, their sum, product,
     integral and derivative is also a Holonomic Function.
 
-    To plot a Holonomic Function, one can use `.evalf()` for numerical computation.
-    Here's an example on `sin(x)**2/x` using numpy and matplotlib.
+    For regular singular points initial conditions can also be provided in the
+    format:
+    [(s0, [C_0, C_1, ...]), (s1, [C0_0, C0_1, ...]), ...]
+    where s0, s1, ... are the roots of indicial equation and vectors
+    [C_0, C_1, ...], [C0_0, C0_1, ...], ... are the corresponding intiial
+    terms of the associated power series. See Examples below.
+
+    To plot a Holonomic Function, one can use `.evalf()` for numerical
+    computation. Here's an example on `sin(x)**2/x` using numpy and matplotlib.
 
     ``
     import sympy.holonomic
@@ -371,7 +378,7 @@ class HolonomicFunction(object):
 
     >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
     >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy import symbols
+    >>> from sympy import symbols, S
     >>> x = symbols('x')
     >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
@@ -383,6 +390,15 @@ class HolonomicFunction(object):
 
     >>> p * q  # annihilator of e^x * sin(x)
     HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
+
+    # an example of initial conditions for regular singular points
+    # only one root `1/2` of the indicial equation. So ics is [(1/2, [1])]
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ])
+    HolonomicFunction((-1/2) + (x)Dx, x), [(1/2, [1])]
+
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ]).to_expr()
+    sqrt(x)
+
     """
 
     _op_priority = 20
@@ -410,6 +426,7 @@ class HolonomicFunction(object):
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
         self.x = x
+        # conditions for regular singular points
         self.singular_ics = singular_ics
 
     def __repr__(self):
@@ -1005,10 +1022,15 @@ class HolonomicFunction(object):
         of the function about `x0`, where `x0` is the point at which
         initial conditions are given.
 
-        Let `R` be the recurrence relation, `p` be the root of indicial
-        equation and `n0` be the value of `n` such that the recurrence holds
-        for all n >= n0. If the point `x0` is ordinary, an answer of the form
-        ((R, n0), ) is returned, else [(R, p, n0)] for singular points.
+        If the point `x0` is ordinary, solution of the form [(R, n0)]
+        is returned. Where `R` is the recurrence relation and `n0` is the
+        smallest `n` for which the recurrence holds true.
+
+        If the point `x0` is regular singular, a vector of `(R, p, n0)` is
+        returned, i.e. [(R, p, n0), ...]. Each tuple in this vector represents
+        a recurrence relation `R` associated with a root of the indicial
+        equation `p`. Conditions of a different format can also be provided in
+        this case, see the docstring of the class.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol C_j, denoting the coefficient of (x - x0)^j
@@ -1019,7 +1041,7 @@ class HolonomicFunction(object):
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
         >>> from sympy.polys.domains import ZZ, QQ
-        >>> from sympy import symbols
+        >>> from sympy import symbols, S
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
@@ -1030,6 +1052,9 @@ class HolonomicFunction(object):
         # log(1 + x), the recurrence relation holds for n >= 2
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
+
+        >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ]).to_sequence()
+        [(HolonomicSequence((n), n), u(0) = 1, 1/2, 1)]
 
         See Also
         ========
@@ -1252,8 +1277,7 @@ class HolonomicFunction(object):
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
         finalsol = []
-        char = 'C'
-        kp = 0
+        char = ord('C')
 
         for p in rootstoconsider:
             dict1 = {}
@@ -1338,7 +1362,7 @@ class HolonomicFunction(object):
                             dummys[i + j[0]] = u0[i + j[0]]
 
                         elif not i + j[0] in dummys:
-                            dummys[i + j[0]] = Symbol(char + '_%s' %(i + j[0]))
+                            dummys[i + j[0]] = Symbol(chr(char) + '_%s' %(i + j[0]))
                             unknowns.append(dummys[i + j[0]])
 
                         if j[1] <= i:
@@ -1354,7 +1378,7 @@ class HolonomicFunction(object):
                     for i in range(len(u0), order):
 
                         if i not in dummys:
-                            dummys[i] = Symbol(char + '_%s' %i)
+                            dummys[i] = Symbol(chr(char) + '_%s' %i)
 
                         if dummys[i] in soleqs:
                             u0.append(soleqs[dummys[i]])
@@ -1372,7 +1396,7 @@ class HolonomicFunction(object):
                 for i in range(len(u0), order):
 
                     if i not in dummys:
-                        dummys[i] = Symbol(char + '_%s' %i)
+                        dummys[i] = Symbol(chr(char) + '_%s' %i)
 
                     s = False
                     for j in soleqs:
@@ -1386,13 +1410,15 @@ class HolonomicFunction(object):
 
             else:
                 finalsol.append((HolonomicSequence(sol, u0), p))
-            char += '%s' %kp
-            kp += 1
+            char += 1
         return finalsol
 
     def series(self, n=6, coefficient=False, order=True, _recur=None):
         """
         Finds the power series expansion of given holonomic function about x0.
+
+        A list of series might be returned if `x0` is a regular point with
+        multiple roots of the indcial equation.
 
         Examples
         ========
