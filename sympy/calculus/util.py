@@ -256,7 +256,7 @@ def not_empty_in(finset_intersection, *syms):
 
 def periodicity(f, symbol, check=False):
     """
-    Returns the period of a given function, if possible.
+    Tests the given function for periodicity in the given symbol.
 
     Parameters
     ==========
@@ -268,18 +268,30 @@ def periodicity(f, symbol, check=False):
     check : Boolean
         The flag to verify whether the value being returned is a period or not.
 
+    Returns
+    =======
+
+    period
+        The period of the function is returned.
+        `None` is returned when the function is aperiodic or has a complex period.
+        The value of `0` is returned as the period of a constant function.
+
     Raises
     ======
 
     NotImplementedError
-        The period of function cannot be determined.
-        The value to be returned cannot be verified.
+        The value of the period computed cannot be verified.
 
 
-    Currently, we can find the period of expressions involving trigonometric
-    functions. Note, that the value returned might not be the "fundamental"
-    period of the given function i.e. it may not be the smallest periodic value
-    of the function.
+    Notes
+    =====
+
+    Currently, we do not support functions with a complex period.
+    The period of functions having complex periodic values such as `exp`, `sinh`
+    is evaluated to `None`.
+
+    The value returned might not be the "fundamental" period of the given
+    function i.e. it may not be the smallest periodic value of the function.
 
     The verification of the period through the `check` flag is not reliable
     due to internal simplification of the given expression. Hence, it is set
@@ -299,6 +311,8 @@ def periodicity(f, symbol, check=False):
     pi/2
     >>> periodicity(sin(4*x)**cos(2*x), x)
     pi
+    >>> periodicity(exp(x), x)
+
     """
     from sympy import simplify, lcm_list
     from sympy.functions.elementary.trigonometric import TrigonometricFunction
