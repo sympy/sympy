@@ -277,7 +277,7 @@ def periodicity(f, symbol, check=False):
 
 
     Currently, we can find the period of expressions involving trigonometric
-    functons. Note, that the value returned might not be the "fundamental"
+    functions. Note, that the value returned might not be the "fundamental"
     period of the given function i.e. it may not be the smallest periodic value
     of the function.
 
@@ -312,7 +312,6 @@ def periodicity(f, symbol, check=False):
         return S.Zero
 
     if isinstance(f, TrigonometricFunction):
-        arg = f.args[0]
         try:
             period = f.period(symbol)
         except NotImplementedError:
@@ -323,20 +322,16 @@ def periodicity(f, symbol, check=False):
         base_has_sym = base.has(symbol)
         expo_has_sym = expo.has(symbol)
 
-        try:
-            if base_has_sym and not expo_has_sym:
-                period = periodicity(base, symbol)
+        if base_has_sym and not expo_has_sym:
+            period = periodicity(base, symbol)
 
-            elif expo_has_sym and not base_has_sym:
-                period = periodicity(expo, symbol)
+        elif expo_has_sym and not base_has_sym:
+            period = periodicity(expo, symbol)
 
-            else:
-                period = _periodicity(f.args, symbol)
+        else:
+            period = _periodicity(f.args, symbol)
 
-        except NotImplementedError:
-            pass
-
-    if f.is_Mul:
+    elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
         if isinstance(g, TrigonometricFunction) or coeff is not S.One:
             period = periodicity(g, symbol)
@@ -344,29 +339,28 @@ def periodicity(f, symbol, check=False):
         else:
             period = _periodicity(g.args, symbol)
 
-    if f.is_Add:
+    elif f.is_Add:
         k, g = f.as_independent(symbol)
         if k is not S.Zero:
             return periodicity(g, symbol)
 
         period = _periodicity(g.args, symbol)
 
-    if period is None:
+    elif period is None:
         from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
         num_of_gs = len(g_s)
         if num_of_gs > 1:
             for index, g in enumerate(reversed(g_s)):
-                try:
-                    start_index = num_of_gs - 1 - index
-                    g = compogen(g_s[start_index:], symbol)
-                    if g != f:
-                        period = periodicity(g, symbol)
+                start_index = num_of_gs - 1 - index
+                g = compogen(g_s[start_index:], symbol)
+                if g != f:
+                    period = periodicity(g, symbol)
+                    if period is None:
+                        continue
 
-                except (ValueError, NotImplementedError):
-                    continue
-                else:
-                    break
+                    else:
+                        break
 
     if period is not None:
         if check:
@@ -380,10 +374,7 @@ def periodicity(f, symbol, check=False):
 
         return period
 
-    else:
-        raise NotImplementedError(filldedent('''Period of the given function
-            cannot be determined using this method. The function might be
-            non-periodic.'''))
+    return None
 
 
 def _periodicity(args, symbol):
@@ -393,21 +384,17 @@ def _periodicity(args, symbol):
     """
     periods = []
     for f in args:
-        try:
-            period = periodicity(f, symbol)
-            if period is not S.Zero:
-                periods.append(period)
-        except NotImplementedError:
+        period = periodicity(f, symbol)
+        if period is None:
             return None
+
+        if period is not S.Zero:
+            periods.append(period)
 
     if len(periods) > 1:
         return lcim(periods)
 
-    elif len(periods) == 1:
-        return periods[0]
-
-    else: # no periodic argument in symbol found
-        return None
+    return periods[0]
 
 
 def lcim(numbers):
