@@ -1362,7 +1362,8 @@ class HolonomicFunction(object):
                             dummys[i + j[0]] = u0[i + j[0]]
 
                         elif not i + j[0] in dummys:
-                            dummys[i + j[0]] = Symbol(chr(char) + '_%s' %(i + j[0]))
+                            letter = chr(char) + '_%s' %(i + j[0])
+                            dummys[i + j[0]] = Symbol(letter)
                             unknowns.append(dummys[i + j[0]])
 
                         if j[1] <= i:
@@ -1378,7 +1379,8 @@ class HolonomicFunction(object):
                     for i in range(len(u0), order):
 
                         if i not in dummys:
-                            dummys[i] = Symbol(chr(char) + '_%s' %i)
+                            letter = chr(char) + '_%s' %i
+                            dummys[i] = Symbol(letter)
 
                         if dummys[i] in soleqs:
                             u0.append(soleqs[dummys[i]])
@@ -1396,7 +1398,8 @@ class HolonomicFunction(object):
                 for i in range(len(u0), order):
 
                     if i not in dummys:
-                        dummys[i] = Symbol(chr(char) + '_%s' %i)
+                        letter = chr(char) + '_%s' %i
+                        dummys[i] = Symbol(letter)
 
                     s = False
                     for j in soleqs:

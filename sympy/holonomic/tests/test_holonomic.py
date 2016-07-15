@@ -1,7 +1,7 @@
 from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, expr_to_holonomic)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr,
+from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
     O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si)
 from sympy import ZZ, QQ, RR
 
@@ -560,7 +560,8 @@ def test_to_expr():
     assert p == q
     p = from_hyper(hyper((-2, -3), (S(1)/2, ), x))
     s = hyperexpand(hyper((-2, -3), (S(1)/2, ), x))
-    D_0 = symbols('D_0')
+    D_0 = Symbol('D_0')
+    C_0 = Symbol('C_0')
     assert (p.to_expr().subs({C_0:1, D_0:0}) - s).simplify() == 0
     p.singular_ics = [(0, [1]), (S(1)/2, [0])]
     assert p.to_expr() == s
@@ -644,7 +645,9 @@ def test_to_meijerg():
     assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).expand() == 0
     p = from_hyper(hyper((-2, -3), (S(1)/2, ), x))
     s = hyperexpand(hyper((-2, -3), (S(1)/2, ), x))
-    C_0, C_1, D_0 = symbols('C_0, C_1, D_0')
+    C_0 = Symbol('C_0')
+    C_1 = Symbol('C_1')
+    D_0 = Symbol('D_0')
     assert (hyperexpand(p.to_meijerg()).subs({C_0:1, D_0:0}) - s).simplify() == 0
     p.singular_ics = [(0, [1]), (S(1)/2, [0])]
     assert (hyperexpand(p.to_meijerg()) - s).simplify() == 0
