@@ -560,8 +560,8 @@ def test_to_expr():
     assert p == q
     p = from_hyper(hyper((-2, -3), (S(1)/2, ), x))
     s = hyperexpand(hyper((-2, -3), (S(1)/2, ), x))
-    C_0, D_0 = symbols('C_0, D_0')
-    assert p.to_expr().subs({C_0:1, D_0:0}) == s
+    C0_0, D_0 = symbols('C0_0, D_0')
+    assert p.to_expr().subs({C_0:1, C0_0:0}) == s
     p.singular_ics = [(0, [1]), (S(1)/2, [0])]
     assert p.to_expr() == s
 
@@ -644,11 +644,11 @@ def test_to_meijerg():
     assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).expand() == 0
     p = from_hyper(hyper((-2, -3), (S(1)/2, ), x))
     s = hyperexpand(hyper((-2, -3), (S(1)/2, ), x))
-    C_0, C_1, D_0 = symbols('C_0, C_1, D_0')
-    assert hyperexpand(p.to_meijerg()).subs({C_0:1, D_0:0}) == s
+    C_0, C_1, C0_0 = symbols('C_0, C_1, C0_0')
+    assert hyperexpand(p.to_meijerg()).subs({C_0:1, C0_0:0}) == s
     p.singular_ics = [(0, [1]), (S(1)/2, [0])]
     assert hyperexpand(p.to_meijerg()) == s
     p = expr_to_holonomic(besselj(S(1)/2, x), initcond=False)
-    assert p.to_expr() == (C_0*cos(x) + C_1*sin(x) + D_0*sin(x))/sqrt(x)
+    assert p.to_expr() == (C0_0*sin(x) + C_0*cos(x) + C_1*sin(x))/sqrt(x)
     p = expr_to_holonomic(besselj(S(1)/2, x), singular_ics=((S(-1)/2, [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]), ))
     assert (p.to_expr() - besselj(S(1)/2, x) - besselj(S(-1)/2, x)).simplify() == 0

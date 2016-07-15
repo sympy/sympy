@@ -1252,7 +1252,8 @@ class HolonomicFunction(object):
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
         finalsol = []
-        char = ord('C')
+        char = 'C'
+        kp = 0
 
         for p in rootstoconsider:
             dict1 = {}
@@ -1337,7 +1338,7 @@ class HolonomicFunction(object):
                             dummys[i + j[0]] = u0[i + j[0]]
 
                         elif not i + j[0] in dummys:
-                            dummys[i + j[0]] = Symbol(chr(char) + '_%s' %(i + j[0]))
+                            dummys[i + j[0]] = Symbol(char + '_%s' %(i + j[0]))
                             unknowns.append(dummys[i + j[0]])
 
                         if j[1] <= i:
@@ -1353,7 +1354,7 @@ class HolonomicFunction(object):
                     for i in range(len(u0), order):
 
                         if i not in dummys:
-                            dummys[i] = Symbol(chr(char) + '_%s' %i)
+                            dummys[i] = Symbol(char + '_%s' %i)
 
                         if dummys[i] in soleqs:
                             u0.append(soleqs[dummys[i]])
@@ -1371,7 +1372,7 @@ class HolonomicFunction(object):
                 for i in range(len(u0), order):
 
                     if i not in dummys:
-                        dummys[i] = Symbol(chr(char) + '_%s' %i)
+                        dummys[i] = Symbol(char + '_%s' %i)
 
                     s = False
                     for j in soleqs:
@@ -1385,7 +1386,8 @@ class HolonomicFunction(object):
 
             else:
                 finalsol.append((HolonomicSequence(sol, u0), p))
-            char += 1
+            char += '%s' %kp
+            kp += 1
         return finalsol
 
     def series(self, n=6, coefficient=False, order=True, _recur=None):
