@@ -287,7 +287,7 @@ class Product(ExprWithIntLimits):
 
                 p1, p2 = p.as_coeff_Add()
                 p1 = self._eval_product(p1, (k, a, n))
-                p2 = self._eval_product(p1, (k, a, n))
+                p2 = self._eval_product(p2, (k, a, n))
                 return (p1 + p2) / q
             else:
                 p = self._eval_product(p, (k, a, n))
