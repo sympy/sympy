@@ -129,10 +129,7 @@ class CosetTable(DefaultPrinting):
         self.A_dict = {x: self.A.index(x) for x in self.A}
         self.A_dict_inv = {}
         for x, index in self.A_dict.items():
-            if index % 2 == 0:
-                self.A_dict_inv[x] = self.A_dict[x] + 1
-            else:
-                self.A_dict_inv[x] = self.A_dict[x] - 1
+            self.A_dict_inv[x] = self.A_dict[x] - 2*Mod(index, 2) + 1
         self.deduction_stack = []
 
     @property
@@ -174,27 +171,31 @@ class CosetTable(DefaultPrinting):
     # Pg. 153 [1]
     def define(self, alpha, x):
         A = self.A
-        if len(self.table) == CosetTable.coset_table_max_limit:
+        table = self.table
+        lt = len(table)
+        if lt == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
             return
-        self.table.append([None]*len(A))
+        table.append([None]*len(A))
         # beta is the new coset generated
-        beta = len(self.table) - 1
+        beta = lt
         self.p.append(beta)
-        self.table[alpha][self.A_dict[x]] = beta
-        self.table[beta][self.A_dict_inv[x]] = alpha
+        table[alpha][self.A_dict[x]] = beta
+        table[beta][self.A_dict_inv[x]] = alpha
 
     def define_f(self, alpha, x):
         A = self.A
-        if len(self.table) == CosetTable.coset_table_max_limit:
+        table = self.table
+        lt = len(table)
+        if lt == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
             return
-        self.table.append([None]*len(A))
+        table.append([None]*len(A))
         # beta is the new coset generated
-        beta = len(self.table) - 1
+        beta = lt
         self.p.append(beta)
-        self.table[alpha][self.A_dict[x]] = beta
-        self.table[beta][self.A_dict_inv[x]] = alpha
+        table[alpha][self.A_dict[x]] = beta
+        table[beta][self.A_dict_inv[x]] = alpha
         # append to deduction stack
         self.deduction_stack.append((alpha, x))
 
@@ -205,21 +206,22 @@ class CosetTable(DefaultPrinting):
         # 2. alpha in omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
         # list of union of generators and their inverses
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             if f != b:
                 self.coincidence_f(f, b)
             return
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -227,8 +229,8 @@ class CosetTable(DefaultPrinting):
             self.coincidence_f(f, b)
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
@@ -239,6 +241,7 @@ class CosetTable(DefaultPrinting):
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         p = self.p
         l = 0
         # behaves as a queue
@@ -247,19 +250,19 @@ class CosetTable(DefaultPrinting):
         while len(q) > 0:
             gamma = q.pop(0)
             for x in A_dict:
-                delta = self.table[gamma][A_dict[x]]
+                delta = table[gamma][A_dict[x]]
                 if delta is not None:
-                    self.table[delta][A_dict_inv[x]] = None
+                    table[delta][A_dict_inv[x]] = None
                     self.deduction_stack.append((delta, x**-1))
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
-                    if self.table[mu][A_dict[x]] is not None:
-                        self.merge(nu, self.table[mu][A_dict[x]], q)
-                    elif self.table[nu][A_dict_inv[x]] is not None:
-                        self.merge(mu, self.table[nu][A_dict_inv[x]], q)
+                    if table[mu][A_dict[x]] is not None:
+                        self.merge(nu, table[mu][A_dict[x]], q)
+                    elif table[nu][A_dict_inv[x]] is not None:
+                        self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
-                        self.table[mu][A_dict[x]] = nu
-                        self.table[nu][A_dict_inv[x]] = mu
+                        table[mu][A_dict[x]] = nu
+                        table[nu][A_dict_inv[x]] = mu
 
     def scan(self, alpha, word):
         # alpha is an integer representing a "coset"
@@ -268,20 +271,21 @@ class CosetTable(DefaultPrinting):
         # 2. alpha in omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             if f != b:
                 self.coincidence(f, b)
             return
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -289,8 +293,8 @@ class CosetTable(DefaultPrinting):
             self.coincidence(f, b)
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
         # otherwise scan is incomplete and yields no information
 
     # used in the low-index subgroups algorithm
@@ -308,18 +312,19 @@ class CosetTable(DefaultPrinting):
         # 2. alpha in omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             return f == b
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -327,8 +332,8 @@ class CosetTable(DefaultPrinting):
             return False
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
         return True
 
     def merge(self, k, lamda, q):
@@ -363,6 +368,7 @@ class CosetTable(DefaultPrinting):
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         p = self.p
         l = 0
         # behaves as a queue
@@ -371,23 +377,24 @@ class CosetTable(DefaultPrinting):
         while len(q) > 0:
             gamma = q.pop(0)
             for x in A_dict:
-                delta = self.table[gamma][A_dict[x]]
+                delta = table[gamma][A_dict[x]]
                 if delta is not None:
-                    self.table[delta][A_dict_inv[x]] = None
+                    table[delta][A_dict_inv[x]] = None
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
-                    if self.table[mu][A_dict[x]] is not None:
-                        self.merge(nu, self.table[mu][A_dict[x]], q)
-                    elif self.table[nu][A_dict_inv[x]] is not None:
-                        self.merge(mu, self.table[nu][A_dict_inv[x]], q)
+                    if table[mu][A_dict[x]] is not None:
+                        self.merge(nu, table[mu][A_dict[x]], q)
+                    elif table[nu][A_dict_inv[x]] is not None:
+                        self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
-                        self.table[mu][A_dict[x]] = nu
-                        self.table[nu][A_dict_inv[x]] = mu
+                        table[mu][A_dict[x]] = nu
+                        table[nu][A_dict_inv[x]] = mu
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         r = len(word)
         f = alpha
         i = 0
@@ -396,28 +403,29 @@ class CosetTable(DefaultPrinting):
         # loop until it has filled the α row in the table.
         while True:
             # do the forward scanning
-            while i <= j and self.table[f][A_dict[word[i]]] is not None:
-                f = self.table[f][A_dict[word[i]]]
+            while i <= j and table[f][A_dict[word[i]]] is not None:
+                f = table[f][A_dict[word[i]]]
                 i += 1
             if i > j:
                 if f != b:
                     self.coincidence(f, b)
                 return
             # forward scan was incomplete, scan backwards
-            while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-                b = self.table[b][A_dict_inv[word[j]]]
+            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+                b = table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
                 self.coincidence(f, b)
             elif j == i:
-                self.table[f][A_dict[word[i]]] = b
-                self.table[b][A_dict_inv[word[i]]] = f
+                table[f][A_dict[word[i]]] = b
+                table[b][A_dict_inv[word[i]]] = f
             else:
                 self.define(f, word[i])
 
     def scan_and_fill_f(self, alpha, word):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         r = len(word)
         f = alpha
         i = 0
@@ -426,22 +434,22 @@ class CosetTable(DefaultPrinting):
         # loop until it has filled the α row in the table.
         while True:
             # do the forward scanning
-            while i <= j and self.table[f][A_dict[word[i]]] is not None:
-                f = self.table[f][A_dict[word[i]]]
+            while i <= j and table[f][A_dict[word[i]]] is not None:
+                f = table[f][A_dict[word[i]]]
                 i += 1
             if i > j:
                 if f != b:
                     self.coincidence_f(f, b)
                 return
             # forward scan was incomplete, scan backwards
-            while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-                b = self.table[b][A_dict_inv[word[j]]]
+            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+                b = table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
                 self.coincidence_f(f, b)
             elif j == i:
-                self.table[f][A_dict[word[i]]] = b
-                self.table[b][A_dict_inv[word[i]]] = f
+                table[f][A_dict[word[i]]] = b
+                table[b][A_dict_inv[word[i]]] = f
                 self.deduction_stack.append((f, word[i]))
             else:
                 self.define_f(f, word[i])
@@ -460,6 +468,7 @@ class CosetTable(DefaultPrinting):
     # Pg. 166
     def process_deductions(self, R_c_x, R_c_x_inv):
         p = self.p
+        table = self.table
         while len(self.deduction_stack) > 0:
             if len(self.deduction_stack) >= CosetTable.max_stack_size:
                 self.look_ahead()
@@ -471,7 +480,7 @@ class CosetTable(DefaultPrinting):
                         self.scan_f(alpha, w)
                         if p[alpha] < alpha:
                             break
-            beta = self.table[alpha][self.A_dict[x]]
+            beta = table[alpha][self.A_dict[x]]
             if beta is not None and p[beta] == beta:
                 for w in R_c_x_inv:
                     self.scan_f(beta, w)
@@ -484,12 +493,13 @@ class CosetTable(DefaultPrinting):
         "process_deductions" calls "scan".
         """
         p = self.p
+        table = self.table
         while len(self.deduction_stack) > 0:
             alpha, x = self.deduction_stack.pop()
             for w in R_c_x:
                 if not self.scan_check(alpha, w):
                     return False
-            beta = self.table[alpha][self.A_dict[x]]
+            beta = table[alpha][self.A_dict[x]]
             if beta is not None:
                 for w in R_c_x_inv:
                     if not self.scan_check(beta, w):
@@ -563,21 +573,22 @@ class CosetTable(DefaultPrinting):
         A = self.A
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         chi = tuple([i for i in range(len(self.p)) if self.p[i] != i])
         for alpha in self.omega:
             gamma += 1
             if gamma != alpha:
                 # replace α by γ in coset table
                 for x in A:
-                    beta = self.table[alpha][A_dict[x]]
-                    self.table[gamma][A_dict[x]] = beta
-                    self.table[beta][A_dict_inv[x]] == gamma
+                    beta = table[alpha][A_dict[x]]
+                    table[gamma][A_dict[x]] = beta
+                    table[beta][A_dict_inv[x]] == gamma
         # all the cosets in the table are live cosets
         self.p = list(range(gamma + 1))
         # delete the useless coloumns
-        del self.table[len(self.p):]
+        del table[len(self.p):]
         # re-define values
-        for row in self.table:
+        for row in table:
             for j in range(len(self.A)):
                 row[j] -= bisect_left(chi, row[j])
 
