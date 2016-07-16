@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Rational, Symbol
-from sympy.geometry import Circle, Line, Point, Polygon, Segment
+from sympy.geometry import Circle, Line, Point, Polygon, Segment, Parabola
 from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
 

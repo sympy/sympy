@@ -53,11 +53,13 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
+import sys
+
 import mpmath
 import mpmath.libmp as mlib
 
 import inspect
-
+import collections
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -92,6 +94,44 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
+def _getnargs(cls):
+    if hasattr(cls, 'eval'):
+        if sys.version_info < (3, ):
+            return _getnargs_old(cls.eval)
+        else:
+            return _getnargs_new(cls.eval)
+    else:
+        return None
+
+def _getnargs_old(eval_):
+    evalargspec = inspect.getargspec(eval_)
+    if evalargspec.varargs:
+        return None
+    else:
+        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
+        if evalargspec.defaults:
+            # if there are default args then they are optional; the
+            # fewest args will occur when all defaults are used and
+            # the most when none are used (i.e. all args are given)
+            return tuple(range(
+                evalargs - len(evalargspec.defaults), evalargs + 1))
+
+        return evalargs
+
+def _getnargs_new(eval_):
+    parameters = inspect.signature(eval_).parameters.items()
+    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
+        return None
+    else:
+        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
+        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
+        if not num_with_default:
+            return num_no_default
+        return tuple(range(num_no_default, num_no_default+num_with_default+1))
+
+
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -103,23 +143,9 @@ class FunctionClass(ManagedProperties):
     _new = type.__new__
 
     def __init__(cls, *args, **kwargs):
-        if hasattr(cls, 'eval'):
-            evalargspec = inspect.getargspec(cls.eval)
-            if evalargspec.varargs:
-                evalargs = None
-            else:
-                evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-                if evalargspec.defaults:
-                    # if there are default args then they are optional; the
-                    # fewest args will occur when all defaults are used and
-                    # the most when none are used (i.e. all args are given)
-                    evalargs = tuple(range(
-                        evalargs - len(evalargspec.defaults), evalargs + 1))
-        else:
-            evalargs = None
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', evalargs))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
@@ -1105,8 +1131,9 @@ class Derivative(Expr):
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
         if evaluate:
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols):
+            from sympy import IndexedBase
+            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
+            if symbol_set.difference(expr.free_symbols).difference(expr.atoms(IndexedBase)):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
@@ -1328,51 +1355,44 @@ class Derivative(Expr):
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
-        if old.is_Derivative and old.expr == self.args[0]:
+        if old.is_Derivative and old.expr == self.expr:
             # Check if canonnical order of variables is equal.
-            old_vars = Derivative._sort_variables(old.variables)
-            self_vars = Derivative._sort_variables(self.args[1:])
+            old_vars = collections.Counter(old.variables)
+            self_vars = collections.Counter(self.variables)
             if old_vars == self_vars:
                 return new
 
-            # Check if olf is a subderivative of self.
-            if len(old_vars) < len(self_vars):
-                self_vars_front = []
-                match = True
-                while old_vars and self_vars and match:
-                    if old_vars[0] == self_vars[0]:
-                        old_vars.pop(0)
-                        self_vars.pop(0)
-                    else:
-                        # If self_v does not match old_v, we need to check if
-                        # the types are the same (symbol vs non-symbol). If
-                        # they are, we can continue checking self_vars for a
-                        # match.
-                        if old_vars[0].is_Symbol != self_vars[0].is_Symbol:
-                            match = False
-                        else:
-                            self_vars_front.append(self_vars.pop(0))
-                if match:
-                    variables = self_vars_front + self_vars
-                    return Derivative(new, *variables)
+            # collections.Counter doesn't have __le__
+            def _subset(a, b):
+                return all(a[i] <= b[i] for i in a)
+
+            if _subset(old_vars, self_vars):
+                return Derivative(new, *(self_vars - old_vars).elements())
+
         return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
-        dx = self.args[1:]
-        for term in self.args[0].lseries(x, logx=logx):
+        dx = self.variables
+        for term in self.expr.lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
-        arg = self.args[0].nseries(x, n=n, logx=logx)
+        arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
-        dx = self.args[1:]
+        dx = self.variables
         rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
             rv.append(o/x)
         return Add(*rv)
 
     def _eval_as_leading_term(self, x):
-        return self.args[0].as_leading_term(x)
+        series_gen = self.expr.lseries(x)
+        d = S.Zero
+        for leading_term in series_gen:
+            d = diff(leading_term, *self.variables)
+            if d != 0:
+                break
+        return d
 
     def _sage_(self):
         import sage.all as sage

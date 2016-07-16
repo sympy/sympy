@@ -2,7 +2,7 @@ import itertools
 
 import collections
 
-from sympy import S, Tuple, MatrixBase
+from sympy import S, Tuple, MatrixBase, transpose
 from sympy import S, Tuple, diff, MatrixBase
 
 from sympy.tensor.array import ImmutableDenseNDimArray
@@ -208,3 +208,67 @@ def derive_by_array(expr, dx):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
         else:
             return diff(expr, dx)
+
+
+def permutedims(expr, perm):
+    """
+    Permutes the indices of an array.
+
+    Parameter specifies the permutation of the indices.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z, t
+    >>> from sympy import sin
+    >>> from sympy.tensor.array import Array, permutedims
+    >>> a = Array([[x, y, z], [t, sin(x), 0]])
+    >>> a
+    [[x, y, z], [t, sin(x), 0]]
+    >>> permutedims(a, (1, 0))
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    If the array is of second order, ``transpose`` can be used:
+
+    >>> from sympy import transpose
+    >>> transpose(a)
+    [[x, t], [y, sin(x)], [z, 0]]
+
+    Examples on higher dimensions:
+
+    >>> b = Array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    >>> permutedims(b, (2, 1, 0))
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, (1, 2, 0))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    ``Permutation`` objects are also allowed:
+
+    >>> from sympy.combinatorics import Permutation
+    >>> permutedims(b, Permutation([1, 2, 0]))
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    """
+    if not isinstance(expr, NDimArray):
+        raise TypeError("expression has to be an N-dim array")
+
+    from sympy.combinatorics import Permutation
+    if not isinstance(perm, Permutation):
+        perm = Permutation(list(perm))
+
+    if perm.size != expr.rank():
+        raise ValueError("wrong permutation size")
+
+    # Get the inverse permutation:
+    iperm = ~perm
+
+    indices_span = perm([range(i) for i in expr.shape])
+
+    new_array = [None]*len(expr)
+    for i, idx in enumerate(itertools.product(*indices_span)):
+        t = iperm(idx)
+        new_array[i] = expr[t]
+
+    new_shape = perm(expr.shape)
+
+    return expr.func(new_array, new_shape)

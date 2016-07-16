@@ -437,7 +437,7 @@ class ReferenceFrame(object):
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
-        >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
 
@@ -605,8 +605,8 @@ class ReferenceFrame(object):
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
-    def orientnew(self, newname, rot_type, amounts, rot_order='', variables=None,
-                  indices=None, latexs=None):
+    def orientnew(self, newname, rot_type, amounts, rot_order='',
+                  variables=None, indices=None, latexs=None):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
 
         See ReferenceFrame.orient() for acceptable rotation types, amounts,
@@ -624,27 +624,52 @@ class ReferenceFrame(object):
         rot_order : str
             If applicable, the order of a series of rotations.
 
-
         Examples
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import symbols
-        >>> q1 = symbols('q1')
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
+
+        Now we have a choice of how to implement the orientation. First is
+        Body. Body orientation takes this reference frame through three
+        successive simple rotations. Acceptable rotation orders are of length
+        3, expressed in XYZ or 123, and cannot have a rotation about about an
+        axis twice in a row.
+
+        >>> A = N.orientnew('A', 'Body', [q1, q2, q3], '123')
+        >>> A = N.orientnew('A', 'Body', [q1, q2, 0], 'ZXZ')
+        >>> A = N.orientnew('A', 'Body', [0, 0, 0], 'XYX')
+
+        Next is Space. Space is like Body, but the rotations are applied in the
+        opposite order.
+
+        >>> A = N.orientnew('A', 'Space', [q1, q2, q3], '312')
+
+        Next is Quaternion. This orients the new ReferenceFrame with
+        Quaternions, defined as a finite rotation about lambda, a unit vector,
+        by some amount theta.
+        This orientation is described by four parameters:
+        q0 = cos(theta/2)
+        q1 = lambda_x sin(theta/2)
+        q2 = lambda_y sin(theta/2)
+        q3 = lambda_z sin(theta/2)
+        Quaternion does not take in a rotation order.
+
+        >>> A = N.orientnew('A', 'Quaternion', [q0, q1, q2, q3])
+
+        Last is Axis. This is a rotation about an arbitrary, non-time-varying
+        axis by some angle. The axis is supplied as a Vector. This is how
+        simple rotations are defined.
+
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-
-
-        .orient() documentation:\n
-        ========================
 
         """
 
         newframe = self.__class__(newname, variables, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
-
-    orientnew.__doc__ += orient.__doc__
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.

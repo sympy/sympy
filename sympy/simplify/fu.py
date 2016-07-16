@@ -41,7 +41,7 @@ Finally, there are the 2 rule lists (RL1 and RL2), which apply a
 sequence of transformations and combined transformations, and the ``fu``
 algorithm itself, which applies rules and rule lists and selects the
 best expressions. There is also a function ``L`` which counts the number
-of trigonometric funcions that appear in the expression.
+of trigonometric functions that appear in the expression.
 
 Other than TR0, re-writing of expressions is not done by the transformations.
 e.g. TR10i finds pairs of terms in a sum that are in the form like

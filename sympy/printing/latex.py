@@ -1437,6 +1437,12 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
 
+    def _print_SingularityFunction(self, expr):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
+        return tex
+
     def _print_Heaviside(self, expr, exp=None):
         tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
         if exp:
@@ -1566,7 +1572,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{N}"
 
     def _print_Naturals0(self, n):
-        return r"\mathbb{N_0}"
+        return r"\mathbb{N}_0"
 
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
@@ -1605,7 +1611,7 @@ class LatexPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(' + \ldots')
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1858,8 +1864,17 @@ class LatexPrinter(Printer):
         contents = self._print(p.args[0])
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
-    def _print_totient(self, expr):
-        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+    def _print_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\phi\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\phi\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_reduced_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\lambda\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\lambda\left(%s\right)' % self._print(expr.args[0])
 
     def _print_divisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
@@ -1880,6 +1895,19 @@ class LatexPrinter(Printer):
         if exp is not None:
             return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
         return r"\sigma^*%s" % tex
+
+    def _print_primenu(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\nu\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\nu\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_primeomega(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\Omega\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
 
 def translate(s):
     r'''

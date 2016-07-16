@@ -879,6 +879,9 @@ def test_classify_sysode():
     -12*x(t) + 12*y(t) + 5*Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq16) == sol16
 
+    # issue 8193: funcs parameter for classify_sysode has to actually work
+    assert classify_sysode(eq1, funcs=[x(t), y(t)]) == sol1
+
 
 def test_ode_order():
     f = Function('f')
