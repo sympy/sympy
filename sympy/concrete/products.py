@@ -283,13 +283,10 @@ class Product(ExprWithIntLimits):
                 # as_numer_denom(). E.g. n**(2/3) + 1 --> (n**(2/3) + 1, 1).
                 # We have to catch this case.
 
-                p1, p2 = p.as_coeff_Add()
-                p1 = self._eval_product(p1, (k, a, n))
-                p2 = self._eval_product(p2, (k, a, n))
-                return (p1 + p2) / q
+                p = sum([self._eval_product(i, (k, a, n)) for i in p.as_coeff_Add()])
             else:
                 p = self._eval_product(p, (k, a, n))
-                return p / q
+            return p / q
 
         elif term.is_Mul:
             exclude, include = [], []
