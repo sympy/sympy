@@ -375,12 +375,27 @@ class For(Basic):
 
     @property
     def target(self):
+        """
+        Return the symbol (target) from the for-loop representation.
+        This object changes each iteration.
+        Target must be a symbol.
+        """
         return self._args[0]
 
     @property
     def iterable(self):
+        """
+        Return the iterable from the for-loop representation.
+        This is the object that target takes values from.
+        Must be an iterable object.
+        """
         return self._args[1]
 
     @property
     def body(self):
+        """
+        Return the sympy expression (body) from the for-loop representation.
+        This is run for each value of target.
+        Must be an iterable object or CodeBlock.
+        """
         return self._args[2]

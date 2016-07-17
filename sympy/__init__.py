@@ -22,6 +22,15 @@ except ImportError:
 
 from sympy.release import __version__
 
+if 'dev' in __version__:
+    def enable_warnings():
+        import warnings
+        warnings.filterwarnings('default',   '.*',   DeprecationWarning, module='sympy.*')
+        del warnings
+    enable_warnings()
+    del enable_warnings
+
+
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
     raise ImportError("Python Version 2.6 or above is required for SymPy.")
