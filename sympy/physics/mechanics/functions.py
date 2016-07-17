@@ -9,9 +9,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
-from sympy.core.backend import (Matrix, USE_SYMENGINE, sympify, MulClass,
-                                DerivativeClass as Derivative, sin, cos, tan,
-                                Mul, AppliedUndef, S, TanClass as Tan)
+from sympy.core.backend import (Matrix, USE_SYMENGINE, sympify, Mul,
+                                Derivative, sin, cos, tan,
+                                AppliedUndef, S)
 import sympy
 
 __all__ = ['inertia',
@@ -495,7 +495,7 @@ def _sub_func(expr, sub_dict):
 
 def _tan_repl_func(expr):
     """Replace tan with sin/cos."""
-    if isinstance(expr, Tan):
+    if isinstance(expr, tan):
         return sin(*expr.args) / cos(*expr.args)
     elif not expr.args or expr.is_Derivative:
         return expr
@@ -539,7 +539,7 @@ def _smart_subs(expr, sub_dict):
 
 def _fraction_decomp(expr):
     """Return num, den such that expr = num/den"""
-    if not isinstance(expr, MulClass):
+    if not isinstance(expr, Mul):
         return expr, 1
     num = []
     den = []

@@ -1,4 +1,4 @@
-from sympy.core.backend import (USE_SYMENGINE, AddClass as Add, zeros, Integer,
+from sympy.core.backend import (USE_SYMENGINE, Add, zeros, Integer,
      sqrt, expand, Matrix, S, sympify)
 if USE_SYMENGINE:
     from sympy.core.backend import Matrix

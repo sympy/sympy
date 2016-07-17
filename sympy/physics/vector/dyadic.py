@@ -1,4 +1,4 @@
-from sympy.core.backend import sympify, AddClass as Add, USE_SYMENGINE
+from sympy.core.backend import sympify, Add, USE_SYMENGINE
 if USE_SYMENGINE:
     from sympy.core.backend import Matrix
 else:
