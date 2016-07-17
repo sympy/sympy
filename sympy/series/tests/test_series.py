@@ -100,10 +100,17 @@ def test_issue_11313():
     assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
 
 
-def test_series_Indexed():
-    A = IndexedBase("A")
-    i = symbols("i")
-    assert (sin(A[i])).series(A[i]) == A[i] - A[i]**3/6 + O(A[i]**5)
+def test_series_of_Subs():
+    from sympy.abs import x, y, z
+
+    subs1 = Subs(sin(x), (x,), (y,))
+    subs2 = Subs(sin(x) * cos(z), (x,), (y,))
+    subs3 = Subs(sin(x * z), (x, z), (y, x))
+
+    assert subs1.series(x) == subs1
+    assert subs1.series(y) == Subs(x - x**3/6 + x**5/120 + O(x**6), (x,), (y,))
+    assert subs2.series(z) == Subs(z**4*sin(x)/24 - z**2*sin(x)/2 + sin(x), (x,), (y,))
+    print subs1.series(y)
 
 
 def test_issue_3978():

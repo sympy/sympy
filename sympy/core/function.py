@@ -1631,6 +1631,11 @@ class Subs(Expr):
         return (self.expr.free_symbols - set(self.variables) |
             set(self.point.free_symbols))
 
+    def _has(self, pattern):
+        if pattern in self.variables and pattern not in self.point:
+            return False
+        return super(Subs, self)._has(pattern)
+
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
@@ -1674,7 +1679,7 @@ class Subs(Expr):
             arg = self.args[0].nseries(other, n=n, logx=logx)
             o = arg.getO()
             subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-            return Add(*subs_args) + o.subs(other, x)
+            return Add(*subs_args) + Subs(o.subs(other, x), x, self.point)
         arg = self.args[0].nseries(x, n=n, logx=logx)
         o = arg.getO()
         other = self.args[1:]
