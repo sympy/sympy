@@ -9,7 +9,7 @@ from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q
+from sympy import sin, Lambda, Q, exp_polar, exp
 
 from sympy.utilities.pytest import raises
 
@@ -185,6 +185,10 @@ def test_issue_6257():
     x, y, z, t = symbols('x y z t')
     assert (x*y).subs({y: z, z: 2}) == 2*x
     assert (x*y).subs({y: z, z: t, t: 2}) == 2*x
+    r = exp_polar(0)*exp(exp_polar(0))
+    assert r.subs({exp_polar(0): 1}) == exp(1)
+    assert (y & x).subs({x: True, y: True}) is S.true
+    assert exp(x / 2 + y).subs(dict([(exp(y + 1), 2), (x, 2)])) == 2
 
 
 def test_literal_evalf_is_number_is_zero_is_comparable():

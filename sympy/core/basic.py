@@ -865,6 +865,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 s[j] = si
             else:
                 sequence[i] = None if _aresame(*s) else tuple(s)
+
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -908,10 +909,18 @@ class Basic(with_metaclass(ManagedProperties)):
             if len(sequence) > 1:
                 try:
                     from sympy.utilities.iterables import topological_sort
-                    substitution = args[0]
+                    substitution = dict(args[0])
+
+                    def expr_key(expr):
+                        if expr.is_Number or not expr.free_symbols:
+                            return 0
+                        else:
+                            return len(expr.atoms())
+
                     topo_sorted_subs = topological_sort(((list(set(substitution.keys() +
                                                                    substitution.values())),
-                                                          sequence)))
+                                                          sequence)),
+                                                        expr_key)
                     sequence = [(item, substitution[item])
                                 for item in topo_sorted_subs
                                 if item in substitution.keys()]
@@ -921,6 +930,8 @@ class Basic(with_metaclass(ManagedProperties)):
                     # sequence will not be changed
                     pass
             for old, new in sequence:
+                if isinstance(new, (bool, int, long, float)):
+                    new = S(new)
                 rv = rv._subs(old, new, **kwargs)
                 if not isinstance(rv, Basic):
                     break
