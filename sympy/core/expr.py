@@ -256,7 +256,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
                     dif.is_nonnegative is not dif.is_negative:
@@ -275,7 +275,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
                     dif.is_nonpositive is not dif.is_positive:
@@ -294,7 +294,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
                     dif.is_positive is not dif.is_nonpositive:
@@ -313,7 +313,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_negative is not None and \
                     dif.is_negative is not dif.is_nonnegative:
@@ -2512,7 +2512,7 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = Dummy('x', positive=True, finite=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
+            rv = self.xreplace({x: xpos}).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
@@ -2554,7 +2554,8 @@ class Expr(Basic, EvalfMixin):
                 s1 = s1.removeO()
             else:
                 o = Order(x**n, x)
-                if (s1 + o).removeO() == s1:
+                s1done = s1.doit()
+                if (s1done + o).removeO() == s1done:
                     o = S.Zero
 
             try:

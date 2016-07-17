@@ -1524,22 +1524,6 @@ class Intersection(Set):
         # Handle Finite sets
         rv = Intersection._handle_finite_sets(args)
         if rv is not None:
-            # simplify symbolic intersection between a FiniteSet
-            # and an interval
-            if isinstance(rv, Intersection) and len(rv.args) == 2:
-                ivl, s = rv.args
-                if isinstance(s, FiniteSet) and len(s) == 1 and isinstance(ivl, Interval):
-                    e = list(s)[0]
-                    if e.free_symbols:
-                        rhs = Dummy()
-                        e, r = clear_coefficients(e, rhs)
-                        if r != rhs:
-                            iargs = list(ivl.args)
-                            iargs[0] = r.subs(rhs, ivl.start)
-                            iargs[1] = r.subs(rhs, ivl.end)
-                            if iargs[0] > iargs[1]:
-                                iargs = iargs[:2][::-1] + iargs[-2:][::-1]
-                            rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
             return rv
 
         # If any of the sets are unions, return a Union of Intersections
