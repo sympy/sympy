@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -98,6 +98,12 @@ def test_issue_11313():
 
     assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
     assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+
+
+def test_series_Indexed():
+    A = IndexedBase("A")
+    i = symbols("i")
+    assert (sin(A[i])).series(A[i]) == A[i] - A[i]**3/6 + O(A[i]**5)
 
 
 def test_issue_3978():
