@@ -747,7 +747,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> (x + y).subs(reps)
         6
         >>> (x + y).subs(reversed(reps))
-        x**2 + 2
+        6
 
         >>> (x**2 + x**4).subs(x**2, y)
         y**2 + y
@@ -905,12 +905,12 @@ class Basic(with_metaclass(ManagedProperties)):
             reps[m] = S.One  # get rid of m
             return rv.xreplace(reps)
         else:
+            from sympy.utilities.iterables import topological_sort
+            from sympy.core.function import FunctionClass
             rv = self
             if len(sequence) > 1:
                 try:
-                    from sympy.utilities.iterables import topological_sort
                     substitution = dict(args[0])
-
                     def expr_key(expr):
                         if expr.is_Number or not expr.free_symbols:
                             return 0
@@ -929,10 +929,22 @@ class Basic(with_metaclass(ManagedProperties)):
                     # In this case topological_sort() can't work and
                     # sequence will not be changed
                     pass
-            for old, new in sequence:
-                if isinstance(new, (bool, int, long, float)):
-                    new = S(new)
+            while sequence:
+                old, new = sequence.pop(0)
+                new = S(new)
                 rv = rv._subs(old, new, **kwargs)
+                new_sequence = list()
+                for older, newer in sequence:
+                    if isinstance(older, FunctionClass):
+                        k, v = S(older), S(newer)
+                    elif not older.is_Number:
+                        k = S(older)._subs(old, new, **kwargs)
+                        v = S(newer)._subs(old, new, **kwargs)
+                    else:
+                        k = S(older)
+                        v = S(newer)._subs(old, new, **kwargs)
+                    new_sequence.append((k, v))
+                sequence = new_sequence
                 if not isinstance(rv, Basic):
                     break
             return rv
