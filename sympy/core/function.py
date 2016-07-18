@@ -1652,6 +1652,9 @@ class Subs(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables:
+            if old in self.point:
+                newpoint = tuple(new if i == old else i for i in self.point)
+                return self.func(self.expr, self.variables, newpoint)
             return self
 
     def _eval_derivative(self, s):
@@ -1662,29 +1665,19 @@ class Subs(Expr):
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
 
-    # def series(self, x=None, x0=0, n=6, dir="+", logx=None):
-    #     # Need to overload this function, as .subs( ) does not work for Subs in
-    #     # case of expansion in the variable being substituted.
-    #     if x in self.args[1]:
-    #         return self.func(self.args[0].series(x, x0, n, dir, logx), *self.args[1:])
-    #     return self.series(x, x0, n, dir, logx)
-
     def _eval_nseries(self, x, n, logx):
-        # if x in self.args[1]:
-        #     raise NotImplementedError("series variable is substitution variable")
-        if x in self.args[2]:
+        if x in self.point:
             # x is the variable being substituted into
-            apos = self.args[2].index(x)
-            other = self.args[1][apos]
-            arg = self.args[0].nseries(other, n=n, logx=logx)
+            apos = self.point.index(x)
+            other = self.variables[apos]
+            arg = self.expr.nseries(other, n=n, logx=logx)
             o = arg.getO()
             subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
-            return Add(*subs_args) + Subs(o.subs(other, x), x, self.point)
-        arg = self.args[0].nseries(x, n=n, logx=logx)
+            return Add(*subs_args) + o.subs(other, x)
+        arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
-        other = self.args[1:]
-        rv = list(Add.make_args(arg.removeO()))
-        return Subs(Add(*rv), *other).doit()
+        subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+        return Add(*subs_args) + o
 
 
 def diff(f, *symbols, **kwargs):

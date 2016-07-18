@@ -122,7 +122,7 @@ from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy import cacheit
+from sympy import cacheit, Subs
 
 from sympy.core.compatibility import reduce
 
@@ -301,6 +301,8 @@ def mrv(e, x):
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
         return mrv(e.args[0], x)
+    elif isinstance(e, Subs):
+        return mrv(e.doit(), x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
