@@ -1,5 +1,6 @@
 """
-This module can be used to solve beam bending problems in mechanics.
+This module can be used to solve 2D beam bending problems with
+singularity functions in mechanics.
 
 """
 
@@ -14,7 +15,6 @@ from sympy.integrals import integrate
 
 
 class Beam(object):
-
     """
     A Beam is a structural element that is capable of withstanding load
     primarily by resisting against bending.
@@ -31,7 +31,7 @@ class Beam(object):
     second_moment : Sympifyable
         A SymPy expression representing the Beam's Second moment of area.
         It is a geometrical property of an area which reflects how its
-        points are distributed with regard to an arbitrary axis.
+        points are distributed with respect to its neutral axis.
 
     Examples
     ========
@@ -83,6 +83,13 @@ class Beam(object):
     @second_moment.setter
     def second_moment(self, i):
         self._second_moment = sympify(i)
+
+    @property
+    def boundary_conditions(self):
+        """
+        Returns a dictionary of boundary conditions applied on the beam.
+        """
+        return self._boundary_conditions
 
     def apply_boundary_conditions(self, **bcs):
         """
@@ -182,11 +189,6 @@ class Beam(object):
             self._boundary_conditions['deflection'].append(bcs)
         return self._boundary_conditions['deflection']
 
-    def boundary_conditions(self):
-        """
-        Returns a dictionary of boundary conditions applied on the beam.
-        """
-        return self._boundary_conditions
 
     def _load_as_SingularityFunction(self, load):
         x = Symbol('x')
@@ -372,7 +374,7 @@ class Beam(object):
 
 
 class PointLoad(object):
-    """A Point Load.
+    """A load (force or moment) applied at a point.
 
     A load applied to a single, specific point. It is also known as a
     concentrated load.
