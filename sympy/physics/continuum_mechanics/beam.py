@@ -8,7 +8,6 @@ from __future__ import print_function, division
 from sympy.core import S, Symbol, Eq, diff
 from sympy.solvers import solve
 from sympy.printing import sstr
-from sympy.physics.mechanics import Point
 from sympy.functions import SingularityFunction
 from sympy import sympify
 from sympy.integrals import integrate
@@ -380,7 +379,7 @@ class PointLoad(object):
 
     Parameters
     ==========
-    location : Point
+    location : Sympifyable
         The specific point of the applied load.
     value : Sympifyable
         A SymPy expression representing the value of the applied load.
@@ -388,14 +387,12 @@ class PointLoad(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import PointLoad
-    >>> from sympy.physics.mechanics import Point
-    >>> p = Point('4')
-    >>> PointLoad(location = p, value = -4)
+    >>> PointLoad(location = 4, value = -4)
     PointLoad(4, -4, Load)
 
     A Moment can be defined just by passing moment=True as an argument.
 
-    >>> PointLoad(location = p, value = -4, moment=True)
+    >>> PointLoad(location = 4, value = -4, moment=True)
     PointLoad(4, -4, Moment)
 
     """
@@ -421,9 +418,7 @@ class PointLoad(object):
 
     @location.setter
     def location(self, l):
-        if not isinstance(l, Point):
-            raise TypeError("PointLoad location attribute must be a Point object.")
-        self._location = l
+        self._location = sympify(l)
 
     @property
     def value(self):
@@ -454,7 +449,7 @@ class DistributedLoad(object):
 
     Parameters
     ==========
-    start : Point
+    start : Sympifyable
         The starting point of the applied load.
     order : Sympifyable
         The order of the applied load.
@@ -464,21 +459,13 @@ class DistributedLoad(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
-    >>> from sympy.physics.mechanics import Point
-    >>> from sympy import Symbol
-    >>> a = Point('4')
-    >>> b = 2
-    >>> DistributedLoad(start = a, order = b, value = 2)
+    >>> DistributedLoad(start = 4, order = 2, value = 2)
     DistributedLoad(4, 2, 2)
 
     """
 
     def __init__(self, start, order, value):
-
-        if isinstance(start, Point):
-            self._start = start
-        else:
-            raise TypeError("DistributedLoad start attribute must be a Point object.")
+        self._start = start
         self._order = order
         self._value = value
 
@@ -495,9 +482,7 @@ class DistributedLoad(object):
 
     @start.setter
     def start(self, s):
-        if not isinstance(s, Point):
-            raise TypeError("DistributedLoad start attribute must be a Point object.")
-        self._start = s
+        self._start = sympify(s)
 
     @property
     def order(self):
