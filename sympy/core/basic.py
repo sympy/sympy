@@ -907,6 +907,7 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             from sympy.utilities.iterables import topological_sort
             from sympy.core.function import FunctionClass
+            from sympy.core.symbol import Dummy
             rv = self
             if len(sequence) > 1:
                 try:
@@ -935,7 +936,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 rv = rv._subs(old, new, **kwargs)
                 new_sequence = list()
                 for older, newer in sequence:
-                    if isinstance(older, FunctionClass):
+                    if isinstance(older, (FunctionClass, Dummy)):
                         k, v = S(older), S(newer)
                     elif not older.is_Number:
                         k = S(older)._subs(old, new, **kwargs)
