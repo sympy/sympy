@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
 from sympy.core.basic import Basic
-from sympy.core import Symbol, Mod
+from sympy.core import Symbol, Mod, S
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
@@ -58,6 +58,10 @@ class FpGroup(DefaultPrinting):
         obj._relators = relators
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+        obj._order = None
+        obj._table = None
+        obj._compressed_table = None
+        obj._compressed_standardized_table = None
         return obj
 
     @property
@@ -77,6 +81,37 @@ class FpGroup(DefaultPrinting):
         else:
             str_form = "<fp group on the generators %s>" % str(self.generators)
         return str_form
+
+    def order(self):
+        """
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.fp_group import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x**2, y**3, (x*y)**3])
+        >>> f.order()
+        12
+
+        """
+        if self._order == None:
+            if len(self.relators()) < len(self.generators):
+                self._order = S.Infinity
+            else:
+                self.coset_enumeration()
+        return self._order
+
+    def index(self, H):
+        """
+        For a subgroup H of the group self, index returns the index
+        [G:U] = |G| / |U| of U in G.
+        """
+        if self._order != None and H._order != None:
+            return self.order()/H.order()
+
+    def coset_enumeration(self, H=None):
+        pass
 
     __repr__ = __str__
 
