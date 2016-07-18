@@ -907,11 +907,13 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             from sympy.utilities.iterables import topological_sort
             from sympy.core.function import FunctionClass
-            from sympy.core.symbol import Dummy
             rv = self
-            if len(sequence) > 1:
+            if len(sequence) > 1 and \
+                    any([seq[-1].free_symbols or seq[0].is_Atom
+                         for seq in sequence]):
                 try:
                     substitution = dict(args[0])
+
                     def expr_key(expr):
                         if expr.is_Number or not expr.free_symbols:
                             return 0
@@ -922,6 +924,15 @@ class Basic(with_metaclass(ManagedProperties)):
                                                                    substitution.values())),
                                                           sequence)),
                                                         expr_key)
+
+                    def dummy_bigger_key(expr):
+                        if expr.is_Dummy:
+                            return 10
+                        else:
+                            return 0
+
+                    if any([el.is_Dummy for el in topo_sorted_subs]):
+                        sorted(topo_sorted_subs, dummy_bigger_key)
                     sequence = [(item, substitution[item])
                                 for item in topo_sorted_subs
                                 if item in substitution.keys()]
