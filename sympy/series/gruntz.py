@@ -301,8 +301,6 @@ def mrv(e, x):
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
         return mrv(e.args[0], x)
-    elif isinstance(e, Subs):
-        return mrv(e.doit(), x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 

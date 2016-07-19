@@ -1679,6 +1679,18 @@ class Subs(Expr):
         subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
         return Add(*subs_args) + o
 
+    def _eval_as_leading_term(self, x):
+        if x in self.point:
+            ipos = self.point.index(x)
+            xvar = self.variables[ipos]
+            return self.expr.as_leading_term(xvar)
+        if x in self.variables:
+            # if `x` is a dummy variable, it means it won't exist after the
+            # substitution has been performed:
+            return self
+        # The variable is independent of the substitution:
+        return self.expr.as_leading_term(x)
+
 
 def diff(f, *symbols, **kwargs):
     """
