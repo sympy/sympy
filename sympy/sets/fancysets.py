@@ -135,6 +135,10 @@ class Integers(with_metaclass(Singleton, Set)):
         elif other.is_integer is False:
             return S.false
 
+    def _union(self, other):
+        if Intersection(self, other) == self:
+            return other
+
     def __iter__(self):
         yield S.Zero
         i = S.One

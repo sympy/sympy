@@ -133,6 +133,8 @@ def test_union():
     assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
         FiniteSet(-sqrt(-I), sqrt(-I))
 
+    assert Union(S.Reals, S.Integers) == S.Reals
+
 
 def test_union_iter():
     # Use Range because it is ordered
@@ -304,6 +306,8 @@ def test_intersection():
     assert Intersection(Intersection(S.Integers, S.Naturals, evaluate=False),
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
+
+    assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
 
 def test_issue_9623():
