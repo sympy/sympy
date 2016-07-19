@@ -7,7 +7,7 @@ singularity functions in mechanics.
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Eq, diff
-from sympy.solvers import solve
+from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction
 from sympy import sympify
@@ -308,11 +308,11 @@ class Beam(object):
 
         bc_eqs = []
         for position, value in self._boundary_conditions['moment']:
-            eqs = Eq(moment_curve.subs(x, position), value)
+            eqs = moment_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
-        constants = solve(bc_eqs, [C1, C2])
-        moment_curve = moment_curve.subs(constants)
+        constants = list(linsolve(bc_eqs, C1, C2))
+        moment_curve = moment_curve.subs({C1 : constants[0][0], C2 : constants[0][1]})
 
         return moment_curve
 
@@ -335,11 +335,11 @@ class Beam(object):
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
-            eqs = Eq(slope_curve.subs(x, position), value)
+            eqs = slope_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
-        constants = solve(bc_eqs, [C3])
-        slope_curve = slope_curve.subs(constants)
+        constants = list(linsolve(bc_eqs, C3))
+        slope_curve = slope_curve.subs({C3 : constants[0][0]})
         return slope_curve
 
 
@@ -363,11 +363,11 @@ class Beam(object):
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
-            eqs = Eq(deflection_curve.subs(x, position), value)
+            eqs = deflection_curve.subs(x, position) - value
             bc_eqs.append(eqs)
 
-        constants = solve(bc_eqs, [C4])
-        deflection_curve = deflection_curve.subs(constants)
+        constants = list(linsolve(bc_eqs, C4))
+        deflection_curve = deflection_curve.subs({C4 : constants[0][0]})
         return deflection_curve
 
 
