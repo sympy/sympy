@@ -136,8 +136,11 @@ class Integers(with_metaclass(Singleton, Set)):
             return S.false
 
     def _union(self, other):
-        if Intersection(self, other) == self:
+        intersect = Intersection(self, other)
+        if intersect == self:
             return other
+        elif intersect == other:
+            return self
 
     def __iter__(self):
         yield S.Zero
@@ -1342,6 +1345,8 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+        if other is S.ComplexInfinity:
+            return False
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()

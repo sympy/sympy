@@ -490,6 +490,8 @@ def test_contains():
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
         And(y <= 3, y <= x, y >= 1, y >= 2)
 
+    assert (S.Complexes).contains(S.ComplexInfinity) == S.false
+
 
 def test_interval_symbolic():
     x = Symbol('x')
