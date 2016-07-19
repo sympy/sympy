@@ -191,6 +191,9 @@ class FreeGroup(DefaultPrinting):
         return self._hash
 
     def __len__(self):
+        """
+        Returns the ``rank`` of the free group.
+        """
         return self.rank
 
     def __str__(self):
@@ -234,6 +237,12 @@ class FreeGroup(DefaultPrinting):
 
     @property
     def elements(self):
+        """
+        Returns the elements of the free group ``self``. Since number of
+        elements of any free group of rank greater than 0 are infinite, so a
+        ValueError is raised otherwise.
+
+        """
         if self.rank == 0:
             # A set containing Identity element of `FreeGroup` self is returned
             return set([self.identity])
