@@ -409,8 +409,9 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x in points], x0)
 
 
-as_finite_diff = deprecated(useinstead="Derivative.as_finite_difference",
-                            deprecated_since_version="1.1")(_as_finite_diff)
+as_finite_diff = deprecated(
+    useinstead="Derivative.as_finite_difference",
+    deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
 
 
 def differentiate_finite(expr, *symbols,

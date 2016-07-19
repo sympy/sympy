@@ -1415,11 +1415,8 @@ class Derivative(Expr):
 
         >>> e, sq2 = exp(1), sqrt(2)
         >>> xl = [x-h, x+h, x+e*h]
-        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)
-        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/\
-((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
-(-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
-(-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
+        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
 
         Partial derivatives are also supported:
 
