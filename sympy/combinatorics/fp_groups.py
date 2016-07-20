@@ -5,7 +5,7 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -43,6 +43,12 @@ class FpGroup(DefaultPrinting):
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
     relators would be specified in such a way that each of them be equal to the
     identity of the provided free group.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics.fp_groups import FpGroup
     """
     is_group = True
     is_FpGroup = True
@@ -125,6 +131,7 @@ class CosetTable(DefaultPrinting):
         self.p = [0]
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
+        # the mathematical coset table which is a list of lists
         self.table = [[None]*len(self.A)]
         self.A_dict = {x: self.A.index(x) for x in self.A}
         self.A_dict_inv = {}
@@ -133,6 +140,7 @@ class CosetTable(DefaultPrinting):
                 self.A_dict_inv[x] = self.A_dict[x] + 1
             else:
                 self.A_dict_inv[x] = self.A_dict[x] - 1
+        # what is this?
         self.deduction_stack = []
 
     @property
@@ -173,6 +181,21 @@ class CosetTable(DefaultPrinting):
 
     # Pg. 153 [1]
     def define(self, alpha, x):
+        """
+        This routine is used in the relator-based strategy of todd coxeter
+        algorithm. If some α^x is undefined, then we remedy this by adjoining
+        a new coset β to Ω (i.e to set of live cosets) and make that equal to
+        α^x. But before we do that, we check whether there is space available
+        for defining a new coset. If there is not enough space then we halt
+        the Coset Table creation. The amount of space used by Coset Table
+        can be manipulated using ``CosetTable.coset_table_max_limit``.
+
+        See Also
+        ========
+
+        define_f
+
+        """
         A = self.A
         if len(self.table) == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
@@ -185,6 +208,18 @@ class CosetTable(DefaultPrinting):
         self.table[beta][self.A_dict_inv[x]] = alpha
 
     def define_f(self, alpha, x):
+        """
+        A variation of ``define`` routine, used in the coset table-based
+        strategy of todd coxeter algorithm. It differs from ``define`` routine
+        in that for each definition it also adds the tuple (α, x) to the
+        deduction stack.
+
+        See Also
+        ========
+
+        define
+
+        """
         A = self.A
         if len(self.table) == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
@@ -199,6 +234,15 @@ class CosetTable(DefaultPrinting):
         self.deduction_stack.append((alpha, x))
 
     def scan_f(self, alpha, word):
+        """
+        A variation of ``scan`` routine which makes puts tuple, whenever a
+        deduction occurs, to deduction stack.
+
+        See Also
+        ========
+        scan, scan_check, scan_and_fill, scan_and_fill_f
+
+        """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
@@ -262,6 +306,31 @@ class CosetTable(DefaultPrinting):
                         self.table[nu][A_dict_inv[x]] = mu
 
     def scan(self, alpha, word):
+        """
+        ``scan`` performs a scanning process on the input ``word``.
+
+        It first locates the largest prefix ``s`` of ``word`` for which `α^s` is
+        defined (i.e is not None), ``s`` may be empty. Let `word=sv`, let ``t`` be
+        the longest suffix of ``v`` for which α^(t^-1) is defined, and let ``v=ut``
+        . Then three possibilities are there:
+
+        1. If ``t=v``, then we say that the scan completes, and if, in addition
+        α^s = α^(t^-1), then we say that the scan completes correctly.
+
+        2. It can also happen that scan does not complete, but ``|u|=1``; that is,
+        the word ``u`` consists of a single generator ``x ∈ A``. In that case, if
+        `α^s = β` and α^(t^-1) = γ, then we can set `β^x = γ` and `γ^(x^-1) = β`.
+        These assignments are known as deductions, and these deductions enable the
+        scan to complete correctly.
+
+        3. The unfortunate situation when the scan completes but not correctly.
+        Then ``coincidence`` routine is run.
+
+        See Also
+        ========
+        scan_f, scan_check, scan_and_fill, scan_and_fill_f
+
+        """
         # alpha is an integer representing a "coset"
         # since scanning can be in two cases
         # 1. for alpha=0 and w in Y (i.e generating set of H)
@@ -300,6 +369,11 @@ class CosetTable(DefaultPrinting):
         under w, it is a straightforward modification of "scan". "scan_check"
         return false (rather than calling "coincidence") if the scan completes
         incorrectly; otherwise it returns true.
+
+        See Also
+        ========
+
+        scan, scan_f, scan_and_fill, scan_and_fill_f
 
         """
         # alpha is an integer representing a "coset"
@@ -386,6 +460,14 @@ class CosetTable(DefaultPrinting):
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
+        """
+        A variation
+
+        See Also
+        ========
+        scan, scan_f, scan_check, scan_and_fill_f
+
+        """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         r = len(word)
@@ -416,6 +498,12 @@ class CosetTable(DefaultPrinting):
                 self.define(f, word[i])
 
     def scan_and_fill_f(self, alpha, word):
+        """
+        See Also
+        ========
+        scan, scan_f, scan_check, scan_and_fill
+
+        """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         r = len(word)
@@ -526,7 +614,7 @@ class CosetTable(DefaultPrinting):
         the end of an enumeration to permute the cosets so that they occur in
         some sort of standard order.
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
 
@@ -602,7 +690,7 @@ class CosetTable(DefaultPrinting):
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> F, x, y = free_group("x, y")
 
@@ -751,7 +839,7 @@ def coset_enumeration_r(fp_grp, Y):
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -822,7 +910,7 @@ def low_index_subgroups(G, N, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -924,7 +1012,7 @@ def first_in_class(C, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1105,7 +1193,7 @@ def rewrite(C, alpha, w):
     ========
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> F, x, y = free_group("x ,y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
@@ -1178,7 +1266,7 @@ def elimination_technique_2(C):
     seems superior in that we may select for elimination the generator with
     shortest equivalent string at each stage.
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
             reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
@@ -1232,7 +1320,7 @@ def _simplification_technique_1(rels):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
@@ -1308,7 +1396,7 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 
