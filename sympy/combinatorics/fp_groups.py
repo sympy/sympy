@@ -164,7 +164,7 @@ class CosetTable(DefaultPrinting):
 
     @property
     def n(self):
-        """The number 'n' represents the length of the sublist containing the
+        """The number ``n`` represents the length of the sublist containing the
         live cosets.
         """
         if not self.table:
@@ -173,26 +173,26 @@ class CosetTable(DefaultPrinting):
 
     # Pg 152 [1]
     def is_complete(self):
-        """
+        r"""
         The coset table is called complete if it has no undefined entries
-        on the live cosets; that is, α^x is defined for all α ∈ Ω and x ∈ A.
+        on the live cosets; that is, `\alpha^x` is defined for all
+        `\alpha \in \Omega` and `x \in A`.
         """
         return not any([None in self.table[coset] for coset in self.omega])
 
     # Pg. 153 [1]
     def define(self, alpha, x):
-        """
+        r"""
         This routine is used in the relator-based strategy of todd coxeter
-        algorithm. If some α^x is undefined, then we remedy this by adjoining
-        a new coset β to Ω (i.e to set of live cosets) and make that equal to
-        α^x. But before we do that, we check whether there is space available
+        algorithm. If some `\alpha^x` is undefined, then we remedy this by adjoining
+        a new coset `\beta` to `\Omega` (i.e to set of live cosets) and make that equal to
+        `\alpha^x`. But before we do that, we check whether there is space available
         for defining a new coset. If there is not enough space then we halt
         the Coset Table creation. The amount of space used by Coset Table
         can be manipulated using ``CosetTable.coset_table_max_limit``.
 
         See Also
         ========
-
         define_f
 
         """
@@ -208,15 +208,14 @@ class CosetTable(DefaultPrinting):
         self.table[beta][self.A_dict_inv[x]] = alpha
 
     def define_f(self, alpha, x):
-        """
+        r"""
         A variation of ``define`` routine, used in the coset table-based
         strategy of todd coxeter algorithm. It differs from ``define`` routine
-        in that for each definition it also adds the tuple (α, x) to the
+        in that for each definition it also adds the tuple `(\alpha, x)` to the
         deduction stack.
 
         See Also
         ========
-
         define
 
         """
@@ -306,22 +305,25 @@ class CosetTable(DefaultPrinting):
                         self.table[nu][A_dict_inv[x]] = mu
 
     def scan(self, alpha, word):
-        """
+        r"""
         ``scan`` performs a scanning process on the input ``word``.
 
-        It first locates the largest prefix ``s`` of ``word`` for which `α^s` is
-        defined (i.e is not None), ``s`` may be empty. Let `word=sv`, let ``t`` be
-        the longest suffix of ``v`` for which α^(t^-1) is defined, and let ``v=ut``
-        . Then three possibilities are there:
+        It first locates the largest prefix ``s`` of ``word`` for which
+        `\alpha^s` is defined (i.e is not None), ``s`` may be empty. Let
+        ``word=sv``, let ``t`` be the longest suffix of ``v`` for which
+        `\alpha^{t^{-1}}` is defined, and let ``v=ut``. Then three possibilities
+        are there:
 
         1. If ``t=v``, then we say that the scan completes, and if, in addition
-        α^s = α^(t^-1), then we say that the scan completes correctly.
+        `\alpha^s = \alpha^{t^{-1}}, then we say that the scan completes
+        correctly.
 
-        2. It can also happen that scan does not complete, but ``|u|=1``; that is,
-        the word ``u`` consists of a single generator ``x ∈ A``. In that case, if
-        `α^s = β` and α^(t^-1) = γ, then we can set `β^x = γ` and `γ^(x^-1) = β`.
-        These assignments are known as deductions, and these deductions enable the
-        scan to complete correctly.
+        2. It can also happen that scan does not complete, but `|u|=1`; that
+        is, the word ``u`` consists of a single generator `x \in A`. In that
+        case, if `\alpha^s = \beta` and `\alpha^{t^{-1}} = \gamma`, then we can
+        set `\beta^x = \gamma` and `\gamma^{x^{-1}} = \beta`. These assignments
+        are known as deductions, and these deductions enable the scan to
+        complete correctly.
 
         3. The unfortunate situation when the scan completes but not correctly.
         Then ``coincidence`` routine is run.
@@ -585,8 +587,9 @@ class CosetTable(DefaultPrinting):
         return True
 
     def switch(self, beta, gamma):
-        """
-        Switch the elements β, γ of Ω in C
+        r"""
+        Switch the elements `\beta`, `\gamma` of `\Omega \in C`
+
         """
         A = self.A
         A_dict = self.A_dict
@@ -605,12 +608,13 @@ class CosetTable(DefaultPrinting):
                         table[alpha][A_dict[x]] = beta
 
     def standardize(self):
-        """A coset table is standardized if when running through the cosets
+        """
+        A coset table is standardized if when running through the cosets
         and within each coset through the generator images (ignoring generator
         inverses), the cosets appear in order of the integers 0, 1, 2, ... n.
-        "Standardize" reorders the elements of \Omega such that, if we scan
-        the coset table first by elements of \Omega and then by elements of A,
-        then the cosets occur in ascending order. `standardize()` is used at
+        "Standardize" reorders the elements of `\Omega` such that, if we scan
+        the coset table first by elements of `\Omega` and then by elements of A,
+        then the cosets occur in ascending order. ``standardize()`` is used at
         the end of an enumeration to permute the cosets so that they occur in
         some sort of standard order.
 
