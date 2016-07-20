@@ -536,18 +536,18 @@ def test_poly_gens():
         FiniteSet(-Rational(3, 2), S.Half)
 
 
-@XFAIL
 def test_uselogcombine_1():
     assert solveset_real(log(x - 3) + log(x + 3), x) == \
         FiniteSet(sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
-        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
 
 @XFAIL
-def test_uselogcombine_2():
+def test_logsolver():
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
+        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
+        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
+
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
         FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))

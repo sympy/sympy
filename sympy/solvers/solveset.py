@@ -536,7 +536,6 @@ def _solve_abs(f, symbol, domain):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-
 def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
@@ -618,7 +617,12 @@ def _solveset(f, symbol, domain, _check=False):
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
-                        result += _solve_as_rational(equation, symbol, domain)
+                        new_result = _solve_as_rational(equation, symbol, domain)
+                        if isinstance(new_result, ConditionSet):
+                            result += transolve(equation, symbol, domain)
+                        else:
+                            result += new_result
+
                 else:
                     result += solver(equation, symbol)
         else:
@@ -642,6 +646,39 @@ def _solveset(f, symbol, domain, _check=False):
                       or domain_check(fx, symbol, s)])
 
     return result
+
+
+def transolve(f, symbol, domain=S.Reals):
+    from sympy.polys import factor
+    from sympy.simplify import powdenest, logcombine
+
+    orig_f = f
+    lhs, rhs = _invert(f, 0, symbol, domain)
+
+    result = S.EmptySet
+    if lhs.is_Add:
+        # it's time to try factoring; powdenest is used
+        # to try get powers in standard form for better factoring
+        f = logcombine(lhs, force=True)
+        if f.count(log) != lhs.count(log):
+            if f.func is log:
+                for rhs_s in rhs:
+                    solutions = _solveset(Eq(f, rhs), symbol, domain)
+                    if isinstance(solutions, FiniteSet):
+                        for solution in solutions:
+                            if simplify(orig_f.subs(symbol, solution)) is S.Zero:
+                                result += FiniteSet(solution)
+                    elif isinstance(solutions, ConditionSet):
+                        result += ConditionSet(symbol, Eq(lhs, 0), domain)
+                    else:
+                        result += solutions
+
+    if result is S.EmptySet:
+        result = ConditionSet(symbol, Eq(orig_f, 0), domain)
+
+    return result
+
+
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
