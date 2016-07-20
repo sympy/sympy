@@ -1215,9 +1215,17 @@ class HolonomicFunction(object):
         indicialroots = self._indicial()
 
         reals = []
+        compl = []
         for i in indicialroots:
             if i.is_real:
                 reals.extend([i] * indicialroots[i])
+            else:
+                a, b = i.as_real_imag()
+                compl.extend([(i, a, b)] * indicialroots[i])
+        compl.sort(key=lambda x : x[1])
+        for i in range(0, len(compl)-1):
+            if compl[i][2] > 0 and compl[i][1] == compl[i+1][1]:
+                compl[i], compl[i+1] = compl[i+1], compl[i]
         reals.sort()
 
         x = self.x
@@ -1253,7 +1261,7 @@ class HolonomicFunction(object):
             rootstoconsider = [min(reals)]
 
         elif independent:
-            rootstoconsider = [i[0] for i in grp]
+            rootstoconsider = [i[0] for i in grp] + [j[0] for j in compl]
 
         elif not allint:
             rootstoconsider = []
