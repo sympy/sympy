@@ -1225,9 +1225,7 @@ class HolonomicFunction(object):
 
         # sort the roots for a fixed ordering of solution
         compl.sort(key=lambda x : x[1])
-        for i in range(0, len(compl) - 1):
-            if compl[i][2] > 0 and compl[i][1] == compl[i + 1][1]:
-                compl[i], compl[i + 1] = compl[i + 1], compl[i]
+        compl.sort(key=lambda x : x[2])
         reals.sort()
 
         x = self.x
