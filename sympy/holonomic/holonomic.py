@@ -1222,10 +1222,12 @@ class HolonomicFunction(object):
             else:
                 a, b = i.as_real_imag()
                 compl.extend([(i, a, b)] * indicialroots[i])
+
+        # sort the roots for a fixed ordering of solution
         compl.sort(key=lambda x : x[1])
-        for i in range(0, len(compl)-1):
-            if compl[i][2] > 0 and compl[i][1] == compl[i+1][1]:
-                compl[i], compl[i+1] = compl[i+1], compl[i]
+        for i in range(0, len(compl) - 1):
+            if compl[i][2] > 0 and compl[i][1] == compl[i + 1][1]:
+                compl[i], compl[i + 1] = compl[i + 1], compl[i]
         reals.sort()
 
         x = self.x
@@ -1246,15 +1248,19 @@ class HolonomicFunction(object):
             if not intdiff:
                 grp.append([i])
 
+        # True if none of the roots differ by an integer i.e.
+        # each element in group have only one member
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
         allint = all(int(i) == i for i in reals)
 
+        # if initial conditions are provided
+        # then use them.
         if self.singular_ics:
             rootstoconsider = []
             for i in self.singular_ics:
-                if i[0] in reals:
+                if i[0] in indicialroots:
                     rootstoconsider.append(i[0])
 
         elif allpos and allint:
@@ -1778,8 +1784,6 @@ class HolonomicFunction(object):
         if as_list:
             listofsol = []
         for i in range(smallest_n + m):
-            if S(u0[i]) == 0:
-                continue
 
             # if the recurrence relation doesn't hold for `n = i`,
             # then a Hypergeometric representation doesn't exist.
@@ -1795,7 +1799,7 @@ class HolonomicFunction(object):
             # if the coefficient u0[i] is zero, then the
             # independent hypergeomtric series starting with
             # x**i is not a part of the answer.
-            if u0[i] is 0:
+            if S(u0[i]) == 0:
                 continue
 
             ap = []

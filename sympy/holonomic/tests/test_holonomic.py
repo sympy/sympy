@@ -277,6 +277,8 @@ def test_series():
     assert expr_to_holonomic(sqrt(x**3 + x)).series(n=10) == sqrt(x**3 + x).series(n=10)
     assert expr_to_holonomic((2*x - 3*x**2)**(S(1)/3)).series() == ((2*x - 3*x**2)**(S(1)/3)).series()
     assert  expr_to_holonomic(sqrt(x**2-x)).series() == (sqrt(x**2-x)).series()
+    assert expr_to_holonomic(cos(x)**2/x**2, singular_ics=[(-2, [1, 0, -1])]).series(n=10) == (cos(x)**2/x**2).series(n=10)
+    assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10) == (cos(x)**2/x**2).series(n=10, x0=1)
 
 def test_evalf_euler():
     x = symbols('x')
