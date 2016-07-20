@@ -1345,8 +1345,6 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
-        if other is S.ComplexInfinity:
-            return False
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()

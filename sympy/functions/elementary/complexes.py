@@ -53,6 +53,8 @@ class re(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -144,6 +146,8 @@ class im(Function):
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
+            return S.NaN
+        elif arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_real:
             return S.Zero
