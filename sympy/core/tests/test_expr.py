@@ -1228,7 +1228,9 @@ def test_as_coefficients_dict():
         [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
-    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+    assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
+        [0, 0, 0, 3.0, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
 
 
 def test_args_cnc():
