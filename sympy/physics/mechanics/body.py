@@ -86,7 +86,7 @@ class Body(RigidBody, Particle):
         >>> from sympy import Symbol
         >>> from sympy.physics.mechanics import Body
         >>> mass = Symbol('mass')
-        >>> body = Body('name_of_body', mass)
+        >>> body = Body('name_of_body', mass=mass)
 
     The Particle version of the Body object can also recieve a masscenter point
     and a reference frame, just not an inertia.
@@ -170,8 +170,7 @@ class Body(RigidBody, Particle):
             >>> l = Symbol('l')
             >>> point = body.masscenter.locatenew('force_point', l *
             ...                                   body.frame.y)
-            >>> gravity = child.mass * g
-            >>> body.apply_force(gravity * body.frame.x, point)
+            >>> body.apply_force(body.mass * g * body.frame.x, point)
 
         """
 
