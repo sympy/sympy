@@ -98,8 +98,10 @@ class Beam(object):
         It is suggested to use ``moment``, ``slope`` and ``deflection`` as the
         keywords while providing the boundary conditions of the moment curve,
         slope curve and the deflection curve respectively as inputs.
+        A tuple in the form of (location, value) can be used to pass the
+        location and the value of a boundary condition. A list of such tuples
+        is passed under each keywords.
 
-        Outputs a dictionary.
 
         Examples
         ========
@@ -109,6 +111,12 @@ class Beam(object):
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+
+        Here ``moment = [(0, 4), (4, 0)]`` means the moment due to the
+        applied loads at point ``0`` and ``4`` are `4` and `0` respectively.
+        Similarly, ``deflection = [(0, 2)]`` means the deflection of the beam
+        at point ``0`` is ``2``.
+
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.boundary_conditions['moment']
