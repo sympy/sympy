@@ -184,12 +184,13 @@ class CosetTable(DefaultPrinting):
     def define(self, alpha, x):
         r"""
         This routine is used in the relator-based strategy of todd coxeter
-        algorithm. If some `\alpha^x` is undefined, then we remedy this by adjoining
-        a new coset `\beta` to `\Omega` (i.e to set of live cosets) and make that equal to
-        `\alpha^x`. But before we do that, we check whether there is space available
-        for defining a new coset. If there is not enough space then we halt
-        the Coset Table creation. The amount of space used by Coset Table
-        can be manipulated using ``CosetTable.coset_table_max_limit``.
+        algorithm. If some `\alpha^x` is undefined, then we remedy this by
+        adjoining a new coset `\beta` to `\Omega` (i.e to set of live cosets)
+        and make that equal to `\alpha^x`. But before we do that, we check
+        whether there is space available for defining a new coset. If there is
+        not enough space then we halt the Coset Table creation. The maximum
+        amount of space that can be used by Coset Table can be manipulated
+        using ``CosetTable.coset_table_max_limit``.
 
         See Also
         ========
@@ -326,7 +327,11 @@ class CosetTable(DefaultPrinting):
         complete correctly.
 
         3. The unfortunate situation when the scan completes but not correctly.
-        Then ``coincidence`` routine is run.
+        Then ``coincidence`` routine is run. i.e when for some `i` with
+        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
+        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and `\gamma = \alph^{t-1}`
+        are defined but unequal. This means that `\beta` and `\gamma`
+        represent the same coset of `H` in `G`.
 
         See Also
         ========
@@ -436,6 +441,9 @@ class CosetTable(DefaultPrinting):
     # coincidence occurs
     def coincidence(self, alpha, beta):
         """
+        The third situation in ``scan`` routine can be handled by ``coincidence``
+        routine.
+
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
@@ -463,7 +471,11 @@ class CosetTable(DefaultPrinting):
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
         """
-        A variation
+        This is a variation of ``scan`` routine, that whenever we call ``scan``
+        and the scan is incomplete, then we make new definitions to enable
+        the scan to complete (that's why the name "fill"); that is, we fill
+        in the gaps in the scan of the relator or subgroup generator. This
+        procedure is exited as soon as the scan completes.
 
         See Also
         ========
@@ -500,7 +512,12 @@ class CosetTable(DefaultPrinting):
                 self.define(f, word[i])
 
     def scan_and_fill_f(self, alpha, word):
-        """
+        r"""
+        A variation of ``scan_and_fill`` routine for use in coset table-based
+        strategy of todd coxeter algorithm. It differs from ``define`` routine
+        in that for each definition it also adds the tuple `(\alpha, x)` to the
+        deduction stack.
+
         See Also
         ========
         scan, scan_f, scan_check, scan_and_fill
