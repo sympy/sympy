@@ -466,9 +466,9 @@ class Abs(Function):
                     return Abs(base)**exponent
                     if base.is_nonnegative:
                         return base**re(exponent)
-                    if base.is_negative:
-                        return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
-                    return
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                return
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
