@@ -447,28 +447,28 @@ class DistributedLoad(object):
 
     Parameters
     ==========
+    value : Sympifyable
+        A SymPy expression representing the value of the applied load.
     start : Sympifyable
         The starting point of the applied load.
     order : Sympifyable
         The order of the applied load.
-    value : Sympifyable
-        A SymPy expression representing the value of the applied load.
 
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
     >>> DistributedLoad(start = 4, order = 2, value = 2)
-    DistributedLoad(4, 2, 2)
+    DistributedLoad(2, 4, 2)
 
     """
 
-    def __init__(self, start, order, value):
+    def __init__(self, value, start, order):
         self._start = start
         self._order = order
         self._value = value
 
     def __str__(self):
-        str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.start), sstr(self.order), sstr(self.value))
+        str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.value), sstr(self.start), sstr(self.order))
         return str_sol
 
     __repr__ = __str__
