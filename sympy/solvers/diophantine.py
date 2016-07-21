@@ -118,6 +118,14 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ``t`` is the optional parameter to be used by ``diop_solve()``.
     ``syms`` is an optional list of symbols which determines the
     order of the elements in the returned tuple.
+    By default, base solution will be returned. If ``base_soln`` is set to
+    False then permuted base solution will be returned, if there is possibility
+    of permutation(value or/and sign permutation).
+    e.g. For equation `a^4 + b^4 - (2^4 + 3^4)` solution is
+    `set([(2, 3)])` (By default, base solutiion ).
+    If ``base_soln`` is set to False then output :
+    `set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2),
+    (3, 2)])`
 
     Details
     =======
@@ -137,6 +145,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     set([(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)])
     >>> diophantine(x**2 + 3*x*y + 4*x)
     set([(0, n1), (3*t_0 - 4, -t_0)])
+    >>> from sympy import symbols
+    >>> a, b = symbols('a, b')
+    >>> diophantine(a**4 + b**4 - (2**4 + 3**4))
+    set([(2, 3)])
+    >>> diophantine(a**4 + b**4 - (2**4 + 3**4), base_soln=False)
+    set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
 
     See Also
     ========
@@ -216,13 +230,13 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     var1_mul_var2 = map(lambda a, b: a * b, var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
-                            coefficint = c[v1_mul_v2]
+                            coefficient = c[v1_mul_v2]
                         except KeyError:
-                            coefficint = 0
+                            coefficient = 0
                         # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
                         # `check_coeff` will be True and do_permute_sign will
                         #  remain False.
-                        check_coeff = bool(check_coeff & coefficint)
+                        check_coeff = bool(check_coeff & coefficient)
                     if not check_coeff:
                         # means only x**2, y**2, z**2, const is present
                         do_permute_signs = True
@@ -234,18 +248,18 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     var1_mul_var2 = map(lambda x, y: x * y, var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
-                            coefficint = c[v1_mul_v2]
+                            coefficient = c[v1_mul_v2]
                         except KeyError:
-                            coefficint = 0
-                        check_coeff = bool(check_coeff & coefficint)
+                            coefficient = 0
+                        check_coeff = bool(check_coeff & coefficient)
                     var_mul = list(subsets(v, 1))
                     # here var_mul is like [(x,), (y, )]
                     for v1_mul_v2 in var_mul:
                         try:
-                            coefficint = c[v1_mul_v2[0]]
+                            coefficient = c[v1_mul_v2[0]]
                         except KeyError:
-                            coefficint = 0
-                        check_coeff = bool(check_coeff & coefficint)
+                            coefficient = 0
+                        check_coeff = bool(check_coeff & coefficient)
                     if not check_coeff:
                         # means only x**2, y**2 and const is present
                         do_permute_signs = True
