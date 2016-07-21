@@ -320,7 +320,22 @@ class Beam(object):
 
         Examples
         ========
-
+        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> P1 = Point('0')
+        >>> P2 = Point('2')
+        >>> P3 = Point('3')
+        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = P2, value = 4)
+        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.slope()
+        -71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1
         """
         x = Symbol('x')
         if not self._boundary_conditions['slope']:
@@ -346,7 +361,22 @@ class Beam(object):
 
         Examples
         ========
-
+        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> P1 = Point('0')
+        >>> P2 = Point('2')
+        >>> P3 = Point('3')
+        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = P2, value = 4)
+        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> b.apply_loads(Load_1, Load_2, Load_3)
+        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.deflection()
+        -71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2
         """
         x = Symbol('x')
         if not (self._boundary_conditions['deflection'] and self._boundary_conditions['slope']):
