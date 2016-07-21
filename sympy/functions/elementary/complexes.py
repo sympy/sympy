@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
-from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -467,7 +466,8 @@ class Abs(Function):
                     return Abs(base)**exponent
                 if base.is_positive == True:
                     return base**re(exponent)
-                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
