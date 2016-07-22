@@ -752,6 +752,13 @@ def test_solve_trig_2():
     soln = ImageSet(lamb_expr1, S.Integers) + ImageSet(lamb_expr2, S.Integers)
     assert solveset_real(eq, x) == soln
 
+    eq = sin(3 * x) - 1
+    s1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers)
+    s2 = ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)
+    s3 = ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)
+    soln = Union(s1, s2, s3, evaluate=False)
+    assert solveset_real(eq, x) == soln
+
 
 def test_issue_10426():
     y, a = symbols('y, a')
