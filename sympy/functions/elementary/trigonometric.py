@@ -524,7 +524,7 @@ class cos(TrigonometricFunction):
                 return AccumBounds(-1, 1)
 
         if isinstance(arg, AccumBounds):
-            return sin(arg + S.Pi/2, evaluate=False)
+            return sin(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
