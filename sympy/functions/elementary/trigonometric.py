@@ -3,9 +3,9 @@ from __future__ import print_function, division
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.numbers import igcdex, Rational
+from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Wild
 from sympy.core.logic import fuzzy_not
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
@@ -62,6 +62,32 @@ class TrigonometricFunction(Function):
         else:
             re, im = self.args[0].as_real_imag()
         return (re, im)
+
+    def _period(self, general_period, symbol=None):
+        f = self.args[0]
+        if symbol is None:
+            symbol = tuple(f.free_symbols)[0]
+
+        if not f.has(symbol):
+            return S.Zero
+
+        if f == symbol:
+            return general_period
+
+        if symbol in f.free_symbols:
+            p, q = Wild('p'), Wild('q')
+            if f.is_Mul:
+                g, h = f.as_independent(symbol)
+                if h == symbol:
+                    return general_period/abs(g)
+
+            if f.is_Add:
+                a, h = f.as_independent(symbol)
+                g, h = h.as_independent(symbol, as_Add=False)
+                if h == symbol:
+                    return general_period/abs(g)
+
+        raise NotImplementedError("Use the periodicity function instead.")
 
 
 def _peeloff_pi(arg):
@@ -215,6 +241,9 @@ class sin(TrigonometricFunction):
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
     .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
     """
+
+    def period(self, symbol=None):
+        return self._period(2*pi, symbol)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -465,6 +494,9 @@ class cos(TrigonometricFunction):
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
     """
+
+    def period(self, symbol=None):
+        return self._period(2*pi, symbol)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -866,6 +898,9 @@ class tan(TrigonometricFunction):
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
     """
 
+    def period(self, symbol=None):
+        return self._period(pi, symbol)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return S.One + self**2
@@ -1139,6 +1174,9 @@ class cot(TrigonometricFunction):
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
     """
+
+    def period(self, symbol=None):
+        return self._period(pi, symbol)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1433,6 +1471,10 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         if t != None and t != self._reciprocal_of(arg):
             return 1/t
 
+    def _period(self, symbol):
+        f = self.args[0]
+        return self._reciprocal_of(f).period(symbol)
+
     def fdiff(self, argindex=1):
         return -self._calculate_reciprocal("fdiff", argindex)/self**2
 
@@ -1518,6 +1560,9 @@ class sec(ReciprocalTrigonometricFunction):
     _reciprocal_of = cos
     _is_even = True
 
+    def period(self, symbol=None):
+        return self._period(symbol)
+
     def _eval_rewrite_as_cot(self, arg):
         cot_half_sq = cot(arg/2)**2
         return (cot_half_sq + 1)/(cot_half_sq - 1)
@@ -1585,6 +1630,9 @@ class csc(ReciprocalTrigonometricFunction):
 
     _reciprocal_of = sin
     _is_odd = True
+
+    def period(self, symbol=None):
+        return self._period(symbol)
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
