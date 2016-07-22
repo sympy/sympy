@@ -1,11 +1,9 @@
 from __future__ import print_function, division
 
-__all__ = ['KanesMethod']
-
 from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
-from sympy.physics.vector import (Vector, ReferenceFrame, dynamicsymbols,
+from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
@@ -14,6 +12,8 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
+
+__all__ = ['KanesMethod']
 
 
 class KanesMethod(object):
@@ -741,30 +741,36 @@ class KanesMethod(object):
         return (self._fr, self._frstar)
 
     def rhs(self, inv_method=None):
-        """ Returns the system's equations of motion in first order form.
+        """Returns the system's equations of motion in first order form. The
+        output is the right hand side of::
 
-        The output of this will be the right hand side of:
+           x' = |q'| =: f(q, u, r, p, t)
+                |u'|
 
-        [qdot, udot].T = f(q, u, t)
-
-        Or, the equations of motion in first order form.  The right hand side
-        is what is needed by most numerical ODE integrators.
+        The right hand side is what is needed by most numerical ODE
+        integrators.
 
         Parameters
         ==========
-
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
+        rhs = zeros(len(self.q) + len(self.u), c=1)
+        kdes = self.kindiffdict()
+        for i, q_i in enumerate(self.q):
+            rhs[i] = kdes[q_i.diff()]
+
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
+            rhs[len(self.q):, 0] = self.mass_matrix.LUsolve(self.forcing)
         else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
+            rhs[len(self.q):, 0] = (self.mass_matrix.inv(inv_method,
+                                                         try_block_diag=True) *
+                                    self.forcing)
+
+        return rhs
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to u."""
