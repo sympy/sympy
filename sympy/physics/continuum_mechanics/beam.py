@@ -35,13 +35,28 @@ class Beam(object):
 
     Examples
     ========
-    >>> from sympy.physics.continuum_mechanics.beam import Beam
+    >>> from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
     >>> from sympy import Symbol
     >>> E = Symbol('E')
     >>> I = Symbol('I')
-    >>> Beam(1, E, I)
-    Beam(1, E, I)
-
+    >>> b = Beam(4, E, I)
+    >>> Load_1 = PointLoad(location = 0, value = -3)
+    >>> Load_2 = PointLoad(location = 4, value = -9)
+    >>> Load_3 = DistributedLoad(value = 6, start = 2, order = 0)
+    >>> b.apply_loads(Load_1, Load_2, Load_3)
+    >>> b.apply_boundary_conditions(deflection = [(4, 0)])
+    >>> b.boundary_conditions
+    {'deflection': [(4, 0)], 'moment': [], 'slope': []}
+    >>> b.load_distribution()
+    -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
+    >>> b.shear_force()
+    -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
+    >>> b.bending_moment()
+    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
+    >>> b.slope()
+    (3*SingularityFunction(x, 0, 2)/2 - SingularityFunction(x, 2, 3) + 9*SingularityFunction(x, 4, 2)/2 - 7)/(E*I)
+    >>> b.deflection()
+    (-7*x + SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 2, 4)/4 + 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     """
 
     def __init__(self, length, elastic_modulus, second_moment):
@@ -91,7 +106,7 @@ class Beam(object):
         """
         return self._boundary_conditions
 
-    def apply_boundary_conditions(self, **bcs):
+    def apply_boundary_conditions(self, moment = [], slope = [], deflection = []):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
@@ -123,12 +138,12 @@ class Beam(object):
         [(0, 4), (4, 0)]
 
         """
-        if bcs['moment']:
-            self._boundary_conditions['moment'].extend([m_bcs for m_bcs in bcs['moment']])
-        if bcs['slope']:
-            self._boundary_conditions['slope'].extend([s_bcs for s_bcs in bcs['slope']])
-        if bcs['deflection']:
-            self._boundary_conditions['deflection'].extend([d_bcs for d_bcs in bcs['deflection']])
+        if moment:
+            self._boundary_conditions['moment'].extend([m_bcs for m_bcs in moment])
+        if slope:
+            self._boundary_conditions['slope'].extend([s_bcs for s_bcs in slope])
+        if deflection:
+            self._boundary_conditions['deflection'].extend([d_bcs for d_bcs in deflection])
 
     def apply_moment_boundary_conditions(self, *m_bcs):
         """
@@ -343,9 +358,11 @@ class Beam(object):
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.slope()
-        -71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1
+        (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
         """
         x = Symbol('x')
+        E = self.elastic_modulus
+        I = self.second_moment
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
 
@@ -359,7 +376,7 @@ class Beam(object):
 
         constants = list(linsolve(bc_eqs, C3))
         slope_curve = slope_curve.subs({C3 : constants[0][0]})
-        return slope_curve
+        return S(1)/(E*I)*slope_curve
 
 
     def deflection(self):
@@ -384,16 +401,29 @@ class Beam(object):
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.deflection()
-        -71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2
+        (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
         """
         x = Symbol('x')
-        if not (self._boundary_conditions['deflection'] and self._boundary_conditions['slope']):
-            return integrate(integrate(self.bending_moment(), x), x)
+        E = self.elastic_modulus
+        I = self.second_moment
+        if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
+            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x)
         elif not self._boundary_conditions['deflection']:
             return integrate(self.slope(), x)
+        elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
+            C3 = Symbol('C3')
+            slope_curve = integrate(self.bending_moment(), x) + C3
+            deflection_curve = integrate(slope_curve, x)
+            bc_eqs = []
+            for position, value in self._boundary_conditions['deflection']:
+                eqs = deflection_curve.subs(x, position) - value
+                bc_eqs.append(eqs)
+            constants = list(linsolve(bc_eqs, C3))
+            deflection_curve = deflection_curve.subs({C3 : constants[0][0]})
+            return S(1)/(E*I)*deflection_curve
 
         C4 = Symbol('C4')
-        deflection_curve = integrate(self.slope(), x) + C4
+        deflection_curve = integrate((E*I)*self.slope(), x) + C4
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
@@ -402,9 +432,7 @@ class Beam(object):
 
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4 : constants[0][0]})
-        return deflection_curve
-
-
+        return S(1)/(E*I)*deflection_curve
 
 
 class PointLoad(object):
