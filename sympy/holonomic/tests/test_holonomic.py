@@ -616,22 +616,26 @@ def test_diff():
 
 def test_extended_domain_in_expr_to_holonomic():
     x = symbols('x')
-    p = expr_to_holonomic(1.2*cos(3.1*x), domain=RR)
+    p = expr_to_holonomic(1.2*cos(3.1*x))
     assert p.to_expr() == 1.2*cos(3.1*x)
     assert sstr(p.integrate(x).to_expr()) == '0.387096774193548*sin(3.1*x)'
     _, Dx = DifferentialOperators(RR.old_poly_ring(x), 'Dx')
-    p = expr_to_holonomic(1.1329138213*x, domain=RR, lenics=2)
+    p = expr_to_holonomic(1.1329138213*x, lenics=2)
     q = HolonomicFunction((-1.1329138213) + (1.1329138213*x)*Dx, x, 0, [0, 1.1329138213])
     assert p == q
     assert p.to_expr() == 1.1329138213*x
     assert sstr(p.integrate((x, 1, 2))) == sstr((1.1329138213*x).integrate((x, 1, 2)))
     y, z = symbols('y, z')
-    p = expr_to_holonomic(sin(x*y*z), x=x, domain=ZZ[y, z])
+    p = expr_to_holonomic(sin(x*y*z), x=x)
     assert p.to_expr() == sin(x*y*z)
     assert p.integrate(x).to_expr() == (-cos(x*y*z) + 1)/(y*z)
-    p = expr_to_holonomic(sin(x*y + z), x=x, domain=ZZ[y, z]).integrate(x).to_expr()
+    p = expr_to_holonomic(sin(x*y + z), x=x).integrate(x).to_expr()
     q = (cos(z) - cos(x*y + z))/y
     assert p == q
+    a = symbols('a')
+    p = expr_to_holonomic(a*x, x, lenics=2)
+    assert p.to_expr() == a*x
+    assert p.integrate(x).to_expr() == a*x**2/2
 
 def test_to_meijerg():
     x = symbols('x')

@@ -2117,7 +2117,8 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
         else:
             raise ValueError("Specify the variable for the function")
     else:
-        syms.remove(x)
+        if len(syms) != 0:
+            syms.remove(x)
 
     extra_syms = [i for i in syms]
 
