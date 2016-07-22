@@ -581,7 +581,7 @@ class StrPrinter(Printer):
         if expr.rel_op in charmap:
             return '%s(%s, %s)' % (charmap[expr.rel_op], expr.lhs, expr.rhs)
 
-        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
+        return '(%s %s %s)' % (self.parenthesize(expr.lhs, precedence(expr)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
