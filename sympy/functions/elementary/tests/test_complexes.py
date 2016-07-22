@@ -78,6 +78,8 @@ def test_re():
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
 
+    assert re(S.ComplexInfinity) == S.NaN
+
 
 def test_im():
     x, y = symbols('x,y')
@@ -146,6 +148,8 @@ def test_im():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
+
+    assert im(S.ComplexInfinity) == S.NaN
 
 
 def test_sign():
