@@ -10,7 +10,7 @@ from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperato
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
-from sympy.polys.domains import QQ, ZZ
+from sympy.polys.domains import QQ, ZZ, RR
 from sympy.polys.domains.pythonrational import PythonRational
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.functions.special.hyper import hyper, meijerg
@@ -1729,7 +1729,7 @@ domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=None):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -1753,12 +1753,25 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=QQ)
     meijerint._rewrite1, _convert_poly_rat_alg, _create_table
     """
     func = sympify(func)
+    syms = func.free_symbols
+
     if not x:
-        syms = func.free_symbols
         if len(syms) == 1:
             x= syms.pop()
         else:
             raise ValueError("Specify the variable for the function")
+    else:
+        syms.remove(x)
+
+    extra_syms = [i for i in syms]
+
+    if domain == None:
+        if func.has(Float):
+            domain = RR
+        else:
+            domain = QQ
+        if len(extra_syms) != 0:
+            domain = domain[extra_syms]
 
     # try to convert if the function is polynomial or rational
     solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain)
