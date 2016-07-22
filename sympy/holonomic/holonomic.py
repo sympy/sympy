@@ -21,6 +21,7 @@ from sympy.polys.polyroots import roots
 from sympy.functions.elementary.exponential import exp_polar, exp
 from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError, SingularityError, NotHolonomicError
 from sympy.polys.rings import PolyElement
+from sympy.polys.fields import FracElement
 
 
 def DifferentialOperators(base, generator):
@@ -1763,7 +1764,7 @@ class HolonomicFunction(object):
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        if isinstance(a.rep[0], PolyElement):
+        if isinstance(a.rep[0], (PolyElement, FracElement)):
             c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
         else:
             c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
@@ -2117,7 +2118,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
         else:
             raise ValueError("Specify the variable for the function")
     else:
-        if len(syms) != 0:
+        if x in syms:
             syms.remove(x)
 
     extra_syms = [i for i in syms]
@@ -2128,7 +2129,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
         else:
             domain = QQ
         if len(extra_syms) != 0:
-            domain = domain[extra_syms]
+            domain = domain[extra_syms].get_field()
 
     # try to convert if the function is polynomial or rational
     solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain, singular_ics=singular_ics)
@@ -2383,7 +2384,7 @@ def _extend_y0(Holonomic, n):
                         return y0
                 except AttributeError:
                     pass
-                if isinstance(r, PolyElement):
+                if isinstance(r, (PolyElement, FracElement)):
                     r = r.as_expr()
                 sol += a * r
             y1.append(sol)
@@ -2428,9 +2429,9 @@ def DMFsubs(frac, x0, mpm=False):
             j = sympify(j)._to_mpmath(mp.prec)
         sol_q += j * x0**i
 
-    if isinstance(sol_p, PolyElement):
+    if isinstance(sol_p, (PolyElement, FracElement)):
         sol_p = sol_p.as_expr()
-    if isinstance(sol_q, PolyElement):
+    if isinstance(sol_q, (PolyElement, FracElement)):
         sol_q = sol_q.as_expr()
 
     return sol_p / sol_q
