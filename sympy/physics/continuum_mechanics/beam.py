@@ -36,7 +36,7 @@ class Beam(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, Piecewise
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
@@ -57,6 +57,10 @@ class Beam(object):
     (3*SingularityFunction(x, 0, 2)/2 - SingularityFunction(x, 2, 3) + 9*SingularityFunction(x, 4, 2)/2 - 7)/(E*I)
     >>> b.deflection()
     (-7*x + SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 2, 4)/4 + 3*SingularityFunction(x, 4, 3)/2)/(E*I)
+    >>> b.deflection().rewrite(Piecewise)
+    (-7*x + Piecewise((x**3, x > 0), (0, True))/2
+          + 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
+          - Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
     def __init__(self, length, elastic_modulus, second_moment):
