@@ -44,9 +44,8 @@ def test_Beam():
     assert s_bcs == [(0, 1), (4, 3), (5, 0)]
 
     # Test for deflection boundary condition method
-    d_bcs = b.apply_deflection_boundary_conditions()
-    assert d_bcs == b.boundary_conditions['deflection']
-    d_bcs = b.apply_deflection_boundary_conditions((4, 3), (5, 0))
+    b.apply_deflection_boundary_conditions((4, 3), (5, 0))
+    d_bcs = b.boundary_conditions['deflection']
     assert d_bcs == [(0, 2), (4, 3), (5, 0)]
 
     # Test for updated boundary conditions

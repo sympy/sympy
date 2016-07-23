@@ -208,12 +208,12 @@ class Beam(object):
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.apply_deflection_boundary_conditions((4, 3), (5, 0))
+        >>> b.boundary_conditions['deflection']
         [(0, 2), (4, 3), (5, 0)]
 
         """
         for bcs in d_bcs:
             self._boundary_conditions['deflection'].append(bcs)
-        return self._boundary_conditions['deflection']
 
 
     def _load_as_SingularityFunction(self, load):
