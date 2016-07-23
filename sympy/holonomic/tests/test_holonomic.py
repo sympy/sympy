@@ -597,6 +597,9 @@ def test_integrate():
     p = expr_to_holonomic((x + 1)**3*exp(-x), x0=-1, lenics=4).integrate(x).to_expr()
     q = (-x**3 - 6*x**2 - 15*x + 6*exp(x + 1) - 16)*exp(-x)
     assert p == q
+    p = expr_to_holonomic(cos(x)**2/x**2, singular_ics=[(-2, [1, 0, -1])]).integrate(x).to_expr()
+    q = -Si(2*x) - cos(x)**2/x
+    assert p == q
 
 def test_diff():
     x, y = symbols('x, y')
