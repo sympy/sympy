@@ -166,7 +166,7 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
     assert sin(x).rewrite(csc) == 1/csc(x)
     assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
-    assert sin(x).rewrite(sec) == sqrt(1 - 1 / sec(x)**2)
+    assert sin(x).rewrite(sec) == 1 / sec(x - pi / 2, evaluate=False)
 
 
 def test_sin_expansion():
@@ -364,7 +364,7 @@ def test_cos_rewrite():
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
     assert cos(x).rewrite(sec) == 1/sec(x)
     assert cos(x).rewrite(sin) == sin(x + pi/2, evaluate=False)
-    assert cos(x).rewrite(csc) == sqrt(1 - 1 / csc(x)**2)
+    assert cos(x).rewrite(csc) == 1/csc(-x + pi/2, evaluate=False)
 
 
 def test_cos_expansion():
@@ -506,9 +506,8 @@ def test_tan_rewrite():
     assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(8*pi/19).rewrite(sqrt) == tan(8*pi/19)
-    assert tan(x).rewrite(sec) == sqrt(sec(x)**2 - 1)
-    assert tan(x).rewrite(csc) == 1/sqrt(csc(x)**2 - 1)
-
+    assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
+    assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
 
 
 def test_tan_subs():
@@ -651,9 +650,8 @@ def test_cot_rewrite():
     assert cot(4*pi/17).rewrite(pow) == (cos(4*pi/17)/sin(4*pi/17)).rewrite(pow)
     assert cot(pi/19).rewrite(pow) == cot(pi/19)
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
-    assert cot(x).rewrite(sec) == 1/(sqrt(1 - 1/sec(x)**2)*sec(x))
-    assert cot(x).rewrite(csc) == sqrt(1 - 1/csc(x)**2)*csc(x)
-
+    assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
+    assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
 
 
 def test_cot_subs():
@@ -1478,7 +1476,6 @@ def test_csc_rewrite():
     assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
     assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
-    assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
 
 
 def test_issue_8653():
