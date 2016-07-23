@@ -622,17 +622,12 @@ class HolonomicFunction(object):
 
         # if the function have initial conditions of the series format
         if self.singular_ics:
-
             y0 = []
-
             for i in self.singular_ics:
-
                 s = i[0]
                 c = i[1]
                 c2 = []
-
                 for j in range(len(c)):
-
                     if c[j] == 0:
                         c2.append(S(0))
 
@@ -641,10 +636,8 @@ class HolonomicFunction(object):
                     elif s + j + 1 == 0:
                         y0 = None
                         break
-
                     else:
                         c2.append(c[j] / S(s + j + 1))
-
                 if y0 == None:
                     break
                 y0.append((s + 1, c2))
