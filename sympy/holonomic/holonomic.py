@@ -1678,10 +1678,10 @@ class HolonomicFunction(object):
 
         sol = [base.from_sympy(base.to_sympy(i).subs(x, x + a)) for i in listaftershift]
         sol = DifferentialOperator(sol, self.annihilator.parent)
-        if not self._have_init_cond:
-            return HolonomicFunction(sol, x)
         x0 = self.x0 - a
-        return HolonomicFunction(sol, x, x0, self.y0)
+        if not self._have_init_cond:
+            return HolonomicFunction(sol, x, x0, singular_ics=self.singular_ics)
+        return HolonomicFunction(sol, x, x0, self.y0, singular_ics=self.singular_ics)
 
     def to_hyper(self, as_list=False, _recur=None):
         """
@@ -2184,8 +2184,8 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
                 raise NotImplementedError
             if singular_ics:
                 sol.singular_ics = singular_ics
-                sol.x0 = x0
             if singular_ics or not initcond:
+                sol.x0 = x0
                 return sol
             if not lenics:
                 lenics = sol.annihilator.order
@@ -2199,7 +2199,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
             sol = sol.composition(func.args[0])
             if singular_ics:
                 sol.singular_ics = singular_ics
-                sol.x0 = x0
+            sol.x0 = x0
             return sol
         if not lenics:
             lenics = sol.annihilator.order
@@ -2231,8 +2231,8 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
         raise NotImplementedError
     if singular_ics:
         sol.singular_ics = singular_ics
-        sol.x0 = x0
     if singular_ics or not initcond:
+        sol.x0 = x0
         return sol
     if not lenics:
         lenics = sol.annihilator.order

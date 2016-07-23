@@ -2,7 +2,7 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, expr_to_holonomic)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
-    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si)
+    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si, asinh)
 from sympy import ZZ, QQ, RR
 
 
@@ -600,6 +600,12 @@ def test_integrate():
     p = expr_to_holonomic(cos(x)**2/x**2, singular_ics=[(-2, [1, 0, -1])]).integrate(x).to_expr()
     q = -Si(2*x) - cos(x)**2/x
     assert p == q
+    p = expr_to_holonomic(sqrt(x**2+x)).integrate(x).to_expr()
+    q = (x**(3/2)*(2*x**2 + 3*x + 1) - x*sqrt(x + 1)*asinh(sqrt(x)))/(4*x*sqrt(x + 1))
+    assert p == q
+    p = expr_to_holonomic(sqrt(x**2+1)).integrate(x).to_expr()
+    q = (sqrt(x**2+1)).integrate(x)
+    assert (p-q).simplify() == 0
 
 def test_diff():
     x, y = symbols('x, y')
