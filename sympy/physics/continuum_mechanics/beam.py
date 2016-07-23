@@ -17,9 +17,9 @@ from sympy.integrals import integrate
 class Beam(object):
     """
     A Beam is a structural element that is capable of withstanding load
-    primarily by resisting against bending.
-    Beams are characterized by their profile (Second moment of area),
-    their length, and their material.
+    primarily by resisting against bending. Beams are characterized by
+    their cross sectional profile(Second moment of area), their length
+    and their material.
 
     Parameters
     ==========
@@ -43,7 +43,8 @@ class Beam(object):
     >>> Load_1 = PointLoad(location = 0, value = -3)
     >>> Load_2 = PointLoad(location = 4, value = -9)
     >>> Load_3 = DistributedLoad(value = 6, start = 2, order = 0)
-    >>> b.apply_loads(Load_1, Load_2, Load_3)
+    >>> b.apply_loads(Load_1)
+    >>> b.apply_loads(Load_2, Load_3)
     >>> b.apply_boundary_conditions(deflection = [(4, 0)])
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
@@ -248,16 +249,12 @@ class Beam(object):
         ========
         >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> P1 = Point('0')
-        >>> P2 = Point('2')
-        >>> P3 = Point('3')
-        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = P2, value = 4)
-        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = 2, value = 4)
+        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.load_distribution()
@@ -274,16 +271,12 @@ class Beam(object):
         ========
         >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> P1 = Point('0')
-        >>> P2 = Point('2')
-        >>> P3 = Point('3')
-        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = P2, value = 4)
-        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = 2, value = 4)
+        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.shear_force()
@@ -304,16 +297,12 @@ class Beam(object):
         ========
         >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> P1 = Point('0')
-        >>> P2 = Point('2')
-        >>> P3 = Point('3')
-        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = P2, value = 4)
-        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = 2, value = 4)
+        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.bending_moment()
@@ -349,16 +338,12 @@ class Beam(object):
         ========
         >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> P1 = Point('0')
-        >>> P2 = Point('2')
-        >>> P3 = Point('3')
-        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = P2, value = 4)
-        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = 2, value = 4)
+        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.slope()
@@ -392,16 +377,12 @@ class Beam(object):
         ========
         >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> P1 = Point('0')
-        >>> P2 = Point('2')
-        >>> P3 = Point('3')
-        >>> Load_1 = PointLoad(location = P1, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = P2, value = 4)
-        >>> Load_3 = DistributedLoad(start = P3, order = 2, value = -2)
+        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
+        >>> Load_2 = PointLoad(location = 2, value = 4)
+        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
         >>> b.apply_loads(Load_1, Load_2, Load_3)
         >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
         >>> b.deflection()
