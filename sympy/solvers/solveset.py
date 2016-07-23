@@ -549,9 +549,6 @@ def solve_decomposition(f, symbol, domain):
     >>> f1 = exp(2*x) - 3*exp(x) + 2
     >>> sd(f1, x, S.Reals)
     {0, log(2)}
-    >>> pprint(sd(f1, x, S.Complexes), use_unicode=False)
-    {2*n*I*pi | n in Integers()} U {2*n*I*pi + Mod(log(2), 2*I*pi) | n in Integers
-    ()}
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
@@ -559,7 +556,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi + 2 | n in Integers()} U {2*n*pi + 2 + pi | n in Integers()}
+    {2*n*pi - 2 | n in Integers()} U {pi*(2*n + 1) - 2 | n in Integers()}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -583,20 +580,25 @@ def solve_decomposition(f, symbol, domain):
                     result += solutions
 
         else:
-            solutions = solveset(g, symbol, domain)
-            if isinstance(solutions, FiniteSet):
-                if isinstance(y_s, ImageSet):
-                    iter_iset = (y_s,)
+            if isinstance(y_s, ImageSet):
+                iter_iset = (y_s,)
 
-                elif isinstance(y_s, Union):
-                    iter_iset = y_s.args
+            elif isinstance(y_s, Union):
+                iter_iset = y_s.args
 
-                for solution in solutions:
-                    for iset in iter_iset:
-                        new_expr = solveset(Eq(iset.lamda.expr, g), symbol, domain)
-                        dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                        base_set = iset.base_set
-                        result += ImageSet(Lambda(dummy_var, new_expr), base_set)
+            for iset in iter_iset:
+                new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
+                dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
+                base_set = iset.base_set
+                if isinstance(new_solutions, FiniteSet):
+                    new_exprs = new_solutions
+
+                elif isinstance(new_solutions, Intersection):
+                    if isinstance(new_solutions.args[1], FiniteSet):
+                        new_exprs = new_solutions.args[1]
+
+                for new_expr in new_exprs:
+                    result += ImageSet(Lambda(dummy_var, new_expr), base_set)
 
         if result is S.EmptySet:
             return ConditionSet(symbol, Eq(f, 0), domain)

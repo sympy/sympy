@@ -1033,15 +1033,14 @@ def test_solve_decomposition():
     s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
     s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
     s3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
-    s4 = ImageSet(Lambda(n, 2*n*pi + 1), S.Integers)
-    s5 = ImageSet(Lambda(n, 2*n*pi + pi + 1), S.Integers)
-    s6 = ImageSet(Lambda(n, 2*n*I*pi + 2*Mod(-1, I*pi)), S.Integers)
+    s4 = ImageSet(Lambda(n, 2*n*pi - 1), S.Integers)
+    s5 = ImageSet(Lambda(n, (2*n + 1)*pi - 1), S.Integers)
 
     assert solve_decomposition(f1, x, S.Reals) == FiniteSet(0, log(2), log(3))
     assert solve_decomposition(f2, x, S.Reals) == s3
     assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, s3)
     assert solve_decomposition(f4, x, S.Reals) == Union(s4, s5)
-    assert solve_decomposition(f5, x, S.Complexes) == s6
+    assert solve_decomposition(f5, x, S.Reals) == FiniteSet(-2)
     assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
 
 
