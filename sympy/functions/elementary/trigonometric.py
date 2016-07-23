@@ -375,7 +375,7 @@ class sin(TrigonometricFunction):
             return I*x**-I / 2 - I*x**I /2
 
     def _eval_rewrite_as_cos(self, arg):
-        return -cos(arg + S.Pi/2, evaluate=False)
+        return cos(arg - S.Pi/2, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)
@@ -1105,7 +1105,7 @@ class tan(TrigonometricFunction):
         return 2*sin(x)**2/sin(2*x)
 
     def _eval_rewrite_as_cos(self, x):
-        return -cos(x + S.Pi/2, evaluate=False)/cos(x)
+        return cos(x - S.Pi/2, evaluate=False)/cos(x)
 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/cos(arg)
@@ -1350,7 +1350,7 @@ class cot(TrigonometricFunction):
         return 2*sin(2*x)/sin(x)**2
 
     def _eval_rewrite_as_cos(self, x):
-        return -cos(x)/cos(x + S.Pi/2, evaluate=False)
+        return cos(x)/cos(x - S.Pi/2, evaluate=False)
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/sin(arg)

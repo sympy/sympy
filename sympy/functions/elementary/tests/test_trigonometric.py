@@ -165,7 +165,7 @@ def test_sin_rewrite():
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
     assert sin(x).rewrite(csc) == 1/csc(x)
-    assert sin(x).rewrite(cos) == -cos(x + pi / 2, evaluate=False)
+    assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
     assert sin(x).rewrite(sec) == sqrt(1 - 1 / sec(x)**2)
 
 
@@ -483,7 +483,7 @@ def test_tan_rewrite():
     neg_exp, pos_exp = exp(-x*I), exp(x*I)
     assert tan(x).rewrite(exp) == I*(neg_exp - pos_exp)/(neg_exp + pos_exp)
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
-    assert tan(x).rewrite(cos) == -cos(x + S.Pi/2, evaluate=False)/cos(x)
+    assert tan(x).rewrite(cos) == cos(x - S.Pi/2, evaluate=False)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
     assert tan(sinh(x)).rewrite(
         exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
@@ -632,7 +632,7 @@ def test_cot_rewrite():
     neg_exp, pos_exp = exp(-x*I), exp(x*I)
     assert cot(x).rewrite(exp) == I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
     assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
-    assert cot(x).rewrite(cos) == -cos(x)/cos(x + pi/2, evaluate=False)
+    assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
     assert cot(sinh(x)).rewrite(
         exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
@@ -1476,7 +1476,7 @@ def test_csc_rewrite():
     assert csc(x).rewrite(sin) == 1/sin(x)
     assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
     assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
-    assert csc(x).rewrite(cos) == -1/cos(x + pi/2, evaluate=False)
+    assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
     assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
 

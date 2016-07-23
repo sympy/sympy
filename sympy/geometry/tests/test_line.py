@@ -600,9 +600,8 @@ def test_line_intersection():
         Triangle(
             Point(0, 0),
             Point(8, 0),
-            Point(4 * cos(19 * pi / 90) / cos(49 * pi / 90, evaluate=False),
-                  4 * sqrt(3) * cos(19 * pi / 90) / sin(2 * pi / 45))
-    )
+            Point(-4*cos(19*pi/90)/sin(2*pi/45),
+            4*sqrt(3)*cos(19*pi/90)/sin(2*pi/45)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
