@@ -733,6 +733,7 @@ class Integral(AddWithLimits):
 
         """
         from sympy.integrals.deltafunctions import deltaintegrate
+        from sympy.integrals.singularityfunctions import singularityintegrate
         from sympy.integrals.heurisch import heurisch, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
@@ -868,6 +869,12 @@ class Integral(AddWithLimits):
                     parts.append(coeff * h)
                     continue
 
+                # g(x) has at least a Singularity Function term
+                h = singularityintegrate(g, x)
+                if h is not None:
+                    parts.append(coeff * h)
+                    continue
+
                 # Try risch again.
                 if risch is not False:
                     try:
@@ -973,7 +980,15 @@ class Integral(AddWithLimits):
                 break
         terms, order = expr.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(Order)
+        order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
+
+    def _eval_as_leading_term(self, x):
+        series_gen = self.args[0].lseries(x)
+        for leading_term in series_gen:
+            if leading_term != 0:
+                break
+        return integrate(leading_term, *self.args[1:])
 
     def as_sum(self, n, method="midpoint"):
         """

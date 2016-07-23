@@ -75,6 +75,10 @@ Ntheory Functions Reference
 
 .. autofunction:: digits
 
+.. autofunction:: primenu
+
+.. autofunction:: primeomega
+
 .. module:: sympy.ntheory.modular
 
 .. autofunction:: symmetric_residue

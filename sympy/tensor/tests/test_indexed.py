@@ -4,7 +4,7 @@ from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order
 
 
 def test_Idx_construction():
@@ -255,3 +255,9 @@ def test_differentiation():
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]).doit() == a
     assert Sum(a*h[m], (n, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (n, -oo, oo))
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]) == oo*a
+
+
+def test_indexed_series():
+    A = IndexedBase("A")
+    i = symbols("i", integer=True)
+    assert sin(A[i]).series(A[i]) == A[i] - A[i]**3/6 + A[i]**5/120 + Order(A[i]**6, A[i])

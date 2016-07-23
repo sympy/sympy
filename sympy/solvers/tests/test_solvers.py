@@ -1072,6 +1072,14 @@ def test_unrad_fail():
         -1, -1 + CRootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
 
 
+def test_checksol():
+    x, y, r, t = symbols('x, y, r, t')
+    eq = r - x**2 - y**2
+    dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
+                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
+    assert checksol(eq, dict_var_soln) == True
+
+
 def test__invert():
     assert _invert(x - 2) == (2, x)
     assert _invert(2) == (2, 0)
@@ -1780,7 +1788,6 @@ def test_issue_2840_8155():
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
-
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]

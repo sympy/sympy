@@ -1545,6 +1545,11 @@ def test_sympy__functions__special__delta_functions__DiracDelta():
     assert _test_args(DiracDelta(x, 1))
 
 
+def test_sympy__functions__special__singularity_functions__SingularityFunction():
+    from sympy.functions.special.singularity_functions import SingularityFunction
+    assert _test_args(SingularityFunction(x, y, z))
+
+
 def test_sympy__functions__special__delta_functions__Heaviside():
     from sympy.functions.special.delta_functions import Heaviside
     assert _test_args(Heaviside(x))
@@ -3679,6 +3684,20 @@ def test_sympy__ntheory__factor___udivisor_sigma():
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
     t = udivisor_sigma(n, k)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___primenu():
+    from sympy.ntheory.factor_ import primenu
+    n = symbols('n', integer=True)
+    t = primenu(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__factor___primeomega():
+    from sympy.ntheory.factor_ import primeomega
+    n = symbols('n', integer=True)
+    t = primeomega(n)
     assert _test_args(t)
 
 
