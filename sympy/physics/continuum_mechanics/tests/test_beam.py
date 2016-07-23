@@ -34,9 +34,8 @@ def test_Beam():
     assert b.boundary_conditions == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
 
     # Test for moment boundary condition method
-    m_bcs = b.apply_moment_boundary_conditions()
-    assert m_bcs == b.boundary_conditions['moment']
-    m_bcs = b.apply_moment_boundary_conditions((4, 3), (5, 0))
+    b.apply_moment_boundary_conditions((4, 3), (5, 0))
+    m_bcs = b.boundary_conditions['moment']
     assert m_bcs == [(0, 4), (4, 0), (4, 3), (5, 0)]
 
     # Test for slope boundary condition method
