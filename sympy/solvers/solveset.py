@@ -1202,6 +1202,14 @@ def linsolve(system, *symbols):
 # ------------------------------nonlinsolve ---------------------------------#
 ##############################################################################
 
+def _return_conditionset(eqs_in_better_order, all_symbols):
+        # return conditionset
+        condition_set = ConditionSet(
+            FiniteSet(*all_symbols),
+            FiniteSet(*eqs_in_better_order),
+            S.Complexes)
+        return condition_set
+
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
@@ -1341,19 +1349,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             unsolved = list(unsolved)
             unsolved.sort(key=default_sort_key)
         return unsolved
+    # end of _unsolved_syms()
 
     # sort such that equation with the fewest potential symbols is first.
     # means eq with less variable first
     eqs_in_better_order = list(
         ordered(system, lambda _: len(_unsolved_syms(_))))
-
-    def _return_conditionset():
-        # return conditionset
-        condition_set = ConditionSet(
-            FiniteSet(*all_symbols),
-            FiniteSet(*eqs_in_better_order),
-            S.Complexes)
-        return condition_set
 
     def add_intersection_complement(result, sym_set, **flags):
         final_result = []
@@ -1379,6 +1380,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                                 res_copy[key_res] = new_value
             final_result.append(res_copy)
         return final_result
+    # end of def add_intersection_complement()
 
     def _extract_main_soln(sol, soln_imageset):
             """separate the Complements, Intersections, ImageSet lambda expr
@@ -1427,7 +1429,50 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if not isinstance(sol, FiniteSet):
                 sol = FiniteSet(sol)
             return sol, soln_imageset
-        # end of def _extract_main_soln()
+    # end of def _extract_main_soln()
+
+    # helper function for _append_new_soln
+    def _remove_lamda_var(rnew, imgset_yes):
+        if imgset_yes:
+            # replace all dummy variables (Imageset lambda variables)
+            # with zero before `checksol`
+            rnew_copy = rnew.copy()
+            dummy_n = imgset_yes[0]
+            for key_res, value_res in rnew_copy.items():
+                rnew_copy[key_res] = value_res.subs(dummy_n, 0)
+            # true if it satisfy the expr of `exclude` list.
+            try:
+                # something like : `Mod(-log(3), 2*I*pi)` can't be
+                # simplified right now, so `checksol` returns `TypeError`.
+                # when this issue is fixed this try block should be
+                # removed.
+                satisfy_exclude = any(
+                    checksol(d, rnew_copy) for d in exclude)
+            except TypeError:
+                satisfy_exclude = None
+        else:
+            try:
+                # something like : `Mod(-log(3), 2*I*pi)` can't be
+                # simplified right now, so `checksol` returns `TypeError`.
+                # when this issue is fixed this try block should be
+                # removed.
+                satisfy_exclude = any(
+                    checksol(d, rnew) for d in exclude)
+            except TypeError:
+                satisfy_exclude = None
+        return satisfy_exclude
+    # end of def _remove_lamda_var()
+
+    # helper function for _append_new_soln
+    def _restore_imgset(rnew, original_imageset, newresult):
+        restore_sym = set(rnew.keys()) & \
+            set(original_imageset.keys())
+        for key_sym in restore_sym:
+            img = original_imageset[key_sym]
+            rnew[key_sym] = img
+        if rnew not in newresult:
+            newresult.append(rnew)
+    # end of def _restore_imgset()
 
     def _append_new_soln(rnew, sym, sol, imgset_yes, soln_imageset,
                          original_imageset, newresult, eq2=None):
@@ -1438,51 +1483,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
          of imageset expr and imageset from this result.
         `soln_imageset` dict of imageset expr and imageset of new soln.
         """
-
-        # helper function
-        def _remove_lamda_var():
-            if imgset_yes:
-                # replace all dummy variables (Imageset lambda variables)
-                # with zero before `checksol`
-                rnew_copy = rnew.copy()
-                dummy_n = imgset_yes[0]
-                for key_res, value_res in rnew_copy.items():
-                    rnew_copy[key_res] = value_res.subs(dummy_n, 0)
-                # true if it satisfy the expr of `exclude` list.
-                try:
-                    # something like : `Mod(-log(3), 2*I*pi)` can't be
-                    # simplified right now, so `checksol` returns `TypeError`.
-                    # when this issue is fixed this try block should be
-                    # removed.
-                    satisfy_exclude = any(
-                        checksol(d, rnew_copy) for d in exclude)
-                except TypeError:
-                    satisfy_exclude = None
-            else:
-                try:
-                    # something like : `Mod(-log(3), 2*I*pi)` can't be
-                    # simplified right now, so `checksol` returns `TypeError`.
-                    # when this issue is fixed this try block should be
-                    # removed.
-                    satisfy_exclude = any(
-                        checksol(d, rnew) for d in exclude)
-                except TypeError:
-                    satisfy_exclude = None
-            return satisfy_exclude
-        # end of def _remove_lamda_var()
-
-        def _restore_imgset():
-            restore_sym = set(rnew.keys()) & \
-                set(original_imageset.keys())
-            for key_sym in restore_sym:
-                img = original_imageset[key_sym]
-                rnew[key_sym] = img
-            if rnew not in newresult:
-                newresult.append(rnew)
-        # end of def _restore_imgset()
-
-        # main code begin
-        satisfy_exclude = _remove_lamda_var()
+        satisfy_exclude = _remove_lamda_var(rnew, imgset_yes)
         delete_soln = False
         if not satisfy_exclude:
             # if sol was imageset then add imageset
@@ -1526,19 +1527,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             elif soln_imageset:
                 rnew[sym] = soln_imageset[sol]
                 # restore original imageset
-                _restore_imgset()
+                _restore_imgset(rnew, original_imageset, newresult)
             else:
                 newresult.append(rnew)
         elif satisfy_exclude:
             delete_soln = True
             rnew = {}
-        _restore_imgset()
+        _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
     # end of def _append_new_soln()
 
     def _new_order_result(result, eq):
-        # separate first, second priority. `res` that makes `eq` value zero
-        # should be used first then other result(second priority)
+        # separate first, second priority. `res` that makes `eq` value equals
+        # to zero, should be used first then other result(second priority)
         first_priority = []
         second_priority = []
         for res in result:
@@ -1696,7 +1697,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     total_solveset_call += (solve_call1 + solve_call2)
 
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
-        return _return_conditionset()
+        return _return_conditionset(eqs_in_better_order, all_symbols)
 
     # overall result
     result = new_result_real + new_result_complex
@@ -1743,6 +1744,74 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         temp = [r[symb] for symb in all_symbols]
         result += FiniteSet(tuple(temp))
     return result
+# end of def substitution()
+
+
+def _solveset_work(system, symbols):
+        soln = solveset(system[0], symbols[0])
+        if isinstance(soln, FiniteSet):
+            _soln = FiniteSet(*[tuple((s,)) for s in soln])
+            return _soln
+        else:
+            return FiniteSet(tuple(FiniteSet(soln)))
+
+
+def _handle_positive_dimensional(polys, symbols, denominators):
+    from sympy.polys.polytools import groebner
+    # substitution method where new system is groebner basis of the system
+    _symbols = symbols
+    _symbols.sort(key=default_sort_key)
+    basis = groebner(polys, _symbols, polys=True)
+    new_system = []
+    for poly_eq in basis:
+        new_system.append(poly_eq.as_expr())
+    result = [{}]
+    result = substitution(
+        new_system, symbols, result, [],
+        denominators)
+    return result
+# end of def _handle_positive_dimensional()
+
+
+def _handle_zero_dimensional(polys, symbols, system):
+    # solve 0 dimensional system using `solve_poly_system`
+    result = solve_poly_system(polys, *symbols)
+    # May be some extra soln is added because
+    # we did `poly = g.as_poly(*symbols, extension=True)`
+    # need to check that and remove if not a soln
+    result_update = S.EmptySet
+    for res in result:
+        dict_sym_value = dict(list(zip(symbols, res)))
+        if all(checksol(eq, dict_sym_value) for eq in system):
+            result_update += FiniteSet(res)
+    return result_update
+# end of def _handle_zero_dimensional()
+
+
+def _separate_poly_nonpoly(system, symbols):
+    polys = []
+    polys_expr = []
+    nonpolys = []
+    denominators = set()
+    for eq in system:
+        # Store denom expression if it contains symbol
+        denominators.update(_simple_dens(eq, symbols))
+        # try to remove sqrt and rational power
+        without_radicals = unrad(simplify(eq))
+        if without_radicals:
+            eq_unrad, cov = without_radicals
+            if not cov:
+                eq = eq_unrad
+        eq = eq.as_numer_denom()[0]
+        # this will remove sqrt if symbols are under it
+        poly = eq.as_poly(*symbols, extension=True)
+        if poly is not None:
+            polys.append(poly)
+            polys_expr.append(poly.as_expr())
+        else:
+            nonpolys.append(eq)
+    return polys, polys_expr, nonpolys, denominators
+# end of def _separate_poly_nonpoly()
 
 
 def nonlinsolve(system, *symbols):
@@ -1900,7 +1969,7 @@ def nonlinsolve(system, *symbols):
     variable is added before returning final solution.
 
     """
-    from sympy.polys.polytools import is_zero_dimensional, groebner
+    from sympy.polys.polytools import is_zero_dimensional
 
     if not system:
         return S.EmptySet
@@ -1925,80 +1994,19 @@ def nonlinsolve(system, *symbols):
                          'second argument, not type \
             %s: %s' % (type(symbols[0]), symbols[0]))
 
-    def _solveset_work(system, symbols):
-        soln = solveset(system[0], symbols[0])
-        if isinstance(soln, FiniteSet):
-            _soln = FiniteSet(*[tuple((s,)) for s in soln])
-            return _soln
-        else:
-            return FiniteSet(tuple(FiniteSet(soln)))
-
     if len(system) == 1 and len(symbols) == 1:
         return _solveset_work(system, symbols)
 
-    polys = []
-    polys_expr = []
-    nonpolys = []
-    denominators = set()
-
-    def _handle_positive_dimensional():
-        # substitution method where new system is groebner basis of the system
-        _symbols = symbols
-        _symbols.sort(key=default_sort_key)
-        basis = groebner(polys, _symbols, polys=True)
-        new_system = []
-        for poly_eq in basis:
-            new_system.append(poly_eq.as_expr())
-        result = [{}]
-        result = substitution(
-            new_system, symbols, result, [],
-            denominators)
-        return result
-    # end of def _handle_positive_dimensional()
-
-    def _handle_zero_dimensional():
-        # solve 0 dimensional system using `solve_poly_system`
-        result = solve_poly_system(polys, *symbols)
-        # May be some extra soln is added because
-        # we did `poly = g.as_poly(*symbols, extension=True)`
-        # need to check that and remove if not a soln
-        result_update = S.EmptySet
-        for res in result:
-            dict_sym_value = dict(list(zip(symbols, res)))
-            if all(checksol(eq, dict_sym_value) for eq in system):
-                result_update += FiniteSet(res)
-        return result_update
-    # end of def _handle_zero_dimensional()
-
-    def _separate_poly_nonpoly():
-        for eq in system:
-            # Store denom expression if it contains symbol
-            denominators.update(_simple_dens(eq, symbols))
-            # try to remove sqrt and rational power
-            without_radicals = unrad(simplify(eq))
-            if without_radicals:
-                eq_unrad, cov = without_radicals
-                if not cov:
-                    eq = eq_unrad
-            eq = eq.as_numer_denom()[0]
-            # this will remove sqrt if symbols are under it
-            poly = eq.as_poly(*symbols, extension=True)
-            if poly is not None:
-                polys.append(poly)
-                polys_expr.append(poly.as_expr())
-            else:
-                nonpolys.append(eq)
-    # end of def _separate_poly_nonpoly()
-
     # main code of def nonlinsolve() starts from here
-    _separate_poly_nonpoly()
+    polys, polys_expr, nonpolys, denominators = _separate_poly_nonpoly(
+        system, symbols)
 
     if len(symbols) == len(polys):
         # If all the equations in the system is poly
         if is_zero_dimensional(polys, symbols):
             # finite number of soln- Zero dimensional system
             try:
-                return _handle_zero_dimensional()
+                return _handle_zero_dimensional(polys, symbols, system)
             except NotImplementedError:
                 # Right now it doesn't fail for any polynomial system of
                 # equation. If `solve_poly_system` fails then substitution
@@ -2008,7 +2016,7 @@ def nonlinsolve(system, *symbols):
                 return result
 
         # positive dimensional system
-        return _handle_positive_dimensional()
+        return _handle_positive_dimensional(polys, symbols, denominators)
 
     else:
         # If alll the equations are not polynomial.
