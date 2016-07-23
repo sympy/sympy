@@ -102,6 +102,14 @@ def function_range(f, symbol, domain):
     from sympy.solvers.solveset import solveset
 
     vals = S.EmptySet
+    period = periodicity(f, symbol)
+    if not any(period is i for i in (None, S.Zero)):
+        inf = domain.inf
+        inf_period = S.Zero if inf.is_infinite else inf
+        sup_period = inf_period + period
+        periodic_interval = Interval(inf_period, sup_period)
+        domain = domain.intersect(periodic_interval)
+
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
     if isinstance(intervals, Interval):
