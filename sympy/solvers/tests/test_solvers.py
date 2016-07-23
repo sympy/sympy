@@ -1783,7 +1783,7 @@ def test_issue_2840_8155():
         -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
         -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
         I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        -2*I*log(cos(2*pi/9) - I*cos(5*pi/18)), -2*I*log(exp(-I*pi/9)),
         -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
