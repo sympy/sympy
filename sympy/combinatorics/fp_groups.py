@@ -183,7 +183,7 @@ class CosetTable(DefaultPrinting):
     # Pg. 153 [1]
     def define(self, alpha, x):
         r"""
-        This routine is used in the relator-based strategy of todd coxeter
+        This routine is used in the relator-based strategy of Todd-Coxeter
         algorithm. If some `\alpha^x` is undefined, then we remedy this by
         adjoining a new coset `\beta` to `\Omega` (i.e to set of live cosets)
         and make that equal to `\alpha^x`. But before we do that, we check
@@ -211,7 +211,7 @@ class CosetTable(DefaultPrinting):
     def define_f(self, alpha, x):
         r"""
         A variation of ``define`` routine, used in the coset table-based
-        strategy of todd coxeter algorithm. It differs from ``define`` routine
+        strategy of Todd-Coxeter algorithm. It differs from ``define`` routine
         in that for each definition it also adds the tuple `(\alpha, x)` to the
         deduction stack.
 
@@ -371,10 +371,10 @@ class CosetTable(DefaultPrinting):
 
     # used in the low-index subgroups algorithm
     def scan_check(self, alpha, word):
-        """
-        Another version of "scan" routine, it checks whether α scans correctly
-        under w, it is a straightforward modification of "scan". "scan_check"
-        return false (rather than calling "coincidence") if the scan completes
+        r"""
+        Another version of ``scan`` routine, it checks whether `\alpha` scans correctly
+        under `word`, it is a straightforward modification of "scan". ``scan_check``
+        return false (rather than calling ``coincidence``) if the scan completes
         incorrectly; otherwise it returns true.
 
         See Also
@@ -514,7 +514,7 @@ class CosetTable(DefaultPrinting):
     def scan_and_fill_f(self, alpha, word):
         r"""
         A variation of ``scan_and_fill`` routine for use in coset table-based
-        strategy of todd coxeter algorithm. It differs from ``define`` routine
+        strategy of Todd-Coxeter algorithm. It differs from ``define`` routine
         in that for each definition it also adds the tuple `(\alpha, x)` to the
         deduction stack.
 
@@ -587,8 +587,9 @@ class CosetTable(DefaultPrinting):
 
     def process_deductions_check(self, R_c_x, R_c_x_inv):
         """
-        A variation of "process_deductions", this calls "scan_check" wherever
-        "process_deductions" calls "scan".
+        A variation of ``process_deductions``, this calls ``scan_check`` wherever
+        ``process_deductions`` calls ``scan``.
+
         """
         p = self.p
         while len(self.deduction_stack) > 0:
