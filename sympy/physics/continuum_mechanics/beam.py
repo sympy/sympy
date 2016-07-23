@@ -220,11 +220,11 @@ class Beam(object):
     def _load_as_SingularityFunction(self, load):
         x = Symbol('x')
         if isinstance(load, PointLoad):
-            if load.moment:
-                return load.value*SingularityFunction(x, load.location, S(-2))
-            return load.value*SingularityFunction(x, load.location, S(-1))
+            if sympify(load.moment):
+                return sympify(load.value)*SingularityFunction(x, sympify(load.location), S(-2))
+            return sympify(load.value)*SingularityFunction(x, sympify(load.location), S(-1))
         elif isinstance(load, DistributedLoad):
-            return load.value*SingularityFunction(x, load.start, load.order)
+            return sympify(load.value)*SingularityFunction(x, sympify(load.start), sympify(load.order))
 
     def apply_loads(self, *loads):
         """
