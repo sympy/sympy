@@ -39,9 +39,8 @@ def test_Beam():
     assert m_bcs == [(0, 4), (4, 0), (4, 3), (5, 0)]
 
     # Test for slope boundary condition method
-    s_bcs = b.apply_slope_boundary_conditions()
-    assert s_bcs == b.boundary_conditions['slope']
-    s_bcs = b.apply_slope_boundary_conditions((4, 3), (5, 0))
+    b.apply_slope_boundary_conditions((4, 3), (5, 0))
+    s_bcs = b.boundary_conditions['slope']
     assert s_bcs == [(0, 1), (4, 3), (5, 0)]
 
     # Test for deflection boundary condition method

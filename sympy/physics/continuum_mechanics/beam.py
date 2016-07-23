@@ -186,12 +186,12 @@ class Beam(object):
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.apply_slope_boundary_conditions((4, 3), (5, 0))
+        >>> b.boundary_conditions['slope']
         [(0, 1), (4, 3), (5, 0)]
 
         """
         for bcs in s_bcs:
             self._boundary_conditions['slope'].append(bcs)
-        return self._boundary_conditions['slope']
 
     def apply_deflection_boundary_conditions(self, *d_bcs):
         """
