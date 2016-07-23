@@ -1,10 +1,5 @@
-from sympy.core.backend import (USE_SYMENGINE, Add, zeros, Integer,
-     sqrt, expand, Matrix, S, sympify)
-if USE_SYMENGINE:
-    from sympy.core.backend import Matrix
-else:
-    from sympy import ImmutableMatrix as Matrix
-
+from sympy.core.backend import (Add, zeros, Integer,
+     sqrt, expand, Matrix, S, sympify, ImmutableMatrix as Matrix)
 from sympy import trigsimp
 from sympy.core.compatibility import u, unicode
 from sympy.utilities.misc import filldedent

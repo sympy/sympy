@@ -9,10 +9,8 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
-from sympy.core.backend import (Matrix, USE_SYMENGINE, sympify, Mul,
-                                Derivative, sin, cos, tan,
-                                AppliedUndef, S)
-import sympy
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -463,18 +461,15 @@ def msubs(expr, *sub_dicts, **kwargs):
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        func = lambda expr, sub_dict: expr.msubs(sub_dict)
     else:
-        func = _msubs
+        func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
         return func(expr, sub_dict)
 
-def _msubs(expr, sub_dict):
-    if USE_SYMENGINE and 'symengine' in str(type(expr)):
-        return expr.msubs(sub_dict)
-    else:
-        return _crawl(expr, _sub_func, sub_dict)
 
 def _crawl(expr, func, *args, **kwargs):
     """Crawl the expression tree, and apply func to every node."""

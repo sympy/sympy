@@ -7,11 +7,17 @@ if USE_SYMENGINE:
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
-        expand, Function, symbols, var, Add, Mul, AppliedUndef, Derivative)
+        expand, Function, symbols, var, Add, Mul, Derivative)
+    from symengine.sympy_compat import AppliedUndef
+    #TODO: Fix this
+    from symengine import Matrix as ImmutableMatrix
 else:
     from sympy import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
-        expand, Function, symbols, var, Add, Mul, AppliedUndef, Derivative)
+        expand, Function, symbols, var, Add, Mul, Derivative)
+    from sympy.core.function import AppliedUndef
+    from sympy import ImmutableMatrix
+

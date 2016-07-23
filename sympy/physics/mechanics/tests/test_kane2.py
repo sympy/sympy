@@ -5,7 +5,7 @@ from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy import trigsimp, simplify, solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
                                      inertia, inertia_of_point_mass,
-                                     Point, ReferenceFrame, RigidBody, msubs)
+                                     Point, ReferenceFrame, RigidBody)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -92,7 +92,7 @@ def test_aux_dep():
 
     # Values of generalized speeds during a steady turn for later substitution
     # into the Fr_star_steady.
-    steady_conditions = solve(msubs(kindiffs, {qd[1] : 0, qd[3] : 0}), u)
+    steady_conditions = solve(kindiffs.subs({qd[1] : 0, qd[3] : 0}), u)
     steady_conditions.update({qd[1] : 0, qd[3] : 0})
 
     # Partial angular velocities and velocities.
@@ -155,8 +155,8 @@ def test_aux_dep():
     Fr_c = Fr_u[:3, :].col_join(Fr_u[6:, :]) + A_rs.T * Fr_u[3:6, :]
     Fr_star_c = Fr_star_u[:3, :].col_join(Fr_star_u[6:, :])\
                 + A_rs.T * Fr_star_u[3:6, :]
-    Fr_star_steady = msubs(Fr_star_c, ud_zero, u_dep_dict, steady_conditions,
-                        {q[3]: -r*cos(q[1])}).expand()
+    Fr_star_steady = Fr_star_c.subs(ud_zero).subs(u_dep_dict)\
+            .subs(steady_conditions).subs({q[3]: -r*cos(q[1])}).expand()
 
 
     # Second, using KaneMethod in mechanics for fr, frstar and frstar_steady.
@@ -183,12 +183,12 @@ def test_aux_dep():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         (fr, frstar)= kane.kanes_equations(forceList, bodyList)
-    frstar_steady = msubs(frstar, ud_zero, u_dep_dict, steady_conditions,
-                        {q[3]: -r*cos(q[1])}).expand()
+    frstar_steady = frstar.subs(ud_zero).subs(u_dep_dict).subs(steady_conditions)\
+                    .subs({q[3]: -r*cos(q[1])}).expand()
     kdd = kane.kindiffdict()
 
     assert Matrix(Fr_c).expand() == fr.expand()
-    assert Matrix(msubs(Fr_star_c, kdd)).expand() == frstar.expand()
+    assert Matrix(Fr_star_c.subs(kdd)).expand() == frstar.expand()
     assert (simplify(Matrix(Fr_star_steady).expand()) ==
             simplify(frstar_steady.expand()))
 
@@ -277,8 +277,7 @@ def test_non_central_inertia():
               mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
             -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
             0])
-
-    t = trigsimp(fr_star.subs(vc_map).subs({u3: 0})).doit()
+    t = trigsimp(fr_star.subs(vc_map).subs({u3: 0})).doit().expand()
     assert ((fr_star_expected - t).expand() == zeros(3, 1))
 
     # define inertias of rigid bodies A, B, C about point D

@@ -6,7 +6,7 @@ from sympy import simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
-                                     dot, msubs)
+                                     dot)
 
 
 def test_one_dof():
@@ -47,7 +47,7 @@ def test_one_dof():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         F_A_old, F_B_old, r_old = KM.linearize()
     M_new, F_A_new, F_B_new, r_new = KM.linearize(new_method=True)
-    assert zeros(2) == simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old)
+    assert simplify(M_new.inv() * F_A_new - M_old.inv() * F_A_old) == zeros(2)
 
 
 def test_two_dof():
@@ -174,7 +174,7 @@ def test_rolling_disc():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     kdd = KM.kindiffdict()
-    rhs = msubs(rhs, kdd)
+    rhs = rhs.subs(kdd)
     rhs.simplify()
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
@@ -183,9 +183,9 @@ def test_rolling_disc():
     # critical speed (where all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
     A = KM.linearize(A_and_B=True, new_method=True)[0]
-    A_upright = msubs(A, {r: 1, g: 1, m: 1, q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
+    A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
     import sympy
-    assert sympy.sympify(msubs(A_upright, {u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
+    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
 
 
 def test_aux():
@@ -226,16 +226,16 @@ def test_aux():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
-    fr = msubs(fr, {u4d: 0, u5d: 0, u4: 0, u5: 0})
-    frstar = msubs(frstar, {u4d: 0, u5d: 0, u4: 0, u5: 0})
+    fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+    frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
                       u_auxiliary=[u4, u5])
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
-    fr2 = msubs(fr2, {u4d: 0, u5d: 0, u4: 0, u5: 0})
-    frstar2 = msubs(frstar2, {u4d: 0, u5d: 0, u4: 0, u5: 0})
+    fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+    frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     frstar.simplify()
     frstar2.simplify()

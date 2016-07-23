@@ -270,7 +270,7 @@ def _dyad_div(one, other):
     if isinstance(one, Dyadic) and isinstance(other, Dyadic):
         raise TypeError("Cannot divide two dyadics")
     elif isinstance(one, Dyadic):
-        return DyadicMul(one, pow(other, S.NegativeOne))
+        return DyadicMul(one, Pow(other, S.NegativeOne))
     else:
         raise TypeError("Cannot divide by a dyadic")
 
