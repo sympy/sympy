@@ -130,6 +130,26 @@ class Beam(object):
     def boundary_conditions(self):
         """
         Returns a dictionary of boundary conditions applied on the beam.
+        The dictionary has three kewwords namely moment, slope and deflection.
+        The value of each kewword is a list of tuple, where each tuple
+        contains loaction and value of a boundary condition in the format
+        (location, value).
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions
+        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+
+        Here the deflection of the beam should be ``2`` at ``0``.
+        Similarly, the slope of the beam should be ``1`` at ``0`` and
+        there are two boundary conditions for bending moment. The bending
+        moment of the beam should be ``4`` at ``0`` and ``0`` at ``4``
         """
         return self._boundary_conditions
 
