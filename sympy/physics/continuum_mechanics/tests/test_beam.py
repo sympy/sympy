@@ -36,7 +36,7 @@ def test_Beam():
     assert b.variable is y
 
     # Test for all boundary conditions.
-    b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+    b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
     assert b.boundary_conditions == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
 
     # Test for moment boundary condition method
@@ -62,11 +62,11 @@ def test_Beam():
                             'slope': [(0, 1), (4, 3), (5, 0)]}
 
     b1 = Beam(2, E, I)
-    Load_1 = PointLoad(location = 0, value = -3, moment = True)
-    Load_2 = PointLoad(location = 2, value = 4)
-    Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-    b1.apply_loads(Load_1, Load_2, Load_3)
-    b1.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+    load_1 = PointLoad(location=0, value=-3, moment=True)
+    load_2 = PointLoad(location=2, value=4)
+    load_3 = DistributedLoad(start=3, order=2, value=-2)
+    b1.apply_loads(load_1, load_2, load_3)
+    b1.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
 
     # Test for load distribution function.
     p = b1.load_distribution()
@@ -97,45 +97,45 @@ def test_Beam():
 def test_PointLoad():
     P1 = Symbol('P1')
     P2 = Symbol('P2')
-    Load_1 = PointLoad(location = P1, value = -4)
-    assert Load_1.location == P1
-    assert Load_1.value == -4
-    assert Load_1.moment is False
+    load_1 = PointLoad(location = P1, value = -4)
+    assert load_1.location == P1
+    assert load_1.value == -4
+    assert load_1.moment is False
 
     # Test the location setter
-    Load_1.location = P2
-    assert Load_1.location == P2
+    load_1.location = P2
+    assert load_1.location == P2
 
     # Test the value setter
-    Load_1.value = 4
-    assert Load_1.value == 4
+    load_1.value = 4
+    assert load_1.value == 4
 
     # Test the moment setter
-    Load_1.moment = True
-    assert Load_1.moment is True
+    load_1.moment = True
+    assert load_1.moment is True
 
-    Load_2 = PointLoad(location = P1, value = 5, moment=True)
-    assert Load_2.location == P1
-    assert Load_2.value == 5
-    assert Load_2.moment is True
+    load_2 = PointLoad(location = P1, value = 5, moment=True)
+    assert load_2.location == P1
+    assert load_2.value == 5
+    assert load_2.moment is True
 
 
 def test_DistributedLoad():
     P1 = Symbol('P1')
     P2 = Symbol('P2')
-    Load_1 = DistributedLoad(start = P1, order = 2, value = -4)
-    assert Load_1.start == P1
-    assert Load_1.order == 2
-    assert Load_1.value == -4
+    load_1 = DistributedLoad(start = P1, order = 2, value = -4)
+    assert load_1.start == P1
+    assert load_1.order == 2
+    assert load_1.value == -4
 
     # Test the start setter
-    Load_1.start = P2
-    assert Load_1.start == P2
+    load_1.start = P2
+    assert load_1.start == P2
 
     # Test the order setter
-    Load_1.order = 4
-    assert Load_1.order == 4
+    load_1.order = 4
+    assert load_1.order == 4
 
     # Test the value setter
-    Load_1.value = 4
-    assert Load_1.value == 4
+    load_1.value = 4
+    assert load_1.value == 4

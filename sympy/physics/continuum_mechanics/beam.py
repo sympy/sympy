@@ -29,12 +29,12 @@ class Beam(object):
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
-    >>> Load_1 = PointLoad(location = 0, value = -3)
-    >>> Load_2 = PointLoad(location = 4, value = -9)
-    >>> Load_3 = DistributedLoad(value = 6, start = 2, order = 0)
-    >>> b.apply_loads(Load_1)
-    >>> b.apply_loads(Load_2, Load_3)
-    >>> b.apply_boundary_conditions(deflection = [(4, 0)])
+    >>> load_1 = PointLoad(location=0, value=-3)
+    >>> load_2 = PointLoad(location=4, value=-9)
+    >>> load_3 = DistributedLoad(value=6, start=2, order=0)
+    >>> b.apply_loads(load_1)
+    >>> b.apply_loads(load_2, load_3)
+    >>> b.apply_boundary_conditions(deflection=[(4, 0)])
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
     >>> b.load_distribution()
@@ -70,7 +70,7 @@ class Beam(object):
         variable : Symbol
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
-            curve. By default, it is set to ``Symbol('x')``. 
+            curve. By default, it is set to ``Symbol('x')``.
         """
         self._length = length
         self._elastic_modulus = elastic_modulus
@@ -152,11 +152,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
 
-        Here ``moment = [(0, 4), (4, 0)]`` means the moment due to the
+        Here ``moment=[(0, 4), (4, 0)]`` means the moment due to the
         applied loads at point ``0`` and ``4`` are `4` and `0` respectively.
-        Similarly, ``deflection = [(0, 2)]`` means the deflection of the beam
+        Similarly, ``deflection=[(0, 2)]`` means the deflection of the beam
         at point ``0`` is ``2``.
 
         >>> b.boundary_conditions
@@ -183,7 +183,7 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.apply_moment_boundary_conditions((4, 3), (5, 0))
@@ -205,7 +205,7 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.apply_slope_boundary_conditions((4, 3), (5, 0))
@@ -227,7 +227,7 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
         >>> b.apply_deflection_boundary_conditions((4, 3), (5, 0))
@@ -274,11 +274,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = 2, value = 4)
-        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-        >>> b.apply_loads(Load_1, Load_2, Load_3)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
+        >>> load_2 = PointLoad(location=2, value=4)
+        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
+        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.load_distribution()
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
@@ -296,11 +296,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = 2, value = 4)
-        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-        >>> b.apply_loads(Load_1, Load_2, Load_3)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
+        >>> load_2 = PointLoad(location=2, value=4)
+        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
+        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.shear_force()
         -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
         """
@@ -322,11 +322,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = 2, value = 4)
-        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-        >>> b.apply_loads(Load_1, Load_2, Load_3)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
+        >>> load_2 = PointLoad(location=2, value=4)
+        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
+        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.bending_moment()
         -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
         """
@@ -363,11 +363,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = 2, value = 4)
-        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-        >>> b.apply_loads(Load_1, Load_2, Load_3)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
+        >>> load_2 = PointLoad(location=2, value=4)
+        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
+        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.slope()
         (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
         """
@@ -402,11 +402,11 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> Load_1 = PointLoad(location = 0, value = -3, moment = True)
-        >>> Load_2 = PointLoad(location = 2, value = 4)
-        >>> Load_3 = DistributedLoad(start = 3, order = 2, value = -2)
-        >>> b.apply_loads(Load_1, Load_2, Load_3)
-        >>> b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
+        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
+        >>> load_2 = PointLoad(location=2, value=4)
+        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
+        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.deflection()
         (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
         """
@@ -452,12 +452,12 @@ class PointLoad(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import PointLoad
-    >>> PointLoad(location = 4, value = -4)
+    >>> PointLoad(location=4, value = -4)
     PointLoad(4, -4, Load)
 
     A Moment can be defined just by passing moment=True as an argument.
 
-    >>> PointLoad(location = 4, value = -4, moment=True)
+    >>> PointLoad(location=4, value = -4, moment=True)
     PointLoad(4, -4, Moment)
 
     """
@@ -523,7 +523,7 @@ class DistributedLoad(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
-    >>> DistributedLoad(start = 4, order = 2, value = 2)
+    >>> DistributedLoad(start = 4, order=2, value = 2)
     DistributedLoad(2, 4, 2)
 
     """
