@@ -21,17 +21,6 @@ class Beam(object):
     their cross sectional profile(Second moment of area), their length
     and their material.
 
-    Parameters
-    ==========
-    length : Sympifyable
-        A SymPy expression representing the Beam's length.
-    elastic_modulus : Sympifyable
-        A SymPy expression representing the Beam's Modulus of Elasticity.
-        It is a measure of the stiffness of the Beam material.
-    second_moment : Sympifyable
-        A SymPy expression representing the Beam's Second moment of area.
-        It is a geometrical property of an area which reflects how its
-        points are distributed with respect to its neutral axis.
 
     Examples
     ========
@@ -64,10 +53,32 @@ class Beam(object):
           - Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment):
+    def __init__(self, length, elastic_modulus, second_moment, variable = Symbol('x')):
+        """Initializes the class.
+
+        Parameters
+        ==========
+        length : Sympifyable
+            A SymPy expression representing the Beam's length.
+        elastic_modulus : Sympifyable
+            A SymPy expression representing the Beam's Modulus of Elasticity.
+            It is a measure of the stiffness of the Beam material.
+        second_moment : Sympifyable
+            A SymPy expression representing the Beam's Second moment of area.
+            It is a geometrical property of an area which reflects how its
+            points are distributed with respect to its neutral axis.
+        variable : Symbol
+            A Symbol object that will be used as the variable along the beam
+            while representing the load, shear, moment, slope and deflection
+            curve. By default, it is set to ``Symbol('x')``. 
+        """
         self._length = length
         self._elastic_modulus = elastic_modulus
         self._second_moment = second_moment
+        if isinstance(variable, Symbol):
+            self._variable = variable
+        else:
+            raise TypeError("""The variable should be a Symbol object.""")
         self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
         self._load = 0
 
@@ -85,6 +96,17 @@ class Beam(object):
     @length.setter
     def length(self, l):
         self._length = sympify(l)
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @variable.setter
+    def variable(self, v):
+        if isinstance(v, Symbol):
+            self._variable = v
+        else:
+            raise TypeError("""The variable should be a Symbol object.""")
 
     @property
     def elastic_modulus(self):
@@ -218,7 +240,7 @@ class Beam(object):
 
 
     def _load_as_SingularityFunction(self, load):
-        x = Symbol('x')
+        x = self.variable
         if isinstance(load, PointLoad):
             if sympify(load.moment):
                 return sympify(load.value)*SingularityFunction(x, sympify(load.location), S(-2))
@@ -282,7 +304,7 @@ class Beam(object):
         >>> b.shear_force()
         -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
         """
-        x = Symbol('x')
+        x = self.variable
         if not self._boundary_conditions['moment']:
             return integrate(self.load_distribution(), x)
         return diff(self.bending_moment(), x)
@@ -308,7 +330,7 @@ class Beam(object):
         >>> b.bending_moment()
         -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
         """
-        x = Symbol('x')
+        x = self.variable
         if not self._boundary_conditions['moment']:
             return -1*integrate(self.shear_force(), x)
 
@@ -349,7 +371,7 @@ class Beam(object):
         >>> b.slope()
         (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
         """
-        x = Symbol('x')
+        x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
         if not self._boundary_conditions['slope']:
@@ -388,7 +410,7 @@ class Beam(object):
         >>> b.deflection()
         (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
         """
-        x = Symbol('x')
+        x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:

@@ -2,9 +2,10 @@ from sympy import Symbol
 from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
 from sympy.functions import SingularityFunction
 from sympy.printing import sstr
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
+y = Symbol('y')
 
 
 def test_Beam():
@@ -16,6 +17,7 @@ def test_Beam():
     assert b.length == 1
     assert b.elastic_modulus == E
     assert b.second_moment == I
+    assert b.variable == x
 
     # Test the length setter
     b.length = 4
@@ -28,6 +30,10 @@ def test_Beam():
     # Test the I setter
     b.second_moment = I_1
     assert b.second_moment is I_1
+
+    # Test the variable setter
+    b.variable = y
+    assert b.variable is y
 
     # Test for all boundary conditions.
     b.apply_boundary_conditions(moment = [(0, 4), (4, 0)], deflection = [(0, 2)], slope = [(0, 1)])
