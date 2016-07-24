@@ -7,6 +7,7 @@ from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import FiniteSet, Union
+from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 
 from sympy.functions import Abs
@@ -395,8 +396,9 @@ def solve_univariate_inequality(expr, gen, relational=True):
     (-oo, -2] U [2, oo)
 
     """
-
+    from sympy.calculus.util import periodicity
     from sympy.solvers.solvers import solve, denoms
+    from sympy.solvers.solveset import solveset_real
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -411,13 +413,22 @@ def solve_univariate_inequality(expr, gen, relational=True):
     elif expr is S.false:
         rv = S.EmptySet
     else:
+        solns = None
         e = expr.lhs - expr.rhs
+
         parts = n, d = e.as_numer_denom()
         if all(i.is_polynomial(gen) for i in parts):
             solns = solve(n, gen, check=False)
             singularities = solve(d, gen, check=False)
-        else:
-            solns = solve(e, gen, check=False)
+        elif solns is None:
+            period = periodicity(e, gen)
+            if not period is None:
+                gen_solns = solveset_real(e, gen)
+                if isinstance(gen_solns, (ImageSet, Union)) or gen_solns is S.EmptySet:
+                    solns = gen_solns.intersect(Interval(0, period))
+            else:
+                solns = solve(e, gen, check=False)
+
             singularities = []
             for d in denoms(e):
                 singularities.extend(solve(d, gen))
