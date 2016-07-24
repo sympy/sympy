@@ -20,4 +20,3 @@ else:
         expand, Function, symbols, var, Add, Mul, Derivative)
     from sympy.core.function import AppliedUndef
     from sympy import ImmutableMatrix
-
