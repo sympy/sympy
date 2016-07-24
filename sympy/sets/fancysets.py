@@ -242,6 +242,14 @@ class ImageSet(Set):
     9
     16
 
+    If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
+    `x` value is in `base_set` or not before passing it as args)
+
+    >>> squares.lamda(2)
+    4
+    >>> squares.lamda(S(1)/2)
+    1/4
+
     >>> n = Dummy('n')
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
