@@ -277,8 +277,10 @@ def test_series():
     assert expr_to_holonomic(sqrt(x**3 + x)).series(n=10) == sqrt(x**3 + x).series(n=10)
     assert expr_to_holonomic((2*x - 3*x**2)**(S(1)/3)).series() == ((2*x - 3*x**2)**(S(1)/3)).series()
     assert  expr_to_holonomic(sqrt(x**2-x)).series() == (sqrt(x**2-x)).series()
-    assert expr_to_holonomic(cos(x)**2/x**2, singular_ics=[(-2, [1, 0, -1])]).series(n=10) == (cos(x)**2/x**2).series(n=10)
+    assert expr_to_holonomic(cos(x)**2/x**2, singular_ics={-2: [1, 0, -1]}).series(n=10) == (cos(x)**2/x**2).series(n=10)
     assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10) == (cos(x)**2/x**2).series(n=10, x0=1)
+    assert expr_to_holonomic(cos(x-1)**2/(x-1)**2, x0=1, singular_ics={-2: [1, 0, -1]}).series(n=10) \
+        == (cos(x-1)**2/(x-1)**2).series(x0=1, n=10)
 
 def test_evalf_euler():
     x = symbols('x')
@@ -492,6 +494,8 @@ def test_expr_to_holonomic():
     p = expr_to_holonomic(sqrt(1 + x**2))
     q = HolonomicFunction((-x) + (x**2 + 1)*Dx, x, 0, 1)
     assert p == q
+    assert (expr_to_holonomic(sqrt(x) + sqrt(2*x)).to_expr()-\
+        (sqrt(x) + sqrt(2*x))).simplify() == 0
 
 def test_to_hyper():
     x = symbols('x')
@@ -565,7 +569,7 @@ def test_to_expr():
     D_0 = Symbol('D_0')
     C_0 = Symbol('C_0')
     assert (p.to_expr().subs({C_0:1, D_0:0}) - s).simplify() == 0
-    p.singular_ics = [(0, [1]), (S(1)/2, [0])]
+    p.singular_ics = {0: [1], S(1)/2: [0]}
     assert p.to_expr() == s
 
 def test_integrate():
@@ -597,7 +601,7 @@ def test_integrate():
     p = expr_to_holonomic((x + 1)**3*exp(-x), x0=-1, lenics=4).integrate(x).to_expr()
     q = (-x**3 - 6*x**2 - 15*x + 6*exp(x + 1) - 16)*exp(-x)
     assert p == q
-    p = expr_to_holonomic(cos(x)**2/x**2, singular_ics=[(-2, [1, 0, -1])]).integrate(x).to_expr()
+    p = expr_to_holonomic(cos(x)**2/x**2, singular_ics={-2: [1, 0, -1]}).integrate(x).to_expr()
     q = -Si(2*x) - cos(x)**2/x
     assert p == q
     p = expr_to_holonomic(sqrt(x**2+x)).integrate(x).to_expr()
@@ -664,9 +668,9 @@ def test_to_meijerg():
     C_1 = Symbol('C_1')
     D_0 = Symbol('D_0')
     assert (hyperexpand(p.to_meijerg()).subs({C_0:1, D_0:0}) - s).simplify() == 0
-    p.singular_ics = [(0, [1]), (S(1)/2, [0])]
+    p.singular_ics = {0: [1], S(1)/2: [0]}
     assert (hyperexpand(p.to_meijerg()) - s).simplify() == 0
     p = expr_to_holonomic(besselj(S(1)/2, x), initcond=False)
     assert (p.to_expr() - (D_0*sin(x) + C_0*cos(x) + C_1*sin(x))/sqrt(x)).simplify() == 0
-    p = expr_to_holonomic(besselj(S(1)/2, x), singular_ics=((S(-1)/2, [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]), ))
+    p = expr_to_holonomic(besselj(S(1)/2, x), singular_ics={S(-1)/2: [sqrt(2)/sqrt(pi), sqrt(2)/sqrt(pi)]})
     assert (p.to_expr() - besselj(S(1)/2, x) - besselj(S(-1)/2, x)).simplify() == 0

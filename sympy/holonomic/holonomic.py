@@ -354,7 +354,7 @@ class HolonomicFunction(object):
 
     For regular singular points initial conditions can also be provided in the
     format:
-    [(s0, [C_0, C_1, ...]), (s1, [C0_0, C0_1, ...]), ...]
+    {s0: [C_0, C_1, ...], s1: [C0_0, C0_1, ...], ...}
     where s0, s1, ... are the roots of indicial equation and vectors
     [C_0, C_1, ...], [C0_0, C0_1, ...], ... are the corresponding intiial
     terms of the associated power series. See Examples below.
@@ -394,10 +394,10 @@ class HolonomicFunction(object):
 
     # an example of initial conditions for regular singular points
     # only one root `1/2` of the indicial equation. So ics is [(1/2, [1])]
-    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ])
-    HolonomicFunction((-1/2) + (x)Dx, x), [(1/2, [1])]
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]})
+    HolonomicFunction((-1/2) + (x)Dx, x), {1/2: [1]}
 
-    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ]).to_expr()
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]}).to_expr()
     sqrt(x)
 
     """
@@ -593,6 +593,18 @@ class HolonomicFunction(object):
                     else:
                         return self.change_ics(other.x0) + other
 
+        if self.singular_ics and other.singular_ics and self.x0 == other.x0:
+            y0 = {}
+            for i in self.singular_ics:
+                if i in other.singular_ics:
+                    y0[i] = [a + b for a, b in zip(self.singular_ics[i], other.singular_ics[i])]
+                else:
+                    y0[i] = self.singular_ics[i]
+            for i in other.singular_ics:
+                if not i in self.singular_ics:
+                    y0[i] = other.singular_ics[i]
+            return HolonomicFunction(sol, self.x, self.x0, singular_ics=y0)
+
         return HolonomicFunction(sol, self.x)
 
     def integrate(self, limits, initcond=False):
@@ -622,10 +634,10 @@ class HolonomicFunction(object):
 
         # if the function have initial conditions of the series format
         if self.singular_ics:
-            y0 = []
+            y0 = {}
             for i in self.singular_ics:
-                s = i[0]
-                c = i[1]
+                s = i
+                c = self.singular_ics[i]
                 c2 = []
                 for j in range(len(c)):
                     if c[j] == 0:
@@ -634,13 +646,12 @@ class HolonomicFunction(object):
                     # if power on `x` is -1, the integration becomes log(x)
                     # TODO: Implement this case
                     elif s + j + 1 == 0:
-                        y0 = None
-                        break
+                        raise NotImplementedError("logarithmic terms in the series are not supported")
                     else:
                         c2.append(c[j] / S(s + j + 1))
                 if y0 == None:
                     break
-                y0.append((s + 1, c2))
+                y0[s + 1] = c2
 
         # for indefinite integration
         if (not limits) or (not self._have_init_cond):
@@ -1078,7 +1089,7 @@ class HolonomicFunction(object):
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
 
-        >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics=[ (S(1)/2, [1]) ]).to_sequence()
+        >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]}).to_sequence()
         [(HolonomicSequence((n), n), u(0) = 1, 1/2, 1)]
 
         See Also
@@ -1283,8 +1294,8 @@ class HolonomicFunction(object):
         if self.singular_ics:
             rootstoconsider = []
             for i in self.singular_ics:
-                if i[0] in indicialroots:
-                    rootstoconsider.append(i[0])
+                if i in indicialroots:
+                    rootstoconsider.append(i)
 
         elif allpos and allint:
             rootstoconsider = [min(reals)]
@@ -1382,10 +1393,8 @@ class HolonomicFunction(object):
                         u0.append(y0[i] / factorial(i))
 
             if self.singular_ics:
-                for i in self.singular_ics:
-                    if i[0] == p:
-                        u0 = i[1]
-                        break
+                if p in self.singular_ics:
+                        u0 = self.singular_ics[p]
 
             if len(u0) < order:
 
@@ -2234,6 +2243,8 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
     if singular_ics or not initcond:
         sol.x0 = x0
         return sol
+    if sol.singular_ics:
+        return sol
     if not lenics:
         lenics = sol.annihilator.order
     y0 = _find_conditions(func, x, x0, lenics)
@@ -2520,7 +2531,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
                     coeff = S(j)**ratexp
                     indicial = S(i) * ratexp
                     break
-            singular_ics = [(indicial, [coeff])]
+            singular_ics = {indicial: [coeff]}
 
     if singular_ics or not initcond:
         return HolonomicFunction(sol, x, x0=x0, singular_ics=singular_ics)
