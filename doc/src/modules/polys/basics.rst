@@ -25,7 +25,7 @@ expressions derived from them by repeated addition, subtraction
 and multiplication are called *polynomial expressions in the
 generators* `x_i`.
 
-By the distributive law it is possible to do perform
+By the distributive law it is possible to perform
 multiplications before additions and subtractions.
 The products of generators thus obtained are called
 *monomials*. They are usually written in the form
