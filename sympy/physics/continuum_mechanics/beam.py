@@ -448,12 +448,6 @@ class PointLoad(object):
     A load applied to a single, specific point. It is also known as a
     concentrated load.
 
-    Parameters
-    ==========
-    location : Sympifyable
-        The specific point of the applied load.
-    value : Sympifyable
-        A SymPy expression representing the value of the applied load.
 
     Examples
     ========
@@ -469,6 +463,14 @@ class PointLoad(object):
     """
 
     def __init__(self, location, value, moment=False):
+        """
+        Parameters
+        ==========
+        location : Sympifyable
+            The specific point of the applied load.
+        value : Sympifyable
+            A SymPy expression representing the value of the applied load.
+        """
         self._location = location
         self._value = value
         self._moment = moment
@@ -518,15 +520,6 @@ class DistributedLoad(object):
 
     A load applied across a length instead of at one point.
 
-    Parameters
-    ==========
-    value : Sympifyable
-        A SymPy expression representing the value of the applied load.
-    start : Sympifyable
-        The starting point of the applied load.
-    order : Sympifyable
-        The order of the applied load.
-
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
@@ -536,6 +529,16 @@ class DistributedLoad(object):
     """
 
     def __init__(self, value, start, order):
+        """
+        Parameters
+        ==========
+        value : Sympifyable
+            A SymPy expression representing the value of the applied load.
+        start : Sympifyable
+            The starting point of the applied load.
+        order : Sympifyable
+            The order of the applied load.
+        """
         self._start = start
         self._order = order
         self._value = value
