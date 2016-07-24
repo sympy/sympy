@@ -417,10 +417,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
             ip = None
         else:
             if V(IPython.__version__) >= '0.11':
-                try:
-                    ip = get_ipython()
-                except NameError:
-                    ip = None
+                tis = IPython.terminal.interactiveshell.TerminalInteractiveShell
+                ip = None
+                if tis.initialized():
+                    ip = tis.instance()
             else:
                 ip = IPython.ipapi.get()
                 if ip:
