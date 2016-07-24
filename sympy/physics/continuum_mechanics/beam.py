@@ -137,7 +137,7 @@ class Beam(object):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
-        It is suggested to use ``moment``, ``slope`` and ``deflection`` as the
+        The user must use ``moment``, ``slope`` and ``deflection`` as the
         keywords while providing the boundary conditions of the moment curve,
         slope curve and the deflection curve respectively as inputs.
         A tuple in the form of (location, value) can be used to pass the
