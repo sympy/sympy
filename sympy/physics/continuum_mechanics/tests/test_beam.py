@@ -1,5 +1,5 @@
 from sympy import Symbol
-from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
+from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -61,10 +61,10 @@ def test_Beam():
         'slope': [(0, 1), (4, 3), (5, 0)]}
 
     b1 = Beam(2, E, I)
-    load_1 = PointLoad(location=0, value=-3, moment=True)
-    load_2 = PointLoad(location=2, value=4)
-    load_3 = DistributedLoad(start=3, order=2, value=-2)
-    b1.apply_loads(load_1, load_2, load_3)
+    b1.apply_load(order=-2, value=-3, start=0)
+    b1.apply_load(order=-1, value=4, start=2)
+    b1.apply_load(order=2, value=-2, start=3)
+
     b1.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
 
     # Test for load distribution function.
@@ -91,50 +91,3 @@ def test_Beam():
     p = b1.deflection()
     q = -71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2
     assert p == q/(E*I)
-
-
-def test_PointLoad():
-    P1 = Symbol('P1')
-    P2 = Symbol('P2')
-    load_1 = PointLoad(location=P1, value=-4)
-    assert load_1.location == P1
-    assert load_1.value == -4
-    assert load_1.moment is False
-
-    # Test the location setter
-    load_1.location = P2
-    assert load_1.location == P2
-
-    # Test the value setter
-    load_1.value = 4
-    assert load_1.value == 4
-
-    # Test the moment setter
-    load_1.moment = True
-    assert load_1.moment is True
-
-    load_2 = PointLoad(location=P1, value=5, moment=True)
-    assert load_2.location == P1
-    assert load_2.value == 5
-    assert load_2.moment is True
-
-
-def test_DistributedLoad():
-    P1 = Symbol('P1')
-    P2 = Symbol('P2')
-    load_1 = DistributedLoad(start=P1, order=2, value=-4)
-    assert load_1.start == P1
-    assert load_1.order == 2
-    assert load_1.value == -4
-
-    # Test the start setter
-    load_1.start = P2
-    assert load_1.start == P2
-
-    # Test the order setter
-    load_1.order = 4
-    assert load_1.order == 4
-
-    # Test the value setter
-    load_1.value = 4
-    assert load_1.value == 4

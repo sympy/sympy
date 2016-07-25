@@ -1,1 +1,1 @@
-from .beam import Beam, PointLoad, DistributedLoad
+from .beam import Beam

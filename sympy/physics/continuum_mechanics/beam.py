@@ -24,16 +24,14 @@ class Beam(object):
 
     Examples
     ========
-    >>> from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
+    >>> from sympy.physics.continuum_mechanics.beam import Beam
     >>> from sympy import Symbol, Piecewise
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
-    >>> load_1 = PointLoad(location=0, value=-3)
-    >>> load_2 = PointLoad(location=4, value=-9)
-    >>> load_3 = DistributedLoad(value=6, start=2, order=0)
-    >>> b.apply_loads(load_1)
-    >>> b.apply_loads(load_2, load_3)
+    >>> b.apply_load(order=-1, value=-3, start=0)
+    >>> b.apply_load(order=-1, value=-9, start=4)
+    >>> b.apply_load(order=0, value=6, start=2)
     >>> b.apply_boundary_conditions(deflection=[(4, 0)])
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
@@ -258,28 +256,13 @@ class Beam(object):
         for bcs in d_bcs:
             self._boundary_conditions['deflection'].append(bcs)
 
-    def _load_as_SingularityFunction(self, load):
+    def apply_load(self, value, start, order):
         x = self.variable
-        if isinstance(load, PointLoad):
-            if sympify(load.moment):
-                return sympify(load.value)*SingularityFunction(x, sympify(load.location), S(-2))
-            return sympify(load.value)*SingularityFunction(x, sympify(load.location), S(-1))
-        elif isinstance(load, DistributedLoad):
-            return sympify(load.value)*SingularityFunction(x, sympify(load.start), sympify(load.order))
+        value = sympify(value)
+        start = sympify(start)
+        order = sympify(order)
 
-    def apply_loads(self, *loads):
-        """
-        Takes PointLoad and DistributedLoad as input. This method would apply
-        the loads, that are passed as arguments, to the beam object. Internally
-        this method would represent the PointLoads and DistributedLoads using
-        Singularity Functions.
-
-        """
-        for load in loads:
-            if isinstance(load, PointLoad) or isinstance(load, DistributedLoad):
-                self._load += self._load_as_SingularityFunction(load)
-            else:
-                raise TypeError("""apply_loads takes either PointLoad or DistributedLoad objects""")
+        self._load += value*SingularityFunction(x, start, order)
 
     def load_distribution(self):
         """
@@ -288,15 +271,14 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
-        >>> load_2 = PointLoad(location=2, value=4)
-        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
-        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_load(order=-2, value=-3, start=0)
+        >>> b.apply_load(order=-1, value=4, start=2)
+        >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.load_distribution()
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
@@ -310,15 +292,14 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
-        >>> load_2 = PointLoad(location=2, value=4)
-        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
-        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_load(order=-2, value=-3, start=0)
+        >>> b.apply_load(order=-1, value=4, start=2)
+        >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.shear_force()
         -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
@@ -335,15 +316,14 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
-        >>> load_2 = PointLoad(location=2, value=4)
-        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
-        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_load(order=-2, value=-3, start=0)
+        >>> b.apply_load(order=-1, value=4, start=2)
+        >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.bending_moment()
         -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
@@ -375,15 +355,14 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
-        >>> load_2 = PointLoad(location=2, value=4)
-        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
-        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_load(order=-2, value=-3, start=0)
+        >>> b.apply_load(order=-1, value=4, start=2)
+        >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.slope()
         (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
@@ -413,15 +392,14 @@ class Beam(object):
 
         Examples
         ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam, DistributedLoad, PointLoad
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> load_1 = PointLoad(location=0, value=-3, moment=True)
-        >>> load_2 = PointLoad(location=2, value=4)
-        >>> load_3 = DistributedLoad(start=3, order=2, value=-2)
-        >>> b.apply_loads(load_1, load_2, load_3)
+        >>> b.apply_load(order=-2, value=-3, start=0)
+        >>> b.apply_load(order=-1, value=4, start=2)
+        >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
         >>> b.deflection()
         (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
@@ -456,138 +434,3 @@ class Beam(object):
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return S(1)/(E*I)*deflection_curve
-
-
-class PointLoad(object):
-    """A load (force or moment) applied at a point.
-
-    A load applied to a single, specific point. It is also known as a
-    concentrated load.
-
-
-    Examples
-    ========
-    >>> from sympy.physics.continuum_mechanics.beam import PointLoad
-    >>> PointLoad(location=4, value = -4)
-    PointLoad(4, -4, Load)
-
-    A Moment can be defined just by passing moment=True as an argument.
-
-    >>> PointLoad(location=4, value = -4, moment=True)
-    PointLoad(4, -4, Moment)
-
-    """
-
-    def __init__(self, location, value, moment=False):
-        """
-        Parameters
-        ==========
-        location : Sympifyable
-            The specific point of the applied load.
-        value : Sympifyable
-            A SymPy expression representing the value of the applied load.
-        """
-        self._location = location
-        self._value = value
-        self._moment = moment
-
-    def __str__(self):
-        if self.moment:
-            str_sol = 'PointLoad(%s, %s, %s)' % (sstr(self.location), sstr(self.value), sstr('Moment'))
-            return str_sol
-        str_sol = 'PointLoad(%s, %s, %s)' % (sstr(self.location), sstr(self.value), sstr('Load'))
-        return str_sol
-
-    __repr__ = __str__
-
-    @property
-    def location(self):
-        """Location of the applied Point Load."""
-        return self._location
-
-    @location.setter
-    def location(self, l):
-        self._location = sympify(l)
-
-    @property
-    def value(self):
-        """Value of the applied Point Load. """
-        return self._value
-
-    @value.setter
-    def value(self, v):
-        self._value = sympify(v)
-
-    @property
-    def moment(self):
-        """Stores whether a Point Load is a load or a couple. """
-        return self._moment
-
-    @moment.setter
-    def moment(self, m):
-        if not isinstance(m, bool):
-            raise TypeError("PointLoad moment attribute must be a bool object.")
-        self._moment = m
-
-
-class DistributedLoad(object):
-
-    """A Distributed Load.
-
-    A load applied across a length instead of at one point.
-
-    Examples
-    ========
-    >>> from sympy.physics.continuum_mechanics.beam import DistributedLoad
-    >>> DistributedLoad(start = 4, order=2, value = 2)
-    DistributedLoad(2, 4, 2)
-
-    """
-
-    def __init__(self, value, start, order):
-        """
-        Parameters
-        ==========
-        value : Sympifyable
-            A SymPy expression representing the value of the applied load.
-        start : Sympifyable
-            The starting point of the applied load.
-        order : Sympifyable
-            The order of the applied load.
-        """
-        self._start = start
-        self._order = order
-        self._value = value
-
-    def __str__(self):
-        str_sol = 'DistributedLoad(%s, %s, %s)' % (sstr(self.value), sstr(self.start), sstr(self.order))
-        return str_sol
-
-    __repr__ = __str__
-
-    @property
-    def start(self):
-        """The starting point of the applied load."""
-        return self._start
-
-    @start.setter
-    def start(self, s):
-        self._start = sympify(s)
-
-    @property
-    def order(self):
-        """The order of the applied load."""
-        return self._order
-
-    @order.setter
-    def order(self, o):
-        self._order = sympify(o)
-
-    @property
-    def value(self):
-        """The value of the applied load."""
-        return self._value
-
-    @value.setter
-    def value(self, v):
-        self._value = sympify(v)
