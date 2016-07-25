@@ -314,7 +314,7 @@ before_install:
   - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
         conda config --add channels conda-forge;
         conda config --add channels symengine;
-        conda install python-symengine;
+        conda install python-symengine=0.1.0.dev0+97c5a21;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
       sudo apt-add-repository -y ppa:aims/sagemath;
