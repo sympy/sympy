@@ -657,10 +657,34 @@ class AccumulationBounds(AtomicExpr):
 
     @property
     def delta(self):
+        """
+        Returns the difference of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).delta
+        2
+
+        """
         return self.max - self.min
 
     @property
     def mid(self):
+        """
+        Returns the mean of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).mid
+        2
+
+        """
         return (self.min + self.max)/2
 
     @_sympifyit('other', NotImplemented)
