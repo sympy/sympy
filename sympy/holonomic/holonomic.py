@@ -959,7 +959,7 @@ class HolonomicFunction(object):
                         return self.change_ics(other.x0) * other
 
         if self.x0 != other.x0:
-            return HolonomicFunction(sol, self.x)
+            return HolonomicFunction(sol_ann, self.x)
         y1 = None
         y2 = None
         if self._have_init_cond and other.singular_ics:
@@ -972,7 +972,7 @@ class HolonomicFunction(object):
             y1 = self.singular_ics
             y2 = other.singular_ics
         if not (y1 or y2):
-            return HolonomicFunction(sol, self.x)
+            return HolonomicFunction(sol_ann, self.x)
         y0 = {}
         for i in y1:
             for j in y2:
