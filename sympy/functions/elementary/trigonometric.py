@@ -375,7 +375,7 @@ class sin(TrigonometricFunction):
             return I*x**-I / 2 - I*x**I /2
 
     def _eval_rewrite_as_cos(self, arg):
-        return -cos(arg + S.Pi/2)
+        return cos(arg - S.Pi / 2, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)
@@ -396,6 +396,9 @@ class sin(TrigonometricFunction):
 
     def _eval_rewrite_as_csc(self, arg):
         return 1/csc(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        return 1 / sec(arg - S.Pi / 2, evaluate=False)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -657,7 +660,7 @@ class cos(TrigonometricFunction):
             return x**I/2 + x**-I/2
 
     def _eval_rewrite_as_sin(self, arg):
-        return sin(arg + S.Pi/2)
+        return sin(arg + S.Pi / 2, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)**2
@@ -813,6 +816,9 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_sec(self, arg):
         return 1/sec(arg)
+
+    def _eval_rewrite_as_csc(self, arg):
+        return 1 / sec(arg)._eval_rewrite_as_csc(arg)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1099,13 +1105,23 @@ class tan(TrigonometricFunction):
         return 2*sin(x)**2/sin(2*x)
 
     def _eval_rewrite_as_cos(self, x):
-        return -cos(x + S.Pi/2)/cos(x)
+        return cos(x - S.Pi / 2, evaluate=False) / cos(x)
 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/cos(arg)
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/cot(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
+        cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
+        return sin_in_sec_form / cos_in_sec_form
+
+    def _eval_rewrite_as_csc(self, arg):
+        sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
+        cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
+        return sin_in_csc_form / cos_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg):
         y = self.rewrite(cos).rewrite(pow)
@@ -1338,13 +1354,23 @@ class cot(TrigonometricFunction):
         return 2*sin(2*x)/sin(x)**2
 
     def _eval_rewrite_as_cos(self, x):
-        return -cos(x)/cos(x + S.Pi/2)
+        return cos(x) / cos(x - S.Pi / 2, evaluate=False)
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/sin(arg)
 
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
+
+    def _eval_rewrite_as_sec(self, arg):
+        cos_in_sec_form = cos(arg)._eval_rewrite_as_sec(arg)
+        sin_in_sec_form = sin(arg)._eval_rewrite_as_sec(arg)
+        return cos_in_sec_form / sin_in_sec_form
+
+    def _eval_rewrite_as_csc(self, arg):
+        cos_in_csc_form = cos(arg)._eval_rewrite_as_csc(arg)
+        sin_in_csc_form = sin(arg)._eval_rewrite_as_csc(arg)
+        return cos_in_csc_form / sin_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg):
         y = self.rewrite(cos).rewrite(pow)
@@ -1573,6 +1599,15 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
+    def _eval_rewrite_as_sin(self, arg):
+        return (1 / cos(arg)._eval_rewrite_as_sin(arg))
+
+    def _eval_rewrite_as_tan(self, arg):
+        return (1 / cos(arg)._eval_rewrite_as_tan(arg))
+
+    def _eval_rewrite_as_csc(self, arg):
+        return csc(pi / 2 - arg, evaluate=False)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return tan(self.args[0])*sec(self.args[0])
@@ -1643,6 +1678,15 @@ class csc(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_cot(self, arg):
         cot_half = cot(arg/2)
         return (1 + cot_half**2)/(2*cot_half)
+
+    def _eval_rewrite_as_cos(self, arg):
+        return (1 / sin(arg)._eval_rewrite_as_cos(arg))
+
+    def _eval_rewrite_as_sec(self, arg):
+        return sec(pi / 2 - arg, evaluate=False)
+
+    def _eval_rewrite_as_tan(self, arg):
+        return (1 / sin(arg)._eval_rewrite_as_tan(arg))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
