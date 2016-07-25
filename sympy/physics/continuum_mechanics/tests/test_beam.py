@@ -1,7 +1,6 @@
 from sympy import Symbol
 from sympy.physics.continuum_mechanics.beam import Beam, PointLoad, DistributedLoad
 from sympy.functions import SingularityFunction
-from sympy.printing import sstr
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
@@ -57,9 +56,9 @@ def test_Beam():
     # Test for updated boundary conditions
     bcs_new = b.boundary_conditions
     assert bcs_new == {
-                       'deflection': [(0, 2), (4, 3), (5, 0)],
-                           'moment': [(0, 4), (4, 0), (4, 3), (5, 0)],
-                            'slope': [(0, 1), (4, 3), (5, 0)]}
+        'deflection': [(0, 2), (4, 3), (5, 0)],
+        'moment': [(0, 4), (4, 0), (4, 3), (5, 0)],
+        'slope': [(0, 1), (4, 3), (5, 0)]}
 
     b1 = Beam(2, E, I)
     load_1 = PointLoad(location=0, value=-3, moment=True)
@@ -97,7 +96,7 @@ def test_Beam():
 def test_PointLoad():
     P1 = Symbol('P1')
     P2 = Symbol('P2')
-    load_1 = PointLoad(location = P1, value = -4)
+    load_1 = PointLoad(location=P1, value=-4)
     assert load_1.location == P1
     assert load_1.value == -4
     assert load_1.moment is False
@@ -114,7 +113,7 @@ def test_PointLoad():
     load_1.moment = True
     assert load_1.moment is True
 
-    load_2 = PointLoad(location = P1, value = 5, moment=True)
+    load_2 = PointLoad(location=P1, value=5, moment=True)
     assert load_2.location == P1
     assert load_2.value == 5
     assert load_2.moment is True
@@ -123,7 +122,7 @@ def test_PointLoad():
 def test_DistributedLoad():
     P1 = Symbol('P1')
     P2 = Symbol('P2')
-    load_1 = DistributedLoad(start = P1, order = 2, value = -4)
+    load_1 = DistributedLoad(start=P1, order=2, value=-4)
     assert load_1.start == P1
     assert load_1.order == 2
     assert load_1.value == -4

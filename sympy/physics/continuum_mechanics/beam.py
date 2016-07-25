@@ -6,7 +6,7 @@ singularity functions in mechanics.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, Eq, diff
+from sympy.core import S, Symbol, diff
 from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction
@@ -53,7 +53,7 @@ class Beam(object):
           - Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable = Symbol('x')):
+    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
         """Initializes the class.
 
         Parameters
@@ -153,7 +153,7 @@ class Beam(object):
         """
         return self._boundary_conditions
 
-    def apply_boundary_conditions(self, moment = [], slope = [], deflection = []):
+    def apply_boundary_conditions(self, moment=[], slope=[], deflection=[]):
         """
         Takes the boundary conditions of the beam bending problem as input.
         The boundary conditions should be passed as keyworded arguments.
@@ -258,7 +258,6 @@ class Beam(object):
         for bcs in d_bcs:
             self._boundary_conditions['deflection'].append(bcs)
 
-
     def _load_as_SingularityFunction(self, load):
         x = self.variable
         if isinstance(load, PointLoad):
@@ -329,7 +328,6 @@ class Beam(object):
             return integrate(self.load_distribution(), x)
         return diff(self.bending_moment(), x)
 
-
     def bending_moment(self):
         """
         Returns a Singularity Function expression which represents
@@ -366,10 +364,9 @@ class Beam(object):
             bc_eqs.append(eqs)
 
         constants = list(linsolve(bc_eqs, C1, C2))
-        moment_curve = moment_curve.subs({C1 : constants[0][0], C2 : constants[0][1]})
+        moment_curve = moment_curve.subs({C1: constants[0][0], C2: constants[0][1]})
 
         return moment_curve
-
 
     def slope(self):
         """
@@ -406,9 +403,8 @@ class Beam(object):
             bc_eqs.append(eqs)
 
         constants = list(linsolve(bc_eqs, C3))
-        slope_curve = slope_curve.subs({C3 : constants[0][0]})
+        slope_curve = slope_curve.subs({C3: constants[0][0]})
         return S(1)/(E*I)*slope_curve
-
 
     def deflection(self):
         """
@@ -446,7 +442,7 @@ class Beam(object):
                 eqs = deflection_curve.subs(x, position) - value
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, C3))
-            deflection_curve = deflection_curve.subs({C3 : constants[0][0]})
+            deflection_curve = deflection_curve.subs({C3: constants[0][0]})
             return S(1)/(E*I)*deflection_curve
 
         C4 = Symbol('C4')
@@ -458,7 +454,7 @@ class Beam(object):
             bc_eqs.append(eqs)
 
         constants = list(linsolve(bc_eqs, C4))
-        deflection_curve = deflection_curve.subs({C4 : constants[0][0]})
+        deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return S(1)/(E*I)*deflection_curve
 
 
