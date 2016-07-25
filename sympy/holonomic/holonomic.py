@@ -593,17 +593,31 @@ class HolonomicFunction(object):
                     else:
                         return self.change_ics(other.x0) + other
 
-        if self.singular_ics and other.singular_ics and self.x0 == other.x0:
-            y0 = {}
-            for i in self.singular_ics:
-                if i in other.singular_ics:
-                    y0[i] = [a + b for a, b in zip(self.singular_ics[i], other.singular_ics[i])]
-                else:
-                    y0[i] = self.singular_ics[i]
-            for i in other.singular_ics:
-                if not i in self.singular_ics:
-                    y0[i] = other.singular_ics[i]
-            return HolonomicFunction(sol, self.x, self.x0, singular_ics=y0)
+        if self.x0 != other.x0:
+            return HolonomicFunction(sol, self.x)
+        y1 = None
+        y2 = None
+        if self._have_init_cond and other.singular_ics:
+            y1 = {S(0):self.y0}
+            y2 = other.singular_ics
+        elif self.singular_ics and other._have_init_cond:
+            y1 = self.singular_ics
+            y2 = {S(0):other.y0}
+        elif self.singular_ics and other.singular_ics:
+            y1 = self.singular_ics
+            y2 = other.singular_ics
+        if not (y1 and y2):
+            return HolonomicFunction(sol, self.x)
+        y0 = {}
+        for i in y1:
+            if i in y2:
+                y0[i] = [a + b for a, b in zip(y1[i], y2[i])]
+            else:
+                y0[i] = y1[i]
+        for i in y2:
+            if not i in y1:
+                y0[i] = y2[i]
+        return HolonomicFunction(sol, self.x, self.x0, singular_ics=y0)
 
         return HolonomicFunction(sol, self.x)
 
@@ -943,6 +957,37 @@ class HolonomicFunction(object):
 
                     else:
                         return self.change_ics(other.x0) * other
+
+        if self.x0 != other.x0:
+            return HolonomicFunction(sol, self.x)
+        y1 = None
+        y2 = None
+        if self._have_init_cond and other.singular_ics:
+            y1 = {S(0):self.y0}
+            y2 = other.singular_ics
+        elif self.singular_ics and other._have_init_cond:
+            y1 = self.singular_ics
+            y2 = {S(0):other.y0}
+        elif self.singular_ics and other.singular_ics:
+            y1 = self.singular_ics
+            y2 = other.singular_ics
+        if not (y1 or y2):
+            return HolonomicFunction(sol, self.x)
+        y0 = {}
+        for i in y1:
+            for j in y2:
+                k = min(len(y1[i]), len(y2[j]))
+                c = []
+                for a in range(k):
+                    s = S(0)
+                    for b in range(a + 1):
+                        s += y1[i][b] * y2[j][a - b]
+                    c.append(s)
+                if not i + j in y0:
+                    y0[i + j] = c
+                else:
+                    y0[i + j] = [a + b for a, b in zip(c, y0[i + j])]
+        return HolonomicFunction(sol_ann, self.x, self.x0, singular_ics=y0)
 
         return HolonomicFunction(sol_ann, self.x)
 
