@@ -68,7 +68,7 @@ def test_Beam():
     b1.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
 
     # Test for load distribution function.
-    p = b1.load_distribution()
+    p = b1.load
     q = -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
     assert p == q
 

@@ -25,17 +25,18 @@ class Beam(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import Beam
-    >>> from sympy import Symbol, Piecewise
+    >>> from sympy import Symbol, Piecewise, SingularityFunction
+    >>> x = Symbol('x')
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
-    >>> b.apply_load(order=-1, value=-3, start=0)
     >>> b.apply_load(order=-1, value=-9, start=4)
+    >>> b.apply_load(order=-1, value=-3, start=0)
     >>> b.apply_load(order=0, value=6, start=2)
     >>> b.apply_boundary_conditions(deflection=[(4, 0)])
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
-    >>> b.load_distribution()
+    >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
     -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
@@ -264,7 +265,8 @@ class Beam(object):
 
         self._load += value*SingularityFunction(x, start, order)
 
-    def load_distribution(self):
+    @property
+    def load(self):
         """
         Returns a Singularity Function expression which represents
         the load distribution curve of the Beam object.
@@ -279,8 +281,7 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
-        >>> b.load_distribution()
+        >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
         return self._load
@@ -306,7 +307,7 @@ class Beam(object):
         """
         x = self.variable
         if not self._boundary_conditions['moment']:
-            return integrate(self.load_distribution(), x)
+            return integrate(self.load, x)
         return diff(self.bending_moment(), x)
 
     def bending_moment(self):
@@ -334,7 +335,7 @@ class Beam(object):
 
         C1 = Symbol('C1')
         C2 = Symbol('C2')
-        load_curve = self.load_distribution()
+        load_curve = self.load
         shear_curve = integrate(load_curve, x) + C1
         moment_curve = integrate(shear_curve, x) + C2
 
