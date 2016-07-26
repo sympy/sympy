@@ -5,23 +5,25 @@ from __future__ import print_function, division
 from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.printing import sstr
-from .linearsolver import NewMatrix
-from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
-from sympy.polys.domains import QQ, ZZ, RR
-from sympy.polys.domains.pythonrational import PythonRational
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.matrices import Matrix
-from sympy.polys.polyclasses import DMF
-from sympy.polys.polyroots import roots
 from sympy.functions.elementary.exponential import exp_polar, exp
+
+from .linearsolver import NewMatrix
+from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError, SingularityError, NotHolonomicError
+
 from sympy.polys.rings import PolyElement
 from sympy.polys.fields import FracElement
+from sympy.polys.domains import QQ, ZZ, RR
+from sympy.polys.domains.pythonrational import PythonRational
+from sympy.polys.polyclasses import DMF
+from sympy.polys.polyroots import roots
 
 
 def DifferentialOperators(base, generator):
@@ -477,9 +479,11 @@ class HolonomicFunction(object):
         return (sol1, sol2)
 
     def __add__(self, other):
+        # if the ground domains are different
         if self.annihilator.parent.base != other.annihilator.parent.base:
             a, b = self.unify(other)
             return a + b
+
         deg1 = self.annihilator.order
         deg2 = other.annihilator.order
         dim = max(deg1, deg2)
@@ -574,6 +578,7 @@ class HolonomicFunction(object):
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
+                # change the intiial conditions to a same point
                 selfat0 = self.annihilator.is_singular(0)
                 otherat0 = other.annihilator.is_singular(0)
 
@@ -595,8 +600,10 @@ class HolonomicFunction(object):
 
         if self.x0 != other.x0:
             return HolonomicFunction(sol, self.x)
+        # if the functions have singular_ics
         y1 = None
         y2 = None
+
         if self._have_init_cond and other.singular_ics:
             y1 = {S(0):self.y0}
             y2 = other.singular_ics
@@ -606,10 +613,15 @@ class HolonomicFunction(object):
         elif self.singular_ics and other.singular_ics:
             y1 = self.singular_ics
             y2 = other.singular_ics
+
         if not (y1 and y2):
             return HolonomicFunction(sol, self.x)
+        # computing singular_ics for the result
+        # taking union of the series terms of both functions
         y0 = {}
         for i in y1:
+            # add corresponding initial terms if the power
+            # on `x` is same
             if i in y2:
                 y0[i] = [a + b for a, b in zip(y1[i], y2[i])]
             else:
@@ -960,8 +972,10 @@ class HolonomicFunction(object):
 
         if self.x0 != other.x0:
             return HolonomicFunction(sol_ann, self.x)
+
         y1 = None
         y2 = None
+
         if self._have_init_cond and other.singular_ics:
             y1 = {S(0):self.y0}
             y2 = other.singular_ics
@@ -971,9 +985,11 @@ class HolonomicFunction(object):
         elif self.singular_ics and other.singular_ics:
             y1 = self.singular_ics
             y2 = other.singular_ics
-        if not (y1 or y2):
+        if not (y1 and y2):
             return HolonomicFunction(sol_ann, self.x)
+
         y0 = {}
+        # multiply every possible pair of the series terms
         for i in y1:
             for j in y2:
                 k = min(len(y1[i]), len(y2[j]))
