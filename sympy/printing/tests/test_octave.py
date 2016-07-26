@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc
+from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
+                             sinc)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -374,3 +375,5 @@ def test_specfun():
     assert octave_code(lowergamma(n, x)) == 'gammainc(x, n, \'lower\')'
     assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+    assert octave_code(LambertW(x)) == 'lambertw(x)'
+    assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
