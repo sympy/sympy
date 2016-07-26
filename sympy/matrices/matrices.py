@@ -2767,7 +2767,6 @@ class MatrixBase(object):
                 for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
-                    #if not iszerofunc(r[k, i]):
                     if not Eq(r[pivot, i], 0): 
                         r.row_swap(pivot, k)
                         break
