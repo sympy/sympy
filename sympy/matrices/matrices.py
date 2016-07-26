@@ -12,6 +12,7 @@ from sympy.core.numbers import Integer, ilcm, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, range, NotIterable
+from sympy.core.relational import Eq
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -2762,11 +2763,12 @@ class MatrixBase(object):
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
-            if iszerofunc(r[pivot, i]):
+            if Eq(r[pivot, i], 0): 
                 for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
-                    if not iszerofunc(r[k, i]):
+                    #if not iszerofunc(r[k, i]):
+                    if not Eq(r[pivot, i], 0): 
                         r.row_swap(pivot, k)
                         break
                 else:
