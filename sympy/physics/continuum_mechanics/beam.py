@@ -33,7 +33,7 @@ class Beam(object):
     >>> b.apply_load(order=-1, value=-9, start=4)
     >>> b.apply_load(order=-1, value=-3, start=0)
     >>> b.apply_load(order=0, value=6, start=2)
-    >>> b.boundary_conditions['deflection'] = [(4, 0)]
+    >>> b.bc_deflection = [(4, 0)]
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
     >>> b.load
@@ -142,7 +142,7 @@ class Beam(object):
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
         >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
@@ -169,6 +169,15 @@ class Beam(object):
     @bc_slope.setter
     def bc_slope(self, s_bcs):
         self._boundary_conditions['slope'] = s_bcs
+
+    @property
+    def bc_deflection(self):
+        return self._boundary_conditions['deflection']
+
+    @bc_deflection.setter
+    def bc_deflection(self, d_bcs):
+        self._boundary_conditions['deflection'] = d_bcs
+
 
     def apply_load(self, value, start, order):
         x = self.variable
@@ -215,7 +224,7 @@ class Beam(object):
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.shear_force()
         -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
@@ -241,7 +250,7 @@ class Beam(object):
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.bending_moment()
         -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
@@ -282,7 +291,7 @@ class Beam(object):
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.slope()
         (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
@@ -321,7 +330,7 @@ class Beam(object):
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.deflection()
         (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)

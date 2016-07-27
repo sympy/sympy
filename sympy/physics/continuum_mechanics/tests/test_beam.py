@@ -36,7 +36,7 @@ def test_Beam():
 
     # Test for all boundary conditions.
     b.bc_moment = [(0, 4), (4, 0)]
-    b.boundary_conditions['deflection'] = [(0, 2)]
+    b.bc_deflection = [(0, 2)]
     b.bc_slope = [(0, 1)]
     assert b.boundary_conditions == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
 
@@ -51,8 +51,8 @@ def test_Beam():
     assert s_bcs == [(0, 1), (4, 3), (5, 0)]
 
     # Test for deflection boundary condition method
-    b.boundary_conditions['deflection'].extend([(4, 3), (5, 0)])
-    d_bcs = b.boundary_conditions['deflection']
+    b.bc_deflection.extend([(4, 3), (5, 0)])
+    d_bcs = b.bc_deflection
     assert d_bcs == [(0, 2), (4, 3), (5, 0)]
 
     # Test for updated boundary conditions
@@ -68,7 +68,7 @@ def test_Beam():
     b1.apply_load(order=2, value=-2, start=3)
 
     b1.bc_moment = [(0, 4), (4, 0)]
-    b1.boundary_conditions['deflection'] = [(0, 2)]
+    b1.bc_deflection = [(0, 2)]
     b1.bc_slope = [(0, 1)]
 
     # Test for load distribution function.
