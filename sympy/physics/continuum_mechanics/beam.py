@@ -25,7 +25,7 @@ class Beam(object):
     Examples
     ========
     >>> from sympy.physics.continuum_mechanics.beam import Beam
-    >>> from sympy import Symbol, Piecewise, SingularityFunction
+    >>> from sympy import Symbol, Piecewise
     >>> x = Symbol('x')
     >>> E = Symbol('E')
     >>> I = Symbol('I')
@@ -33,7 +33,7 @@ class Beam(object):
     >>> b.apply_load(order=-1, value=-9, start=4)
     >>> b.apply_load(order=-1, value=-3, start=0)
     >>> b.apply_load(order=0, value=6, start=2)
-    >>> b.apply_boundary_conditions(deflection=[(4, 0)])
+    >>> b.boundary_conditions['deflection'] = [(4, 0)]
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
     >>> b.load
@@ -141,7 +141,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.boundary_conditions
         {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
 
@@ -151,111 +153,6 @@ class Beam(object):
         moment of the beam should be ``4`` at ``0`` and ``0`` at ``4``
         """
         return self._boundary_conditions
-
-    def apply_boundary_conditions(self, moment=[], slope=[], deflection=[]):
-        """
-        Takes the boundary conditions of the beam bending problem as input.
-        The boundary conditions should be passed as keyworded arguments.
-        The user must use ``moment``, ``slope`` and ``deflection`` as the
-        keywords while providing the boundary conditions of the moment curve,
-        slope curve and the deflection curve respectively as inputs.
-        A tuple in the form of (location, value) can be used to pass the
-        location and the value of a boundary condition. A list of such tuples
-        is passed under each keywords.
-
-
-        Examples
-        ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
-
-        Here ``moment=[(0, 4), (4, 0)]`` means the moment due to the
-        applied loads at point ``0`` and ``4`` are `4` and `0` respectively.
-        Similarly, ``deflection=[(0, 2)]`` means the deflection of the beam
-        at point ``0`` is ``2``.
-
-        >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
-        >>> b.boundary_conditions['moment']
-        [(0, 4), (4, 0)]
-
-        """
-        if moment:
-            self._boundary_conditions['moment'].extend([m_bcs for m_bcs in moment])
-        if slope:
-            self._boundary_conditions['slope'].extend([s_bcs for s_bcs in slope])
-        if deflection:
-            self._boundary_conditions['deflection'].extend([d_bcs for d_bcs in deflection])
-
-    def apply_moment_boundary_conditions(self, *m_bcs):
-        """
-        Takes only the moment boundary conditions as input.
-
-        Examples
-        ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
-        >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
-        >>> b.apply_moment_boundary_conditions((4, 3), (5, 0))
-        >>> b.boundary_conditions['moment']
-        [(0, 4), (4, 0), (4, 3), (5, 0)]
-
-        """
-        for bcs in m_bcs:
-            self._boundary_conditions['moment'].append(bcs)
-
-    def apply_slope_boundary_conditions(self, *s_bcs):
-        """
-        Takes only the slope boundary conditions as input.
-
-        Examples
-        ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
-        >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
-        >>> b.apply_slope_boundary_conditions((4, 3), (5, 0))
-        >>> b.boundary_conditions['slope']
-        [(0, 1), (4, 3), (5, 0)]
-
-        """
-        for bcs in s_bcs:
-            self._boundary_conditions['slope'].append(bcs)
-
-    def apply_deflection_boundary_conditions(self, *d_bcs):
-        """
-        Takes only the slope boundary conditions as input.
-
-        Examples
-        ========
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
-        >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
-        >>> b.apply_deflection_boundary_conditions((4, 3), (5, 0))
-        >>> b.boundary_conditions['deflection']
-        [(0, 2), (4, 3), (5, 0)]
-
-        """
-        for bcs in d_bcs:
-            self._boundary_conditions['deflection'].append(bcs)
 
     def apply_load(self, value, start, order):
         x = self.variable
@@ -301,7 +198,9 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.shear_force()
         -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
         """
@@ -325,7 +224,9 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.bending_moment()
         -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
         """
@@ -364,7 +265,9 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.slope()
         (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
         """
@@ -401,7 +304,9 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.apply_boundary_conditions(moment=[(0, 4), (4, 0)], deflection=[(0, 2)], slope=[(0, 1)])
+        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.boundary_conditions['deflection'] = [(0, 2)]
+        >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.deflection()
         (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
         """
