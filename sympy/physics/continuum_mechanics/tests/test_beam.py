@@ -35,14 +35,14 @@ def test_Beam():
     assert b.variable is y
 
     # Test for all boundary conditions.
-    b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+    b.bc_moment = [(0, 4), (4, 0)]
     b.boundary_conditions['deflection'] = [(0, 2)]
     b.boundary_conditions['slope'] = [(0, 1)]
     assert b.boundary_conditions == {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
 
     # Test for moment boundary condition method
-    b.boundary_conditions['moment'].extend([(4, 3), (5, 0)])
-    m_bcs = b.boundary_conditions['moment']
+    b.bc_moment.extend([(4, 3), (5, 0)])
+    m_bcs = b.bc_moment
     assert m_bcs == [(0, 4), (4, 0), (4, 3), (5, 0)]
 
     # Test for slope boundary condition method
@@ -67,7 +67,7 @@ def test_Beam():
     b1.apply_load(order=-1, value=4, start=2)
     b1.apply_load(order=2, value=-2, start=3)
 
-    b1.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+    b1.bc_moment = [(0, 4), (4, 0)]
     b1.boundary_conditions['deflection'] = [(0, 2)]
     b1.boundary_conditions['slope'] = [(0, 1)]
 

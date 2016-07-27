@@ -141,7 +141,7 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.boundary_conditions['deflection'] = [(0, 2)]
         >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.boundary_conditions
@@ -153,6 +153,14 @@ class Beam(object):
         moment of the beam should be ``4`` at ``0`` and ``0`` at ``4``
         """
         return self._boundary_conditions
+
+    @property
+    def bc_moment(self):
+        return self._boundary_conditions['moment']
+
+    @bc_moment.setter
+    def bc_moment(self, m_bcs):
+        self._boundary_conditions['moment'] = m_bcs
 
     def apply_load(self, value, start, order):
         x = self.variable
@@ -198,7 +206,7 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.boundary_conditions['deflection'] = [(0, 2)]
         >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.shear_force()
@@ -224,7 +232,7 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.boundary_conditions['deflection'] = [(0, 2)]
         >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.bending_moment()
@@ -265,7 +273,7 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.boundary_conditions['deflection'] = [(0, 2)]
         >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.slope()
@@ -304,7 +312,7 @@ class Beam(object):
         >>> b.apply_load(order=-2, value=-3, start=0)
         >>> b.apply_load(order=-1, value=4, start=2)
         >>> b.apply_load(order=2, value=-2, start=3)
-        >>> b.boundary_conditions['moment'] = [(0, 4), (4, 0)]
+        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.boundary_conditions['deflection'] = [(0, 2)]
         >>> b.boundary_conditions['slope'] = [(0, 1)]
         >>> b.deflection()
