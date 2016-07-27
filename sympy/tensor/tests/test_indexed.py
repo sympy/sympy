@@ -116,6 +116,10 @@ def test_IndexedBase_shape():
     assert b[i, j].func(*b[i, j].args) == b[i, j]
     raises(IndexException, lambda: b[i])
     raises(IndexException, lambda: b[i, i, j])
+    F = IndexedBase("F", shape=m)
+    assert F.shape == Tuple(m)
+    assert F[i].subs(i, j) == F[j]
+    raises(IndexException, lambda: F[i, j])
 
 
 def test_Indexed_constructor():
