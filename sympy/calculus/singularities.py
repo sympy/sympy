@@ -12,7 +12,7 @@ the following function types in the given ``Interval``:
 - Decreasing
 - Strictly Decreasing
 - Monotonic
- 
+
 """
 
 from sympy.core.sympify import sympify
