@@ -475,7 +475,7 @@ def test_tensorflow_basic_math():
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.constant(0, dtype=tensorflow.float32)
-    s =  tensorflow.Session()
+    s = tensorflow.Session()
     assert func(a).eval(session=s) == 0.5
 
 def test_tensorflow_placeholders():
@@ -484,7 +484,7 @@ def test_tensorflow_placeholders():
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s =  tensorflow.Session()
+    s = tensorflow.Session()
     assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
 
 def test_integral():
