@@ -26,3 +26,4 @@ from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
     intersection, closest_points, farthest_points
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.curve import Curve
+from sympy.geometry.parabola import Parabola

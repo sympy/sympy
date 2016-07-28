@@ -221,8 +221,10 @@ def test_parametric_log_deriv():
 
 
 def test_issue_10798():
-    from sympy import integrate, pi, I, log, polylog, exp_polar
+    from sympy import integrate, pi, I, log, polylog, exp_polar, Piecewise, meijerg, Abs
     from sympy.abc import x, y
     assert integrate(1/(1-(x*y)**2), (x, 0, 1), y) == \
-        I*pi*log(y)/2 + polylog(2, exp_polar(I*pi)/y)/2 - \
-        polylog(2, exp_polar(2*I*pi)/y)/2
+        -Piecewise((I*pi*log(y) - polylog(2, y), Abs(y) < 1), (-I*pi*log(1/y) - polylog(2, y), Abs(1/y) < 1), \
+                   (-I*pi*meijerg(((), (1, 1)), ((0, 0), ()), y) + I*pi*meijerg(((1, 1), ()), ((), (0, 0)), y) - polylog(2, y), True))/2 \
+                   - log(y)*log(1 - 1/y)/2 + log(y)*log(1 + 1/y)/2 + log(y)*log(y - 1)/2 \
+                   - log(y)*log(y + 1)/2 + I*pi*log(y)/2 - polylog(2, y*exp_polar(I*pi))/2

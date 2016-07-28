@@ -323,7 +323,7 @@ def test_issue_10198():
         -1 + 1/abs(1/x - 1) < 0) == Or(
         And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2)
         )
-    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, -1)
+    raises(NotImplementedError, lambda: reduce_inequalities(abs(1/sqrt(x)) - 1, x))
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
         And(S(0) < x, x < S(3)/4), And(S(3)/2 < x, x < oo))

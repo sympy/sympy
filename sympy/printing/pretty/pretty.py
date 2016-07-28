@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -1140,6 +1141,18 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left("O"))
         return pform
 
+    def _print_SingularityFunction(self, e):
+        if self._use_unicode:
+            shift = self._print(e.args[0]-e.args[1])
+            n = self._print(e.args[2])
+            base = prettyForm("<")
+            base = prettyForm(*base.right(shift))
+            base = prettyForm(*base.right(">"))
+            pform = base**n
+            return pform
+        else:
+            return self._print_Function(e)
+
     def _print_gamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
@@ -1165,6 +1178,25 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
             pform = prettyForm(*pform.parens())
             pform = prettyForm(*pform.left(greek_unicode['gamma']))
+            return pform
+        else:
+            return self._print_Function(e)
+
+    def _print_DiracDelta(self, e):
+        if self._use_unicode:
+            if len(e.args) == 2:
+                a = prettyForm(greek_unicode['delta'])
+                b = self._print(e.args[1])
+                b = prettyForm(*b.parens())
+                c = self._print(e.args[0])
+                c = prettyForm(*c.parens())
+                pform = a**b
+                pform = stringPict(*pform.right(' '))
+                pform = stringPict(*pform.right(c))
+                return pform
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek_unicode['delta']))
             return pform
         else:
             return self._print_Function(e)
@@ -1228,6 +1260,25 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pforma.left(pforma0))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left(name))
+        return pform
+
+    def _print_GoldenRatio(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('phi'))
+        return self._print(Symbol("GoldenRatio"))
+
+    def _print_EulerGamma(self, expr):
+        if self._use_unicode:
+            return prettyForm(pretty_symbol('gamma'))
+        return self._print(Symbol("EulerGamma"))
+
+    def _print_Mod(self, expr):
+        pform = self._print(expr.args[0])
+        if pform.binding > prettyForm.MUL:
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right(' mod '))
+        pform = prettyForm(*pform.right(self._print(expr.args[1])))
+        pform.binding = prettyForm.OPEN
         return pform
 
     def _print_Add(self, expr, order=None):
@@ -1600,7 +1651,7 @@ class PrettyPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(dots)
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:
@@ -1704,6 +1755,9 @@ class PrettyPrinter(Printer):
 
     def _print_FracField(self, field):
         return prettyForm(sstr(field))
+
+    def _print_FreeGroupElement(self, elm):
+        return prettyForm(str(elm))
 
     def _print_PolyElement(self, poly):
         return prettyForm(sstr(poly))
@@ -2020,6 +2074,24 @@ class PrettyPrinter(Printer):
         pform = self._print(p.args[0])
         pform = prettyForm(*pform.left('%s(' % (p.__class__.__name__)))
         pform = prettyForm(*pform.right(')'))
+        return pform
+
+    def _print_primenu(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['nu']))
+        else:
+            pform = prettyForm(*pform.left('nu'))
+        return pform
+
+    def _print_primeomega(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        if self._use_unicode:
+            pform = prettyForm(*pform.left(greek_unicode['Omega']))
+        else:
+            pform = prettyForm(*pform.left('Omega'))
         return pform
 
 

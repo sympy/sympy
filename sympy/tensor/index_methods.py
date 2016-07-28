@@ -235,10 +235,11 @@ def get_indices(expr):
         return inds, {}
     elif expr is None:
         return set(), {}
-    elif expr.is_Atom:
-        return set(), {}
     elif isinstance(expr, Idx):
         return {expr}, {}
+    elif expr.is_Atom:
+        return set(), {}
+
 
     # recurse via specialized functions
     else:
@@ -335,11 +336,11 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys(), key=default_sort_key)
-    [(x[j]*A[i, j] + y[i])*x[i], (i,)]
+    [(A[i, j]*x[j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([(x[j]*A[i, j] + y[i])*x[i]])
+    set([(A[i, j]*x[j] + y[i])*x[i]])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
+    [{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:
