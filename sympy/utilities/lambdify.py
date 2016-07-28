@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
+import tensorflow as tf
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins)
@@ -16,6 +17,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+TENSORFLOW = {}
 SYMPY = {}
 NUMEXPR = {}
 
@@ -26,6 +28,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
 
@@ -87,6 +90,18 @@ NUMPY_TRANSLATIONS = {
     "ImmutableDenseMatrix": "array",
 }
 
+TENSORFLOW_TRANSLATIONS = {
+    "Abs": "abs",
+    "ceiling": "ceil",
+    "Max": "maximum",
+    "Min": "minimum",
+    "im": "imag",
+    "ln": "log",
+    "Mod": "mod",
+    "conjugate": "conj",
+    "re": "real",
+}
+
 NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
@@ -94,6 +109,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",

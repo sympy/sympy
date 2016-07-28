@@ -21,6 +21,7 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 numexpr = import_module('numexpr')
+tensorflow = import_module('tensorflow')
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -153,6 +154,14 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
+def test_tensorflow_transl():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
+    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert tens in tensorflow.__dict__
 
 def test_numpy_translation_abs():
     if not numpy:
@@ -459,6 +468,24 @@ def test_numexpr_userfunctions():
     uf = implemented_function(Function('uf'), lambda x, y : 2*x*y+1)
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
+
+def test_tensorflow_basic_math():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.constant(0, dtype=tensorflow.float32)
+    s =  tensorflow.Session()
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_placeholders():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s =  tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
