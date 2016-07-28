@@ -882,6 +882,46 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
+def solvify(f, symbol, domain=S.Reals):
+    from sympy.calculus.util import periodicity
+    solutions = solveset(f, symbol, domain)
+    result = None
+    if solutions is S.EmptySet:
+        result = []
+
+    elif isinstance(solutions, ConditionSet):
+        raise NotImplementedError
+
+    elif isinstance(solutions, FiniteSet):
+        result = list(solutions)
+
+       
+    else:
+        period = periodicity(f, symbol)
+        if period is not None:
+            my_sols = S.EmptySet
+            if isinstance(solutions, ImageSet):
+                sols = (solutions,)
+            elif isinstance(solutions, Union):
+                if all(isinstance(i, ImageSet) for i in solutions.args):
+                    sols = solutions.args
+
+            for sol in sols:
+                my_sols += sol.intersect(Interval(0, period))
+
+            if isinstance(my_sols, FiniteSet):
+                result = list(my_sols)
+
+        else:
+            temp = solutions.intersect(domain)
+            if isinstance(temp, FiniteSet):
+                result += temp
+
+
+    return result
+
+
+
 ###############################################################################
 ################################ LINSOLVE #####################################
 ###############################################################################
