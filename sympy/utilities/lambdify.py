@@ -7,7 +7,6 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
-import tensorflow as tf
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins)
