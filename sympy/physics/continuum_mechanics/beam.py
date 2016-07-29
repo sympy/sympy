@@ -35,8 +35,8 @@ class Beam(object):
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
-    >>> b.apply_load(order=-1, value=-9, start=4)
-    >>> b.apply_load(order=-1, value=-3, start=0)
+    >>> b.apply_load(value=-9, order=-1, start=4)
+    >>> b.apply_load(value=-3, order=-1, start=0)
     >>> b.apply_load(order=0, value=6, start=2)
     >>> b.bc_deflection = [(4, 0)]
     >>> b.boundary_conditions
@@ -135,12 +135,16 @@ class Beam(object):
         """
         Returns a dictionary of boundary conditions applied on the beam.
         The dictionary has three kewwords namely moment, slope and deflection.
-        The value of each kewword is a list of tuple, where each tuple
+        The value of each keyword is a list of tuple, where each tuple
         contains loaction and value of a boundary condition in the format
         (location, value).
 
         Examples
         ========
+        There is a beam of length 4 meters. The bending moment at 0 should be 4
+        and at 4 it should be 0. The slope of the beam should be 1 at 0. The
+        deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
@@ -183,8 +187,50 @@ class Beam(object):
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
 
-
     def apply_load(self, value, start, order):
+        """
+        This method adds up the loads given to a particular beam object.
+
+        Parameters
+        ==========
+        value :
+            The magnitude of an applied load.
+        start :
+            The starting point of the applied load.
+        end :
+            An optional argument that can be used if the load have an end point
+            within the length of the beam.
+        order :
+            The order of the applied load.
+
+            For Moments, order = -2
+            For Pointloads, order = -1
+            For constant distributed load, order = 0
+            For Ramp load, order = 1
+            For Parabolic Ramp, order = 2
+            ... so on.
+
+        Examples
+        ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(4, E, I)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.load
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
+
+        """
         x = self.variable
         value = sympify(value)
         start = sympify(start)
@@ -200,14 +246,21 @@ class Beam(object):
 
         Examples
         ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(order=-2, value=-3, start=0)
-        >>> b.apply_load(order=-1, value=4, start=2)
-        >>> b.apply_load(order=2, value=-2, start=3)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
@@ -220,14 +273,23 @@ class Beam(object):
 
         Examples
         ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam. The bending moment at 0 should be 4 and
+        at 4 it should be 0. The slope of the beam should be 1 at 0. The
+        deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(order=-2, value=-3, start=0)
-        >>> b.apply_load(order=-1, value=4, start=2)
-        >>> b.apply_load(order=2, value=-2, start=3)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -246,14 +308,23 @@ class Beam(object):
 
         Examples
         ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam. The bending moment at 0 should be 4 and
+        at 4 it should be 0. The slope of the beam should be 1 at 0. The
+        deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(order=-2, value=-3, start=0)
-        >>> b.apply_load(order=-1, value=4, start=2)
-        >>> b.apply_load(order=2, value=-2, start=3)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -287,14 +358,23 @@ class Beam(object):
 
         Examples
         ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam. The bending moment at 0 should be 4 and
+        at 4 it should be 0. The slope of the beam should be 1 at 0. The
+        deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(order=-2, value=-3, start=0)
-        >>> b.apply_load(order=-1, value=4, start=2)
-        >>> b.apply_load(order=2, value=-2, start=3)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -326,14 +406,23 @@ class Beam(object):
 
         Examples
         ========
+        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
+        applied in the clockwise direction at the starting point of the beam.
+        A pointload of magnitude 4 N is applied from the top of the beam at
+        2 meters from the starting point and a parabolic ramp load of magnitude
+        2 Nm/m is applied below the beam starting from 3 meters away from the
+        starting point of the beam. The bending moment at 0 should be 4 and
+        at 4 it should be 0. The slope of the beam should be 1 at 0. The
+        deflection should be 2 at 0.
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(order=-2, value=-3, start=0)
-        >>> b.apply_load(order=-1, value=4, start=2)
-        >>> b.apply_load(order=2, value=-2, start=3)
+        >>> b.apply_load(value=-3, order=-2, start=0)
+        >>> b.apply_load(value=4, order=-1, start=2)
+        >>> b.apply_load(value=-2, order=2, start=3)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
