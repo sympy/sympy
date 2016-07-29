@@ -310,6 +310,7 @@ before_install:
     fi
   - |
     if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
+      pip install mpmath;
       if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
         pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp27-none-linux_x86_64.whl;
       elif [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
