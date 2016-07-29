@@ -24,6 +24,11 @@ class Beam(object):
 
     Examples
     ========
+    There is a beam of length 4 meters. A constant distributed load of 6 Nm/m
+    is applied from half of the beam till the end. There are two supports below
+    the beam, one at the starting point and another at the ending point of the beam.
+    The deflection of the beam at the end is resticted.
+
     >>> from sympy.physics.continuum_mechanics.beam import Beam
     >>> from sympy import Symbol, Piecewise
     >>> x = Symbol('x')
@@ -57,8 +62,8 @@ class Beam(object):
 
         Parameters
         ==========
-        length : Sympifyable
-            A SymPy expression representing the Beam's length.
+        length :
+            A Symbol or value representing the Beam's length.
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material.
