@@ -63,9 +63,9 @@ def test_Beam():
         'slope': [(0, 1), (4, 3), (5, 0)]}
 
     b1 = Beam(2, E, I)
-    b1.apply_load(order=-2, value=-3, start=0)
-    b1.apply_load(order=-1, value=4, start=2)
-    b1.apply_load(order=2, value=-2, start=3)
+    b1.apply_load(value=-3, start=0, order=-2)
+    b1.apply_load(value=4, start=2, order=-1)
+    b1.apply_load(value=-2, start=3, order=2)
 
     b1.bc_moment = [(0, 4), (4, 0)]
     b1.bc_deflection = [(0, 2)]

@@ -35,9 +35,9 @@ class Beam(object):
     >>> E = Symbol('E')
     >>> I = Symbol('I')
     >>> b = Beam(4, E, I)
-    >>> b.apply_load(value=-9, order=-1, start=4)
-    >>> b.apply_load(value=-3, order=-1, start=0)
-    >>> b.apply_load(order=0, value=6, start=2)
+    >>> b.apply_load(value=-9, start=4, order=-1)
+    >>> b.apply_load(value=-3, start=0, order=-1)
+    >>> b.apply_load(order=0, start=2, value=6)
     >>> b.bc_deflection = [(4, 0)]
     >>> b.boundary_conditions
     {'deflection': [(4, 0)], 'moment': [], 'slope': []}
@@ -224,9 +224,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
 
@@ -258,9 +258,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
@@ -287,9 +287,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -322,9 +322,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -372,9 +372,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
@@ -420,9 +420,9 @@ class Beam(object):
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, order=-2, start=0)
-        >>> b.apply_load(value=4, order=-1, start=2)
-        >>> b.apply_load(value=-2, order=2, start=3)
+        >>> b.apply_load(value=-3, start=0, order=-2)
+        >>> b.apply_load(value=4, start=2, order=-1)
+        >>> b.apply_load(value=-2, start=3, order=2)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
