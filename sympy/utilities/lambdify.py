@@ -123,7 +123,7 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "sympy", "tensorflow".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
@@ -187,7 +187,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy", "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -370,6 +370,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if _module_present('numexpr',namespaces) and printer is None:
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
+
+    if _module_present('tensorflow',namespaces) and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import TensorflowPrinter as printer
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):

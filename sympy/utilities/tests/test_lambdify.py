@@ -8,7 +8,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct)
+    DotProduct, Eq)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -486,6 +486,46 @@ def test_tensorflow_placeholders():
     a = tensorflow.placeholder(dtype=tensorflow.float32)
     s = tensorflow.Session()
     assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+def test_tensorflow_variables():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.Variable(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    s.run(tensorflow.initialize_all_variables())
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_logical_operations():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Not(And(Or(x, y), y))
+    func = lambdify([x, y], expr, modules="tensorflow")
+    a = tensorflow.constant(False)
+    b = tensorflow.constant(True)
+    s = tensorflow.Session()
+    assert func(a, b).eval(session=s) == 0
+
+def test_tensorflow_piecewise():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
+    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+def test_tensorflow_relational():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = x >= 0
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 1})
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
