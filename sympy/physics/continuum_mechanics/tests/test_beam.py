@@ -95,3 +95,50 @@ def test_Beam():
     p = b1.deflection()
     q = -71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2
     assert p == q/(E*I)
+
+    # Test using symbols
+    l = Symbol('l')
+    w0 = Symbol('w0')
+    w1 = Symbol('w2')
+    w2 = Symbol('w2')
+    a1 = Symbol('a1')
+    b = Symbol('b')
+    b1 = Symbol('b1')
+    c = Symbol('c')
+    c1 = Symbol('c1')
+    d = Symbol('d')
+
+    b2 = Beam(l, E, I)
+
+    b2.apply_load(w0, a1, 1)
+    b2.apply_load(w1, b1, -2)
+    b2.apply_load(w2, c1, -1)
+
+    b2.bc_deflection = [(c, d)]
+
+    # Test for load distribution function.
+    p = b2.load
+    q = w0*SingularityFunction(x, a1, 1) + w2*SingularityFunction(x, b1, -2) + w2*SingularityFunction(x, c1, -1)
+    assert p == q
+
+    # Test for shear force distribution function
+    p = b2.shear_force()
+    q = w0*SingularityFunction(x, a1, 2)/2 + w2*SingularityFunction(x, b1, -1) + w2*SingularityFunction(x, c1, 0)
+    assert p == q
+
+    # Test for bending moment distribution function
+    p = b2.bending_moment()
+    q = -w0*SingularityFunction(x, a1, 3)/6 - w2*SingularityFunction(x, b1, 0) - w2*SingularityFunction(x, c1, 1)
+    assert p == q
+
+    # Test for slope distribution function
+    p = b2.slope()
+    q = (-w0*SingularityFunction(x, a1, 4)/24 - w2*SingularityFunction(x, b1, 1) - w2*SingularityFunction(x, c1, 2)/2 +
+        (d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
+    assert p == q/(E*I)
+
+    # Test for deflection distribution function
+    p = b2.deflection()
+    q = (-w0*SingularityFunction(x, a1, 5)/120 - w2*SingularityFunction(x, b1, 2)/2 - w2*SingularityFunction(x, c1, 3)/6 +
+        x*(d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
+    assert p == q/(E*I)
