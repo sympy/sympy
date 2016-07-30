@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
-from sympy.combinatorics.free_group import free_group
+from sympy.combinatorics.free_groups import free_group
 
 """
 References
