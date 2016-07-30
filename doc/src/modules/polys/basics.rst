@@ -20,8 +20,8 @@ Basic concepts
 Polynomials
 -----------
 
-Given a family `(x_i)` of symbols, or other suitable objects,
-expressions derived from them by repeated addition, subtraction
+Given a family `(x_i)` of symbols, or other suitable objects, including
+numbers, expressions derived from them by repeated addition, subtraction
 and multiplication are called *polynomial expressions in the
 generators* `x_i`.
 
@@ -36,17 +36,37 @@ generators and `\nu = (\nu_1, \nu_2, \ldots, \nu_n)` is the
 family of exponents.
 
 When all monomials having the same exponents are combined, the polynomial
+expression
 becomes a sum of products `c_\nu x^\nu`, called the *terms* of the polynomial,
 where the *coefficients* `c_\nu` are integers.
-If some of the `x_i` are integers, they are incorporated
-in the coefficients and not regarded as generators.
+If some of the `x_i` are manifest numbers, they are incorporated
+in the coefficients and not regarded as generators. Such coefficients
+are typically rational, real or complex numbers. Some symbolic numbers,
+e.g., ``pi``, can be either coefficients or generators.
 
-The set of all polynomials
+A polynomial expression that is a sum of terms with different
+monomials is uniquely determined by its family of coefficients
+`(c_\nu)`. Such an expression is customarily called a *polynomial*,
+though, more properly, that name does stand for the coefficient
+family once the generators are given.
+SymPy implements polynomials by default as dictionaries with monomials
+as keys and coefficients as values. Another implementation consists
+of nested lists of coefficients.
+
+The set of all polynomials with integer coefficients
 in the generators `x_i` is a *ring*, i.e., the sums, differences and
 products of its elements are again polynomials in the same generators.
 This ring is denoted `\mathbb{Z}[x_1, x_2, \ldots, x_n]`, or
 `\mathbb{Z}[(x_i)]`, and called
 the *ring of polynomials in the* `x_i` *with integer coefficients*.
+
+More generally, the coefficients of a polynomial can be elements of
+any commutative ring `A`, and the corresponding polynomial ring
+is then denoted `A[x_1, x_2, \dots, x_n]`. The ring `A` can also
+be a polynomial ring. In SymPy, the coefficient ring is called the
+``domain`` of the polynomial ring, and it can be given as a
+keyword parameter. By default, it is determined by the coefficients
+of the polynomial arguments.
 
 Polynomial expressions can be transformed into polynomials by the
 method :func:`as_poly`::
@@ -55,8 +75,6 @@ method :func:`as_poly`::
     >>> e.as_poly()
     Poly(x*y - 2*x*z + y**2 - 2*y*z, x, y, z, domain='ZZ')
 
-More generally, it is possible to construct polynomials with
-other types of coefficients.
 If a polynomial expression contains numbers that are not integers,
 they are regarded as coefficients and the coefficient ring is
 extended accordingly. In particular, division by integers
@@ -106,9 +124,10 @@ must not contain negative powers of generators*::
 It is important to realize that the generators `x` and `1/x = x^{-1}` are
 treated as algebraically independent variables. In particular, their product
 is not equal to 1. Hence *generators in denominators should be avoided even
-if they raise no error*. Similar problems emerge with
-rational powers of generators. So, for example, ``x`` and
-``sqrt(x) = x**(1/2)`` are not recognized as algebraically dependent.
+if they raise no error in the current implementation*. This behavior is
+undesirable and may change in the future. Similar problems emerge with
+rational powers of generators. So, for example, `x` and
+`\sqrt x = x^{1/2}` are not recognized as algebraically dependent.
 
 If there are algebraic numbers in an expression, it is possible to
 adjoin them to the coefficient ring by setting the keyword ``extension``::
@@ -119,10 +138,12 @@ adjoin them to the coefficient ring by setting the keyword ``extension``::
     >>> e.as_poly(extension=True)
     Poly(x + sqrt(2), x, domain='QQ<sqrt(2)>')
 
-With the default setting ``extension=False`` `x` and `\sqrt 2` are
-incorrectly considered algebraically independent. With coefficients in
-the extension field `\mathbb{Q}(\sqrt 2)` the square root is treated
-properly as an algebraic number.
+With the default setting ``extension=False``, both `x` and `\sqrt 2` are
+incorrectly considered algebraically independent variables. With
+coefficients in the extension field `\mathbb{Q}(\sqrt 2)`
+the square root is treated properly as an algebraic number. Setting
+``extension=True`` whenever algebraic numbers are involved is definitely
+recommended even though it is not forced in the current implementation.
 
 Divisibility
 ------------
@@ -227,8 +248,31 @@ each nonzero element of the domain and having the following property:
 The ring of integers and all univariate polynomial rings over fields
 are Euclidean domains with `w(a) = |a|` resp. `w(a) = \deg(a)`.
 
+The division identity for integers is implemented in Python as the built-in
+function :func:`divmod` that can also be applied to SymPy Integers::
+
+    >>> divmod(Integer(53), Integer(7))
+    (7, 4)
+
+For polynomials the division identity is given in SymPy by the
+function :func:`div`::
+
+    >>> f = 5*x**2 + 10*x + 3
+    >>> g = 2*x + 2
+
+    >>> q, r = div(f, g, domain='QQ')
+    >>> q
+    5*x   5
+    --- + -
+     2    2
+    >>> r
+    -2
+    >>> (q*g + r).expand()
+       2
+    5*x  + 10*x + 3
+
 The division identity can be used to determine the divisibility
-of elements of a Euclidean domain.
+of elements in a Euclidean domain.
 If `r = 0` in the division identity, then `a` is divisible by `b`.
 Conversely, if `a = cb` for some element `c`, then `(c - q)b = r`.
 It follows that `c = q` and `r = 0` if `w` has the additional property:
@@ -244,6 +288,23 @@ computation of a greatest common divisor by means of the
 `Euclidean algorithm <https://en.wikipedia.org/wiki/Euclidean_algorithm>`_.
 It applies to two elements of a Euclidean domain. A gcd of several
 elements can be obtained by iteration.
+
+The function for computing the greatest common divisor of integers in
+SymPy is currently :func:`igcd`::
+
+    >>> igcd(2, 4)
+    2
+    >>> igcd(5, 10, 15)
+    5
+
+For univariate polynomials over a field the function has its common
+name :func:`gcd`, and the returned polynomial is monic::
+
+    >>> f = 4*x**2 - 1
+    >>> g = 8*x**3 + 1
+    >>> gcd(f, g, domain=QQ)
+    x + 1/2
+
 
 Divisibility of polynomials
 ```````````````````````````
@@ -325,7 +386,14 @@ Another important consequence is that a greatest common divisor
 of two polynomials in `\mathbb{Z}[x]` can be found efficiently
 by applying the Euclidean algorithm separately to their contents
 and primitive parts in the Euclidean domains `\mathbb{Z}` and
-`\mathbb{Q}[x]`.
+`\mathbb{Q}[x]`. This is also implemented in SymPy::
+
+    >>> f = 4*x**2 - 1
+    >>> g = 8*x**3 + 1
+    >>> gcd(f, g)
+    2*x + 1
+    >>> gcd(6*f, 3*g)
+    6*x + 3
 
 Basic functionality
 ===================
