@@ -354,7 +354,10 @@ class HolonomicFunction(object):
     Given two Holonomic Functions f and g, their sum, product,
     integral and derivative is also a Holonomic Function.
 
-    For regular singular points initial conditions can also be provided in the
+    For ordinary points initial condition should be a vector of values of
+    the derivatives i.e. [y(x0), y'(x0), y''(x0) ...].
+
+    For regular singular points initial conditions can also be provided in this
     format:
     {s0: [C_0, C_1, ...], s1: [C0_0, C0_1, ...], ...}
     where s0, s1, ... are the roots of indicial equation and vectors
@@ -396,48 +399,45 @@ class HolonomicFunction(object):
 
     # an example of initial conditions for regular singular points
     # only one root `1/2` of the indicial equation. So ics is [(1/2, [1])]
-    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]})
+
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]})
     HolonomicFunction((-1/2) + (x)Dx, x), {1/2: [1]}
 
-    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]}).to_expr()
+    >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_expr()
     sqrt(x)
 
     """
 
     _op_priority = 20
 
-    def __init__(self, annihilator, x, x0=0, y0=[], singular_ics=None):
+    def __init__(self, annihilator, x, x0=0, y0=None):
         """
         Takes the annihilator and variable of the function.
-        x0 is the point for which initial conditions are given and
-        y0 is a vector of initial values y0 = [f(x0), f'(x0), f''(x0) ...]
+
+        `x0` is the point for which initial conditions are given and
+        `y0` is the initial condition.
+
+        For ordinary points `y0` should be a vector of initial values
+        y0 = [f(x0), f'(x0), f''(x0) ...].
+
         To make the function unique, length of the vector `y0` must be equal to or
         greater than the order of differential equation.
         """
-        # initial conditions as a list [f(x0), f'(x0), ...]
-        if not isinstance(y0, list):
-            self.y0 = [y0]
-        else:
-            self.y0 = y0
 
-        if len(self.y0) == 0:
-            self._have_init_cond = False
-        else:
-            self._have_init_cond = True
+        # initial condition
+        self.y0 = y0
         # the point for initial conditions, defualt is zero.
         self.x0 = x0
         # differential operator L such that L.f = 0
         self.annihilator = annihilator
         self.x = x
-        # conditions for regular singular points
-        self.singular_ics = singular_ics
 
     def __repr__(self):
         str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
-        if not self._have_init_cond and self.singular_ics == None:
+        if not self._have_init_cond():
             return str_sol
-        elif self.singular_ics:
-            str_sol += ', ' + sstr(self.singular_ics)
+        elif self.is_singularics():
+            str_sol += ', ' + sstr(self.y0)
             return str_sol
         else:
             cond_str = ''
@@ -477,6 +477,28 @@ class HolonomicFunction(object):
         sol2 = HolonomicFunction(sol2, other.x, other.x0, other.y0)
 
         return (sol1, sol2)
+
+    def is_singularics(self):
+        """
+        Returns True if the function have singular initial condition
+        in the dictionary format.
+
+        Returns False if the function have ordinary initial condition
+        in the list format.
+
+        Returns None for all other cases.
+        """
+
+        if isinstance(self.y0, dict):
+            return True
+        elif isinstance(self.y0, list):
+            return False
+
+    def _have_init_cond(self):
+        """
+        Checks if the function have initial condition.
+        """
+        return bool(self.y0)
 
     def __add__(self, other):
         # if the ground domains are different
@@ -566,15 +588,20 @@ class HolonomicFunction(object):
         # annihilator of the solution
         sol = sol1 * (self.annihilator)
         sol = _normalize(sol.listofpoly, self.annihilator.parent, negative=False)
-        # solving initial conditions
-        if self._have_init_cond and other._have_init_cond:
 
+        if not (self._have_init_cond() and other._have_init_cond()):
+            return HolonomicFunction(sol, self.x)
+
+        # both the functions have ordinary initial conditions
+        if self.is_singularics() == False and other.is_singularics() == False:
+
+            # directly add the corresponding value
             if self.x0 == other.x0:
                 # try to extended the initial conditions
                 # using the annihilator
-                y0_self = _extend_y0(self, sol.order)
-                y0_other = _extend_y0(other, sol.order)
-                y0 = [a + b for a, b in zip(y0_self, y0_other)]
+                y1 = _extend_y0(self, sol.order)
+                y2 = _extend_y0(other, sol.order)
+                y0 = [a + b for a, b in zip(y1, y2)]
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
@@ -600,23 +627,22 @@ class HolonomicFunction(object):
 
         if self.x0 != other.x0:
             return HolonomicFunction(sol, self.x)
+
         # if the functions have singular_ics
         y1 = None
         y2 = None
 
-        if self._have_init_cond and other.singular_ics:
+        if self.is_singularics() == False and other.is_singularics() == True:
             y1 = {S(0):self.y0}
-            y2 = other.singular_ics
-        elif self.singular_ics and other._have_init_cond:
-            y1 = self.singular_ics
+            y2 = other.y0
+        elif self.is_singularics() == True and other.is_singularics() == False:
+            y1 = self.y0
             y2 = {S(0):other.y0}
-        elif self.singular_ics and other.singular_ics:
-            y1 = self.singular_ics
-            y2 = other.singular_ics
+        elif self.is_singularics() == True and other.is_singularics() == True:
+            y1 = self.y0
+            y2 = other.y0
 
-        if not (y1 and y2):
-            return HolonomicFunction(sol, self.x)
-        # computing singular_ics for the result
+        # computing singular initial condition for the result
         # taking union of the series terms of both functions
         y0 = {}
         for i in y1:
@@ -629,9 +655,7 @@ class HolonomicFunction(object):
         for i in y2:
             if not i in y1:
                 y0[i] = y2[i]
-        return HolonomicFunction(sol, self.x, self.x0, singular_ics=y0)
-
-        return HolonomicFunction(sol, self.x)
+        return HolonomicFunction(sol, self.x, self.x0, y0)
 
     def integrate(self, limits, initcond=False):
         """
@@ -647,7 +671,7 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
-        >>> HolonomicFunction(Dx - 1, x, 0, 1).integrate((x, 0, x))  # e^x - 1
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).integrate((x, 0, x))  # e^x - 1
         HolonomicFunction((-1)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
 
         # integrate(cos(x), (x 0, x)) = sin(x)
@@ -659,11 +683,10 @@ class HolonomicFunction(object):
         D = self.annihilator.parent.derivative_operator
 
         # if the function have initial conditions of the series format
-        if self.singular_ics:
+        if self.is_singularics() == True:
             y0 = {}
-            for i in self.singular_ics:
-                s = i
-                c = self.singular_ics[i]
+            for i in self.y0:
+                c = self.y0[i]
                 c2 = []
                 for j in range(len(c)):
                     if c[j] == 0:
@@ -671,18 +694,19 @@ class HolonomicFunction(object):
 
                     # if power on `x` is -1, the integration becomes log(x)
                     # TODO: Implement this case
-                    elif s + j + 1 == 0:
+                    elif i + j + 1 == 0:
                         raise NotImplementedError("logarithmic terms in the series are not supported")
                     else:
-                        c2.append(c[j] / S(s + j + 1))
-                if y0 == None:
-                    break
-                y0[s + 1] = c2
+                        c2.append(c[j] / S(i + j + 1))
+                y0[i + 1] = c2
 
-        # for indefinite integration
-        if (not limits) or (not self._have_init_cond):
-            if self.singular_ics:
-                return HolonomicFunction(self.annihilator * D, self.x, self.x0, singular_ics=y0)
+            if hasattr(limits, "__iter__"):
+                raise NotImplementedError("Definite integration for singular initial conditions")
+
+            return HolonomicFunction(self.annihilator * D, self.x, self.x0, y0)
+
+        # if no initial conditions are available for the function
+        if not self._have_init_cond():
             if initcond:
                 return HolonomicFunction(self.annihilator * D, self.x, self.x0, [S(0)])
             return HolonomicFunction(self.annihilator * D, self.x)
@@ -749,7 +773,7 @@ class HolonomicFunction(object):
         cos(x)
 
         # derivative of e^2*x
-        >>> HolonomicFunction(Dx - 2, x, 0, 1).diff().to_expr()
+        >>> HolonomicFunction(Dx - 2, x, 0, [1]).diff().to_expr()
         2*exp(2*x)
 
         See Also
@@ -780,9 +804,12 @@ class HolonomicFunction(object):
 
             sol = DifferentialOperator(ann.listofpoly[1:], ann.parent)
 
-            if self._have_init_cond:
-                return HolonomicFunction(sol, self.x, self.x0, self.y0[1:])
-
+            if self._have_init_cond():
+                # if ordinary initial condition
+                if self.is_singularics() == False:
+                    return HolonomicFunction(sol, self.x, self.x0, self.y0[1:])
+                # TODO: support for singular initial condition
+                return HolonomicFunction(sol, self.x)
             else:
                 return HolonomicFunction(sol, self.x)
 
@@ -804,7 +831,7 @@ class HolonomicFunction(object):
 
         sol = _normalize(sol[1:], self.annihilator.parent, negative=False)
 
-        if not self._have_init_cond:
+        if not self._have_init_cond() or self.is_singularics() == True:
             return HolonomicFunction(sol, self.x)
 
         y0 = _extend_y0(self, sol.order + 1)[1:]
@@ -813,7 +840,7 @@ class HolonomicFunction(object):
     def __eq__(self, other):
         if self.annihilator == other.annihilator:
             if self.x == other.x:
-                if self._have_init_cond and other._have_init_cond:
+                if self._have_init_cond() and other._have_init_cond():
                     if self.x0 == other.x0 and self.y0 == other.y0:
                         return True
                     else:
@@ -834,7 +861,7 @@ class HolonomicFunction(object):
             if not other.is_constant():
                 raise NotImplementedError(" Can't multiply a HolonomicFunction and expressions/functions.")
 
-            if not self._have_init_cond:
+            if not self._have_init_cond():
                 return self
             else:
                 y0 = _extend_y0(self, ann_self.order)
@@ -920,7 +947,10 @@ class HolonomicFunction(object):
 
         sol_ann = _normalize(sol[0][0:], self.annihilator.parent, negative=False)
 
-        if self._have_init_cond and other._have_init_cond:
+        if not (self._have_init_cond() and other._have_init_cond()):
+            return HolonomicFunction(sol_ann, self.x)
+
+        if self.is_singularics() == False and other.is_singularics() == False:
 
             # if both the conditions are at same point
             if self.x0 == other.x0:
@@ -973,20 +1003,19 @@ class HolonomicFunction(object):
         if self.x0 != other.x0:
             return HolonomicFunction(sol_ann, self.x)
 
+        # if the functions have singular_ics
         y1 = None
         y2 = None
 
-        if self._have_init_cond and other.singular_ics:
+        if self.is_singularics() == False and other.is_singularics() == True:
             y1 = {S(0):self.y0}
-            y2 = other.singular_ics
-        elif self.singular_ics and other._have_init_cond:
-            y1 = self.singular_ics
+            y2 = other.y0
+        elif self.is_singularics() == True and other.is_singularics() == False:
+            y1 = self.y0
             y2 = {S(0):other.y0}
-        elif self.singular_ics and other.singular_ics:
-            y1 = self.singular_ics
-            y2 = other.singular_ics
-        if not (y1 and y2):
-            return HolonomicFunction(sol_ann, self.x)
+        elif self.is_singularics() == True and other.is_singularics() == True:
+            y1 = self.y0
+            y2 = other.y0
 
         y0 = {}
         # multiply every possible pair of the series terms
@@ -1003,9 +1032,7 @@ class HolonomicFunction(object):
                     y0[i + j] = c
                 else:
                     y0[i + j] = [a + b for a, b in zip(c, y0[i + j])]
-        return HolonomicFunction(sol_ann, self.x, self.x0, singular_ics=y0)
-
-        return HolonomicFunction(sol_ann, self.x)
+        return HolonomicFunction(sol_ann, self.x, self.x0, y0)
 
     __rmul__ = __mul__
 
@@ -1110,8 +1137,8 @@ class HolonomicFunction(object):
 
         # if initial conditions are given for the resulting function
         if args:
-            return HolonomicFunction(sol, self.x, args[0], args[1], **kwargs)
-        return HolonomicFunction(sol, self.x, **kwargs)
+            return HolonomicFunction(sol, self.x, args[0], args[1])
+        return HolonomicFunction(sol, self.x)
 
     def to_sequence(self, lb=True):
         """
@@ -1150,7 +1177,7 @@ class HolonomicFunction(object):
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
 
-        >>> HolonomicFunction(-S(1)/2 + x*Dx, x, x0=0, singular_ics={S(1)/2: [1]}).to_sequence()
+        >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_sequence()
         [(HolonomicSequence((n), n), u(0) = 1, 1/2, 1)]
 
         See Also
@@ -1352,9 +1379,9 @@ class HolonomicFunction(object):
 
         # if initial conditions are provided
         # then use them.
-        if self.singular_ics:
+        if self.is_singularics() == True:
             rootstoconsider = []
-            for i in self.singular_ics:
+            for i in self.y0:
                 if i in indicialroots:
                     rootstoconsider.append(i)
 
@@ -1372,7 +1399,7 @@ class HolonomicFunction(object):
 
         elif not allpos:
 
-            if not self._have_init_cond or S(self.y0[0]).is_finite ==  False:
+            if not self._have_init_cond() or S(self.y0[0]).is_finite ==  False:
                 rootstoconsider = [min(reals)]
 
             else:
@@ -1446,16 +1473,16 @@ class HolonomicFunction(object):
 
             u0 = []
 
-            if p >= 0 and int(p) == p and len(rootstoconsider) == 1:
+            if self.is_singularics() == True:
+                if p in self.y0:
+                        u0 = self.y0[p]
+
+            elif self.is_singularics() == False and p >= 0 and int(p) == p and len(rootstoconsider) == 1:
                 y0 = _extend_y0(self, order + int(p))
                 # u(n) = y^n(0)/factorial(n)
                 if len(y0) > int(p):
                     for i in range(int(p), len(y0)):
                         u0.append(y0[i] / factorial(i))
-
-            if self.singular_ics:
-                if p in self.singular_ics:
-                        u0 = self.singular_ics[p]
 
             if len(u0) < order:
 
@@ -1749,9 +1776,9 @@ class HolonomicFunction(object):
         sol = [base.from_sympy(base.to_sympy(i).subs(x, x + a)) for i in listaftershift]
         sol = DifferentialOperator(sol, self.annihilator.parent)
         x0 = self.x0 - a
-        if not self._have_init_cond:
-            return HolonomicFunction(sol, x, x0, singular_ics=self.singular_ics)
-        return HolonomicFunction(sol, x, x0, self.y0, singular_ics=self.singular_ics)
+        if not self._have_init_cond():
+            return HolonomicFunction(sol, x)
+        return HolonomicFunction(sol, x, x0, self.y0)
 
     def to_hyper(self, as_list=False, _recur=None):
         """
@@ -1778,7 +1805,7 @@ class HolonomicFunction(object):
         x*hyper((), (3/2,), -x**2/4)
 
         # exp(x)
-        >>> HolonomicFunction(Dx - 1, x, 0, 1).to_hyper()
+        >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_hyper()
         hyper((), (), x)
 
         See Also
@@ -2180,7 +2207,7 @@ domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=None, singular_ics=None):
+def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=None, y0=None):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -2226,7 +2253,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
             domain = domain[extra_syms].get_field()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain, singular_ics=singular_ics)
+    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain, y0=y0)
     if solpoly:
         return solpoly
 
@@ -2252,33 +2279,33 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
             sol = _convert_meijerint(func, x, initcond=False, domain=domain)
             if not sol:
                 raise NotImplementedError
-            if singular_ics:
-                sol.singular_ics = singular_ics
-            if singular_ics or not initcond:
+            if y0:
+                sol.y0 = y0
+            if y0 or not initcond:
                 sol.x0 = x0
                 return sol
             if not lenics:
                 lenics = sol.annihilator.order
-            y0 = _find_conditions(func, x, x0, lenics)
-            while not y0:
+            _y0 = _find_conditions(func, x, x0, lenics)
+            while not _y0:
                 x0 += 1
-                y0 = _find_conditions(func, x, x0, lenics)
-            return HolonomicFunction(sol.annihilator, x, x0, y0)
+                _y0 = _find_conditions(func, x, x0, lenics)
+            return HolonomicFunction(sol.annihilator, x, x0, _y0)
 
-        if singular_ics or not initcond:
+        if y0 or not initcond:
             sol = sol.composition(func.args[0])
-            if singular_ics:
-                sol.singular_ics = singular_ics
+            if y0:
+                sol.y0 = y0
             sol.x0 = x0
             return sol
         if not lenics:
             lenics = sol.annihilator.order
 
-        y0 = _find_conditions(func, x, x0, lenics)
-        while not y0:
+        _y0 = _find_conditions(func, x, x0, lenics)
+        while not _y0:
             x0 += 1
-            y0 = _find_conditions(func, x, x0, lenics)
-        return sol.composition(func.args[0], x0, y0)
+            _y0 = _find_conditions(func, x, x0, lenics)
+        return sol.composition(func.args[0], x0, _y0)
 
     # iterate though the expression recursively
     args = func.args
@@ -2299,21 +2326,21 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
 
     if not sol:
         raise NotImplementedError
-    if singular_ics:
-        sol.singular_ics = singular_ics
-    if singular_ics or not initcond:
+    if y0:
+        sol.y0 = y0
+    if y0 or not initcond:
         sol.x0 = x0
         return sol
-    if sol.singular_ics:
+    if sol.y0:
         return sol
     if not lenics:
         lenics = sol.annihilator.order
-    y0 = _find_conditions(func, x, x0, lenics)
-    while not y0:
+    _y0 = _find_conditions(func, x, x0, lenics)
+    while not _y0:
         x0 += 1
-        y0 = _find_conditions(func, x, x0, lenics)
+        _y0 = _find_conditions(func, x, x0, lenics)
 
-    return HolonomicFunction(sol.annihilator, x, x0, y0)
+    return HolonomicFunction(sol.annihilator, x, x0, _y0)
 
 
 ## Some helper functions ##
@@ -2533,7 +2560,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, singular_ics=None):
+def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, y0=None):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -2583,7 +2610,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if singular_ics == None and x0 == 0 and is_singular:
+        if y0 == None and x0 == 0 and is_singular:
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
@@ -2592,10 +2619,10 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
                     coeff = S(j)**ratexp
                     indicial = S(i) * ratexp
                     break
-            singular_ics = {indicial: [coeff]}
+            y0 = {indicial: [coeff]}
 
-    if singular_ics or not initcond:
-        return HolonomicFunction(sol, x, x0=x0, singular_ics=singular_ics)
+    if y0 or not initcond:
+        return HolonomicFunction(sol, x, x0, y0)
 
     if not lenics:
         lenics = sol.order
