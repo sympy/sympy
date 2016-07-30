@@ -379,7 +379,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True):
+def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
     """Solves a real univariate inequality.
 
     Examples
@@ -397,8 +397,8 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
     """
     from sympy.calculus.util import periodicity
-    from sympy.solvers.solvers import solve, denoms
-    from sympy.solvers.solveset import solveset_real
+    from sympy.solvers.solvers import denoms
+    from sympy.solvers.solveset import solveset_real, solvify
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -415,23 +415,15 @@ def solve_univariate_inequality(expr, gen, relational=True):
     else:
         solns = None
         e = expr.lhs - expr.rhs
+        solns = solvify(e, gen, domain)
 
-        parts = n, d = e.as_numer_denom()
-        if all(i.is_polynomial(gen) for i in parts):
-            solns = solve(n, gen, check=False)
-            singularities = solve(d, gen, check=False)
-        elif solns is None:
-            period = periodicity(e, gen)
-            if not period is None:
-                gen_solns = solveset_real(e, gen)
-                if isinstance(gen_solns, (ImageSet, Union)) or gen_solns is S.EmptySet:
-                    solns = gen_solns.intersect(Interval(0, period))
-            else:
-                solns = solve(e, gen, check=False)
+        if solns is None:
+            return None
 
+        else:
             singularities = []
             for d in denoms(e):
-                singularities.extend(solve(d, gen))
+                singularities.extend(solvify(d, gen, domain))
 
         include_x = expr.func(0, 0)
 
