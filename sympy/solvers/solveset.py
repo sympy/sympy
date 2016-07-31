@@ -882,6 +882,166 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
+def _unsolved_syms(eq, all_symbols, known_symbols=set([]), sort=False):
+    """Returns the unsolved symbol present
+    in the equation `eq`.
+    """
+    from sympy.core.compatibility import default_sort_key
+    free = eq.free_symbols
+    unsolved = (free - set(known_symbols)) & set(all_symbols)
+    if sort:
+        unsolved = list(unsolved)
+        unsolved.sort(key=default_sort_key)
+    return unsolved
+# end of _unsolved_syms()
+
+
+def _sort_eqs(system, all_symbols, known_symbols=set([])):
+    from sympy.core.compatibility import ordered
+    _eq_unsolved_sym = {}
+    for eq in system:
+        _eq_unsolved_sym[eq] = _unsolved_syms(eq, all_symbols, known_symbols)
+
+    # sort such that equation with the fewest potential symbols is first.
+    # means eq with less variable first
+    eqs_sorted = list(
+        ordered(
+            system,
+            lambda _: len(_eq_unsolved_sym[_])
+        )
+    )
+    return eqs_sorted, _eq_unsolved_sym
+
+
+def eliminate(eqs, *symbols):
+    """
+
+    Eliminate the `symbols` from the equations and returns equation(s)
+    which does not contains `symbols`.
+
+    Parameters
+    ==========
+
+    eqs : list of equations
+        The target system of equations
+    symbols : list of Symbols
+        symbols to be eliminated
+
+    Raises
+    ======
+
+    ValueError
+        The input is not valid.
+    NotImplementedError
+        The value for symbol can not be substituted
+
+    Returns
+    =======
+
+    A FiniteSet of equations, does not contains `symbols`. If no such equation
+    is found then EmptySet.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import eliminate
+    >>> x, y, z = symbols('x, y, z', real=True)
+    >>> eliminate([x + y + z , y - z], y)
+    {-x - 2*z}
+    >>> eliminate([x + y + z , y - z, x - z], y)
+    {-x - 2*z, x - z}
+    >>> eliminate([x + y + z , y - z, x - y], y, z)
+    {3*x}
+    >>> eliminate([x + y + z], z, y)
+    EmptySet()
+
+    """
+    # It is implemented for domain=S.Reals
+    if not eqs:
+        return S.EmptySet
+
+    if not symbols:
+        return FiniteSet(*[eq for eq in eqs])
+
+    if hasattr(symbols[0], '__iter__'):
+        symbols = symbols[0]
+
+    try:
+        sym = symbols[0].is_Symbol
+    except AttributeError:
+        sym = False
+
+    if not sym:
+        msg = 'Symbols or iterable of symbols must be given as \
+        second argument, not type %s: %s'
+        raise ValueError(msg % (type(symbols[0]), symbols[0]))
+
+    res = []
+    for eq in eqs:
+        if simplify(eq).is_number:
+            eqs.remove(eq)
+        elif not eq.has(*symbols):
+            res.append(eq)
+            eqs.remove(eq)
+
+    if len(eqs) == 1:
+        eqs = simplify(eqs[0])
+        if not eqs.has(*symbols):
+            return FiniteSet(eqs)
+        else:
+            return S.EmptySet
+
+    eqs_new, eq_dict = _sort_eqs(eqs, symbols)
+    for eq in eqs_new[1:]:
+        eliminate_sym = eq_dict[eq]
+        eqs_used = dict(list(zip(eqs_new, [False for e in eqs_new])))
+        if len(eliminate_sym):
+            eq = simplify(eq.expand(force=True))
+            ind = eqs_new.index(eq)
+            while eliminate_sym:
+                # from prev eq, get the value and subs to this eq.
+                sym = eliminate_sym.pop()
+                prev = ind - 1
+                while(True):
+                    eq_prev = eqs_new[prev]
+                    if eq_prev.has(sym):
+                        break
+                    else:
+                        prev = prev - 1
+                        if prev < 0:
+                            # Can not eliminate symbol `sym`
+                            break
+
+                if not eqs_used[eq_prev] and eq_prev.has(sym):
+                    sym_, sym_value = invert_real(eq_prev, 0, sym)
+                    if sym != sym_:
+                        # Try solveset
+                        sym_value = solveset_real(
+                            sym_ - list(sym_value)[0],
+                            sym)
+                    if not isinstance(sym_value, FiniteSet):
+                        # If it is ImageSet, Union, Intersection, Complement
+                        if isinstance(sym_value, Intersection) \
+                                and sym_value.args[0] == S.Reals:
+                            sym_value = sym_value.args[1]
+                        else:
+                            msg = 'Unable to eliminate the symbol:  %s'
+                            raise NotImplementedError(msg % sym)
+                    sym_value = list(sym_value)[0]
+                    eq_new = eq.subs(sym, sym_value)
+                    # update
+                    eqs_new[ind] = eq_new
+                    eq = eq_new
+                    eqs_used[eq_prev] = True
+                    if not eq_new.has(*symbols):
+                        eqs_new.remove(eq_new)
+                        res.append(eq_new)
+                        break
+
+    return FiniteSet(*res)
+
+
 ###############################################################################
 ################################ LINSOLVE #####################################
 ###############################################################################

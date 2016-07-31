@@ -4515,7 +4515,7 @@ class MatrixBase(object):
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
         if not v[rank:, 0].is_zero:
-            raise ValueError("Linear system has no solution")
+           raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)
         free_var_index = permutation[len(pivots):]  # non-pivots columns are free variables
