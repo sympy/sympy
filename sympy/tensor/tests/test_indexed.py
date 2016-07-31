@@ -222,8 +222,7 @@ def test_differentiation():
     assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2
 
-    assert Sum(expr, (i, -oo, oo)).diff(hi) == oo
-    assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(2, (i, -oo, oo))
+    assert Sum(expr.diff(hi), (i, -oo, oo)).doit() == Sum(2, (i, -oo, oo)).doit()
     assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == oo
 
     expr = a * hj * hj / S(2)
@@ -258,7 +257,7 @@ def test_differentiation():
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (m, -oo, oo))
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]).doit() == a
     assert Sum(a*h[m], (n, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (n, -oo, oo))
-    assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]) == oo*a
+    assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]).doit() == oo*a
 
 
 def test_indexed_series():
