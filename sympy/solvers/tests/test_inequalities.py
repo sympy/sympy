@@ -12,7 +12,7 @@ from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, XFAIL
 
 
 inf = oo.evalf()
@@ -299,6 +299,7 @@ def test_issue_9954():
     assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
 
 
+@XFAIL
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
@@ -323,7 +324,8 @@ def test_issue_10198():
         -1 + 1/abs(1/x - 1) < 0) == Or(
         And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2)
         )
-    raises(NotImplementedError, lambda: reduce_inequalities(abs(1/sqrt(x)) - 1, x))
+    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Or(
+        And(-oo < x, x < 0), Eq(x, 1))
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
         And(S(0) < x, x < S(3)/4), And(S(3)/2 < x, x < oo))

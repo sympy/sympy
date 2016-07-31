@@ -536,18 +536,18 @@ def test_poly_gens():
         FiniteSet(-Rational(3, 2), S.Half)
 
 
+@XFAIL
 def test_uselogcombine_1():
     assert solveset_real(log(x - 3) + log(x + 3), x) == \
         FiniteSet(sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-
-
-@XFAIL
-def test_uselogcombine_2():
     assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
+
+@XFAIL
+def test_uselogcombine_2():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
         FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
@@ -562,16 +562,19 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
-    # issue 9565
+    raises(ValueError, lambda: solveset(abs(x) - 1, x))
+
+
+@XFAIL
+def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
 
-    # issue #10069
+
+@XFAIL
+def test_issue_10069():
     eq = abs(1/(x - 1)) - 1 > 0
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
     assert solveset_real(eq, x) == u
-    assert solveset(eq, x, domain=S.Reals) == u
-
-    raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
 @XFAIL
