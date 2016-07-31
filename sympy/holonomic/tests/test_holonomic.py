@@ -505,6 +505,7 @@ def test_expr_to_holonomic():
     assert p == q
     assert (expr_to_holonomic(sqrt(x) + sqrt(2*x)).to_expr()-\
         (sqrt(x) + sqrt(2*x))).simplify() == 0
+    assert expr_to_holonomic(3*x+2*sqrt(x)).to_expr() == 3*x+2*sqrt(x)
 
 def test_to_hyper():
     x = symbols('x')
@@ -580,6 +581,9 @@ def test_to_expr():
     assert (p.to_expr().subs({C_0:1, D_0:0}) - s).simplify() == 0
     p.y0 = {0: [1], S(1)/2: [0]}
     assert p.to_expr() == s
+    assert expr_to_holonomic(x**5).to_expr() == x**5
+    assert expr_to_holonomic(2*x**3-3*x**2).to_expr().expand() == \
+        2*x**3-3*x**2
 
 def test_integrate():
     x = symbols('x')

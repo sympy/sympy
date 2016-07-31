@@ -434,11 +434,17 @@ class HolonomicFunction(object):
 
     def __repr__(self):
         str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
+
         if not self._have_init_cond():
             return str_sol
+
+        # printing the singular initial condition
+        # in valid python
         elif self.is_singularics():
             str_sol += ', ' + sstr(self.y0)
             return str_sol
+
+        # for ordinary initial conditions
         else:
             cond_str = ''
             diff_str = ''
@@ -502,10 +508,11 @@ class HolonomicFunction(object):
 
     def _singularics_to_ord(self):
         """
-        Converts a singular initial condition to ordinary.
+        Converts a singular initial condition to ordinary if possible.
         """
         a = list(self.y0)[0]
         b = self.y0[a]
+
         if len(self.y0) == 1 and a == int(a) and a > 0:
             y0 = []
             for i in range(a):
@@ -703,6 +710,8 @@ class HolonomicFunction(object):
             if r:
                 return r.integrate(limits, initcond=initcond)
 
+            # computing singular initial condition for the function
+            # produced after integration.
             y0 = {}
             for i in self.y0:
                 c = self.y0[i]
@@ -1494,8 +1503,7 @@ class HolonomicFunction(object):
             u0 = []
 
             if self.is_singularics() == True:
-                if p in self.y0:
-                        u0 = self.y0[p]
+                u0 = self.y0[p]
 
             elif self.is_singularics() == False and p >= 0 and int(p) == p and len(rootstoconsider) == 1:
                 y0 = _extend_y0(self, order + int(p))
@@ -1878,6 +1886,7 @@ class HolonomicFunction(object):
 
                 if i < 0 or int(i) != i:
                     continue
+
                 i = int(i)
                 if i < len(u0):
                     if isinstance(u0[i], (PolyElement, FracElement)):
@@ -2026,9 +2035,10 @@ class HolonomicFunction(object):
 
         if lenics == None and len(self.y0) > self.annihilator.order:
             lenics = len(self.y0)
+        dom = self.annihilator.parent.base.domain
 
         try:
-            sol = expr_to_holonomic(self.to_expr(), x=self.x, x0=b, lenics=lenics, domain=self.annihilator.parent.base.domain)
+            sol = expr_to_holonomic(self.to_expr(), x=self.x, x0=b, lenics=lenics, domain=dom)
         except (NotPowerSeriesError, NotHyperSeriesError):
             symbolic = False
 
@@ -2239,7 +2249,7 @@ domain_for_table = None
 from sympy.integrals.meijerint import _mytype
 
 
-def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=None, y0=None):
+def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, initcond=True):
     """
     Uses `meijerint._rewrite1` to convert to `meijerg` function and then
     eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
@@ -2270,11 +2280,10 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
             x= syms.pop()
         else:
             raise ValueError("Specify the variable for the function")
-    else:
-        if x in syms:
-            syms.remove(x)
+    elif x in syms:
+        syms.remove(x)
 
-    extra_syms = [i for i in syms]
+    extra_syms = list(syms)
 
     if domain == None:
         if func.has(Float):
@@ -2285,7 +2294,7 @@ def expr_to_holonomic(func, x=None, initcond=True, x0=0, lenics=None, domain=Non
             domain = domain[extra_syms].get_field()
 
     # try to convert if the function is polynomial or rational
-    solpoly = _convert_poly_rat_alg(func, x, initcond=initcond, x0=x0, lenics=lenics, domain=domain, y0=y0)
+    solpoly = _convert_poly_rat_alg(func, x, x0=x0, y0=y0, lenics=lenics, domain=domain, initcond=initcond)
     if solpoly:
         return solpoly
 
@@ -2622,7 +2631,7 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
 
     # if the function is constant
     if not func.has(x):
-        return HolonomicFunction(Dx, x, 0, func)
+        return HolonomicFunction(Dx, x, 0, [func])
 
     if ispoly:
         # differential equation satisfied by polynomial
