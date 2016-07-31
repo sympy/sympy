@@ -500,6 +500,20 @@ class HolonomicFunction(object):
         """
         return bool(self.y0)
 
+    def _singularics_to_ord(self):
+        """
+        Converts a singular initial condition to ordinary.
+        """
+        a = list(self.y0)[0]
+        b = self.y0[a]
+        if len(self.y0) == 1 and a == int(a) and a > 0:
+            y0 = []
+            for i in range(a):
+                y0.append(S(0))
+            y0 += b
+
+            return HolonomicFunction(self.annihilator, self.x, self.x0, y0)
+
     def __add__(self, other):
         # if the ground domains are different
         if self.annihilator.parent.base != other.annihilator.parent.base:
@@ -684,6 +698,11 @@ class HolonomicFunction(object):
 
         # if the function have initial conditions of the series format
         if self.is_singularics() == True:
+
+            r = self._singularics_to_ord()
+            if r:
+                return r.integrate(limits, initcond=initcond)
+
             y0 = {}
             for i in self.y0:
                 c = self.y0[i]
@@ -1382,8 +1401,9 @@ class HolonomicFunction(object):
         if self.is_singularics() == True:
             rootstoconsider = []
             for i in self.y0:
-                if i in indicialroots:
-                    rootstoconsider.append(i)
+                for j in indicialroots:
+                    if j == i:
+                        rootstoconsider.append(i)
 
         elif allpos and allint:
             rootstoconsider = [min(reals)]
@@ -1840,6 +1860,7 @@ class HolonomicFunction(object):
             for i in recurrence[1:]:
                 sol += self.to_hyper(as_list=as_list, _recur=i)
             return sol
+
         u0 = recurrence.u0
         r = recurrence.recurrence
         x = self.x
@@ -1854,11 +1875,22 @@ class HolonomicFunction(object):
 
             sol = S(0)
             for j, i in enumerate(nonzeroterms):
-                if int(i) == i and i >= 0 and int(i) < len(u0):
-                    sol += u0[int(i)] * x**int(i)
+
+                if i < 0 or int(i) != i:
+                    continue
+                i = int(i)
+                if i < len(u0):
+                    if isinstance(u0[i], (PolyElement, FracElement)):
+                        u0[i] = u0[i].as_expr()
+                    sol += u0[i] * x**i
+
                 else:
                     sol += Symbol('C_%s' %j) * x**i
-            sol = sol * x**constantpower
+
+            if isinstance(sol, (PolyElement, FracElement)):
+                sol = sol.as_expr() * x**constantpower
+            else:
+                sol = sol * x**constantpower
             if as_list:
                 if x0 != 0:
                     return [(sol.subs(x, x - x0), )]
@@ -2472,7 +2504,7 @@ def _extend_y0(Holonomic, n):
     value point in the differential equation.
     """
 
-    if Holonomic.annihilator.is_singular(Holonomic.x0):
+    if Holonomic.annihilator.is_singular(Holonomic.x0) or Holonomic.is_singularics() == True:
         return Holonomic.y0
 
     annihilator = Holonomic.annihilator
@@ -2596,6 +2628,19 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
         # differential equation satisfied by polynomial
         sol = func * Dx - func.diff(x)
         sol = _normalize(sol.listofpoly, sol.parent, negative=False)
+        is_singular = sol.is_singular(x0)
+
+        # try to compute the conditions for singular points
+        if y0 == None and x0 == 0 and is_singular:
+            rep = R.from_sympy(func).rep
+            for i, j in enumerate(reversed(rep)):
+                if j == 0:
+                    continue
+                else:
+                    coeff = list(reversed(rep))[i:]
+                    indicial = i
+                    break
+            y0 = {indicial:coeff}
 
     elif israt:
         order = 1
