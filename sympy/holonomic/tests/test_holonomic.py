@@ -662,6 +662,13 @@ def test_extended_domain_in_expr_to_holonomic():
     p = expr_to_holonomic(a*x, x)
     assert p.to_expr() == a*x
     assert p.integrate(x).to_expr() == a*x**2/2
+    D_2, C_1 = symbols("D_2, C_1")
+    p = expr_to_holonomic(x) + expr_to_holonomic(1.2*cos(x))
+    p = p.to_expr().subs(D_2, 0)
+    assert p - x - 1.2*cos(1.0*x) == 0
+    p = expr_to_holonomic(x) * expr_to_holonomic(1.2*cos(x))
+    p = p.to_expr().subs(C_1, 0)
+    assert p - 1.2*x*cos(1.0*x) == 0
 
 def test_to_meijerg():
     x = symbols('x')

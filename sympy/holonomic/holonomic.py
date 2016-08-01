@@ -466,15 +466,18 @@ class HolonomicFunction(object):
         R1 = self.annihilator.parent.base
         R2 = other.annihilator.parent.base
 
+        dom1 = R1.dom
+        dom2 = R2.dom
+
         if R1 == R2:
             return (self, other)
 
-        R = R1.unify(R2)
+        R = (dom1.unify(dom2)).old_poly_ring(self.x)
 
         newparent, _ = DifferentialOperators(R, str(self.annihilator.parent.gen_symbol))
 
-        sol1 = [R(i.rep) for i in self.annihilator.listofpoly]
-        sol2 = [R(i.rep) for i in other.annihilator.listofpoly]
+        sol1 = [R1.to_sympy(i) for i in self.annihilator.listofpoly]
+        sol2 = [R2.to_sympy(i) for i in other.annihilator.listofpoly]
 
         sol1 = DifferentialOperator(sol1, newparent)
         sol2 = DifferentialOperator(sol2, newparent)
