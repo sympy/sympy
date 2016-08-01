@@ -537,18 +537,14 @@ class ImageSet(Set):
                 # use one dummy variable n_self
                 var_self = self.lamda.variables
                 if len(var_self) > 1:
-                    msg = 'Not Implemented for multiple lambda variables. \
-                    %s contains these lambda variables : %s'
-                    raise NotImplementedError(
-                        filldedent(msg % (self, var_self)))
+                    # Not Implemented for multiple lambda variables.
+                    return None
                 var_self = var_self[0]
                 base = other.base_set
                 var_final = other.lamda.variables
                 if len(var_final) > 1:
-                    msg = 'Not Implemented for multiple lambda variables. \
-                    %s contains these lambda variables : %s'
-                    raise NotImplementedError(
-                        filldedent(msg % (other, var_final)))
+                    # Not Implemented for multiple lambda variables.
+                    return None
                 var_final = var_final[0]
 
                 # Extracting expr
@@ -557,10 +553,8 @@ class ImageSet(Set):
                 if Poly(lamb_expr, var_self).is_linear:
                     self_expr = lamb_expr
                 else:
-                    msg = 'Not Implemented for non linear ImageSet. \
-                    %s contains these lambda expr : %s'
-                    raise NotImplementedError(
-                        filldedent(msg % (self, lamb_expr)))
+                    # Not Implemented for non linear ImageSet.
+                    return None
                 if base_self.is_superset(base):
                     # take the superset
                     base = base_self
@@ -569,24 +563,25 @@ class ImageSet(Set):
                 if Poly(lamb_expr, var_final).is_linear:
                     final_expr = lamb_expr
                 else:
-                    msg = 'Not Implemented for non linear ImageSet. \
-                    %s contains these lambda expr : %s'
-                    raise NotImplementedError(
-                        filldedent(msg % (other, lamb_expr)))
+                    # Not Implemented for non linear ImageSet.
+                    return None
 
+                var_term = self_expr.coeff(var_self)
+                if var_term == 0:
+                    raise NotImplementedError()
                 if simplify(
                         final_expr.subs(var_final, var_self) -
-                        self_expr) % (2 * pi) == pi:
-                    # (2*x*pi + pi + expr1) - ( 2*x*pi  + exp1) = pi
-                    # can be => x*pi + expr1
-                    final_expr = pi * var_self + first_val(self)
+                        self_expr) % var_term == var_term / 2:
+                    # (a*pi + pi + expr1) - ( a*pi  + exp1) == abs(a/2)*pi
+                    # can be => (a/2)*pi + expr1
+                    final_expr = (var_term / 2) * var_self + first_val(self)
                     ans = ImageSet(Lambda(var_self, final_expr), base)
                 elif simplify(
                         final_expr -
-                        self_expr) % (2 * pi) == 0:
-                    # (2*x*pi + expr1) - ( 2*x*pi  + 2*pi + exp1)= -2*pi
-                    # can be => 2*x*pi + expr1
-                    final_expr = 2 * pi * var_self + first_val(self)
+                        self_expr) % var_term == 0:
+                    # (a*pi + expr1) - ( a*pi  + 2*pi + exp1)= 0
+                    # can be => a*pi + expr1
+                    final_expr = var_term * var_self + first_val(self)
                     ans = ImageSet(Lambda(var_self, final_expr), base)
                 else:
                     return None

@@ -1043,27 +1043,47 @@ def test_issue_8257():
 
 def test_Union_imageset():
     n = Dummy('n')
+    img1 = ImageSet(Lambda(n, 2 * n * pi), S.Integers)
+    assert Union(img1) == img1
 
-    assert Union(ImageSet(Lambda(n, 2*n*pi), S.Integers)) == \
-    ImageSet(Lambda(n, 2*pi*n), S.Integers)
+    assert Union(S.EmptySet, img1) == img1
 
-    assert Union(S.EmptySet, ImageSet(Lambda(n, 2*n*pi), \
-                    S.Integers)) == ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 2 * n * pi + pi), S.Integers)
+    assert Union(img1, img2) == ImageSet(Lambda(n, n * pi), S.Integers)
 
-    assert Union(ImageSet(Lambda(n, 2*n*pi), S.Integers) + \
-        ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)) == \
-    ImageSet(Lambda(n, n*pi), S.Integers)
+    img1 = ImageSet(Lambda(n, 2 * n * pi + pi / 4), S.Integers)
+    img2 = ImageSet(Lambda(n, 2 * n * pi + 5 * pi / 4), S.Integers)
+    union = ImageSet(Lambda(n, n * pi + pi / 4), S.Integers)
+    assert Union(img1, img2) == union
 
-    assert Union(ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi + 5*pi/4), S.Integers)) == \
-    ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+    img1 = ImageSet(Lambda(n, 2 * n * pi - pi / 3), S.Integers)
+    img2 = ImageSet(Lambda(n, 2 * n * pi + 2 * pi / 3), S.Integers)
+    img3 = ImageSet(Lambda(n, 2 * n * pi - 2 * pi / 3), S.Integers)
+    img4 = ImageSet(Lambda(n, 2 * n * pi + pi / 3), S.Integers)
+    img5 = ImageSet(Lambda(n, n * pi - pi / 3), S.Integers)
+    img6 = ImageSet(Lambda(n, n * pi - 2 * pi / 3), S.Integers)
+    assert Union(img1, img2, img3, img4) == Union(img5, img6, evaluate=False)
 
-    assert Union(ImageSet(Lambda(n, 2*n*pi - pi/3), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi + 2*pi/3), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi - 2*pi/3), S.Integers) \
-        + ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers))== \
-    ImageSet(Lambda(n, n*pi - pi/3), S.Integers) + \
-    ImageSet(Lambda(n, n*pi - 2*pi/3), S.Integers)
+    img1 = ImageSet(Lambda(n, 4 * n * pi + pi / 4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4 * n * pi + 5 * pi / 4), S.Integers)
+    # no simplification
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, n * pi + 2 * pi / 3), S.Integers)
+    img2 = ImageSet(Lambda(n, n * pi + pi / 6), S.Integers)
+    img3 = ImageSet(Lambda(n, n * pi + pi / 3), S.Integers)
+    img4 = ImageSet(Lambda(n, n * pi + 5 * pi / 6), S.Integers)
+    uni1 = ImageSet(Lambda(n, pi * n / 2 + pi / 6), S.Integers)
+    uni2 = ImageSet(Lambda(n, pi * n / 2 + pi / 3), S.Integers)
+    # One can check the answer using following lines
+    #  for i in range(0, 10):
+    # ....:     print img1.lamda(i) in uni1
+    # ....:     print img2.lamda(i) in uni1
+    # ....:     print img3.lamda(i) in uni2
+    # ....:     print img4.lamda(i) in uni2
+
+    assert Union(img1, img2) == uni1
+    assert Union(img3, img4) == uni2
 
 
 def test_issue_10931():
