@@ -300,7 +300,7 @@ class MatrixBase(object):
 
     def copy(self):
         """
-        Returns the copy of a matrix expression.
+        Returns the copy of a matrix.
 
         Examples
         ========
@@ -317,7 +317,7 @@ class MatrixBase(object):
 
     def trace(self):
         """
-        Returns the trace of a matrix expression i.e. the sum of the
+        Returns the trace of a matrix i.e. the sum of the
         diagonal elements.
 
         Examples
@@ -339,7 +339,7 @@ class MatrixBase(object):
 
         Also, by setting method='LU' we can specify it to be done using LU decomposition.
 
-        However, if determinant of the matrix is zero, a ``ValueError`` is raised as the inverse for that
+        However, if the determinant of the matrix is zero, a ``ValueError`` is raised as the inverse for that
         matrix doesn't exist.
 
         See Also
