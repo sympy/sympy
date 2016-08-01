@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import re
 
 from .str import StrPrinter
 from sympy.utilities import default_sort_key
@@ -9,6 +10,8 @@ class LambdaPrinter(StrPrinter):
     This printer converts expressions into strings that can be used by
     lambdify.
     """
+
+    _valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
 
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
@@ -87,6 +90,18 @@ class LambdaPrinter(StrPrinter):
             ') else (', self._print(expr.args[2]), '))'
         ]
         return ''.join(result)
+
+    def _print_Symbol(self, expr):
+
+        s = super(LambdaPrinter, self)._print_Symbol(expr)
+
+        # Replace any invalid Python identifier characters in the symbol name
+        # with underscores.
+        if re.match(self._valid_identifier_regex, s):
+            return s
+        else:
+            return re.sub('\W|^(?=\d)', '_', s)
+
 
 class NumPyPrinter(LambdaPrinter):
     """

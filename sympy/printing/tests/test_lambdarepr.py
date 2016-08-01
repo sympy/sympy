@@ -179,3 +179,12 @@ def test_multiple_sums():
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+def test_invalid_python_identifier():
+
+    s = symbols(r'32v2?g#Gmw845h$Wb53wi\phi')
+    assert lambdarepr(s) == '_32v2_g_Gmw845h_Wb53wi_phi'
+
+    s = symbols('k_\dot{\phi}')
+    assert lambdarepr(s) == 'k__dot__phi_'
