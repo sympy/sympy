@@ -77,6 +77,12 @@ def test_atoms():
     f = lambdify(x, I + x, {"I": 1j})
     assert f(1) == 1 + 1j
 
+
+def test_invalid_symbol_names():
+    x, y = symbols('\omega, \dot{\gamma}')
+    f = lambdify([x, y], x + y)
+    assert f(1, 2) == 3
+
 #================== Test different modules =========================
 
 # high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
