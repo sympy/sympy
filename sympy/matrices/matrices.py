@@ -335,12 +335,14 @@ class MatrixBase(object):
 
     def inv(self, method=None, **kwargs):
         """
-        Return the inverse of a matrix using Gaussian elimination by default.
+        Return the inverse of a matrix.
 
-        Also, by setting method='LU' we can specify it to be done using LU decomposition.
+        Inverse is found using Gaussian elimination & LU, with former being default.
 
-        However, if the determinant of the matrix is zero, a ``ValueError`` is raised as the inverse for that
-        matrix doesn't exist.
+        Raises
+        ========
+
+        If the determinant of the matrix is zero, a ``ValueError`` is raised.
 
         See Also
         ========
