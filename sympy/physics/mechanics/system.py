@@ -177,6 +177,32 @@ class SymbolicSystem(object):
         of application, force vector) and torques are given by (reference frame
         acting upon, torque vector). Ex [(point, force), (ref_frame, torque)]
 
+    Example
+    =======
+
+    As a simple example, the dynamics of a simple pendulum will be input into a
+    SymbolicSystem object manually. First some imports will be needed and then
+    symbols will be set up for the length of the pendulum (l), mass at the end
+    of the pendulum (m), and a constant for gravity (g). ::
+
+        >>> from sympy import Matrix, sin, symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, SymbolicSystem
+        >>> l, m, g = symbols('l m g')
+
+    The system will be defined by an angle of theta from the vertical and a
+    generalized speed of omega will be used where omega = theta_dot. ::
+
+        >>> theta, omega = dynamicsymbols('theta omega')
+
+    Now the equations of motion are ready to be formed and passed to the
+    SymbolicSystem object. ::
+
+        >>> kin_explicit_rhs = Matrix([omega])
+        >>> dyn_implicit_mat = Matrix([l**2 * m])
+        >>> dyn_implicit_rhs = Matrix([-g * l * m * sin(theta)])
+        >>> symsystem = SymbolicSystem(theta, dyn_implicit_rhs, omega,
+        ...                            dyn_implicit_mat)
+
     """
 
     def __init__(self, coord_states, right_hand_side, speeds=None,
