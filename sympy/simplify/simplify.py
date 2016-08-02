@@ -626,23 +626,50 @@ def sum_simplify(s):
             other = 1
             s = 0
             n_sum_terms = 0
+            sum_terms = []
             for j in range(len(term.args)):
                 if isinstance(term.args[j], Sum):
-                    s = term.args[j]
+                    try:
+                        simple = True
+                        s = term.args[j]._eval_simplify()
+                        sum_terms.append(s)
+                    except (AttributeError, TypeError):
+                        simple = False
+                        s = term.args[j]
+                        sum_terms.append(s)
                     n_sum_terms = n_sum_terms + 1
                 elif term.args[j].is_number == True:
                     constant = constant * term.args[j]
                 else:
                     other = other * term.args[j]
             if other == 1 and n_sum_terms == 1:
-                # Insert the constant inside the Sum
-                s_t.append(Sum(constant * s.function, *s.limits))
+                # remove constant from inside the Sum
+                if simple:
+                    s_t.append(constant * s)
+                else:
+                    s_t.append(constant * Sum(constant * s.function, *s.limits))
             elif other != 1 and n_sum_terms == 1:
-                o_t.append(other * Sum(constant * s.function, *s.limits))
+                if simple:
+                    o_t.append(other * s)
+                else:
+                    o_t.append(other * constant * Sum(s.function, *s.limits))
+            else:
+                if len(sum_terms):
+                    #some simplification may have happened
+                    #use if so
+                    o_t.append(Mul(*sum_terms) * other * constant)
+                else:
+                    o_t.append(term)
+        elif isinstance(term, Sum):
+            try:
+                term = term._eval_simplify()
+            except (AttributeError, TypeError):
+                pass
+
+            if isinstance(term, Sum):
+                s_t.append(term)
             else:
                 o_t.append(term)
-        elif isinstance(term, Sum):
-            s_t.append(term)
         else:
             o_t.append(term)
 
