@@ -1467,6 +1467,12 @@ def _rewrite_single(f, x, recursive=True):
                     #      but better be safe.
                     if Tuple(*(r1 + (g,))).has(oo, zoo, -oo):
                         continue
+                    # A Meijer G-function is defined only if no
+                    # a in g.an differs from any b in g.bm
+                    # by a positive integer.
+                    if any((a - b).is_integer and (a - b) > 0
+                           for a in g.an for b in g.bm):
+                        continue
                     g = meijerg(g.an, g.aother, g.bm, g.bother,
                                 unpolarify(g.argument, exponents_only=True))
                     res.append(r1 + (g,))
