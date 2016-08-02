@@ -26,14 +26,14 @@ def free_group(symbols):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> F, x, y, z = free_group("x, y, z")
     >>> F
     <free group on the generators (x, y, z)>
     >>> x**2*y**-1
     x**2*y**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -50,14 +50,14 @@ def xfree_group(symbols):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import xfree_group
+    >>> from sympy.combinatorics.free_groups import xfree_group
     >>> F, (x, y, z) = xfree_group("x, y, z")
     >>> F
     <free group on the generators (x, y, z)>
     >>> y**2*x**-2*z**-1
     y**2*x**-2*z**-1
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -75,13 +75,13 @@ def vfree_group(symbols):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import vfree_group
+    >>> from sympy.combinatorics.free_groups import vfree_group
     >>> vfree_group("x, y, z")
     <free group on the generators (x, y, z)>
     >>> x**2*y**-2*z
     x**2*y**-2*z
     >>> type(_)
-    <class 'sympy.combinatorics.free_group.FreeGroupElement'>
+    <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
 
     """
     _free_group = FreeGroup(symbols)
@@ -163,7 +163,7 @@ class FreeGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> F.generators
         (x, y, z)
@@ -269,7 +269,7 @@ class FreeGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> f.is_abelian
         False
@@ -295,7 +295,7 @@ class FreeGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> f.contains(x**3*y**2)
         True
@@ -372,7 +372,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> (x*z).array_form
         ((x, 1), (z, 1))
@@ -398,7 +398,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b, c, d = free_group("a b c d")
         >>> (a**3).letter_form
         (a, a, a)
@@ -494,7 +494,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> x*y**2*y**-4
         x*y**-2
@@ -544,7 +544,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> x.inverse()
         x**-1
@@ -562,7 +562,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y = free_group("x y")
         >>> (x**2*y*y**-1*x**-2).order()
         1
@@ -592,7 +592,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y = free_group("x y")
         >>> w = x**5*y*x**2*y**-4*x
         >>> w.eliminate_word( x, x**2 )
@@ -636,7 +636,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> len(w)
@@ -661,7 +661,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
         >>> f
         <free group on the generators (swapnil0, swapnil1)>
@@ -698,7 +698,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> b < a
         False
@@ -741,7 +741,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, x, y, z = free_group("x y z")
         >>> y**2 > x**2
         True
@@ -770,7 +770,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> w = x**2*y**3
         >>> w.exponent_sum(x)
@@ -800,7 +800,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> w = x**2*y**3
         >>> w.generator_count(x)
@@ -828,7 +828,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.subword(2, 6)
@@ -851,7 +851,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**4*y**-3).is_dependent(x**4*y**-2)
         True
@@ -886,7 +886,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> (x**2*y**-1).contains_generators()
         set([x, y])
@@ -926,7 +926,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> w = x*y*x*y*x
         >>> w.cyclic_conjugates()
@@ -945,7 +945,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> w1 = x**2*y**5
         >>> w2 = x*y**5*x
@@ -977,7 +977,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, swapnil0, swapnil1 = free_group("swapnil0 swapnil1")
         >>> (swapnil1**3*swapnil0*swapnil1**-1).number_syllables()
         3
@@ -993,7 +993,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.exponent_syllable( 2 )
@@ -1010,7 +1010,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.generator_syllable( 3 )
@@ -1029,7 +1029,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a, b")
         >>> w = a**5*b*a**2*b**-4*a
         >>> w.sub_syllables(1, 2)
@@ -1087,7 +1087,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**2*y**-1*x**-1).is_cyclically_reduced()
         False
@@ -1106,7 +1106,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> (x**2*y**2*x**-1).identity_cyclic_reduction()
         x*y**2

@@ -5,7 +5,7 @@ from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -58,11 +58,69 @@ class FpGroup(DefaultPrinting):
         obj._relators = relators
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+
+        obj._coset_table = []
+        obj._is_standardized = False
+        obj._is_compressed = False or obj._is_standardized
+
+        obj._order = None
+        obj._center = None
         return obj
 
     @property
     def free_group(self):
         return self._free_group
+
+    def coset_enumeration(self, H, strategy="relator_based"):
+        """
+        Return an instance of ``coset table``, when Todd-Coxeter algorithm is
+        run over the ``self`` with ``H`` as subgroup, using ``method`` as a
+        strategy. The returned value is neither compressed not standardized.
+
+        """
+        if method == 'relator_based':
+            C = coset_enumeration_r(self, H)
+        else:
+            C = coset_enumeration_c(self, H)
+        return C
+
+    def coset_table(self, H, strategy="relator_based"):
+        """
+        Return the mathematical coset table of ``self`` in ``H``.
+
+        """
+        if not H:
+            if self._coset_table != None:
+                if not self._is_standardized:
+                    if not self._is_compressed:
+                        self._coset_table.compressed()
+                    self._coset_table.standardize()
+                    self._is_standardized = True
+            else:
+                C = self.coset_enumeration([], strategy)
+                C.compress()
+                if standardize:
+                    C.standardize()
+                self._coset_table = C
+                self._is_standardized = True
+            return self._coset_table.table
+        else:
+            C = self.coset_enumeration(H, strategy)
+            C.compress(); C.standardize()
+            return C.table
+
+    def order(self, strategy="relator_based"):
+        """
+        """
+        if self._order != None:
+            return self._order
+        if self._coset_table == []:
+            C = self.coset_enumeration(standardize=False)
+            C.compress()
+            self._order = len(C.table)
+
+    def index(self, H, strategy="relator_based"):
+        pass
 
     def relators(self):
         return tuple(self._relators)
@@ -133,8 +191,7 @@ class CosetTable(DefaultPrinting):
         self.p = [0]
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
-        # the mathematical coset table which represented using the list of
-        # lists as data structure
+        # the mathematical coset table which is a list of lists
         self.table = [[None]*len(self.A)]
         self.A_dict = {x: self.A.index(x) for x in self.A}
         self.A_dict_inv = {}
@@ -155,6 +212,11 @@ class CosetTable(DefaultPrinting):
         return [coset for coset in range(len(self.p)) if self.p[coset] == coset]
 
     def copy(self):
+        """
+        Return a copy of Coset Table instance ``self``. It makes a shallow
+        copy.
+
+        """
         self_copy = self.__class__(self.fp_group, self.subgroup)
         self_copy.table = [list(perm_rep) for perm_rep in self.table]
         self_copy.p = list(self.p)
@@ -199,7 +261,7 @@ class CosetTable(DefaultPrinting):
 
         See Also
         ========
-        define_f
+        define_c
 
         """
         A = self.A
@@ -215,7 +277,7 @@ class CosetTable(DefaultPrinting):
         table[alpha][self.A_dict[x]] = beta
         table[beta][self.A_dict_inv[x]] = alpha
 
-    def define_f(self, alpha, x):
+    def define_c(self, alpha, x):
         r"""
         A variation of ``define`` routine, used in the coset table-based
         strategy of Todd-Coxeter algorithm. It differs from ``define`` routine
@@ -242,14 +304,14 @@ class CosetTable(DefaultPrinting):
         # append to deduction stack
         self.deduction_stack.append((alpha, x))
 
-    def scan_f(self, alpha, word):
+    def scan_c(self, alpha, word):
         """
-        A variation of ``scan`` routine which makes puts tuple, whenever a
+        A variation of ``scan`` routine which puts at tuple, whenever a
         deduction occurs, to deduction stack.
 
         See Also
         ========
-        scan, scan_check, scan_and_fill, scan_and_fill_f
+        scan, scan_check, scan_and_fill, scan_and_fill_c
 
         """
         # alpha is an integer representing a "coset"
@@ -270,7 +332,7 @@ class CosetTable(DefaultPrinting):
             i += 1
         if i > j:
             if f != b:
-                self.coincidence_f(f, b)
+                self.coincidence_c(f, b)
             return
         while j >= i and table[b][A_dict_inv[word[j]]] is not None:
             b = table[b][A_dict_inv[word[j]]]
@@ -278,7 +340,7 @@ class CosetTable(DefaultPrinting):
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
             # run the "coincidence" routine
-            self.coincidence_f(f, b)
+            self.coincidence_c(f, b)
         elif j == i:
             # deduction process
             table[f][A_dict[word[i]]] = b
@@ -288,7 +350,7 @@ class CosetTable(DefaultPrinting):
 
     # α, β coincide, i.e. α, β represent the pair of cosets where
     # coincidence occurs
-    def coincidence_f(self, alpha, beta):
+    def coincidence_c(self, alpha, beta):
         """
         """
         A_dict = self.A_dict
@@ -344,7 +406,7 @@ class CosetTable(DefaultPrinting):
 
         See Also
         ========
-        scan_f, scan_check, scan_and_fill, scan_and_fill_f
+        scan_c, scan_check, scan_and_fill, scan_and_fill_c
 
         """
         # α is an integer representing a "coset"
@@ -384,12 +446,12 @@ class CosetTable(DefaultPrinting):
         r"""
         Another version of ``scan`` routine, it checks whether `\alpha` scans
         correctly under `word`, it is a straightforward modification of ``scan``.
-        ``scan_check`` return false (rather than calling ``coincidence``) if
+        ``scan_check`` returns false (rather than calling ``coincidence``) if
         the scan completes incorrectly; otherwise it returns true.
 
         See Also
         ========
-        scan, scan_f, scan_and_fill, scan_and_fill_f
+        scan, scan_c, scan_and_fill, scan_and_fill_c
 
         """
         # alpha is an integer representing a "coset"
@@ -508,7 +570,7 @@ class CosetTable(DefaultPrinting):
             else:
                 self.define(f, word[i])
 
-    def scan_and_fill_f(self, alpha, word):
+    def scan_and_fill_c(self, alpha, word):
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -525,20 +587,20 @@ class CosetTable(DefaultPrinting):
                 i += 1
             if i > j:
                 if f != b:
-                    self.coincidence_f(f, b)
+                    self.coincidence_c(f, b)
                 return
             # forward scan was incomplete, scan backwards
             while j >= i and table[b][A_dict_inv[word[j]]] is not None:
                 b = table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
-                self.coincidence_f(f, b)
+                self.coincidence_c(f, b)
             elif j == i:
                 table[f][A_dict[word[i]]] = b
                 table[b][A_dict_inv[word[i]]] = f
                 self.deduction_stack.append((f, word[i]))
             else:
-                self.define_f(f, word[i])
+                self.define_c(f, word[i])
 
     def look_ahead(self):
         """
@@ -577,13 +639,13 @@ class CosetTable(DefaultPrinting):
                 alpha, x = self.deduction_stack.pop()
                 if p[alpha] == alpha:
                     for w in R_c_x:
-                        self.scan_f(alpha, w)
+                        self.scan_c(alpha, w)
                         if p[alpha] < alpha:
                             break
             beta = table[alpha][self.A_dict[x]]
             if beta is not None and p[beta] == beta:
                 for w in R_c_x_inv:
-                    self.scan_f(beta, w)
+                    self.scan_c(beta, w)
                     if p[beta] < beta:
                         break
 
@@ -636,7 +698,7 @@ class CosetTable(DefaultPrinting):
         the end of an enumeration to permute the cosets so that they occur in
         some sort of standard order.
 
-        >>> from sympy.combinatorics.free_group import free_group
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
 
@@ -713,7 +775,7 @@ class CosetTable(DefaultPrinting):
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> F, x, y = free_group("x, y")
 
@@ -863,7 +925,7 @@ def coset_enumeration_r(fp_grp, Y):
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -891,7 +953,7 @@ def coset_enumeration_c(fp_grp, Y):
         R_c_list.append(r)
         R_set.difference_update(r)
     for w in Y:
-        C.scan_and_fill_f(0, w)
+        C.scan_and_fill_c(0, w)
     for x in A:
         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     i = 0
@@ -900,7 +962,7 @@ def coset_enumeration_c(fp_grp, Y):
         i += 1
         for x in C.A:
             if C.table[alpha][C.A_dict[x]] is None:
-                C.define_f(alpha, x)
+                C.define_c(alpha, x)
                 C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
     return C
 
@@ -934,7 +996,7 @@ def low_index_subgroups(G, N, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1036,7 +1098,7 @@ def first_in_class(C, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1217,7 +1279,7 @@ def rewrite(C, alpha, w):
     ========
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> F, x, y = free_group("x ,y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
@@ -1290,7 +1352,7 @@ def elimination_technique_2(C):
     seems superior in that we may select for elimination the generator with
     shortest equivalent string at each stage.
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
             reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
@@ -1344,7 +1406,7 @@ def _simplification_technique_1(rels):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
@@ -1420,7 +1482,7 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 
