@@ -657,11 +657,13 @@ class HolonomicFunction(object):
         y2 = None
 
         if self.is_singularics() == False and other.is_singularics() == True:
-            y1 = {S(0):self.y0}
+            _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
+            y1 = {S(0):_y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
+            _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0):other.y0}
+            y2 = {S(0):_y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0
@@ -1039,11 +1041,13 @@ class HolonomicFunction(object):
         y2 = None
 
         if self.is_singularics() == False and other.is_singularics() == True:
-            y1 = {S(0):self.y0}
+            _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
+            y1 = {S(0):_y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
+            _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0):other.y0}
+            y2 = {S(0):_y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0

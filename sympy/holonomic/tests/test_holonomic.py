@@ -623,6 +623,9 @@ def test_integrate():
     p = expr_to_holonomic(sqrt(x**2+1)).integrate(x).to_expr()
     q = (sqrt(x**2+1)).integrate(x)
     assert (p-q).simplify() == 0
+    p = expr_to_holonomic(1/x**2, y0={-2:[1, 0, 0]})
+    q = expr_to_holonomic(cos(x)**2)
+    assert (p*q).integrate(x).to_expr() == -Si(2*x) - cos(x)**2/x
 
 def test_diff():
     x, y = symbols('x, y')
