@@ -443,7 +443,7 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
                     return expr.func(v, 0)
                 return S.false
 
-        start = S.NegativeInfinity
+        start = domain.inf
         sol_sets = [S.EmptySet]
         try:
             reals = _nsort(set(solns + singularities), separated=True)[0]
@@ -471,7 +471,7 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
 
             start = end
 
-        end = S.Infinity
+        end = domain.sup
 
         # in case start == -oo then there were no solutions so we just
         # check a point between -oo and oo (e.g. 0) else pick a point
