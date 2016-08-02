@@ -1,7 +1,7 @@
 # NOTE: THIS CODE WILL BE MAKING USE OF THE JOINTS CODE THAT STILL NEEDS TO BE
 # FIXED AND ADDED
 
-from sympy import Matrix, zeros
+from sympy import Matrix, symbols, zeros
 from sympy.physics.vector import cross_m, cross_f
 
 
@@ -205,6 +205,43 @@ class FeatherstonesMethod(object):
             # Need to find i_X_o_star from i_X_o
             i_X_o_star = i_X_o[i]  # Need actual equation for transformation
             pA[i] = cross_f(v[i], bodies[i].I*v[i]) - i_X_o_star*bodies[i].fx
+
+        # Pass 2 mock up (note only being shown here and not in combined_pass_1
+        # because it should come out the same)
+
+        # Initialize pass 2 variables
+        U = [0 for i in iters]
+        D = [0 for i in iters]
+        u = [0 for i in iters]
+        # Need to determine proper tau forces (what is the difference between
+        # tau and fx?)
+        tau = [0 for i in iters]
+
+        for i in reversed(iters):
+            U[i] = IA[i] * S[i]
+            D[i] = S[i].transpose() * U[i]
+            u[i] = tau[i] - S[i].transpose()*pA[i]
+            if parent_array[i] != 0:
+                Ia = IA[i] - U[i]*D[i].inv()*U[i].transpose()
+                pa = pA[i] + Ia*c[i] + U[i]*D[i].inv()*u[i]
+                lam_X_i_star = i_X_lam[i]  # Need to figure out correct transformation
+                IA[parent_array[i]] = IA[parent_array[i]] + lam_X_i_star[i] * \
+                    Ia*i_X_lam[i]
+                pA[parent_array[i]] = pA[parent_array[i]] + lam_X_i_star * pa
+
+        # Pass 3 mock up (note only being shown here and not in combined_pass_1
+        # because it should come out the same)
+
+        # Initialize variables for pass 3
+        a = Matrix(iters)
+        # Need to allow the user to be able to specify gravity force?
+        g = symbols('g')
+        a[0] = - g * base.frame.y
+
+        for i in iters:
+            a_prime = i_X_lam[i]*a[parent_array[i]] + c[i]
+            qddot = D[i].inv()*(u[i] - U[i].transpose()*a_prime)
+            a[i] = a_prime + S[i]*qddot[i]
 
     def combined_pass_1(self, base):
         """This method is being used to prototype what the algorithm looks
