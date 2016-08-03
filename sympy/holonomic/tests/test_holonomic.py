@@ -106,7 +106,7 @@ def test_addition_initial_condition():
         (x + 1)*Dx**4, x, 2, [4, 1, 2, -5 ])
     assert p + q == r
     p = expr_to_holonomic(sin(x))
-    q = expr_to_holonomic(1/x)
+    q = expr_to_holonomic(1/x, x0=1)
     r = HolonomicFunction((x**2 + 6) + (x**3 + 2*x)*Dx + (x**2 + 6)*Dx**2 + (x**3 + 2*x)*Dx**3, \
         x, 1, [sin(1) + 1, -1 + cos(1), -sin(1) + 2])
     assert p + q == r
@@ -145,7 +145,7 @@ def test_multiplication_initial_condition():
     r = HolonomicFunction(6*Dx + 3*Dx**2 + 2*Dx**3 - 3*Dx**4 + Dx**6, x, 0, [1, 5, 14, 17, 17, 2])
     assert p * q == r
     p = expr_to_holonomic(sin(x))
-    q = expr_to_holonomic(1/x)
+    q = expr_to_holonomic(1/x, x0=1)
     r = HolonomicFunction(x + 2*Dx + x*Dx**2, x, 1, [sin(1), -sin(1) + cos(1)])
     assert p * q == r
     p = expr_to_holonomic(sqrt(x))
@@ -506,6 +506,13 @@ def test_expr_to_holonomic():
     assert (expr_to_holonomic(sqrt(x) + sqrt(2*x)).to_expr()-\
         (sqrt(x) + sqrt(2*x))).simplify() == 0
     assert expr_to_holonomic(3*x+2*sqrt(x)).to_expr() == 3*x+2*sqrt(x)
+    p = expr_to_holonomic((x**4+x**3+5*x**2+3*x+2)/x**2, lenics=3)
+    q = HolonomicFunction((-2*x**4 - x**3 + 3*x + 4) + (x**5 + x**4 + 5*x**3 + 3*x**2 + \
+        2*x)*Dx, x, 0, {-2: [2, 3, 5]})
+    assert p == q
+    p = expr_to_holonomic(1/(x-1)**2, lenics=3, x0=1)
+    q = HolonomicFunction((2) + (x - 1)*Dx, x, 1, {-2: [1, 0, 0]})
+    assert p == q
 
 def test_to_hyper():
     x = symbols('x')
@@ -610,8 +617,8 @@ def test_integrate():
     q = p.to_expr()
     assert p.integrate(x).to_expr() == q.integrate((x, 0, x))
     assert p.integrate((x, 0, 1)) == q.integrate((x, 0, 1))
-    assert expr_to_holonomic(1/x).integrate(x).to_expr() == log(x)
-    p = expr_to_holonomic((x + 1)**3*exp(-x), x0=-1, lenics=4).integrate(x).to_expr()
+    assert expr_to_holonomic(1/x, x0=1).integrate(x).to_expr() == log(x)
+    p = expr_to_holonomic((x + 1)**3*exp(-x), x0=-1).integrate(x).to_expr()
     q = (-x**3 - 6*x**2 - 15*x + 6*exp(x + 1) - 16)*exp(-x)
     assert p == q
     p = expr_to_holonomic(cos(x)**2/x**2, y0={-2: [1, 0, -1]}).integrate(x).to_expr()
@@ -624,8 +631,10 @@ def test_integrate():
     q = (sqrt(x**2+1)).integrate(x)
     assert (p-q).simplify() == 0
     p = expr_to_holonomic(1/x**2, y0={-2:[1, 0, 0]})
+    r = expr_to_holonomic(1/x**2, lenics=3)
+    assert p == r
     q = expr_to_holonomic(cos(x)**2)
-    assert (p*q).integrate(x).to_expr() == -Si(2*x) - cos(x)**2/x
+    assert (r*q).integrate(x).to_expr() == -Si(2*x) - cos(x)**2/x
 
 def test_diff():
     x, y = symbols('x, y')

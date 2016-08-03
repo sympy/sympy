@@ -520,7 +520,7 @@ class HolonomicFunction(object):
             y0 = []
             for i in range(a):
                 y0.append(S(0))
-            y0 += b
+            y0 += [j * factorial(a + i) for i, j in enumerate(b)]
 
             return HolonomicFunction(self.annihilator, self.x, self.x0, y0)
 
@@ -2371,18 +2371,28 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     elif f is Pow:
         sol = sol**args[1]
-
+    sol.x0 = x0
     if not sol:
         raise NotImplementedError
     if y0:
         sol.y0 = y0
     if y0 or not initcond:
-        sol.x0 = x0
         return sol
     if sol.y0:
         return sol
     if not lenics:
         lenics = sol.annihilator.order
+    if sol.annihilator.is_singular(x0):
+        r = sol._indicial()
+        l = list(r)
+        if len(r) == 1 and r[l[0]] == S(1):
+            r = l[0]
+            g = func / (x - x0)**r
+            singular_ics = _find_conditions(g, x, x0, lenics)
+            singular_ics = [j / factorial(i) for i, j in enumerate(singular_ics)]
+            y0 = {r:singular_ics}
+            return HolonomicFunction(sol.annihilator, x, x0, y0)
+
     _y0 = _find_conditions(func, x, x0, lenics)
     while not _y0:
         x0 += 1
@@ -2608,7 +2618,7 @@ def DMFsubs(frac, x0, mpm=False):
     return sol_p / sol_q
 
 
-def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, y0=None):
+def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initcond=True):
     """Converts Polynomials and Rationals to Holonomic.
     """
 
@@ -2687,6 +2697,17 @@ def _convert_poly_rat_alg(func, x, initcond=True, x0=0, lenics=None, domain=QQ, 
 
     if not lenics:
         lenics = sol.order
+
+    if sol.is_singular(x0):
+        r = HolonomicFunction(sol, x, x0)._indicial()
+        l = list(r)
+        if len(r) == 1 and r[l[0]] == S(1):
+            r = l[0]
+            g = func / (x - x0)**r
+            singular_ics = _find_conditions(g, x, x0, lenics)
+            singular_ics = [j / factorial(i) for i, j in enumerate(singular_ics)]
+            y0 = {r:singular_ics}
+            return HolonomicFunction(sol, x, x0, y0)
 
     y0 = _find_conditions(func, x, x0, lenics)
     while not y0:
