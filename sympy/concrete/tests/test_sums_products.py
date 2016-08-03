@@ -588,7 +588,7 @@ def test_eval_diff():
     assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
     e = Sum(x*y, (x, 1, a))
     assert e.diff(a) == Derivative(e, a)
-    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y).doit() == \
         Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == 24
 
 
@@ -938,6 +938,15 @@ def test_convergent_failing():
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_6966():
+    i, k, m = symbols('i k m', integer=True)
+    z_i, q_i = symbols('z_i q_i')
+    a_k = Sum(-q_i*z_i/k,(i,1,m))
+    b_k = a_k.diff(z_i)
+    assert isinstance(b_k, Sum)
+    assert b_k == Sum(-q_i/k,(i,1,m))
 
 
 def test_issue_10156():
