@@ -382,8 +382,8 @@ class MatrixBase(object):
 
         According to the ``method`` keyword, it calls the appropriate method:
 
-          LDL .... inverse_LDL(); default
-          CH ... inverse_CH()
+          LDL ... inverse_LDL(); default
+          CH .... inverse_CH()
 
         Raises
         ------
