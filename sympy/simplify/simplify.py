@@ -678,9 +678,13 @@ def sum_add(self, other, method=0):
 
     if isinstance(self, Mul):
         rself = __refactor(self)
+    else:
+        rself = self
 
     if isinstance(other, Mul):
         rother = __refactor(other)
+    else:
+        rother = other
 
     if type(rself) == type(rother):
         if method == 0:
