@@ -1,4 +1,7 @@
+"""Finitely Presented Groups and its algorithms. """
+
 # -*- coding: utf-8 -*-
+
 from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core import Symbol, Mod
@@ -59,9 +62,8 @@ class FpGroup(DefaultPrinting):
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
 
-        obj._coset_table = []
+        obj._coset_table = None
         obj._is_standardized = False
-        obj._is_compressed = False or obj._is_standardized
 
         obj._order = None
         obj._center = None
@@ -74,15 +76,26 @@ class FpGroup(DefaultPrinting):
     def coset_enumeration(self, H, strategy="relator_based"):
         """
         Return an instance of ``coset table``, when Todd-Coxeter algorithm is
-        run over the ``self`` with ``H`` as subgroup, using ``method`` as a
-        strategy. The returned value is neither compressed not standardized.
+        run over the ``self`` with ``H`` as subgroup, using ``strategy``
+        argument as strategy. The returned coset table is compressed but not
+        standardized.
 
         """
-        if method == 'relator_based':
+        if strategy == 'relator_based':
             C = coset_enumeration_r(self, H)
         else:
             C = coset_enumeration_c(self, H)
+        C.compress()
         return C
+
+    def standardize_coset_table(self):
+        """
+        Standardized the coset table ``self`` and makes the internal variable
+        ``_is_standardized`` equal to ``True``.
+
+        """
+        self._coset_table.standardize()
+        self._is_standardized = True
 
     def coset_table(self, H, strategy="relator_based"):
         """
@@ -92,35 +105,65 @@ class FpGroup(DefaultPrinting):
         if not H:
             if self._coset_table != None:
                 if not self._is_standardized:
-                    if not self._is_compressed:
-                        self._coset_table.compressed()
-                    self._coset_table.standardize()
-                    self._is_standardized = True
+                    self.standardize_coset_table()
             else:
                 C = self.coset_enumeration([], strategy)
-                C.compress()
-                if standardize:
-                    C.standardize()
                 self._coset_table = C
-                self._is_standardized = True
+                self.standardize_coset_table()
             return self._coset_table.table
         else:
             C = self.coset_enumeration(H, strategy)
-            C.compress(); C.standardize()
+            C.standardize()
             return C.table
 
     def order(self, strategy="relator_based"):
         """
+        Returns the order of the finitely presented group ``self``. It uses
+        the coset enumeration with identity group as subgroup, i.e ``H=[]``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x, y**2])
+        >>> f.order(strategy="coset_table_based")
+        2
+
         """
         if self._order != None:
             return self._order
-        if self._coset_table == []:
-            C = self.coset_enumeration(standardize=False)
-            C.compress()
-            self._order = len(C.table)
+        if self._coset_table != None:
+            self._order = len(self._coset_table.table)
+        else:
+            self._coset_table = self.coset_enumeration([], strategy)
+            self._order = len(self._coset_table.table)
+        return self._order
 
     def index(self, H, strategy="relator_based"):
-        pass
+        """
+        Returns the index of subgroup ``H`` in group ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x**5, y**4, y*x*y**3*x**3])
+        >>> f.index([x])
+        4
+
+        """
+        # TODO: use |G:H| = |G|/|H| (currently H can't be made into a group)
+        # when we know |G| and |H|
+
+        if H == []:
+            return self.order()
+        else:
+            C = self.coset_enumeration(H, strategy)
+            return len(C.table)
 
     def relators(self):
         return tuple(self._relators)
@@ -207,8 +250,7 @@ class CosetTable(DefaultPrinting):
 
     @property
     def omega(self):
-        """Set of live cosets
-        """
+        """Set of live cosets. """
         return [coset for coset in range(len(self.p)) if self.p[coset] == coset]
 
     def copy(self):
