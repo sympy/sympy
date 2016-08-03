@@ -335,14 +335,26 @@ class MatrixBase(object):
 
     def inv(self, method=None, **kwargs):
         """
-        Return the inverse of a matrix.
+        Return the inverse of a matrix (default is Gauss elimination).
 
-        Inverse is found using Gaussian elimination & LU, with former being default.
+        kwargs
+        ======
+
+        method : ('GE', 'LU', or 'ADJ')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          GE .... inverse_GE(); default
+          LU .... inverse_LU()
+          ADJ ... inverse_ADJ()
 
         Raises
         ------
         ValueError
-        If the determinant of the matrix is zero.
+            If the determinant of the matrix is zero.
 
         See Also
         ========
