@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import S, Expr, Mul, Add
-from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
