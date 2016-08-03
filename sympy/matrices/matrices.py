@@ -335,7 +335,12 @@ class MatrixBase(object):
 
     def inv(self, method=None, **kwargs):
         """
-        Return the inverse of a matrix (default is Gauss elimination).
+        Return the inverse of a matrix.
+
+        CASE 1: If the matrix is a dense matrix.
+
+        Return the matrix inverse using the method indicated (default
+        is Gauss elimination).
 
         kwargs
         ======
@@ -351,17 +356,39 @@ class MatrixBase(object):
           LU .... inverse_LU()
           ADJ ... inverse_ADJ()
 
-        Raises
-        ------
-        ValueError
-            If the determinant of the matrix is zero.
-
         See Also
         ========
 
         inverse_LU
         inverse_GE
         inverse_ADJ
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
+
+        CASE 2: If the matrix is a sparse matrix.
+
+        Return the matrix inverse using Cholesky or LDL (default).
+
+        kwargs
+        ======
+
+        method : ('CH', 'LDL')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          LDL .... inverse_LDL(); default
+          CH .... inverse_CH()
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
 
         """
         if not self.is_square:
