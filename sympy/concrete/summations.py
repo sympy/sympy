@@ -299,7 +299,29 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 else:
                     o_t.append(term)
             elif isinstance(term, Sum):
-                s_t.append(term._eval_simplify())
+                constant = 1
+                inner = 1
+                sum_var = term.args[1].args[0]
+                subterms = Mul.make_args(term.args[0])
+                sum_terms = []
+                for j in range(len(subterms)):
+                    theterm = subterms[j]
+                    if isinstance(theterm, Sum):
+                        sum_terms.append(theterm._eval_simplify())
+                    elif theterm.is_number == True:
+                        constant = constant * theterm
+                    #any term that does not depend on the summation variable
+                    #can be considered constant
+                    elif not (theterm.atoms(sum_var)):
+                        constant = constant * theterm
+                    else:
+                        inner = inner * theterm
+
+                if len(sum_terms):
+                    # remove constants from the Sum
+                    s_t.append(constant * Mul(*sum_terms.extend(inner)))
+                else:
+                    s_t.append(constant * Sum(inner, *term.limits))
             else:
                 o_t.append(term)
 

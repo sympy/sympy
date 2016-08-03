@@ -627,7 +627,6 @@ def sum_simplify(s):
             for j in range(len(term.args)):
                 if isinstance(term.args[j], Sum):
                     sum_terms.append(term.args[j]._eval_simplify())
-                    n_sum_terms = n_sum_terms + 1
                 else:
                     other = other * term.args[j]
                 if len(sum_terms):
