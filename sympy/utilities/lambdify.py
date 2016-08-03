@@ -167,10 +167,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     """
     Returns a lambda function for fast calculation of numerical values.
 
-    If not specified differently by the user, SymPy functions are replaced as
-    far as possible by either python-math, numpy (if available) or mpmath
-    functions - exactly in this order. To change this behavior, the "modules"
-    argument can be used. It accepts:
+    If not specified differently by the user, ``modules`` defaults to
+    ``["numpy"]`` if NumPy is installed, and ``["math", "mpmath", "sympy"]``
+    if it isn't, that is, SymPy functions are replaced as far as possible by
+    either ``numpy`` functions if available, and Python's standard library
+    ``math``, or ``mpmath`` functions otherwise. To change this behavior, the
+    "modules" argument can be used. It accepts:
 
      - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
      - any modules (e.g. math)
@@ -301,6 +303,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
     in other namespaces, unless the ``use_imps`` input parameter is False.
+
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
@@ -309,18 +312,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     module_provided = True
     if modules is None:
         module_provided = False
-        # Use either numpy (if available) or python.math where possible.
-        # XXX: This leads to different behaviour on different systems and
-        #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
 
-        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
-            pass
+            # Use either numpy (if available) or python.math where possible.
+            # XXX: This leads to different behaviour on different systems and
+            #      might be the reason for irreproducible errors.
+            modules = ["math", "mpmath", "sympy"]
         else:
-            modules.insert(1, "numpy")
+            modules = ["numpy"]
 
     # Get the needed namespaces.
     namespaces = []

@@ -219,7 +219,7 @@ def test_sqrt():
 
 
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -249,7 +249,7 @@ def test_vector_discontinuous():
 
 
 def test_trig_symbolic():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     assert abs(d[0] + 1) < 0.0001
     assert abs(d[1] - 0) < 0.0001
