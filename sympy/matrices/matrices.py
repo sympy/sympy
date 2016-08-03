@@ -340,9 +340,9 @@ class MatrixBase(object):
         Inverse is found using Gaussian elimination & LU, with former being default.
 
         Raises
-        ========
-
-        If the determinant of the matrix is zero, a ``ValueError`` is raised.
+        ------
+        ValueError
+        If the determinant of the matrix is zero.
 
         See Also
         ========
