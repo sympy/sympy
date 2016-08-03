@@ -622,54 +622,22 @@ def sum_simplify(s):
 
     for term in terms:
         if isinstance(term, Mul):
-            constant = 1
             other = 1
-            s = 0
-            n_sum_terms = 0
             sum_terms = []
             for j in range(len(term.args)):
                 if isinstance(term.args[j], Sum):
-                    try:
-                        simple = True
-                        s = term.args[j]._eval_simplify()
-                        sum_terms.append(s)
-                    except (AttributeError, TypeError):
-                        simple = False
-                        s = term.args[j]
-                        sum_terms.append(s)
+                    sum_terms.append(term.args[j]._eval_simplify())
                     n_sum_terms = n_sum_terms + 1
-                elif term.args[j].is_number == True:
-                    constant = constant * term.args[j]
                 else:
                     other = other * term.args[j]
-            if other == 1 and n_sum_terms == 1:
-                # remove constant from inside the Sum
-                if simple:
-                    s_t.append(constant * s)
-                else:
-                    s_t.append(constant * Sum(constant * s.function, *s.limits))
-            elif other != 1 and n_sum_terms == 1:
-                if simple:
-                    o_t.append(other * s)
-                else:
-                    o_t.append(other * constant * Sum(s.function, *s.limits))
-            else:
                 if len(sum_terms):
                     #some simplification may have happened
                     #use if so
-                    o_t.append(Mul(*sum_terms) * other * constant)
+                    s_t.append(Mul(*sum_terms) * other)
                 else:
                     o_t.append(term)
         elif isinstance(term, Sum):
-            try:
-                term = term._eval_simplify()
-            except (AttributeError, TypeError):
-                pass
-
-            if isinstance(term, Sum):
-                s_t.append(term)
-            else:
-                o_t.append(term)
+            s_t.append(term._eval_simplify())
         else:
             o_t.append(term)
 
@@ -698,26 +666,42 @@ def sum_simplify(s):
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy import Mul
 
-    if type(self) == type(other):
+    #we know this is something in terms of a constant * a sum
+    #so we temporarily put the constants inside for simplification
+    #then simplify the result
+    def __refactor(val):
+        args = Mul.make_args(val)
+        sumv = next(x for x in args if isinstance(x, Sum))
+        constant = Mul(*[x for x in args if x != sumv])
+        return Sum(constant * sumv.function, *sumv.limits)
+
+    if isinstance(self, Mul):
+        rself = __refactor(self)
+
+    if isinstance(other, Mul):
+        rother = __refactor(other)
+
+    if type(rself) == type(rother):
         if method == 0:
-            if self.limits == other.limits:
-                return Sum(self.function + other.function, *self.limits)
+            if rself.limits == rother.limits:
+                return Sum(rself.function + rother.function, *rself.limits)._eval_simplify()
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
-                    i = self.limits[0][0]
-                    x1 = self.limits[0][1]
-                    y1 = self.limits[0][2]
-                    j = other.limits[0][0]
-                    x2 = other.limits[0][1]
-                    y2 = other.limits[0][2]
+            if simplify(rself.function - rother.function) == 0:
+                if len(rself.limits) == len(rother.limits) == 1:
+                    i = rself.limits[0][0]
+                    x1 = rself.limits[0][1]
+                    y1 = rself.limits[0][2]
+                    j = rother.limits[0][0]
+                    x2 = rother.limits[0][1]
+                    y2 = rother.limits[0][2]
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return Sum(self.function, (i, x1, y2))
+                            return Sum(rself.function, (i, x1, y2))._eval_simplify()
                         elif x1 == y2 + 1:
-                            return Sum(self.function, (i, x2, y1))
+                            return Sum(rself.function, (i, x2, y1))._eval_simplify()
 
     return Add(self, other)
 

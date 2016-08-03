@@ -168,6 +168,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.function.is_zero:
             return True
 
+    #the free symbols of the sum include the free symbols
+    #of any of arguements (i.e. sums of indexed functions)
+    @property
+    def free_symbols(self):
+        return set().union(*[a.free_symbols for a in self.args])
+
     def doit(self, **hints):
         if hints.get('deep', True):
             f = self.function.doit(**hints)
@@ -269,9 +275,54 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import sum_simplify
-        return sum_simplify(self)
+    def _eval_simplify(self, ratio=0, measure=0):
+        from sympy.simplify.simplify import sum_add
+        from sympy import Mul
+        s = self
+
+        terms = Add.make_args(s)
+        s_t = [] # Sum Terms
+        o_t = [] # Other Terms
+
+        for term in terms:
+            if isinstance(term, Mul):
+                other = 1
+                sum_terms = []
+                for j in range(len(term.args)):
+                    if isinstance(term.args[j], Sum):
+                        sum_terms.append(term.args[j]._eval_simplify())
+                    else:
+                        other = other * term.args[j]
+                if len(sum_terms):
+                    # remove constant from the Sum
+                    s_t.append(other * Mul(*sum_terms))
+                else:
+                    o_t.append(term)
+            elif isinstance(term, Sum):
+                s_t.append(term._eval_simplify())
+            else:
+                o_t.append(term)
+
+        used = [False] * len(s_t)
+
+        for method in range(2):
+            for i, s_term1 in enumerate(s_t):
+                if not used[i]:
+                    for j, s_term2 in enumerate(s_t):
+                        if not used[j] and i != j:
+                            temp = sum_add(s_term2, method)
+                            if isinstance(temp, Sum):
+                                s_t[i] = temp
+                                s_term1 = s_t[i]
+                                used[j] = True
+
+        result = Add(*o_t)
+
+        for i, s_term in enumerate(s_t):
+            if not used[i]:
+                result = Add(result, s_term)
+
+        return result
 
     def _eval_summation(self, f, x):
         return None
