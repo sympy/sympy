@@ -200,7 +200,7 @@ class SymbolicSystem(object):
         >>> kin_explicit_rhs = Matrix([omega])
         >>> dyn_implicit_mat = Matrix([l**2 * m])
         >>> dyn_implicit_rhs = Matrix([-g * l * m * sin(theta)])
-        >>> symsystem = SymbolicSystem(theta, dyn_implicit_rhs, omega,
+        >>> symsystem = SymbolicSystem([theta], dyn_implicit_rhs, [omega],
         ...                            dyn_implicit_mat)
 
     """
