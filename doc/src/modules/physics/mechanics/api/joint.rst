@@ -21,21 +21,3 @@ SlidingJoint
 
 .. autoclass:: SlidingJoint
    :members:
-
-CylindricalJoint
-================
-
-.. autoclass:: CylindricalJoint
-   :members:
-
-PlanarJoint
-===========
-
-.. autoclass:: PlanarJoint
-   :members:
-
-SphericalJoint
-==============
-
-.. autoclass:: SphericalJoint
-   :members:
