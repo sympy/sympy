@@ -125,7 +125,8 @@ matrix:
       virtualenv:
         system_site_packages: true
 
-    - env:
+    - python: 3.5 # Dummy value
+      env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
         - TEST_TENSORFLOW="true"
@@ -204,7 +205,8 @@ matrix:
         system_site_packages: true
 
     # The apt installation of sage fails sometimes
-    - env:
+    - python: 3.5 # Dummy value
+      env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
         - TEST_TENSORFLOW="true"
