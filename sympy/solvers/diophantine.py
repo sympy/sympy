@@ -402,7 +402,7 @@ def classify_diop(eq, _dict=True):
         diop_type = "cubic_thue"
 
     elif (total_degree > 3 and total_degree % 2 == 0 and
-            all(k.is_Pow for k in coeff if k != 1)):
+            all(k.is_Pow and k.exp == total_degree for k in coeff if k != 1)):
         if all(coeff[k] == 1 for k in coeff if k != 1):
             diop_type = 'general_sum_of_even_powers'
 
