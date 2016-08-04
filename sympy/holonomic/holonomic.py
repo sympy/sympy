@@ -518,6 +518,7 @@ class HolonomicFunction(object):
 
         if len(self.y0) == 1 and a == int(a) and a > 0:
             y0 = []
+            a = int(a)
             for i in range(a):
                 y0.append(S(0))
             y0 += [j * factorial(a + i) for i, j in enumerate(b)]
