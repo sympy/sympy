@@ -920,38 +920,43 @@ def test_solveset_integers():
     soln = ImageSet(Lambda(t_0, FiniteSet((t_0, -t_0))), S.Integers)
     assert solveset_integers(y + x + 0) == soln
 
-    assert solveset_integers(0*x - y - 5) == FiniteSet((-5,))
+    assert solveset_integers(0 * x - y - 5) == FiniteSet((-5,))
 
-    soln=ImageSet(Lambda(t_0, FiniteSet((3*t_0 - 5, -2*t_0 + 5))), S.Integers)
-    assert solveset_integers(3*y + 2*x - 5) == soln
-    assert solveset_integers(4*x + 6*y - 3) == S.EmptySet
+    f_set = FiniteSet((3 * t_0 - 5, - 2 * t_0 + 5))
+    soln = ImageSet(Lambda(t_0, f_set), S.Integers)
+    assert solveset_integers(3 * y + 2 * x - 5) == soln
+    assert solveset_integers(4 * x + 6 * y - 3) == S.EmptySet
 
-    f_set = FiniteSet((0, n1), (3*t_0 - 4, -t_0))
+    f_set = FiniteSet((0, n1), (3 * t_0 - 4, - t_0))
     soln = ImageSet(Lambda((n1, t_0), f_set), S.Integers)
-    assert solveset_integers(x**2 + 3*x*y + 4*x, [x, y]) == soln
+    assert solveset_integers(x**2 + 3 * x * y + 4 * x, [x, y]) == soln
 
-    assert solveset_integers(4*x + 3*y - 4*z + 5, param = None) == \
-    FiniteSet((0, 5, 5))
+    soln = FiniteSet((0, 5, 5))
+    assert solveset_integers(4 * x + 3 * y - 4 * z + 5, param=None) == soln
 
-    assert solveset_integers(4*x + 2*y + 8*z - 5) == S.EmptySet
+    assert solveset_integers(4 * x + 2 * y + 8 * z - 5) == S.EmptySet
 
-    assert solveset_integers(5*x + 7*y - 2*z - 6) == \
-    ImageSet(Lambda((t_0, t_1), \
-        FiniteSet((t_0, -3*t_0 + 2*t_1 + 6, -8*t_0 + 7*t_1 + 18))), S.Integers)
+    f_set = FiniteSet((t_0, -3 * t_0 + 2 * t_1 + 6, - 8 * t_0 + 7 * t_1 + 18))
+    soln = ImageSet(Lambda((t_0, t_1), f_set), S.Integers)
+    assert solveset_integers(5 * x + 7 * y - 2 * z - 6) == soln
 
-    assert solveset_integers(5*x + 7*y - 2*z - 6, [y, x, z]) == \
-    ImageSet(Lambda((t_0, t_1), \
-        FiniteSet((-3*t_0 + 2*t_1 + 6, t_0, -8*t_0 + 7*t_1 + 18))), S.Integers)
+    f_set = FiniteSet((-3 * t_0 + 2 * t_1 + 6, t_0, - 8 * t_0 + 7 * t_1 + 18))
+    soln = ImageSet(Lambda((t_0, t_1), f_set), S.Integers)
+    assert solveset_integers(5 * x + 7 * y - 2 * z - 6, [y, x, z]) == soln
 
-    assert solveset_integers(1/x + 1/y - S.Half) == \
-    FiniteSet((-2, 1), (1, -2), (3, 6), (4, 4), (6, 3))
+    soln = FiniteSet((-2, 1), (1, -2), (3, 6), (4, 4), (6, 3))
+    assert solveset_integers(1 / x + 1 / y - S.Half) == soln
 
+    f = x + y**2 - 3
     soln = ImageSet(Lambda(t, FiniteSet((-t**2 + 3, -t))), S.Integers)
-    assert solveset_integers(x + y**2 - 3) == soln
+    assert solveset_integers(f) == soln
+
+    unsolve = ConditionSet(FiniteSet(x, y), f + x**6, S.Integers)
+    assert solveset_integers(f + x**6) == unsolve
 
     raises(TypeError, lambda: solveset_integers(sin(x)))
     raises(TypeError, lambda: solveset_integers(3))
-    raises(TypeError, lambda: solveset_integers(x/pi - 3))
+    raises(TypeError, lambda: solveset_integers(x / pi - 3))
 
 
 

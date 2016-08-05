@@ -991,7 +991,9 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
         a imageset of FiniteSet tuples for `symbols` for which `f` is
         True or is equal to zero and base set is S.Integers for free_symbols
         present in the solution.
-        An `EmptySet` is returned if `f` no Integers solution is found..
+        An `EmptySet` is returned if `f` no Integers solution is found and
+        `ConditionSet` if it is not able to solve or not implemented for that
+        equation `f`.
 
     Note
     =====
@@ -1025,6 +1027,10 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     >>> pprint(solveset_integers(eq, [y, x], k), use_unicode = False)
     {{(-k_0, 3*k_0 - 4), (n1, 0)} | k_0, n1 in Integers()}
 
+    >>> pprint(solveset_integers(eq + x**5), use_unicode = False)
+                                        5    2
+    {{x, y} | {x, y} in Integers() and x  + x  + 3*x*y + 4*x}
+
     >>> pprint(solveset_integers(2*x + 1), use_unicode = False)
     EmptySet()
 
@@ -1034,8 +1040,12 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     """
     from sympy.solvers.diophantine import diophantine
 
-    # solution will be in set
-    solution = diophantine(f, param, symbols)
+    try:
+        # solution will be in set
+        solution = diophantine(f, param, symbols)
+    except NotImplementedError:
+        free = FiniteSet(*[free_sym for free_sym in f.free_symbols])
+        return ConditionSet(free, f, S.Integers)
 
     # soln in Imageset
     var_int = S.EmptySet
