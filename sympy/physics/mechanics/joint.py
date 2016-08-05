@@ -9,34 +9,36 @@ class Joint(object):
     """Abstract Base class for all specific joints.
 
     A Joint connects two bodies (a parent and child) by adding different degrees
-    of freedom to child with respect to parent.
+    of freedom to the child object with respect to the parent object.
+
     This is the base class for all specific joints and holds all common methods
-    acting as an interface for all joints. Custom joint can be created by
+    acting as an interface for all joints. Custom joints can be created by
     creating a subclass of this class and overriding 'apply_joint()' method to
-    add the dynamics of the joint.
+    add the dynamics of the custom joint.
 
     Parameters
-    ----------
-    name: String
+    ==========
+
+    name : String
         Name of the joint which makes it unique. Should be different from other
         joints.
-    parent: Body
+    parent : Body
         Instance of Body class serving as the parent in the joint.
-    child: Body
+    child : Body
         Instance of Body class serving as the child in the joint.
-    parent_point_pos: 3 Tuple, Optional
+    parent_point_pos : 3 Tuple, optional
         Defines the joint's point where the parent will be connected to child.
         3 Tuple defines the values of x, y and z directions w.r.t parent's
         frame. If it is not supplied, center of mass is added as default.
-    child_point_pos: 3 Tuple, Optional
+    child_point_pos : 3 Tuple, optional
         Defines the joint's point where the child will be connected to parent.
         3 Tuple defines the values of x, y and z directions w.r.t child's frame.
         If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
+    parent_axis : Vector, optional
         Defines the orientation as a vector which must be aligned with child's
         axis before adding joint. If it is not passed, default is x axis in
         parent's frame.
-    child_axis: Vector, Optional
+    child_axis : Vector, optional
         Defines the orientation as a vector which must be aligned with parent's
         axis before adding joint. If it is not passed, default is x axis in
         child's frame.
@@ -103,53 +105,82 @@ class PinJoint(Joint):
     amount with respect to the parent axis by passing an axis in child body
     which must align with parent axis after the rotation.
 
+    Attributes
+    ==========
+
+    name : string
+        This is the name of the joint
+    parent : Body
+        This returns the parent body object of the joint
+    child : Body
+        This returns the child body object of the joint
+    coordinates : list
+        This returns the list of coordinates that define the joint. For a
+        PinJoint this is the angle between the two body link frames.
+    speeds : list
+        This returns the list of generalized speeds for the joint. For a pin
+        joint this is equivalent to the derivative of the generalized
+        coordinate.
+    kds : list
+        This returns a list of the kinematic differential equations.
+    parent_axis : Vector
+        This is the axis in the parent body at the joint location that aligns
+        with the given axis of the frame in the child body located at the joint.
+    child_axis : Vector
+        This is the axis in the child body at the joint location that aligns
+        with the given axis of the frame in the parent body located at the joint.
+
     Parameters
-    ----------
-    name: String
+    ==========
+
+    name : String
         Name of the joint which makes it unique. Should be different from other
         joints.
-    parent: Body
+    parent : Body
         Instance of Body class serving as the parent in the joint.
-    child: Body
+    child : Body
         Instance of Body class serving as the child in the joint.
-    parent_point_pos: 3 Tuple, Optional
+    parent_point_pos : 3 Tuple, optional
         Defines the pin joint's point where the parent will be connected to
         child.  3 Tuple defines the values of x, y and z directions w.r.t
         parent's frame. If it is not supplied, center of mass is added as
         default.
-    child_point_pos: 3 Tuple, Optional
+    child_point_pos : 3 Tuple, optional
         Defines the joint's point where the child will be connected to parent.
         3 Tuple defines the values of x, y and z directions w.r.t child's frame.
         If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
+    parent_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with child's
         axis before adding joint. If it is not passed, default is x axis in
-        parent's frame.
-    child_axis: Vector, Optional
+        parent's frame. Can accept 'X', 'Y', 'Z' or a 3 tuple describing the
+        vector.
+    child_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with parent's
         axis before adding joint. If it is not passed, default is x axis in
-        child's frame.
+        child's frame. Can accept 'X', 'Y', 'Z' or a 3 tuple describing the
+        vector.
 
     Examples
-    --------
+    ========
+
     Adding a Pin Joint which connects center of mass of parent to a point
     pointed by child.frame.x + child.frame.y w.r.t. child's center of mass.
-    Gravity is along y axis of parent.
+    Gravity is along y axis of parent. ::
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Body, PinJoint
-    >>> parent = Body('parent')
-    >>> child = Body('child')
-    >>> gravity = Symbol('gravity')
-    >>> l = Symbol('l')
-    >>> child.apply_force(child.mass * gravity * parent.frame.y,
-    ...                   child.masscenter)
-    >>> pin_joint = PinJoint('pinjoint', parent, \
-    ...                      child, child_point_pos=(l, l, 0))
-    >>> pin_joint.coordinates
-    [pinjoint_theta(t)]
-    >>> pin_joint.speeds
-    [pinjoint_omega(t)]
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Body, PinJoint
+        >>> parent = Body('parent')
+        >>> child = Body('child')
+        >>> gravity = Symbol('gravity')
+        >>> l = Symbol('l')
+        >>> child.apply_force(child.mass * gravity * parent.frame.y,
+        ...                   child.masscenter)
+        >>> pin_joint = PinJoint('pinjoint', parent, \
+        ...                      child, child_point_pos=(l, l, 0))
+        >>> pin_joint.coordinates
+        [pinjoint_theta(t)]
+        >>> pin_joint.speeds
+        [pinjoint_omega(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
@@ -220,48 +251,77 @@ class SlidingJoint(Joint):
     constant amount with respect to the parent axis by passing an axis in child
     body which must align with parent axis after the rotation.
 
+    Attributes
+    ==========
+
+    name : string
+        This is the name of the joint
+    parent : Body
+        This returns the parent body object of the joint
+    child : Body
+        This returns the child body object of the joint
+    coordinates : list
+        This returns the list of coordinates that define the joint. For a
+        SlidingJoint this is the distance between the two body link points.
+    speeds : list
+        This returns the list of generalized speeds for the joint. For a sliding
+        joint this is equivalent to the derivative of the generalized
+        coordinate.
+    kds : list
+        This returns a list of the kinematic differential equations.
+    parent_axis : Vector
+        This is the axis in the parent body at the joint location that aligns
+        with the given axis of the frame in the child body located at the joint.
+    child_axis : Vector
+        This is the axis in the child body at the joint location that aligns
+        with the given axis of the frame in the parent body located at the joint.
+
     Parameters
-    ----------
-    name: String
+    ==========
+
+    name : String
         Name of the joint which makes it unique. Should be different from other
         joints.
-    parent: Body
+    parent : Body
         Instance of Body class serving as the parent in the joint.
-    child: Body
+    child : Body
         Instance of Body class serving as the child in the joint.
-    parent_point_pos: 3 Tuple, Optional
+    parent_point_pos : 3 Tuple, optional
         Defines the joint's point where the parent will be connected to child.
         3 Tuple defines the values of x, y and z directions w.r.t parent's
         frame. If it is not supplied, center of mass is added as default.
-    child_point_pos: 3 Tuple, Optional
+    child_point_pos : 3 Tuple, optional
         Defines the joint's point where the child will be connected to parent.
         3 Tuple defines the values of x, y and z directions w.r.t child's frame.
         If it is not supplied, center of mass is added as default.
-    parent_axis: Vector, Optional
+    parent_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with child's
         axis before adding joint. If it is not passed, default is x axis in
-        parent's frame.
-    child_axis: Vector, Optional
+        parent's frame. Can pass in 'X', 'Y', 'Z' or a 3 tuple describing the
+        vector.
+    child_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with parent's
         axis before adding joint. If it is not passed, default is x axis in
-        child's frame.
+        child's frame. Can pass in 'X', 'Y', 'Z' or a 3 tuple describing the
+        vector.
 
     Examples
-    --------
-    Adds sliding Joint between parent's masscenter and a point located at unit
-    distance in x axis of child.
+    ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Body, SlidingJoint
-    >>> parent = Body('parent')
-    >>> child = Body('child')
-    >>> l = Symbol('l')
-    >>> sliding_joint = SlidingJoint('slidingjoint', parent, child, \
-                                     child_point_pos=(l, 0, 0))
-    >>> sliding_joint.coordinates
-    [slidingjoint_x(t)]
-    >>> sliding_joint.speeds
-    [slidingjoint_v(t)]
+    Adds sliding Joint between parent's masscenter and a point located at unit
+    distance in x axis of child. ::
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Body, SlidingJoint
+        >>> parent = Body('parent')
+        >>> child = Body('child')
+        >>> l = Symbol('l')
+        >>> sliding_joint = SlidingJoint('slidingjoint', parent, child, \
+        ...                             child_point_pos=(l, 0, 0))
+        >>> sliding_joint.coordinates
+        [slidingjoint_x(t)]
+        >>> sliding_joint.speeds
+        [slidingjoint_v(t)]
 
     """
     def __init__(self, name, parent, child, parent_point_pos=None,
