@@ -1213,9 +1213,10 @@ def _return_conditionset(eqs_in_better_order, all_symbols):
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
-    r""" Solves the `system` using substitution method.
-    A helper function for `nonlinsolve`. This will be called from
-    `nonlinsolve` when any equation(s) is non polynomial equation.
+    r"""
+     Solves the `system` using substitution method. It is used in
+     `nonlinsolve`. This will be called from `nonlinsolve` when any
+     equation(s) is non polynomial equation.
 
     Parameters
     ==========

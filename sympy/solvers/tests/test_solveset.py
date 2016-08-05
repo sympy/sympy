@@ -25,7 +25,7 @@ from sympy.core.containers import Dict
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, solveset, nonlinsolve)
+    solveset, solve_decomposition, substitution, nonlinsolve)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
