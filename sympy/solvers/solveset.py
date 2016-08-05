@@ -408,6 +408,7 @@ def _solve_as_rational(f, symbol, domain):
 def _solve_trig(f, symbol, domain):
     """ Helper to solve trigonometric equations """
     from sympy import factor, factor_list
+    from sympy.simplify.fu import hyper_as_trig, fu
 
     def good_for_factor(trig_eq):
         # if there is more than 1 Trig function present then only do
@@ -423,7 +424,10 @@ def _solve_trig(f, symbol, domain):
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
-    # TODO trighsimp function for Hyperbolic Functions if required
+    elif _is_function_class_equation(HyperbolicFunction, f, symbol):
+        t, f = hyper_as_trig(f)
+        f = f(fu(t))
+        f = trigsimp(f)
     f_orig = f
     if f.is_number or isinstance(f, (bool, BooleanAtom)):
         # f is True in S.Reals
