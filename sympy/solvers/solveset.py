@@ -28,6 +28,7 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
 from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy.calculus.util import periodicity
 
 
 def _invert(f_x, y, x, domain=S.Complexes):
@@ -882,44 +883,84 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
-def solvify(f, symbol, domain=S.Reals):
-    from sympy.calculus.util import periodicity
-    solutions = solveset(f, symbol, domain)
+def solvify(f, symbol, domain):
+    """Solves an equation and returns the solution in accordance with the
+    `solve` output API.
+
+    Returns
+    =======
+
+    We classify the output based on the type of solution returned by `solveset`.
+
+    Solution    |    Output
+    ----------------------------------------
+    FiniteSet   | list
+
+    ImageSet,   | list (if `f` is periodic)
+    Union       |
+
+    EmptySet    | empty list
+
+    Others      | None
+
+
+    Raises
+    ======
+
+    NotImplementedError
+        A ConditionSet is the input.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import solvify, solveset
+    >>> from sympy.abc import x
+    >>> from sympy import S, tan, sin, exp
+    >>> solvify(x**2 - 9, x, S.Reals)
+    [-3, 3]
+    >>> solvify(sin(x) - 1, x, S.Reals)
+    [pi/2]
+    >>> solvify(tan(x), x, S.Reals)
+    [0, pi]
+    >>> solvify(exp(x) - 1, x, S.Complexes)
+
+    >>> solvify(exp(x) - 1, x, S.Reals)
+    [0]
+
+    """
+    solution_set = solveset(f, symbol, domain)
     result = None
-    if solutions is S.EmptySet:
+    if solution_set is S.EmptySet:
         result = []
 
-    elif isinstance(solutions, ConditionSet):
-        raise NotImplementedError
+    elif isinstance(solution_set, ConditionSet):
+        raise NotImplementedError('solveset is unable to solve this equation.')
 
-    elif isinstance(solutions, FiniteSet):
-        result = list(solutions)
+    elif isinstance(solution_set, FiniteSet):
+        result = list(solution_set)
 
-       
     else:
         period = periodicity(f, symbol)
         if period is not None:
-            my_sols = S.EmptySet
-            if isinstance(solutions, ImageSet):
-                sols = (solutions,)
-            elif isinstance(solutions, Union):
-                if all(isinstance(i, ImageSet) for i in solutions.args):
-                    sols = solutions.args
+            solutions = S.EmptySet
+            if isinstance(solution_set, ImageSet):
+                iter_solutions = (solution_set,)
+            elif isinstance(solution_set, Union):
+                if all(isinstance(i, ImageSet) for i in solution_set.args):
+                    iter_solutions = solution_set.args
 
-            for sol in sols:
-                my_sols += sol.intersect(Interval(0, period))
+            for solution in iter_solutions:
+                solutions += solution.intersect(Interval(0, period, False, True))
 
-            if isinstance(my_sols, FiniteSet):
-                result = list(my_sols)
+            if isinstance(solutions, FiniteSet):
+                result = list(solutions)
 
         else:
-            temp = solutions.intersect(domain)
-            if isinstance(temp, FiniteSet):
-                result += temp
-
+            solution = solution_set.intersect(domain)
+            if isinstance(solution, FiniteSet):
+                result += solution
 
     return result
-
 
 
 ###############################################################################
