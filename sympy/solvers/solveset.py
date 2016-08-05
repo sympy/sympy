@@ -425,9 +425,13 @@ def _solve_trig(f, symbol, domain):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
     elif _is_function_class_equation(HyperbolicFunction, f, symbol):
-        t, f = hyper_as_trig(f)
-        f = f(fu(t))
-        f = trigsimp(f)
+        try:
+            t, f = hyper_as_trig(f)
+            f = f(fu(t))
+            f = trigsimp(f)
+        except NotImplementedError:
+            pass
+
     f_orig = f
     if f.is_number or isinstance(f, (bool, BooleanAtom)):
         # f is True in S.Reals

@@ -1557,6 +1557,12 @@ def test_simplifed_trig_solution_2():
     assert solveset_real(3 * tan(x)**2 - 1, x) == soln
 
 
+def test_hyperbolicFunc():
+    from sympy import sinh, cosh
+    eq = -sinh(x)**2 + cosh(x)**2
+    assert solveset_real(eq, x) == S.EmptySet
+
+
 def test_issue_8715():
     eq = x + 1/x > -2 + 1/x
     assert solveset(eq, x, S.Reals) == \
