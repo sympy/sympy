@@ -159,9 +159,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     """
 
     from sympy.utilities.iterables import (
-        subsets,
-        permute_signs,
-        signed_permutations)
+        subsets, permute_signs, signed_permutations)
 
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
@@ -219,7 +217,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 'binary_quadratic']
             if t in permute_signs_for:
                 do_permute_signs_var = True
-            elif t in (permute_signs_check):
+            elif t in permute_signs_check:
                 # if all the variables in eq have even powers
                 # then do_permute_sign = True
                 if len_var == 3:
@@ -227,7 +225,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y), (x, z), (y, z)]
                     check_coeff = True
                     a, b = symbols('a, b')
-                    var1_mul_var2 = map(lambda a, b: a * b, var_mul)
+                    var1_mul_var2 = map(lambda a, b: a*b, var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
                             coefficient = c[v1_mul_v2]
@@ -235,7 +233,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                             coefficient = 0
                         # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
                         # `check_coeff` will be True and do_permute_sign will
-                        #  remain False.
+                        #  remain False. Means no permuted solution.
                         check_coeff = bool(check_coeff & coefficient)
                     if not check_coeff:
                         # means only x**2, y**2, z**2, const is present
@@ -245,7 +243,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y)]
                     check_coeff = True
                     x, y = symbols('x, y')
-                    var1_mul_var2 = map(lambda x, y: x * y, var_mul)
+                    var1_mul_var2 = map(lambda x, y: x*y, var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
                             coefficient = c[v1_mul_v2]
@@ -262,6 +260,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         check_coeff = bool(check_coeff & coefficient)
                     if not check_coeff:
                         # means only x**2, y**2 and const is present
+                        # so we can get more soln by permuting this soln.
                         do_permute_signs = True
         if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
