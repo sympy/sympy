@@ -333,7 +333,7 @@ def as_int(n):
         if result != n:
             raise TypeError
     except TypeError:
-        raise ValueError('{:s} is not an integer'.format(n))
+        raise '%s is not an integer' % (n,)
     return result
 
 
