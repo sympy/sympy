@@ -6506,20 +6506,16 @@ def is_zero_dimensional(F, *gens, **args):
 
     # Remove sqrt or radicals from `F` eqs, if present.
     for eq in F:
+        eq_new = eq
         without_radicals = unrad(simplify(eq))
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:
-                F.remove(eq)
-                # remove the denominator
-                eq_unrad = eq_unrad.as_numer_denom()[0]
-                F.append(eq_unrad)
-        else:
-            # remove the denominator
-            eq_orig = eq
-            eq = eq.as_numer_denom()[0]
-            F.remove(eq_orig)
-            F.append(eq)
+                eq_new = eq_unrad
+        # use the numerator
+        eq_new = eq_new.as_numer_denom()[0]
+        F.remove(eq)
+        F.append(eq_new)
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
 
