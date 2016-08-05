@@ -306,7 +306,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         constant = constant * theterm
                     #any term that does not depend on the summation variable
                     #can be considered constant
-                    elif not (theterm.atoms().intersection(sum_var)):
+                    elif not (theterm.free_symbols.intersection(sum_var)):
                         constant = constant * theterm
                     else:
                         inner = inner * theterm
