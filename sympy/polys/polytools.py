@@ -6511,7 +6511,15 @@ def is_zero_dimensional(F, *gens, **args):
             eq_unrad, cov = without_radicals
             if not cov:
                 F.remove(eq)
+                # remove the denominator
+                eq_unrad = eq_unrad.as_numer_denom()[0]
                 F.append(eq_unrad)
+        else:
+            # remove the denominator
+            eq_orig = eq
+            eq = eq.as_numer_denom()[0]
+            F.remove(eq_orig)
+            F.append(eq)
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
 
