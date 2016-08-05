@@ -710,7 +710,7 @@ def test_simplify():
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
         Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
     assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
-        4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+        4 * Sum(z, (z, 0, 1))) == 4*Sum(z, (z, 0, 1)) + 3*Sum(x, (x, 0, 6))
     assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
         Sum(3*x**2 + x, (x, a, b))
     assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
