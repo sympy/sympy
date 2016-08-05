@@ -1048,16 +1048,30 @@ def test_solve_decomposition():
 def test_nonlinsolve_basic():
     assert nonlinsolve([],[]) == S.EmptySet
     assert nonlinsolve([],[x, y]) == S.EmptySet
+
+    system = [x, y - x - 5]
     assert nonlinsolve([x],[x, y]) == FiniteSet((0, y))
-    assert nonlinsolve([x, y - x - 5], [y]) == FiniteSet((x + 5,))
+    assert nonlinsolve(system, [y]) == FiniteSet((x + 5,))
     soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    assert nonlinsolve([sin(x) -1], [x]) == FiniteSet(tuple(soln))
-    assert nonlinsolve([x**2 -1], [x]) == FiniteSet((-1,), (1,))
+    assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(tuple(soln))
+    assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
+
+    soln = FiniteSet((- y, y), (y, y))
+    assert nonlinsolve([Abs(x) - y], x, y) == soln
+    soln = FiniteSet((y, y))
+    assert nonlinsolve([x - y, 0], x, y) == soln
+    assert nonlinsolve([0, x - y], x, y) == soln
+    assert nonlinsolve([x - y, x - y], x, y) == soln
+    assert nonlinsolve([x, 0], x, y) == FiniteSet((0, y))
 
 
-def test_raise_exception():
+def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
+    raises(ValueError, lambda: nonlinsolve([x**2 -1], [sin(x)]))
+    raises(ValueError, lambda: nonlinsolve([x**2 -1], sin(x)))
+    raises(ValueError, lambda: nonlinsolve([x**2 -1], 1))
+    raises(ValueError, lambda: nonlinsolve([x**2 -1], x + y))
 
 
 def test_trig_system():
@@ -1094,13 +1108,23 @@ def test_trig_system_fail():
 
 
 def test_nonlinsolve_positive_dimensional():
-    x, y, z, a, b, c = symbols('x, y, z, a, b, c', real = True)
+    x, y, z, a, b, c, d = symbols('x, y, z, a, b, c, d', real = True)
     assert nonlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
 
     system = [a**2 + a*c, a - b]
     assert nonlinsolve(system, [a, b]) == FiniteSet((0, 0), (-c, -c))
-     # here (a= 0, b = 0) is independent soln so both is printed.
-     # if symbols = [a, b, c] then only {a : -c ,b : -c}
+    # here (a= 0, b = 0) is independent soln so both is printed.
+    # if symbols = [a, b, c] then only {a : -c ,b : -c}
+
+    eq1 =  a + b + c + d
+    eq2 = a*b + b*c + c*d + d*a
+    eq3 = a*b*c + b*c*d + c*d*a + d*a*b
+    eq4 = a*b*c*d - 1
+    system = [eq1, eq2, eq3, eq4]
+    sol1 = (-1/d, -d, 1/d, FiniteSet(d) - FiniteSet(0))
+    sol2 = (1/d, -d, -1/d, FiniteSet(d) - FiniteSet(0))
+    soln = FiniteSet(sol1, sol2)
+    assert nonlinsolve(system, [a, b, c, d]) == soln
 
 
 def test_nonlinsolve_polysys():
@@ -1336,6 +1360,12 @@ def test_substitution_basic():
     soln = FiniteSet((-3, -2), (-3, 2), (3, -2), (3, 2))
     assert substitution(system, [x, y]) == soln
 
+    soln = FiniteSet((-1, 1))
+    assert substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y]) == soln
+    assert substitution(
+        [x + y], [x], [{y: 1}], [y],
+        set([x + 1]), [y, x]) == S.EmptySet
+
 
 def test_issue_5132_substitution():
     x, y, z, r, t = symbols('x, y, z, r, t', real=True)
@@ -1363,6 +1393,14 @@ def test_issue_5132_substitution():
                                         )
     soln = soln_real + soln_complex
     assert substitution(eqs, [y, z]) == soln
+
+
+def test_raises_substitution():
+    raises(ValueError, lambda: substitution([x**2 -1], []))
+    raises(TypeError, lambda: substitution([x**2 -1]))
+    raises(ValueError, lambda: substitution([x**2 -1], [sin(x)]))
+    raises(TypeError, lambda: substitution([x**2 -1], x))
+    raises(TypeError, lambda: substitution([x**2 -1], 1))
 
 # end of tests for nonlinsolve
 
