@@ -168,12 +168,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.function.is_zero:
             return True
 
-    #the free symbols of the sum include the free symbols
-    #of any of arguements (i.e. sums of indexed functions)
-    @property
-    def free_symbols(self):
-        return set().union(*[a.free_symbols for a in self.args])
-
     def doit(self, **hints):
         if hints.get('deep', True):
             f = self.function.doit(**hints)
