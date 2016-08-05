@@ -295,7 +295,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             elif isinstance(term, Sum):
                 constant = 1
                 inner = 1
-                sum_var = term.args[1].args[0]
+                sum_var = set([term.args[1].args[0]])
                 subterms = Mul.make_args(term.args[0])
                 sum_terms = []
                 for j in range(len(subterms)):
@@ -306,7 +306,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                         constant = constant * theterm
                     #any term that does not depend on the summation variable
                     #can be considered constant
-                    elif not (theterm.atoms(sum_var)):
+                    elif not (theterm.atoms().intersection(sum_var)):
                         constant = constant * theterm
                     else:
                         inner = inner * theterm
