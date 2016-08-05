@@ -25,7 +25,7 @@ from sympy.physics.units import cm
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset)
+    solveset, solve_decomposition)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -1017,6 +1017,31 @@ def test_linsolve():
     a, b, c, d, e = symbols('a, b, c, d, e')
     Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
     assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
+
+
+def test_solve_decomposition():
+    x = Symbol('x')
+    n = Dummy('n')
+
+    f1 = exp(3*x) - 6*exp(2*x) + 11*exp(x) - 6
+    f2 = sin(x)**2 - 2*sin(x) + 1
+    f3 = sin(x)**2 - sin(x)
+    f4 = sin(x + 1)
+    f5 = exp(x + 2) - 1
+    f6 = 1/log(x)
+
+    s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
+    s3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    s4 = ImageSet(Lambda(n, 2*n*pi - 1), S.Integers)
+    s5 = ImageSet(Lambda(n, (2*n + 1)*pi - 1), S.Integers)
+
+    assert solve_decomposition(f1, x, S.Reals) == FiniteSet(0, log(2), log(3))
+    assert solve_decomposition(f2, x, S.Reals) == s3
+    assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, s3)
+    assert solve_decomposition(f4, x, S.Reals) == Union(s4, s5)
+    assert solve_decomposition(f5, x, S.Reals) == FiniteSet(-2)
+    assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
 
 
 def test_issue_9556():
