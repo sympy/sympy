@@ -1223,7 +1223,7 @@ def test_N12():
 
 def test_N13():
     x = Symbol('x')
-    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
+    assert solveset(sin(x) < 2, domain=S.Reals) == Interval(0, 2*pi, False, True)
 
 
 @XFAIL

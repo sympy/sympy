@@ -1,7 +1,7 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
-                   Or, S, sin, sqrt, Symbol, Union, Integral, Sum,
+                   Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
@@ -274,11 +274,6 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
 
-    # XXX should be limited in domain, e.g. between 0 and 2*pi
-    assert isolve(sin(x) < S.Half, x) == \
-        Or(And(-oo < x, x < pi/6), And(5*pi/6 < x, x < oo))
-    assert isolve(sin(x) > S.Half, x) == And(pi/6 < x, x < 5*pi/6)
-
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
         And(rootof(x**7 - x - 2, 0) < x, x < oo)
@@ -290,6 +285,24 @@ def test_solve_univariate_inequality():
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
+
+
+def test_trig_inequalities():
+    # all the inequalities are solved in a periodic interval.
+    assert isolve(sin(x) < S.Half, x, relational=False) == \
+        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, True))
+    assert isolve(sin(x) > S.Half, x, relational=False) == \
+        Interval(pi/6, 5*pi/6, True, True)
+    assert isolve(cos(x) < S.Zero, x, relational=False) == \
+        Interval(pi/2, 3*pi/2, True, True)
+    assert isolve(cos(x) >= S.Zero, x, relational=False) == \
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+
+    assert isolve(tan(x) < S.One, x, relational=False) == \
+        Union(Interval(0, pi/4, False, True), Interval(pi/2, pi, True, True))
+
+    assert isolve(sin(x) <= S.Zero, x, relational=False) == \
+        Union(FiniteSet(S(0)), Interval(pi, 2*pi, False, True))
 
 
 def test_issue_9954():
@@ -333,7 +346,7 @@ def test_issue_10198():
         1 - 1/sqrt(x)), '<', x))
 
 def test_issue_10047():
-    assert solve(sin(x) < 2) == And(-oo < x, x < oo)
+    assert solve(sin(x) < 2) == And(S(0) <= x, x < 2*pi)
 
 
 def test_issue_10268():

@@ -921,7 +921,7 @@ def solvify(f, symbol, domain):
     >>> solvify(sin(x) - 1, x, S.Reals)
     [pi/2]
     >>> solvify(tan(x), x, S.Reals)
-    [0, pi]
+    [0]
     >>> solvify(exp(x) - 1, x, S.Complexes)
 
     >>> solvify(exp(x) - 1, x, S.Reals)
