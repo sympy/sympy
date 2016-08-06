@@ -279,16 +279,19 @@ class CosetTable(DefaultPrinting):
     def n(self):
         """The number `n` represents the length of the sublist containing the
         live cosets.
+
         """
         if not self.table:
             return 0
         return max(self.omega) + 1
 
-    # Pg 152 [1]
+    # Pg. 152 [1]
     def is_complete(self):
-        """
+        r"""
         The coset table is called complete if it has no undefined entries
-        on the live cosets; that is, α^x is defined for all α ∈ Ω and x ∈ A.
+        on the live cosets; that is, `\alpha^x` is defined for all
+        `\alpha \in \Omega` and `x \in A`.
+
         """
         return not any([None in self.table[coset] for coset in self.omega])
 
@@ -360,10 +363,10 @@ class CosetTable(DefaultPrinting):
         scan, scan_check, scan_and_fill, scan_and_fill_c
 
         """
-        # alpha is an integer representing a "coset"
+        # α is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for alpha=0 and w in Y (i.e generating set of H)
-        # 2. alpha in omega (set of live cosets), w in R (relators)
+        # 1. for α=0 and w in Y (i.e generating set of H)
+        # 2. α in  (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -774,8 +777,7 @@ class CosetTable(DefaultPrinting):
     # Compression of a Coset Table
     # Pg. 167 5.2.3
     def compress(self):
-        """Removes the non-live cosets from the coset table
-        """
+        """Removes the non-live cosets from the coset table. """
         gamma = -1
         A = self.A
         A_dict = self.A_dict
@@ -1101,8 +1103,10 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
 
 
 def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
-    """
-    It solves the problem of trying out each individual possibility for α^x.
+    r"""
+    Solves the problem of trying out each individual possibility
+    for `\alpha^x.
+
     """
     D = C.copy()
     A_dict = D.A_dict
@@ -1434,9 +1438,7 @@ def elimination_technique_2(C):
     return C._schreier_generators, C._reidemeister_relators
 
 def simplify_presentation(C):
-    """
-    Relies upon `_simplification_technique_1` for its functioning.
-    """
+    """Relies upon ``_simplification_technique_1`` for its functioning. """
     rels = C._reidemeister_relators
     rels_arr = _simplification_technique_1(rels)
     group = C._schreier_free_group
