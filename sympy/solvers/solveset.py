@@ -649,11 +649,9 @@ def _solveset(f, symbol, domain, _check=False):
 
 
 def transolve(f, symbol, domain=S.Reals):
-    from sympy.polys import factor
-    from sympy.simplify import powdenest, logcombine
+    """Helper for solving transcendental equations."""
 
-    orig_f = f
-    lhs, rhs = _invert(f, 0, symbol, domain)
+    lhs, rhs_s = _invert(f, 0, symbol, domain)
 
     result = S.EmptySet
     if lhs.is_Add:
@@ -679,6 +677,45 @@ def transolve(f, symbol, domain=S.Reals):
     return result
 
 
+def _check_log(f):
+    """Helper function to check if the equation is logarithmic or not."""
+
+    from sympy.simplify import logcombine
+
+    orig_f = f
+    # Heuristic-01
+    g = logcombine(f, force=True)
+    if g.count(log) != f.count(log):
+        if g.func is log:
+            return g
+
+    return False
+
+
+def _solve_log(f, symbol, domain):
+    """Helper function to solve logarithmic equations."""
+
+    from sympy.solvers.solvers import checksol
+
+    lhs, y_s = _invert(f, 0, symbol, domain)
+    result = S.EmptySet
+    g = _check_log(lhs)
+    if g:
+        for y in y_s:
+            solutions = _solveset(g - y, symbol, domain)
+
+            if isinstance(solutions, FiniteSet):
+                for solution in solutions:
+                    if checksol(f, symbol, solution):
+                        result += FiniteSet(solution)
+
+            elif isinstance(solutions, ConditionSet):
+                result += ConditionSet(symbol, Eq(g, y), domain)
+
+            else:
+                result += solutions
+
+    return result
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
