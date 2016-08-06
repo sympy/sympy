@@ -745,6 +745,7 @@ class Interval(Set, EvalfMixin):
         if end == S.Infinity:
             right_open = true
 
+        cls.is_EmptySet = (end - start).is_negative
         return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
