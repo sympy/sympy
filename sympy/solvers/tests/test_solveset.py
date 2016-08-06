@@ -540,14 +540,13 @@ def test_uselogcombine_1():
     assert solveset_real(log(x - 3) + log(x + 3), x) == \
         FiniteSet(sqrt(10))
     assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
+        -3 + sqrt(-36 + (-exp(3) + 6)**2)/2 + exp(3)/2,
+        -sqrt(-36 + (-exp(3) + 6)**2)/2 - 3 + exp(3)/2)
 
 
 @XFAIL
 def test_logsolver():
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
-        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
-
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solveset_real(eq, x) == \
         FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
@@ -914,9 +913,10 @@ def test_solveset_domain():
 def test_improve_coverage():
     from sympy.solvers.solveset import _has_rational_power
     x = Symbol('x')
-    y = exp(x+1/x**2)
-    solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    y = exp(x + 1/x**2)
+    solution = solveset(y**2 + y, x, S.Reals)
+    unsolved_object = ConditionSet(x, Eq(exp(x + x**(-2)) + exp(2*x + 2/x**2), 0),
+                                   S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
@@ -1084,7 +1084,7 @@ def test_simplification():
 def test_issue_10555():
     f = Function('f')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
-        ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+        ConditionSet(x, Eq(f(x) - pi/2, 0), S.Reals)
 
 
 def test_issue_8715():
