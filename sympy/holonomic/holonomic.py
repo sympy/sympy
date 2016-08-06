@@ -136,10 +136,10 @@ class DifferentialOperator(object):
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
     >>> DifferentialOperator([0, 1, x**2], R)
-    (1)Dx + (x**2)Dx**2
+    (1)*Dx + (x**2)*Dx**2
 
     >>> (x*Dx*x + 1 - Dx**2)**2
-    (2*x**2 + 2*x + 1) + (4*x**3 + 2*x**2 - 4)Dx + (x**4 - 6*x - 2)Dx**2 + (-2*x**2)Dx**3 + (1)Dx**4
+    (2*x**2 + 2*x + 1) + (4*x**3 + 2*x**2 - 4)*Dx + (x**4 - 6*x - 2)*Dx**2 + (-2*x**2)*Dx**3 + (1)*Dx**4
 
     See Also
     ========
@@ -309,10 +309,10 @@ class DifferentialOperator(object):
                 print_str += ' + '
 
             if i == 1:
-                print_str += '(' + sstr(j) + ')Dx'
+                print_str += '(' + sstr(j) + ')*Dx'
                 continue
 
-            print_str += '(' + sstr(j) + ')' + 'Dx**' + sstr(i)
+            print_str += '(' + sstr(j) + ')' + '*Dx**' + sstr(i)
 
         return print_str
 
@@ -392,16 +392,16 @@ class HolonomicFunction(object):
     >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])  # sin(x)
 
     >>> p + q  # annihilator of e^x + sin(x)
-    HolonomicFunction((-1) + (1)Dx + (-1)Dx**2 + (1)Dx**3, x), f(0) = 1, f'(0) = 2, f''(0) = 1
+    HolonomicFunction((-1) + (1)*Dx + (-1)*Dx**2 + (1)*Dx**3, x, 0, [1, 2, 1])
 
     >>> p * q  # annihilator of e^x * sin(x)
-    HolonomicFunction((2) + (-2)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
+    HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
     # an example of initial conditions for regular singular points
     # only one root `1/2` of the indicial equation. So ics is [(1/2, [1])]
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]})
-    HolonomicFunction((-1/2) + (x)Dx, x), {1/2: [1]}
+    HolonomicFunction((-1/2) + (x)*Dx, x, 0, {1/2: [1]})
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_expr()
     sqrt(x)
@@ -432,30 +432,17 @@ class HolonomicFunction(object):
         self.annihilator = annihilator
         self.x = x
 
-    def __repr__(self):
-        str_sol = 'HolonomicFunction(%s, %s)' % ((self.annihilator).__repr__(), sstr(self.x))
-
-        if not self._have_init_cond():
-            return str_sol
-
-        # printing the singular initial condition
-        # in valid python
-        elif self.is_singularics():
-            str_sol += ', ' + sstr(self.y0)
-            return str_sol
-
-        # for ordinary initial conditions
+    def __str__(self):
+        if self._have_init_cond():
+            str_sol = 'HolonomicFunction(%s, %s, %s, %s)' % (str(self.annihilator),\
+                sstr(self.x), sstr(self.x0), sstr(self.y0))
         else:
-            cond_str = ''
-            diff_str = ''
-            for i in self.y0:
-                cond_str += ', f%s(%s) = %s' % (diff_str, sstr(self.x0), sstr(i))
-                diff_str += "'"
+            str_sol = 'HolonomicFunction(%s, %s)' % (str(self.annihilator),\
+                sstr(self.x))
 
-            sol = str_sol + cond_str
-            return sol
+        return str_sol
 
-    __str__ = __repr__
+    __repr__ = __str__
 
     def unify(self, other):
         """
@@ -699,11 +686,11 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).integrate((x, 0, x))  # e^x - 1
-        HolonomicFunction((-1)Dx + (1)Dx**2, x), f(0) = 0, f'(0) = 1
+        HolonomicFunction((-1)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
         # integrate(cos(x), (x 0, x)) = sin(x)
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [1, 0]).integrate((x, 0, x))
-        HolonomicFunction((1)Dx + (1)Dx**3, x), f(0) = 0, f'(0) = 1, f''(0) = 0
+        HolonomicFunction((1)*Dx + (1)*Dx**3, x, 0, [0, 1, 0])
         """
 
         # to get the annihilator, just multiply by Dx from right
@@ -1125,10 +1112,10 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
         >>> HolonomicFunction(Dx - 1, x).composition(x**2, 0, [1])  # e^(x**2)
-        HolonomicFunction((-2*x) + (1)Dx, x), f(0) = 1
+        HolonomicFunction((-2*x) + (1)*Dx, x, 0, [1])
 
         >>> HolonomicFunction(Dx**2 + 1, x).composition(x**2 - 1, 1, [1, 0])
-        HolonomicFunction((4*x**3) + (-1)Dx + (x)Dx**2, x), f(1) = 1, f'(1) = 0
+        HolonomicFunction((4*x**3) + (-1)*Dx + (x)*Dx**2, x, 1, [1, 0])
 
         See Also
         ========
@@ -2033,10 +2020,10 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
 
         >>> expr_to_holonomic(sin(x)).change_ics(1)
-        HolonomicFunction((1) + (1)Dx**2, x), f(1) = sin(1), f'(1) = cos(1)
+        HolonomicFunction((1) + (1)*Dx**2, x, 1, [sin(1), cos(1)])
 
         >>> expr_to_holonomic(exp(x)).change_ics(2)
-        HolonomicFunction((-1) + (1)Dx, x), f(2) = exp(2)
+        HolonomicFunction((-1) + (1)*Dx, x, 2, [exp(2)])
         """
 
         symbolic = True
@@ -2108,7 +2095,7 @@ def from_hyper(func, x0=0, evalf=False):
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> from_hyper(hyper([], [S(3)/2], x**2/4))
-    HolonomicFunction((-x) + (2)Dx + (x)Dx**2, x), f(1) = sinh(1), f'(1) = -sinh(1) + cosh(1)
+    HolonomicFunction((-x) + (2)*Dx + (x)*Dx**2, x, 1, [sinh(1), -sinh(1) + cosh(1)])
     """
 
     a = func.ap
@@ -2182,7 +2169,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     >>> from sympy import symbols, meijerg, S
     >>> x = symbols('x')
     >>> from_meijerg(meijerg(([], []), ([S(1)/2], [0]), x**2/4))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1/sqrt(pi)
+    HolonomicFunction((1) + (1)*Dx**2, x, 0, [0, 1/sqrt(pi)])
     """
 
     a = func.ap
@@ -2270,10 +2257,10 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     >>> from sympy import sin, exp, symbols
     >>> x = symbols('x')
     >>> expr_to_holonomic(sin(x))
-    HolonomicFunction((1) + (1)Dx**2, x), f(0) = 0, f'(0) = 1
+    HolonomicFunction((1) + (1)*Dx**2, x, 0, [0, 1])
 
     >>> expr_to_holonomic(exp(x))
-    HolonomicFunction((-1) + (1)Dx, x), f(0) = 1
+    HolonomicFunction((-1) + (1)*Dx, x, 0, [1])
 
     See Also
     ========
