@@ -396,7 +396,7 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
     (-oo, -2] U [2, oo)
 
     """
-    from sympy.calculus.util import periodicity
+    from sympy.calculus.util import continuous_domain, periodicity
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solveset_real, solvify
 
@@ -415,6 +415,13 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
     else:
         solns = None
         e = expr.lhs - expr.rhs
+        period = periodicity(e, gen)
+        if period is not None:
+            inf, sup = domain.inf, domain.sup
+            if sup - inf is S.Infinity:
+                periodic_interval = Interval(0, period, False, True)
+                domain = continuous_domain(e, gen, periodic_interval)
+
         solns = solvify(e, gen, domain)
 
         if solns is None:
@@ -446,9 +453,16 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
         start = domain.inf
         sol_sets = [S.EmptySet]
         try:
-            reals = _nsort(set(solns + singularities), separated=True)[0]
+            discontinuities = domain.boundary - FiniteSet(domain.inf, domain.sup)
+            critical_points = set(solns + singularities + list(discontinuities))
+            reals = _nsort(critical_points, separated=True)[0]
+
         except NotImplementedError:
             raise NotImplementedError('sorting of these roots is not supported')
+
+        if valid(start) and start.is_finite:
+            sol_sets.append(FiniteSet(start))
+
         for x in reals:
             end = x
 
@@ -481,6 +495,10 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
             (start/2 if start.is_negative else
             (2*start if start.is_positive else
             start + 1)))
+
+        if pt >= end:
+            pt = (start + end)/2
+
         if valid(pt):
             sol_sets.append(Interval(start, end, True, True))
 
