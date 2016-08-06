@@ -715,7 +715,7 @@ def test_simplify():
         Sum(3*x**2 + x, (x, a, b))
     assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
         4 * y * Sum(z, (z, n, k))) + 1 == \
-            y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
+            4*y*Sum(z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
@@ -843,7 +843,7 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
         True))
 
 
