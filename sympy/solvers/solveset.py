@@ -585,7 +585,6 @@ def _solve_abs(f, symbol, domain):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-<<<<<<< HEAD
 def solve_decomposition(f, symbol, domain):
     """
     Function to solve equations via the principle of "Decomposition
@@ -663,8 +662,6 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-=======
->>>>>>> 1374887... initial commit for transolve
 def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
