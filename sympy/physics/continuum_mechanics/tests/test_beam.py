@@ -62,9 +62,9 @@ def test_Beam():
         'slope': [(0, 1), (4, 3), (5, 0)]}
 
     b1 = Beam(2, E, I)
-    b1.apply_load(value=-3, start=0, order=-2)
-    b1.apply_load(value=4, start=2, order=-1)
-    b1.apply_load(value=-2, start=3, order=2)
+    b1.apply_load(-3, 0, -2)
+    b1.apply_load(4, 2, -1)
+    b1.apply_load(-2, 3, 2)
 
     b1.bc_moment = [(0, 4), (4, 0)]
     b1.bc_deflection = [(0, 2)]
@@ -139,5 +139,11 @@ def test_Beam():
     # Test for deflection distribution function
     p = b2.deflection()
     q = (-w0*SingularityFunction(x, a1, 5)/120 - w2*SingularityFunction(x, b1, 2)/2 - w2*SingularityFunction(x, c1, 3)/6 +
-        x*(d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
+         x*(d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
     assert p == q/(E*I)
+
+    b3 = Beam(9, E, I)
+    b3.apply_load(value=-2, start=2, order=2, end=3)
+    p = b3.load
+    q = - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
+    assert p == q

@@ -187,7 +187,7 @@ class Beam(object):
     def bc_deflection(self, d_bcs):
         self._boundary_conditions['deflection'] = d_bcs
 
-    def apply_load(self, value, start, order):
+    def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
 
@@ -216,8 +216,8 @@ class Beam(object):
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
-        starting point of the beam.
+        2 Nm/m is applied below the beam starting from 2 meters to 3 meters
+        away from the starting point of the beam.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import Symbol
@@ -226,10 +226,10 @@ class Beam(object):
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
+        >>> b.apply_load(value=-2, start=2, order=2, end = 3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
-
+        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
+            + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
         """
         x = self.variable
         value = sympify(value)
@@ -237,6 +237,14 @@ class Beam(object):
         order = sympify(order)
 
         self._load += value*SingularityFunction(x, start, order)
+
+        if end:
+            if order == 0:
+                self._load += -value*SingularityFunction(x, end, order)
+            elif order.is_positive:
+                self._load += -value*SingularityFunction(x, end, order) - value*SingularityFunction(x, end, 0)
+            else:
+                raise ValueError("""Order of the load should be positive.""")
 
     @property
     def load(self):
@@ -329,7 +337,8 @@ class Beam(object):
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.bending_moment()
-        -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1) - SingularityFunction(x, 3, 4)/6 + 7
+        -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1)
+            - SingularityFunction(x, 3, 4)/6 + 7
         """
         x = self.variable
         if not self._boundary_conditions['moment']:
@@ -379,7 +388,8 @@ class Beam(object):
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.slope()
-        (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2) - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
+        (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2)
+            - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -427,7 +437,8 @@ class Beam(object):
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.deflection()
-        (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3 - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
+        (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3
+            - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
