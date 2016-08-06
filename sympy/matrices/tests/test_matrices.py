@@ -2735,6 +2735,26 @@ def test_issue_10770():
             assert new == m and id(new) != id(m)
 
 
+def test_issue_11238():
+    from sympy import Point, tan, sqrt, pi, Matrix, simplify
+    x = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
+    y = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/(-3 + tan(13*pi/45)**2)
+    p1 = Point(0, 0)
+    p2 = Point(1, -sqrt(3))
+    p0 = Point(x,y)
+    m1 = Matrix([p1 - simplify(p0), p2 - simplify(p0)])
+    m2 = Matrix([p1 - p0, p2 - p0])
+    m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
+    assert m1.rank(simplify=True) == m2.rank(simplify=True) == \
+           m3.rank(simplify=True) == 1
+
+
+def test_issue_9480():
+    m = Matrix([[-5 + 5*sqrt(2), -5],
+                [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
+    assert m.rank() == 1
+
+
 def test_issue_10658():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert A.extract([0, 1, 2], [True, True, False]) == \
