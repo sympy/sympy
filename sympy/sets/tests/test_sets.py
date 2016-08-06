@@ -1049,10 +1049,8 @@ def test_issue_10931():
 def test_issue_11442():
     a = Symbol('a', real=True)
     b = Symbol('b', real=True)
-    i1 = Interval(2, 7)
-    i2 = Interval(a, b)
-    assert not i1.is_EmptySet
-    assert i2.is_EmptySet is None
+    assert Interval(2, 7).is_EmptySet is False
+    assert Interval(a, b).is_EmptySet is None
 
 
 
