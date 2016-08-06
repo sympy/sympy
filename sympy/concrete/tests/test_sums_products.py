@@ -719,17 +719,17 @@ def test_simplify():
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
-        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(x, (t, b+1, c))) == (x + y) * Sum(1, (t, a, b)) + x * Sum(1, (t, b+1, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
-        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(y, (t, a, b))) == (x + y) * Sum(1, (t, a, b)) + x * Sum(1, (t, b+1, c))
     assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
     assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
         Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b))) \
-        == Sum(x + y + z, (t, a, b))          # issue 8596
+        == (x + y + z) * Sum(1, (t, a, b))          # issue 8596
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b)) + \
-        Sum(v, (t, a, b))) == Sum(x + y + z + v, (t, a, b))  # issue 8596
+        Sum(v, (t, a, b))) == (x + y + z + v) * Sum(1, (t, a, b))  # issue 8596
     assert simplify(Sum(x * y, (x, a, b)) / (3 * y)) == \
         (Sum(x, (x, a, b)) / 3)
     assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
