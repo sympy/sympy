@@ -732,8 +732,8 @@ def test_simplify():
         Sum(v, (t, a, b))) == Sum(x + y + z + v, (t, a, b))  # issue 8596
     assert simplify(Sum(x * y, (x, a, b)) / (3 * y)) == \
         (Sum(x, (x, a, b)) / 3)
-    assert simplify(Sum(x * y, (x, a, b)) / (3 * Sum(x * y, (x, a, b)))) \
-        == 1.0 / 3.0
+    assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
+        == Sum(Function('f')(x), (x, a, b))
 
 
 def test_change_index():
