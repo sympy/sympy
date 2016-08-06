@@ -655,24 +655,11 @@ def transolve(f, symbol, domain=S.Reals):
 
     result = S.EmptySet
     if lhs.is_Add:
-        # it's time to try factoring; powdenest is used
-        # to try get powers in standard form for better factoring
-        f = logcombine(lhs, force=True)
-        if f.count(log) != lhs.count(log):
-            if f.func is log:
-                for rhs_s in rhs:
-                    solutions = _solveset(Eq(f, rhs), symbol, domain)
-                    if isinstance(solutions, FiniteSet):
-                        for solution in solutions:
-                            if simplify(orig_f.subs(symbol, solution)) is S.Zero:
-                                result += FiniteSet(solution)
-                    elif isinstance(solutions, ConditionSet):
-                        result += ConditionSet(symbol, Eq(lhs, 0), domain)
-                    else:
-                        result += solutions
+        # solving equation
+        result += _solve_log(f, symbol, domain)
 
     if result is S.EmptySet:
-        result = ConditionSet(symbol, Eq(orig_f, 0), domain)
+        result = ConditionSet(symbol, Eq(f, 0), domain)
 
     return result
 
