@@ -528,7 +528,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u' ' + u'\N{CIRCLED PLUS}' + u' '))
+                    pform = prettyForm(*pform.right(u' \N{CIRCLED PLUS} '))
                 else:
                     pform = prettyForm(*pform.right(' + '))
         return pform
