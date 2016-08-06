@@ -1,6 +1,5 @@
-"""Finitely Presented Groups and its algorithms. """
-
 # -*- coding: utf-8 -*-
+"""Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
 from sympy.core.basic import Basic
@@ -46,6 +45,7 @@ class FpGroup(DefaultPrinting):
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
     relators would be specified in such a way that each of them be equal to the
     identity of the provided free group.
+
     """
     is_group = True
     is_FpGroup = True
@@ -62,7 +62,10 @@ class FpGroup(DefaultPrinting):
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
 
+        # CosetTable instance on identity subgroup
         obj._coset_table = None
+        # returns whether coset table on identity subgroup
+        # has been standardized
         obj._is_standardized = False
 
         obj._order = None
@@ -232,6 +235,7 @@ class CosetTable(DefaultPrinting):
         self.subgroup = subgroup
         # "p" is setup independent of Ω and n
         self.p = [0]
+        # a list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
         # the mathematical coset table which is a list of lists
@@ -273,7 +277,7 @@ class CosetTable(DefaultPrinting):
 
     @property
     def n(self):
-        """The number 'n' represents the length of the sublist containing the
+        """The number `n` represents the length of the sublist containing the
         live cosets.
         """
         if not self.table:
@@ -695,6 +699,7 @@ class CosetTable(DefaultPrinting):
         """
         A variation of "process_deductions", this calls "scan_check" wherever
         "process_deductions" calls "scan".
+
         """
         p = self.p
         table = self.table
@@ -711,9 +716,7 @@ class CosetTable(DefaultPrinting):
         return True
 
     def switch(self, beta, gamma):
-        """
-        Switch the elements β, γ of Ω in C
-        """
+        """Switch the elements β, γ of Ω in ``self``. """
         A = self.A
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
@@ -998,14 +1001,16 @@ def coset_enumeration_c(fp_grp, Y):
         C.scan_and_fill_c(0, w)
     for x in A:
         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    i = 0
-    while i < len(C.omega):
-        alpha = C.omega[i]
-        i += 1
-        for x in C.A:
-            if C.table[alpha][C.A_dict[x]] is None:
-                C.define_c(alpha, x)
-                C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+    alpha = 0
+    while alpha < len(C.table):
+        if C.p[alpha] == alpha:
+            for x in C.A:
+                if C.p[alpha] != alpha:
+                    break
+                if C.table[alpha][C.A_dict[x]] is None:
+                    C.define_c(alpha, x)
+                    C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+        alpha += 1
     return C
 
 
