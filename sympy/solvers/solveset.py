@@ -882,13 +882,33 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
-def _unsolved_syms(eq, all_symbols, known_symbols=set([]), sort=False):
+def _unsolved_syms(eq, symbols, known_symbols=set([]), sort=False):
     """Returns the unsolved symbol present
     in the equation `eq`.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import _unsolved_syms
+    >>> x, y, z = symbols('x, y, z', real=True)
+    >>> eq = x + y + z
+    >>> _unsolved_syms(eq, [x, y, z])
+    set([x, y, z])
+    >>> _unsolved_syms(eq, [x, y])
+    set([x, y])
+    >>> _unsolved_syms(eq, [x, y, z], [z])
+    set([x, y])
+    >>> _unsolved_syms(eq, [x, y, z], [x, z])
+    set([y])
+    >>> _unsolved_syms(eq, [x, y, z], [x, y, z])
+    set()
+
+
     """
     from sympy.core.compatibility import default_sort_key
     free = eq.free_symbols
-    unsolved = (free - set(known_symbols)) & set(all_symbols)
+    unsolved = (free - set(known_symbols)) & set(symbols)
     if sort:
         unsolved = list(unsolved)
         unsolved.sort(key=default_sort_key)
@@ -897,6 +917,27 @@ def _unsolved_syms(eq, all_symbols, known_symbols=set([]), sort=False):
 
 
 def _sort_eqs(system, all_symbols, known_symbols=set([])):
+    """
+    sort such that equation with the fewest potential symbols is first.
+    means eq with less variable first.
+    Returns `eqs_sorted` and  `_eq_unsolved_sym`.
+    `eqs_sorted` is a list of equations in new order and `_eq_unsolved_sym`
+    is a dict of equation and set of unsolved symbol.
+
+    Examples
+    ========
+
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solveset import _sort_eqs
+    >>> x, y, z = symbols('x, y, z', real=True)
+    >>> sys = [x + y + z, x + y, z]
+    >>> eqs, eqs_dict = _sort_eqs(sys, [x, y, z])
+    >>> eqs
+    [z, x + y, x + y + z]
+    >>> eqs_dict
+    {z: set([z]), x + y: set([x, y]), x + y + z: set([x, y, z])}
+
+    """
     from sympy.core.compatibility import ordered
     _eq_unsolved_sym = {}
     for eq in system:
