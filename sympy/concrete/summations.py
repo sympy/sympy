@@ -355,7 +355,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = self.function
 
         if len(sequence_term.free_symbols) > 1:
-            raise NotImplementedError("convergence checking for more that one symbol "
+            raise NotImplementedError("convergence checking for more than one symbol "
                                       "containing series is not handled")
 
         if lower_limit.is_finite and upper_limit.is_finite:
