@@ -51,7 +51,7 @@ class Joint(object):
         self.child = child
         self.coordinates = []
         self.speeds = []
-        self.kds = []
+        self.kin_diff = []
 
         if parent_point_pos is None:
             parent_point_pos = (0, 0, 0)  # Parent's Center of mass
@@ -121,7 +121,7 @@ class PinJoint(Joint):
         This returns the list of generalized speeds for the joint. For a pin
         joint this is equivalent to the derivative of the generalized
         coordinate.
-    kds : list
+    kin_diff : list
         This returns a list of the kinematic differential equations.
     parent_axis : Vector
         This is the axis in the parent body at the joint location that aligns
@@ -140,6 +140,10 @@ class PinJoint(Joint):
         Instance of Body class serving as the parent in the joint.
     child : Body
         Instance of Body class serving as the child in the joint.
+    coord : function of time
+        This is the generalized coordinate to associate with the PinJoint.
+    speed : function of time
+        This is the generalized speed to associate with the PinJoint.
     parent_point_pos : 3 Tuple, optional
         Defines the pin joint's point where the parent will be connected to
         child.  3 Tuple defines the values of x, y and z directions w.r.t
@@ -183,7 +187,7 @@ class PinJoint(Joint):
         [pinjoint_omega(t)]
 
     """
-    def __init__(self, name, parent, child, parent_point_pos=None,
+    def __init__(self, name, parent, child, coord, speed, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
         parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
@@ -218,15 +222,11 @@ class PinJoint(Joint):
         super(PinJoint, self).__init__(name, parent, child, parent_point_pos,
                                        child_point_pos)
 
+        self.coordinates.append(coord)
+        self.speeds.append(speed)
+        self.kin_diff.append(coord - speed)
+
     def apply_joint(self):
-        theta = dynamicsymbols(self.name + '_theta')
-        thetad = dynamicsymbols(self.name + '_theta', 1)
-        omega = dynamicsymbols(self.name + '_omega')
-
-        self.coordinates.append(theta)
-        self.speeds.append(omega)
-        self.kds.append(thetad - omega)
-
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [theta, self.parent_axis])
         self.child.frame.set_ang_vel(self.parent.frame,
@@ -267,7 +267,7 @@ class SlidingJoint(Joint):
         This returns the list of generalized speeds for the joint. For a sliding
         joint this is equivalent to the derivative of the generalized
         coordinate.
-    kds : list
+    kin_diff : list
         This returns a list of the kinematic differential equations.
     parent_axis : Vector
         This is the axis in the parent body at the joint location that aligns
@@ -286,6 +286,10 @@ class SlidingJoint(Joint):
         Instance of Body class serving as the parent in the joint.
     child : Body
         Instance of Body class serving as the child in the joint.
+    coord : function of time
+        This is the generalized coordinate to associate with the SlidingJoint.
+    speed : function of time
+        This is the generalized speed to associate with the SlidingJoint.
     parent_point_pos : 3 Tuple, optional
         Defines the joint's point where the parent will be connected to child.
         3 Tuple defines the values of x, y and z directions w.r.t parent's
@@ -317,14 +321,14 @@ class SlidingJoint(Joint):
         >>> child = Body('child')
         >>> l = Symbol('l')
         >>> sliding_joint = SlidingJoint('slidingjoint', parent, child, \
-        ...                             child_point_pos=(l, 0, 0))
+        ...                              child_point_pos=(l, 0, 0))
         >>> sliding_joint.coordinates
         [slidingjoint_x(t)]
         >>> sliding_joint.speeds
         [slidingjoint_v(t)]
 
     """
-    def __init__(self, name, parent, child, parent_point_pos=None,
+    def __init__(self, name, parent, child, coord, speed, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
         parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
@@ -359,15 +363,11 @@ class SlidingJoint(Joint):
         super(SlidingJoint, self).__init__(name, parent, child,
                                            parent_point_pos, child_point_pos)
 
+        self.coordinates.append(coord)
+        self.speeds.append(speed)
+        self.kin_diff.append(coord - speed)
+
     def apply_joint(self):
-        x = dynamicsymbols(self.name + '_x')
-        xd = dynamicsymbols(self.name + '_x', 1)
-        v = dynamicsymbols(self.name + '_v')
-
-        self.coordinates.append(x)
-        self.speeds.append(v)
-        self.kds.append(xd - v)
-
         self.child.frame.orient(self.parent.frame, 'Axis',
                                 [0, self.parent.frame.x])
         self._align_axes(self.parent_axis, self.child_axis)
