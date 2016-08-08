@@ -889,14 +889,9 @@ def solveset_complex(f, symbol):
     return solveset(f, symbol, S.Complexes)
 
 
-<<<<<<< HEAD
 def solvify(f, symbol, domain):
     """Solves an equation using solveset and returns the solution in accordance
     with the `solve` output API.
-=======
-def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
-    r"""Solves a given equation in domain S.Integers. `diophantine`, defined in
-    solvers/diophantine.py; is used to get the integer solution..
 
     Parameters
     ==========
@@ -904,16 +899,10 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     f : Expr or a relational.
         The target equation
     symbols : list of Symbol
-        The variable for which the equation is solved. The order of
-        symbols in input `symbols` will determine the order of values
-        in the solution tuple.
-    param : symbol that should be used in integer solution
->>>>>>> solveset_integers function added
 
     Returns
     =======
 
-<<<<<<< HEAD
     We classify the output based on the type of solution returned by `solveset`.
 
     Solution    |    Output
@@ -985,12 +974,34 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
                 result += solution
 
     return result
-=======
+
+
+def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
+    r"""Solves a given equation `f` in domain `S.Integers`. `diophantine`, defined
+    in`solvers/diophantine.py`; is used to get the integer solution.
+
+    Parameters
+    ==========
+
+    f : Expr or a relational.
+        The target equation
+    symbols : list of Symbol
+        The variables for which the equation is solved. `symbols`is an optional
+        list of symbols which determines the order of the elements in the
+        returned tuple.
+    param : symbol that should be used in integer solution.
+        `t` is the optional parameter to be used.
+
+    Returns
+    =======
+
     Set
-        A FiniteSet, if finite number of solution is present otherwise
-        a imageset of FiniteSet tuples for `symbols` for which `f` is
-        True or is equal to zero and base set is S.Integers for free_symbols
-        present in the solution.
+        A FiniteSet, if finite number of solution is present.
+
+        Parametrized solution in a ImageSet of FiniteSet of tuples for
+        `symbols` for which `f` is `True` or is equal to zero and base set
+        is `S.Integers` for free symbols present in the solution tuple.
+
         An `EmptySet` is returned if `f` no Integers solution is found and
         `ConditionSet` if it is not able to solve or not implemented for that
         equation `f`.
@@ -1037,6 +1048,11 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     >>> pprint(solveset_integers(x + 1), use_unicode = False)
     {(-1,)}
 
+    See Also
+    ========
+
+    solveset_real(), solveset_complex
+
     """
     from sympy.solvers.diophantine import diophantine
 
@@ -1061,7 +1077,6 @@ def solveset_integers(f, symbols = None, param = Symbol("t", integer = True)):
     if var_int is S.EmptySet:
         return expr
     return imageset(Lambda(var_int, expr), S.Integers)
->>>>>>> solveset_integers function added
 
 
 ###############################################################################
