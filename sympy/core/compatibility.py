@@ -59,6 +59,13 @@ Metaclasses:
         * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
             class Foo(with_metaclass(Meta, Bar)):
                 pass
+Issue #10985:
+    * `u` has been removed from all the files except the one mentioned below
+        * `sympy/printing/pretty/pretty_symbology.py`
+        * `sympy/vector/dyadic.py`
+        * `sympy/vector/vector.py`
+        * `sympy/vector/scaler.py`
+    * This is because it is needed to handle `\N`.
 """
 
 import sys
