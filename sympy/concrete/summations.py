@@ -269,8 +269,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=0, measure=0):
+    def _eval_simplify(self, ratio=1.7, measure=None):
         from sympy.simplify.simplify import sum_add
+        from sympy.core.exprtools import factor_terms
         from sympy import Mul
         s = self
 
