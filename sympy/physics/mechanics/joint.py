@@ -155,12 +155,12 @@ class PinJoint(Joint):
         If it is not supplied, center of mass is added as default.
     parent_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with child's
-        axis before adding joint. If it is not passed, default is x axis in
+        axis before adding joint. If it is not passed, default is z axis in
         parent's frame. Can accept 'X', 'Y', 'Z' or a 3 tuple describing the
         vector.
     child_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with parent's
-        axis before adding joint. If it is not passed, default is x axis in
+        axis before adding joint. If it is not passed, default is z axis in
         child's frame. Can accept 'X', 'Y', 'Z' or a 3 tuple describing the
         vector.
 
@@ -179,8 +179,8 @@ class PinJoint(Joint):
         >>> l = Symbol('l')
         >>> child.apply_force(child.mass * gravity * parent.frame.y,
         ...                   child.masscenter)
-        >>> pin_joint = PinJoint('pinjoint', parent, \
-        ...                      child, child_point_pos=(l, l, 0))
+        >>> pin_joint = PinJoint('pinjoint', parent, child,
+        ...                      child_point_pos=(l, l, 0))
         >>> pin_joint.coordinates
         [pinjoint_theta(t)]
         >>> pin_joint.speeds
@@ -196,7 +196,7 @@ class PinJoint(Joint):
                           'Z': child.frame.z}
 
         if parent_axis is None:
-            self.parent_axis = parent.frame.x
+            self.parent_axis = parent.frame.z
         elif isinstance(parent_axis, tuple):
             self.parent_axis = convert_tuple_to_vector(self.parent.frame,
                                                        parent_axis)
@@ -208,7 +208,7 @@ class PinJoint(Joint):
                             " or a 3-Tuple.")
 
         if child_axis is None:
-            self.child_axis = child.frame.x
+            self.child_axis = child.frame.z
         elif isinstance(child_axis, tuple):
             self.child_axis = convert_tuple_to_vector(self.child.frame,
                                                       child_axis)
@@ -300,12 +300,12 @@ class SlidingJoint(Joint):
         If it is not supplied, center of mass is added as default.
     parent_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with child's
-        axis before adding joint. If it is not passed, default is x axis in
+        axis before adding joint. If it is not passed, default is z axis in
         parent's frame. Can pass in 'X', 'Y', 'Z' or a 3 tuple describing the
         vector.
     child_axis : 3 Tuple or string, optional
         Defines the orientation as a vector which must be aligned with parent's
-        axis before adding joint. If it is not passed, default is x axis in
+        axis before adding joint. If it is not passed, default is z axis in
         child's frame. Can pass in 'X', 'Y', 'Z' or a 3 tuple describing the
         vector.
 
@@ -337,7 +337,7 @@ class SlidingJoint(Joint):
                           'Z': child.frame.z}
 
         if parent_axis is None:
-            self.parent_axis = parent.frame.x
+            self.parent_axis = parent.frame.z
         elif isinstance(parent_axis, tuple):
             self.parent_axis = convert_tuple_to_vector(self.parent.frame,
                                                        parent_axis)
@@ -349,7 +349,7 @@ class SlidingJoint(Joint):
                             " or a 3-Tuple.")
 
         if child_axis is None:
-            self.child_axis = child.frame.x
+            self.child_axis = child.frame.z
         elif isinstance(child_axis, tuple):
             self.child_axis = convert_tuple_to_vector(self.child.frame,
                                                       child_axis)
