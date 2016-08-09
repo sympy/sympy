@@ -2654,7 +2654,10 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
                     coeff = list(reversed(rep))[i:]
                     indicial = i
                     break
-            y0 = {indicial:coeff}
+            for i, j in enumerate(coeff):
+                if isinstance(j, (PolyElement, FracElement)):
+                    coeff[i] = j.as_expr()
+            y0 = {indicial:S(coeff)}
 
     elif israt:
         order = 1
@@ -2678,7 +2681,9 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
                     coeff = S(j)**ratexp
                     indicial = S(i) * ratexp
                     break
-            y0 = {indicial: [coeff]}
+            if isinstance(coeff, (PolyElement, FracElement)):
+                coeff = coeff.as_expr()
+            y0 = {indicial: S([coeff])}
 
     if y0 or not initcond:
         return HolonomicFunction(sol, x, x0, y0)
