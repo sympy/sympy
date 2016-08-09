@@ -625,11 +625,18 @@ def sum_simplify(s):
             other = 1
             sum_terms = []
 
-            for j in range(len(term.args)):
-                if isinstance(term.args[j], Sum):
-                    sum_terms.append(term.args[j]._eval_simplify())
+            if not term.has(Sum):
+                o_t.append(term)
+                continue
+
+            mul_terms = Mul.make_args(term)
+            for j in range(len(mul_terms)):
+                if isinstance(mul_terms[j], Sum):
+                    sum_terms.append(mul_terms[j]._eval_simplify())
+                elif mul_terms[j].has(Sum):
+                    other = other * sum_simplify(mul_terms[j])
                 else:
-                    other = other * term.args[j]
+                    other = other * mul_terms[j]
             if len(sum_terms):
                 #some simplification may have happened
                 #use if so
