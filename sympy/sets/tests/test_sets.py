@@ -1053,7 +1053,6 @@ def test_issue_11442():
     assert Interval(a, b).is_EmptySet is None
 
 
-
 def test_issue_11174():
     soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
     assert Intersection(FiniteSet(-x), S.Reals) == soln
