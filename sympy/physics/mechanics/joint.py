@@ -1,4 +1,4 @@
-from sympy import acos
+from sympy import acos, Matrix
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
 
@@ -50,8 +50,8 @@ class Joint(object):
         self.name = name
         self.parent = parent
         self.child = child
-        self.coordinates = [i for i in coordinates]
-        self.speeds = [i for i in speeds]
+        self.coordinates = Matrix([i for i in coordinates])
+        self.speeds = Matrix([i for i in speeds])
         self.kin_diff = []
 
         # Process the parent and child joint access input possibilities
@@ -129,6 +129,15 @@ class Joint(object):
         raise NotImplementedError("To define a custom pydy.Joint, you need to" +
                                   " override apply_joint method in Joint's" +
                                   " subclass.")
+
+    def spatial_info(self):
+        try:
+            spat_velocity = self.motion_subspace * self.coordinates.transpose()
+            return self.joint_transform, self.motion_subspace, spat_velocity
+        except AttributeError:
+            raise NotImplementedError("To use this method you need to define" +
+                                      " motion subspace and joint transform" +
+                                      " for your joint.")
 
 
 class PinJoint(Joint):
@@ -235,6 +244,16 @@ class PinJoint(Joint):
                                        parent_axis, child_axis)
 
         self.kin_diff.append(coord - speed)
+
+        # Define spatial information
+        self.joint_transform = Matrix([[cos(coord), sin(coord),  0, 0, 0, 0],
+                                       [-sin(coord), cos(coord), 0, 0, 0, 0],
+                                       [0,           0,          1, 0, 0, 0],
+                                       [0, 0, 0,  cos(coord), sin(coord), 0],
+                                       [0, 0, 0, -sin(coord), cos(coord), 0],
+                                       [0, 0, 0,  0,          0,          1]])
+
+        self.motion_subspace = Matrix([0, 0, 1, 0, 0, 0])
 
     def apply_joint(self):
         # Orient the two joint frames in the two bodies
@@ -350,6 +369,16 @@ class SlidingJoint(Joint):
                                            parent_axis, child_axis)
 
         self.kin_diff.append(coord - speed)
+
+        # Define spatial information
+        self.joint_transform = Matrix([[1,     0,      0, 0, 0, 0],
+                                       [0,     1,      0, 0, 0, 0],
+                                       [0,     0,      1, 0, 0, 0],
+                                       [0,     -coord, 0, 1, 0, 0],
+                                       [coord, 0,      0, 0, 1, 0],
+                                       [0,     0,      0, 0, 0, 1]])
+
+        self.motion_subspace = Matrix([0, 0, 0, 0, 0, 1])
 
     def apply_joint(self):
         # Orient the two joint frames in the two bodies
