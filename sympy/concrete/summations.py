@@ -296,7 +296,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 constant = 1
                 inner = 1
                 sum_var = set([term.args[1].args[0]])
-                subterms = Mul.make_args(term.args[0])
+                subterms = Mul.make_args(simplify(term.args[0]))
                 sum_terms = []
                 for j in range(len(subterms)):
                     theterm = subterms[j]
