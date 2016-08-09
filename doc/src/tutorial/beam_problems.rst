@@ -20,13 +20,30 @@ In Sympy, we can constuct a beam object with the following properties :
 - Length
 - Elastic Modulus
 - Second Moment of Area
-- A symbol that can be used as a variable along the length. By default,
-  this is set to ``Symbol(x)``
+- Variable : A symbol that can be used as a variable along the length. By default,
+  this is set to ``Symbol(x)``.
+- Boundary Conditions
+    - bc_moment : Boundary conditions for moment.
+    - bc_slope : Boundary conditions for slope.
+    - bc_deflection : Boundary conditions for deflection.
+- Load Distribution
 
-For example :
+We have following methods under the beam class:
 
-    >>> from sympy.physics.continuum_mechanics.beam import Beam
-    >>> from sympy import Symbol
-    >>> E = Symbol('E')
-    >>> I = Symbol('I')
-    >>> b = Beam(4, E, I)
+- apply_load
+- shear_force
+- bending_moment
+- slope
+- deflection
+
+
+Examples
+========
+
+Let us solve some beam bending problems using this module :
+
+**Example 1**
+
+**Example 2**
+
+**Example 3**
