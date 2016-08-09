@@ -735,6 +735,9 @@ def test_simplify():
     assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
         == Sum(Function('f')(x), (x, a, b))
     assert simplify(Sum(c * x, (x, a, b)) - c * Sum(x, (x, a, b))) == 0
+    assert simplify(c * (Sum(x, (x, a, b))  + y)) == c * (y + Sum(x, (x, a, b)))
+    assert simplify(c * (Sum(x, (x, a, b)) + y * Sum(x, (x, a, b)))) == \
+        c * (y + 1) * Sum(x, (x, a, b))
 
 
 def test_change_index():
