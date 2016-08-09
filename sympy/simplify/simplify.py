@@ -642,7 +642,7 @@ def sum_simplify(s):
                 #use if so
                 s_t.append(Mul(*sum_terms) * other)
             else:
-                o_t.append(term)
+                o_t.append(other)
         elif isinstance(term, Sum):
             s_t.append(term._eval_simplify())
         else:
