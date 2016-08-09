@@ -410,17 +410,6 @@ def _solve_trig(f, symbol, domain):
     from sympy import factor, factor_list
     from sympy.simplify.fu import hyper_as_trig, fu
 
-    def good_for_factor(trig_eq):
-        # if there is more than 1 Trig function present then only do
-        # factorization.
-        i = 0
-        for a in trig_eq.args:
-            if isinstance(a, (TrigonometricFunction, HyperbolicFunction)):
-                i += 1
-                if i >= 2:
-                    return True
-    # end of def good_for_factor(trig_eq)
-
     if _is_function_class_equation(TrigonometricFunction, f, symbol):
         f = trigsimp(f)
     # trigsimp is not defined for hyperbolic
@@ -452,12 +441,11 @@ def _solve_trig(f, symbol, domain):
         # factor the `exp` expression reduces the number of ImageSet
         # eg. f = 4*sin(x)**3  + 2*sin(x)**2 - 2*sin(x) - 1, one can check by
         # comparing soln of solveset(f) and solveset(factor(f.rewrite(exp)))
-        if len(fact_list) != 1 or good_for_factor(fact[0]):
+        if len(fact_list) != 1:
             # if only one term then no need of factorization
             f1 = factor(f1)
         if f1.is_Mul:
-            # exp form have multiplications
-            # store each terms
+            # exp form have multiplications, store each terms
             for fact in f1.args:
                 # dont add numbers
                 if not fact.is_number:
@@ -472,7 +460,7 @@ def _solve_trig(f, symbol, domain):
     if isinstance(soln, ConditionSet):
         # try to solve without converting it into exp form.
         # In this time if ConditionSet is returned then it's
-        # expression will be in Trigonometric Function.
+        # expression will be in Trigonometric Function(original eq).
         return _solve_as_poly(f_orig, symbol, domain)
     return soln.intersection(domain) if domain.is_subset(S.Reals) else soln
 
@@ -594,9 +582,6 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    # If solution in ImageSet then return it
-    if isinstance(result, ImageSet) or any(isinstance(r, ImageSet) for r in result.args):
-        return result
     return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
 
 

@@ -1047,9 +1047,32 @@ def test_Union_imageset():
     assert Union(img1) == img1
 
     assert Union(S.EmptySet, img1) == img1
+    assert Union(img1, S.EmptySet) == img1
 
     img2 = ImageSet(Lambda(n, 2 * n * pi + pi), S.Integers)
     assert Union(img1, img2) == ImageSet(Lambda(n, n * pi), S.Integers)
+
+    img2 = ImageSet(Lambda(n, 2 * n * pi + pi), Interval(0, 10))
+    uni = Union(img1, img2, evaluate=False)
+    assert Union(img1, img2) == uni
+
+    img2 = ImageSet(Lambda((n, m), 2 * n * pi + pi), S.Integers)
+    uni = Union(img1, img2, evaluate=False)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, 2 * n * pi), S.Reals)
+    img2 = ImageSet(Lambda(n, 2 * n * pi + pi), S.Reals)
+    uni = ImageSet(Lambda(n, n * pi), S.Reals)
+    assert Union(img1, img2) == uni
+    img2 = ImageSet(Lambda(n, n**2), S.Reals)
+    uni = Union(img1, img2, evaluate=False)
+    assert Union(img1, img2) == uni
+    assert Union(img2, img1) == uni
+
+    img1 = ImageSet(Lambda(n, n*pi + pi/3), S.Integers)
+    img2 = ImageSet(Lambda(n, n*pi + pi/3 + 2*pi), S.Integers)
+    uni = ImageSet(Lambda(n, pi*n + pi/3), S.Integers)
+    assert Union(img1, img2) == uni
 
     img1 = ImageSet(Lambda(n, 2 * n * pi + pi / 4), S.Integers)
     img2 = ImageSet(Lambda(n, 2 * n * pi + 5 * pi / 4), S.Integers)
