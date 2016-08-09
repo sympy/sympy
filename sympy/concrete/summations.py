@@ -254,8 +254,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return None
             df = Derivative(f, x, evaluate=True)
             rv = self.func(df, limit)
-            if limit[0] not in df.free_symbols:
-                rv = rv.doit()
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')

@@ -357,8 +357,9 @@ class IndexedBase(Expr, NotIterable):
 
         if is_sequence(shape):
             shape = Tuple(*shape)
-        else:
-            shape = sympify(shape)
+        elif shape is not None:
+            shape = Tuple(shape)
+
         if shape is not None:
             obj = Expr.__new__(cls, label, shape, **kw_args)
         else:
