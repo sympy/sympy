@@ -26,17 +26,17 @@ class SymbolicSystem(object):
 
     where
 
-        x : states, i.e. [q, u]
-        t : time
-        r : specified (exogenous) inputs
-        p : constants
-        q : generalized coordinates
-        u : generalized speeds
-        M : mass matrix or generalized inertia matrix (implicit dynamical
-            equations or combined dynamics and kinematics)
-        F : right hand side (implicit dynamical equations or combined dynamics
-            and kinematics)
-        G : right hand side of the kinematical differential equations
+    x : states, i.e. [q, u]
+    t : time
+    r : specified (exogenous) inputs
+    p : constants
+    q : generalized coordinates
+    u : generalized speeds
+    M : mass matrix or generalized inertia matrix (implicit dynamical equations
+    or combined dynamics and kinematics)
+    F : right hand side (implicit dynamical equations or combined dynamics and
+    kinematics)
+    G : right hand side of the kinematical differential equations
 
 
 

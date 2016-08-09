@@ -33,28 +33,28 @@ The first step will be to initialize all of the dynamic and constant symbols. ::
 Next step is to define the equations of motion in multiple forms:
 
     [1] Explicit form where the kinematics and dynamics are combined
-        x' = F(x, t, r, p)
+        x' = F_1(x, t, r, p)
 
     [2] Implicit form where the kinematics and dynamics are combined
-        M(x, p) x' = F(x, t, r, p)
+        M(x, p) x' = F_2(x, t, r, p)
 
     [3] Implicit form where the kinematics and dynamics are separate
-        M(q, p) u' = F(q, u, t, r, p)
+        M(q, p) u' = F_3(q, u, t, r, p)
         q' = G(q, u, t, r, p)
 
 where
 
-    x : states, i.e. [q, u]
-    t : time
-    r : specified (exogenous) inputs
-    p : constants
-    q : generalized coordinates
-    u : generalized speeds
-    M : mass matrix or generalized inertia matrix (implicit dynamical
-        equations or combined dynamics and kinematics)
-    F : right hand side (implicit dynamical equations or combined dynamics
-        and kinematics)
-    G : right hand side of the kinematical differential equations ::
+x : states, i.e. [q, u]
+t : time
+r : specified (exogenous) inputs
+p : constants
+q : generalized coordinates
+u : generalized speeds
+M : mass matrix or generalized inertia matrix (implicit dynamical equations or
+combined dynamics and kinematics)
+F : right hand side (implicit dynamical equations or combined dynamics and
+kinematics)
+G : right hand side of the kinematical differential equations ::
 
     >>> dyn_implicit_mat = Matrix([[1, 0, -x/m],
     ...                            [0, 1, -y/m],
