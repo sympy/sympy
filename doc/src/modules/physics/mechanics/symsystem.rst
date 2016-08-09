@@ -3,22 +3,28 @@ Symbolic Systems in Physics/Mechanics
 =====================================
 
 The `SymbolicSystem` class in physics/mechanics is a location for the pertinent
-of a dynamic system. In its most basic form it contains the equations of motion
-for the dynamic system, however, it can also contain information regarding the
-loads that the system is feeling, the bodies that the system is comprised of
-and any additional equations the user feels is important for the system. The
-goal of this class is to provide a unified output format for the equations of
-motion that simulation code can be designed around.
+information of a multibody dynamic system. In its most basic form it contains
+the equations of motion for the dynamic system, however, it can also contain
+information regarding the loads that the system is subject to, the bodies that
+the system is comprised of and any additional equations the user feels is
+important for the system. The goal of this class is to provide a unified output
+format for the equations of motion that numerical analysis code can be designed
+around.
 
 SymbolicSystem Example Usage
 ============================
 
 This code will go over the manual input of the equations of motion for the
-simple pendulum into `SymbolicSystem` using x and y coordinates instead of
-theta.
+simple pendulum that uses the Cartesian location of the mass as the generalized
+coordinates into `SymbolicSystem`.
 
-The equations of motion are formed at
-http://nbviewer.jupyter.org/github/bmcage/odes/blob/master/docs/ipython/Planar%20Pendulum%20as%20DAE.ipynb ::
+The equations of motion are formed in the physics/mechanics/examples_. In that
+spot the variables q1 and q2 are used in place of x and y and the reference
+frame is rotated 90 degrees.
+
+.. _examples: ../examples/lin_pend_nonmin_example.html
+
+::
 
     >>> from sympy import atan, symbols, Matrix
     >>> from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame,
@@ -36,15 +42,15 @@ Next step is to define the equations of motion in multiple forms:
         x' = F_1(x, t, r, p)
 
     [2] Implicit form where the kinematics and dynamics are combined
-        M(x, p) x' = F_2(x, t, r, p)
+        M_2(x, p) x' = F_2(x, t, r, p)
 
     [3] Implicit form where the kinematics and dynamics are separate
-        M(q, p) u' = F_3(q, u, t, r, p)
+        M_3(q, p) u' = F_3(q, u, t, r, p)
         q' = G(q, u, t, r, p)
 
 where
 
-x : states, i.e. [q, u]
+x : states, e.g. [q, u]
 t : time
 r : specified (exogenous) inputs
 p : constants
@@ -54,7 +60,9 @@ M : mass matrix or generalized inertia matrix (implicit dynamical equations or
 combined dynamics and kinematics)
 F : right hand side (implicit dynamical equations or combined dynamics and
 kinematics)
-G : right hand side of the kinematical differential equations ::
+G : right hand side of the kinematical differential equations 
+
+::
 
     >>> dyn_implicit_mat = Matrix([[1, 0, -x/m],
     ...                            [0, 1, -y/m],
@@ -98,9 +106,15 @@ class. ::
     >>> alg_con = [2]
     >>> alg_con_full = [4]
 
-An iterable containing the states now needs to be created for the solvers. ::
+An iterable containing the states now needs to be created for the system. The
+`SymbolicSystem` class can determine which of the states are considered
+coordinates or speeds by passing in the indexes of the coordinates and speeds.
+If these indexes are not passed in the object will not be able to differentiate
+between coordinates and speeds. ::
 
     >>> states = (x, y, u, v, lam)
+    >>> coord_idxs = (0, 1)
+    >>> speed_idxs = (2, 3)
 
 Now the equations of motion instances can be created using the above mentioned
 equations of motion formats. ::
@@ -111,20 +125,18 @@ equations of motion formats. ::
     >>> symsystem2 = system.SymbolicSystem(states, comb_implicit_rhs, 
     ...                                    mass_matrix=comb_implicit_mat,
     ...                                    alg_con=alg_con_full,
-    ...                                    coord_idxs=(0, 1))
+    ...                                    coord_idxs=coord_idxs)
     >>> symsystem3 = system.SymbolicSystem(states, dyn_implicit_rhs, 
     ...                                    mass_matrix=dyn_implicit_mat,
     ...                                    coordinate_derivatives=kin_explicit_rhs,
-    ...                                    alg_con=alg_con, coord_idxs=(0, 1), 
-    ...                                    speed_idxs=(2, 3))
+    ...                                    alg_con=alg_con, 
+    ...                                    coord_idxs=coord_idxs, 
+    ...                                    speed_idxs=speed_idxs)
 
-The `SymbolicSystem` class can determine which of the states are considered
-coordinates or speeds by passing in the indexes of the coordinates and speeds.
-If these indexes are not passed in the object will not be able to differentiate
-between coordinates and speeds. Like coordinates and speeds, the bodies and
-loads attributes can only be accessed if they are specified during
-initialization of the `SymbolicSystem` class. Lastly here are some attributes
-accessible from the `SymbolicSystem` class. ::
+ Like coordinates and speeds, the bodies and loads attributes can only be
+ accessed if they are specified during initialization of the `SymbolicSystem`
+ class. Lastly here are some attributes accessible from the `SymbolicSystem`
+ class. ::
 
     >>> symsystem1.states
     Matrix([

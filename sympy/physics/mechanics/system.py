@@ -18,15 +18,15 @@ class SymbolicSystem(object):
             x' = F_1(x, t, r, p)
 
         [2] Implicit form where the kinematics and dynamics are combined
-            M(x, p) x' = F_2(x, t, r, p)
+            M_2(x, p) x' = F_2(x, t, r, p)
 
         [3] Implicit form where the kinematics and dynamics are separate
-            M(q, p) u' = F_3(q, u, t, r, p)
+            M_3(q, p) u' = F_3(q, u, t, r, p)
             q' = G(q, u, t, r, p)
 
     where
 
-    x : states, i.e. [q, u]
+    x : states, e.g. [q, u]
     t : time
     r : specified (exogenous) inputs
     p : constants
@@ -43,16 +43,13 @@ class SymbolicSystem(object):
     Attributes
     ==========
 
-    TODO - come up with the size of the matrices and add a notes section
-    detailing any variables I used
-
-    coordinates : Matrix
+    coordinates : Matrix, shape(n, 1)
         This is a matrix containing the generalized coordinates of the system
 
-    speeds : Matrix
+    speeds : Matrix, shape(m, 1)
         This is a matrix containing the generalized speeds of the system
 
-    states : Matrix
+    states : Matrix, shape(o, 1)
         This is a matrix containing the state variables of the system
 
     alg_con : List
@@ -63,34 +60,34 @@ class SymbolicSystem(object):
         a representation of the combined kinematics and dynamics thus make sure
         it always matches the mass matrix entered.
 
-    dyn_implicit_mat : Matrix
+    dyn_implicit_mat : Matrix, shape(m, m)
         This is the M matrix in form [3] of the equations of motion (the mass
         matrix or generalized inertia matrix of the dynamical equations of
         motion in implicit form).
 
-    dyn_implicit_rhs : Matrix
+    dyn_implicit_rhs : Matrix, shape(m, 1)
         This is the F vector in form [3] of the equations of motion (the right
         hand side of the dynamical equations of motion in implicit form).
 
-    comb_implicit_mat : Matrix
+    comb_implicit_mat : Matrix, shape(o, o)
         This is the M matrix in form [2] of the equations of motion. This matrix
         contains a block diagonal structure where the top left block (the first
         rows) represent the matrix in the implicit form of the kinematical
         equations and the bottom right block (the last rows) represent the
         matrix in the implicit form of the dynamical equations.
 
-    comb_implicit_rhs : Matrix
+    comb_implicit_rhs : Matrix, shape(o, 1)
         This is the F vector in form [2] of the equations of motion. The top
         part of the vector represents the right hand side of the implicit form
         of the kinemaical equations and the bottom of the vector represents the
         right hand side of the implicit form of the dynamical equations of
         motion.
 
-    comb_explicit_rhs : Matrix
+    comb_explicit_rhs : Matrix, shape(o, 1)
         This vector represents the right hand side of the combined equations of
         motion in explicit form (form [1] from above).
 
-    kin_explicit_rhs : Matrix
+    kin_explicit_rhs : Matrix, shape(m, 1)
         This is the right hand side of the explicit form of the kinematical
         equations of motion as can be seen in form [3] (the G matrix).
 
@@ -203,6 +200,13 @@ class SymbolicSystem(object):
         >>> symsystem = SymbolicSystem([theta], dyn_implicit_rhs, [omega],
         ...                            dyn_implicit_mat)
 
+    Notes
+    =====
+
+    m : number of generalized speeds
+    n : number of generalized coordinates
+    o : number of states
+
     """
 
     def __init__(self, coord_states, right_hand_side, speeds=None,
@@ -266,7 +270,7 @@ class SymbolicSystem(object):
     def coordinates(self):
         """Returns the column matrix of the generalized coordinates"""
         if self._coordinates is None:
-            raise AttributeError("The coordinates were not specified")
+            raise AttributeError("The coordinates were not specified.")
         else:
             return self._coordinates
 
@@ -274,7 +278,7 @@ class SymbolicSystem(object):
     def speeds(self):
         """Returns the column matrix of generalized speeds"""
         if self._speeds is None:
-            raise AttributeError("The speeds were not specified")
+            raise AttributeError("The speeds were not specified.")
         else:
             return self._speeds
 
@@ -296,7 +300,7 @@ class SymbolicSystem(object):
         included"""
         if self._dyn_implicit_mat is None:
             raise AttributeError("dyn_implicit_mat is not specified for "
-                                 "equations of motion form [1] or [2]")
+                                 "equations of motion form [1] or [2].")
         else:
             return self._dyn_implicit_mat
 
@@ -307,7 +311,7 @@ class SymbolicSystem(object):
         included"""
         if self._dyn_implicit_rhs is None:
             raise AttributeError("dyn_implicit_rhs is not specified for "
-                                 "equations of motion form [1] or [2]")
+                                 "equations of motion form [1] or [2].")
         else:
             return self._dyn_implicit_rhs
 
@@ -328,7 +332,7 @@ class SymbolicSystem(object):
                 return self._comb_implicit_mat
             else:
                 raise AttributeError("comb_implicit_mat is not specified for "
-                                     "equations of motion form [1]")
+                                     "equations of motion form [1].")
         else:
             return self._comb_implicit_mat
 
@@ -345,7 +349,7 @@ class SymbolicSystem(object):
                 return self._comb_implicit_rhs
             else:
                 raise AttributeError("comb_implicit_mat is not specified for "
-                                     "equations of motion in form [1]")
+                                     "equations of motion in form [1].")
         else:
             return self._comb_implicit_rhs
 
@@ -362,7 +366,7 @@ class SymbolicSystem(object):
         form, x' = F, where the kinematical equations are included"""
         if self._comb_explicit_rhs is None:
             raise AttributeError("Please run .combute_explicit_form before "
-                                 "attempting to access comb_explicit_rhs")
+                                 "attempting to access comb_explicit_rhs.")
         else:
             return self._comb_explicit_rhs
 
@@ -372,7 +376,7 @@ class SymbolicSystem(object):
         form, q' = G"""
         if self._kin_explicit_rhs is None:
             raise AttributeError("kin_explicit_rhs is not specified for "
-                                 "equations of motion form [1] or [2]")
+                                 "equations of motion form [1] or [2].")
         else:
             return self._kin_explicit_rhs
 
@@ -424,7 +428,7 @@ class SymbolicSystem(object):
     def bodies(self):
         """Returns the bodies in the system"""
         if self._bodies is None:
-            raise AttributeError("bodies were not specified for the system")
+            raise AttributeError("bodies were not specified for the system.")
         else:
             return self._bodies
 
@@ -432,6 +436,6 @@ class SymbolicSystem(object):
     def loads(self):
         """Returns the loads in the system"""
         if self._loads is None:
-            raise AttributeError("bodies were not specified for the system")
+            raise AttributeError("loads were not specified for the system.")
         else:
             return self._loads
