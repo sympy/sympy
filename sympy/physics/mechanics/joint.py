@@ -44,46 +44,84 @@ class Joint(object):
         child's frame.
     """
 
-    def __init__(self, name, parent, child, parent_point_pos=None,
-                 child_point_pos=None):
+    def __init__(self, name, parent, child, coordinates, speeds,
+                 parent_point_pos=(0, 0, 0), child_point_pos=(0, 0, 0),
+                 parent_axis=None, child_axis=None):
         self.name = name
         self.parent = parent
         self.child = child
-        self.coordinates = []
-        self.speeds = []
+        self.coordinates = [i for i in coordinates]
+        self.speeds = [i for i in speeds]
         self.kin_diff = []
 
-        if parent_point_pos is None:
-            parent_point_pos = (0, 0, 0)  # Parent's Center of mass
+        # Process the parent and child joint access input possibilities
+        parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
+                           'Z': parent.frame.z}
+        child_axes_str = {'X': child.frame.x, 'Y': child.frame.y,
+                          'Z': child.frame.z}
 
-        if child_point_pos is None:
-            child_point_pos = (0, 0, 0)  # Child's Center of mass
+        if parent_axis is None:
+            self.parent_axis = parent.frame.z
+        elif isinstance(parent_axis, tuple):
+            self.parent_axis = convert_tuple_to_vector(self.parent.frame,
+                                                       parent_axis)
+        elif isinstance(parent_axis, str) and parent_axis.upper() \
+                in parent_axes_str.keys():
+            self.parent_axis = parent_axes_str[parent_axis.upper()]
+        else:
+            raise TypeError("Parent Axis must either be one of 'X', 'Y', 'Z'" +
+                            " or a 3-Tuple.")
 
-        self._parent_joint_location = convert_tuple_to_vector(
-            parent.frame, parent_point_pos)
-        self._child_joint_location = convert_tuple_to_vector(
-            child.frame, child_point_pos)
+        if child_axis is None:
+            self.child_axis = child.frame.z
+        elif isinstance(child_axis, tuple):
+            self.child_axis = convert_tuple_to_vector(self.child.frame,
+                                                      child_axis)
+        elif isinstance(child_axis, str) and child_axis.upper() \
+                in child_axes_str.keys():
+            self.child_axis = child_axes_str[child_axis.upper()]
+        else:
+            raise TypeError("Child Axis must either be one of 'X', 'Y', 'Z'" +
+                            " or a 3 Tuple.")
 
-        self._locate_joint_point()
-        self.apply_joint()
+        # Orient the frame at the joint in the parent body such that the joint
+        # axis is the z axis of the new frame
+        mag = self.parent_axis.magnitude()
+        angle = acos(dot(self.parent.frame.z, self.parent_axis)/(mag))
+        axis = cross(self.parent.frame.z, self.parent_axis)
+        temp = self.parent.frame.orientnew(name + "_parent_joint_frame", 'Axis',
+                                           [angle, axis])
+        self.parent_joint_frame = temp
+        self.parent_joint_frame.set_ang_vel(self.parent.frame, 0)
 
-    def _locate_joint_point(self):
+        # Orient the frame at the joint in the child body such that the joint
+        # axis is the z axis of the new frame.
+        mag = self.child_axis.magnitude()
+        angle = acos(dot(self.child.frame.z, self.child_axis)/(mag))
+        axis = cross(self.child.frame.z, self.child_axis)
+        temp = self.child.frame.orientnew(name + "_child_joint_frame", 'Axis',
+                                           [angle, axis])
+        self.child_joint_frame = temp
+        self.child_joint_frame.set_ang_vel(self.child.frame, 0)
+
+        # Create the Point objects for the parent and child bodies at the joint
+        # location
+        parent_joint_location = convert_tuple_to_vector(parent.frame,
+                                                        parent_point_pos)
         self.parent_joint_point = self.parent.masscenter.locatenew(
-            self.name + '_parent_joint',
-            self._parent_joint_location)
-        self.child_joint_point = self.child.masscenter.locatenew(
-            self.name + '_child_joint',
-            self._child_joint_location)
+            self.name + '_parent_joint_point', parent_joint_location)
+        self.parent_joint_point.set_vel(self.parent.frame, 0)
+        self.parent_joint_point.set_vel(self.parent_joint_frame, 0)
 
-    def _align_axes(self, parent_axis, child_axis):
-        """Rotates child_frame so that child_axis is aligned to parent_axis."""
-        mag1 = parent_axis.magnitude()
-        mag2 = child_axis.magnitude()
-        angle = acos(dot(parent_axis, child_axis)/(mag1 * mag2))
-        axis = cross(child_axis, parent_axis)
-        if axis != Vector(0):
-            self.child.frame.orient(
-                self.parent.frame, 'Axis', [angle, axis])
+        child_joint_location = convert_tuple_to_vector(child.frame,
+                                                       child_point_pos)
+        self.child_joint_point = self.child.masscenter.locatenew(
+            self.name + '_child_joint_point', child_joint_location)
+        self.child_joint_point.set_vel(self.child.frame, 0)
+        self.child_joint_point.set_vel(self.child_joint_frame, 0)
+
+        # Run the joint specific code
+        self.apply_joint()
 
     def apply_joint(self):
         """To create a custom joint, this method should add degrees of freedom
@@ -187,56 +225,31 @@ class PinJoint(Joint):
         [pinjoint_omega(t)]
 
     """
-    def __init__(self, name, parent, child, coord, speed, parent_point_pos=None,
-                 child_point_pos=None, parent_axis=None, child_axis=None):
+    def __init__(self, name, parent, child, coord, speed,
+                 parent_point_pos=(0, 0, 0), child_point_pos=(0, 0, 0),
+                 parent_axis=None, child_axis=None):
 
-        parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
-                           'Z': parent.frame.z}
-        child_axes_str = {'X': child.frame.x, 'Y': child.frame.y,
-                          'Z': child.frame.z}
 
-        if parent_axis is None:
-            self.parent_axis = parent.frame.z
-        elif isinstance(parent_axis, tuple):
-            self.parent_axis = convert_tuple_to_vector(self.parent.frame,
-                                                       parent_axis)
-        elif isinstance(parent_axis, str) and parent_axis.upper() \
-                in parent_axes_str.keys():
-            self.parent_axis = parent_axes_str[parent_axis.upper()]
-        else:
-            raise TypeError("Parent Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3-Tuple.")
+        super(PinJoint, self).__init__(name, parent, child, coord, speed,
+                                       parent_point_pos, child_point_pos,
+                                       parent_axis, child_axis)
 
-        if child_axis is None:
-            self.child_axis = child.frame.z
-        elif isinstance(child_axis, tuple):
-            self.child_axis = convert_tuple_to_vector(self.child.frame,
-                                                      child_axis)
-        elif isinstance(child_axis, str) and child_axis.upper() \
-                in child_axes_str.keys():
-            self.child_axis = child_axes_str[child_axis.upper()]
-        else:
-            raise TypeError("Child Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3 Tuple")
-
-        super(PinJoint, self).__init__(name, parent, child, parent_point_pos,
-                                       child_point_pos)
-
-        self.coordinates.append(coord)
-        self.speeds.append(speed)
         self.kin_diff.append(coord - speed)
 
     def apply_joint(self):
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [theta, self.parent_axis])
-        self.child.frame.set_ang_vel(self.parent.frame,
-                                     omega * self.parent_axis)
-        self._align_axes(self.parent_axis, self.child_axis)
-        self.parent_joint_point.set_vel(self.parent.frame, 0)
-        self.child_joint_point.set_vel(self.parent.frame, 0)
+        # Orient the two joint frames in the two bodies
+        self.child_joint_frame.orient(self.parent_joint_frame, 'Axis',
+                                      [self.coordinates[0],
+                                       self.parent_joint_frame.z])
+        self.child_joint_frame.set_ang_vel(self.parent_joint_frame,
+                                           self.speeds[0])
+
+        # Set the velocities of the joint's points for the two bodies
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
-        self.child.masscenter.v2pt_theory(self.parent.masscenter,
-                                          self.parent.frame, self.child.frame)
+        self.child_joint_point.set_vel(self.parent_joint_frame, 0)
+        self.child.masscenter.v2pt_theory(self.child_joint_point,
+                                          self.parent_joint_frame,
+                                          self.child_joint_frame)
 
 
 class SlidingJoint(Joint):
@@ -331,54 +344,24 @@ class SlidingJoint(Joint):
     def __init__(self, name, parent, child, coord, speed, parent_point_pos=None,
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
-        parent_axes_str = {'X': parent.frame.x, 'Y': parent.frame.y,
-                           'Z': parent.frame.z}
-        child_axes_str = {'X': child.frame.x, 'Y': child.frame.y,
-                          'Z': child.frame.z}
 
-        if parent_axis is None:
-            self.parent_axis = parent.frame.z
-        elif isinstance(parent_axis, tuple):
-            self.parent_axis = convert_tuple_to_vector(self.parent.frame,
-                                                       parent_axis)
-        elif isinstance(parent_axis, str) and parent_axis.upper() \
-                in parent_axes_str.keys():
-            self.parent_axis = parent_axes_str[parent_axis.upper()]
-        else:
-            raise TypeError("Parent Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3-Tuple.")
+        super(SlidingJoint, self).__init__(name, parent, child, coord, speed,
+                                           parent_point_pos, child_point_pos,
+                                           parent_axis, child_axis)
 
-        if child_axis is None:
-            self.child_axis = child.frame.z
-        elif isinstance(child_axis, tuple):
-            self.child_axis = convert_tuple_to_vector(self.child.frame,
-                                                      child_axis)
-        elif isinstance(child_axis, str) and child_axis.upper() \
-                in child_axes_str.keys():
-            self.child_axis = child_axes_str[child_axis.upper()]
-        else:
-            raise TypeError("Child Axis must either be one of 'X', 'Y', 'Z'" +
-                            " or a 3 Tuple")
-
-        super(SlidingJoint, self).__init__(name, parent, child,
-                                           parent_point_pos, child_point_pos)
-
-        self.coordinates.append(coord)
-        self.speeds.append(speed)
         self.kin_diff.append(coord - speed)
 
     def apply_joint(self):
-        self.child.frame.orient(self.parent.frame, 'Axis',
-                                [0, self.parent.frame.x])
-        self._align_axes(self.parent_axis, self.child_axis)
-        self._locate_joint_point()
+        # Orient the two joint frames in the two bodies
+        self.child_joint_frame.orient(self.parent_joint_frame, 'Axis',
+                                      [0, self.parent_joint_frame.z])
+        self.child_joint_frame.set_ang_vel(self.parent_joint_frame, 0)
 
-        self.parent_joint_point.set_vel(self.parent.frame, 0)
-        self.child_joint_point.set_vel(self.child.frame, 0)
-
+        # Set he velocities of the joint's points for the two bodies
         self.child_joint_point.set_pos(self.parent_joint_point,
-                                       x * self.parent_axis)
-        self.child_joint_point.set_vel(self.parent.frame,
-                                       v * self.parent_axis)
-        self.child.masscenter.set_vel(self.parent.frame,
-                                      v * self.parent_axis)
+                                       self.coordinates[0] *
+                                       self.child_joint_frame.z)
+        self.child_joint_point.set_vel(self.parent_joint_frame, self.speeds[0])
+        self.child.masscenter.v2pt_theory(self.child_joint_point,
+                                          self.parent_joint_frame,
+                                          self.child_joint_frame)
