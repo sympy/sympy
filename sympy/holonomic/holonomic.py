@@ -688,7 +688,7 @@ class HolonomicFunction(object):
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).integrate((x, 0, x))  # e^x - 1
         HolonomicFunction((-1)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
-        # integrate(cos(x), (x 0, x)) = sin(x)
+        # integrate(cos(x), (x, 0, x)) = sin(x)
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [1, 0]).integrate((x, 0, x))
         HolonomicFunction((1)*Dx + (1)*Dx**3, x, 0, [0, 1, 0])
         """
@@ -2672,15 +2672,17 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular:
+        if y0 == None and x0 == 0 and is_singular and not lenics > 1:
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
                     continue
-                else:
-                    coeff = S(j)**ratexp
-                    indicial = S(i) * ratexp
-                    break
+                if isinstance(j, (PolyElement, FracElement)):
+                    j = j.as_expr()
+
+                coeff = S(j)**ratexp
+                indicial = S(i) * ratexp
+                break
             if isinstance(coeff, (PolyElement, FracElement)):
                 coeff = coeff.as_expr()
             y0 = {indicial: S([coeff])}
