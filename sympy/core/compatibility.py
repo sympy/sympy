@@ -65,7 +65,6 @@ Issue #10985:
         * `sympy/vector/dyadic.py`
         * `sympy/vector/vector.py`
         * `sympy/vector/scaler.py`
-    * This is because it is needed to handle `\N`.
 """
 
 import sys
