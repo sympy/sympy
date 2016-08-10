@@ -1983,7 +1983,7 @@ def latex(expr, **settings):
     8 \sqrt{2} \mu^{\frac{7}{2}}
 
     >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{\frac{7}{2}}$
+    $8 \sqrt{2} \tau^{7 / 2}$
 
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
