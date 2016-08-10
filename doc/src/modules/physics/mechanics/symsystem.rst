@@ -50,17 +50,18 @@ Next step is to define the equations of motion in multiple forms:
 
 where
 
-x : states, e.g. [q, u]
-t : time
-r : specified (exogenous) inputs
-p : constants
-q : generalized coordinates
-u : generalized speeds
-M : mass matrix or generalized inertia matrix (implicit dynamical equations or
-combined dynamics and kinematics)
-F : right hand side (implicit dynamical equations or combined dynamics and
-kinematics)
-G : right hand side of the kinematical differential equations 
+    x : states, e.g. [q, u]
+    t : time
+    r : specified (exogenous) inputs
+    p : constants
+    q : generalized coordinates
+    u : generalized speeds
+    F_1 : right hand side of the combined equations in explicit form
+    F_2 : right hand side of the combined equations in implicit form
+    F_3 : right hand side of the dynamical equations in implicit form
+    M_2 : mass matrix of the combined equations in implicit form
+    M_3 : mass matrix of the dynamical equations in implicit form
+    G : right hand side of the kinematical differential equations
 
 ::
 
@@ -82,10 +83,15 @@ information can be passed into `system.SymbolicSystem` in the form of a bodies
 and loads iterable. ::
 
     >>> theta = atan(x/y)
+    >>> omega = dynamicsymbols('omega')
     >>> N = ReferenceFrame('N')
     >>> A = N.orientnew('A', 'Axis', [theta, N.z])
+    >>> A.set_ang_vel(N, omega * N.z)
     >>> O = Point('O')
+    >>> O.set_vel(N, 0)
     >>> P = O.locatenew('P', l * A.x)
+    >>> P.v2pt_theory(O, N, A)
+    l*omega*A.y
     >>> Pa = Particle('Pa', P, m)
 
 Now the bodies and loads iterables need to be initialized. ::
@@ -190,7 +196,7 @@ equations of motion formats. ::
     [v(t)]])
     >>> symsystem1.alg_con
     [4]
-    >>> symsystem1.dynamic_symbols
-    set([lambda(t), u(t), v(t), x(t), y(t)])
-    >>> symsystem1.constant_symbols
-    set([g, l, m])
+    >>> symsystem1.bodies
+    (Pa,)
+    >>> symsystem1.loads
+    ((P, g*m*N.x),)

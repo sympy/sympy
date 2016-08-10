@@ -78,13 +78,15 @@ def test_form_1():
     inter = comb_explicit_rhs
     assert simplify(symsystem1.comb_explicit_rhs - inter) == zeros(5, 1)
 
-    assert symsystem1.dynamic_symbols == set([x, y, u, v, lam])
-    assert symsystem1.constant_symbols == set([m, l, g])
+    assert set(symsystem1.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert type(symsystem1.dynamic_symbols()) == tuple
+    assert set(symsystem1.constant_symbols()) == set([l, g, m])
+    assert type(symsystem1.constant_symbols()) == tuple
 
     assert symsystem1.output_eqns == out_eqns
 
-    assert symsystem1.bodies == [Pa]
-    assert symsystem1.loads == [(P, g * m * N.x)]
+    assert symsystem1.bodies == (Pa,)
+    assert symsystem1.loads == ((P, g * m * N.x),)
 
 
 def test_form_2():
@@ -103,17 +105,20 @@ def test_form_2():
     assert simplify(symsystem2.comb_implicit_rhs - inter) == zeros(5, 1)
     assert simplify(symsystem2.comb_implicit_mat-comb_implicit_mat) == zeros(5)
 
+    assert set(symsystem2.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert type(symsystem2.dynamic_symbols()) == tuple
+    assert set(symsystem2.constant_symbols()) == set([l, g, m])
+    assert type(symsystem2.constant_symbols()) == tuple
+
     inter = comb_explicit_rhs
     symsystem2.compute_explicit_form()
     assert simplify(symsystem2.comb_explicit_rhs - inter) == zeros(5, 1)
 
-    assert symsystem2.dynamic_symbols == set([x, y, u, v, lam])
-    assert symsystem2.constant_symbols == set([m, l, g])
 
     assert symsystem2.output_eqns == out_eqns
 
-    assert symsystem2.bodies == [Pa]
-    assert symsystem2.loads == [(P, g * m * N.x)]
+    assert symsystem2.bodies == (Pa,)
+    assert symsystem2.loads == ((P, g * m * N.x),)
 
 
 def test_form_3():
@@ -144,13 +149,15 @@ def test_form_3():
     symsystem3.compute_explicit_form()
     assert simplify(symsystem3.comb_explicit_rhs - inter) == zeros(5, 1)
 
-    assert symsystem3.dynamic_symbols == set([x, y, u, v, lam])
-    assert symsystem3.constant_symbols == set([m, l, g])
+    assert set(symsystem3.dynamic_symbols()) == set([y, v, lam, u, x])
+    assert type(symsystem3.dynamic_symbols()) == tuple
+    assert set(symsystem3.constant_symbols()) == set([l, g, m])
+    assert type(symsystem3.constant_symbols()) == tuple
 
     assert symsystem3.output_eqns == {}
 
-    assert symsystem3.bodies == [Pa]
-    assert symsystem3.loads == [(P, g * m * N.x)]
+    assert symsystem3.bodies == (Pa,)
+    assert symsystem3.loads == ((P, g * m * N.x),)
 
 
 def test_property_attributes():
@@ -182,16 +189,13 @@ def test_property_attributes():
     with raises(AttributeError):
         symsystem.states = 42
     with raises(AttributeError):
-        symsystem.dynamic_symbols = 42
-    with raises(AttributeError):
-        symsystem.constant_symbols = 42
-    with raises(AttributeError):
         symsystem.alg_con = 42
 
 
 def test_not_specified_errors():
     """This test will cover errors that arise from trying to access attributes
-    that were not specificed upon object creation"""
+    that were not specificed upon object creation or were specified on creation
+    and the user trys to recalculate them."""
     # Trying to access form 2 when form 1 given
     # Trying to access form 3 when form 2 given
 
@@ -207,6 +211,8 @@ def test_not_specified_errors():
         symsystem1.dyn_implicit_rhs
     with raises(AttributeError):
         symsystem1.kin_explicit_rhs
+    with raises(AttributeError):
+        symsystem1.compute_explicit_form()
 
     symsystem2 = SymbolicSystem(coordinates, comb_implicit_rhs, speeds=speeds,
                                 mass_matrix=comb_implicit_mat)
