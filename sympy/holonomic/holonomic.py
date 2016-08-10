@@ -1,8 +1,11 @@
-"""Holonomic Functions and Differential Operators"""
+"""
+This module implements Holonomic Functions and
+various operations on them.
+"""
 
 from __future__ import print_function, division
 
-from sympy import (symbols, Symbol, diff, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.printing import sstr
 from sympy.core.compatibility import range
@@ -16,7 +19,8 @@ from sympy.functions.elementary.exponential import exp_polar, exp
 
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
-from .holonomicerrors import NotPowerSeriesError, NotHyperSeriesError, SingularityError, NotHolonomicError
+from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
+    SingularityError, NotHolonomicError)
 
 from sympy.polys.rings import PolyElement
 from sympy.polys.fields import FracElement
@@ -28,19 +32,22 @@ from sympy.polys.polyroots import roots
 
 def DifferentialOperators(base, generator):
     """
-    Returns an Algebra of Differential Operators and the operator for
-    differentiation i.e. the `Dx` operator.
-    The first argument needs to be the base polynomial ring for the algebra
-    and the second argument must be a generator which can be either a
-    noncommutative Symbol or a string.
+    Returns an Algebra of Differential Operators also called Weyl Algebra
+    and the operator for differentiation i.e. the `Dx` operator.
+
+    The first argument needs to be the base polynomial ring for the algebra.
+    The base polynomial ring is the ring of polynomials in `x` that will
+    appear as coefficients in the operators.
+
+    and the second argument must be the generator of the algebra which can
+    be either a noncommutative `Symbol` or a string. e.g. "Dx" or "D".
 
     Examples
     =======
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy import symbols
+    >>> from sympy.abc import x
     >>> from sympy.holonomic.holonomic import DifferentialOperators
-    >>> x = symbols('x')
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     """
 
@@ -51,9 +58,11 @@ def DifferentialOperators(base, generator):
 class DifferentialOperatorAlgebra(object):
     """
     An Ore Algebra is a set of noncommutative polynomials in the
-    intermediate `Dx` and coefficients in a base ring A. It follows the
-    commutation rule:
+    intermediate `Dx` and coefficients in a base polynomial ring A.
+    It follows the commutation rule:
+
     Dx * a = sigma(a) * Dx + delta(a)
+    for `a` an element in ring `A`.
 
     Where sigma: A --> A is an endomorphism and delta: A --> A is a
     skew-derivation i.e. delta(ab) = delta(a) * b + sigma(a) * delta(b)
@@ -91,10 +100,10 @@ class DifferentialOperatorAlgebra(object):
             [base.zero, base.one], self)
 
         if generator is None:
-            self.gen_symbol = symbols('Dx', commutative=False)
+            self.gen_symbol = Symbol('Dx', commutative=False)
         else:
             if isinstance(generator, str):
-                self.gen_symbol = symbols(generator, commutative=False)
+                self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
 
@@ -118,9 +127,9 @@ class DifferentialOperator(object):
     """
     Differential Operators are elements of Weyl Algebra. The Operators
     are defined by a list of polynomials in the base ring and the
-    parent ring of the Operator.
+    parent ring of the Operator i.e. the algebra it belongs to.
 
-    Takes a list of polynomials for each power of Dx and the
+    Takes a list of polynomials for each power of `Dx` and the
     parent ring which must be an instance of DifferentialOperatorAlgebra.
 
     A Differential Operator can be created easily using
@@ -150,6 +159,17 @@ class DifferentialOperator(object):
     _op_priority = 20
 
     def __init__(self, list_of_poly, parent):
+        """
+        Parameters
+        ==========
+
+        list_of_poly:
+            List of polynomials belonging to the base ring of the algebra.
+        parent:
+            Parent algebra of the operator.
+
+        """
+
         # the parent ring for this operator
         # must be an DifferentialOperatorAlgebra object
         self.parent = parent
@@ -159,14 +179,13 @@ class DifferentialOperator(object):
         # the list should not have trailing zeroes
         # represents the operator
         # convert the expressions into ring elements using from_sympy
-        if isinstance(list_of_poly, list):
-            for i, j in enumerate(list_of_poly):
-                if not isinstance(j, base.dtype):
-                    list_of_poly[i] = base.from_sympy(sympify(j))
-                elif isinstance(j, base.dtype):
-                    list_of_poly[i] = base.from_sympy(base.to_sympy(j))
+        for i, j in enumerate(list_of_poly):
+            if not isinstance(j, base.dtype):
+                list_of_poly[i] = base.from_sympy(sympify(j))
+            else:
+                list_of_poly[i] = base.from_sympy(base.to_sympy(j))
 
-            self.listofpoly = list_of_poly
+        self.listofpoly = list_of_poly
         # highest power of `Dx`
         self.order = len(self.listofpoly) - 1
 
@@ -309,10 +328,10 @@ class DifferentialOperator(object):
                 print_str += ' + '
 
             if i == 1:
-                print_str += '(' + sstr(j) + ')*Dx'
+                print_str += '(' + sstr(j) + ')*%s' %(self.parent.gen_symbol)
                 continue
 
-            print_str += '(' + sstr(j) + ')' + '*Dx**' + sstr(i)
+            print_str += '(' + sstr(j) + ')' + '*%s**' %(self.parent.gen_symbol) + sstr(i)
 
         return print_str
 
@@ -398,7 +417,7 @@ class HolonomicFunction(object):
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
     # an example of initial conditions for regular singular points
-    # only one root `1/2` of the indicial equation. So ics is [(1/2, [1])]
+    # the indicial equation have only one root `1/2`.
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]})
     HolonomicFunction((-1/2) + (x)*Dx, x, 0, {1/2: [1]})
@@ -412,16 +431,23 @@ class HolonomicFunction(object):
 
     def __init__(self, annihilator, x, x0=0, y0=None):
         """
-        Takes the annihilator and variable of the function.
 
-        `x0` is the point for which initial conditions are given and
-        `y0` is the initial condition.
+        Parameters
+        ==========
 
-        For ordinary points `y0` should be a vector of initial values
-        y0 = [f(x0), f'(x0), f''(x0) ...].
-
-        To make the function unique, length of the vector `y0` must be equal to or
-        greater than the order of differential equation.
+        annihilator:
+            Annihilator of the Holonomic Function, represented by a
+            `DifferentialOperator` object.
+        x:
+            Variable of the function.
+        x0:
+            The point at which initial conditions are stored.
+            Generally an integer.
+        y0:
+            The initial condition. The proper format for the initial condition
+            is described in class docstring. To make the function unique,
+            length of the vector `y0` should be equal to or greater than the
+            order of differential equation.
         """
 
         # initial condition
@@ -446,7 +472,7 @@ class HolonomicFunction(object):
 
     def unify(self, other):
         """
-        Unifies the ground domain of a given two Holonomic
+        Unifies the base polynomial ring of a given two Holonomic
         Functions.
         """
 
@@ -645,13 +671,14 @@ class HolonomicFunction(object):
         y2 = None
 
         if self.is_singularics() == False and other.is_singularics() == True:
+            # convert the ordinary initial condition to singular.
             _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
-            y1 = {S(0):_y0}
+            y1 = {S(0): _y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
             _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0):_y0}
+            y2 = {S(0): _y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0
@@ -673,8 +700,7 @@ class HolonomicFunction(object):
 
     def integrate(self, limits, initcond=False):
         """
-        Integrate the given holonomic function. Limits can be provided,
-        Initial conditions can only be computed when limits are (x0, x).
+        Integrate the given holonomic function.
 
         Examples
         ========
@@ -741,21 +767,47 @@ class HolonomicFunction(object):
                 x0 = self.x0
                 a = limits[1]
                 b = limits[2]
+                definite = True
 
         else:
-            x0 = self.x0
-            a = self.x0
-            b = self.x
+            definite = False
 
-        if x0 == a:
-            y0 = [S(0)]
-            y0 += self.y0
+        y0 = [S(0)]
+        y0 += self.y0
+
+        indefinite_integral = HolonomicFunction(self.annihilator * D, self.x, self.x0, y0)
+
+        if not definite:
+            return indefinite_integral
 
         # use evalf to get the values at `a`
-        else:
-            y0 = [S(0)]
-            tempy0 = self.change_ics(a).y0
-            y0 += tempy0
+        if x0 != a:
+            try:
+                indefinite_expr = indefinite_integral.to_expr()
+            except (NotHyperSeriesError, NotPowerSeriesError):
+                indefinite_expr = None
+
+            if indefinite_expr:
+                lower = indefinite_expr.subs(self.x, a)
+                if isinstance(lower, NaN):
+                    lower = indefinite_expr.limit(self.x, a)
+            else:
+                lower = indefinite_integral.evalf(a)
+
+            if b == self.x:
+                y0[0] = y0[0] - lower
+                return HolonomicFunction(self.annihilator * D, self.x, x0, y0)
+
+            elif S(b).is_Number:
+                if indefinite_expr:
+                    upper = indefinite_expr.subs(self.x, b)
+                    if isinstance(upper, NaN):
+                        upper = indefinite_expr.limit(self.x, b)
+                else:
+                    upper = indefinite_integral.evalf(b)
+
+                return upper - lower
+
 
         # if the upper limit is `x`, the answer will be a function
         if b == self.x:
@@ -1223,7 +1275,7 @@ class HolonomicFunction(object):
             return self._frobenius(lb=lb)
 
         dict1 = {}
-        n = symbols('n', integer=True)
+        n = Symbol('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
@@ -1433,7 +1485,7 @@ class HolonomicFunction(object):
                         posroots.append(i)
                 rootstoconsider = [min(posroots)]
 
-        n = symbols('n', integer=True)
+        n = Symbol('n', integer=True)
         dom = self.annihilator.parent.base.dom
         R, _ = RecurrenceOperators(dom.old_poly_ring(n), 'Sn')
 
@@ -2657,7 +2709,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
             for i, j in enumerate(coeff):
                 if isinstance(j, (PolyElement, FracElement)):
                     coeff[i] = j.as_expr()
-            y0 = {indicial:S(coeff)}
+            y0 = {indicial: S(coeff)}
 
     elif israt:
         order = 1
