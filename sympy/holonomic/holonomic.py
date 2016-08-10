@@ -1082,12 +1082,12 @@ class HolonomicFunction(object):
 
         if self.is_singularics() == False and other.is_singularics() == True:
             _y0 = [j / factorial(i) for i, j in enumerate(self.y0)]
-            y1 = {S(0):_y0}
+            y1 = {S(0): _y0}
             y2 = other.y0
         elif self.is_singularics() == True and other.is_singularics() == False:
             _y0 = [j / factorial(i) for i, j in enumerate(other.y0)]
             y1 = self.y0
-            y2 = {S(0):_y0}
+            y2 = {S(0): _y0}
         elif self.is_singularics() == True and other.is_singularics() == True:
             y1 = self.y0
             y2 = other.y0
@@ -1150,9 +1150,9 @@ class HolonomicFunction(object):
 
     def composition(self, expr, *args, **kwargs):
         """
-        Returns the annihilator after composition of a holonomic function with
-        an algebraic function. Initial conditions for the annihilator after
-        composition can be also be provided to the function.
+        Returns a Holonomic Function after composition of a holonomic
+        function with an algebraic function. Initial conditions for the
+        result can be also be provided to the method.
 
         Examples
         ========
@@ -1217,15 +1217,15 @@ class HolonomicFunction(object):
 
     def to_sequence(self, lb=True):
         """
-        Finds the recurrence relation in power series expansion
+        Finds recurrence relation in the series expansion
         of the function about `x0`, where `x0` is the point at which
-        initial conditions are given.
+        the initial condition is stored.
 
         If the point `x0` is ordinary, solution of the form [(R, n0)]
         is returned. Where `R` is the recurrence relation and `n0` is the
         smallest `n` for which the recurrence holds true.
 
-        If the point `x0` is regular singular, a vector of `(R, p, n0)` is
+        If the point `x0` is regular singular, a vector of `(R, p, n0)`s is
         returned, i.e. [(R, p, n0), ...]. Each tuple in this vector represents
         a recurrence relation `R` associated with a root of the indicial
         equation `p`. Conditions of a different format can also be provided in
@@ -1628,7 +1628,7 @@ class HolonomicFunction(object):
 
     def series(self, n=6, coefficient=False, order=True, _recur=None):
         """
-        Finds the power series expansion of given holonomic function about x0.
+        Finds the power series expansion of given holonomic function about `x0`.
 
         A list of series might be returned if `x0` is a regular point with
         multiple roots of the indcial equation.
@@ -1718,7 +1718,8 @@ class HolonomicFunction(object):
         return ser
 
     def _indicial(self):
-        """Computes the roots of Indicial equation.
+        """
+        Computes roots of the Indicial equation.
         """
 
         if self.x0 != 0:
@@ -2120,11 +2121,9 @@ class HolonomicFunction(object):
 
         # convert to hypergeometric first
         rep = self.to_hyper(as_list=True)
-
         sol = S(0)
 
         for i in rep:
-
             if len(i) == 1:
                 sol += i[0]
 
@@ -2136,8 +2135,8 @@ class HolonomicFunction(object):
 
 def from_hyper(func, x0=0, evalf=False):
     """
-    Converts Hypergeometric Function to Holonomic.
-    func is the Hypergeometric Function and x0 be the point at
+    Converts a hypergeometric function to holonomic.
+    `func` is the Hypergeometric Function and `x0` is the point at
     which initial conditions are required.
 
     Examples
@@ -2211,7 +2210,7 @@ def from_hyper(func, x0=0, evalf=False):
 def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     """
     Converts a Meijer G-function to Holonomic.
-    func is the Hypergeometric Function and x0 be the point at
+    `func` is the G-Function and `x0` is the point at
     which initial conditions are required.
 
     Examples
@@ -2298,9 +2297,28 @@ from sympy.integrals.meijerint import _mytype
 
 def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, initcond=True):
     """
-    Uses `meijerint._rewrite1` to convert to `meijerg` function and then
-    eventually to Holonomic Functions. Only works when `meijerint._rewrite1`
-    returns a `meijerg` representation of the function provided.
+    Converts a function or an expression to a holonomic function.
+
+    Parameters
+    ==========
+
+    func:
+        The expression to be converted.
+    x:
+        variable for the function.
+    x0:
+        point at which initial condition must be computed.
+    y0:
+        One can optionally provide initial condition if the method
+        isn't able to do it automatically.
+    lenics:
+        Number of terms in the initial condition. By default it is
+        equal to the order of the annihilator.
+    domain:
+        Ground domain for the polynomials in `x` appearing as coefficients
+        in the annihilator.
+    initcond:
+        Set it false if you don't want the initial conditions to be computed.
 
     Examples
     ========
@@ -2659,7 +2677,8 @@ def DMFsubs(frac, x0, mpm=False):
 
 
 def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initcond=True):
-    """Converts Polynomials and Rationals to Holonomic.
+    """
+    Converts polynomials, rationals and algebraic functions to holonomic.
     """
 
     ispoly = func.is_polynomial()
