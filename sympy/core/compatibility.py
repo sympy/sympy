@@ -61,10 +61,11 @@ Metaclasses:
                 pass
 Issue #10985:
     * `u` has been removed from all the files except the one mentioned below
-        * `sympy/printing/pretty/pretty_symbology.py`
         * `sympy/vector/dyadic.py`
         * `sympy/vector/vector.py`
         * `sympy/vector/scaler.py`
+    *  One could use the vector module to pass a properly decoded string
+       (preferably a `unicode` string in Python 2 if it contains non-ascii)
 """
 
 import sys
