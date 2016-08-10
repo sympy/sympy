@@ -1,7 +1,8 @@
 from sympy import eye, Symbol
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
                                      inertia)
-from sympy.physics.vector import cross_m, Point, Vector
+from sympy.physics.vector import Point, Vector
+from sympy.physics.vector.spatial import cross_m
 
 __all__ = ['Body']
 
@@ -218,13 +219,15 @@ class Body(RigidBody, Particle):
         specified by vec.
         """
 
-        top_left = self.inertia+self.mass*cross_m(vec)*cross_m(vec).transpose()
+        vec = vec.to_matrix(self.frame)
+        inertia = self.inertia[0].to_matrix(self.frame)
+        top_left = inertia+self.mass*cross_m(vec)*cross_m(vec).transpose()
         top_right = self.mass*cross_m(vec)
         bottom_right = self.mass*cross_m(vec).transpose()
         bottom_left = self.mass*eye(3)
 
         top_row = top_left.col_join(top_right)
-        bottom_row = bottom_left.col_join(bottome_right)
+        bottom_row = bottom_left.col_join(bottom_right)
         out = top_row.row_join(bottom_row)
 
         return out

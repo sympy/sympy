@@ -1,4 +1,4 @@
-from sympy import acos, Matrix
+from sympy import acos, cos, Matrix, sin
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
 
@@ -89,20 +89,12 @@ class Joint(object):
         mag = self.parent_axis.magnitude()
         angle = acos(dot(self.parent.frame.z, self.parent_axis)/(mag))
         axis = cross(self.parent.frame.z, self.parent_axis)
+        if axis == 0:
+            axis = self.parent.frame.z
         temp = self.parent.frame.orientnew(name + "_parent_joint_frame", 'Axis',
                                            [angle, axis])
         self.parent_joint_frame = temp
         self.parent_joint_frame.set_ang_vel(self.parent.frame, 0)
-
-        # Orient the frame at the joint in the child body such that the joint
-        # axis is the z axis of the new frame.
-        mag = self.child_axis.magnitude()
-        angle = acos(dot(self.child.frame.z, self.child_axis)/(mag))
-        axis = cross(self.child.frame.z, self.child_axis)
-        temp = self.child.frame.orientnew(name + "_child_joint_frame", 'Axis',
-                                           [angle, axis])
-        self.child_joint_frame = temp
-        self.child_joint_frame.set_ang_vel(self.child.frame, 0)
 
         # Create the Point objects for the parent and child bodies at the joint
         # location
@@ -117,11 +109,36 @@ class Joint(object):
                                                        child_point_pos)
         self.child_joint_point = self.child.masscenter.locatenew(
             self.name + '_child_joint_point', child_joint_location)
-        self.child_joint_point.set_vel(self.child.frame, 0)
-        self.child_joint_point.set_vel(self.child_joint_frame, 0)
+        self.child_joint_point.set_vel(child.frame, 0)
 
         # Run the joint specific code
         self.apply_joint()
+
+        # Orient the frame at the joint in the child body such that the joint
+        # axis is the z axis of the new frame. Note this has to be done after
+        # apply_joint has been run due to each reference frame only being able
+        # to be oriented once.
+        mag = self.child_axis.magnitude()
+        angle = -1 * acos(dot(self.child.frame.z, self.child_axis)/(mag))
+        axis = cross(self.child.frame.z, self.child_axis)
+
+        # Get child_axis defined in the child_joint_frame
+        temp_frame = self.child.frame.orientnew("temp_frame", "Axis",
+                                                [angle, axis])
+        temp_axis = temp_frame.dcm(self.child.frame) * \
+                    axis.to_matrix(self.child.frame)
+        axis = temp_axis[0]*self.child_joint_frame.x + \
+               temp_axis[1]*self.child_joint_frame.y + \
+               temp_axis[2]*self.child_joint_frame.z
+
+
+        self.child.frame.orient(self.child_joint_frame, 'Axis', [angle, axis])
+
+        self.child_joint_frame.set_ang_vel(self.child.frame, 0)
+        self.child_joint_point.set_vel(self.child_joint_frame, 0)
+        self.child.masscenter.v2pt_theory(self.child_joint_point,
+                                          self.parent_joint_frame,
+                                          self.child_joint_frame)
 
     def apply_joint(self):
         """To create a custom joint, this method should add degrees of freedom
@@ -239,7 +256,7 @@ class PinJoint(Joint):
                  parent_axis=None, child_axis=None):
 
 
-        super(PinJoint, self).__init__(name, parent, child, coord, speed,
+        super(PinJoint, self).__init__(name, parent, child, [coord], [speed],
                                        parent_point_pos, child_point_pos,
                                        parent_axis, child_axis)
 
@@ -257,18 +274,18 @@ class PinJoint(Joint):
 
     def apply_joint(self):
         # Orient the two joint frames in the two bodies
-        self.child_joint_frame.orient(self.parent_joint_frame, 'Axis',
-                                      [self.coordinates[0],
-                                       self.parent_joint_frame.z])
+        temp = self.parent_joint_frame.orientnew(self.name +
+                                                 "_child_joint_frame", 'Axis',
+                                                 [self.coordinates[0],
+                                                  self.parent_joint_frame.z])
+        self.child_joint_frame = temp
         self.child_joint_frame.set_ang_vel(self.parent_joint_frame,
-                                           self.speeds[0])
+                                           self.speeds[0] *
+                                           self.parent_joint_frame.z)
 
         # Set the velocities of the joint's points for the two bodies
         self.child_joint_point.set_pos(self.parent_joint_point, 0)
         self.child_joint_point.set_vel(self.parent_joint_frame, 0)
-        self.child.masscenter.v2pt_theory(self.child_joint_point,
-                                          self.parent_joint_frame,
-                                          self.child_joint_frame)
 
 
 class SlidingJoint(Joint):
@@ -364,9 +381,10 @@ class SlidingJoint(Joint):
                  child_point_pos=None, parent_axis=None, child_axis=None):
 
 
-        super(SlidingJoint, self).__init__(name, parent, child, coord, speed,
-                                           parent_point_pos, child_point_pos,
-                                           parent_axis, child_axis)
+        super(SlidingJoint, self).__init__(name, parent, child, [coord],
+                                           [speed], parent_point_pos,
+                                           child_point_pos, parent_axis,
+                                           child_axis)
 
         self.kin_diff.append(coord - speed)
 
@@ -382,15 +400,19 @@ class SlidingJoint(Joint):
 
     def apply_joint(self):
         # Orient the two joint frames in the two bodies
-        self.child_joint_frame.orient(self.parent_joint_frame, 'Axis',
-                                      [0, self.parent_joint_frame.z])
-        self.child_joint_frame.set_ang_vel(self.parent_joint_frame, 0)
+        temp = self.parent_joint_frame.orientnew(self.name +
+                                                 "_child_joint_frame", 'Axis',
+                                                 [0, self.parent_joint_frame.z])
+        self.child_joint_frame = temp
+        self.child_joint_frame.set_ang_vel(self.parent_joint_frame,
+                                           0*self.parent_joint_frame.z)
 
         # Set he velocities of the joint's points for the two bodies
         self.child_joint_point.set_pos(self.parent_joint_point,
                                        self.coordinates[0] *
                                        self.child_joint_frame.z)
-        self.child_joint_point.set_vel(self.parent_joint_frame, self.speeds[0])
+        self.child_joint_point.set_vel(self.parent_joint_frame,
+                                       self.speeds[0]*self.parent_joint_frame.z)
         self.child.masscenter.v2pt_theory(self.child_joint_point,
                                           self.parent_joint_frame,
                                           self.child_joint_frame)
