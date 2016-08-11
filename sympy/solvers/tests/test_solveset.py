@@ -25,7 +25,7 @@ from sympy.physics.units import cm
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition)
+    solveset, solve_decomposition, eliminate)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -174,6 +174,43 @@ def test_domain_check():
     assert domain_check(x**2, x, 0) is True
     assert domain_check(x, x, oo) is False
     assert domain_check(0, x, oo) is False
+
+
+def test_eliminate():
+    x, y, z, t = symbols('x y z t', real=True)
+
+    assert eliminate([x+y+z], z) == S.EmptySet
+    assert eliminate([x+y+z, 0], z) == S.EmptySet
+    assert eliminate([x+y+z, x+z], y) == S.EmptySet
+
+    assert eliminate([x+y+z, x+z], z) == FiniteSet(y)
+    assert eliminate([x+y+z, x+z]) == FiniteSet(x+y+z, x+z)
+
+    eqs = [2*x + 3*y + 4*z - 1, 9*x +8*y +7*z - 2]
+    res = FiniteSet(11*x/2 + 11*y/4 - S(1)/4)
+    assert eliminate(eqs, z) == res
+
+    eqs = [x - 2 - y, y - z]
+    res = FiniteSet(x - z - 2)
+    assert eliminate(eqs, y) == res
+
+    eqs = [x + y + z, z**2 - 4]
+    assert eliminate(eqs, z) == FiniteSet((-x - y)**2 - 4)
+
+    eqs = [x**2 + y**2 +z**2 - 1, x - y + z - 2, x**3 - y**2 - z - 1]
+    res = FiniteSet(x**2 + y**2 + (-x + y + 2)**2 - 1, x**3 + x - y**2 - y - 3)
+    assert eliminate(eqs, z) == res
+
+    eqs = [sqrt(x) + sqrt(y - 1) - 1, 2*x**(S(1)/3) + 3*y**2 -2]
+    res = FiniteSet(2*x**(S(1)/3) + 3*((-sqrt(x) + 1)**2 + 1)**2 - 2)
+    assert eliminate(eqs, y) == res
+
+    eqs = [x**2 + y**2 +z**2 - 1, x - y + z - 2, x**3 - y**2 - z - 1]
+    res = FiniteSet(x**3 + x/2 - \
+        (x/2 - sqrt(-3*x**2 + 4*x - 2)/2 - 1)**2 + \
+        sqrt(-3*x**2 + 4*x - 2)/2 - 2)
+    assert eliminate(eqs, z, y) == res
+    assert eliminate(eqs, y, z) == res
 
 
 def test_is_function_class_equation():
