@@ -158,7 +158,7 @@ class FreeGroup(DefaultPrinting):
         return obj
 
     def _generators(group):
-        """Returns the generators of the FreeGroup
+        """Returns the generators of the FreeGroup.
 
         Examples
         ========
@@ -179,8 +179,7 @@ class FreeGroup(DefaultPrinting):
         return self.__class__(symbols or self.symbols)
 
     def __contains__(self, i):
-        """Return True if `i` is contained in FreeGroup.
-        """
+        """Return True if `i` is contained in FreeGroup."""
         if not isinstance(i, FreeGroupElement):
             raise TypeError("FreeGroup contains only FreeGroupElement as elements "
                         ", not elements of type %s" % type(i))
@@ -214,19 +213,24 @@ class FreeGroup(DefaultPrinting):
         return self is other
 
     def index(self, gen):
-        """Returns the index of the generator `gen` from (f_0, ..., f_(n-1))
+        """Returns the index of the generator `gen` from ``(f_0, ..., f_(n-1))``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> F.index(y)
+        1
+
         """
         if isinstance(gen, self.dtype):
-            try:
-                return self.generators.index(gen)
-            except:
-                raise ValueError("invalid generator: %s" % gen)
+            return self.generators.index(gen)
         else:
             raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
-        """Returns the order of the free group.
-        """
+        """Returns the order of the free group."""
         if self.rank == 0:
             return 1
         else:
@@ -256,6 +260,16 @@ class FreeGroup(DefaultPrinting):
     def _symbol_index(self, symbol):
         """Returns the index of a generator for free group `self`, while
         returns the -ve index of the inverse generator.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy import Symbol
+        >>> F, x, y = free_group("x, y")
+        >>> F._symbol_index(-Symbol('x'))
+        0
+
         """
         try:
             return self.symbols.index(symbol)
@@ -264,7 +278,7 @@ class FreeGroup(DefaultPrinting):
 
     @property
     def is_abelian(self):
-        """Tests if the group is Abelian.
+        """Returns if the group is Abelian.
 
         Examples
         ========
@@ -282,8 +296,7 @@ class FreeGroup(DefaultPrinting):
 
     @property
     def identity(self):
-        """Returns the identity element of free group.
-        """
+        """Returns the identity element of free group."""
         return self.dtype()
 
     def contains(self, g):
@@ -309,13 +322,11 @@ class FreeGroup(DefaultPrinting):
             return True
 
     def is_subgroup(self, F):
-        """Return True if all elements of `self` belong to `F`.
-        """
+        """Return True if all elements of `self` belong to `F`."""
         return F.is_group and all([self.contains(gen) for gen in F.generators])
 
     def center(self):
-        """Returns the center of the free group `self`.
-        """
+        """Returns the center of the free group `self`."""
         return set([self.identity])
 
 
@@ -365,9 +376,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         Since elements (i.e. words) don't commute, the indexing of tuple
         makes that property to stay.
 
-        The structure in `array_form` of `FreeGroupElement` is shown below,
+        The structure in ``array_form`` of ``FreeGroupElement`` is of form:
 
-        ( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )
+        ``( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )``
 
         Examples
         ========
@@ -390,8 +401,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     @property
     def letter_form(self):
         """
-        The  letter  representation  of an `FreeGroupElement` is as a
-        tuple of generator symbols, each entry corresponding to a group
+        The letter representation of a ``FreeGroupElement`` is a tuple
+        of generator symbols, with each entry corresponding to a group
         generator. Inverses of the generators are represented by
         negative generator symbols.
 
@@ -440,7 +451,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def ext_rep(self):
-        """This is called the External Representation of `FreeGroupElement`
+        """This is called the External Representation of ``FreeGroupElement``
         """
         return tuple(flatten(self.array_form))
 
@@ -489,7 +500,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return result
 
     def __mul__(self, other):
-        """Returns the product of elements belonging to the same `FreeGroup`.
+        """Returns the product of elements belonging to the same ``FreeGroup``.
 
         Examples
         ========
@@ -539,7 +550,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def inverse(self):
         """
-        Returns the inverse of a `FreeGroupElement` element
+        Returns the inverse of a ``FreeGroupElement`` element
 
         Examples
         ========
@@ -557,7 +568,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return group.dtype(r)
 
     def order(self):
-        """Find the order of a `FreeGroupElement`.
+        """Find the order of a ``FreeGroupElement``.
 
         Examples
         ========
@@ -574,19 +585,19 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return S.Infinity
 
     def commutator(self, other):
-        """Returns the commutator of self and x: ``~x*~self*x*self``
+        """Returns the commutator of `self` and `x`: ``~x*~self*x*self``
         """
         group = self.group
         if not isinstance(other, group.dtype):
-            raise ValueError("commutator of only `FreeGroupElement` of the same "
-                    "`FreeGroup` exists")
+            raise ValueError("commutator of only FreeGroupElement of the same "
+                    "FreeGroup exists")
         else:
             return self.inverse()*other.inverse()*self*other
 
     def eliminate_word(self, gen, by):
         """
         For an associative word `self`, a generator `gen`, and an associative
-        word by, `eliminate_word` returns the associative word obtained by
+        word by, ``eliminate_word`` returns the associative word obtained by
         replacing each occurrence of `gen` in `self` by `by`.
 
         Examples
@@ -631,7 +642,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def __len__(self):
         """
-        For an associative word `self`, this returns the number of letters in it.
+        For an associative word `self`, returns the number of letters in it.
 
         Examples
         ========
@@ -692,8 +703,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         same length are compared w.r.t. the lexicographical ordering induced
         by the ordering of generators. Generators  are  sorted  according
         to the order in which they were created. If the generators are
-        invertible then each generator g is larger than its inverse g**-1,
-        and g**-1 is larger than every generator that is smaller than g.
+        invertible then each generator `g` is larger than its inverse `g^{-1}`,
+        and `g^{-1}` is larger than every generator that is smaller than `g`.
 
         Examples
         ========
@@ -1079,10 +1090,10 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
 
     def is_cyclically_reduced(self):
-        """Returns whether the word is cyclically reduced or not.
+        r"""Returns whether the word is cyclically reduced or not.
         A word is cyclically reduced if by forming the cycle of the
-        word, the word is not reduced, i.e a word w = a_1 ... a_n
-        is called cyclically reduced if a_1 != a_n**−1.
+        word, the word is not reduced, i.e a word w = `a_1 ... a_n`
+        is called cyclically reduced if `a_1 \ne a_n^{−1}`.
 
         Examples
         ========
@@ -1099,7 +1110,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return True
         return self[0] != self[-1]**-1
 
-    #TODO: may be it should moved to FpGroupElement
     def identity_cyclic_reduction(self):
         """Return a unique cyclically reduced version of the word.
 
