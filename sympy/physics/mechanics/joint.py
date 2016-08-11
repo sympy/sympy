@@ -1,5 +1,6 @@
 from sympy import acos, cos, Matrix, sin
 from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
+from sympy.physics.vector.spatial import rot, xlt
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
 
 __all__ = ['Joint', 'PinJoint', 'SlidingJoint']
@@ -49,7 +50,9 @@ class Joint(object):
                  parent_axis=None, child_axis=None):
         self.name = name
         self.parent = parent
+        self.parent.child_joints.append(self)
         self.child = child
+        self.child.parent_joint = self
         self.coordinates = Matrix([i for i in coordinates])
         self.speeds = Matrix([i for i in speeds])
         self.kin_diff = []
@@ -121,6 +124,8 @@ class Joint(object):
         mag = self.child_axis.magnitude()
         angle = -1 * acos(dot(self.child.frame.z, self.child_axis)/(mag))
         axis = cross(self.child.frame.z, self.child_axis)
+        if axis == 0:
+            axis = self.child.frame.z
 
         # Get child_axis defined in the child_joint_frame
         temp_frame = self.child.frame.orientnew("temp_frame", "Axis",
@@ -155,6 +160,28 @@ class Joint(object):
             raise NotImplementedError("To use this method you need to define" +
                                       " motion subspace and joint transform" +
                                       " for your joint.")
+
+    def XT_child(self):
+        if self.parent.parent_joint is None:
+            rotation = rot(self.parent_joint_frame.dcm(self.parent.frame))
+            vector = self.parent_joint_point.pos_from(self.parent.masscenter)
+            translation = xlt(vector.to_matrix(self.parent.frame))
+        else:
+            temp_frame = self.parent.parent_joint.child_joint_frame
+            dcm1 = self.parent.frame.dcm(temp_frame)
+            rotation1 = rot(dcm1)
+            rotation2 = rot(self.parent_joint_frame.dcm(self.parent.frame))
+
+            temp_point = self.parent.parent_joint.child_joint_point
+            vector1 = self.parent.masscenter.pos_from(temp_point)
+            vector2 = self.parent_joint_point.pos_from(self.parent.masscenter)
+            translation1 = xlt(vector1.to_matrix(temp_frame))
+            translation2 = xlt(vector2.to_matrix(self.parent.frame))
+
+            rotation = rotation1*translation1
+            translation = rotation2 * translation2
+
+        return rotation*translation
 
 
 class PinJoint(Joint):

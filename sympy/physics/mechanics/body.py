@@ -98,6 +98,8 @@ class Body(RigidBody, Particle):
 
         self.name = name
         self.loads = []
+        self.parent_joint = None
+        self.child_joints = []
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
