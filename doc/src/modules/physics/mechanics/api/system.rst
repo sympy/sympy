@@ -5,7 +5,7 @@ SymbolicSystem (Docstrings)
 SymbolicSystem
 ==============
 
-.. automodule:: sympy.physics.mechanics.system
+.. autoclass:: sympy.physics.mechanics.system.SymbolicSystem
    :members:
 
    .. automethod:: __init__
