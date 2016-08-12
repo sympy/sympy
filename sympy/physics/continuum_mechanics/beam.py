@@ -88,7 +88,7 @@ class Beam(object):
         self._load = 0
 
     def __str__(self):
-        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
 
     @property
