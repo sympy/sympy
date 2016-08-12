@@ -6444,7 +6444,7 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     .. math:: (A - \lambda I) \eta = v
 
-    3. When `A` has two complex conjugate roots the solution is given by
+    3. When `A` has two complex conjugate eigenvalues the solution is given by
 
     .. math:: \exp(\re \lambda * t) * (C_1 * (\re v * \sin(\im \lambda * t) + \im v * \cos(\im \lambda * t)) + \\
                                        C_2 * (\re v * cos(\im \lambda * t) - \im v * sin(\im \lambda * t)))
@@ -6532,8 +6532,8 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
 
     .. math:: x' = Ax + k
 
-    The general solution of this system is given by sum of its particular solution and the
-    general solution of the corresponding homogeneous system is obtained from type1.
+    The general solution of this system is given by the sum of its particular solution and the
+    general solution of the corresponding homogeneous system which is obtained from type1.
 
     1. When A is invertible a particular solution is given by `x = -A^{-1} k`
 
