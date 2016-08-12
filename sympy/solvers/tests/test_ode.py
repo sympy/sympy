@@ -57,75 +57,75 @@ def test_linear_2eq_order1():
     assert dsolve(eq2) == sol2
 
     # Characteristic equation has two real roots and b = 0
-    eq = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), x(t) + y(t)))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
+    eq3 = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), x(t) + y(t)))
+    sol = dsolve(eq3)
+    assert _check_solution_linear_2eq_order_1(eq3, sol)
 
     # Characteristic equation has two real roots and b, c = 0
-    eq = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), y(t)))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
+    eq4 = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), y(t)))
+    sol = dsolve(eq4)
+    assert _check_solution_linear_2eq_order_1(eq4, sol)
 
     # Characteristic equation has two complex conjugate roots
-    eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol3 = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)), \
+    eq5 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
+    sol5 = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)), \
     Eq(y(t), ((C1/2 - sqrt(7)*C2/2)*sin(sqrt(7)*t/2) + (sqrt(7)*C1/2 + C2/2)*cos(sqrt(7)*t/2))*exp(3*t/2))]
-    assert dsolve(eq3) == sol3
-
-    # Characteristic equation has one real root with multiple 2 and two linearly independent eigenvectors
-    eq = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), y(t)))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
-
-    # Characteristic equation has one real root with multiple 2 and one eigenvector
-    eq = (Eq(diff(x(t),t), 2*x(t) - y(t)), Eq(diff(y(t),t), x(t)))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
-
-    # Characteristic equation has one real root with multiple 2 and one eigenvector and b = 0
-    eq = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), x(t) + y(t)))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
-
-    # Rhs is zero
-    eq = (Eq(diff(x(t), t), 0), Eq(diff(y(t), t), 0))
-    sol = dsolve(eq)
-    assert _check_solution_linear_2eq_order_1(eq, sol)
-
-    # Inhomogeneous equation where the characteristic equation has two real roots
-    eq4 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
-    sol4 = [Eq(x(t), C1*exp(t*(-sqrt(6) + 3)) + C2*exp(t*(sqrt(6) + 3)) - S(22)/3), \
-    Eq(y(t), C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) - S(5)/3)]
-    assert dsolve(eq4) == sol4
-
-    # Inhomogeneous equation where the characteristic equation has two complex conjugate roots
-    eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
-    sol5 = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(58)/3), \
-    Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(185)/3)]
     assert dsolve(eq5) == sol5
 
-    eq6 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
-    sol6 = [Eq(x(t), (C1*exp(Integral(2, t)) + C2*exp(-Integral(2, t)))*exp(Integral(5*t, t))), \
+    # Characteristic equation has one real root with multiple 2 and two linearly independent eigenvectors
+    eq6 = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), y(t)))
+    sol = dsolve(eq6)
+    assert _check_solution_linear_2eq_order_1(eq6, sol)
+
+    # Characteristic equation has one real root with multiple 2 and one eigenvector
+    eq7 = (Eq(diff(x(t),t), 2*x(t) - y(t)), Eq(diff(y(t),t), x(t)))
+    sol = dsolve(eq7)
+    assert _check_solution_linear_2eq_order_1(eq7, sol)
+
+    # Characteristic equation has one real root with multiple 2 and one eigenvector and b = 0
+    eq8 = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), x(t) + y(t)))
+    sol = dsolve(eq8)
+    assert _check_solution_linear_2eq_order_1(eq8, sol)
+
+    # Rhs is zero
+    eq9 = (Eq(diff(x(t), t), 0), Eq(diff(y(t), t), 0))
+    sol = dsolve(eq9)
+    assert _check_solution_linear_2eq_order_1(eq9, sol)
+
+    # Inhomogeneous equation where the characteristic equation has two real roots
+    eq10 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    sol10 = [Eq(x(t), C1*exp(t*(-sqrt(6) + 3)) + C2*exp(t*(sqrt(6) + 3)) - S(22)/3), \
+    Eq(y(t), C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) - S(5)/3)]
+    assert dsolve(eq10) == sol10
+
+    # Inhomogeneous equation where the characteristic equation has two complex conjugate roots
+    eq11 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
+    sol11 = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(58)/3), \
+    Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(185)/3)]
+    assert dsolve(eq11) == sol11
+
+    eq12 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
+    sol12 = [Eq(x(t), (C1*exp(Integral(2, t)) + C2*exp(-Integral(2, t)))*exp(Integral(5*t, t))), \
     Eq(y(t), (C1*exp(Integral(2, t)) - C2*exp(-Integral(2, t)))*exp(Integral(5*t, t)))]
-    assert dsolve(eq6) == sol6
+    assert dsolve(eq12) == sol12
 
-    eq7 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
-    sol7 = [Eq(x(t), (C1*cos(Integral(t**2, t)) + C2*sin(Integral(t**2, t)))*exp(Integral(5*t, t))), \
+    eq13 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
+    sol13 = [Eq(x(t), (C1*cos(Integral(t**2, t)) + C2*sin(Integral(t**2, t)))*exp(Integral(5*t, t))), \
     Eq(y(t), (-C1*sin(Integral(t**2, t)) + C2*cos(Integral(t**2, t)))*exp(Integral(5*t, t)))]
-    assert dsolve(eq7) == sol7
+    assert dsolve(eq13) == sol13
 
-    eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-    sol8 = [Eq(x(t), (C1*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
+    eq14 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
+    sol14 = [Eq(x(t), (C1*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
     C2*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t))), \
     Eq(y(t), (C1*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
     C2*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t)))]
-    assert dsolve(eq8) == sol8
+    assert dsolve(eq14) == sol14
 
-    eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
-    sol10 = [Eq(x(t), C1*x0 + C2*x0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t)), \
+    eq15 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
+    sol15 = [Eq(x(t), C1*x0 + C2*x0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t)), \
     Eq(y(t), C1*y0 + C2(y0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t) + \
     exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0))]
-    assert dsolve(eq10) == sol10
+    assert dsolve(eq15) == sol15
 
 
 def test_linear_2eq_order1_nonhomog_linear():
