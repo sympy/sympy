@@ -379,14 +379,45 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
     """Solves a real univariate inequality.
+
+    Parameters
+    ==========
+
+    expr : Relational
+        The target inequality
+    gen : Symbol
+        The variable for which the inequality is solved
+    relational : bool
+        A Relational type output is expected or not
+    domain : Set
+        The domain over which the equation is solved
+
+    Raises
+    ======
+
+    NotImplementedError
+        The solution of the inequality cannot be determined due to limitation
+        in `solvify`.
+
+    Notes
+    =====
+
+    Currently, we cannot solve all the inequalities due to limitations in
+    `solvify`. Also, the solution returned for trigonometric inequalities
+    are restricted in its periodic interval.
+
+    See Also
+    ========
+
+    solvify: solver returning solveset solutions with solve's output API
 
     Examples
     ========
 
     >>> from sympy.solvers.inequalities import solve_univariate_inequality
-    >>> from sympy.core.symbol import Symbol
+    >>> from sympy import Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
@@ -394,6 +425,13 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     (-oo, -2] U [2, oo)
+
+    >>> domain = Interval(0, S.Infinity)
+    >>> solve_univariate_inequality(x**2 >= 4, x, False, domain)
+    [2, oo)
+
+    >>> solve_univariate_inequality(sin(x) > 0, x, relational=False)
+    (0, pi)
 
     """
     from sympy.calculus.util import continuous_domain, periodicity
@@ -413,7 +451,6 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
     elif expr is S.false:
         rv = S.EmptySet
     else:
-        solns = None
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
         if period is not None:
@@ -425,7 +462,8 @@ def solve_univariate_inequality(expr, gen, domain=S.Reals, relational=True):
         solns = solvify(e, gen, domain)
 
         if solns is None:
-            return None
+            raise NotImplementedError(filldedent('''The inequality cannot be
+                solved using solve_univariate_inequality.'''))
 
         else:
             singularities = []

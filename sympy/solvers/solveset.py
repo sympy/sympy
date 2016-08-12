@@ -884,8 +884,8 @@ def solveset_complex(f, symbol):
 
 
 def solvify(f, symbol, domain):
-    """Solves an equation and returns the solution in accordance with the
-    `solve` output API.
+    """Solves an equation using solveset and returns the solution in accordance
+    with the `solve` output API.
 
     Returns
     =======
