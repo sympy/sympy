@@ -75,15 +75,15 @@ class StrPrinter(Printer):
         return "False"
 
     def _print_And(self, expr):
-        return '(%s)' % (' & '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return '%s' % (' & '.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args]))
 
     def _print_Or(self, expr):
-        return '(%s)' % (' | '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return '%s' % (' | '.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args]))
 
     def _print_Not(self, expr):
-        return '%s(%s)' % ('~', self._print(expr.args[0]))
+        return '%s%s' % ('~', self._print(expr.args[0]))
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
@@ -122,11 +122,11 @@ class StrPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         try:
-            return 'Domain: ' + self._print(d.as_boolean())
+            return 'Domain: (' + self._print(d.as_boolean()) + ')'
         except Exception:
             try:
-                return ('Domain: ' + self._print(d.symbols) + ' in ' +
-                        self._print(d.set))
+                return ('Domain: (' + self._print(d.symbols) + ' in ' +
+                        self._print(d.set) + ')')
             except:
                 return 'Domain on ' + self._print(d.symbols)
 
