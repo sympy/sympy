@@ -26,6 +26,17 @@ h = Function('h')
 # constant_renumber because it will normalize it (constant_renumber causes
 # dsolve() to return different results on different machines)
 
+def _check_solution_linear_2eq_order_1(eq, sol):
+    # Substitute the solution into the equality
+    subs = [(s.lhs, s.rhs) for s in sol]
+    eq = (eq[0].subs(subs), eq[1].subs(subs))
+    # Evaluate the derivative and verify that the right hand side and the left hand side are equal
+    for i in range(2):
+        res_eqi = simplify(eq[i].lhs.doit() - eq[i].rhs)
+        if res_eqi != 0:
+            return False
+    return True
+
 def test_linear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -45,11 +56,41 @@ def test_linear_2eq_order1():
     sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + 43/2)))]
     assert dsolve(eq2) == sol2
 
+    # Characteristic equation has two real roots and b = 0
+    eq = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), x(t) + y(t)))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
+
+    # Characteristic equation has two real roots and b, c = 0
+    eq = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), y(t)))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
+
     # Characteristic equation has two complex conjugate roots
     eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
     sol3 = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)), \
     Eq(y(t), ((C1/2 - sqrt(7)*C2/2)*sin(sqrt(7)*t/2) + (sqrt(7)*C1/2 + C2/2)*cos(sqrt(7)*t/2))*exp(3*t/2))]
     assert dsolve(eq3) == sol3
+
+    # Characteristic equation has one real root with multiple 2 and two linearly independent eigenvectors
+    eq = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), y(t)))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
+
+    # Characteristic equation has one real root with multiple 2 and one eigenvector
+    eq = (Eq(diff(x(t),t), 2*x(t) - y(t)), Eq(diff(y(t),t), x(t)))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
+
+    # Characteristic equation has one real root with multiple 2 and one eigenvector and b = 0
+    eq = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), x(t) + y(t)))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
+
+    # Rhs is zero
+    eq = (Eq(diff(x(t), t), 0), Eq(diff(y(t), t), 0))
+    sol = dsolve(eq)
+    assert _check_solution_linear_2eq_order_1(eq, sol)
 
     # Inhomogeneous equation where the characteristic equation has two real roots
     eq4 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
