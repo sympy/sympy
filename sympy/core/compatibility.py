@@ -60,12 +60,11 @@ Metaclasses:
             class Foo(with_metaclass(Meta, Bar)):
                 pass
 Issue #10985:
-    * `u` has been removed from all the files except the one mentioned below
+    * Use unicode string prefix `u` for Python 2.7 as mentioned in files below
         * `sympy/vector/dyadic.py`
         * `sympy/vector/vector.py`
         * `sympy/vector/scaler.py`
-    *  One could use the vector module to pass a properly decoded string
-       (preferably a `unicode` string in Python 2 if it contains non-ascii)
+    * For Python >= 3.3 using `u` as a prefix is not required.
 """
 
 import sys
@@ -80,8 +79,6 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
     def u_decode(x):
         return x
 
@@ -112,8 +109,6 @@ else:
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
     def u_decode(x):
         return x.decode('utf-8')
 
