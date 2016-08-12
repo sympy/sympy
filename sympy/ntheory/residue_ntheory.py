@@ -3,7 +3,8 @@
 from __future__ import print_function, division
 
 from sympy.core.singleton import S
-from sympy.core.numbers import igcd, igcdex
+from sympy.core.numbers import igcd, igcdex, mod_inverse
+from sympy.core.power import isqrt
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
@@ -988,3 +989,73 @@ class mobius(Function):
             if any(i > 1 for i in a.values()):
                 return S.Zero
             return S.NegativeOne**len(a)
+
+
+def _discrete_log_trial_mul(n, a, b, order=None):
+    if order is None:
+        order = n
+    a %= n
+    b %= n
+    x = 1
+    k = 1
+    for i in range(order):
+        if x == a:
+            return i
+        x = x * b % n
+    raise ValueError("Log does not exist")
+
+
+def _discrete_log_shanks_steps(n, a, b, order=None):
+    if order is None:
+        order = n_order(b, n)
+    a %= n
+    b %= n
+    m = isqrt(order) + 1
+    T = dict()
+    x = 1
+    for i in range(m):
+        T[x] = i
+        x = x * b % n
+    z = mod_inverse(b, n)
+    z = pow(z, m, n)
+    x = a
+    for i in range(m):
+        if x in T:
+            return i * m + T[x]
+        x = x * z % n
+    raise ValueError("Log does not exist")
+
+
+def _discrete_log_pohlig_hellman(n, a, b, order=None):
+    from .modular import crt
+
+    if order is None:
+        order = n_order(b, n)
+
+    a %= n
+    b %= n
+    f = factorint(order)
+    l = [0] * len(f)
+
+    for i, (pi, ri) in enumerate(f.items()):
+        for j in range(ri):
+            gj = pow(b, l[i], n)
+            aj = pow(a * mod_inverse(gj, n), order // pi**(j + 1), n)
+            bj = pow(b, order // pi, n)
+            cj = _discrete_log_shanks_steps(n, aj, bj, pi)
+            l[i] += cj * pi**j
+
+    d, _ = crt([pi**ri for pi, ri in f.items()], l)
+    return d
+
+
+def discrete_log(n, a, b, order=None):
+    if order is None:
+        order = n_order(b, n)
+
+    if order < 1000:
+        return _discrete_log_trial_mul(n, a, b, order)
+    elif order < 100000:
+        return _discrete_log_shanks_steps(n, a, b, order)
+
+    return _discrete_log_pohlig_hellman(n, a, b, order)
