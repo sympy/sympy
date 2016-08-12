@@ -6417,6 +6417,297 @@ def sysode_linear_2eq_order1(match_):
         sol = _linear_2eq_order1_type7(x, y, t, r, eq)
     return sol
 
+def _linear_2eq_order1_type1(x, y, t, r, eq):
+    """
+    The equations of this type are
+
+    .. math:: x' = ax + by,
+
+    .. math:: y' = cx + dy
+
+    or in matrix notation
+
+    .. math:: x' = Ax
+
+    The form of the solution to this system depends on the eigenvalues and eigenvectors of the matrix `A`
+
+    1. When `A` has two real eigenvalues, or one real eigenvalue and two linearly independent
+    eigenvectors, the solution is given by
+
+    .. math:: C_1 * v_1 * \exp{\lambda_1 * t} + C_2 * v_2 * \exp{\lambda_2 * t}
+
+    2. When `A` has one real eigenvalue and a single eigenvector the solution is given by
+
+    .. math:: C_1 * v * \exp(\lambda * t) + C_2 * (v * t * \exp(\lambda * t) + \eta * \exp(\lambda * t))
+
+    where `\eta` is a vector satisfying the equation
+
+    .. math:: (A - \lambda I) \eta = v
+
+    3. When `A` has two complex conjugate roots the solution is given by
+
+    .. math:: \exp(\re \lambda * t) * (C_1 * (\re v * \sin(\im \lambda * t) + \im v * \cos(\im \lambda * t)) + \\
+                                       C_2 * (\re v * cos(\im \lambda * t) - \im v * sin(\im \lambda * t)))
+    """
+    l = Dummy('l')
+    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
+    # Find the eigenvalues of the A matrix
+    a = r['a']
+    b = r['b']
+    c = r['c']
+    d = r['d']
+    l1 = rootof(l**2 - (a + d) * l + a * d - b * c, l, 0)
+    l2 = rootof(l**2 - (a + d) * l + a * d - b * c, l, 1)
+    # Compute the discriminant of the characteristic equation
+    D = (a - d)**2 + 4 * b * c
+
+    # Check the sign of the discriminant to determine the types of eigenvalues
+    gsol = 2 * [0]
+    if D > 0:
+        # Two distinct real eigenvalues
+        # Compute two linearly independent eigenvectors
+        if not b.is_zero:
+            v1 = [b, l1 - a]
+            v2 = [b, l2 - a]
+        else:
+            if not c.is_zero:
+                v1 = [l1 - d, c]
+                v2 = [l2 - d, c]
+            else:
+                if l1 == a:
+                    v1 = [1, 0]
+                    v2 = [0, 1]
+                else:
+                    v1 = [0, 1]
+                    v2 = [1, 0]
+        for i in range(2):
+            gsol[i] = C1 * v1[i] * exp(l1 * t) + C2 * v2[i] * exp(l2 * t)
+    else:
+        if D == 0:
+            # One multiple eigenvalue
+            if b.is_zero and c.is_zero:
+                # Special case, the A matrix has two linearly independent eigenvectors
+                v1 = [1, 0]
+                v2 = [0, 1]
+                for i in range(2):
+                    gsol[i] = C1 * v1[i] * exp(l1 * t) + C2 * v2[i] * exp(l2 * t)
+            else:
+                # Compute the single eigenvector of the A matrix, and a solution to the equation (A - lI) * eta = v
+                if not b.is_zero:
+                    v = [b, l1 - a]
+                    eta = [0, 1]
+                else:
+                    # No need to check if c is zero, because both b and c cannot be zero
+                    v = [l1 - d, c]
+                    eta = [1, 0]
+                for i in range(2):
+                    gsol[i] = C1 * v[i] * exp(l1 * t) + C2 * (v[i] * t * exp(l1 * t) + eta[i] * exp(l1 * t))
+        else:
+            # Complex conjugate eigenvalues
+            # Compute real and imaginary part of the second eigenvector (the first eigenvector is just the
+            # complex conjugate of the second) (using the second eigenvalue/eigenvector since it has a
+            # positive imaginary part)
+            if not b.is_zero:
+                v1 = [b, l2 - a]
+            else:
+                # No need to check if c is zero, because both b and c cannot be zero
+                v1 = [l2 - d, c]
+            vr = [re(v1[0]), re(v1[1])]
+            vi = [im(v1[0]), im(v1[1])]
+            for i in range(2):
+                gsol[i] = exp(re(l2) * t) * (C1 * (vr[i] * sin(im(l2) * t) + vi[i] * cos(im(l2) * t)) +
+                                             C2 * (vr[i] * cos(im(l2) * t) - vi[i] * sin(im(l2) * t)))
+    return [Eq(x(t), gsol[0]), Eq(y(t), gsol[1])]
+
+
+def _linear_2eq_order1_type2(x, y, t, r, eq):
+    r"""
+    The equations of this type are
+
+    .. math:: x' = ax + by + k_1
+
+    .. math:: y' = cx + dy + k_2
+
+    or in matrix notation
+
+    .. math:: x' = Ax + k
+
+    The general solution of this system is given by sum of its particular solution and the
+    general solution of the corresponding homogeneous system is obtained from type1.
+
+    1. When A is invertible a particular solution is given by `x = -A^{-1} k`
+
+    If A is not invertible we know that the rows of A are linearly dependent, A = [[a, b], kappa * [a, b]].
+    We have different particular solutions, depending on which elements of the A matrix are zero
+
+    2. If A is zero a particular solution is given by `x = kt`
+
+    3. If the first row in A is zero we have the following cases
+
+    3.1 If `c \neq 0, d = 0` the equation has no solution unless `k_1 = 0`, in which case a particular solution
+    is given by
+
+    .. math:: x = -\frac{k_2}{c}
+
+    .. math:: y = 0
+
+    3.2 If `c = 0, d \neq 0` a particular solution is given by
+
+    .. math:: x = k_1 t
+
+    .. math:: y = -\frac{k_2}{d}
+
+    3.3 If `c \neq 0, d \neq 0` a particular solution is given by
+
+    .. math:: x = -\frac{k_2}{c} - \frac{k_1}{d} + k_1 t
+
+    .. math:: y = -\frac{c k_1}{d} t
+
+    4. If the second row in A is zero we have the following cases
+
+    4.1 If `a \neq 0, b = 0` a particular solution is given by
+
+    .. math:: x = -\frac{k_1}{a}
+
+    .. math:: y = k_2 t
+
+    4.2 If `a = 0, b \neq 0` the equation has no solution unless `k_2 = 0` in which case a particular solution
+    is given by
+
+    .. math:: x = 0
+
+    .. math:: y = -\frac{k_1}{b}
+
+    4.3 If `a \neq 0, b \neq 0` a particular solution is given by
+
+    .. math:: x = -\frac{b k_2}{a} t
+
+    .. math:: y = -\frac{k_1}{b} - \frac{k_2}{a} + k_2 t
+
+    5. No row in A is entirely zero
+
+    5.1 The first column of A is zero. A particular solution is given by
+
+    .. math:: x = (-\frac{b k_2}{d} + k_1) t
+
+    .. math:: y = -\frac{k_2}{d}
+
+    5.2 The second column of A is zero. A particular solution is given by
+
+    .. math:: x = -\frac{k_1}{a}
+
+    .. math:: y = (-\frac{c k_1}{a} + k_2) t
+
+    5.3 No entry in A is zero. If `a + d \neq 0` a particular solution is given by
+
+    .. math:: x =  \frac{-bk_2 + \frac{bc}{a} k_1}{a + d} t + \frac{-b k_2 - a k_1}{a (a + d)}
+
+    .. math:: y = \frac{ak_2 - c k_1}{a + d} t
+
+    If `a + d = 0` the equation has no particular solution unless `k_2 = \kappa k_1`, in which case a particular
+    solution is given by
+
+    .. math:: x = -\frac{k_1}{a}
+
+    .. math:: y = 0
+    """
+    a = r['a']
+    b = r['b']
+    c = r['c']
+    d = r['d']
+    k1 = -r['k1']
+    k2 = -r['k2']
+    det = a * d - b * c
+    psol = 2 * [0]
+    if det != 0:
+        # Case 1 the A matrix is invertible, a particular solution is given by -A^{-1} * k
+        psol[0] = -1 / det * (d * k1 - b * k2)
+        psol[1] = -1 / det * (-c * k1 + a * k2)
+        return psol
+    # The rows of A are linearly dependent, we get different particular solution depending on whether
+    # the matrix elements are zero or not
+    if a.is_zero:
+        if b.is_zero:
+            if c.is_zero:
+                if d.is_zero:
+                    # Case 2: A is the zero matrix
+                    return [k1 * t, k2 * t]
+                else:
+                    # Case 3.2 A = [[0, 0], [0, d]]
+                    return [k1 * t, -k2 / d]
+            else:
+                if d.is_zero:
+                    # Case 3.1 A = [[0, 0], [c, 0]]
+                    if not k1.is_zero:
+                        raise ValueError("The ODE has no particular solution")
+                    return [-k2 / c, 0]
+                else:
+                    # Case 3.3 A = [[0, 0], [c, d]]
+                    return [-k2 / c - k1 / d + k1 * t, -c * k1 / d * t]
+        else:
+            if c.is_zero:
+                if d.is_zero:
+                    # Case 4.2 A = [[0, b], [0, 0]]
+                    if not k2.is_zero:
+                        raise ValueError("The ODE has no particular solution")
+                    return [0, -k1 / b]
+                else:
+                    # Case 5.1 A = [[0, b], [0, d]]
+                    return [(-b * k2 / d + k1) * t, -k2 / d]
+            else:
+                if d.is_zero:
+                    # A = [[0, b], [c, 0]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+                else:
+                    # A = [[0, b], [c, d]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+    else:
+        if b.is_zero:
+            if c.is_zero:
+                if d.is_zero:
+                    # Case 4.1 A = [[a, 0], [0, 0]]
+                    return [-k1 / a, k2 * t]
+                else:
+                    # A = [[a, 0], [0, d]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+            else:
+                if d.is_zero:
+                    # Case 5.2 A = [[a, 0], [c, 0]]
+                    return [-k1 / a, (-c * k1 / a + k2) * t]
+                else:
+                    # A = [[a, 0], [c, d]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+        else:
+            if c.is_zero:
+                if d.is_zero:
+                    # Case 4.3 A = [[a, b], [0, 0]]
+                    return [-b * k2 / a * t, -k1 / b - k2 / a + k2 * t]
+                else:
+                    # A = [[a, b], [0, d]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+            else:
+                if d.is_zero:
+                    # A = [[a, b], [c, 0]]
+                    # In this case the rows are not linearly independent, and hence the matrix is invertible
+                    pass
+                else:
+                    # Case 5.3 A = [[a, b], [c, d]]
+                    kappa = c / a
+                    if not (a + d).is_zero:
+                        return [
+                            (-b * k2 + b * c / a * k1) / (a + d) * t + (-b * k2 - a * k1) / (a * (a + d)),
+                            (a * k2 - c * k1) / (a + d) * t
+                        ]
+                    else:
+                        if not (k2 - kappa * k1).is_zero:
+                            raise ValueError("The ODE has no particular solution")
+                        return [-k1 / a, 0]
+
 def _linear_2eq_order1_type3(x, y, t, r, eq):
     r"""
     The equations of this type of ode are

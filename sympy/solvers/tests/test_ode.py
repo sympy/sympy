@@ -47,33 +47,36 @@ def test_linear_2eq_order1():
 
     # Characteristic equation has two real roots and b = 0
     eq3 = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), x(t) + y(t)))
-    sol3 = [Eq(x(t), 2 * C2 * exp(3 * t)), Eq(y(t), -C1 * exp(t) + C2 * exp(3 * t))]
+    sol3 = [Eq(x(t), 2 * C2 * exp(3 * t)), Eq(y(t), C1 * exp(t) + C2 * exp(3 * t))]
     assert dsolve(eq3) == sol3
 
     # Characteristic equation has two real roots and b, c = 0
     eq4 = (Eq(diff(x(t),t), 3 * x(t)), Eq(diff(y(t),t), y(t)))
-    sol4 = [Eq(x(t), 2*C2*exp(3*t)), Eq(y(t), -2*C1*exp(t))]
+    sol4 = [Eq(x(t), C2*exp(3*t)), Eq(y(t), C1*exp(t))]
     assert dsolve(eq4) == sol4
 
     # Characteristic equation has two complex conjugate roots
     eq5 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
-    sol5 = [Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)), \
-    Eq(y(t), ((C1/2 - sqrt(7)*C2/2)*sin(sqrt(7)*t/2) + (sqrt(7)*C1/2 + C2/2)*cos(sqrt(7)*t/2))*exp(3*t/2))]
+    sol5 = [
+        Eq(x(t), (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2)),
+        Eq(y(t), (C1 * (sin(sqrt(7) * t / 2) / 2 + sqrt(7) * cos(sqrt(7) * t / 2) / 2) +
+                  C2 * (-sqrt(7) * sin(sqrt(7) * t / 2) / 2 + cos(sqrt(7) * t / 2) / 2)) * exp(3 * t / 2))
+    ]
     assert dsolve(eq5) == sol5
 
     # Characteristic equation has one real root with multiple 2 and two linearly independent eigenvectors
     eq6 = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), y(t)))
-    sol6 = [Eq(x(t), C2*exp(t)), Eq(y(t), C1*exp(t))]
+    sol6 = [Eq(x(t), C1*exp(t)), Eq(y(t), C2*exp(t))]
     assert dsolve(eq6) == sol6
 
     # Characteristic equation has one real root with multiple 2 and one eigenvector
     eq7 = (Eq(diff(x(t),t), 2*x(t) - y(t)), Eq(diff(y(t),t), x(t)))
-    sol7 = [Eq(x(t), (-2*C1 - 2*C2*t - C2)*exp(t)), Eq(y(t), (-2*C1 - 2*C2*t + C2)*exp(t))]
+    sol7 = [Eq(x(t), -C1 * exp(t) - C2 * t * exp(t)), Eq(y(t), -C1 * exp(t) + C2 * (-t * exp(t) + exp(t)))]
     assert dsolve(eq7) == sol7
 
     # Characteristic equation has one real root with multiple 2 and one eigenvector and b = 0
     eq8 = (Eq(diff(x(t),t), x(t)), Eq(diff(y(t),t), x(t) + y(t)))
-    sol8 = [Eq(x(t), C1*exp(t)), Eq(y(t), (C1*t + C2)*exp(t))]
+    sol8 = [Eq(x(t), C2*exp(t)), Eq(y(t), C1 * exp(t) + C2*t*exp(t))]
     assert dsolve(eq8) == sol8
 
     # Rhs is zero
@@ -133,7 +136,7 @@ def test_linear_2eq_order1_nonhomog():
 def test_linear_2eq_order1_type2_degen():
     e = [Eq(diff(f(x), x), f(x) + 5),
          Eq(diff(g(x), x), f(x) + 7)]
-    s1 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C2*exp(x) - C1 + 2*x - 5)]
+    s1 = [Eq(f(x), C2*exp(x) - 5), Eq(g(x), C1 + C2*exp(x) + 2*x)]
     s = dsolve(e)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -144,7 +147,7 @@ def test_linear_2eq_order1_type2_degen():
 def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), f(x)),
          Eq(diff(g(x), x), g(x))]
-    s1 = [Eq(f(x), C2*exp(x)), Eq(g(x), C1*exp(x))]
+    s1 = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x))]
     s = dsolve(e)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -154,7 +157,7 @@ def test_dsolve_linear_2eq_order1_diag_triangular():
     e = [Eq(diff(f(x), x), 2*f(x)),
          Eq(diff(g(x), x), 3*f(x) + 7*g(x))]
     s1 = [Eq(f(x), -5*C1*exp(2*x)),
-          Eq(g(x), 3*C1*exp(2*x) + 8*C2*exp(7*x))];
+          Eq(g(x), 3*C1*exp(2*x) + 3*C2*exp(7*x))];
     s = dsolve(e)
     assert s == s1
     s = [(l.lhs, l.rhs) for l in s]
@@ -2762,7 +2765,7 @@ def test_issue_7093():
 def test_dsolve_linsystem_symbol():
     eps = Symbol('epsilon', positive=True)
     eq1 = (Eq(diff(f(x), x), -eps*g(x)), Eq(diff(g(x), x), eps*f(x)))
-    sol1 = [Eq(f(x), -eps*(C1*sin(eps*x) + C2*cos(eps*x))),
+    sol1 = [Eq(f(x), -C1*eps*sin(eps*x) - C2*eps*cos(eps*x)),
             Eq(g(x), C1*eps*cos(eps*x) - C2*eps*sin(eps*x))]
     assert dsolve(eq1) == sol1
 
