@@ -372,12 +372,8 @@ def _solve_as_rational(f, symbol, domain):
     else:
         # search for exp(I*x) terms
         flag = False
-        atoms = list(g.atoms(exp))
-        atoms += list(h.atoms(exp))
-        for atom in atoms:
-            for img in expand_log(atom, force=True).atoms(I):
-                if img:
-                    flag = True
+        if g.has(I) or h.has(I):
+            flag = True
         if flag:
             # to get soln in desired form  for
             # solveset((tan(x)-1).rewrite(exp), x, S.Reals)
@@ -393,8 +389,10 @@ def _solve_as_rational(f, symbol, domain):
             if isinstance(solns, FiniteSet):
                 result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
-                return result.intersection(domain) \
-                if domain.is_subset(S.Reals) else result
+                if domain.is_subset(S.Reals):
+                    return result.intersection(domain)
+                else:
+                    return result
             elif solns is S.EmptySet:
                 return S.EmptySet
             else:
@@ -462,7 +460,10 @@ def _solve_trig(f, symbol, domain):
         # In this time if ConditionSet is returned then it's
         # expression will be in Trigonometric Function(original eq).
         return _solve_as_poly(f_orig, symbol, domain)
-    return soln.intersection(domain) if domain.is_subset(S.Reals) else soln
+    if domain.is_subset(S.Reals):
+        return soln.intersection(domain)
+    else:
+        return soln
 
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):

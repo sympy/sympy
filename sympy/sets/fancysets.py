@@ -529,68 +529,87 @@ class ImageSet(Set):
         if other is S.EmptySet:
             return self
 
-        def first_val(imgset):
+        def val_at(imgset, i):
             base = imgset.base_set
             if base == S.Reals:
-                return imgset.lamda(0)
+                return imgset.lamda(i)
             else:
                 iterable = iter(base)
                 # If base is not iterbale then TypeError.
+                while (i > 0):
+                    next(iterable)
+                    i = i - 1
                 return imgset.lamda(next(iterable))
 
         def _attempt_1(self_expr, other_expr, var_self, var_other, base):
             var_term = self_expr.coeff(var_self)
             if var_term == 0:
+                # if not able to find coeff of var_self in
+                # self_expr(some complex expr)
                 return None
-            if simplify(
-                    other_expr.subs(var_other, var_self) -
-                    self_expr) % var_term == var_term / 2:
-                # (a*pi + pi + expr1) - ( a*pi  + exp1) == abs(a/2)*pi
-                # can be => (a/2)*pi + expr1
-                other_expr = (var_term / 2) * var_self + first_val(self)
-                ans = ImageSet(Lambda(var_self, other_expr), base)
-            elif simplify(
-                    other_expr.subs(var_other, var_self) -
-                    self_expr) % var_term == 0:
-                # (a*pi + expr1) - ( a*pi  + 2*pi + exp1) == 0
-                # can be => a*pi + expr1
-                other_expr = var_term * var_self + first_val(self)
-                ans = ImageSet(Lambda(var_self, other_expr), base)
-            else:
-                ans = None
-            return ans
+            # use one dummy `var_self` (dummy of self.lamda.variables)
+            other_expr = other_expr.subs(var_other, var_self)
+            try:
+                if self_expr.coeff(var_self) != other_expr.coeff(var_self):
+                    # e.g. expr1 = n + 1/4 , expr2 = 5*n + 5/4
+                    # if (5*n + abs(5/4 - 1/4)) % n == 0 means union
+                    # value = n + 1/4
+                    other_const = other_expr.coeff(var_self, 0)
+                    self_const = self_expr.coeff(var_self, 0)
+                    gap = other_const - self_const
+                    # checking if `other` + gap is multiple of `self` or not.
+                    check_multiple = lambda i: val_at(other, i) - other_const + gap
+                    self_term = val_at(self, 1) - self_const
+                    check = lambda i: check_multiple(i) % self_term
+                    # may be 1st values is multiple, so need to check for 2
+                    # or 3 continuous value.
+                    if all(check(i) == 0 for i in [1, 2, 3]):
+                        return self
+                    # otherwise can't club them, return None
+                    return None
+                if simplify(other_expr - self_expr) % var_term == var_term / 2:
+                    # (a*n*pi + pi + expr1) - ( a*n*pi  + exp1) == (a/2)*pi*n
+                    # can be => (a/2)*pi*n + expr1
+                    other_expr = (var_term / 2) * var_self + val_at(self, 0)
+                    return ImageSet(Lambda(var_self, other_expr), base)
+                elif simplify(other_expr - self_expr) % var_term == 0:
+                    # (a*n*pi + expr1) - ( a*n*pi  + a*pi + exp1) == 0
+                    # can be => a*pi*n + expr1
+                    other_expr = var_term * var_self + val_at(self, 0)
+                    return ImageSet(Lambda(var_self, other_expr), base)
+                else:
+                    return None
+            except TypeError:
+                return None
+        # end of def _attempt_1()
 
         if isinstance(other, ImageSet):
-            try:
-                base = other.base_set
-                if base != self.base_set:
-                    raise NotImplementedError
-                # use one dummy variable var_self
-                var_self = self.lamda.variables
-                var_other = other.lamda.variables
-                if len(var_self) > 1 or len(var_other) > 1:
-                    # Not Implemented for multiple lambda variables.
-                    return None
-                var_self, var_other = var_self[0], var_other[0]
+            base = other.base_set
+            if base != self.base_set:
+                # Not implemented for different base
+                return None
+            # use one dummy variable var_self
+            var_self = self.lamda.variables
+            var_other = other.lamda.variables
+            if len(var_self) > 1 or len(var_other) > 1:
+                # Not Implemented for multiple lambda variables.
+                return None
+            var_self, var_other = var_self[0], var_other[0]
 
-                # Extracting expr
-                self_expr, other_expr = self.lamda.expr, other.lamda.expr
+            # Extracting expr
+            self_expr, other_expr = self.lamda.expr, other.lamda.expr
+            try:
                 linear = Poly(self_expr, var_self).is_linear and \
                     Poly(other_expr, var_other).is_linear
                 if not linear:
                     # Not Implemented for non linear ImageSet.
                     return None
-
-                ans = _attempt_1(self_expr, other_expr,
-                                 var_self, var_other, base)
-                # Add more ways to club `self` and `other` ImageSet
-                return ans
-
-            except (
-                NotImplementedError, TypeError,
-                ValueError, PolynomialError
-            ):
+            except PolynomialError:
                 return None
+            ans = _attempt_1(self_expr, other_expr,
+                             var_self, var_other, base)
+            # Add more ways to club `self` and `other` ImageSet
+            return ans
         else:
             return None
 

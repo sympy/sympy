@@ -1041,6 +1041,25 @@ def test_issue_8257():
     assert FiniteSet(-oo) + Interval(-oo, oo) == reals_plus_negativeinfinity
 
 
+def test_Union_imageset_basic():
+    img1 = ImageSet(Lambda(n, 4*n + 4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n), S.Integers)
+    assert Union(img1, img2) == img2
+
+    img1 = ImageSet(Lambda(n, 15*n + S(15/2)), S.Integers)
+    img2 = ImageSet(Lambda(n, 15*n), S.Integers)
+    uni = ImageSet(Lambda(n, S(15)*n/2), S.Integers)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, n + 5), S.Integers)
+    img2 = ImageSet(Lambda(n, 3*n), S.Integers)
+    assert Union(img1, img2) == img1
+
+    img1 = ImageSet(Lambda(n, 7*n + 6), S.Integers)
+    img2 = ImageSet(Lambda(n, 13*n + 5), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+
 def test_Union_imageset():
     n = Dummy('n')
     img1 = ImageSet(Lambda(n, 2 * n * pi), S.Integers)
@@ -1091,6 +1110,44 @@ def test_Union_imageset():
     img2 = ImageSet(Lambda(n, 4 * n * pi + 5 * pi / 4), S.Integers)
     # no simplification
     assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 5*n*pi + 5*pi/4), S.Integers)
+    # All 6*pi + pi + pi/4 is contained in n*pi + pi/4
+    assert Union(img1, img2) == img1
+    assert Union(img2, img1) == img1
+
+    img1 = ImageSet(Lambda(n, 4*n*pi + 3*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 2*n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
+    assert Union(img1, img2) == Union(img1, img2, evaluate=False)
+
+    img1 = ImageSet(Lambda(n, 4*n*pi + 2*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi), S.Integers)
+    uni = ImageSet(Lambda(n, 2*n*pi), S.Integers)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, 12*n*pi + 6*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 12*n*pi), S.Integers)
+    # all values multiple of 12*pi
+    uni = ImageSet(Lambda(n, 6*n*pi), S.Integers)
+    assert Union(img1, img2) == uni
+
+    img1 = ImageSet(Lambda(n, 7*n*pi), S.Integers)
+    img2 = ImageSet(Lambda(n, 7*n*pi + 7*pi), S.Integers)
+    # all values multiple of 7*pi
+    uni = ImageSet(Lambda(n, 7*n*pi), S.Integers)
+    assert Union(img1, img2) == uni
+
+
+    img1 = ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+    img2 = ImageSet(Lambda(n, 4*n*pi + 5*pi/4), S.Integers)
+    # coeff of `n` is not same, but (4*pi*n + pi) % n*pi == 0
+    # means img2 is multiple of img1
+    assert Union(img1, img2) == img1
 
     img1 = ImageSet(Lambda(n, n * pi + 2 * pi / 3), S.Integers)
     img2 = ImageSet(Lambda(n, n * pi + pi / 6), S.Integers)
