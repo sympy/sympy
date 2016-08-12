@@ -1418,10 +1418,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
                         coef = eqs.as_independent(func)[1]
                         for xr in range(1, ode_order(eqs,func)+1):
                             coef -= eqs.as_independent(diff(func,t,xr))[1]
-                        if coef != 0:
+                        if coef != 1 and coef != 0:
                             is_linear_ = False
                     else:
-                        if eqs.as_independent(diff(func,t,k))[1]:
+                        coef = eqs.as_independent(diff(func,t,k))[1]
+                        if coef != 1 and coef != 0:
                             is_linear_ = False
                 else:
                     for func_ in funcs:
