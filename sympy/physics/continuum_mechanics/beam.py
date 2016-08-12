@@ -24,16 +24,17 @@ class Beam(object):
 
     Examples
     ========
-    There is a beam of length 4 meters. A constant distributed load of 6 Nm/m
-    is applied from half of the beam till the end. There are two supports below
-    the beam, one at the starting point and another at the ending point of the beam.
-    The deflection of the beam at the end is resticted.
+    There is a beam of length 4 meters. A constant distributed load of 6 N/m
+    is applied from half of the beam till the end. There are two simple supports
+    below the beam, one at the starting point and another at the ending point
+    of the beam. The deflection of the beam at the end is resticted.
+
+    Using the sign convention of downwards forces and sagging bending
+    moments being positive.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
-    >>> from sympy import Symbol, Piecewise
-    >>> x = Symbol('x')
-    >>> E = Symbol('E')
-    >>> I = Symbol('I')
+    >>> from sympy import symbols, Piecewise
+    >>> E, I = symbols('E, I')
     >>> b = Beam(4, E, I)
     >>> b.apply_load(value=-9, start=4, order=-1)
     >>> b.apply_load(value=-3, start=0, order=-1)
@@ -146,9 +147,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
@@ -220,9 +220,8 @@ class Beam(object):
         away from the starting point of the beam.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
@@ -262,9 +261,8 @@ class Beam(object):
         starting point of the beam.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
@@ -291,9 +289,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
@@ -326,9 +323,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
@@ -377,9 +373,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
@@ -426,9 +421,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.apply_load(value=-3, start=0, order=-2)
         >>> b.apply_load(value=4, start=2, order=-1)
