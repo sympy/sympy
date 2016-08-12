@@ -39,9 +39,9 @@ class Beam(object):
     >>> b.apply_load(value=-9, start=4, order=-1)
     >>> b.apply_load(value=-3, start=0, order=-1)
     >>> b.apply_load(order=0, start=2, value=6)
-    >>> b.bc_deflection = [(4, 0)]
+    >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(4, 0)], 'moment': [], 'slope': []}
+    {'deflection': [(0, 0), (4, 0)], 'moment': [], 'slope': []}
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
