@@ -167,7 +167,6 @@ class DifferentialOperator(object):
             List of polynomials belonging to the base ring of the algebra.
         parent:
             Parent algebra of the operator.
-
         """
 
         # the parent ring for this operator
@@ -2743,7 +2742,8 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular and not lenics > 1:
+        if y0 == None and x0 == 0 and is_singular and \
+            (lenics == None or lenics <= 1):
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
