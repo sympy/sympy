@@ -2,7 +2,7 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp)
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -286,6 +286,9 @@ def test_solve_univariate_inequality():
     assert isolve((x - 1)/den <= 0, x) == \
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
+    n = Dummy('n')
+    raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+
 
 def test_trig_inequalities():
     # all the inequalities are solved in a periodic interval.
@@ -351,3 +354,10 @@ def test_issue_10047():
 
 def test_issue_10268():
     assert solve(log(x) < 1000) == And(-oo < x, x < exp(1000))
+
+
+@XFAIL
+def test_isolve_Sets():
+    n = Dummy('n')
+    assert isolve(Abs(x) <= n, x, relational=False) == \
+        Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))

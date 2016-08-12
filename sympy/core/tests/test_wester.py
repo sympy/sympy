@@ -1221,9 +1221,10 @@ def test_N12():
     assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
 
 
+@XFAIL
 def test_N13():
     x = Symbol('x')
-    assert solveset(sin(x) < 2, domain=S.Reals) == Interval(0, 2*pi, False, True)
+    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 @XFAIL
