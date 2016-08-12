@@ -77,9 +77,9 @@ class Beam(object):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self._length = sympify(length)
-        self._elastic_modulus = sympify(elastic_modulus)
-        self._second_moment = sympify(second_moment)
+        self._length = length
+        self._elastic_modulus = elastic_modulus
+        self._second_moment = second_moment
         if isinstance(variable, Symbol):
             self._variable = variable
         else:
