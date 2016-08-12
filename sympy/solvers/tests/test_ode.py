@@ -185,6 +185,73 @@ def test_sysode_linear_2eq_order1_type1_D_lt_0_b_eq_0():
     assert e[1].subs(s).doit()
 
 
+def _check_solution_linear_2eq_order_1(eq, sol):
+    # Substitute the solution into the equality
+    subs = [(s.lhs, s.rhs) for s in sol]
+    eq = (eq[0].subs(subs), eq[1].subs(subs))
+    # Evaluate the derivative and verify that the right hand side and the left hand side are equal
+    for i in range(2):
+        res_eqi = simplify(eq[i].lhs.doit() - eq[i].rhs)
+        if res_eqi != 0:
+            return False
+    return True
+
+
+def test_linear_2eq_order1_type2():
+    t = Symbol('t')
+    x, y = symbols('x, y', function=True)
+    a, b, c, d = symbols('a:d')
+    k1, k2 = symbols('k1:3')
+
+    eq1 = (Eq(diff(x(t), t), x(t) + 2 * y(t) + k1), Eq(diff(y(t), t), 3 * x(t) + 4 * y(t) + k2))
+    sol1 = dsolve(eq1)
+    assert _check_solution_linear_2eq_order_1(eq1, sol1)
+
+    eq2 = (Eq(diff(x(t), t), k1), Eq(diff(y(t), t), k2))
+    sol2 = dsolve(eq2)
+    assert _check_solution_linear_2eq_order_1(eq2, sol2)
+
+    eq31 = (Eq(diff(x(t), t), 0), Eq(diff(y(t), t), c * x(t) + k2))
+    sol31 = dsolve(eq31)
+    assert _check_solution_linear_2eq_order_1(eq31, sol31)
+
+    eq32 = (Eq(diff(x(t), t), k1), Eq(diff(y(t), t), y(t) + k2))
+    sol32 = dsolve(eq32)
+    assert _check_solution_linear_2eq_order_1(eq32, sol32)
+
+    eq33 = (Eq(diff(x(t), t), k1), Eq(diff(y(t), t), x(t) + 2 * y(t) + k2))
+    sol33 = dsolve(eq33)
+    assert _check_solution_linear_2eq_order_1(eq33, sol33)
+
+    eq41 = (Eq(diff(x(t), t), x(t) + k1), Eq(diff(y(t), t), k2))
+    sol41 = dsolve(eq41)
+    assert _check_solution_linear_2eq_order_1(eq41, sol41)
+
+    eq42 = (Eq(diff(x(t), t), y(t) + k1), Eq(diff(y(t), t), 0))
+    sol42 = dsolve(eq42)
+    assert _check_solution_linear_2eq_order_1(eq42, sol42)
+
+    eq43 = (Eq(diff(x(t), t), x(t) + 2 * y(t) + k1), Eq(diff(y(t), t), k2))
+    sol43 = dsolve(eq43)
+    assert _check_solution_linear_2eq_order_1(eq43, sol43)
+
+    eq51 = (Eq(diff(x(t), t), y(t) + k1), Eq(diff(y(t), t), 2 * y(t) + k2))
+    sol51 = dsolve(eq51)
+    assert _check_solution_linear_2eq_order_1(eq51, sol51)
+
+    eq52 = (Eq(diff(x(t), t), x(t) + k1), Eq(diff(y(t), t), 2 * x(t) + k2))
+    sol52 = dsolve(eq52)
+    assert _check_solution_linear_2eq_order_1(eq52, sol52)
+
+    eq53 = (Eq(diff(x(t), t), x(t) + 2 * y(t) + k1), Eq(diff(y(t), t), 3 * x(t) + 6 * y(t) + k2))
+    sol53 = dsolve(eq53)
+    assert _check_solution_linear_2eq_order_1(eq53, sol53)
+
+    eq53_2 = (Eq(diff(x(t), t), 2 * x(t) - y(t) + k1), Eq(diff(y(t), t), 4 * x(t) - 2 * y(t) + 2 * k1))
+    sol53_2 = dsolve(eq53_2)
+    assert _check_solution_linear_2eq_order_1(eq53_2, sol53_2)
+
+
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
