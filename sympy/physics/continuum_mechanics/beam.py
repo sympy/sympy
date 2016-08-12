@@ -91,8 +91,6 @@ class Beam(object):
         str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
 
-    __repr__ = __str__
-
     @property
     def length(self):
         """Length of the Beam."""
@@ -104,6 +102,28 @@ class Beam(object):
 
     @property
     def variable(self):
+        """
+        A symbol that can be used as a variable along the length of the beam
+        while representing load distribution, shear force curve, bending moment
+        , slope curve and the deflection curve. By default, it is set to
+        ``Symbol('x')``, but this property is mutable.
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> x, y, z = symbols('x, y, z')
+        >>> b = Beam(4, E, I)
+        >>> b.variable
+        x
+        >>> b.variable = y
+        >>> b.variable
+        y
+        >>> b = Beam(4, E, I, z)
+        >>> b.variable
+        z
+        """
         return self._variable
 
     @variable.setter
