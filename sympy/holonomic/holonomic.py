@@ -35,7 +35,7 @@ def DifferentialOperators(base, generator):
     This function is used to create annihilators using ``Dx``.
 
     Returns an Algebra of Differential Operators also called Weyl Algebra
-    and the operator for differentiation i.e. the :math:`Dx` operator.
+    and the operator for differentiation i.e. the ``Dx`` operator.
 
     Parameters
     ==========
@@ -410,7 +410,7 @@ class HolonomicFunction(object):
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
     An example of initial conditions for regular singular points,
-    the indicial equation have only one root `1/2`.
+    the indicial equation has only one root `1/2`.
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]})
     HolonomicFunction((-1/2) + (x)*Dx, x, 0, {1/2: [1]})

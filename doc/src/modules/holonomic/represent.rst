@@ -1,7 +1,9 @@
 Represnting a Holonomic Function in SymPy
 =========================================
 
-Let's understand this with an example:
+In this module the differential equation will be
+represented by a Differential Operator annihilating the function.
+Let's explain this with an example:
 
 Take :math:`sin(x)` for instance, the differential equation satisfied by it
 is :math:`y''(x) + y(x) = 0`. So by definition we conclude it is a Holonomic
