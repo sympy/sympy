@@ -1309,13 +1309,13 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         return S.EmptySet
 
     if not symbols:
-        msg = 'Symbols must be given, for which solution of the '\
-            'system is to be found.'
+        msg = ('Symbols must be given, for which solution of the '
+               'system is to be found.')
         raise ValueError(filldedent(msg))
 
     if not is_sequence(symbols):
-        msg = 'symbols should be given as a sequence, e.g. a list.' \
-            'Not type %s: %s'
+        msg = ('symbols should be given as a sequence, e.g. a list.'
+               'Not type %s: %s')
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
     try:
@@ -1324,8 +1324,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         sym = False
 
     if not sym:
-        msg = 'Iterable of symbols must be given as' \
-            'second argument, not type %s: %s'
+        msg = ('Iterable of symbols must be given as '
+               'second argument, not type %s: %s')
         raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
 
     # By default `all_symbols` will be same as `symbols`
@@ -1982,8 +1982,8 @@ def nonlinsolve(system, *symbols):
         return S.EmptySet
 
     if not symbols:
-        msg = 'Symbols must be given, for which solution of the \
-                    system is to be found.'
+        msg = ('Symbols must be given, for which solution of the '
+               'system is to be found.')
         raise ValueError(filldedent(msg))
 
     if hasattr(symbols[0], '__iter__'):
@@ -1994,13 +1994,13 @@ def nonlinsolve(system, *symbols):
     except AttributeError:
         sym = False
     except IndexError:
-        msg = 'Symbols must be given, for which solution of the \
-                         system is to be found.'
+        msg = ('Symbols must be given, for which solution of the '
+               'system is to be found.')
         raise IndexError(filldedent(msg))
 
     if not sym:
-        msg = 'Symbols or iterable of symbols must be given as \
-                         second argument, not type %s: %s'
+        msg = ('Symbols or iterable of symbols must be given as '
+               'second argument, not type %s: %s')
         raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
 
     if len(system) == 1 and len(symbols) == 1:
