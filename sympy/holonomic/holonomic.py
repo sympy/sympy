@@ -31,24 +31,32 @@ from sympy.polys.polyroots import roots
 
 
 def DifferentialOperators(base, generator):
-    """
+    r"""
+    This function is used to create annihilators using ``Dx``.
+
     Returns an Algebra of Differential Operators also called Weyl Algebra
-    and the operator for differentiation i.e. the `Dx` operator.
+    and the operator for differentiation i.e. the :math:`Dx` operator.
 
-    The first argument needs to be the base polynomial ring for the algebra.
-    The base polynomial ring is the ring of polynomials in `x` that will
-    appear as coefficients in the operators.
+    Parameters
+    ==========
 
-    and the second argument must be the generator of the algebra which can
-    be either a noncommutative `Symbol` or a string. e.g. "Dx" or "D".
+    base:
+        Base polynomial ring for the algebra.
+        The base polynomial ring is the ring of polynomials in :math:`x` that
+        will appear as coefficients in the operators.
+    generator:
+        Generator of the algebra which can
+        be either a noncommutative ``Symbol`` or a string. e.g. "Dx" or "D".
 
     Examples
-    =======
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.abc import x
     >>> from sympy.holonomic.holonomic import DifferentialOperators
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    >>> R
+    Univariate Differential Operator Algebra in intermediate Dx over the base ring ZZ[x]
     """
 
     ring = DifferentialOperatorAlgebra(base, generator)
@@ -56,16 +64,17 @@ def DifferentialOperators(base, generator):
 
 
 class DifferentialOperatorAlgebra(object):
-    """
+    r"""
     An Ore Algebra is a set of noncommutative polynomials in the
-    intermediate `Dx` and coefficients in a base polynomial ring A.
+    intermediate ``Dx`` and coefficients in a base polynomial ring :math:`A`.
     It follows the commutation rule:
+    .. math ::
+        Dxa = \sigma(a)Dx + \delta(a)
 
-    Dx * a = sigma(a) * Dx + delta(a)
-    for `a` an element in ring `A`.
+    for :math:`a \subset A`.
 
-    Where sigma: A --> A is an endomorphism and delta: A --> A is a
-    skew-derivation i.e. delta(ab) = delta(a) * b + sigma(a) * delta(b)
+    Where :math:`\sigma: A --> A` is an endomorphism and :math:`\delta: A --> A`
+    is a skew-derivation i.e. :math:`delta(ab) = delta(a) * b + sigma(a) * delta(b)`.
 
     If one takes the sigma as identity map and delta as the standard derivation
     then it becomes the algebra of Differential Operators also called
@@ -382,21 +391,6 @@ class HolonomicFunction(object):
     [C_0, C_1, ...], [C0_0, C0_1, ...], ... are the corresponding intiial
     terms of the associated power series. See Examples below.
 
-    To plot a Holonomic Function, one can use `.evalf()` for numerical
-    computation. Here's an example on `sin(x)**2/x` using numpy and matplotlib.
-
-    ``
-    import sympy.holonomic
-    from sympy import var, sin
-    import matplotlib.pyplot as plt
-    import numpy as np
-    var("x")
-    r = np.linspace(1, 5, 100)
-    y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r)
-    plt.plot(r, y, label="holonomic function")
-    plt.show()
-    ``
-
     Examples
     ========
 
@@ -415,14 +409,27 @@ class HolonomicFunction(object):
     >>> p * q  # annihilator of e^x * sin(x)
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
-    # an example of initial conditions for regular singular points
-    # the indicial equation have only one root `1/2`.
+    An example of initial conditions for regular singular points,
+    the indicial equation have only one root `1/2`.
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]})
     HolonomicFunction((-1/2) + (x)*Dx, x, 0, {1/2: [1]})
 
     >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_expr()
     sqrt(x)
+
+    To plot a Holonomic Function, one can use `.evalf()` for numerical
+    computation. Here's an example on `sin(x)**2/x` using numpy and matplotlib.
+
+    >>> import sympy.holonomic # doctest: +SKIP
+    >>> from sympy import var, sin # doctest: +SKIP
+    >>> import matplotlib.pyplot as plt # doctest: +SKIP
+    >>> import numpy as np # doctest: +SKIP
+    >>> var("x") # doctest: +SKIP
+    >>> r = np.linspace(1, 5, 100) # doctest: +SKIP
+    >>> y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r) # doctest: +SKIP
+    >>> plt.plot(r, y, label="holonomic function") # doctest: +SKIP
+    >>> plt.show() # doctest: +SKIP
 
     """
 
