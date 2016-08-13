@@ -1,8 +1,8 @@
 r"""
-The :mod:`sympy.holonomic` module is intended to deal with Holonomic Functions along
+The :py:mod:`~sympy.holonomic` module is intended to deal with holonomic functions along
 with various operations on them like addition, multiplication, composition,
 integration and differentiation. The module also implements various kinds of
-conversions such as converting Holonomic Functions to a different form and the
+conversions such as converting holonomic functions to a different form and the
 other way around.
 """
 

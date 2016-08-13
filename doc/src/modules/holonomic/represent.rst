@@ -1,13 +1,17 @@
 Represnting a Holonomic Function in SymPy
 =========================================
 
-In this module the differential equation will be
-represented by a Differential Operator annihilating the function.
+.. module:: sympy.holonomic.holonomic
+
+Class :class:`DifferentialOperator` is used to represent the annihilator
+but we can create a differential operator easily using the function
+:func:`DifferentialOperators`. Class :class:`HolonomicFunction` represents a holonomic function.
+
 Let's explain this with an example:
 
 Take :math:`sin(x)` for instance, the differential equation satisfied by it
-is :math:`y''(x) + y(x) = 0`. So by definition we conclude it is a Holonomic
-Function. The general solution of this ODE is
+is :math:`y''(x) + y(x) = 0`. By definition we conclude it is a holonomic
+function. The general solution of this ODE is
 :math:`C_{1}sin(x) + C_{2}cos(x)` but to get :math:`sin(x)` we need to
 provide initial conditions i.e. :math:`y(0) = 0, y'(0) = 1`.
 
@@ -19,7 +23,7 @@ respect to ``x``.
 
 So the differential equation can also be written as
 :math:`D^{2}y(x) + y(x) = 0` or :math:`(D^{2} + 1)y(x) = 0`.
-The part left of :math:`y(x)` is called the annihilator i.e. :math:`D^{2}+1`.
+The part left of :math:`y(x)` is the annihilator i.e. :math:`D^{2}+1`.
 
 So this is how one will represent ``sin(x)`` as a Holonomic Function:
 
@@ -29,8 +33,3 @@ So this is how one will represent ``sin(x)`` as a Holonomic Function:
     >>> R, D = DifferentialOperators(ZZ.old_poly_ring(x), 'D')
     >>> HolonomicFunction(D**2 + 1, x, 0, [0, 1])
     HolonomicFunction((1) + (1)*D**2, x, 0, [0, 1])
-
-.. module:: sympy.holonomic.holonomic
-
-.. autofunction:: DifferentialOperators
-

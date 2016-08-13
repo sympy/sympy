@@ -14,3 +14,4 @@ Contents
 
    about.rst
    represent.rst
+   operations.rst

@@ -1136,7 +1136,8 @@ class HolonomicFunction(object):
         if n < 0:
             raise NotHolonomicError("Negative Power on a Holonomic Function")
         if n == 0:
-            return S(1)
+            Dx = self.annihilator.parent.derivative_operator
+            return HolonomicFunction(Dx, self.x, S(0), [S(1)])
         if n == 1:
             return self
         else:
