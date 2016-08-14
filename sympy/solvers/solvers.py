@@ -299,7 +299,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, **assumptions):
+def check_assumptions(expr, e=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -331,6 +331,9 @@ def check_assumptions(expr, **assumptions):
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
+    if e is not None:
+        assumptions = e.assumptions0
+
     expr = sympify(expr)
 
     result = True
