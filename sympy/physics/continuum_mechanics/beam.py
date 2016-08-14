@@ -12,6 +12,7 @@ from sympy.printing import sstr
 from sympy.functions import SingularityFunction
 from sympy.core import sympify
 from sympy.integrals import integrate
+from sympy.series import limit
 
 
 class Beam(object):
@@ -24,23 +25,27 @@ class Beam(object):
 
     Examples
     ========
-    There is a beam of length 4 meters. A constant distributed load of 6 Nm/m
-    is applied from half of the beam till the end. There are two supports below
-    the beam, one at the starting point and another at the ending point of the beam.
-    The deflection of the beam at the end is resticted.
+    There is a beam of length 4 meters. A constant distributed load of 6 N/m
+    is applied from half of the beam till the end. There are two simple supports
+    below the beam, one at the starting point and another at the ending point
+    of the beam. The deflection of the beam at the end is resticted.
+
+    Using the sign convention of downwards forces being positive.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam
-    >>> from sympy import Symbol, Piecewise
-    >>> x = Symbol('x')
-    >>> E = Symbol('E')
-    >>> I = Symbol('I')
+    >>> from sympy import symbols, Piecewise
+    >>> E, I = symbols('E, I')
+    >>> R1, R2 = symbols('R1, R2')
     >>> b = Beam(4, E, I)
-    >>> b.apply_load(value=-9, start=4, order=-1)
-    >>> b.apply_load(value=-3, start=0, order=-1)
-    >>> b.apply_load(order=0, start=2, value=6)
-    >>> b.bc_deflection = [(4, 0)]
+    >>> b.apply_load(R1, 0, -1)
+    >>> b.apply_load(6, 2, 0)
+    >>> b.apply_load(R2, 4, -1)
+    >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(4, 0)], 'moment': [], 'slope': []}
+    {'deflection': [(0, 0), (4, 0)], 'moment': [], 'slope': []}
+    >>> b.load
+    R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
+    >>> b.evaluate_reaction_forces(R1, R2)
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
@@ -76,9 +81,9 @@ class Beam(object):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self._length = sympify(length)
-        self._elastic_modulus = sympify(elastic_modulus)
-        self._second_moment = sympify(second_moment)
+        self._length = length
+        self._elastic_modulus = elastic_modulus
+        self._second_moment = second_moment
         if isinstance(variable, Symbol):
             self._variable = variable
         else:
@@ -87,10 +92,8 @@ class Beam(object):
         self._load = 0
 
     def __str__(self):
-        str_sol = 'Beam(%s, %s, %s)' % (sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
-
-    __repr__ = __str__
 
     @property
     def length(self):
@@ -103,6 +106,28 @@ class Beam(object):
 
     @property
     def variable(self):
+        """
+        A symbol that can be used as a variable along the length of the beam
+        while representing load distribution, shear force curve, bending moment
+        , slope curve and the deflection curve. By default, it is set to
+        ``Symbol('x')``, but this property is mutable.
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> x, y, z = symbols('x, y, z')
+        >>> b = Beam(4, E, I)
+        >>> b.variable
+        x
+        >>> b.variable = y
+        >>> b.variable
+        y
+        >>> b = Beam(4, E, I, z)
+        >>> b.variable
+        z
+        """
         return self._variable
 
     @variable.setter
@@ -146,9 +171,8 @@ class Beam(object):
         deflection should be 2 at 0.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
         >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
@@ -196,18 +220,19 @@ class Beam(object):
         value :
             The magnitude of an applied load.
         start :
-            The starting point of the applied load.
+            The starting point of the applied load. For point moments and
+            point forces this is the location of application.
         end :
-            An optional argument that can be used if the load have an end point
+            An optional argument that can be used if the load has an end point
             within the length of the beam.
         order :
             The order of the applied load.
 
-            For Moments, order = -2
-            For Pointloads, order = -1
-            For constant distributed load, order = 0
-            For Ramp load, order = 1
-            For Parabolic Ramp, order = 2
+            For moments, order= -2
+            For point loads, order=-1
+            For constant distributed load, order=0
+            For ramp loads, order=1
+            For parabolic ramp loads, order=2
             ... so on.
 
         Examples
@@ -216,17 +241,16 @@ class Beam(object):
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 2 meters to 3 meters
+        2 N/m is applied below the beam starting from 2 meters to 3 meters
         away from the starting point of the beam.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=2, order=2, end = 3)
+        >>> b.apply_load(-3, 0, -2)
+        >>> b.apply_load(4, 2, -1)
+        >>> b.apply_load(-2, 2, 2, end = 3)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2)
             + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
@@ -240,9 +264,9 @@ class Beam(object):
 
         if end:
             if order == 0:
-                self._load += -value*SingularityFunction(x, end, order)
+                self._load -= value*SingularityFunction(x, end, order)
             elif order.is_positive:
-                self._load += -value*SingularityFunction(x, end, order) - value*SingularityFunction(x, end, 0)
+                self._load -= value*SingularityFunction(x, end, order) + value*SingularityFunction(x, end, 0)
             else:
                 raise ValueError("""Order of the load should be positive.""")
 
@@ -258,21 +282,66 @@ class Beam(object):
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
         2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
+        2 N/m is applied below the beam starting from 3 meters away from the
         starting point of the beam.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
+        >>> b.apply_load(-3, 0, -2)
+        >>> b.apply_load(4, 2, -1)
+        >>> b.apply_load(-2, 3, 2)
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
         return self._load
+
+    def evaluate_reaction_forces(self, *reactions):
+        """
+        Solves for the reaction forces.
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, linsolve, limit
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)  # Reaction force at x = 10
+        >>> b.apply_load(R2, 30, -1)  # Reaction force at x = 30
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.load
+        R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+        """
+        load = self.load
+        x = self.variable
+        l = self.length
+        shear_force = integrate(load, x)
+        bending_moment = integrate(integrate(load, x), x)
+
+        shear_curve = limit(shear_force, x, l)
+        moment_curve = limit(bending_moment, x, l)
+        reaction_values = linsolve([shear_curve, moment_curve], reactions).args
+        for i in range(len(reactions)):
+            self._load = self._load.subs(reactions[i], reaction_values[0][i])
 
     def shear_force(self):
         """
@@ -281,28 +350,29 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
-        applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
-        2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
-        starting point of the beam. The bending moment at 0 should be 4 and
-        at 4 it should be 0. The slope of the beam should be 1 at 0. The
-        deflection should be 2 at 0.
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.bc_deflection = [(0, 2)]
-        >>> b.bc_slope = [(0, 1)]
+        >>> from sympy import symbols, linsolve, limit
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.shear_force()
-        -3*SingularityFunction(x, 0, -1) + 4*SingularityFunction(x, 2, 0) - 2*SingularityFunction(x, 3, 3)/3 - 71/24
+        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
         if not self._boundary_conditions['moment']:
@@ -316,29 +386,29 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
-        applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
-        2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
-        starting point of the beam. The bending moment at 0 should be 4 and
-        at 4 it should be 0. The slope of the beam should be 1 at 0. The
-        deflection should be 2 at 0.
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.bc_deflection = [(0, 2)]
-        >>> b.bc_slope = [(0, 1)]
+        >>> from sympy import symbols, linsolve, limit
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.bending_moment()
-        -71*x/24 - 3*SingularityFunction(x, 0, 0) + 4*SingularityFunction(x, 2, 1)
-            - SingularityFunction(x, 3, 4)/6 + 7
+        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
         if not self._boundary_conditions['moment']:
@@ -367,29 +437,30 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
-        applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
-        2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
-        starting point of the beam. The bending moment at 0 should be 4 and
-        at 4 it should be 0. The slope of the beam should be 1 at 0. The
-        deflection should be 2 at 0.
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.bc_deflection = [(0, 2)]
-        >>> b.bc_slope = [(0, 1)]
+        >>> from sympy import symbols, linsolve, limit
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.slope()
-        (-71*x**2/48 + 7*x - 3*SingularityFunction(x, 0, 1) + 2*SingularityFunction(x, 2, 2)
-            - SingularityFunction(x, 3, 5)/30 + 1)/(E*I)
+        (4*SingularityFunction(x, 0, 2) - 3*SingularityFunction(x, 10, 2)
+            - 120*SingularityFunction(x, 30, 1) - SingularityFunction(x, 30, 2) - 4000/3)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -416,29 +487,30 @@ class Beam(object):
 
         Examples
         ========
-        There is a beam of length 4 meters. A moment of magnitude 3 Nm is
-        applied in the clockwise direction at the starting point of the beam.
-        A pointload of magnitude 4 N is applied from the top of the beam at
-        2 meters from the starting point and a parabolic ramp load of magnitude
-        2 Nm/m is applied below the beam starting from 3 meters away from the
-        starting point of the beam. The bending moment at 0 should be 4 and
-        at 4 it should be 0. The slope of the beam should be 1 at 0. The
-        deflection should be 2 at 0.
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import Symbol
-        >>> E = Symbol('E')
-        >>> I = Symbol('I')
-        >>> b = Beam(4, E, I)
-        >>> b.apply_load(value=-3, start=0, order=-2)
-        >>> b.apply_load(value=4, start=2, order=-1)
-        >>> b.apply_load(value=-2, start=3, order=2)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
-        >>> b.bc_deflection = [(0, 2)]
-        >>> b.bc_slope = [(0, 1)]
+        >>> from sympy import symbols, linsolve, limit, Symbol
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.deflection()
-        (-71*x**3/144 + 7*x**2/2 + x - 3*SingularityFunction(x, 0, 2)/2 + 2*SingularityFunction(x, 2, 3)/3
-            - SingularityFunction(x, 3, 6)/180 + 2)/(E*I)
+        (-4000*x/3 + 4*SingularityFunction(x, 0, 3)/3 - SingularityFunction(x, 10, 3)
+            - 60*SingularityFunction(x, 30, 2) - SingularityFunction(x, 30, 3)/3 + 12000)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -449,14 +521,15 @@ class Beam(object):
             return integrate(self.slope(), x)
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             C3 = Symbol('C3')
+            C4 = Symbol('C4')
             slope_curve = integrate(self.bending_moment(), x) + C3
-            deflection_curve = integrate(slope_curve, x)
+            deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
                 eqs = deflection_curve.subs(x, position) - value
                 bc_eqs.append(eqs)
-            constants = list(linsolve(bc_eqs, C3))
-            deflection_curve = deflection_curve.subs({C3: constants[0][0]})
+            constants = list(linsolve(bc_eqs, (C3, C4)))
+            deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S(1)/(E*I)*deflection_curve
 
         C4 = Symbol('C4')

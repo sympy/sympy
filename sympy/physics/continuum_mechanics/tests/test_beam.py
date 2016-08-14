@@ -98,48 +98,45 @@ def test_Beam():
     # Test using symbols
     l = Symbol('l')
     w0 = Symbol('w0')
-    w1 = Symbol('w2')
     w2 = Symbol('w2')
     a1 = Symbol('a1')
-    b = Symbol('b')
-    b1 = Symbol('b1')
     c = Symbol('c')
     c1 = Symbol('c1')
     d = Symbol('d')
+    e = Symbol('e')
+    f = Symbol('f')
 
     b2 = Beam(l, E, I)
 
     b2.apply_load(w0, a1, 1)
-    b2.apply_load(w1, b1, -2)
     b2.apply_load(w2, c1, -1)
 
     b2.bc_deflection = [(c, d)]
+    b2.bc_slope = [(e, f)]
 
     # Test for load distribution function.
     p = b2.load
-    q = w0*SingularityFunction(x, a1, 1) + w2*SingularityFunction(x, b1, -2) + w2*SingularityFunction(x, c1, -1)
+    q = w0*SingularityFunction(x, a1, 1) + w2*SingularityFunction(x, c1, -1)
     assert p == q
 
     # Test for shear force distribution function
     p = b2.shear_force()
-    q = w0*SingularityFunction(x, a1, 2)/2 + w2*SingularityFunction(x, b1, -1) + w2*SingularityFunction(x, c1, 0)
+    q = w0*SingularityFunction(x, a1, 2)/2 + w2*SingularityFunction(x, c1, 0)
     assert p == q
 
     # Test for bending moment distribution function
     p = b2.bending_moment()
-    q = -w0*SingularityFunction(x, a1, 3)/6 - w2*SingularityFunction(x, b1, 0) - w2*SingularityFunction(x, c1, 1)
+    q = -w0*SingularityFunction(x, a1, 3)/6 - w2*SingularityFunction(x, c1, 1)
     assert p == q
 
     # Test for slope distribution function
     p = b2.slope()
-    q = (-w0*SingularityFunction(x, a1, 4)/24 - w2*SingularityFunction(x, b1, 1) - w2*SingularityFunction(x, c1, 2)/2 +
-        (d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
+    q = (f + w0*SingularityFunction(e, a1, 4)/24 - w0*SingularityFunction(x, a1, 4)/24 + w2*SingularityFunction(e, c1, 2)/2 - w2*SingularityFunction(x, c1, 2)/2)
     assert p == q/(E*I)
 
     # Test for deflection distribution function
     p = b2.deflection()
-    q = (-w0*SingularityFunction(x, a1, 5)/120 - w2*SingularityFunction(x, b1, 2)/2 - w2*SingularityFunction(x, c1, 3)/6 +
-         x*(d + w0*SingularityFunction(c, a1, 5)/120 + w2*SingularityFunction(c, b1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6)/c)
+    q = (-c*f - c*w0*SingularityFunction(e, a1, 4)/24 - c*w2*SingularityFunction(e, c1, 2)/2 + d + f*x + w0*x*SingularityFunction(e, a1, 4)/24 + w0*SingularityFunction(c, a1, 5)/120 - w0*SingularityFunction(x, a1, 5)/120 + w2*x*SingularityFunction(e, c1, 2)/2 + w2*SingularityFunction(c, c1, 3)/6 - w2*SingularityFunction(x, c1, 3)/6)
     assert p == q/(E*I)
 
     b3 = Beam(9, E, I)
