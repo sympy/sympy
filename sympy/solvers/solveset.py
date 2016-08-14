@@ -26,7 +26,8 @@ from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
 from sympy.solvers.solvers import checksol, denoms, unrad
-from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvers.inequalities import (solve_univariate_inequality,
+                                        solveset_univariate_trig_inequality)
 from sympy.utilities import filldedent
 
 
@@ -857,9 +858,14 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
         try:
-            result = solve_univariate_inequality(
-            f, symbol, relational=False) - _invalid_solutions(
-            f, symbol, domain)
+            if _is_function_class_equation(
+                    TrigonometricFunction, f.lhs - f.rhs, symbol):
+                result = solveset_univariate_trig_inequality(
+                    f, symbol)
+            else:
+                result = solve_univariate_inequality(
+                    f, symbol, relational=False) - _invalid_solutions(
+                    f, symbol, domain)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result

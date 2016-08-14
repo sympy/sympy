@@ -153,6 +153,140 @@ class Set(Basic):
         """
         return self.is_disjoint(other)
 
+
+
+    def _union_simplify(self, other):
+        """
+        Try to reduce number of imageset in the args.
+        It is mostly helper to _solve_trig method defined in
+        solvers/solveset.py.
+
+        Helper method for `_union ` of ImageSet.
+
+        First extract the expression of imageset and put in list in new_list
+        (for self) and final_list(for other). If there is any
+        expr in new_list have difference of pi or -pi with any final_list expr.
+        then club them into one expr( (2*n + 1)*pi and 2*n*pi  => n*pi) ,
+        add them and remove previous expr from final_list.
+        At the end final_list contains the minimum number of expr that can
+        generate all the expressions of self and  other.
+
+        Parameters
+        ==========
+
+        self : S.EmptySet of imageset(s).
+        other : S.EmptySet or  imageset(s)
+.
+        Returns
+        =======
+        simplified imageset(s) if possible otherwise self + other .
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> from sympy import pprint
+        >>> from sympy.core import Dummy, pi, S, Symbol
+        >>> n = Dummy('n')
+        >>> pprint(\
+            ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)._union_simplify(\
+                ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)),\
+                use_unicode = False)
+                3*pi
+        {n*pi + ---- | n in Integers()}
+                 4
+
+
+        >>> pprint((ImageSet(Lambda(n, 2*n*pi + pi/3), \
+            S.Integers) + ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)).\
+            _union_simplify(ImageSet(Lambda(n, 2*n*pi), S.Integers)),\
+            use_unicode = False)
+                                             pi
+        {n*pi | n in Integers()} U {2*n*pi + -- | n in Integers()}
+                                             3
+
+
+        """
+
+        from sympy.sets.fancysets import ImageSet
+        from sympy.core.function import Lambda
+        from sympy.core import pi
+
+        if self is S.EmptySet:
+            return other
+
+        new_list = []
+        # number of imageset
+        if isinstance(self, ImageSet):
+            new_img_len = 1
+            new_list.append(self)
+        else:
+            new_img_len = len(self.args)
+            for i in range(0, new_img_len):
+                # list of imageset
+                new_list.append(self.args[i])
+
+        new_expr = []
+        final_expr = []
+        # soln list
+        final_list = []
+        final_len = 0
+
+        if isinstance(other, ImageSet):
+            final_len = 1
+            final_list.append(other)
+        else:
+            final_len = len(other.args)
+            for i in range(0, final_len):
+                # list of imageset
+                final_list.append(other.args[i])
+
+        # use one dummy variable n_final
+        n_self = (new_list[0].lamda.expr).atoms(Dummy).pop()
+        # there may be problem when inside expr we have more than one
+        # dummy variable
+        n_final = (final_list[0].lamda.expr).atoms(Dummy).pop()
+
+        # Extracting expr
+        for s in new_list:
+            # lambda expression
+            lamb = s.lamda.expr
+            new_expr.append(lamb.subs(n_self, n_final))
+
+        for s in final_list:
+            # lambda expression
+            lamb = s.lamda.expr
+            final_expr.append(lamb)
+        final = S.EmptySet
+        i = 0
+
+        # there may be problem when it is not linear
+        # but we don't get that case in _solve_trig.
+        while i < new_img_len:
+            done = False
+            for j in range(0, len(final_expr)):
+                if final_expr[j] - new_expr[i] == pi:
+                    # (2*x*pi + pi + expr1) -( 2*x*pi  + exp1) = pi
+                    # can be => x*pi + expr1
+                    final_expr.extend([pi * n_final + new_expr[i].subs(n_final, 0)])
+                    final_expr.remove(final_expr[j])
+                    done = True
+                elif final_expr[j] - new_expr[i] == -pi:
+                    # (2*x*pi + expr1) -( 2*x*pi  + pi + exp1) = -pi
+                    # can be => x*pi + expr1
+                    final_expr += [pi * n_final + final_expr[j].subs(n_final, 0)]
+                    final_expr.remove(final_expr[j])
+                    done = True
+            if not done:
+                final_expr.append(new_expr[i])
+            i += 1
+
+        final = Union(*[ImageSet(Lambda(n_final, s), S.Integers) \
+                            for s in final_expr], evaluate=False)
+        return final
+
+
     def _union(self, other):
         """
         This function should only be used internally
@@ -165,7 +299,10 @@ class Set(Basic):
 
         Used within the :class:`Union` class
         """
-        return None
+        try:
+            return self._union_simplify(other)
+        except:
+            return None
 
     def complement(self, universe):
         """
@@ -708,6 +845,7 @@ class Interval(Set, EvalfMixin):
 
     .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
+
     is_Interval = True
 
     def __new__(cls, start, end, left_open=False, right_open=False):
@@ -728,16 +866,20 @@ class Interval(Set, EvalfMixin):
         if not all(i.is_real is not False or i in inftys for i in (start, end)):
             raise ValueError("Non-real intervals are not supported")
 
-        # evaluate if possible
-        if (end < start) == True:
-            return S.EmptySet
-        elif (end - start).is_negative:
-            return S.EmptySet
+        # If ImageSet then pass
+        try:
+            # evaluate if possible
+            if (end < start) == True:
+                return S.EmptySet
+            elif (end - start).is_negative:
+                return S.EmptySet
 
-        if end == start and (left_open or right_open):
-            return S.EmptySet
-        if end == start and not (left_open or right_open):
-            return FiniteSet(end)
+            if end == start and (left_open or right_open):
+                return S.EmptySet
+            if end == start and not (left_open or right_open):
+                return FiniteSet(end)
+        except:
+            pass
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
@@ -911,8 +1053,34 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        from sympy.sets.fancysets import ImageSet
         if other.is_UniversalSet:
             return S.UniversalSet
+
+        try:
+            # check if it is ImageSet in Interval
+            other_img = isinstance(other.start, ImageSet)
+            self_img = isinstance(self.start, ImageSet)
+            if other_img and self_img:
+                start_union = other.start + self.start
+                if len(start_union.args) == 1:
+                    # means it is reduced
+                    # check for end points now
+                    end_union = other.end + self.end
+                    if len(end_union.args) == 1:
+                        # start and end point can be clubbed
+                        s = start_union.args[0]
+                        e = end_union.args[0]
+                        new_self = Interval(s, e)
+                        return set((new_self, ))
+            else:
+                # otherwise return None
+                return None
+        except:
+            # If it is not ImageSet then Error
+            # pass it
+            pass
+
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
