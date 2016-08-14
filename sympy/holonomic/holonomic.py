@@ -1218,7 +1218,7 @@ class HolonomicFunction(object):
 
     def to_sequence(self, lb=True):
         r"""
-        Finds recurrence relation in the series expansion
+        Finds recurrence relation for the coefficients in the series expansion
         of the function about :math:`x_0`, where :math:`x_0` is the point at
         which the initial condition is stored.
 
@@ -1227,11 +1227,11 @@ class HolonomicFunction(object):
         smallest ``n`` for which the recurrence holds true.
 
         If the point :math:`x_0` is regular singular, a list of solutions in
-        the format :math:`(R, p, n_0)` is returned,
-        i.e. :math:`[(R, p, n0), ... ]`. Each tuple in this vector represents
-        a recurrence relation :math:`R` associated with a root of the indicial
-        equation ``p``. Conditions of a different format can also be provided in
-        this case, see the docstring of the class.
+        the format :math:`(R, p, n_0)` is returned, i.e. `[(R, p, n_0), ... ]`.
+        Each tuple in this vector represents a recurrence relation :math:`R`
+        associated with a root of the indicial equation ``p``. Conditions of
+        a different format can also be provided in this case, see the
+        docstring of HolonomicFunction class.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol :math:`C_j`, denoting the coefficient of
@@ -1260,8 +1260,8 @@ class HolonomicFunction(object):
         References
         ==========
 
-        [1] https://hal.inria.fr/inria-00070025/document
-        [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [1]. https://hal.inria.fr/inria-00070025/document
+        .. [2]. http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 

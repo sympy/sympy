@@ -19,8 +19,8 @@ a holonomic functions.
     >>> p * q
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
-``p`` and ``q`` here are holonomic representation of :math:`e^x` and
-:math:`sin(x)` respectively.
+``p`` and ``q`` here are holonomic representation of `e^x` and
+`\sin(x)` respectively.
 
 .. module:: sympy.holonomic.holonomic
 
