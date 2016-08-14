@@ -412,7 +412,6 @@ def _sqrt_mod_prime_power(a, p, k):
         return sorted([ZZ(res), ZZ(p - res)])
 
     if k > 1:
-        f = factorint(a)
         # see Ref.[2]
         if p == 2:
             if a % 8 != 1:
