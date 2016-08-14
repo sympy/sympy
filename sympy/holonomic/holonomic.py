@@ -1773,15 +1773,21 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
-        >>> # a straight line on the real axis from (0 to 1)
+
+        A straight line on the real axis from (0 to 1)
+
         >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-        >>> # using Runge-Kutta 4th order on e^x from 0.1 to 1.
-        >>> # exact solution at 1 is 2.71828182845905
+
+        Runge-Kutta 4th order on e^x from 0.1 to 1.
+        Exact solution at 1 is 2.71828182845905
+
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)
         [1.10517083333333, 1.22140257085069, 1.34985849706254, 1.49182424008069,
         1.64872063859684, 1.82211796209193, 2.01375162659678, 2.22553956329232,
         2.45960141378007, 2.71827974413517]
-        >>> # using Euler's method for the same
+
+        Euler's method for the same
+
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r, method='Euler')
         [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
         2.357947691, 2.5937424601]
@@ -1856,7 +1862,7 @@ class HolonomicFunction(object):
         representing the given holonomic function.
 
         Returns an answer of the form:
-        a1 * x**b1 * hyper() + a2 * x**b2 * hyper() ...
+        `a_1 \cdot x^{b_1} \cdot hyper() + a_2 \cdot x^{b_2} \cdot hyper() ...`
 
         This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.

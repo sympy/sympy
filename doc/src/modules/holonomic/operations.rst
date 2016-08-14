@@ -12,15 +12,22 @@ a holonomic functions.
     >>> from sympy import symbols
     >>> x = symbols('x')
     >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
+
+    ``p`` and ``q`` here are holonomic representation of `e^x` and
+    `\sin(x)` respectively.
+
     >>> p = HolonomicFunction(Dx - 1, x, 0, [1])
     >>> q = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
+
+    Holonomic representation of `e^x+\sin(x)`
+
     >>> p + q
     HolonomicFunction((-1) + (1)*Dx + (-1)*Dx**2 + (1)*Dx**3, x, 0, [1, 2, 1])
+
+    Holonomic representation of `e^x \cdot \sin(x)`
+
     >>> p * q
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
-
-``p`` and ``q`` here are holonomic representation of `e^x` and
-`\sin(x)` respectively.
 
 .. module:: sympy.holonomic.holonomic
 
