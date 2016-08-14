@@ -370,11 +370,11 @@ class DifferentialOperator(object):
 
 
 class HolonomicFunction(object):
-    """
+    r"""
     A Holonomic Function is a solution to a linear homogeneous ordinary
     differential equation with polynomial coefficients. This differential
     equation can also be represented by an annihilator i.e. a Differential
-    Operator L such that L.f = 0. For uniqueness of these functions,
+    Operator ``L`` such that :math:`L.f = 0`. For uniqueness of these functions,
     initial conditions can also be provided along with the annihilator.
 
     Holonomic functions have closure properties and thus forms a ring.
@@ -382,13 +382,13 @@ class HolonomicFunction(object):
     integral and derivative is also a Holonomic Function.
 
     For ordinary points initial condition should be a vector of values of
-    the derivatives i.e. [y(x0), y'(x0), y''(x0) ...].
+    the derivatives i.e. :math:`[y(x_0), y'(x_0), y''(x_0) ... ]`.
 
     For regular singular points initial conditions can also be provided in this
     format:
-    {s0: [C_0, C_1, ...], s1: [C0_0, C0_1, ...], ...}
+    :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    [C_0, C_1, ...], [C0_0, C0_1, ...], ... are the corresponding intiial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intiial
     terms of the associated power series. See Examples below.
 
     Examples
@@ -716,11 +716,11 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
-
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).integrate((x, 0, x))  # e^x - 1
         HolonomicFunction((-1)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
-        # integrate(cos(x), (x, 0, x)) = sin(x)
+        integrate(cos(x), (x, 0, x)) = sin(x)
+
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [1, 0]).integrate((x, 0, x))
         HolonomicFunction((1)*Dx + (1)*Dx**3, x, 0, [0, 1, 0])
         """
@@ -835,7 +835,7 @@ class HolonomicFunction(object):
         return HolonomicFunction(self.annihilator * D, self.x)
 
     def diff(self, *args):
-        """
+        r"""
         Differentiation of the given Holonomic function.
 
         Examples
@@ -847,16 +847,18 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
 
-        # derivative of sin(x)
+        Derivative of sin(x)
+
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_expr()
         cos(x)
 
-        # derivative of e^2*x
+        Derivative of :math:`e^{2x}`
+
         >>> HolonomicFunction(Dx - 2, x, 0, [1]).diff().to_expr()
         2*exp(2*x)
 
         See Also
-        =======
+        ========
 
         .integrate()
         """
@@ -1251,11 +1253,13 @@ class HolonomicFunction(object):
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
 
-        # exp(x), the recurrence relation holds for n >= 0
+        exp(x), the recurrence relation holds for n >= 0
+
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
         [(HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)]
 
-        # log(1 + x), the recurrence relation holds for n >= 2
+        log(1 + x), the recurrence relation holds for n >= 2
+
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
 
@@ -1270,7 +1274,8 @@ class HolonomicFunction(object):
         References
         ==========
 
-        [1] hal.inria.fr/inria-00070025/document
+        [1] https://hal.inria.fr/inria-00070025/document
+
         [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
         """
 

@@ -4,7 +4,7 @@ Represnting a Holonomic Function in SymPy
 .. module:: sympy.holonomic.holonomic
 
 Class :class:`DifferentialOperator` is used to represent the annihilator
-but we can create a differential operator easily using the function
+but we create differential operators easily using the function
 :func:`DifferentialOperators`. Class :class:`HolonomicFunction` represents a holonomic function.
 
 Let's explain this with an example:
@@ -33,3 +33,8 @@ So this is how one will represent ``sin(x)`` as a Holonomic Function:
     >>> R, D = DifferentialOperators(ZZ.old_poly_ring(x), 'D')
     >>> HolonomicFunction(D**2 + 1, x, 0, [0, 1])
     HolonomicFunction((1) + (1)*D**2, x, 0, [0, 1])
+
+The polynomial coefficients will be memebrs of the ring ``ZZ[x]`` in the example.
+The ``D`` operator returned by the function :py:func:`DifferentialOperators` can
+be used to create annihilators just like SymPy expressions.
+We currently use the older implementations of rings in SymPy for priority mechanism.
