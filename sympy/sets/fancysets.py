@@ -547,26 +547,18 @@ class ImageSet(Set):
                 # if not able to find coeff of var_self in
                 # self_expr(some complex expr)
                 return None
-            # use one dummy `var_self` (dummy of self.lamda.variables)
-            other_expr = other_expr.subs(var_other, var_self)
             try:
-                if self_expr.coeff(var_self) != other_expr.coeff(var_self):
-                    # e.g. expr1 = n + 1/4 , expr2 = 5*n + 5/4
-                    # if (5*n + abs(5/4 - 1/4)) % n == 0 means union
-                    # value = n + 1/4
-                    other_const = other_expr.coeff(var_self, 0)
-                    self_const = self_expr.coeff(var_self, 0)
-                    gap = other_const - self_const
-                    # checking if `other` + gap is multiple of `self` or not.
-                    check_multiple = lambda i: val_at(other, i) - other_const + gap
-                    self_term = val_at(self, 1) - self_const
-                    check = lambda i: check_multiple(i) % self_term
-                    # may be 1st values is multiple, so need to check for 2
-                    # or 3 continuous value.
-                    if all(check(i) == 0 for i in [1, 2, 3]):
+                if self_expr.coeff(var_self) != other_expr.coeff(var_other):
+                    # TypeError: Equation should be a polynomial with Rational
+                    # coefficients.
+                    if self.is_superset(other):
                         return self
-                    # otherwise can't club them, return None
-                    return None
+                    elif other.is_superset(self):
+                        return other
+                    else:
+                        return None
+                # use 1 dummy/variable var_self (dummy of self.lamda.variables)
+                other_expr = other_expr.subs(var_other, var_self)
                 if simplify(other_expr - self_expr) % var_term == var_term / 2:
                     # (a*n*pi + pi + expr1) - ( a*n*pi  + exp1) == (a/2)*pi*n
                     # can be => (a/2)*pi*n + expr1
