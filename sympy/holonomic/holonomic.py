@@ -57,6 +57,8 @@ def DifferentialOperators(base, generator):
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
     >>> R
     Univariate Differential Operator Algebra in intermediate Dx over the base ring ZZ[x]
+    >>> Dx*x
+    (1) + (x)*Dx
     """
 
     ring = DifferentialOperatorAlgebra(base, generator)
@@ -74,7 +76,7 @@ class DifferentialOperatorAlgebra(object):
     for :math:`a \subset A`.
 
     Where :math:`\sigma: A --> A` is an endomorphism and :math:`\delta: A --> A`
-    is a skew-derivation i.e. :math:`delta(ab) = delta(a) * b + sigma(a) * delta(b)`.
+    is a skew-derivation i.e. :math:`\delta(ab) = \delta(a) * b + \sigma(a) * \delta(b)`.
 
     If one takes the sigma as identity map and delta as the standard derivation
     then it becomes the algebra of Differential Operators also called
@@ -138,11 +140,11 @@ class DifferentialOperator(object):
     are defined by a list of polynomials in the base ring and the
     parent ring of the Operator i.e. the algebra it belongs to.
 
-    Takes a list of polynomials for each power of `Dx` and the
+    Takes a list of polynomials for each power of ``Dx`` and the
     parent ring which must be an instance of DifferentialOperatorAlgebra.
 
     A Differential Operator can be created easily using
-    the operator `Dx`. See examples below.
+    the operator ``Dx``. See examples below.
 
     Examples
     ========
@@ -706,7 +708,7 @@ class HolonomicFunction(object):
 
     def integrate(self, limits, initcond=False):
         """
-        Integrate the given holonomic function.
+        Integrates the given holonomic function.
 
         Examples
         ========
@@ -718,9 +720,6 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).integrate((x, 0, x))  # e^x - 1
         HolonomicFunction((-1)*Dx + (1)*Dx**2, x, 0, [0, 1])
-
-        integrate(cos(x), (x, 0, x)) = sin(x)
-
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [1, 0]).integrate((x, 0, x))
         HolonomicFunction((1)*Dx + (1)*Dx**3, x, 0, [0, 1, 0])
         """
@@ -846,14 +845,8 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
-
-        Derivative of sin(x)
-
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).diff().to_expr()
         cos(x)
-
-        Derivative of :math:`e^{2x}`
-
         >>> HolonomicFunction(Dx - 2, x, 0, [1]).diff().to_expr()
         2*exp(2*x)
 
@@ -1159,9 +1152,10 @@ class HolonomicFunction(object):
 
     def composition(self, expr, *args, **kwargs):
         """
-        Returns a Holonomic Function after composition of a holonomic
-        function with an algebraic function. Initial conditions for the
-        result can be also be provided to the method.
+        Returns function after composition of a holonomic
+        function with an algebraic function. The method can't compute
+        initial conditions for the result by itself, so they can be also be
+        provided.
 
         Examples
         ========
@@ -1171,17 +1165,15 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
-
         >>> HolonomicFunction(Dx - 1, x).composition(x**2, 0, [1])  # e^(x**2)
         HolonomicFunction((-2*x) + (1)*Dx, x, 0, [1])
-
         >>> HolonomicFunction(Dx**2 + 1, x).composition(x**2 - 1, 1, [1, 0])
         HolonomicFunction((4*x**3) + (-1)*Dx + (x)*Dx**2, x, 1, [1, 0])
 
         See Also
         ========
 
-        from_hyper
+        from_hyper()
         """
 
         R = self.annihilator.parent
@@ -1225,24 +1217,25 @@ class HolonomicFunction(object):
         return HolonomicFunction(sol, self.x)
 
     def to_sequence(self, lb=True):
-        """
+        r"""
         Finds recurrence relation in the series expansion
-        of the function about `x0`, where `x0` is the point at which
-        the initial condition is stored.
+        of the function about :math:`x_0`, where :math:`x_0` is the point at
+        which the initial condition is stored.
 
-        If the point `x0` is ordinary, solution of the form [(R, n0)]
-        is returned. Where `R` is the recurrence relation and `n0` is the
-        smallest `n` for which the recurrence holds true.
+        If the point :math:`x_0` is ordinary, solution of the form :math:`[(R, n_0)]`
+        is returned. Where :math:`R` is the recurrence relation and :math:`n_0` is the
+        smallest ``n`` for which the recurrence holds true.
 
-        If the point `x0` is regular singular, a vector of `(R, p, n0)`s is
-        returned, i.e. [(R, p, n0), ...]. Each tuple in this vector represents
-        a recurrence relation `R` associated with a root of the indicial
-        equation `p`. Conditions of a different format can also be provided in
+        If the point :math:`x_0` is regular singular, a list of solutions in
+        the format :math:`(R, p, n_0)` is returned,
+        i.e. :math:`[(R, p, n0), ... ]`. Each tuple in this vector represents
+        a recurrence relation :math:`R` associated with a root of the indicial
+        equation ``p``. Conditions of a different format can also be provided in
         this case, see the docstring of the class.
 
         If it's not possible to numerically compute a initial condition,
-        it is returned as a symbol C_j, denoting the coefficient of (x - x0)^j
-        in the power series about x0.
+        it is returned as a symbol :math:`C_j`, denoting the coefficient of
+        :math:`(x - x_0)^j` in the power series about :math:`x_0`.
 
         Examples
         ========
@@ -1252,31 +1245,24 @@ class HolonomicFunction(object):
         >>> from sympy import symbols, S
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
-
-        exp(x), the recurrence relation holds for n >= 0
-
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
         [(HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)]
-
-        log(1 + x), the recurrence relation holds for n >= 2
-
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
-
         >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_sequence()
         [(HolonomicSequence((n), n), u(0) = 1, 1/2, 1)]
 
         See Also
         ========
 
-        HolonomicFunction.series
+        HolonomicFunction.series()
 
         References
         ==========
 
         [1] https://hal.inria.fr/inria-00070025/document
-
         [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+
         """
 
         if self.x0 != 0:
@@ -1639,10 +1625,10 @@ class HolonomicFunction(object):
         return finalsol
 
     def series(self, n=6, coefficient=False, order=True, _recur=None):
-        """
-        Finds the power series expansion of given holonomic function about `x0`.
+        r"""
+        Finds the power series expansion of given holonomic function about :math:`x_0`.
 
-        A list of series might be returned if `x0` is a regular point with
+        A list of series might be returned if :math:`x_0` is a regular point with
         multiple roots of the indcial equation.
 
         Examples
@@ -1653,17 +1639,15 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
-
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).series()  # e^x
         1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
-
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).series(n=8)  # sin(x)
         x - x**3/6 + x**5/120 - x**7/5040 + O(x**8)
 
         See Also
         ========
 
-        HolonomicFunction.to_sequence
+        HolonomicFunction.to_sequence()
         """
 
         if _recur == None:
@@ -1770,19 +1754,19 @@ class HolonomicFunction(object):
         return roots(R.to_sympy(s), x)
 
     def evalf(self, points, method='RK4', h=0.05, derivatives=False):
-        """
+        r"""
         Finds numerical value of a holonomic function using numerical methods.
         (RK4 by default). A set of points (real or complex) must be provided
         which will be the path for the numerical integration.
 
-        The path should be given as a list [x1, x2, ... xn]. The numerical
-        values will be computed at each point in this order x1 --> x2 --> x3
-        ... --> xn.
+        The path should be given as a list :math:`[x_1, x_2, ... x_n]`. The numerical
+        values will be computed at each point in this order
+        :math:`x_1 --> x_2 --> x_3 ... --> x_n`.
 
-        Returns values of the function at x1, x2, ... xn in a list.
+        Returns values of the function at :math:`x_1, x_2, ... x_n` in a list.
 
         Examples
-        =======
+        ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
         >>> from sympy.polys.domains import ZZ, QQ
@@ -1791,15 +1775,13 @@ class HolonomicFunction(object):
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
         >>> # a straight line on the real axis from (0 to 1)
         >>> r = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-
-        # using Runge-Kutta 4th order on e^x from 0.1 to 1.
-        # exact solution at 1 is 2.71828182845905
+        >>> # using Runge-Kutta 4th order on e^x from 0.1 to 1.
+        >>> # exact solution at 1 is 2.71828182845905
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r)
         [1.10517083333333, 1.22140257085069, 1.34985849706254, 1.49182424008069,
         1.64872063859684, 1.82211796209193, 2.01375162659678, 2.22553956329232,
         2.45960141378007, 2.71827974413517]
-
-        # using Euler's method for the same
+        >>> # using Euler's method for the same
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).evalf(r, method='Euler')
         [1.1, 1.21, 1.331, 1.4641, 1.61051, 1.771561, 1.9487171, 2.14358881,
         2.357947691, 2.5937424601]
@@ -1876,7 +1858,7 @@ class HolonomicFunction(object):
         Returns an answer of the form:
         a1 * x**b1 * hyper() + a2 * x**b2 * hyper() ...
 
-        This is very useful as one can now use `hyperexpand` to find the
+        This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.
 
         Examples
@@ -1887,12 +1869,10 @@ class HolonomicFunction(object):
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
-
-        # sin(x)
+        >>> # sin(x)
         >>> HolonomicFunction(Dx**2 + 1, x, 0, [0, 1]).to_hyper()
         x*hyper((), (3/2,), -x**2/4)
-
-        # exp(x)
+        >>> # exp(x)
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_hyper()
         hyper((), (), x)
 
@@ -2062,10 +2042,8 @@ class HolonomicFunction(object):
         >>> from sympy import symbols, S
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
-
         >>> HolonomicFunction(x**2*Dx**2 + x*Dx + (x**2 - 1), x, 0, [0, S(1)/2]).to_expr()
         besselj(1, x)
-
         >>> HolonomicFunction((1 + x)*Dx**3 + Dx**2, x, 0, [1, 1, 1]).to_expr()
         x*log(x + 1) + log(x + 1) + 1
 
@@ -2118,10 +2096,8 @@ class HolonomicFunction(object):
         >>> from sympy.holonomic import expr_to_holonomic
         >>> from sympy import sin, cos, hyperexpand, log, symbols
         >>> x = symbols('x')
-
         >>> hyperexpand(expr_to_holonomic(cos(x) + sin(x)).to_meijerg())
         sin(x) + cos(x)
-
         >>> hyperexpand(expr_to_holonomic(log(x)).to_meijerg()).simplify()
         log(x)
 
@@ -2146,13 +2122,13 @@ class HolonomicFunction(object):
 
 
 def from_hyper(func, x0=0, evalf=False):
-    """
+    r"""
     Converts a hypergeometric function to holonomic.
-    `func` is the Hypergeometric Function and `x0` is the point at
+    ``func`` is the Hypergeometric Function and ``x0`` is the point at
     which initial conditions are required.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.holonomic.holonomic import from_hyper, DifferentialOperators
     >>> from sympy import symbols, hyper, S
@@ -2222,11 +2198,11 @@ def from_hyper(func, x0=0, evalf=False):
 def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     """
     Converts a Meijer G-function to Holonomic.
-    `func` is the G-Function and `x0` is the point at
+    ``func`` is the G-Function and ``x0`` is the point at
     which initial conditions are required.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.holonomic.holonomic import from_meijerg, DifferentialOperators
     >>> from sympy import symbols, meijerg, S
@@ -2340,7 +2316,6 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     >>> x = symbols('x')
     >>> expr_to_holonomic(sin(x))
     HolonomicFunction((1) + (1)*Dx**2, x, 0, [0, 1])
-
     >>> expr_to_holonomic(exp(x))
     HolonomicFunction((-1) + (1)*Dx, x, 0, [1])
 
