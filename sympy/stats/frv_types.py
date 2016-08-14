@@ -9,6 +9,7 @@ Die
 Bernoulli
 Coin
 Binomial
+Multinomial
 Hypergeometric
 """
 
@@ -18,17 +19,21 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy.concrete.summations import Sum
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy)
+from sympy import (S, sympify, Rational, binomial, multinomial_coefficients,
+                   cacheit, Integer, prod,
+                   Dict, Basic, KroneckerDelta, Dummy)
 
 __all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial', 'Hypergeometric']
+           'Binomial', 'Multinomial', 'Hypergeometric']
+
 
 def rv(name, cls, *args):
     density = cls(*args)
     return SingleFinitePSpace(name, density).value
 
+
 class FiniteDistributionHandmade(SingleFiniteDistribution):
+
     @property
     def dict(self):
         return self.args[0]
@@ -36,6 +41,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     def __new__(cls, density):
         density = Dict(density)
         return Basic.__new__(cls, density)
+
 
 def FiniteRV(name, density):
     """
@@ -55,7 +61,9 @@ def FiniteRV(name, density):
     """
     return rv(name, FiniteDistributionHandmade, density)
 
+
 class DiscreteUniformDistribution(SingleFiniteDistribution):
+
     @property
     def p(self):
         return Rational(1, len(self.args))
@@ -129,9 +137,9 @@ class DieDistribution(SingleFiniteDistribution):
             return S.Zero
         if x.is_Symbol:
             i = Dummy('i', integer=True, positive=True)
-            return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
+            return Sum(KroneckerDelta(x, i) / self.sides, (i, 1, self.sides))
         raise ValueError("'x' expected as an argument of type 'number' or 'symbol', "
-                        "not %s" % (type(x)))
+                         "not %s" % (type(x)))
 
 
 def Die(name, sides=6):
@@ -227,8 +235,8 @@ class BinomialDistribution(SingleFiniteDistribution):
     def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
         n = as_int(n)
-        return dict((k*succ + (n - k)*fail,
-                binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
+        return dict((k * succ + (n - k) * fail,
+                     binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
 
 
 def Binomial(name, n, p, succ=1, fail=0):
@@ -251,6 +259,60 @@ def Binomial(name, n, p, succ=1, fail=0):
     return rv(name, BinomialDistribution, n, p, succ, fail)
 
 
+class MultinomialDistribution(SingleFiniteDistribution):
+    _argnames = ('n', 'p')
+
+    def __new__(cls, *args):
+        n = args[MultinomialDistribution._argnames.index('n')]
+        p = args[MultinomialDistribution._argnames.index('p')]
+        n_sym = sympify(n)
+        p_sym = sympify(p)
+
+        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
+            raise ValueError("'n' must be positive integer. n = %s." % str(n))
+        elif fuzzy_not(fuzzy_and(i.is_nonnegative for i in p_sym)):
+            raise ValueError(
+                "All items of 'p' must be: 0 <= p_i <= 1 . p = %s" % str(p))
+        elif sum(p) != 1:
+            raise ValueError(
+                "sum(p) must be equal to 1. sum(p) = %s" % str(sum(p)))
+        else:
+            return super(MultinomialDistribution, cls).__new__(cls, *args)
+
+    @property
+    @cacheit
+    def dict(self):
+        n, p = self.n, self.p
+        n = as_int(n)
+        coeff = multinomial_coefficients(len(p), n)
+        return {k: v * prod(map(pow, p, k)) for k, v in coeff.items()}
+
+
+def Multinomial(name, n, p):
+    """
+    Create a Finite Random Variable representing a multinomial distribution.
+    p: list-like vector of probabilities. p[i] must add up to 1.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Multinomial, density
+    >>> from sympy import Rational
+    >>> p0 = Rational(1, 6)
+    >>> p = [p0, 2*p0, 3*p0]
+    >>> X = Multinomial('X', 4, p) 
+    >>> density(X).dict
+    {(0, 0, 4): 1/16, (0, 1, 3): 1/6, (0, 2, 2): 1/6,
+    (0, 3, 1): 2/27, (0, 4, 0): 1/81, (1, 0, 3): 1/12,
+    (1, 1, 2): 1/6, (1, 2, 1): 1/9, (1, 3, 0): 2/81,
+    (2, 0, 2): 1/24, (2, 1, 1): 1/18, (2, 2, 0): 1/54,
+    (3, 0, 1): 1/108, (3, 1, 0): 1/162, (4, 0, 0): 1/1296}
+    """
+    return rv(name, MultinomialDistribution, n, tuple(p))
+
+
 class HypergeometricDistribution(SingleFiniteDistribution):
     _argnames = ('N', 'm', 'n')
 
@@ -262,7 +324,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         density = dict((sympify(k),
                         Rational(binomial(m, k) * binomial(N - m, n - k),
                                  binomial(N, n)))
-                        for k in range(max(0, n + m - N), min(m, n) + 1))
+                       for k in range(max(0, n + m - N), min(m, n) + 1))
         return density
 
 
@@ -286,6 +348,7 @@ def Hypergeometric(name, N, m, n):
 
 
 class RademacherDistribution(SingleFiniteDistribution):
+
     @property
     @cacheit
     def dict(self):
