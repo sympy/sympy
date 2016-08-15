@@ -1260,8 +1260,8 @@ class HolonomicFunction(object):
         References
         ==========
 
-        .. [1]. https://hal.inria.fr/inria-00070025/document
-        .. [2]. http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [1] https://hal.inria.fr/inria-00070025/document
+        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 
@@ -1862,7 +1862,7 @@ class HolonomicFunction(object):
         representing the given holonomic function.
 
         Returns an answer of the form:
-        `a_1 \cdot x^{b_1} \cdot hyper() + a_2 \cdot x^{b_2} \cdot hyper() ...`
+        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} ...`
 
         This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.
