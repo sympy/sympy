@@ -22,6 +22,11 @@ class Beam(object):
     their cross sectional profile(Second moment of area), their length
     and their material.
 
+    .. note::
+       While solving a beam bending problem, a user should choose its
+       own sign convention and should stick to it. The results will
+       automatically follow the chosen sign convention.
+
 
     Examples
     ========
@@ -114,9 +119,9 @@ class Beam(object):
     def variable(self):
         """
         A symbol that can be used as a variable along the length of the beam
-        while representing load distribution, shear force curve, bending moment
-        , slope curve and the deflection curve. By default, it is set to
-        ``Symbol('x')``, but this property is mutable.
+        while representing load distribution, shear force curve, bending
+        moment, slope curve and the deflection curve. By default, it is set
+        to ``Symbol('x')``, but this property is mutable.
 
         Examples
         ========
