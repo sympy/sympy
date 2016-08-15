@@ -72,7 +72,7 @@ class Beam(object):
 
         Parameters
         ==========
-        length :
+        length : Sympifyable
             A Symbol or value representing the Beam's length.
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
@@ -81,7 +81,7 @@ class Beam(object):
             A SymPy expression representing the Beam's Second moment of area.
             It is a geometrical property of an area which reflects how its
             points are distributed with respect to its neutral axis.
-        variable : Symbol
+        variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
@@ -195,14 +195,6 @@ class Beam(object):
         """
         return self._boundary_conditions
 
-    # @property
-    # def bc_moment(self):
-    #     return self._boundary_conditions['moment']
-
-    # @bc_moment.setter
-    # def bc_moment(self, m_bcs):
-    #     self._boundary_conditions['moment'] = m_bcs
-
     @property
     def bc_slope(self):
         return self._boundary_conditions['slope']
@@ -225,23 +217,23 @@ class Beam(object):
 
         Parameters
         ==========
-        value :
+        value : Sympifyable
             The magnitude of an applied load.
-        start :
+        start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
-        end :
+        end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
-        order :
+        order : Integer
             The order of the applied load.
 
-            For moments, order= -2
-            For point loads, order=-1
-            For constant distributed load, order=0
-            For ramp loads, order=1
-            For parabolic ramp loads, order=2
-            ... so on.
+            - For moments, order= -2
+            - For point loads, order=-1
+            - For constant distributed load, order=0
+            - For ramp loads, order=1
+            - For parabolic ramp loads, order=2
+            - ... so on.
 
         Examples
         ========
