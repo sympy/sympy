@@ -39,7 +39,67 @@ class SymbolicSystem(object):
     M_3 : mass matrix of the dynamical equations in implicit form
     G : right hand side of the kinematical differential equations
 
+        Parameters
+        ==========
 
+        coord_states : ordered iterable of functions of time
+            This input will either be a collection of the coordinates or states
+            of the system depending on whether or not the speeds are also given.
+            If speeds are specified this input will be assumed to be the
+            coordinates otherwise this input will be assumed to be the states.
+
+        right_hand_side : Matrix
+            This variable is the right hand side of the equations of motion in
+            any of the forms. The specific form will be assumed depending on
+            whether a mass matrix or coordinate derivatives are given.
+
+        speeds : ordered iterable of functions of time, optional
+            This is a collection of the generalized speeds of the system. If
+            given it will be assumed that the first argument (coord_states) will
+            represent the generalized coordinates of the system.
+
+        mass_matrix : Matrix, optional
+            The matrix of the implicit forms of the equations of motion (forms
+            [2] and [3]). The distinction between the forms is determined by
+            whether or not the coordinate derivatives are passed in. If they are
+            given form [3] will be assumed otherwise form [2] is assumed.
+
+        coordinate_derivatives : Matrix, optional
+            The right hand side of the kinematical equations in explicit form.
+            If given it will be assumed that the equations of motion are being
+            entered in form [3].
+
+        alg_con : Iterable, optional
+            The indexes of the rows in the equations of motion that contain
+            algebraic constraints instead of differential equations. If the
+            equations are input in form [3], it will be assumed the indexes are
+            referencing the mass_matrix/right_hand_side combination and not the
+            coordinate_derivatives.
+
+        output_eqns : Dictionary, optional
+            Any output equations that are desired to be tracked are stored in a
+            dictionary where the key corresponds to the name given for the
+            specific equation and the value is the equation itself in symbolic
+            form
+
+        coord_idxs : Iterable, optional
+            If coord_states corresponds to the states rather than the
+            coordinates this variable will tell SymbolicSystem which indexes of
+            the states correspond to generalized coordinates.
+
+        speed_idxs : Iterable, optional
+            If coord_states corresponds to the states rather than the
+            coordinates this variable will tell SymbolicSystem which indexes of
+            the states correspond to generalized speeds.
+
+        bodies : iterable of Body/Rigidbody objects, optional
+            Iterable containing the bodies of the system
+
+        loads : iterable of load instances (described below), optional
+            Iterable containing the loads of the system where forces are given
+            by (point of application, force vector) and torques are given by
+            (reference frame acting upon, torque vector). Ex [(point, force),
+            (ref_frame, torque)]
 
     Attributes
     ==========
@@ -146,72 +206,7 @@ class SymbolicSystem(object):
                  mass_matrix=None, coordinate_derivatives=None, alg_con=None,
                  output_eqns={}, coord_idxs=None, speed_idxs=None, bodies=None,
                  loads=None):
-        """Initializes a SymbolicSystem object
-
-
-        Parameters
-        ==========
-
-        coord_states : ordered iterable of functions of time
-            This input will either be a collection of the coordinates or states
-            of the system depending on whether or not the speeds are also given.
-            If speeds are specified this input will be assumed to be the
-            coordinates otherwise this input will be assumed to be the states.
-
-        right_hand_side : Matrix
-            This variable is the right hand side of the equations of motion in
-            any of the forms. The specific form will be assumed depending on
-            whether a mass matrix or coordinate derivatives are given.
-
-        speeds : ordered iterable of functions of time, optional
-            This is a collection of the generalized speeds of the system. If
-            given it will be assumed that the first argument (coord_states) will
-            represent the generalized coordinates of the system.
-
-        mass_matrix : Matrix, optional
-            The matrix of the implicit forms of the equations of motion (forms
-            [2] and [3]). The distinction between the forms is determined by
-            whether or not the coordinate derivatives are passed in. If they are
-            given form [3] will be assumed otherwise form [2] is assumed.
-
-        coordinate_derivatives : Matrix, optional
-            The right hand side of the kinematical equations in explicit form.
-            If given it will be assumed that the equations of motion are being
-            entered in form [3].
-
-        alg_con : Iterable, optional
-            The indexes of the rows in the equations of motion that contain
-            algebraic constraints instead of differential equations. If the
-            equations are input in form [3], it will be assumed the indexes are
-            referencing the mass_matrix/right_hand_side combination and not the
-            coordinate_derivatives.
-
-        output_eqns : Dictionary, optional
-            Any output equations that are desired to be tracked are stored in a
-            dictionary where the key corresponds to the name given for the
-            specific equation and the value is the equation itself in symbolic
-            form
-
-        coord_idxs : Iterable, optional
-            If coord_states corresponds to the states rather than the
-            coordinates this variable will tell SymbolicSystem which indexes of
-            the states correspond to generalized coordinates.
-
-        speed_idxs : Iterable, optional
-            If coord_states corresponds to the states rather than the
-            coordinates this variable will tell SymbolicSystem which indexes of
-            the states correspond to generalized speeds.
-
-        bodies : iterable of Body/Rigidbody objects, optional
-            Iterable containing the bodies of the system
-
-        loads : iterable of load instances (described below), optional
-            Iterable containing the loads of the system where forces are given
-            by (point of application, force vector) and torques are given by
-            (reference frame acting upon, torque vector). Ex [(point, force),
-            (ref_frame, torque)]
-
-        """
+        """Initializes a SymbolicSystem object"""
 
         # Extract information on speeds, coordinates and states
         if speeds is None:
