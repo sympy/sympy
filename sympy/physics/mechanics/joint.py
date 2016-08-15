@@ -1,5 +1,5 @@
 from sympy import acos, cos, Matrix, sin
-from sympy.physics.vector import cross, Vector, dot, dynamicsymbols
+from sympy.physics.vector import cross, dot
 from sympy.physics.vector.spatial import rot, xlt
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
 
@@ -48,6 +48,9 @@ class Joint(object):
     def __init__(self, name, parent, child, coordinates, speeds,
                  parent_point_pos=(0, 0, 0), child_point_pos=(0, 0, 0),
                  parent_axis=None, child_axis=None):
+        # TODO: Test that coordinates and speeds are sympy functions of time
+        # instead of symbols? Add to input errors tests?
+
         self.name = name
         self.parent = parent
         self.parent.child_joints.append(self)
@@ -98,6 +101,7 @@ class Joint(object):
                                            [angle, axis])
         self.parent_joint_frame = temp
         self.parent_joint_frame.set_ang_vel(self.parent.frame, 0)
+        self.parent.masscenter.set_vel(self.parent_joint_frame, 0)
 
         # Create the Point objects for the parent and child bodies at the joint
         # location
@@ -131,11 +135,10 @@ class Joint(object):
         temp_frame = self.child.frame.orientnew("temp_frame", "Axis",
                                                 [angle, axis])
         temp_axis = temp_frame.dcm(self.child.frame) * \
-                    axis.to_matrix(self.child.frame)
+            axis.to_matrix(self.child.frame)
         axis = temp_axis[0]*self.child_joint_frame.x + \
-               temp_axis[1]*self.child_joint_frame.y + \
-               temp_axis[2]*self.child_joint_frame.z
-
+            temp_axis[1]*self.child_joint_frame.y + \
+            temp_axis[2]*self.child_joint_frame.z
 
         self.child.frame.orient(self.child_joint_frame, 'Axis', [angle, axis])
 
@@ -154,7 +157,7 @@ class Joint(object):
 
     def spatial_info(self):
         try:
-            spat_velocity = self.motion_subspace * self.coordinates.transpose()
+            spat_velocity = self.motion_subspace * self.speeds.transpose()
             return self.joint_transform, self.motion_subspace, spat_velocity
         except AttributeError:
             raise NotImplementedError("To use this method you need to define" +
@@ -219,7 +222,8 @@ class PinJoint(Joint):
         with the given axis of the frame in the child body located at the joint.
     child_axis : Vector
         This is the axis in the child body at the joint location that aligns
-        with the given axis of the frame in the parent body located at the joint.
+        with the given axis of the frame in the parent body located at the
+        joint.
 
     Parameters
     ==========
@@ -281,7 +285,6 @@ class PinJoint(Joint):
     def __init__(self, name, parent, child, coord, speed,
                  parent_point_pos=(0, 0, 0), child_point_pos=(0, 0, 0),
                  parent_axis=None, child_axis=None):
-
 
         super(PinJoint, self).__init__(name, parent, child, [coord], [speed],
                                        parent_point_pos, child_point_pos,
@@ -350,7 +353,8 @@ class SlidingJoint(Joint):
         with the given axis of the frame in the child body located at the joint.
     child_axis : Vector
         This is the axis in the child body at the joint location that aligns
-        with the given axis of the frame in the parent body located at the joint.
+        with the given axis of the frame in the parent body located at the
+        joint.
 
     Parameters
     ==========
@@ -404,9 +408,9 @@ class SlidingJoint(Joint):
         [slidingjoint_v(t)]
 
     """
-    def __init__(self, name, parent, child, coord, speed, parent_point_pos=None,
-                 child_point_pos=None, parent_axis=None, child_axis=None):
-
+    def __init__(self, name, parent, child, coord, speed,
+                 parent_point_pos=(0, 0, 0), child_point_pos=(0, 0, 0),
+                 parent_axis=None, child_axis=None):
 
         super(SlidingJoint, self).__init__(name, parent, child, [coord],
                                            [speed], parent_point_pos,
@@ -416,12 +420,12 @@ class SlidingJoint(Joint):
         self.kin_diff.append(coord - speed)
 
         # Define spatial information
-        self.joint_transform = Matrix([[1,     0,      0, 0, 0, 0],
-                                       [0,     1,      0, 0, 0, 0],
-                                       [0,     0,      1, 0, 0, 0],
-                                       [0,     -coord, 0, 1, 0, 0],
-                                       [coord, 0,      0, 0, 1, 0],
-                                       [0,     0,      0, 0, 0, 1]])
+        self.joint_transform = Matrix([[1,      0,    0, 0, 0, 0],
+                                       [0,      1,    0, 0, 0, 0],
+                                       [0,      0,    1, 0, 0, 0],
+                                       [0,     coord, 0, 1, 0, 0],
+                                       [-coord,  0,   0, 0, 1, 0],
+                                       [0,      0,    0, 0, 0, 1]])
 
         self.motion_subspace = Matrix([0, 0, 0, 0, 0, 1])
 
