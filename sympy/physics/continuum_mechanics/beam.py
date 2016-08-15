@@ -56,15 +56,15 @@ class Beam(object):
     >>> b.shear_force()
     -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
     >>> b.bending_moment()
-    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
+    -3*SingularityFunction(x, 0, 1) + 3*SingularityFunction(x, 2, 2) - 9*SingularityFunction(x, 4, 1)
     >>> b.slope()
-    (3*SingularityFunction(x, 0, 2)/2 - SingularityFunction(x, 2, 3) + 9*SingularityFunction(x, 4, 2)/2 - 7)/(E*I)
+    (-3*SingularityFunction(x, 0, 2)/2 + SingularityFunction(x, 2, 3) - 9*SingularityFunction(x, 4, 2)/2 + 7)/(E*I)
     >>> b.deflection()
-    (-7*x + SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 2, 4)/4 + 3*SingularityFunction(x, 4, 3)/2)/(E*I)
+    (7*x - SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 2, 4)/4 - 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     >>> b.deflection().rewrite(Piecewise)
-    (-7*x + Piecewise((x**3, x > 0), (0, True))/2
-          + 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
-          - Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
+    (7*x - Piecewise((x**3, x > 0), (0, True))/2
+         - 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
+         + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
     def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
@@ -400,10 +400,10 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.bending_moment()
-        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
+        -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
-        return -1*integrate(self.shear_force(), x)
+        return integrate(self.shear_force(), x)
 
     def slope(self):
         """
@@ -434,8 +434,8 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.slope()
-        (4*SingularityFunction(x, 0, 2) - 3*SingularityFunction(x, 10, 2)
-            - 120*SingularityFunction(x, 30, 1) - SingularityFunction(x, 30, 2) - 4000/3)/(E*I)
+        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -484,8 +484,8 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.deflection()
-        (-4000*x/3 + 4*SingularityFunction(x, 0, 3)/3 - SingularityFunction(x, 10, 3)
-            - 60*SingularityFunction(x, 30, 2) - SingularityFunction(x, 30, 3)/3 + 12000)/(E*I)
+        (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
