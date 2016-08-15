@@ -225,11 +225,11 @@ class Body(RigidBody, Particle):
         inertia = self.inertia[0].to_matrix(self.frame)
         top_left = inertia+self.mass*cross_m(vec)*cross_m(vec).transpose()
         top_right = self.mass*cross_m(vec)
-        bottom_right = self.mass*cross_m(vec).transpose()
-        bottom_left = self.mass*eye(3)
+        bottom_left = self.mass*cross_m(vec).transpose()
+        bottom_right = self.mass*eye(3)
 
-        top_row = top_left.col_join(top_right)
-        bottom_row = bottom_left.col_join(bottom_right)
-        out = top_row.row_join(bottom_row)
+        top_row = top_left.row_join(top_right)
+        bottom_row = bottom_left.row_join(bottom_right)
+        out = top_row.col_join(bottom_row)
 
         return out
