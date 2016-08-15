@@ -42,7 +42,7 @@ class Beam(object):
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(0, 0), (4, 0)], 'moment': [], 'slope': []}
+    {'deflection': [(0, 0), (4, 0)], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.evaluate_reaction_forces(R1, R2)
@@ -88,7 +88,7 @@ class Beam(object):
             self._variable = variable
         else:
             raise TypeError("""The variable should be a Symbol object.""")
-        self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
+        self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
         self._reaction_forces = {}
 
@@ -180,26 +180,23 @@ class Beam(object):
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        {'deflection': [(0, 2)], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
-        Similarly, the slope of the beam should be ``1`` at ``0`` and
-        there are two boundary conditions for bending moment. The bending
-        moment of the beam should be ``4`` at ``0`` and ``0`` at ``4``
+        Similarly, the slope of the beam should be ``1`` at ``0``.
         """
         return self._boundary_conditions
 
-    @property
-    def bc_moment(self):
-        return self._boundary_conditions['moment']
+    # @property
+    # def bc_moment(self):
+    #     return self._boundary_conditions['moment']
 
-    @bc_moment.setter
-    def bc_moment(self, m_bcs):
-        self._boundary_conditions['moment'] = m_bcs
+    # @bc_moment.setter
+    # def bc_moment(self, m_bcs):
+    #     self._boundary_conditions['moment'] = m_bcs
 
     @property
     def bc_slope(self):
@@ -342,11 +339,8 @@ class Beam(object):
         load = self.load
         x = self.variable
         l = self.length
-        shear_force = integrate(load, x)
-        bending_moment = integrate(integrate(load, x), x)
-
-        shear_curve = limit(shear_force, x, l)
-        moment_curve = limit(bending_moment, x, l)
+        shear_curve = limit(self.shear_force(), x, l)
+        moment_curve = limit(self.bending_moment(), x, l)
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
         self._reaction_forces = {reactions[i]: reaction_values[0][i] for i in range(len(reactions))}
         self._load = self._load.subs(self._reaction_forces)
@@ -383,9 +377,7 @@ class Beam(object):
         -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        if not self._boundary_conditions['moment']:
-            return integrate(self.load, x)
-        return diff(self.bending_moment(), x)
+        return integrate(self.load, x)
 
     def bending_moment(self):
         """
@@ -419,24 +411,7 @@ class Beam(object):
         8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
-        if not self._boundary_conditions['moment']:
-            return -1*integrate(self.shear_force(), x)
-
-        C1 = Symbol('C1')
-        C2 = Symbol('C2')
-        load_curve = self.load
-        shear_curve = integrate(load_curve, x) + C1
-        moment_curve = integrate(shear_curve, x) + C2
-
-        bc_eqs = []
-        for position, value in self._boundary_conditions['moment']:
-            eqs = moment_curve.subs(x, position) - value
-            bc_eqs.append(eqs)
-
-        constants = list(linsolve(bc_eqs, C1, C2))
-        moment_curve = moment_curve.subs({C1: constants[0][0], C2: constants[0][1]})
-
-        return moment_curve
+        return -1*integrate(self.shear_force(), x)
 
     def slope(self):
         """
