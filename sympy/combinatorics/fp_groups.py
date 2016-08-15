@@ -400,6 +400,15 @@ class CosetTable(DefaultPrinting):
     # coincidence occurs
     def coincidence_c(self, alpha, beta):
         """
+        A variation of ``coincidence`` routine used in the coset-table based
+        method of coset enumeration. The only difference being on addition of
+        a new coset in coset table(i.e new coset introduction), then it is
+        appended to ``deduction_stack``.
+
+        See Also
+        ========
+        coincidence
+
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
@@ -415,6 +424,7 @@ class CosetTable(DefaultPrinting):
                 delta = table[gamma][A_dict[x]]
                 if delta is not None:
                     table[delta][A_dict_inv[x]] = None
+                    # only line of difference from ``coincidence`` routine
                     self.deduction_stack.append((delta, x**-1))
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
@@ -436,7 +446,7 @@ class CosetTable(DefaultPrinting):
         possibilities are there:
 
         1. If ``t=v``, then we say that the scan completes, and if, in addition
-        `\alpha^s = \alpha^{t^{-1}}, then we say that the scan completes
+        `\alpha^s = \alpha^{t^{-1}}`, then we say that the scan completes
         correctly.
 
         2. It can also happen that scan does not complete, but `|u|=1`; that
@@ -445,12 +455,7 @@ class CosetTable(DefaultPrinting):
         set `\beta^x = \gamma` and `\gamma^{x^{-1}} = \beta`. These assignments
         are known as deductions and enable the scan to complete correctly.
 
-        3. The unfortunate situation when the scan completes but not correctly,
-        then ``coincidence`` routine is run. i.e when for some `i` with
-        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
-        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
-        `\gamma = \alph^{t-1}` are defined but unequal. This means that
-        `\beta` and `\gamma` represent the same coset of `H` in `G`.
+        3. See ``coicidence`` routine for explanation of third condition.
 
         Notes
         =====
@@ -539,6 +544,26 @@ class CosetTable(DefaultPrinting):
         return True
 
     def merge(self, k, lamda, q):
+        """
+        Input: 'k', 'lamda' being the two class representatives to be merged.
+        =====
+
+        Merge two classes with representatives ``k`` and ``lamda``, described
+        on Pg. 157 [1] (for pseudocode), start by putting ``p[k] = lamda``.
+        It is more efficient to choose the new representative from the larger
+        of the two classes being merged, i.e larger among ``k`` and ``lamda``.
+        procedure ``merge`` performs the merging operation, adds the deleted
+        class representative to the queue ``q``.
+
+        Notes
+        =====
+        Pg. 86-87 [1] contains a description of this method.
+
+        See Also
+        ========
+        coincidence, rep
+
+        """
         p = self.p
         phi = self.rep(k)
         psi = self.rep(lamda)
@@ -549,6 +574,42 @@ class CosetTable(DefaultPrinting):
             q.append(v)
 
     def rep(self, k):
+        r"""
+        Input: `k \in [0 \ldots n-1]`, as for ``self`` only array ``p`` is used
+        =====
+        Output: Representative of the class containing ``k``.
+        ======
+
+        Returns the representative of `\sim` class containing ``k``, it also
+        makes some modification to array ``p`` of ``self`` to ease further
+        computations, described on Pg. 157 [1].
+
+        The information on classes under `\sim` is stored in array `p` of
+        ``self`` argument, which will always satisfy the property:
+
+        `p[\alpha] \sim \alpha` and `p[\alpha]=\alpha \iff \alpha=rep(\alpha)`
+        `\forall \in [0 \ldots n-1]`.
+
+        So, for `\alpha \in [0 \ldots n-1]`, we find `rep(self, \alpha)` by
+        continually replacing `\alpha` by `p[\alpha]` until it becomes
+        constant (i.e satisfies `p[\alpha] = \alpha`):w
+
+        To increase the efficiency of later ``rep`` calculations, whenever we
+        find `rep(self, \alpha)=\beta`, we set
+        `p[\gamma] = \beta \forall \gamma \in p-chain` from `\alpha` to `\beta`
+
+        Notes
+        =====
+        ``rep`` routine is also described on Pg. 85-87 [1] in Atkinson's
+        algorithm, this results from the fact that ``coincidence`` routine
+        introduces functionality similar to that introduced by the
+        ``minimal_block`` routine on Pg. 85-87 [1].
+
+        See also
+        ========
+        coincidence, merge
+
+        """
         p = self.p
         lamda = k
         rho = p[lamda]
@@ -566,8 +627,22 @@ class CosetTable(DefaultPrinting):
     # α, β coincide, i.e. α, β represent the pair of cosets
     # where coincidence occurs
     def coincidence(self, alpha, beta):
-        """
-        described on Pg. 156 [1].
+        r"""
+        The third situation described in ``scan`` routine is handled by this
+        routine, described on Pg. 156-161 [1].
+
+        The unfortunate situation when the scan completes but not correctly,
+        then ``coincidence`` routine is run. i.e when for some `i` with
+        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
+        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
+        `\gamma = \alph^{t-1}` are defined but unequal. This means that
+        `\beta` and `\gamma` represent the same coset of `H` in `G`. Described
+        on Pg. 156 [1]. ``rep``
+
+        See Also
+        ========
+        scan
+
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
