@@ -212,7 +212,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
 
 def sqrt_mod(a, p, all_roots=False):
     """
-    find a root of ``x**2 = a mod p``
+    Find a root of ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -264,7 +264,7 @@ def sqrt_mod(a, p, all_roots=False):
 
 def _product(*iters):
     """
-    cartesian product generator
+    Cartesian product generator
 
     Notes
     =====
@@ -298,7 +298,7 @@ def _product(*iters):
 
 def sqrt_mod_iter(a, p, domain=int):
     """
-    iterate over solutions to ``x**2 = a mod p``
+    Iterate over solutions to ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -358,7 +358,7 @@ def sqrt_mod_iter(a, p, domain=int):
 
 def _sqrt_mod_prime_power(a, p, k):
     """
-    find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
+    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
 
     Parameters
     ==========
@@ -475,7 +475,7 @@ def _sqrt_mod_prime_power(a, p, k):
 
 def _sqrt_mod1(a, p, n):
     """
-    find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
+    Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
     see http://www.numbertheory.org/php/squareroot.html
     """
@@ -748,7 +748,7 @@ def _nthroot_mod1(s, q, p, all_roots):
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
-    find the solutions to ``x**n = a mod p``
+    Find the solutions to ``x**n = a mod p``
 
     Parameters
     ==========
