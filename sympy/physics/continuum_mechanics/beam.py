@@ -90,10 +90,16 @@ class Beam(object):
             raise TypeError("""The variable should be a Symbol object.""")
         self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
         self._load = 0
+        self._reaction_forces = {}
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
+
+    @property
+    def reaction_forces(self):
+        """ Returns the reaction forces in a dictionary."""
+        return self._reaction_forces
 
     @property
     def length(self):
@@ -327,6 +333,8 @@ class Beam(object):
         R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
         >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.reaction_forces
+        {R1: 6, R2: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
@@ -340,7 +348,8 @@ class Beam(object):
         shear_curve = limit(shear_force, x, l)
         moment_curve = limit(bending_moment, x, l)
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        self._load = self._load.subs({reactions[i]: reaction_values[0][i] for i in range(len(reactions))})
+        self._reaction_forces = {reactions[i]: reaction_values[0][i] for i in range(len(reactions))}
+        self._load = self._load.subs(self._reaction_forces)
 
     def shear_force(self):
         """
