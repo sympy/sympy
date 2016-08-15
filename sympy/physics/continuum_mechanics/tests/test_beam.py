@@ -1,6 +1,7 @@
 from sympy import Symbol, symbols
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction
+from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -139,6 +140,36 @@ def test_Beam():
 
     b3 = Beam(9, E, I)
     b3.apply_load(value=-2, start=2, order=2, end=3)
+    b3.bc_slope.append((0, 2))
     p = b3.load
     q = - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 2*SingularityFunction(x, 3, 2)
     assert p == q
+
+    p = b3.slope()
+    q = SingularityFunction(x, 2, 5)/30 - SingularityFunction(x, 3, 3)/3 - SingularityFunction(x, 3, 5)/30 + 2
+    assert p == q/(E*I)
+
+    p = b3.deflection()
+    q = 2*x + SingularityFunction(x, 2, 6)/180 - SingularityFunction(x, 3, 4)/12 - SingularityFunction(x, 3, 6)/180
+    assert p == q/(E*I)
+
+    b4 = Beam(4, E, I)
+    b4.apply_load(-3, 0, 0, end=3)
+
+    p = b4.load
+    q = -3*SingularityFunction(x, 0, 0) + 3*SingularityFunction(x, 3, 0)
+    assert p == q
+
+    p = b4.slope()
+    q = 3*SingularityFunction(x, 0, 3)/6 - 3*SingularityFunction(x, 3, 3)/6
+    assert p == q/(E*I)
+
+    p = b4.deflection()
+    q = 3*SingularityFunction(x, 0, 4)/24 - 3*SingularityFunction(x, 3, 4)/24
+    assert p == q/(E*I)
+
+    raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
+    with raises(TypeError):
+        b = Beam(1, E, I, 1)
+    with raises(TypeError):
+        b4.variable = 1
