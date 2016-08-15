@@ -86,13 +86,10 @@ class Beam(object):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self._length = length
-        self._elastic_modulus = elastic_modulus
-        self._second_moment = second_moment
-        if isinstance(variable, Symbol):
-            self._variable = variable
-        else:
-            raise TypeError("""The variable should be a Symbol object.""")
+        self.length = length
+        self.elastic_modulus = elastic_modulus
+        self.second_moment = second_moment
+        self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
         self._reaction_forces = {}
