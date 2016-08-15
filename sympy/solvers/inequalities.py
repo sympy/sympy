@@ -456,19 +456,18 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
         if period is not None:
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                periodic_interval = Interval(0, period, False, True)
-                domain = continuous_domain(e, gen, periodic_interval)
+                domain = Interval(0, period, False, True)
 
+        singularities = []
+        for d in denoms(e):
+            singularities.extend(solvify(d, gen, domain))
+
+        domain = continuous_domain(e, gen, domain)
         solns = solvify(e, gen, domain)
 
         if solns is None:
             raise NotImplementedError(filldedent('''The inequality cannot be
                 solved using solve_univariate_inequality.'''))
-
-        else:
-            singularities = []
-            for d in denoms(e):
-                singularities.extend(solvify(d, gen, domain))
 
         include_x = expr.func(0, 0)
 
