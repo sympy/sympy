@@ -222,18 +222,17 @@ class Beam(object):
         start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
-        end : Sympifyable, optional
-            An optional argument that can be used if the load has an end point
-            within the length of the beam.
         order : Integer
             The order of the applied load.
-
             - For moments, order= -2
             - For point loads, order=-1
             - For constant distributed load, order=0
             - For ramp loads, order=1
             - For parabolic ramp loads, order=2
             - ... so on.
+        end : Sympifyable, optional
+            An optional argument that can be used if the load has an end point
+            within the length of the beam.
 
         Examples
         ========
@@ -333,13 +332,12 @@ class Beam(object):
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
-        load = self.load
         x = self.variable
         l = self.length
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        self._reaction_forces = {reactions[i]: reaction_values[0][i] for i in range(len(reactions))}
+        self._reaction_forces = dict(zip(reactions, reaction_values[0]))
         self._load = self._load.subs(self._reaction_forces)
 
     def shear_force(self):
