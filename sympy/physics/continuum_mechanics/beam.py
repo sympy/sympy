@@ -22,6 +22,11 @@ class Beam(object):
     their cross sectional profile(Second moment of area), their length
     and their material.
 
+    .. note::
+       While solving a beam bending problem, a user should choose its
+       own sign convention and should stick to it. The results will
+       automatically follow the chosen sign convention.
+
 
     Examples
     ========
@@ -42,7 +47,7 @@ class Beam(object):
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(0, 0), (4, 0)], 'moment': [], 'slope': []}
+    {'deflection': [(0, 0), (4, 0)], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.evaluate_reaction_forces(R1, R2)
@@ -51,15 +56,15 @@ class Beam(object):
     >>> b.shear_force()
     -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
     >>> b.bending_moment()
-    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
+    -3*SingularityFunction(x, 0, 1) + 3*SingularityFunction(x, 2, 2) - 9*SingularityFunction(x, 4, 1)
     >>> b.slope()
-    (3*SingularityFunction(x, 0, 2)/2 - SingularityFunction(x, 2, 3) + 9*SingularityFunction(x, 4, 2)/2 - 7)/(E*I)
+    (-3*SingularityFunction(x, 0, 2)/2 + SingularityFunction(x, 2, 3) - 9*SingularityFunction(x, 4, 2)/2 + 7)/(E*I)
     >>> b.deflection()
-    (-7*x + SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 2, 4)/4 + 3*SingularityFunction(x, 4, 3)/2)/(E*I)
+    (7*x - SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 2, 4)/4 - 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     >>> b.deflection().rewrite(Piecewise)
-    (-7*x + Piecewise((x**3, x > 0), (0, True))/2
-          + 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
-          - Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
+    (7*x - Piecewise((x**3, x > 0), (0, True))/2
+         - 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
+         + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
     def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x')):
@@ -67,7 +72,7 @@ class Beam(object):
 
         Parameters
         ==========
-        length :
+        length : Sympifyable
             A Symbol or value representing the Beam's length.
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
@@ -76,24 +81,27 @@ class Beam(object):
             A SymPy expression representing the Beam's Second moment of area.
             It is a geometrical property of an area which reflects how its
             points are distributed with respect to its neutral axis.
-        variable : Symbol
+        variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self._length = length
-        self._elastic_modulus = elastic_modulus
-        self._second_moment = second_moment
-        if isinstance(variable, Symbol):
-            self._variable = variable
-        else:
-            raise TypeError("""The variable should be a Symbol object.""")
-        self._boundary_conditions = {'deflection': [], 'moment': [], 'slope': []}
+        self.length = length
+        self.elastic_modulus = elastic_modulus
+        self.second_moment = second_moment
+        self.variable = variable
+        self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
+        self._reaction_forces = {}
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
+
+    @property
+    def reaction_forces(self):
+        """ Returns the reaction forces in a dictionary."""
+        return self._reaction_forces
 
     @property
     def length(self):
@@ -108,9 +116,9 @@ class Beam(object):
     def variable(self):
         """
         A symbol that can be used as a variable along the length of the beam
-        while representing load distribution, shear force curve, bending moment
-        , slope curve and the deflection curve. By default, it is set to
-        ``Symbol('x')``, but this property is mutable.
+        while representing load distribution, shear force curve, bending
+        moment, slope curve and the deflection curve. By default, it is set
+        to ``Symbol('x')``, but this property is mutable.
 
         Examples
         ========
@@ -174,26 +182,15 @@ class Beam(object):
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> b = Beam(4, E, I)
-        >>> b.bc_moment = [(0, 4), (4, 0)]
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'moment': [(0, 4), (4, 0)], 'slope': [(0, 1)]}
+        {'deflection': [(0, 2)], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
-        Similarly, the slope of the beam should be ``1`` at ``0`` and
-        there are two boundary conditions for bending moment. The bending
-        moment of the beam should be ``4`` at ``0`` and ``0`` at ``4``
+        Similarly, the slope of the beam should be ``1`` at ``0``.
         """
         return self._boundary_conditions
-
-    @property
-    def bc_moment(self):
-        return self._boundary_conditions['moment']
-
-    @bc_moment.setter
-    def bc_moment(self, m_bcs):
-        self._boundary_conditions['moment'] = m_bcs
 
     @property
     def bc_slope(self):
@@ -217,23 +214,22 @@ class Beam(object):
 
         Parameters
         ==========
-        value :
+        value : Sympifyable
             The magnitude of an applied load.
-        start :
+        start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
-        end :
+        order : Integer
+            The order of the applied load.
+            - For moments, order= -2
+            - For point loads, order=-1
+            - For constant distributed load, order=0
+            - For ramp loads, order=1
+            - For parabolic ramp loads, order=2
+            - ... so on.
+        end : Sympifyable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
-        order :
-            The order of the applied load.
-
-            For moments, order= -2
-            For point loads, order=-1
-            For constant distributed load, order=0
-            For ramp loads, order=1
-            For parabolic ramp loads, order=2
-            ... so on.
 
         Examples
         ========
@@ -327,21 +323,19 @@ class Beam(object):
         R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
         >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.reaction_forces
+        {R1: 6, R2: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
-        load = self.load
         x = self.variable
         l = self.length
-        shear_force = integrate(load, x)
-        bending_moment = integrate(integrate(load, x), x)
-
-        shear_curve = limit(shear_force, x, l)
-        moment_curve = limit(bending_moment, x, l)
+        shear_curve = limit(self.shear_force(), x, l)
+        moment_curve = limit(self.bending_moment(), x, l)
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        for i in range(len(reactions)):
-            self._load = self._load.subs(reactions[i], reaction_values[0][i])
+        self._reaction_forces = dict(zip(reactions, reaction_values[0]))
+        self._load = self._load.subs(self._reaction_forces)
 
     def shear_force(self):
         """
@@ -375,9 +369,7 @@ class Beam(object):
         -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        if not self._boundary_conditions['moment']:
-            return integrate(self.load, x)
-        return diff(self.bending_moment(), x)
+        return integrate(self.load, x)
 
     def bending_moment(self):
         """
@@ -408,27 +400,10 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.bending_moment()
-        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
+        -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
-        if not self._boundary_conditions['moment']:
-            return -1*integrate(self.shear_force(), x)
-
-        C1 = Symbol('C1')
-        C2 = Symbol('C2')
-        load_curve = self.load
-        shear_curve = integrate(load_curve, x) + C1
-        moment_curve = integrate(shear_curve, x) + C2
-
-        bc_eqs = []
-        for position, value in self._boundary_conditions['moment']:
-            eqs = moment_curve.subs(x, position) - value
-            bc_eqs.append(eqs)
-
-        constants = list(linsolve(bc_eqs, C1, C2))
-        moment_curve = moment_curve.subs({C1: constants[0][0], C2: constants[0][1]})
-
-        return moment_curve
+        return integrate(self.shear_force(), x)
 
     def slope(self):
         """
@@ -459,8 +434,8 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.slope()
-        (4*SingularityFunction(x, 0, 2) - 3*SingularityFunction(x, 10, 2)
-            - 120*SingularityFunction(x, 30, 1) - SingularityFunction(x, 30, 2) - 4000/3)/(E*I)
+        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -509,8 +484,8 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.evaluate_reaction_forces(R1, R2)
         >>> b.deflection()
-        (-4000*x/3 + 4*SingularityFunction(x, 0, 3)/3 - SingularityFunction(x, 10, 3)
-            - 60*SingularityFunction(x, 30, 2) - SingularityFunction(x, 30, 3)/3 + 12000)/(E*I)
+        (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
