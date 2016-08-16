@@ -59,12 +59,6 @@ Metaclasses:
         * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
             class Foo(with_metaclass(Meta, Bar)):
                 pass
-Issue #10985:
-    * Use unicode string prefix `u` for Python 2.7 as mentioned in files below
-        * `sympy/vector/dyadic.py`
-        * `sympy/vector/vector.py`
-        * `sympy/vector/scaler.py`
-    * For Python >= 3.3 using `u` as a prefix is not required.
 """
 
 import sys
@@ -79,6 +73,7 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
+
     def u_decode(x):
         return x
 
@@ -109,6 +104,7 @@ else:
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
+
     def u_decode(x):
         return x.decode('utf-8')
 
