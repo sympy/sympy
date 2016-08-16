@@ -44,7 +44,7 @@ class Set(Basic):
     is_ProductSet = False
     is_Union = False
     is_Intersection = None
-    is_EmptySet = None
+    is_EmptySet = False
     is_UniversalSet = None
     is_Complement = None
     is_ComplexRegion = False
