@@ -729,10 +729,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        is_empty = (end - start).is_negative
         if (end < start) == True:
-            return S.EmptySet
-        elif is_empty:
             return S.EmptySet
 
         if end == start and (left_open or right_open):
@@ -747,7 +744,7 @@ class Interval(Set, EvalfMixin):
             right_open = true
 
         interval = Basic.__new__(cls, start, end, left_open, right_open)
-        interval.is_EmptySet = is_empty
+        interval.is_EmptySet = (end - start).is_negative
         return interval
 
     @property
