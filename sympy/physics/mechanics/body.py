@@ -219,6 +219,33 @@ class Body(RigidBody, Particle):
         Calculates the 6x6 spatial inertia from the 3x3 inertia, the mass of the
         body and the location of the inertia from the center of mass as
         specified by vec.
+
+        Defined as equation 2.63 on page 33 of Rigid Body Dynamics Algorithms
+
+        Parameters
+        ==========
+
+        vec: Vector
+            Defines the point at which the spatial inertia will be calculated.
+            The vector can be defined in any reference frame so long as that
+            reference frame has been oriented relative to the Bodys frame.
+
+        Example
+        =======
+
+        This example will find the spatial inertia at a point [1, 1, 1] from the
+        body's center of mass. ::
+
+            >>> from sympy.physics.mechanics import Body
+            >>> body = Body('body')
+            >>> r = 1 * body.frame.x + 1 * body.frame.y + 1 * body.frame.z
+            >>> body.spatial_inertia(r)
+
+        References
+        ==========
+
+            .. [Featherstone2007] Roy Featherstone, Rigid Body Dynamics
+               Algorithms.  2007 Springer
         """
 
         vec = vec.to_matrix(self.frame)
