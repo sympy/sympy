@@ -1075,7 +1075,7 @@ def test_Union_imageset_basic():
     assert Union(img1, img2) == Union(img1, img2, evaluate=False)
 
 
-def test_union_imageset_1():
+def test_union_imageset():
     n = Dummy('n')
     img1 = ImageSet(Lambda(n, 2 * n * pi), S.Integers)
     assert Union(img1) == img1

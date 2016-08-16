@@ -17,10 +17,9 @@ from sympy.polys.rootoftools import CRootOf
 
 from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 
-from sympy.utilities.pytest import XFAIL, raises, skip, slow
+from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-from sympy.core.containers import Dict
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
@@ -1071,8 +1070,6 @@ def test_nonlinsolve_basic():
     system = [x, y - x - 5]
     assert nonlinsolve([x],[x, y]) == FiniteSet((0, y))
     assert nonlinsolve(system, [y]) == FiniteSet((x + 5,))
-    soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(tuple(soln))
     assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
 
     soln = FiniteSet((- y, y), (y, y))
@@ -1097,13 +1094,18 @@ def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    soln = FiniteSet(soln1)
-    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
 
 
 @XFAIL
 def test_trig_system_fail():
+    # Comparison error
+    soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(soln)
+
+    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    soln = FiniteSet(soln1)
+    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
+
     # fails because solveset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditonset for sin(x) + sin(y) - 1
