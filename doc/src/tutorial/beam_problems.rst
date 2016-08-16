@@ -6,7 +6,7 @@ To make this document easier to read, we are going to enable pretty printing.
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
-    >>> init_printing(use_unicode=True)
+    >>> init_printing(use_unicode=True, wrap_line=False)
 
 Beam
 ====
@@ -147,3 +147,55 @@ deflection is restricted at both the supports.
                                  E⋅I                              
 
 **Example 3**
+
+A beam of length 6 meters is having a roller support at the start and a
+hinged support at the end. A clockwise moment of 1.5 kN.m is applied at the mid
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m
+is applied from the mid til the end of the beam.
+
+.. note::
+
+    Using the sign convention of upward forces and clockwise moment
+    being positive.
+
+>>> from sympy.physics.continuum_mechanics.beam import Beam
+>>> from sympy import symbols
+>>> E, I = symbols('E, I')
+>>> R1, R2 = symbols('R1, R2')
+>>> b = Beam(6, E, I)
+>>> b.apply_load(R1, 0, -1)
+>>> b.apply_load(1.5, 3, -2)
+>>> b.apply_load(-3, 3, 0)
+>>> b.apply_load(-1, 3, 1)
+>>> b.apply_load(R2, 6, -1)
+>>> b.bc_deflection = [(0, 0), (6, 0)]
+>>> b.evaluate_reaction_forces(R1, R2)
+>>> b.reaction_forces
+    {R₁: 2.75, R₂: 10.75}
+>>> b.load
+            -1              -2            0          1                -1
+    2.75⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.75⋅<x - 6>  
+>>> b.shear_force()
+                                                    2                 
+            0              -1            1   <x - 3>                 0
+    2.75⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.75⋅<x - 6> 
+                                                2                     
+>>> b.bending_moment()
+                                        2          3                 
+            1              0   3⋅<x - 3>    <x - 3>                 1
+    2.75⋅<x>  + 1.5⋅<x - 3>  - ────────── - ──────── + 10.75⋅<x - 6> 
+                                   2           6                     
+>>> b.slope()
+                                       3          4                        
+             2              1   <x - 3>    <x - 3>                 2       
+    1.375⋅<x>  + 1.5⋅<x - 3>  - ──────── - ──────── + 5.375⋅<x - 6>  - 15.6
+                                   2          24                           
+    ───────────────────────────────────────────────────────────────────────
+                                      E⋅I                                  
+>>> b.deflection()
+                                                              4          5                            
+                                   3               2   <x - 3>    <x - 3>                            3
+    -15.6⋅x + 0.458333333333333⋅<x>  + 0.75⋅<x - 3>  - ──────── - ──────── + 1.79166666666667⋅<x - 6> 
+                                                          8         120                               
+    ──────────────────────────────────────────────────────────────────────────────────────────────────
+                                                   E⋅I                                                
