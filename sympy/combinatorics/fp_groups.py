@@ -226,7 +226,7 @@ class CosetTable(DefaultPrinting):
     # default limit for the number of cosets allowed in a
     # coset enumeration.
     coset_table_max_limit = 4096000
-    # maximun size of deduction stack above or equal to
+    # maximum size of deduction stack above or equal to
     # which it is emptied
     max_stack_size = 500
 

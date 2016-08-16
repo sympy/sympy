@@ -28,15 +28,27 @@ The Construction of Finitely Presented Groups
 Finitely presented groups are construced by factoring a free group by a
 set of relators. The set of relators is taken in as a list of words in
 generators of free group in SymPy, using a list provides ordering to the
-relators. If the list of relators is empty, the assosciated free group is
+relators. If the list of relators is empty, the associated free group is
 returned.
 
-For example:
+Example of construction of a finitely-presented group.
+The symmetric group of degree 4 may be represented as a two generator group
+with presentation `< a, b | a^2, b^3, (a*b)^4 >`. Giving the relations as a
+list of relators, the presentation of would be specified as:
 
-    >>> F, x, y = free_group("x, y")
-    >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
-    >>> f
-    <fp group on the generators (x, y)>
+>>> F, a, b = free_group("a, b")
+>>> G = FpGroup(F, [a**2, b**3, (a*b)**4])
+>>> G
+<free group on the generators (a, b)>
+
+Currently groups with relators having presentation like
+`< r, s | r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
+
+>>> F, r, s = free_group("r, s")
+>>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
+
+obviously this is not a unique way to make such a group, but the point is that
+in case of equality with non-identity the user has to manually do that.
 
 Free Groups and Words
 =====================
@@ -103,6 +115,25 @@ Comparison of words
 Coset Enumeration: The Todd-Coxeter Algorithm
 =============================================
 
+This section describes the use of coset enumeration techniques in SymPy. The
+algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
+is developed in Sympy using [Ho05] and [CDHW73]. The reader should consult
+[CDHW73] and [Hav91] for a general description of the algorithm.
+
+For experienced users we have a number of parameters that can be used to
+manipulate the algorithm, like
+
+``coset_table_max_limit``: manipulate the maximum number of cosets allowed in
+coset enumeration.
+
+``max_stack_size``
+maximum size of ``deduction_stack`` above to equal to which the stack is
+emptied.
+
+Compression and Standardization
+-------------------------------
+
+
 Subgroups of Finite Index: Low Index Subgroups algorithm
 ========================================================
 
@@ -118,3 +149,6 @@ Bibliography
     Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
+    https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722
+
+    A practical method for enumerating cosets of a finite abstract group
