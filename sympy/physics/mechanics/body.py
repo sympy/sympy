@@ -1,7 +1,8 @@
-from sympy import Symbol
+from sympy import eye, Symbol
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame,
                                      inertia)
 from sympy.physics.vector import Point, Vector
+from sympy.physics.vector.spatial import cross_m
 
 __all__ = ['Body']
 
@@ -97,6 +98,8 @@ class Body(RigidBody, Particle):
 
         self.name = name
         self.loads = []
+        self.parent_joint = None
+        self.child_joints = []
 
         if frame is None:
             frame = ReferenceFrame(name + '_frame')
@@ -210,3 +213,23 @@ class Body(RigidBody, Particle):
         if not isinstance(vec, Vector):
             raise TypeError("A Vector must be supplied to add torque.")
         self.loads.append((self.frame, vec))
+
+    def spatial_inertia(self, vec):
+        """
+        Calculates the 6x6 spatial inertia from the 3x3 inertia, the mass of the
+        body and the location of the inertia from the center of mass as
+        specified by vec.
+        """
+
+        vec = vec.to_matrix(self.frame)
+        inertia = self.inertia[0].to_matrix(self.frame)
+        top_left = inertia+self.mass*cross_m(vec)*cross_m(vec).transpose()
+        top_right = self.mass*cross_m(vec)
+        bottom_left = self.mass*cross_m(vec).transpose()
+        bottom_right = self.mass*eye(3)
+
+        top_row = top_left.row_join(top_right)
+        bottom_row = bottom_left.row_join(bottom_right)
+        out = top_row.col_join(bottom_row)
+
+        return out

@@ -1,7 +1,7 @@
-from sympy import Symbol, symbols
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
 from sympy.utilities.pytest import raises
+
 
 def test_default():
     body = Body('body')
@@ -17,6 +17,8 @@ def test_default():
     ixy, iyz, izx = symbols('body_ixy body_iyz body_izx')
     assert body.inertia == (inertia(body.frame, ixx, iyy, izz, ixy, iyz, izx),
                             body.masscenter)
+    assert body.parent_joint is None
+    assert body.child_joints == []
 
 
 def test_custom_rigid_body():
@@ -118,6 +120,7 @@ def test_body_add_force():
     raises(TypeError, lambda: rigid_body.apply_force(force_vector,  0))
     raises(TypeError, lambda: rigid_body.apply_force(0))
 
+
 def test_body_add_torque():
     body = Body('body')
     torque_vector = body.frame.x
@@ -126,3 +129,40 @@ def test_body_add_torque():
     assert len(body.loads) == 1
     assert body.loads[0] == (body.frame, torque_vector)
     raises(TypeError, lambda: body.apply_torque(0))
+
+
+def test_spatial_inertia():
+    body = Body('body')
+
+    # Create the symbols and vector that will be needed to test the body's
+    # spatial inertai
+    ixx, iyy, izz = symbols('body_ixx body_iyy body_izz')
+    ixy, iyz, izx = symbols('body_ixy body_iyz body_izx')
+    cx, cy, cz, m = symbols('cx cy cz body_mass')
+    c = cx * body.frame.x + cy * body.frame.y + cz * body.frame.z
+
+    # Form the expected output spatial inertia
+    top_left = Matrix([[ixx + m*(cy**2+cz**2), ixy - m*cx*cy, izx - m*cx*cz],
+                       [ixy - m*cx*cy, iyy + m*(cx**2+cz**2), iyz - m*cy*cz],
+                       [izx - m*cx*cz, iyz - m*cy*cz, izz + m*(cx**2+cy**2)]])
+
+    top_right = Matrix([[0,    -m*cz,  m*cy],
+                        [m*cz,     0, -m*cx],
+                        [-m*cy, m*cx,     0]])
+
+    bottom_left = Matrix([[0,      m*cz, -m*cy],
+                          [-m*cz,     0,  m*cx],
+                          [m*cy,  -m*cx,     0]])
+
+    bottom_right = Matrix([[m, 0, 0],
+                           [0, m, 0],
+                           [0, 0, m]])
+
+    top_row = top_left.row_join(top_right)
+    bottom_row = bottom_left.row_join(bottom_right)
+    expected_out = top_row.col_join(bottom_row)
+
+    # Obtain the output spatial inertia and compare with the expected result
+    out = body.spatial_inertia(c)
+
+    assert simplify(out - expected_out) == zeros(6)
