@@ -33,7 +33,7 @@ returned.
 
 Example of construction of a finitely-presented group.
 The symmetric group of degree 4 may be represented as a two generator group
-with presentation `< a, b | a^2, b^3, (a*b)^4 >`. Giving the relations as a
+with presentation `< a, b \mid a^2, b^3, (a*b)^4 >`. Giving the relations as a
 list of relators, the presentation of would be specified as:
 
 >>> F, a, b = free_group("a, b")
@@ -42,7 +42,7 @@ list of relators, the presentation of would be specified as:
 <free group on the generators (a, b)>
 
 Currently groups with relators having presentation like
-`< r, s | r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
+`< r, s \mid r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
 
 >>> F, r, s = free_group("r, s")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
@@ -75,10 +75,10 @@ creates a free group ``F[0]`` of rank 2, and a tuple of generators ``F[1]``.
 Construction of words
 ---------------------
 
-Can be called with different public versions of ``FreeGroup`` i.e ``free_group``
-, ``vfree_group`` and ``xfree_group``.
+Can be called with different public versions of ``FreeGroup`` i.e
+``free_group``, ``vfree_group`` and ``xfree_group``.
 
-Methods for manipulating words
+Methods for manipulating Words
 ------------------------------
 
 This section describes some basic access functions for words. These operations apply
@@ -120,15 +120,43 @@ algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
 is developed in Sympy using [Ho05] and [CDHW73]. The reader should consult
 [CDHW73] and [Hav91] for a general description of the algorithm.
 
+CosetTable
+----------
+
+Class used to manipulate the information regarding the coset enumeration of
+the finitely presented group ``G`` on the cosets of the subgroup ``H``.
+
+Definition
+----------
+
+Basically a coset table is the permutation representation of the finitely
+presented group on the cosets of a subgroup. Most of the set theoretic and
+group functions use the regular representation of ``G``, i.e., the coset table
+of ``G`` over the trivial subgroup.
+
+The actual mathematical coset table is obtained using ``.table`` and is a list
+of lists. For each generator of ``G`` and its inverse the table contains a
+coloumn. Each coloumn is simply a list of integers. If ``l`` is the generator
+list for the generator `g` and if ``l[i] = j`` then generator `g` takes the
+coset `i` to the coset `j` by multiplication from the right.
+
+For finitely presented groups, a coset table is computed by a Todd-Coxeter
+coset enumeration. Note that you may influence the performance of that
+enumeration by changing the values of the variable
+``CosetTable.coset_table_max_limit``.
+
 For experienced users we have a number of parameters that can be used to
 manipulate the algorithm, like
 
-``coset_table_max_limit``: manipulate the maximum number of cosets allowed in
-coset enumeration.
+* ``coset_table_max_limit``: manipulate the maximum number of cosets allowed
+  in coset enumeration. A coset enumeration will not finish if the subgroup
+  does not have finite index, and even if it has it may take many more
+  intermediate cosets than the actual index of the subgroup is. To avoid a
+  coset enumeration "running away" therefore SymPy has a "safety stop"
+  built-in. This is controlled by this variable.
 
-``max_stack_size``
-maximum size of ``deduction_stack`` above to equal to which the stack is
-emptied.
+* ``max_stack_size``: manipulate the maximum size of ``deduction_stack`` above
+  to equal to which the stack is emptied.
 
 Compression and Standardization
 -------------------------------
