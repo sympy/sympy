@@ -1,7 +1,3 @@
-# This file will contain spatial vector functions that will be used in the
-# implementation of Featherstone's methods. The functions will be follow the
-# nomenclature used in Featherstone's "Rigid Body Dynamics Algorithms" book.
-
 # This code will assume the spatial vectors are given such that the first three
 # elements correspond to rotations and the last three elements correspond to
 # translations. This is not a requirement of spatial vectors in general but
@@ -12,14 +8,6 @@
 #     Springer
 
 from sympy import cos, Matrix, sin, zeros
-
-################################################################################
-#
-# Rotations
-#
-################################################################################
-
-# Rotations and nomenclature taken from table 2.2 on page 23
 
 
 def rx(theta):
@@ -125,7 +113,9 @@ def rz(theta):
 
 
 def rot(E):
-    """This function returns the 6x6 rotation matrix for spatial vectors.
+    """This function returns the 6x6 rotation matrix for spatial vectors as
+    defined in table 2.2 on page 23 of Featherstone's Rigid Body Dynamics
+    Algorithms book.
 
     Parameters
     ==========
@@ -160,16 +150,10 @@ def rot(E):
     return X
 
 
-################################################################################
-#
-# Translations
-#
-################################################################################
-
-# Formulas and nomeclature taken from table 2.2 on page 23
-
 def xlt(r):
-    """This function returns the 6x6 translation matrix for spatial vectors.
+    """This function returns the 6x6 translation matrix for spatial vectors as
+    defined in table 2.2 on page 23 of Featherstones' Rigid Body Dynamics
+    Algorithms book.
 
     Parameters
     ==========
@@ -206,18 +190,9 @@ def xlt(r):
     return X
 
 
-################################################################################
-#
-# Spatial cross products
-#
-################################################################################
-
-# The spatial cross product tables can be found in figure 2.5 on page 24
-# The table may be incorrect? Matrix is built based on Roy Featherstone's Matlab
-# code.
-
 def cross_f(v):
-    """This function returns the force cross product (vx*).
+    """This function returns the force space cross product (vx*). This operation
+    is defined in Featherstone's Rigid Body Dynamics Algorithms book.
 
     Parameters
     ==========
@@ -255,18 +230,21 @@ def cross_f(v):
 
 
 def cross_m(v):
-    """This function returns the motion cross product (vx).
+    """This function returns the motion cross product (vx). The operation will
+    depend on the size of the matrix entered. If a 3x1 vector is given the 3x3
+    cross product matrix will be returned. Otherwise the code will assume that a
+    6x1 matrix was given and will return the 6x6 cross product matrix.
 
     Parameters
     ==========
 
-    v: Matrix, size(6, 1)
+    v: Matrix, size(6, 1) or size(3, 1)
         This is the input vector for the cross product vx.
 
     Returns
     =======
 
-    crossed: Matrix, size(6, 6)
+    crossed: Matrix, size(6, 6) or size(3, 3)
         This is the result of the motion cross product.
 
     Examples
@@ -297,45 +275,3 @@ def cross_m(v):
                           [-v5, v4,   0, -v2, v1,   0]])
 
     return crossed
-
-
-################################################################################
-#
-# Transformation Matrices
-#
-################################################################################
-
-def X_to_Xstar(X):
-    """This function will take a motion transformation matrix and change it to a
-    force transformation matrix.
-
-    Parameters
-    ==========
-
-    X: Matrix, size(6, 6)
-        This is the transformation matrix for the motion space of spatial
-        vectors
-
-    Returns
-    =======
-
-    Xstar: Matrix, size(6, 6)
-        This is the transformation matrix for the force space of spatial vectors
-
-    Examples
-    ========
-
-    A transformation matrix for a rotation about the z direction in the force
-    space can be determined as follows::
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.vector.spatial import rz, rot, X_to_Xstar
-        >>> theta = symbols('theta')
-        >>> E = rz(theta)
-        >>> X = rot(E)
-        >>> Xstar = X_to_Xstar(X)
-    """
-
-    Xstar = X.inv().transpose()
-
-    return Xstar

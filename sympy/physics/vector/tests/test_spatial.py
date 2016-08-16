@@ -127,24 +127,3 @@ def test_cross_m():
 
     # Test the obtained 6x6 results against the expected results
     assert simplify(crossed_m - crossed_m_exp) == zeros(6)
-
-
-def test_X_to_Xstar():
-    # Obtain the return results for X_to_Xstar
-    theta = symbols('theta')
-    E = spatial.rz(theta)
-    X = spatial.rot(E)
-    Xstar = spatial.X_to_Xstar(X)
-
-    # Set up the expected return value
-    Xstar_exp = Matrix([[-sin(theta)**2/cos(theta) + 1/cos(theta), sin(theta),
-                         0, 0, 0, 0],
-                        [-sin(theta), cos(theta), 0, 0, 0, 0],
-                        [0, 0, 1, 0, 0, 0],
-                        [0, 0, 0, -sin(theta)**2/cos(theta) + 1/cos(theta),
-                         sin(theta), 0],
-                        [0, 0, 0, -sin(theta), cos(theta), 0],
-                        [0, 0, 0, 0, 0, 1]])
-
-    # Test the obtained results against the expected results
-    assert simplify(Xstar - Xstar_exp) == zeros(6)
