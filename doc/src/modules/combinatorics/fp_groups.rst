@@ -127,6 +127,20 @@ algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
 is developed in Sympy using [Ho05] and [CDHW73]. The reader should consult
 [CDHW73] and [Hav91] for a general description of the algorithm.
 
+We have two strategies of coset enumeration *relator-based* and
+*coset-table based* and the two have been implemented as
+``coset_enumeration_r``, ``coset_enumeration_c`` respectively. The two
+strategies differ in the way they make new definitions for the cosets.
+
+Though from the user point of view it is suggested to rather use the
+``.coset_enumeration`` method of ``FpGroup`` and specify the ``strategy``
+argument
+
+``strategy``:
+    (default="relator_based") specifies the strategy of coset
+    enumeration to be used, possible values are *"relator_based"* or
+    *"coset_table_based"*.
+
 CosetTable
 ----------
 
@@ -154,8 +168,30 @@ enumeration by changing the values of the variable
 Attributes of CosetTable
 ------------------------
 
-``p``
-    It is a list of integers.
+For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
+
+* ``p``:
+  A map from `[0, \ldots, n-1]` to `[0, \ldots n-1]` with `p[\alpha] \le
+  \alpha \forall \alpha`. It is a ``list`` instance so mutable. data-structure, mathematically what, modifiable?,
+
+* ``n``: A non-negative integer, non-mutable attriburte, dependently
+  calculated as the maximum among the live-cosets (i.e `\Omega`).
+  Mathematically it represents?
+
+* ``table``: A list of lists, mutable attribute, mathematically represents the
+  coset table.
+
+* ``A``: A list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`,
+  where `gen_i` is the `i`-th generator of corresponding group ``G``.
+
+* ``A_dict``: A dictionary instance, mutable attribute. A pre-calculated
+  attribute with ``gen, 
+
+* ``A_dict_inv``:
+
+* ``deduction_stack``:
+
+* ``omega``:
 
 For experienced users we have a number of parameters that can be used to
 manipulate the algorithm, like
@@ -182,6 +218,14 @@ manipulate the algorithm, like
 
 Compression and Standardization
 -------------------------------
+
+For any two entries `i, j` with `i < j` in coset table, the first
+occurrence of `i` in a coset table precedes the first occurrence of `j` with
+respect to the usual row-wise ordering of the table entries. We call such a
+table a standard coset table. To standardize a ``CosetTable`` we use the
+``.standardize`` method.
+
+**Note** the method alters the given table, it does not create a copy.
 
 Subgroups of Finite Index: Low Index Subgroups algorithm
 ========================================================
