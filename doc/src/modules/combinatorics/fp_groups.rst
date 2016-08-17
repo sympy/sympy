@@ -4,7 +4,10 @@ Introduction
 This module presents the functionality designed for computing with finitely-
 presented groups (fp-groups for short). The name of the corresponding SymPy
 object is ``FpGroup``. The functions or classes described here are studied
-under **computational group theory**.
+under **computational group theory**. All code examples assume:
+
+>>> from sympy.combinatorics.free_groups import free_group, vfree_group, xfree_group
+>>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable
 
 Overview of Facilities
 ----------------------
@@ -39,12 +42,12 @@ list of relators, the presentation of would be specified as:
 >>> F, a, b = free_group("a, b")
 >>> G = FpGroup(F, [a**2, b**3, (a*b)**4])
 >>> G
-<free group on the generators (a, b)>
+<fp group on the generators (a, b)>
 
 Currently groups with relators having presentation like
-`< r, s \mid r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
+`< r, s, t \mid r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
 
->>> F, r, s = free_group("r, s")
+>>> F, r, s, t = free_group("r, s, t")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
 
 obviously this is not a unique way to make such a group, but the point is that
@@ -58,16 +61,16 @@ Construction of a Free Group
 
 ``free_group("gen0, gen1, \ldots gen_(n-1)")`` constructs a free group ``F`` on ``n``
 generators, where ``n`` is a positive integer.
-The `i`-th generator of `F` may be obtained using the method `.generators[i]`, `i = 0, \ldots n-1`.
+The `i`-th generator of `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
 Ex
 
-F, x, y = free_group("x, y")
+>>> F, x, y = free_group("x, y")
 
 creates a free group of rank 2 and assigns the variables ``x`` and ``y`` to the two
 generators.
 
-F = vfree_group("x, y")
+>>> F = vfree_group("x, y")
 
 creates a free group ``F[0]`` of rank 2, and a tuple of generators ``F[1]``.
 
