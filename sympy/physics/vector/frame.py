@@ -1,6 +1,6 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
                    eye, symbols, Dummy, ImmutableMatrix as Matrix)
-from sympy.core.compatibility import string_types, u, range
+from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']
@@ -559,9 +559,15 @@ class ReferenceFrame(object):
         #of the frames it is linked to. Also remove it from the _dcm_dict of
         #its parent
         frames = self._dcm_cache.keys()
+        dcm_dict_del = []
+        dcm_cache_del = []
         for frame in frames:
             if frame in self._dcm_dict:
-                del frame._dcm_dict[self]
+                dcm_dict_del += [frame]
+            dcm_cache_del += [frame]
+        for frame in dcm_dict_del:
+            del frame._dcm_dict[self]
+        for frame in dcm_cache_del:
             del frame._dcm_cache[self]
         #Add the dcm relationship to _dcm_dict
         self._dcm_dict = self._dlist[0] = {}

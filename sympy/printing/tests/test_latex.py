@@ -59,6 +59,8 @@ def test_latex_basic():
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == "1 / x"
+    assert latex(-S(3)/2) == r"- \frac{3}{2}"
+    assert latex(-S(3)/2, fold_short_frac=True) == r"- 3 / 2"
     assert latex(1/x**2) == r"\frac{1}{x^{2}}"
     assert latex(1/(x + y)/2) == r"\frac{1}{2 \left(x + y\right)}"
     assert latex(x/2) == r"\frac{x}{2}"

@@ -73,8 +73,7 @@ if PY3:
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
+
     def u_decode(x):
         return x
 
@@ -105,8 +104,7 @@ else:
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 

@@ -423,8 +423,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = self.function
 
         if len(sequence_term.free_symbols) > 1:
-            raise NotImplementedError("convergence checking for more that one symbol "
-                                        "containing series is not handled")
+            raise NotImplementedError("convergence checking for more than one symbol "
+                                      "containing series is not handled")
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return S.true
@@ -555,7 +555,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return dirich2
 
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
-                                    "is not yet implemented" % (sequence_term))
+                                  "is not yet implemented" % (sequence_term))
 
     def is_absolutely_convergent(self):
         """
