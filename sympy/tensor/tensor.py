@@ -2682,17 +2682,21 @@ class TensAdd(TensExpr):
         # flatten TensAdd, coerce terms which are not tensors to tensors
 
         if not all(isinstance(x, TensExpr) for x in args):
-            args1 = []
+            args_expanded = []
             for x in args:
-                if isinstance(x, TensExpr):
-                    if isinstance(x, TensAdd):
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if isinstance(x, TensExpr) and x.coeff]
-            args2 = [x for x in args if not isinstance(x, TensExpr)]
-            t1 = TensMul.from_data(Add(*args2), [], [], [])
-            args = [t1] + args1
+                if isinstance(x, TensAdd):
+                    args_expanded.extend(list(x.args))
+                else:
+                    args_expanded.append(x)
+            args_tensor = []
+            args_scalar = []
+            for x in args_expanded:
+                if isinstance(x, TensExpr) and x.coeff:
+                    args_tensor.append(x)
+                if not isinstance(x, TensExpr):
+                    args_scalar.append(x)
+            t1 = TensMul.from_data(Add(*args_scalar), [], [], [])
+            args = [t1] + args_tensor
         a = []
         for x in args:
             if isinstance(x, TensAdd):
