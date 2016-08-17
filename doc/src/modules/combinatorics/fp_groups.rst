@@ -1,5 +1,8 @@
+Finitely Presented Groups
+=========================
+
 Introduction
-============
+------------
 
 This module presents the functionality designed for computing with finitely-
 presented groups (fp-groups for short). The name of the corresponding SymPy
@@ -7,10 +10,9 @@ object is ``FpGroup``. The functions or classes described here are studied
 under **computational group theory**. All code examples assume:
 
 >>> from sympy.combinatorics.free_groups import free_group, vfree_group, xfree_group
->>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable
+>>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, coset_enumeration_r
 
 Overview of Facilities
-----------------------
 
 The facilities provided for fp-groups fall into a number of natural groupings
 
@@ -21,6 +23,9 @@ The facilities provided for fp-groups fall into a number of natural groupings
 
 * The construction of all subgroups having index less than some (small)
   specified positive integer, using the *Low-Index Subgroups* algorithm.
+
+* Algorithms for computing presentations of a subgroup of finite index
+  in a group defined by finite presentation.
 
 For a description of fundamental algorithms of finitely presented groups
 we often make use of *Handbook of Computational Group Theory*.
@@ -84,17 +89,18 @@ Can be called with different public versions of ``FreeGroup`` i.e
 Methods for manipulating Words
 ------------------------------
 
-This section describes some basic access functions for words. These operations apply
-to both, free groups and arbitrary fp-groups.
+This section describes some basic access functions for *words*. These operations apply
+to words of both ``FreeGroup`` as well as that of arbitrary ``FpGroup``.
 
-copy
-return a
+``copy``
+    return a
 
-is_identity
+``is_identity``
 
-array_form
+``array_form``
+    Returns one of the internal use representation of ``word``.
 
-letter_form
+``letter_form``
 
 index
 
@@ -104,12 +110,10 @@ contains
 
 eliminate_word
 
-len
-
 ``in``
 
 ``len(w)``
-The lenth of word ``w``.
+    The lenth of word ``w``.
 
 
 Comparison of words
@@ -129,41 +133,55 @@ CosetTable
 Class used to manipulate the information regarding the coset enumeration of
 the finitely presented group ``G`` on the cosets of the subgroup ``H``.
 
-Definition
-----------
+Basically a *coset table* ``CosetTable(G,H)``, is the permutation representation
+of the finitely presented group on the cosets of a subgroup. Most of the set
+theoretic and group functions use the regular representation of ``G``, i.e.,
+the coset table of ``G`` over the trivial subgroup.
 
-Basically a coset table is the permutation representation of the finitely
-presented group on the cosets of a subgroup. Most of the set theoretic and
-group functions use the regular representation of ``G``, i.e., the coset table
-of ``G`` over the trivial subgroup.
-
-The actual mathematical coset table is obtained using ``.table`` and is a list
-of lists. For each generator of ``G`` and its inverse the table contains a
-coloumn. Each coloumn is simply a list of integers. If ``l`` is the generator
-list for the generator `g` and if ``l[i] = j`` then generator `g` takes the
-coset `i` to the coset `j` by multiplication from the right.
+The actual mathematical coset table is obtained using ``.table`` attribute and
+is a list of lists. For each generator ``g`` of ``G`` it contains a coloumn and
+the next coloumn corresponds to ``g**-1`` and so on for other generators, so in
+total it has ``2*G.rank()`` coloumns. Each coloumn is simply a list of integers.
+If ``l`` is the generator list for the generator `g` and if ``l[i] = j`` then
+generator ``g`` takes the coset `i` to the coset `j` by multiplication from the
+right.
 
 For finitely presented groups, a coset table is computed by a Todd-Coxeter
 coset enumeration. Note that you may influence the performance of that
 enumeration by changing the values of the variable
 ``CosetTable.coset_table_max_limit``.
 
+Attributes of CosetTable
+------------------------
+
+``p``
+    It is a list of integers.
+
 For experienced users we have a number of parameters that can be used to
 manipulate the algorithm, like
 
-* ``coset_table_max_limit``: manipulate the maximum number of cosets allowed
-  in coset enumeration. A coset enumeration will not finish if the subgroup
-  does not have finite index, and even if it has it may take many more
-  intermediate cosets than the actual index of the subgroup is. To avoid a
-  coset enumeration "running away" therefore SymPy has a "safety stop"
-  built-in. This is controlled by this variable.
+* ``coset_table_max_limit`` (default value = `4096000`): manipulate the maximum
+  number of cosets allowed in coset enumeration, i.e the number of rows allowed
+  in coset table. A coset enumeration will not finish if the subgroup does not
+  have finite index, and even if it has it may take many more intermediate
+  cosets than the actual index of the subgroup is. To avoid a coset enumeration
+  "running away" therefore SymPy has a "safety stop" built-in. This is
+  controlled by this variable. For example:
 
-* ``max_stack_size``: manipulate the maximum size of ``deduction_stack`` above
-  to equal to which the stack is emptied.
+  >>> CosetTable.coset_table_max_limit = 50
+  >>> F, a, b = free_group("a, b")
+  >>> Cox = FpGroup(F, [a**6, b**6, (a*b)**2, (a**2*b**2)**2, (a**3*b**3)**5])
+  >>> C_r = coset_enumeration_r(Cox, [a])
+  Traceback (most recent call last):
+    ...
+  ValueError: the coset enumeration has defined more than 50 cosets
+
+
+* ``max_stack_size`` (default value = `500`): manipulate the maximum size of
+  ``deduction_stack`` above or equal to which the stack is emptied.
 
 Compression and Standardization
 -------------------------------
-
 
 Subgroups of Finite Index: Low Index Subgroups algorithm
 ========================================================
@@ -180,6 +198,6 @@ Bibliography
     Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
-    https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722
+    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
 
     A practical method for enumerating cosets of a finite abstract group

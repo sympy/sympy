@@ -317,7 +317,9 @@ class CosetTable(DefaultPrinting):
         len_table = len(table)
         if len_table == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
-            return
+            raise ValueError("the coset enumeration has defined more than "
+                    "%s cosets. Try with a greater value max number of cosets "
+                    % CosetTable.coset_table_max_limit)
         table.append([None]*len(A))
         # beta is the new coset generated
         beta = len_table
@@ -342,7 +344,9 @@ class CosetTable(DefaultPrinting):
         len_table = len(table)
         if len_table == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
-            return
+            raise ValueError("the coset enumeration has defined more than "
+                    "%s cosets. Try with a greater value max number of cosets "
+                    % CosetTable.coset_table_max_limit)
         table.append([None]*len(A))
         # beta is the new coset generated
         beta = len_table
