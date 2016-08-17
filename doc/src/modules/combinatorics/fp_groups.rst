@@ -170,28 +170,16 @@ Attributes of CosetTable
 
 For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
 
-* ``p``:
-  A map from `[0, \ldots, n-1]` to `[0, \ldots n-1]` with `p[\alpha] \le
-  \alpha \forall \alpha`. It is a ``list`` instance so mutable. data-structure, mathematically what, modifiable?,
-
 * ``n``: A non-negative integer, non-mutable attriburte, dependently
   calculated as the maximum among the live-cosets (i.e `\Omega`).
-  Mathematically it represents?
 
 * ``table``: A list of lists, mutable attribute, mathematically represents the
   coset table.
 
-* ``A``: A list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`,
-  where `gen_i` is the `i`-th generator of corresponding group ``G``.
-
-* ``A_dict``: A dictionary instance, mutable attribute. A pre-calculated
-  attribute with ``gen, 
-
-* ``A_dict_inv``:
-
-* ``deduction_stack``:
-
-* ``omega``:
+* ``omega``: A list, dependent on the internal attribute ``p``. `\Omega`
+  represents the list of live-cosets. A *standard* coset-table has its
+  `\Omega = [0, 1, \ldots, index-1]` where `index` is the index of subgroup
+  ``H`` in ``G``.
 
 For experienced users we have a number of parameters that can be used to
 manipulate the algorithm, like
@@ -227,8 +215,19 @@ table a standard coset table. To standardize a ``CosetTable`` we use the
 
 **Note** the method alters the given table, it does not create a copy.
 
-Subgroups of Finite Index: Low Index Subgroups algorithm
-========================================================
+Subgroups of Finite Index
+=========================
+
+The functionality in this section are concerned with the construction of
+subgroups of finite index. We describe a method for computing all subgroups
+whose index does not exceed some (modest) integer bound.
+
+Low Index Subgroups
+-------------------
+
+``low_index_subgroups``: Given a finitely presented group ``G`` (can be a free
+group), and ``N`` a positive integer, determine the conjugacy classes of
+subgroups of ``G`` whose indices is less than or equal to ``n``.
 
 Bibliography
 ============
