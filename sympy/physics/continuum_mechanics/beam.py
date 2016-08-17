@@ -355,7 +355,7 @@ class Beam(object):
         being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, linsolve, limit
+        >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(30, E, I)
@@ -389,7 +389,7 @@ class Beam(object):
         being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, linsolve, limit
+        >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(30, E, I)
@@ -423,7 +423,7 @@ class Beam(object):
         being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, linsolve, limit
+        >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(30, E, I)
@@ -473,7 +473,7 @@ class Beam(object):
         being positive.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, linsolve, limit, Symbol
+        >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(30, E, I)
