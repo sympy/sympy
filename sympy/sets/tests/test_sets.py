@@ -1055,4 +1055,4 @@ def test_issue_11174():
 
 def test_issue_11442():
     assert Interval(2, 7).is_EmptySet is False
-    assert Interval(2, 1).is_EmptySet is False
+    assert Interval(2, 1).is_EmptySet is True
