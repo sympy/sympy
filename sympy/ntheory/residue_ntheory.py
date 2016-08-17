@@ -830,7 +830,7 @@ def quadratic_residues(p):
 
 def legendre_symbol(a, p):
     r"""
-    Returns the Legendre symbol ``(a / p)``.
+    Returns the Legendre symbol `(a / p)`.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -876,7 +876,7 @@ def legendre_symbol(a, p):
 
 def jacobi_symbol(m, n):
     r"""
-    Returns the Jacobi symbol ``(m / n)``.
+    Returns the Jacobi symbol `(m / n)`.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
