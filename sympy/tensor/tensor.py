@@ -822,14 +822,21 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         if isinstance(key, TensAdd):
             sumvar = S.Zero
-            data_list = [i.data for i in key.args]
+            data_list = []
+            free_args_list = []
+            for arg in key.args:
+                if isinstance(arg, TensExpr):
+                    data_list.append(arg.data)
+                    free_args_list.append([x[0] for x in arg.free])
+                else:
+                    data_list.append(arg)
+                    free_args_list.append([])
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
 
-            free_args_list = [[x[0] for x in arg.free] for arg in key.args]
             numpy = import_module("numpy")
             for data, free_args in zip(data_list, free_args_list):
                 if len(free_args) < 2:
