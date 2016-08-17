@@ -1494,6 +1494,14 @@ def test_valued_tensor_add_scalar():
     expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
     assert expr2.data == 0
 
+    # multiple scalar summands after the contracted tensor
+    expr3 =  A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+    assert expr3.data == 0
+
+    # multiple scalar summands and multiple tensors
+    expr4 = C(mu0)*C(-mu0) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+    assert expr4.data == 0
+
 
 def test_noncommuting_components():
     numpy = import_module("numpy")
