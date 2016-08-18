@@ -240,12 +240,25 @@ class Body(RigidBody, Particle):
             >>> body = Body('body')
             >>> r = 1 * body.frame.x + 1 * body.frame.y + 1 * body.frame.z
             >>> body.spatial_inertia(r)
+            Matrix([
+            [body_ixx + 2*body_mass,   body_ixy - body_mass,   body_izx -
+             body_mass,          0, -body_mass,  body_mass],
+            [  body_ixy - body_mass, body_iyy + 2*body_mass,   body_iyz -
+               body_mass,  body_mass,          0, -body_mass],
+            [  body_izx - body_mass,   body_iyz - body_mass, body_izz +
+               2*body_mass, -body_mass,  body_mass,          0],
+            [                     0,              body_mass,
+               -body_mass,  body_mass,          0,          0],
+            [            -body_mass,                      0,
+               body_mass,          0,  body_mass,          0],
+            [             body_mass,             -body_mass,
+               0,          0,          0,  body_mass]])
 
         References
         ==========
 
-            .. [Featherstone2007] Roy Featherstone, Rigid Body Dynamics
-               Algorithms.  2007 Springer
+        .. [Featherstone2007] Roy Featherstone, Rigid Body Dynamics
+            Algorithms.  2007 Springer
         """
 
         vec = vec.to_matrix(self.frame)
