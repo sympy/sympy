@@ -1,4 +1,4 @@
-from sympy import acos, cos, Matrix, sin
+from sympy import acos, cos, Matrix, sin, pprint
 from sympy.physics.vector import cross, dot
 from sympy.physics.vector.spatial import rot, xlt
 from sympy.physics.mechanics.functions import convert_tuple_to_vector
@@ -126,7 +126,7 @@ class Joint(object):
         # apply_joint has been run due to each reference frame only being able
         # to be oriented once.
         mag = self.child_axis.magnitude()
-        angle = -1 * acos(dot(self.child.frame.z, self.child_axis)/(mag))
+        angle = acos(dot(self.child.frame.z, self.child_axis)/(mag))
         axis = cross(self.child.frame.z, self.child_axis)
         if axis == 0:
             axis = self.child.frame.z
@@ -134,11 +134,13 @@ class Joint(object):
         # Get child_axis defined in the child_joint_frame
         temp_frame = self.child.frame.orientnew("temp_frame", "Axis",
                                                 [angle, axis])
+        print(axis.to_matrix(self.child.frame))
         temp_axis = temp_frame.dcm(self.child.frame) * \
             axis.to_matrix(self.child.frame)
         axis = temp_axis[0]*self.child_joint_frame.x + \
             temp_axis[1]*self.child_joint_frame.y + \
             temp_axis[2]*self.child_joint_frame.z
+        angle = -1 * angle
 
         self.child.frame.orient(self.child_joint_frame, 'Axis', [angle, axis])
 
