@@ -98,14 +98,14 @@ class TensorflowPrinter(LambdaPrinter):
         "Logical And printer"
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
+        # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
+        # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
@@ -145,7 +145,7 @@ class TensorflowPrinter(LambdaPrinter):
             return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
                                                lhs=lhs,
                                                rhs=rhs)
-        return super(NumPyPrinter, self)._print_Relational(expr)
+        return super(TensorflowPrinter, self)._print_Relational(expr)
 
 
 class NumPyPrinter(LambdaPrinter):
