@@ -633,21 +633,8 @@ def sum_simplify(s):
             mul_terms = Mul.make_args(term)
             for mul_term in mul_terms:
                 if isinstance(mul_term, Sum):
-                    #this may be something of the form
-                    # x * Sum(whatever)
-                    # OR
-                    # x1 * Sum(whatever) + x2 * Sum(whatever)...
-                    #hence we turn it into an add list, and add to sum terms
                     r = mul_term._eval_simplify()
                     sum_terms.extend(Add.make_args(r))
-                elif mul_term.has(Sum):
-                    #as above, we need to turn this into an add list
-                    r = sum_simplify(mul_term)
-                    for rarg in Add.make_args(r):
-                        if r.has(Sum):
-                            sum_terms.append(rarg)
-                        else:
-                            other = other * rarg
                 else:
                     other = other * mul_term
             if len(sum_terms):
