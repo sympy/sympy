@@ -416,16 +416,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            version = V(IPython.__version__)
-            if '1.0' > version >= '0.11':
-                ip = IPython.core.ipapi.get()
-            elif version >= '1.0':
+            try:
                 from IPython import get_ipython
                 ip = get_ipython()
-            else:
-                ip = IPython.ipapi.get()
-                if ip:
-                    ip = ip.IP
+            except ImportError:
+                ip = None
         in_ipython = bool(ip)
         if ipython is None:
             ipython = in_ipython
