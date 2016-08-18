@@ -115,6 +115,24 @@ class TensorflowPrinter(LambdaPrinter):
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
 
+    def _print_Min(self, expr, **kwargs):
+        from sympy import Min
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'minimum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Min(*expr.args[1:]), **kwargs))
+
+    def _print_Max(self, expr, **kwargs):
+        from sympy import Max
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'maximum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Max(*expr.args[1:]), **kwargs))
+
     def _print_Piecewise(self, expr, **kwargs):
         from sympy import Piecewise
         e, cond = expr.args[0].args
