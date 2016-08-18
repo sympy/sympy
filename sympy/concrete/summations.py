@@ -270,76 +270,45 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, ratio=1.7, measure=None):
-        from sympy.simplify.simplify import sum_add
-        from sympy.core.exprtools import factor_terms
-        from sympy import Mul
-        s = self
+        from sympy.simplify.simplify import sum_add, sum_factor, sum_combine
+        from sympy.core.function import expand
+        from sympy.core.mul import Mul
 
-        terms = Add.make_args(s)
+        #split the function into adds
+        terms = Add.make_args(expand(self.function))
         s_t = [] # Sum Terms
         o_t = [] # Other Terms
 
         for term in terms:
-            if isinstance(term, Mul):
-                other = 1
-                sum_terms = []
-                for j in range(len(term.args)):
-                    if isinstance(term.args[j], Sum):
-                        sum_terms.append(term.args[j]._eval_simplify())
+            if term.has(Sum):
+                #if there is an embedded sum here
+                #it is of the form x * (Sum(whatever))
+                #hence we make a Mul out of it, and simplify all interior sum terms
+                subterms = Mul.make_args(expand(term))
+                out_terms = []
+                for subterm in subterms:
+                    #go through each term
+                    if isinstance(subterm, Sum):
+                        #if it's a sum, simpify it
+                        out_terms.append(subterm._eval_simplify())
                     else:
-                        other = other * term.args[j]
-                if len(sum_terms):
-                    # remove constant from the Sum
-                    s_t.append(other * Mul(*sum_terms))
-                else:
-                    o_t.append(term)
-            elif isinstance(term, Sum):
-                constant = 1
-                inner = 1
-                sum_vars = set([sum_var.args[0] for sum_var in term.args[1:]])
-                subterms = Mul.make_args(factor_terms(term.args[0]))
-                sum_terms = []
-                for j in range(len(subterms)):
-                    theterm = subterms[j]
-                    if isinstance(theterm, Sum):
-                        sum_terms.append(theterm._eval_simplify())
-                    elif theterm.is_number == True:
-                        constant = constant * theterm
-                    #any term that does not depend on the summation variable
-                    #can be considered constant
-                    elif not (theterm.free_symbols.intersection(sum_vars)):
-                        constant = constant * theterm
-                    else:
-                        inner = inner * theterm
+                        #otherwise, add it as is
+                        out_terms.append(subterm)
 
-                if len(sum_terms):
-                    # remove constants from the Sum
-                    s_t.append(constant * Mul(*sum_terms.extend(inner)))
-                else:
-                    s_t.append(constant * Sum(inner, *term.limits))
+                #turn it back into a Mul
+                s_t.append(Mul(*out_terms))
             else:
                 o_t.append(term)
 
-        used = [False] * len(s_t)
-
-        for method in range(2):
-            for i, s_term1 in enumerate(s_t):
-                if not used[i]:
-                    for j, s_term2 in enumerate(s_t):
-                        if not used[j] and i != j:
-                            temp = sum_add(s_term2, method)
-                            if isinstance(temp, Sum):
-                                s_t[i] = temp
-                                s_term1 = s_t[i]
-                                used[j] = True
+        #next try to combine any interior sums for further simplification
+        used, s_t = sum_combine(s_t)
 
         result = Add(*o_t)
-
         for i, s_term in enumerate(s_t):
             if not used[i]:
                 result = Add(result, s_term)
 
-        return result
+        return sum_factor(result, limits=self.limits)
 
     def _eval_summation(self, f, x):
         return None
