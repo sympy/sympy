@@ -171,6 +171,14 @@ def test_issue_10348():
     I = ReferenceFrame('I')
     A = I.orientnew('A', 'space', u, 'XYZ')
 
+
+def test_issue_11503():
+    A = ReferenceFrame("A")
+    B = A.orientnew("B", "Axis", [35, A.y])
+    C = ReferenceFrame("C")
+    A.orient(C, "Axis", [70, C.z])
+
+
 def test_partial_velocity():
 
     N = ReferenceFrame('N')

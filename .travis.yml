@@ -129,6 +129,7 @@ matrix:
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
+        - TEST_TENSORFLOW="true"
       sudo: true
       dist: trusty
 
@@ -208,6 +209,7 @@ matrix:
       env:
         - TEST_SAGE="true"
         - FASTCACHE="false"
+        - TEST_TENSORFLOW="true"
       sudo: true
       dist: trusty
 
@@ -305,6 +307,17 @@ before_install:
     if [[ "${TEST_THEANO}" == "true" ]]; then
         # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
         conda install theano;
+    fi
+  - |
+    if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
+      pip install mpmath;
+      if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp27-none-linux_x86_64.whl;
+      elif [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
+        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp34-cp34m-linux_x86_64.whl;
+      elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+        pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.9.0-cp35-cp35m-linux_x86_64.whl;
+      fi
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
       sudo apt-add-repository -y ppa:aims/sagemath;

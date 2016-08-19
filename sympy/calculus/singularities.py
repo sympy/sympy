@@ -189,8 +189,6 @@ def is_strictly_decreasing(f, interval=S.Reals, symbol=None):
     >>> from sympy import is_strictly_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
-    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
-    True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))

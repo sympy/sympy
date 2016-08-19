@@ -822,14 +822,21 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         if isinstance(key, TensAdd):
             sumvar = S.Zero
-            data_list = [i.data for i in key.args]
+            data_list = []
+            free_args_list = []
+            for arg in key.args:
+                if isinstance(arg, TensExpr):
+                    data_list.append(arg.data)
+                    free_args_list.append([x[0] for x in arg.free])
+                else:
+                    data_list.append(arg)
+                    free_args_list.append([])
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
 
-            free_args_list = [[x[0] for x in arg.free] for arg in key.args]
             numpy = import_module("numpy")
             for data, free_args in zip(data_list, free_args_list):
                 if len(free_args) < 2:
@@ -2675,17 +2682,21 @@ class TensAdd(TensExpr):
         # flatten TensAdd, coerce terms which are not tensors to tensors
 
         if not all(isinstance(x, TensExpr) for x in args):
-            args1 = []
+            args_expanded = []
             for x in args:
-                if isinstance(x, TensExpr):
-                    if isinstance(x, TensAdd):
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if isinstance(x, TensExpr) and x.coeff]
-            args2 = [x for x in args if not isinstance(x, TensExpr)]
-            t1 = TensMul.from_data(Add(*args2), [], [], [])
-            args = [t1] + args1
+                if isinstance(x, TensAdd):
+                    args_expanded.extend(list(x.args))
+                else:
+                    args_expanded.append(x)
+            args_tensor = []
+            args_scalar = []
+            for x in args_expanded:
+                if isinstance(x, TensExpr) and x.coeff:
+                    args_tensor.append(x)
+                if not isinstance(x, TensExpr):
+                    args_scalar.append(x)
+            t1 = TensMul.from_data(Add(*args_scalar), [], [], [])
+            args = [t1] + args_tensor
         a = []
         for x in args:
             if isinstance(x, TensAdd):
