@@ -650,7 +650,7 @@ def sum_simplify(s):
         else:
             o_t.append(term)
 
-    
+
     used, s_t = sum_combine(s_t)
     result = Add(*o_t)
 
@@ -668,7 +668,7 @@ def sum_combine(s_t):
     """
     from sympy.concrete.summations import Sum
 
-    
+
     used = [False] * len(s_t)
 
     for method in range(2):
@@ -688,7 +688,7 @@ def sum_factor(self, limits=None):
     """Helper function for Sum simplification
 
        if limits is specified, "self" is the inner part of a sum
-        
+
        Returns the sum with constant factors brought outside
     """
     from sympy.core.exprtools import factor_terms
