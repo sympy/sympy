@@ -614,8 +614,8 @@ def _solveset(f, symbol, domain, _check=False):
     that has already been sympify'ed and is known to contain the
     given symbol."""
     # _check controls whether the answer is checked or not
-
     from sympy.simplify.simplify import signsimp
+
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -678,6 +678,7 @@ def _solveset(f, symbol, domain, _check=False):
                     signsimp(i).as_content_primitive())
                     for i in rhs_s])
             result = rhs_s
+
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
@@ -693,7 +694,8 @@ def _solveset(f, symbol, domain, _check=False):
                         result += _solve_as_rational(equation, symbol, domain)
                 else:
                     result += solver(equation, symbol)
-        else:
+
+        elif rhs_s is not S.EmptySet:
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
     if _check:

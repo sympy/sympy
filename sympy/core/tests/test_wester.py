@@ -1196,6 +1196,7 @@ def test_N8():
                Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
+@XFAIL
 def test_N9():
     x = Symbol('x')
     assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
