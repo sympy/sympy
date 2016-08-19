@@ -707,10 +707,6 @@ def sum_expand(self, limits=None):
     #and remove the from the sum if independent
     result = factor_terms(result)
     i, d = result.as_independent(*sum_vars)
-    #if either part is zero, we need to change to 1
-    #as this results from a factorization
-    if i == 0: i = 1
-    if d == 0: d = 1
     if isinstance(result, Add):
         result = i * Sum(1, *limits) + Sum(d, *limits)
     else:
