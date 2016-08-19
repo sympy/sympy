@@ -650,7 +650,7 @@ def sum_simplify(s):
         else:
             o_t.append(term)
 
-    
+
     used, s_t = sum_combine(s_t)
     result = Add(*o_t)
 
@@ -668,7 +668,7 @@ def sum_combine(s_t):
     """
     from sympy.concrete.summations import Sum
 
-    
+
     used = [False] * len(s_t)
 
     for method in range(2):
@@ -684,11 +684,11 @@ def sum_combine(s_t):
 
     return used, s_t
 
-def sum_factor(self, limits=None):
+def sum_expand(self, limits=None):
     """Helper function for Sum simplification
 
        if limits is specified, "self" is the inner part of a sum
-        
+
        Returns the sum with constant factors brought outside
     """
     from sympy.core.exprtools import factor_terms
@@ -744,7 +744,7 @@ def sum_add(self, other, method=0):
     if type(rself) == type(rother):
         if method == 0:
             if rself.limits == rother.limits:
-                return sum_factor(Sum(rself.function + rother.function, *rself.limits))
+                return sum_expand(Sum(rself.function + rother.function, *rself.limits))
         elif method == 1:
             if simplify(rself.function - rother.function) == 0:
                 if len(rself.limits) == len(rother.limits) == 1:
@@ -757,9 +757,9 @@ def sum_add(self, other, method=0):
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return sum_factor(Sum(rself.function, (i, x1, y2)))
+                            return sum_expand(Sum(rself.function, (i, x1, y2)))
                         elif x1 == y2 + 1:
-                            return sum_factor(Sum(rself.function, (i, x2, y1)))
+                            return sum_expand(Sum(rself.function, (i, x2, y1)))
 
     return Add(self, other)
 

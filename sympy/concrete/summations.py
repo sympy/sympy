@@ -270,7 +270,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, ratio=1.7, measure=None):
-        from sympy.simplify.simplify import sum_add, sum_factor, sum_combine
+        from sympy.simplify.simplify import sum_expand, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul
 
@@ -308,7 +308,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if not used[i]:
                 result = Add(result, s_term)
 
-        return sum_factor(result, limits=self.limits)
+        return sum_expand(result, limits=self.limits)
 
     def _eval_summation(self, f, x):
         return None
