@@ -639,6 +639,25 @@ def test_add2():
     t = A(m, -m, n) + A(n, p, -p)
     assert t == 0
 
+def test_add3():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    i0, i1 = tensor_indices('i0:2', Lorentz)
+    E, px, py, pz = symbols('E px py pz')
+    A = tensorhead('A', [Lorentz], [[1]])
+    B = tensorhead('B', [Lorentz], [[1]])
+
+    expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
+    assert expr1.args == (-E**2 + px**2 + py**2 + pz**2, A(i0)*A(-i0))
+
+    expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
+    assert expr2.args == (E**2 - px**2 - py**2 - pz**2, -A(i0)*A(-i0))
+
+    expr3 = A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+    assert expr3.args == (-E**2 + px**2 + py**2 + pz**2, A(i0)*A(-i0))
+
+    expr4 = B(i1)*B(-i1) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+    assert expr4.args == (2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2, -A(i0)*A(-i0), B(i1)*B(-i1))
+
 def test_mul():
     from sympy.abc import x
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -1493,6 +1512,14 @@ def test_valued_tensor_add_scalar():
     # multiple scalar summands in front of the contracted tensor
     expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
     assert expr2.data == 0
+
+    # multiple scalar summands after the contracted tensor
+    expr3 =  A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+    assert expr3.data == 0
+
+    # multiple scalar summands and multiple tensors
+    expr4 = C(mu0)*C(-mu0) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+    assert expr4.data == 0
 
 
 def test_noncommuting_components():
