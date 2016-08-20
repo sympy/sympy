@@ -75,48 +75,23 @@ creates a free group of rank 2 and assigns the variables ``x`` and ``y`` to the 
 generators.
 
 >>> F = vfree_group("x, y")
+>>> F
+<free group on the generators (x, y)>
 
-creates a free group ``F[0]`` of rank 2, and a tuple of generators ``F[1]``.
+creates a free group ``F`` of rank 2, with tuple of generators ``F.generators``,
+and inserts ``x`` and ``y`` as generators into the global namespace.
 
+>>> F = xfree_group("x, y")
+>>> F
+(<free group on the generators (x, y)>, (x, y))
+
+creates a free groups ``F[0]`` of rank 2, with tuple of generators ``F[1]``.
 
 Construction of words
 `````````````````````
 
 Can be called with different public versions of ``FreeGroup`` i.e
 ``free_group``, ``vfree_group`` and ``xfree_group``.
-
-Methods for manipulating Words
-``````````````````````````````
-
-This section describes some basic access functions for *words*. These operations apply
-to words of both ``FreeGroup`` as well as that of arbitrary ``FpGroup``.
-
-``copy``
-    return a
-
-``is_identity``
-
-``array_form``
-    Returns one of the internal use representation of ``word``.
-
-``letter_form``
-
-index
-
-ext_rep
-
-contains
-
-eliminate_word
-
-``in``
-
-``len(w)``
-    The lenth of word ``w``.
-
-
-Comparison of words
-```````````````````
 
 Coset Enumeration: The Todd-Coxeter Algorithm
 ---------------------------------------------
@@ -237,7 +212,7 @@ having index <= 4, can be found as follows:
 >>> l = low_index_subgroups(G, 4)
 >>> for coset_table in l:
 ...     print(coset_table.table)
-
+...
 [[0, 0, 0, 0]]
 [[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
 [[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]]
