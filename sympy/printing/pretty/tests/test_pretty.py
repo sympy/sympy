@@ -3430,20 +3430,32 @@ u("""\
 def test_pretty_FormalPowerSeries():
     f = fps(log(1 + x))
 
+
     ascii_str = \
 """\
-     2    3    4    5        \n\
-    x    x    x    x     / 6\\\n\
-x - -- + -- - -- + -- + O\\x /\n\
-    2    3    4    5         \
+  oo             \n\
+____             \n\
+\   `            \n\
+ \         -k  k \n\
+  \   -(-1)  *x  \n\
+  /   -----------\n\
+ /         k     \n\
+/___,            \n\
+k = 1            \
 """
 
     ucode_str = \
 u("""\
-     2    3    4    5        \n\
-    x    x    x    x     ⎛ 6⎞\n\
-x - ── + ── - ── + ── + O⎝x ⎠\n\
-    2    3    4    5         \
+  ∞              \n\
+ ____            \n\
+ ╲               \n\
+  ╲        -k  k \n\
+   ╲  -(-1)  ⋅x  \n\
+   ╱  ───────────\n\
+  ╱        k     \n\
+ ╱               \n\
+ ‾‾‾‾            \n\
+k = 1            \
 """)
 
     assert pretty(f) == ascii_str
@@ -5495,3 +5507,34 @@ def test_pretty_primeomega():
     n = symbols('n', integer=True)
     assert pretty(primeomega(n)) == ascii_str1
     assert upretty(primeomega(n)) == ucode_str1
+
+
+def test_pretty_Mod():
+    from sympy.core import Mod
+
+    ascii_str1 = "x mod 7"
+    ucode_str1 = u("x mod 7")
+
+    ascii_str2 = "(x + 1) mod 7"
+    ucode_str2 = u("(x + 1) mod 7")
+
+    ascii_str3 = "2*x mod 7"
+    ucode_str3 = u("2⋅x mod 7")
+
+    ascii_str4 = "(x mod 7) + 1"
+    ucode_str4 = u("(x mod 7) + 1")
+
+    ascii_str5 = "2*(x mod 7)"
+    ucode_str5 = u("2⋅(x mod 7)")
+
+    x = symbols('x', integer=True)
+    assert pretty(Mod(x, 7)) == ascii_str1
+    assert upretty(Mod(x, 7)) == ucode_str1
+    assert pretty(Mod(x + 1, 7)) == ascii_str2
+    assert upretty(Mod(x + 1, 7)) == ucode_str2
+    assert pretty(Mod(2 * x, 7)) == ascii_str3
+    assert upretty(Mod(2 * x, 7)) == ucode_str3
+    assert pretty(Mod(x, 7) + 1) == ascii_str4
+    assert upretty(Mod(x, 7) + 1) == ucode_str4
+    assert pretty(2 * Mod(x, 7)) == ascii_str5
+    assert upretty(2 * Mod(x, 7)) == ucode_str5

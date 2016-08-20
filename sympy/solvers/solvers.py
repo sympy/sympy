@@ -299,7 +299,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, **assumptions):
+def check_assumptions(expr, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -307,8 +307,7 @@ def check_assumptions(expr, **assumptions):
     Examples
     ========
 
-       >>> from sympy import Symbol, pi, I, exp
-       >>> from sympy.solvers.solvers import check_assumptions
+       >>> from sympy import Symbol, pi, I, exp, check_assumptions
 
        >>> check_assumptions(-5, integer=True)
        True
@@ -325,12 +324,21 @@ def check_assumptions(expr, **assumptions):
        >>> check_assumptions(-2*x - 5, real=True, positive=True)
        False
 
+       To check assumptions of ``expr`` against another variable or expression,
+       pass the expression or variable as ``against``.
+
+       >>> check_assumptions(2*x + 1, x)
+       True
+
        `None` is returned if check_assumptions() could not conclude.
 
        >>> check_assumptions(2*x - 1, real=True, positive=True)
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
+    if against is not None:
+        assumptions = against.assumptions0
+
     expr = sympify(expr)
 
     result = True

@@ -1,3 +1,20 @@
+"""
+Singularities
+=============
+
+This module implements algorithms for finding singularities for a function
+and identifying types of functions.
+
+The differential calculus methods in this module include methods to identify
+the following function types in the given ``Interval``:
+- Increasing
+- Strictly Increasing
+- Decreasing
+- Strictly Decreasing
+- Monotonic
+
+"""
+
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify

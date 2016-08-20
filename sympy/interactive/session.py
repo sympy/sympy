@@ -472,9 +472,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
-        mainloop(message)
+        print(message)
+        mainloop()
         sys.exit('Exiting ...')
     else:
-        ip.write(message)
+        print(message)
         import atexit
-        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)
+        atexit.register(lambda: print("Exiting ...\n"))
