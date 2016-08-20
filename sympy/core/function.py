@@ -1355,7 +1355,7 @@ class Derivative(Expr):
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
-        if old.is_Derivative and old.expr == self.args[0]:
+        if old.is_Derivative and old.expr == self.expr:
             # Check if canonnical order of variables is equal.
             old_vars = collections.Counter(old.variables)
             self_vars = collections.Counter(self.variables)
@@ -1372,21 +1372,27 @@ class Derivative(Expr):
         return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
-        dx = self.args[1:]
-        for term in self.args[0].lseries(x, logx=logx):
+        dx = self.variables
+        for term in self.expr.lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
-        arg = self.args[0].nseries(x, n=n, logx=logx)
+        arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
-        dx = self.args[1:]
+        dx = self.variables
         rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
             rv.append(o/x)
         return Add(*rv)
 
     def _eval_as_leading_term(self, x):
-        return self.args[0].as_leading_term(x)
+        series_gen = self.expr.lseries(x)
+        d = S.Zero
+        for leading_term in series_gen:
+            d = diff(leading_term, *self.variables)
+            if d != 0:
+                break
+        return d
 
     def _sage_(self):
         import sage.all as sage
@@ -1625,6 +1631,11 @@ class Subs(Expr):
         return (self.expr.free_symbols - set(self.variables) |
             set(self.point.free_symbols))
 
+    def _has(self, pattern):
+        if pattern in self.variables and pattern not in self.point:
+            return False
+        return super(Subs, self)._has(pattern)
+
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
@@ -1641,6 +1652,9 @@ class Subs(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables:
+            if old in self.point:
+                newpoint = tuple(new if i == old else i for i in self.point)
+                return self.func(self.expr, self.variables, newpoint)
             return self
 
     def _eval_derivative(self, s):
@@ -1650,6 +1664,32 @@ class Subs(Expr):
             + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
+
+    def _eval_nseries(self, x, n, logx):
+        if x in self.point:
+            # x is the variable being substituted into
+            apos = self.point.index(x)
+            other = self.variables[apos]
+            arg = self.expr.nseries(other, n=n, logx=logx)
+            o = arg.getO()
+            subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+            return Add(*subs_args) + o.subs(other, x)
+        arg = self.expr.nseries(x, n=n, logx=logx)
+        o = arg.getO()
+        subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+        return Add(*subs_args) + o
+
+    def _eval_as_leading_term(self, x):
+        if x in self.point:
+            ipos = self.point.index(x)
+            xvar = self.variables[ipos]
+            return self.expr.as_leading_term(xvar)
+        if x in self.variables:
+            # if `x` is a dummy variable, it means it won't exist after the
+            # substitution has been performed:
+            return self
+        # The variable is independent of the substitution:
+        return self.expr.as_leading_term(x)
 
 
 def diff(f, *symbols, **kwargs):

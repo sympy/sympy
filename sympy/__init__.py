@@ -20,6 +20,8 @@ except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
     "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
+del mpmath
+
 from sympy.release import __version__
 
 if 'dev' in __version__:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing

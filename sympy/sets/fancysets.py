@@ -135,6 +135,13 @@ class Integers(with_metaclass(Singleton, Set)):
         elif other.is_integer is False:
             return S.false
 
+    def _union(self, other):
+        intersect = Intersection(self, other)
+        if intersect == self:
+            return other
+        elif intersect == other:
+            return self
+
     def __iter__(self):
         yield S.Zero
         i = S.One
@@ -234,6 +241,14 @@ class ImageSet(Set):
     4
     9
     16
+
+    If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
+    `x` value is in `base_set` or not before passing it as args)
+
+    >>> squares.lamda(2)
+    4
+    >>> squares.lamda(S(1)/2)
+    1/4
 
     >>> n = Dummy('n')
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0

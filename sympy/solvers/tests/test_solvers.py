@@ -11,7 +11,7 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1277,6 +1277,7 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
+    assert check_assumptions(1, x) == True
 
 
 def test_issue_6056():
