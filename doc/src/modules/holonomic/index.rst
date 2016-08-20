@@ -16,3 +16,4 @@ Contents
    represent.rst
    operations.rst
    convert.rst
+   uses.rst
