@@ -13,6 +13,7 @@ under **computational group theory**. All code examples assume:
 >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, coset_enumeration_r
 
 Overview of Facilities
+``````````````````````
 
 The facilities provided for fp-groups fall into a number of natural groupings
 
@@ -59,10 +60,10 @@ obviously this is not a unique way to make such a group, but the point is that
 in case of equality with non-identity the user has to manually do that.
 
 Free Groups and Words
-=====================
+---------------------
 
 Construction of a Free Group
-----------------------------
+````````````````````````````
 
 ``free_group("gen0, gen1, \ldots gen_(n-1)")`` constructs a free group ``F`` on ``n``
 generators, where ``n`` is a positive integer.
@@ -81,13 +82,13 @@ creates a free group ``F[0]`` of rank 2, and a tuple of generators ``F[1]``.
 
 
 Construction of words
----------------------
+`````````````````````
 
 Can be called with different public versions of ``FreeGroup`` i.e
 ``free_group``, ``vfree_group`` and ``xfree_group``.
 
 Methods for manipulating Words
-------------------------------
+``````````````````````````````
 
 This section describes some basic access functions for *words*. These operations apply
 to words of both ``FreeGroup`` as well as that of arbitrary ``FpGroup``.
@@ -117,10 +118,10 @@ eliminate_word
 
 
 Comparison of words
--------------------
+```````````````````
 
 Coset Enumeration: The Todd-Coxeter Algorithm
-=============================================
+---------------------------------------------
 
 This section describes the use of coset enumeration techniques in SymPy. The
 algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
@@ -142,7 +143,7 @@ argument
     *"coset_table_based"*.
 
 CosetTable
-----------
+``````````
 
 Class used to manipulate the information regarding the coset enumeration of
 the finitely presented group ``G`` on the cosets of the subgroup ``H``.
@@ -166,7 +167,7 @@ enumeration by changing the values of the variable
 ``CosetTable.coset_table_max_limit``.
 
 Attributes of CosetTable
-------------------------
+````````````````````````
 
 For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
 
@@ -205,7 +206,7 @@ manipulate the algorithm, like
   ``deduction_stack`` above or equal to which the stack is emptied.
 
 Compression and Standardization
--------------------------------
+```````````````````````````````
 
 For any two entries `i, j` with `i < j` in coset table, the first
 occurrence of `i` in a coset table precedes the first occurrence of `j` with
@@ -216,21 +217,21 @@ table a standard coset table. To standardize a ``CosetTable`` we use the
 **Note** the method alters the given table, it does not create a copy.
 
 Subgroups of Finite Index
-=========================
+-------------------------
 
 The functionality in this section are concerned with the construction of
 subgroups of finite index. We describe a method for computing all subgroups
 whose index does not exceed some (modest) integer bound.
 
 Low Index Subgroups
--------------------
+```````````````````
 
-``low_index_subgroups``: Given a finitely presented group ``G`` (can be a free
+``low_index_subgroups(G, N)``: Given a finitely presented group ``G`` (can be a free
 group), and ``N`` a positive integer, determine the conjugacy classes of
-subgroups of ``G`` whose indices is less than or equal to ``n``.
+subgroups of ``G`` whose indices is less than or equal to ``N``.
 
 Bibliography
-============
+------------
 
 [CDHW73]
     John J. Cannon, Lucien A. Dimino, George Havas, and Jane M. Watson.
