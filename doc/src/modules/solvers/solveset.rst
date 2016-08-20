@@ -586,7 +586,7 @@ linsolve
 
 
 nonlinsolve
---------
+-----------
 
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
 
