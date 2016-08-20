@@ -434,7 +434,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
     (0, pi)
 
     """
-    from sympy.calculus.util import continuous_domain, periodicity
+    from sympy.calculus.util import (continuous_domain, periodicity,
+        function_range)
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solveset_real, solvify
 
@@ -445,101 +446,123 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
     expr = expr.subs(gen, d)
     _gen = gen
     gen = d
+    rv = None
 
     if expr is S.true:
-        rv = S.Reals
+        rv = domain
+
     elif expr is S.false:
         rv = S.EmptySet
+
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
         if period is not None:
+            try:
+                frange = function_range(e, gen, domain)
+            except NotImplementedError:
+                pass
+
+            rel = expr.rel_op
+            if rel == '<' or rel == '<=':
+                if expr.func(frange.sup, 0):
+                    rv = domain
+                elif not expr.func(frange.inf, 0):
+                    rv = S.EmptySet
+
+            elif rel == '>' or rel == '>=':
+                if expr.func(frange.inf, 0):
+                    rv = domain
+                elif not expr.func(frange.sup, 0):
+                    rv = S.EmptySet
+
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
                 domain = Interval(0, period, False, True)
 
-        singularities = []
-        for d in denoms(e):
-            singularities.extend(solvify(d, gen, domain))
+        if rv is None:
+            singularities = []
+            for d in denoms(e):
+                singularities.extend(solvify(d, gen, domain))
 
-        domain = continuous_domain(e, gen, domain)
-        solns = solvify(e, gen, domain)
+            domain = continuous_domain(e, gen, domain)
+            solns = solvify(e, gen, domain)
 
-        if solns is None:
-            raise NotImplementedError(filldedent('''The inequality cannot be
-                solved using solve_univariate_inequality.'''))
+            if solns is None:
+                raise NotImplementedError(filldedent('''The inequality cannot be
+                    solved using solve_univariate_inequality.'''))
 
-        include_x = expr.func(0, 0)
+            include_x = expr.func(0, 0)
 
-        def valid(x):
-            v = e.subs(gen, x)
+            def valid(x):
+                v = e.subs(gen, x)
+                try:
+                    r = expr.func(v, 0)
+                except TypeError:
+                    r = S.false
+                if r in (S.true, S.false):
+                    return r
+                if v.is_real is False:
+                    return S.false
+                else:
+                    v = v.n(2)
+                    if v.is_comparable:
+                        return expr.func(v, 0)
+                    return S.false
+
+            start = domain.inf
+            sol_sets = [S.EmptySet]
             try:
-                r = expr.func(v, 0)
-            except TypeError:
-                r = S.false
-            if r in (S.true, S.false):
-                return r
-            if v.is_real is False:
-                return S.false
-            else:
-                v = v.n(2)
-                if v.is_comparable:
-                    return expr.func(v, 0)
-                return S.false
+                discontinuities = domain.boundary - FiniteSet(domain.inf, domain.sup)
+                critical_points = set(solns + singularities + list(discontinuities))
+                reals = _nsort(critical_points, separated=True)[0]
 
-        start = domain.inf
-        sol_sets = [S.EmptySet]
-        try:
-            discontinuities = domain.boundary - FiniteSet(domain.inf, domain.sup)
-            critical_points = set(solns + singularities + list(discontinuities))
-            reals = _nsort(critical_points, separated=True)[0]
+            except NotImplementedError:
+                raise NotImplementedError('sorting of these roots is not supported')
 
-        except NotImplementedError:
-            raise NotImplementedError('sorting of these roots is not supported')
+            if valid(start) and start.is_finite:
+                sol_sets.append(FiniteSet(start))
 
-        if valid(start) and start.is_finite:
-            sol_sets.append(FiniteSet(start))
+            for x in reals:
+                end = x
 
-        for x in reals:
-            end = x
+                if end in [S.NegativeInfinity, S.Infinity]:
+                    if valid(S(0)):
+                        sol_sets.append(Interval(start, S.Infinity, True, True))
+                        break
 
-            if end in [S.NegativeInfinity, S.Infinity]:
-                if valid(S(0)):
-                    sol_sets.append(Interval(start, S.Infinity, True, True))
-                    break
+                pt = ((start + end)/2 if start is not S.NegativeInfinity else
+                    (end/2 if end.is_positive else
+                    (2*end if end.is_negative else
+                    end - 1)))
+                if valid(pt):
+                    sol_sets.append(Interval(start, end, True, True))
 
-            pt = ((start + end)/2 if start is not S.NegativeInfinity else
-                (end/2 if end.is_positive else
-                (2*end if end.is_negative else
-                end - 1)))
+                if x in singularities:
+                    singularities.remove(x)
+                elif include_x:
+                    sol_sets.append(FiniteSet(x))
+
+                start = end
+
+            end = domain.sup
+
+            # in case start == -oo then there were no solutions so we just
+            # check a point between -oo and oo (e.g. 0) else pick a point
+            # past the last solution (which is start after the end of the
+            # for-loop above
+            pt = (0 if start is S.NegativeInfinity else
+                (start/2 if start.is_negative else
+                (2*start if start.is_positive else
+                start + 1)))
+
+            if pt >= end:
+                pt = (start + end)/2
+
             if valid(pt):
                 sol_sets.append(Interval(start, end, True, True))
 
-            if x in singularities:
-                singularities.remove(x)
-            elif include_x:
-                sol_sets.append(FiniteSet(x))
-
-            start = end
-
-        end = domain.sup
-
-        # in case start == -oo then there were no solutions so we just
-        # check a point between -oo and oo (e.g. 0) else pick a point
-        # past the last solution (which is start after the end of the
-        # for-loop above
-        pt = (0 if start is S.NegativeInfinity else
-            (start/2 if start.is_negative else
-            (2*start if start.is_positive else
-            start + 1)))
-
-        if pt >= end:
-            pt = (start + end)/2
-
-        if valid(pt):
-            sol_sets.append(Interval(start, end, True, True))
-
-        rv = Union(*sol_sets).subs(gen, _gen)
+            rv = Union(*sol_sets).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
 
