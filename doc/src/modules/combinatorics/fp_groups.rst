@@ -226,9 +226,23 @@ whose index does not exceed some (modest) integer bound.
 Low Index Subgroups
 ```````````````````
 
-``low_index_subgroups(G, N)``: Given a finitely presented group ``G`` (can be a free
-group), and ``N`` a positive integer, determine the conjugacy classes of
+``low_index_subgroups(G, N)``: Given a finitely presented group ``G`` (can be a
+free group), and ``N`` a positive integer, determine the conjugacy classes of
 subgroups of ``G`` whose indices is less than or equal to ``N``.
+
+Constructing a presentation for a subgroup
+------------------------------------------
+
+Let ``H`` be a subgroup of finite index in finitely presented group ``G``. There
+are two ways to construct a set of defining relations for ``H`` from those of
+``G``. First is on a set of Schreier generators, known generally as Reidemeister-
+Schreier algorithm or on the given list of generators of ``H``.
+
+Reidemeister Schreier algorithm
+```````````````````````````````
+
+Presentation on user generators
+```````````````````````````````
 
 Bibliography
 ------------
