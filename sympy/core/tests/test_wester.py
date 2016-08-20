@@ -1216,13 +1216,11 @@ def test_N11():
     assert solveset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
-@XFAIL
 def test_N12():
     x = Symbol('x')
     assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
 
 
-@XFAIL
 def test_N13():
     x = Symbol('x')
     assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
@@ -1236,14 +1234,12 @@ def test_N14():
                                          Interval(pi/2, oo, True, True))
 
 
-@XFAIL
 def test_N15():
     r, t = symbols('r t')
     # raises NotImplementedError: only univariate inequalities are supported
     solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
 
 
-@XFAIL
 def test_N16():
     r, t = symbols('r t')
     solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
