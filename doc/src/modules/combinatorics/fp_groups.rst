@@ -224,9 +224,26 @@ whose index does not exceed some (modest) integer bound.
 Low Index Subgroups
 ```````````````````
 
-``low_index_subgroups(G, N)``: Given a finitely presented group ``G`` (can be a
-free group), and ``N`` a positive integer, determine the conjugacy classes of
+``low_index_subgroups(G, N)``: Given a finitely presented group `G = <X \mid R>`
+(can be a free group), and ``N`` a positive integer, determine the conjugacy classes of
 subgroups of ``G`` whose indices is less than or equal to ``N``.
+
+For example to find all subgroups of `G = <a, b \mid a^2 = b^3 = (ab)^4 = 1>`
+having index <= 4, can be found as follows:
+
+>>> from sympy.combinatorics.fp_groups import low_index_subgroups
+>>> F, a, b = free_group("a, b")
+>>> G = FpGroup(F, [a**2, b**3, (a*b)**4])
+>>> l = low_index_subgroups(G, 4)
+>>> for coset_table in l:
+...     print(coset_table.table)
+
+[[0, 0, 0, 0]]
+[[0, 0, 1, 2], [1, 1, 2, 0], [3, 3, 0, 1], [2, 2, 3, 3]]
+[[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]]
+[[1, 1, 0, 0], [0, 0, 1, 1]]
+
+This returns the coset tables of the interested subgroups.
 
 Constructing a presentation for a subgroup
 ------------------------------------------
