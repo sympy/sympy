@@ -114,8 +114,8 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
   >>> from sympy import sqrt
   >>> system = [x**2 - 2*y**2 -2, x*y - 2]
-  >>> symbols = [x, y]
-  >>> nonlinsolve(system, symbols)
+  >>> vars = [x, y]
+  >>> nonlinsolve(system, vars)
   {(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
 
   >>> n = Dummy('n')
