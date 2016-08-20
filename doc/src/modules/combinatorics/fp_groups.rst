@@ -69,8 +69,6 @@ Construction of a Free Group
 generators, where ``n`` is a positive integer.
 The `i`-th generator of `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
-Ex
-
 >>> F, x, y = free_group("x, y")
 
 creates a free group of rank 2 and assigns the variables ``x`` and ``y`` to the two
@@ -233,16 +231,30 @@ subgroups of ``G`` whose indices is less than or equal to ``N``.
 Constructing a presentation for a subgroup
 ------------------------------------------
 
-Let ``H`` be a subgroup of finite index in finitely presented group ``G``. There
-are two ways to construct a set of defining relations for ``H`` from those of
-``G``. First is on a set of Schreier generators, known generally as Reidemeister-
-Schreier algorithm or on the given list of generators of ``H``.
+In this section we discuss finding the presentation of a subgroup in a finitely
+presentation group. While the *subgroup* is currently allowed as input only in
+the form of a list of generators for the subgroup, you can expect the
+functionality of a *coset table* as input for subgroup in the group in near
+future.
+
+There are two ways to construct a set of defining relations for subgroup from
+those of ``G``. First is on a set of Schreier generators, known generally as
+Reidemeister-Schreier algorithm or on the given list of generators of ``H``.
 
 Reidemeister Schreier algorithm
 ```````````````````````````````
 
-Presentation on user generators
-```````````````````````````````
+called using ``reidemeister_presentation(G, Y)`` where ``G`` is the group and
+``Y`` is a list of generators for subgroup ``H`` whose presentation we want to
+find.
+
+>>> from sympy.combinatorics.fp_groups import reidemeister_presentation
+>>> F, x, y = free_group("x, y")
+>>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
+>>> H = [x*y, x**-1*y**-1*x*y*x]
+>>> p1 = reidemeister_presentation(f, H)
+>>> p1
+((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))
 
 Bibliography
 ------------
