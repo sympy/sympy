@@ -348,8 +348,9 @@ def test_issue_10198():
         1 - 1/sqrt(x)), '<', x))
 
 
+@XFAIL
 def test_issue_10047():
-    assert solve(sin(x) < 2) == And(S(0) <= x, x < 2*pi)
+    assert solve(sin(x) < 2) == And(-oo <= x, x < oo)
 
 
 def test_issue_10268():
