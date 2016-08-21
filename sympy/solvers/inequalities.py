@@ -458,10 +458,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
         if period is not None:
-            try:
-                frange = function_range(e, gen, domain)
-            except NotImplementedError:
-                pass
+            frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
             if rel == '<' or rel == '<=':

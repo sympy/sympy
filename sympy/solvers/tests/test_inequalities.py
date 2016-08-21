@@ -307,6 +307,11 @@ def test_trig_inequalities():
     assert isolve(sin(x) <= S.Zero, x, relational=False) == \
         Union(FiniteSet(S(0)), Interval(pi, 2*pi, False, True))
 
+    assert isolve(sin(x) <= S(1), x, relational=False) == S.Reals
+    assert isolve(cos(x) < S(-2), x, relational=False) == S.EmptySet
+    assert isolve(sin(x) >= S(-1), x, relational=False) == S.Reals
+    assert isolve(cos(x) > S(1), x, relational=False) == S.EmptySet
+
 
 def test_issue_9954():
     assert isolve(x**2 >= 0, x, relational=False) == S.Reals
