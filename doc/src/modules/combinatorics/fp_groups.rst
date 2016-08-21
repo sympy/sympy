@@ -90,8 +90,15 @@ creates a free groups ``F[0]`` of rank 2, with tuple of generators ``F[1]``.
 Construction of words
 `````````````````````
 
-Can be called with different public versions of ``FreeGroup`` i.e
-``free_group``, ``vfree_group`` and ``xfree_group``.
+This section is applicable to words of ``FreeGroup`` as well as ``FpGroup``.
+When we say *word* in SymPy, it actually means a `reduced word
+<https://en.wikipedia.org/wiki/Word_(group_theory)#Reduced_words>`_ , since the
+words are automatically reduced. Given a group ``G`` defined on `n` generators
+`x_1, x_2, x_3, \ldots, x_n`, a word is constructed as
+`\prod{x_i^{r_j}}` where `i \in [1, 2, \ldots, n]` and `j \in \mathbb{Z}`.
+
+Each word can be constructed in a variety of ways, since after reduction they
+may be equivalent.
 
 Coset Enumeration: The Todd-Coxeter Algorithm
 ---------------------------------------------
