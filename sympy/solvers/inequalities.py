@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Pow, Mul, Symbol, Dummy, sympify
+from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
@@ -492,6 +492,7 @@ def solve_univariate_inequality(expr, gen, relational=True):
 
 
 def _real_conditions(expr, gen):
+    from sympy.core import Pow, Mul
     n_sol_sets = []
     e = expr.gts - expr.lts
     for subexpression in e.atoms(Pow):
