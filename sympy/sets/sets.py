@@ -89,6 +89,7 @@ class Set(Basic):
         """
         return Union(self, other)
 
+
     def intersect(self, other):
         """
         Returns the intersection of 'self' and 'other'.

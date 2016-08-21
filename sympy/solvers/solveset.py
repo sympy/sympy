@@ -619,6 +619,7 @@ def _solveset(f, symbol, domain, _check=False):
     # _check controls whether the answer is checked or not
 
     from sympy.simplify.simplify import signsimp
+    from sympy import erf, erfinv, erfc, erfcinv
     orig_f = f
     f = together(f)
     if f.is_Mul:
@@ -716,6 +717,15 @@ def _solveset(f, symbol, domain, _check=False):
                       if isinstance(s, RootOf)
                       or domain_check(fx, symbol, s)])
 
+            if isinstance(result, FiniteSet) and \
+            not any(isinstance(x, (erf, erfinv, erfc, erfcinv)) for x in result.args):
+                valid = []
+                for r in result:
+                    if checksol(f, symbol, r):
+                        valid.append(r)
+                if valid is None:
+                    return ConditionSet(symbol, f, domain)
+                result = FiniteSet(*valid)
     return result
 
 
