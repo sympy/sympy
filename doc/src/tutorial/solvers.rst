@@ -143,25 +143,25 @@ infinitely many solutions is said to be positive-dimensional):
 
    * The order of solution corresponds the order of given symbols.
 
-   * Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW``
-   (if there is solution present in the form of ``LambertW``).
+   * Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
+   is solution present in the form of ``LambertW``).
 
-   ``solve`` can be used for such cases:
+   	``solve`` can be used for such cases:
 
-	>>> solve([x**2 - y**2/exp(x)], [x, y])
-	⎡⎧             ⎛y⎞⎫⎤
-	⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
-	⎣⎩             ⎝2⎠⎭⎦
+   >>> solve([x**2 - y**2/exp(x)], [x, y])
+   ⎡⎧             ⎛y⎞⎫⎤
+   ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
+   ⎣⎩             ⎝2⎠⎭⎦
 
    * Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.
 
    ``solve`` can be used for such cases(not all solution):
 
-	>>> solve([sin(x + y), cos(x - y)], [x, y])
-	⎡⎛-3⋅π   3⋅π⎞  ⎛-π   π⎞  ⎛π  3⋅π⎞  ⎛3⋅π  π⎞⎤
-	⎢⎜─────, ───⎟, ⎜───, ─⎟, ⎜─, ───⎟, ⎜───, ─⎟⎥
-	⎣⎝  4     4 ⎠  ⎝ 4   4⎠  ⎝4   4 ⎠  ⎝ 4   4⎠⎦
+   >>> solve([sin(x + y), cos(x - y)], [x, y])
+   ⎡⎛-3⋅π   3⋅π⎞  ⎛-π   π⎞  ⎛π  3⋅π⎞  ⎛3⋅π  π⎞⎤
+   ⎢⎜─────, ───⎟, ⎜───, ─⎟, ⎜─, ───⎟, ⎜───, ─⎟⎥
+   ⎣⎝  4     4 ⎠  ⎝ 4   4⎠  ⎝4   4 ⎠  ⎝ 4   4⎠⎦
 
 
 .. _tutorial-roots:
