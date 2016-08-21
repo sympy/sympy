@@ -23,7 +23,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet)
+                        Union, ConditionSet, ImageSet, Complement)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -513,7 +513,9 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
+    return (result
+            if isinstance(result, Complement)
+            else FiniteSet(*[s for s in result if checksol(f, symbol, s) is True]))
 
 
 def _solve_abs(f, symbol, domain):

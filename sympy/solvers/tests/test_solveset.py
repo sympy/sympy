@@ -1480,6 +1480,7 @@ def test_issue_8715():
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
 
+
 def test_issue_11174():
     r, t = symbols('r t')
     eq = z**2 + exp(2*x) - sin(y)
@@ -1490,3 +1491,12 @@ def test_issue_11174():
     s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
     soln = Intersection(S.Reals, FiniteSet(s))
     assert solveset(eq, x, S.Reals) == soln
+
+
+def test_issue_11534():
+    # eq and eq2 should give the same solution as a Complement
+    eq = -y + x/sqrt(-x**2 + 1)
+    eq2 = -y**2 + x**2/(-x**2 +1)
+    soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
+    assert solveset(eq, x, S.Reals) == soln
+    assert solveset(eq2, x, S.Reals) == soln
