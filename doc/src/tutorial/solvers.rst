@@ -140,20 +140,19 @@ infinitely many solutions is said to be positive-dimensional):
 
 .. note::
 
+   1. The order of solution corresponds the order of given symbols.
 
-   * The order of solution corresponds the order of given symbols.
-
-   * Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
+   2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
    is solution present in the form of ``LambertW``).
 
-   	``solve`` can be used for such cases:
+   ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y])
    ⎡⎧             ⎛y⎞⎫⎤
    ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
    ⎣⎩             ⎝2⎠⎭⎦
 
-   * Currently ``nonlinsolve`` is not properly capable of solving the system of equations
+   3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.
 
    ``solve`` can be used for such cases(not all solution):
