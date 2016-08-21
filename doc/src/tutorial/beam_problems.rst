@@ -1,5 +1,5 @@
 ===========================================================
-Solving Beam Bending Problems using Discontinuity Functions
+Solving Beam Bending Problems using Singularity Functions
 ===========================================================
 
 To make this document easier to read, we are going to enable pretty printing.
@@ -42,7 +42,8 @@ Examples
 
 Let us solve some beam bending problems using this module :
 
-**Example 1**
+Example 1
+---------
 
 A beam of length 9 meters is having a fixed support at the start.
 A distributed constant load of 8 kN/m is applied downward from the starting
@@ -95,7 +96,8 @@ of 12 kN is applied at the end.
     ─────────────────────────────────────────────────────────────────
                                    E⋅I                               
 
-**Example 2**
+Example 2
+---------
 
 There is a beam of length 30 meters. A moment of magnitude 120 Nm is
 applied in the clockwise direction at the end of the beam. A pointload
@@ -146,7 +148,8 @@ deflection is restricted at both the supports.
     ──────────────────────────────────────────────────────────────
                                  E⋅I                              
 
-**Example 3**
+Example 3
+---------
 
 A beam of length 6 meters is having a roller support at the start and a
 hinged support at the end. A clockwise moment of 1.5 kN-m is applied at the mid
