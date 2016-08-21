@@ -23,7 +23,6 @@ In Sympy, we can constuct a 2D beam objects with the following properties :
 - Variable : A symbol that can be used as a variable along the length. By default,
   this is set to ``Symbol(x)``.
 - Boundary Conditions
-    - bc_moment : Boundary conditions for moment.
     - bc_slope : Boundary conditions for slope.
     - bc_deflection : Boundary conditions for deflection.
 - Load Distribution
@@ -47,7 +46,7 @@ Let us solve some beam bending problems using this module :
 
 A beam of length 9 meters is having a fixed support at the start.
 A distributed constant load of 8 kN/m is applied downward from the starting
-point till 5 meters away from the start. A clockwise moment of 50 kN.m is
+point till 5 meters away from the start. A clockwise moment of 50 kN-m is
 applied at 5 meters away from the start of the beam. A downward point load
 of 12 kN is applied at the end.
 
@@ -67,8 +66,8 @@ of 12 kN is applied at the end.
 >>> b.apply_load(-8, 0, 0, end=5)
 >>> b.apply_load(50, 5, -2)
 >>> b.apply_load(-12, 9, -1)
->>> b.bc_slope = [(0, 0)]
->>> b.bc_deflection = [(0, 0)]
+>>> b.bc_slope.append((0, 0))
+>>> b.bc_deflection.append((0, 0))
 >>> b.evaluate_reaction_forces(R1, M1)
 >>> b.reaction_forces
     {M₁: -258, R₁: 52}
@@ -119,7 +118,8 @@ deflection is restricted at both the supports.
 >>> b.apply_load(R1, 10, -1)
 >>> b.apply_load(R2, 30, -1)
 >>> b.apply_load(120, 30, -2)
->>> b.bc_deflection = [(10, 0), (30, 0)]
+>>> b.bc_deflection.append((10, 0))
+>>> b.bc_deflection.append((30, 0))
 >>> b.evaluate_reaction_forces(R1, R2)
 >>> b.reaction_forces
     {R₁: 6, R₂: 2}
@@ -149,7 +149,7 @@ deflection is restricted at both the supports.
 **Example 3**
 
 A beam of length 6 meters is having a roller support at the start and a
-hinged support at the end. A clockwise moment of 1.5 kN.m is applied at the mid
+hinged support at the end. A clockwise moment of 1.5 kN-m is applied at the mid
 of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m
 is applied from the mid til the end of the beam.
 
@@ -168,7 +168,8 @@ is applied from the mid til the end of the beam.
 >>> b.apply_load(-3, 3, 0)
 >>> b.apply_load(-1, 3, 1)
 >>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection = [(0, 0), (6, 0)]
+>>> b.bc_deflection.append((0, 0))
+>>> b.bc_deflection.append((6, 0))
 >>> b.evaluate_reaction_forces(R1, R2)
 >>> b.reaction_forces
     {R₁: 2.75, R₂: 10.75}
