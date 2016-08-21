@@ -50,7 +50,7 @@ class Beam(object):
     {'deflection': [(0, 0), (4, 0)], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
-    >>> b.evaluate_reaction_forces(R1, R2)
+    >>> b.solve_for_reaction_loads(R1, R2)
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
@@ -92,16 +92,16 @@ class Beam(object):
         self.variable = variable
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._reaction_forces = {}
+        self._reaction_loads = {}
 
     def __str__(self):
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
         return str_sol
 
     @property
-    def reaction_forces(self):
+    def reaction_loads(self):
         """ Returns the reaction forces in a dictionary."""
-        return self._reaction_forces
+        return self._reaction_loads
 
     @property
     def length(self):
@@ -293,7 +293,7 @@ class Beam(object):
         """
         return self._load
 
-    def evaluate_reaction_forces(self, *reactions):
+    def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
 
@@ -322,8 +322,8 @@ class Beam(object):
         >>> b.load
         R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
-        >>> b.evaluate_reaction_forces(R1, R2)
-        >>> b.reaction_forces
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.reaction_loads
         {R1: 6, R2: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
@@ -334,8 +334,8 @@ class Beam(object):
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
-        self._reaction_forces = dict(zip(reactions, reaction_values[0]))
-        self._load = self._load.subs(self._reaction_forces)
+        self._reaction_loads = dict(zip(reactions, reaction_values[0]))
+        self._load = self._load.subs(self._reaction_loads)
 
     def shear_force(self):
         """
@@ -364,7 +364,7 @@ class Beam(object):
         >>> b.apply_load(R2, 30, -1)
         >>> b.apply_load(120, 30, -2)
         >>> b.bc_deflection = [(10, 0), (30, 0)]
-        >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.shear_force()
         -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
         """
@@ -398,7 +398,7 @@ class Beam(object):
         >>> b.apply_load(R2, 30, -1)
         >>> b.apply_load(120, 30, -2)
         >>> b.bc_deflection = [(10, 0), (30, 0)]
-        >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.bending_moment()
         -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
         """
@@ -432,7 +432,7 @@ class Beam(object):
         >>> b.apply_load(R2, 30, -1)
         >>> b.apply_load(120, 30, -2)
         >>> b.bc_deflection = [(10, 0), (30, 0)]
-        >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.slope()
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
@@ -482,7 +482,7 @@ class Beam(object):
         >>> b.apply_load(R2, 30, -1)
         >>> b.apply_load(120, 30, -2)
         >>> b.bc_deflection = [(10, 0), (30, 0)]
-        >>> b.evaluate_reaction_forces(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.deflection()
         (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)

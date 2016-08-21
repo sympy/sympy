@@ -30,7 +30,7 @@ In Sympy, we can constuct a 2D beam objects with the following properties :
 We have following methods under the beam class:
 
 - apply_load
-- evaluate_reaction_forces
+- solve_for_reaction_loads
 - shear_force
 - bending_moment
 - slope
@@ -68,8 +68,8 @@ of 12 kN is applied at the end.
 >>> b.apply_load(-12, 9, -1)
 >>> b.bc_slope.append((0, 0))
 >>> b.bc_deflection.append((0, 0))
->>> b.evaluate_reaction_forces(R1, M1)
->>> b.reaction_forces
+>>> b.solve_for_reaction_loads(R1, M1)
+>>> b.reaction_loads
     {M₁: -258, R₁: 52}
 >>> b.load
              -2         -1        0             -2            0             -1
@@ -120,8 +120,8 @@ deflection is restricted at both the supports.
 >>> b.apply_load(120, 30, -2)
 >>> b.bc_deflection.append((10, 0))
 >>> b.bc_deflection.append((30, 0))
->>> b.evaluate_reaction_forces(R1, R2)
->>> b.reaction_forces
+>>> b.solve_for_reaction_loads(R1, R2)
+>>> b.reaction_loads
     {R₁: 6, R₂: 2}
 >>> b.load
            -1             -1               -2             -1
@@ -170,8 +170,8 @@ is applied from the mid til the end of the beam.
 >>> b.apply_load(R2, 6, -1)
 >>> b.bc_deflection.append((0, 0))
 >>> b.bc_deflection.append((6, 0))
->>> b.evaluate_reaction_forces(R1, R2)
->>> b.reaction_forces
+>>> b.solve_for_reaction_loads(R1, R2)
+>>> b.reaction_loads
     {R₁: 2.75, R₂: 10.75}
 >>> b.load
             -1              -2            0          1                -1
