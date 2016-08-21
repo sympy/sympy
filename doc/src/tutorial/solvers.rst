@@ -97,7 +97,7 @@ is an example of the syntax of ``linsolve``.
 In the ``solveset`` module, the non linear system of equations is solved using
 ``nonlinsolve``. Following are examples of ``nonlinsolve``.
 
-* When only real solution is present:
+1. When only real solution is present:
 
 	>>> a, b, c, d = symbols('a, b, c, d', real=True)
 	>>> nonlinsolve([a**2 + a, a - b], [a, b])
@@ -105,12 +105,12 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	>>> nonlinsolve([x*y - 1, x - 2], x, y)
 	{(2, 1/2)}
 
-* When only complex solution is present:
+2. When only complex solution is present:
 
 	>>> nonlinsolve([x**2 + 1, y**2 + 1], [x, y])
 	{(-ⅈ, -ⅈ), (-ⅈ, ⅈ), (ⅈ, -ⅈ), (ⅈ, ⅈ)}
 
-* When both real and complex solution is present:
+3. When both real and complex solution is present:
 
 	>>> from sympy import sqrt
 	>>> system = [x**2 - 2*y**2 -2, x*y - 2]
@@ -127,7 +127,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	>>> nonlinsolve(system, [x, y]) == soln
 	True
 
-* If non linear system of equations is Positive dimensional system (A system with
+4. If non linear system of equations is Positive dimensional system (A system with
 infinitely many solutions is said to be positive-dimensional):
 
 	>>> nonlinsolve([x*y, x*y - x], [x, y])
