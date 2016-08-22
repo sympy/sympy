@@ -98,7 +98,7 @@ When we say *word* in SymPy, it actually means a `reduced word
 words are automatically reduced. Given a group ``G`` defined on `n` generators
 `x_1, x_2, x_3, \ldots, x_n`, a word is constructed as
 `s_1^{r_1}s_2^{r_2} \cdots s_k^{r_k}` where `s_i \in \{x_1, x_2, \ldots, x_n\}`
-, `r_i \in \mathbb{Z}` forall `k`.
+, `r_i \in \mathbb{Z}` for all `k`.
 
 Each word can be constructed in a variety of ways, since after reduction they
 may be equivalent.
