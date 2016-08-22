@@ -17,3 +17,4 @@
    solvers.rst
    matrices.rst
    manipulation.rst
+   beam_problems.rst
