@@ -34,7 +34,7 @@ we often make use of *Handbook of Computational Group Theory*.
 The Construction of Finitely Presented Groups
 ---------------------------------------------
 
-Finitely presented groups are construced by factoring a free group by a
+Finitely presented groups are constructed by factoring a free group by a
 set of relators. The set of relators is taken in as a list of words in
 generators of free group in SymPy, using a list provides ordering to the
 relators. If the list of relators is empty, the associated free group is
@@ -43,7 +43,7 @@ returned.
 Example of construction of a finitely-presented group.
 The symmetric group of degree 4 may be represented as a two generator group
 with presentation `\langle a, b \mid a^2, b^3, (ab)^4 \rangle`. Giving the relations as a
-list of relators, the presentation of would be specified as:
+list of relators, group in SymPy would be specified as:
 
 >>> F, a, b = free_group("a, b")
 >>> G = FpGroup(F, [a**2, b**3, (a*b)**4])
@@ -56,8 +56,8 @@ Currently groups with relators having presentation like
 >>> F, r, s, t = free_group("r, s, t")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
 
-obviously this is not a unique way to make such a group, but the point is that
-in case of equality with non-identity the user has to manually do that.
+Obviously this is not a unique way to make that particular group, but the point
+is that in case of equality with non-identity the user has to manually do that.
 
 Free Groups and Words
 ---------------------
@@ -65,14 +65,14 @@ Free Groups and Words
 Construction of a Free Group
 ````````````````````````````
 
-``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free group ``F`` on ``n``
-generators, where ``n`` is a positive integer.
-The `i`-th generator of `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
+``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free group ``F`` on
+``n`` generators, where ``n`` is a positive integer. The `i`-th generator of
+`F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
 >>> F, x, y = free_group("x, y")
 
-creates a free group ``F`` of rank 2 and assigns the variables ``x`` and ``y`` to the two
-generators.
+creates a free group ``F`` of rank 2 and assigns the variables ``x`` and ``y``
+to the two generators.
 
 >>> F = vfree_group("x, y")
 >>> F
@@ -84,6 +84,8 @@ and inserts ``x`` and ``y`` as generators into the global namespace.
 >>> F = xfree_group("x, y")
 >>> F
 (<free group on the generators (x, y)>, (x, y))
+>>> x**2
+x**2
 
 creates a free groups ``F[0]`` of rank 2, with tuple of generators ``F[1]``.
 
@@ -116,7 +118,7 @@ strategies differ in the way they make new definitions for the cosets.
 
 Though from the user point of view it is suggested to rather use the
 ``.coset_enumeration`` method of ``FpGroup`` and specify the ``strategy``
-argument
+argument.
 
 ``strategy``:
     (default="relator_based") specifies the strategy of coset
@@ -260,18 +262,14 @@ find.
 Bibliography
 ------------
 
-[CDHW73]
-    John J. Cannon, Lucien A. Dimino, George Havas, and Jane M. Watson.
+.. [CDHW73] John J. Cannon, Lucien A. Dimino, George Havas, and Jane M. Watson.
     Implementation and analysis of the Todd-Coxeter algorithm. Math. Comp., 27:463–
     490, 1973.
 
-[Ho05]
-    Derek F. Holt,
+.. [Ho05] Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
     `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
 
-[Hav91]
-    George Havas.
-    Coset enumeration strategies.
+.. [Hav91] George Havas, Coset enumeration strategies.
     In Proceedings of the International Symposium on Symbolic and Algebraic Computation (ISSAC'91), Bonn 1991, pages 191--199. ACM Press, 1991.
