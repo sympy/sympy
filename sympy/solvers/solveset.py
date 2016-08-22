@@ -1883,7 +1883,7 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
 
-    * Positive dimensional system and complements:
+    1. Positive dimensional system and complements:
 
     >>> from sympy import pprint
     >>> from sympy.polys.polytools import is_zero_dimensional
@@ -1902,7 +1902,7 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
     {(-y + 2, y)}
 
-    * If some of the equations are non polynomial equation then `nonlinsolve`
+    2. If some of the equations are non polynomial equation then `nonlinsolve`
     will call `substitution` function and returns real and complex solutions,
     if present.
 
@@ -1912,7 +1912,7 @@ def nonlinsolve(system, *symbols):
         log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
         Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
 
-    * If system is Non linear polynomial zero dimensional then it returns
+    3. If system is Non linear polynomial zero dimensional then it returns
     both solution (real and complex solutions, if present using
     `solve_poly_system`):
 
@@ -1920,7 +1920,7 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    * `nonlinsolve` can solve some linear(zero or positive dimensional)
+    4. `nonlinsolve` can solve some linear(zero or positive dimensional)
     system (because it is using `groebner` function to get the
     groebner basis and then `substitution` function basis as the new `system`).
     But it is not recommended to solve linear system using `nonlinsolve`,
@@ -1929,7 +1929,7 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
     {(3*z - 5, -z + 4, z)}
 
-    * System having polynomial equations and only real solution is present
+    5. System having polynomial equations and only real solution is present
     (will be solved using `solve_poly_system`):
 
     >>> e1 = sqrt(x**2 + y**2) - 10
@@ -1941,14 +1941,15 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 + sqrt(5), -sqrt(5) + 1), (-sqrt(5) + 2, 1 + sqrt(5))}
 
-    * It is better to use symbols instead of Trigonometric Function or Function
-    (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol and so on.
-    Get soln from `nonlinsolve` and then using `solveset` get the value of `x`)
+    6. It is better to use symbols instead of Trigonometric Function or
+    Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
+    and so on. Get soln from `nonlinsolve` and then using `solveset` get
+    the value of `x`)
 
     How nonlinsolve is better than old solver `_solve_system` :
     ===========================================================
 
-    * A positive dimensional system solver : nonlinsolve can return
+    1. A positive dimensional system solver : nonlinsolve can return
     solution for positive dimensional system. It finds the
     Groebner Basis of the positive dimensional system(calling it as
     basis) then we can start solving equation(having least number of
@@ -1957,7 +1958,7 @@ def nonlinsolve(system, *symbols):
     terms of minimum variables. Here the important thing is how we
     are substituting the known values and in which equations.
 
-    * Real and Complex both solutions : nonlinsolve returns both real
+    2. Real and Complex both solutions : nonlinsolve returns both real
     and complex solution. If all the equations in the system are polynomial
     then using `solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
@@ -1969,7 +1970,7 @@ def nonlinsolve(system, *symbols):
     polynomial equation(s) is present). When solution is valid then add its
     general solution in the final result.
 
-    * Complements and Intersection will be added if any : nonlinsolve maintains
+    3. Complement and Intersection will be added if any : nonlinsolve maintains
     dict for complements and Intersections. If solveset find complements or/and
     Intersection with any Interval or set during the execution of
     `substitution` function ,then complement or/and Intersection for that
