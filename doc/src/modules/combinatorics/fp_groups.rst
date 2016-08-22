@@ -42,7 +42,7 @@ returned.
 
 Example of construction of a finitely-presented group.
 The symmetric group of degree 4 may be represented as a two generator group
-with presentation `< a, b \mid a^2, b^3, (a*b)^4 >`. Giving the relations as a
+with presentation `\langle a, b \mid a^2, b^3, (ab)^4 \rangle`. Giving the relations as a
 list of relators, the presentation of would be specified as:
 
 >>> F, a, b = free_group("a, b")
@@ -51,7 +51,7 @@ list of relators, the presentation of would be specified as:
 <fp group on the generators (a, b)>
 
 Currently groups with relators having presentation like
-`< r, s, t \mid r^2, s^2, t^2, rst = str = trs >` will have to be specified as:
+`\langle r, s, t \mid r^2, s^2, t^2, rst = str = trs \rangle` will have to be specified as:
 
 >>> F, r, s, t = free_group("r, s, t")
 >>> G = FpGroup(F, [r**2, s**2, t**2, r*s*t*r**-1*t**-1*s**-1, s*t*r*s**-1*r**-1*t**-1])
@@ -65,13 +65,13 @@ Free Groups and Words
 Construction of a Free Group
 ````````````````````````````
 
-``free_group("gen0, gen1, \ldots gen_(n-1)")`` constructs a free group ``F`` on ``n``
+``free_group("gen0, gen1, ..., gen_(n-1)")`` constructs a free group ``F`` on ``n``
 generators, where ``n`` is a positive integer.
 The `i`-th generator of `F` may be obtained using the method ``.generators[i]``, `i = 0, \ldots n-1`.
 
 >>> F, x, y = free_group("x, y")
 
-creates a free group of rank 2 and assigns the variables ``x`` and ``y`` to the two
+creates a free group ``F`` of rank 2 and assigns the variables ``x`` and ``y`` to the two
 generators.
 
 >>> F = vfree_group("x, y")
@@ -95,7 +95,8 @@ When we say *word* in SymPy, it actually means a `reduced word
 <https://en.wikipedia.org/wiki/Word_(group_theory)#Reduced_words>`_ , since the
 words are automatically reduced. Given a group ``G`` defined on `n` generators
 `x_1, x_2, x_3, \ldots, x_n`, a word is constructed as
-`\prod{x_i^{r_j}}` where `i \in [1, 2, \ldots, n]` and `j \in \mathbb{Z}`.
+`s_1^{r_1}s_2^{r_2} \cdots s_k^{r_k}` where `s_i \in \{x_1, x_2, \ldots, x_n\}`
+, `r_i \in \mathbb{Z} \forall k`.
 
 Each word can be constructed in a variety of ways, since after reduction they
 may be equivalent.
@@ -134,7 +135,7 @@ theoretic and group functions use the regular representation of ``G``, i.e.,
 the coset table of ``G`` over the trivial subgroup.
 
 The actual mathematical coset table is obtained using ``.table`` attribute and
-is a list of lists. For each generator ``g`` of ``G`` it contains a coloumn and
+is a list of lists. For each generator ``g`` of ``G`` it contains a column and
 the next coloumn corresponds to ``g**-1`` and so on for other generators, so in
 total it has ``2*G.rank()`` coloumns. Each coloumn is simply a list of integers.
 If ``l`` is the generator list for the generator `g` and if ``l[i] = j`` then
@@ -159,8 +160,8 @@ For ``CosetTable(G, H)`` where ``G`` is the group and ``H`` is the subgroup.
 
 * ``omega``: A list, dependent on the internal attribute ``p``. `\Omega`
   represents the list of live-cosets. A *standard* coset-table has its
-  `\Omega = [0, 1, \ldots, index-1]` where `index` is the index of subgroup
-  ``H`` in ``G``.
+  `\Omega = \{0, 1, \ldots, index-1 \}` where `index` is the index of subgroup
+  `H` in `G`.
 
 For experienced users we have a number of parameters that can be used to
 manipulate the algorithm, like
@@ -206,11 +207,11 @@ whose index does not exceed some (modest) integer bound.
 Low Index Subgroups
 ```````````````````
 
-``low_index_subgroups(G, N)``: Given a finitely presented group `G = <X \mid R>`
+``low_index_subgroups(G, N)``: Given a finitely presented group `G = \langle X \mid R \rangle`
 (can be a free group), and ``N`` a positive integer, determine the conjugacy classes of
 subgroups of ``G`` whose indices is less than or equal to ``N``.
 
-For example to find all subgroups of `G = <a, b \mid a^2 = b^3 = (ab)^4 = 1>`
+For example to find all subgroups of `G = \langle a, b \mid a^2 = b^3 = (ab)^4 = 1 \rangle`
 having index <= 4, can be found as follows:
 
 >>> from sympy.combinatorics.fp_groups import low_index_subgroups
@@ -225,7 +226,8 @@ having index <= 4, can be found as follows:
 [[0, 0, 1, 2], [2, 2, 2, 0], [1, 1, 0, 1]]
 [[1, 1, 0, 0], [0, 0, 1, 1]]
 
-This returns the coset tables of the interested subgroups.
+This returns the coset tables of subgroups of satisfying the property
+that index, `index`, of subgroup in group is `\le n`.
 
 Constructing a presentation for a subgroup
 ------------------------------------------
@@ -269,4 +271,7 @@ Bibliography
     In the series 'Discrete Mathematics and its Applications',
     `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
 
-    A practical method for enumerating cosets of a finite abstract group
+[Hav91]
+    George Havas.
+    Coset enumeration strategies.
+    In Proceedings of the International Symposium on Symbolic and Algebraic Computation (ISSAC'91), Bonn 1991, pages 191--199. ACM Press, 1991.
