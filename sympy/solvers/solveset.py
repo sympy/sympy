@@ -970,8 +970,8 @@ def solvify(f, symbol, domain):
 
 
 def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
-    r"""Solves a given equation `f` in domain `S.Integers`. `diophantine`, defined
-    in`solvers/diophantine.py`; is used to get the integer solution.
+    r"""Solves a given equation `f` in domain `S.Integers`. `diophantine`,
+    defined in`solvers/diophantine.py`; is used to get the integer solution.
 
     Parameters
     ==========
