@@ -25,7 +25,7 @@ from sympy.core.containers import Dict
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve)
+    solveset, solve_decomposition, substitution, nonlinsolve, solvify)
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -562,16 +562,19 @@ def test_solve_abs():
 
     assert solveset_real(Abs(x - 7) - 8, x) == FiniteSet(-S(1), S(15))
 
-    # issue 9565
+    raises(ValueError, lambda: solveset(abs(x) - 1, x))
+
+
+@XFAIL
+def test_issue_9565():
     assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
 
-    # issue #10069
+
+@XFAIL
+def test_issue_10069():
     eq = abs(1/(x - 1)) - 1 > 0
     u = Union(Interval.open(0, 1), Interval.open(1, 2))
     assert solveset_real(eq, x) == u
-    assert solveset(eq, x, domain=S.Reals) == u
-
-    raises(ValueError, lambda: solveset(abs(x) - 1, x))
 
 
 @XFAIL
@@ -930,6 +933,19 @@ def test_issue_9522():
 
     assert solveset(expr1, x, S.Reals) == EmptySet()
     assert solveset(expr2, x, S.Reals) == EmptySet()
+
+
+def test_solvify():
+    x = Symbol('x')
+
+    assert solvify(x**2 + 10, x, S.Reals) == []
+    assert solvify(x**3 + 1, x, S.Complexes) == [-1, 1/2 - sqrt(3)*I/2,
+                                                 1/2 + sqrt(3)*I/2]
+    assert solvify(log(x), x, S.Reals) == [1]
+    assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
+    assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
+    assert solvify(sin(Abs(x)), x, S.Reals) is None
+    raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
 def test_linear_eq_to_matrix():

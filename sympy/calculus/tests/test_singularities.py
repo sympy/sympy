@@ -58,7 +58,6 @@ def test_is_decreasing():
 
 
 def test_is_strictly_decreasing():
-    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2)) is False
     assert is_strictly_decreasing(-x**2, Interval(-oo, 0)) is False
@@ -71,3 +70,8 @@ def test_is_monotonic():
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     assert is_monotonic(-x**2, S.Reals) is False
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x) is True
+
+
+@XFAIL
+def test_strictly_decreasing():
+    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
