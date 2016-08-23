@@ -12,7 +12,7 @@ from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand, expand_complex)
 from sympy.core.relational import Eq
-from sympy.simplify import simplify, fraction, trigsimp, powdenest
+from sympy.simplify import simplify, fraction, trigsimp, powdenest, logcombine
 from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
@@ -663,7 +663,19 @@ def transolve(f, symbol, domain, **flags):
     result = S.EmptySet
     if lhs.is_Add:
         # solving equation
-        result += _solve_log(f, symbol, domain)
+        for rhs in rhs_s:
+            orig_f = f
+            f = factor(powdenest(lhs - rhs))
+            g = _check_log(f)
+            if f.is_Mul:
+                result += _solveset(f, symbol, domain)
+
+            elif g:
+                result += _solve_log(f, symbol, domain)
+
+            else:
+                transolve(f, symbol, domain, **flags)
+
 
     if result is S.EmptySet:
         result = ConditionSet(symbol, Eq(f, 0), domain)
@@ -674,14 +686,11 @@ def transolve(f, symbol, domain, **flags):
 def _check_log(f):
     """Helper function to check if the equation is logarithmic or not."""
 
-    from sympy.simplify import logcombine
-
     orig_f = f
     # Heuristic-01
     g = logcombine(f, force=True)
     if g.count(log) != f.count(log):
-        if g.func is log:
-            return g
+        return g
 
     return False
 
@@ -691,23 +700,18 @@ def _solve_log(f, symbol, domain):
 
     from sympy.solvers.solvers import checksol
 
-    lhs, y_s = _invert(f, 0, symbol, domain)
     result = S.EmptySet
-    g = _check_log(lhs)
-    if g:
-        for y in y_s:
-            solutions = _solveset(g - y, symbol, domain)
+    orig_f = f
+    f = _check_log(orig_f)
+    solutions = _solveset(f, symbol, domain)
 
-            if isinstance(solutions, FiniteSet):
-                for solution in solutions:
-                    if checksol(f, symbol, solution):
-                        result += FiniteSet(solution)
+    if isinstance(solutions, FiniteSet):
+        for solution in solutions:
+            if checksol(orig_f, symbol, solution):
+                result += FiniteSet(solution)
 
-            elif isinstance(solutions, ConditionSet):
-                result += ConditionSet(symbol, Eq(g, y), domain)
-
-            else:
-                result += solutions
+    else:
+        result += solutions
 
     return result
 
