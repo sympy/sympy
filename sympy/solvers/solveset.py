@@ -893,13 +893,6 @@ def solvify(f, symbol, domain):
     """Solves an equation using solveset and returns the solution in accordance
     with the `solve` output API.
 
-    Parameters
-    ==========
-
-    f : Expr or a relational.
-        The target equation
-    symbols : list of Symbol
-
     Returns
     =======
 
@@ -983,7 +976,7 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
     Parameters
     ==========
 
-    f : Expr or a relational.
+    f : Expr
         The target equation
     symbols : list of Symbol
         The variables for which the equation is solved. `symbols`is an optional
