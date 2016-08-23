@@ -16,6 +16,8 @@ from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify import simplify, fraction, trigsimp, powdenest
+from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold)
@@ -26,9 +28,8 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf)
-from sympy.solvers.solvers import (checksol, denoms, unrad,
-    _simple_dens, recast_to_symbols)
+                         RootOf, factor)
+from sympy.solvers.solvers import checksol, denoms, unrad
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -792,8 +793,15 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 
-def transolve(f, symbol, domain=S.Reals):
+def transolve(f, symbol, domain, **flags):
     """Helper for solving transcendental equations."""
+
+    if 'tsolve_saw' not in flags:
+        flags['tsolve_saw'] = []
+    if f in flags['tsolve_saw']:
+        return None
+    else:
+        flags['tsolve_saw'].append(f)
 
     lhs, rhs_s = _invert(f, 0, symbol, domain)
 
