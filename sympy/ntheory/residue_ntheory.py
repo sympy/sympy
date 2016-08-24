@@ -1026,6 +1026,78 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     raise ValueError("Log does not exist")
 
 
+def _discrete_log_pollard_rho(n, a, b, order=None):
+    a %= n
+    b %= n
+
+    if order is None:
+        order = n_order(b, n)
+
+    for i in range(10):
+        aa = randint(1, order - 1)
+        ba = randint(1, order - 1)
+        xa = pow(b, aa, n) * pow(a, ba, n) % n
+
+        c = xa % 3
+        if c == 0:
+            xb = a * xa % n
+            ab = aa
+            bb = (ba + 1) % order
+        elif c == 1:
+            xb = xa * xa % n
+            ab = (aa + aa) % order
+            bb = (ba + ba) % order
+        else:
+            xb = b * xa % n
+            ab = (aa + 1) % order
+            bb = ba
+
+        for j in range(order):
+            c = xa % 3
+            if c == 0:
+                xa = a * xa % n
+                ba = (ba + 1) % order
+            elif c == 1:
+                xa = xa * xa % n
+                aa = (aa + aa) % order
+                ba = (ba + ba) % order
+            else:
+                xa = b * xa % n
+                aa = (aa + 1) % order
+
+            c = xb % 3
+            if c == 0:
+                xb = a * xb % n
+                bb = (bb + 1) % order
+            elif c == 1:
+                xb = xb * xb % n
+                ab = (ab + ab) % order
+                bb = (bb + bb) % order
+            else:
+                xb = b * xb % n
+                ab = (ab + 1) % order
+
+            c = xb % 3
+            if c == 0:
+                xb = a * xb % n
+                bb = (bb + 1) % order
+            elif c == 1:
+                xb = xb * xb % n
+                ab = (ab + ab) % order
+                bb = (bb + bb) % order
+            else:
+                xb = b * xb % n
+                ab = (ab + 1) % order
+
+            if xa == xb:
+                r = (ba - bb) % order
+                if r != 0:
+                    return mod_inverse(r, order) * (ab - aa) % order
+                break
+
+    raise ValueError("Pollard's Rho failed to find logarithm")
+
+
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     from .modular import crt
 
