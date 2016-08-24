@@ -1114,20 +1114,25 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
             gj = pow(b, l[i], n)
             aj = pow(a * mod_inverse(gj, n), order // pi**(j + 1), n)
             bj = pow(b, order // pi, n)
-            cj = _discrete_log_shanks_steps(n, aj, bj, pi)
+            cj = discrete_log(n, aj, bj, pi, True)
             l[i] += cj * pi**j
 
     d, _ = crt([pi**ri for pi, ri in f.items()], l)
     return d
 
 
-def discrete_log(n, a, b, order=None):
+def discrete_log(n, a, b, order=None, prime_order=None):
     if order is None:
         order = n_order(b, n)
 
+    if prime_order is None:
+        prime_order = isprime(order)
+
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
-    elif order < 100000:
-        return _discrete_log_shanks_steps(n, a, b, order)
+    elif prime_order:
+        if order < 100000:
+            return _discrete_log_shanks_steps(n, a, b, order)
+        return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
