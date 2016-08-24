@@ -992,10 +992,10 @@ class mobius(Function):
 
 
 def _discrete_log_trial_mul(n, a, b, order=None):
-    if order is None:
-        order = n
     a %= n
     b %= n
+    if order is None:
+        order = n
     x = 1
     k = 1
     for i in range(order):
@@ -1006,10 +1006,10 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
 
 def _discrete_log_shanks_steps(n, a, b, order=None):
-    if order is None:
-        order = n_order(b, n)
     a %= n
     b %= n
+    if order is None:
+        order = n_order(b, n)
     m = isqrt(order) + 1
     T = dict()
     x = 1
@@ -1100,12 +1100,12 @@ def _discrete_log_pollard_rho(n, a, b, order=None):
 
 def _discrete_log_pohlig_hellman(n, a, b, order=None):
     from .modular import crt
+    a %= n
+    b %= n
 
     if order is None:
         order = n_order(b, n)
 
-    a %= n
-    b %= n
     f = factorint(order)
     l = [0] * len(f)
 
