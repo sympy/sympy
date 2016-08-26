@@ -436,7 +436,6 @@ class ImageSet(Set):
             n = self.lamda.variables[0]
             base_set = self.base_set
             new_inf, new_sup = None, None
-            new_lopen, new_ropen = other.left_open, other.right_open
 
             if f.is_real:
                 inverter = invert_real
@@ -463,7 +462,7 @@ class ImageSet(Set):
                 range_set = S.EmptySet
 
                 if all(i.is_real for i in (new_sup, new_inf)):
-                    new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
+                    new_interval = Interval(new_inf, new_sup)
                     range_set = base_set._intersect(new_interval)
                 else:
                     if other.is_subset(S.Reals):

@@ -62,10 +62,10 @@ def test_Beam():
     b1.apply_load(R2, 30, -1)
     b1.apply_load(120, 30, -2)
     b1.bc_deflection = [(10, 0), (30, 0)]
-    b1.solve_for_reaction_loads(R1, R2)
+    b1.evaluate_reaction_forces(R1, R2)
 
     # Test for finding reaction forces
-    p = b1.reaction_loads
+    p = b1.reaction_forces
     q = {R1: 6, R2: 2}
     assert p == q
 
