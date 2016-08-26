@@ -4,7 +4,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.polys.domains.realfield import RealField
 
-from sympy import S, sqrt, sin, Float, E, GoldenRatio, pi, Catalan
+from sympy import S, sqrt, sin, Float
 from sympy.abc import x, y
 
 def test_construct_domain():
@@ -121,18 +121,3 @@ def test_precision():
     result = construct_domain([f2])
     y = result[1][0]
     assert y-1 > 1e-50
-
-def test_issue_11538():
-    dom = ZZ[E]
-    assert construct_domain(E) == (dom, dom.convert(E))
-    dom = ZZ[x,E]
-    assert construct_domain(x**2 + 2*x + E) == \
-           (dom, dom.convert(x**2 + 2*x + E))
-    dom = ZZ[pi]
-    assert construct_domain(pi) == (dom, dom.convert(pi))
-    dom = ZZ[y,pi]
-    assert construct_domain(y**2 + pi) == \
-           (dom, dom.convert(y**2 + pi))
-    dom = EX
-    assert construct_domain(x + y + GoldenRatio) == \
-           (dom, dom.convert(x + y + GoldenRatio))

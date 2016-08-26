@@ -456,6 +456,7 @@ def test_imageset_intersect_interval():
     f9 = ImageSet(Lambda(n, exp(n)), S.Naturals0)
 
     assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f1.intersect(Interval(0, 2*pi, False, True)) == FiniteSet(0, pi)
     assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
     assert f3.intersect(Interval(-1, 1)) == S.EmptySet
     assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
