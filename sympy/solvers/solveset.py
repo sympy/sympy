@@ -741,7 +741,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         A set of values for `symbol` for which `f` is True or is equal to
         zero. An `EmptySet` is returned if `f` is False or nonzero.
         A `ConditionSet` is returned as unsolved object if algorithms
-        to evaluatee complete solution are not yet implemented.
+        to evaluate complete solution are not yet implemented.
 
     `solveset` claims to be complete in the solution set that it returns.
 
