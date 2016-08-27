@@ -98,14 +98,14 @@ class TensorflowPrinter(LambdaPrinter):
         "Logical And printer"
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
+        # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
+        # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
         return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
@@ -114,6 +114,24 @@ class TensorflowPrinter(LambdaPrinter):
         # If LambdaPrinter didn't define it, we would still have to define our
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Min(self, expr, **kwargs):
+        from sympy import Min
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'minimum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Min(*expr.args[1:]), **kwargs))
+
+    def _print_Max(self, expr, **kwargs):
+        from sympy import Max
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'maximum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Max(*expr.args[1:]), **kwargs))
 
     def _print_Piecewise(self, expr, **kwargs):
         from sympy import Piecewise
@@ -145,7 +163,7 @@ class TensorflowPrinter(LambdaPrinter):
             return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
                                                lhs=lhs,
                                                rhs=rhs)
-        return super(NumPyPrinter, self)._print_Relational(expr)
+        return super(TensorflowPrinter, self)._print_Relational(expr)
 
 
 class NumPyPrinter(LambdaPrinter):

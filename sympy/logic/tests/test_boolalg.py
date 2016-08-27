@@ -482,6 +482,9 @@ def test_ITE():
     B = True
     assert ITE(And(A, B), B, C) == C
     assert ITE(Or(A, False), And(B, True), False) is false
+    x = symbols('x')
+    assert ITE(x, A, B) == Not(x)
+    assert ITE(x, B, A) == x
 
 
 def test_ITE_diff():

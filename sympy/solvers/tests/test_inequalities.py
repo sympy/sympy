@@ -1,8 +1,8 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
-                   Or, S, sin, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp)
+                   Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -12,7 +12,7 @@ from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, XFAIL
 
 
 inf = oo.evalf()
@@ -274,11 +274,6 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
 
-    # XXX should be limited in domain, e.g. between 0 and 2*pi
-    assert isolve(sin(x) < S.Half, x) == \
-        Or(And(-oo < x, x < pi/6), And(5*pi/6 < x, x < oo))
-    assert isolve(sin(x) > S.Half, x) == And(pi/6 < x, x < 5*pi/6)
-
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
         And(rootof(x**7 - x - 2, 0) < x, x < oo)
@@ -291,6 +286,32 @@ def test_solve_univariate_inequality():
     assert isolve((x - 1)/den <= 0, x) == \
         Or(And(-oo < x, x < 1), And(S(1) < x, x < 2))
 
+    n = Dummy('n')
+    raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+
+
+def test_trig_inequalities():
+    # all the inequalities are solved in a periodic interval.
+    assert isolve(sin(x) < S.Half, x, relational=False) == \
+        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, True))
+    assert isolve(sin(x) > S.Half, x, relational=False) == \
+        Interval(pi/6, 5*pi/6, True, True)
+    assert isolve(cos(x) < S.Zero, x, relational=False) == \
+        Interval(pi/2, 3*pi/2, True, True)
+    assert isolve(cos(x) >= S.Zero, x, relational=False) == \
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+
+    assert isolve(tan(x) < S.One, x, relational=False) == \
+        Union(Interval(0, pi/4, False, True), Interval(pi/2, pi, True, True))
+
+    assert isolve(sin(x) <= S.Zero, x, relational=False) == \
+        Union(FiniteSet(S(0)), Interval(pi, 2*pi, False, True))
+
+    assert isolve(sin(x) <= S(1), x, relational=False) == S.Reals
+    assert isolve(cos(x) < S(-2), x, relational=False) == S.EmptySet
+    assert isolve(sin(x) >= S(-1), x, relational=False) == S.Reals
+    assert isolve(cos(x) > S(1), x, relational=False) == S.EmptySet
+
 
 def test_issue_9954():
     assert isolve(x**2 >= 0, x, relational=False) == S.Reals
@@ -299,6 +320,7 @@ def test_issue_9954():
     assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
 
 
+@XFAIL
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
     assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
@@ -323,16 +345,24 @@ def test_issue_10198():
         -1 + 1/abs(1/x - 1) < 0) == Or(
         And(-oo < x, x < 0), And(S(0) < x, x < S(1)/2)
         )
-    raises(NotImplementedError, lambda: reduce_inequalities(abs(1/sqrt(x)) - 1, x))
+    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
         And(S(0) < x, x < S(3)/4), And(S(3)/2 < x, x < oo))
     raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
         1 - 1/sqrt(x)), '<', x))
 
+
 def test_issue_10047():
     assert solve(sin(x) < 2) == And(-oo < x, x < oo)
 
 
 def test_issue_10268():
-    assert solve(log(x) < 1000) == And(-oo < x, x < exp(1000))
+    assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
+
+
+@XFAIL
+def test_isolve_Sets():
+    n = Dummy('n')
+    assert isolve(Abs(x) <= n, x, relational=False) == \
+        Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
