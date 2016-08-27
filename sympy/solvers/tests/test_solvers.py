@@ -4,7 +4,8 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
+    E, cbrt)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -1792,3 +1793,17 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+def test_issue_11538():
+    assert solve(x + E) == [-E]
+    assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
+    assert solve(x**3 + 2*E) == [
+        -cbrt(2 * E),
+        cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
+        cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
+    assert solve([x + 4,y + E],x,y) == {x:-4,y:-E}
+    assert solve([x**2 + 4,y + E],x,y) == [(-2*I, -E), (2*I, -E)]
+
+    e1 = x - y**3 + 4
+    e2 = x + y + 4 + 4 * E
+    assert solve([e1,e2],x,y) != []
