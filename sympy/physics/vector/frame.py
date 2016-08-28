@@ -470,11 +470,16 @@ class ReferenceFrame(object):
 
         >>> B.orient(N, 'Quaternion', [q0, q1, q2, q3])
 
-        Last is Axis. This is a rotation about an arbitrary, non-time-varying
+        Next is Axis. This is a rotation about an arbitrary, non-time-varying
         axis by some angle. The axis is supplied as a Vector. This is how
         simple rotations are defined.
 
         >>> B.orient(N, 'Axis', [q1, N.x + 2 * N.y])
+
+        Last is DCM (Direction Cosine Matrix). This is a rotation matrix given manually.
+
+        >>> B.orient(N, 'DCM', eye(3))
+        >>> B.orient(N, 'DCM', ImmutableMatrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]]))
 
         """
 
