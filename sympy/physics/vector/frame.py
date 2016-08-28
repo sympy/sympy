@@ -1,5 +1,5 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MutableDenseMatrix as MDMatrix)
+                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -483,7 +483,7 @@ class ReferenceFrame(object):
         if rot_type == 'DCM':
             # When rot_type == 'DCM', then amounts must be a Matrix type object
             # (e.g. sympy.matrices.dense.MutableDenseMatrix).
-            if type(amounts) not in (MDMatrix, Matrix):
+            if not isinstance(amounts, MatrixBase):
                 raise TypeError("Amounts must be a sympy Matrix type object.")
         else:
             amounts = list(amounts)
