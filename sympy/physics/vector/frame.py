@@ -425,10 +425,12 @@ class ReferenceFrame(object):
             defined in relation to.
         rot_type : str
             The type of orientation matrix that is being created. Supported
-            types are 'Body', 'Space', 'Quaternion', and 'Axis'. See examples
+            types are 'Body', 'Space', 'Quaternion', 'Axis', and 'DCM'. See examples
             for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
+            In case of rot_type='DCM', value must be a sympy.matrices.MatrixBase object
+            (or subclasses of it).
         rot_order : str
             If applicable, the order of a series of rotations.
 
