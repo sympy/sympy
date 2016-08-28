@@ -438,7 +438,7 @@ class ReferenceFrame(object):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> from sympy import symbols
+        >>> from sympy import symbols, eye, ImmutableMatrix
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
@@ -479,7 +479,7 @@ class ReferenceFrame(object):
         Last is DCM (Direction Cosine Matrix). This is a rotation matrix given manually.
 
         >>> B.orient(N, 'DCM', eye(3))
-        >>> B.orient(N, 'DCM', ImmutableMatrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]]))
+        >>> B.orient(N, 'DCM', ImmutableMatrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
 
         """
 
