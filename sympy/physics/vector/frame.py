@@ -1,5 +1,5 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, symbols, Dummy, ImmutableMatrix as Matrix)
+                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MutableDenseMatrix as MDMatrix)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -478,10 +478,18 @@ class ReferenceFrame(object):
 
         from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
-        amounts = list(amounts)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+
+        # Allow passing a rotation matrix manually.
+        if rot_type == 'DCM':
+            # When rot_type == 'DCM', then amounts must be a Matrix type object
+            # (e.g. sympy.matrices.dense.MutableDenseMatrix).
+            if type(amounts) not in (MDMatrix, Matrix):
+                raise TypeError("Amounts must be a sympy Matrix type object.")
+        else:
+            amounts = list(amounts)
+            for i, v in enumerate(amounts):
+                if not isinstance(v, Vector):
+                    amounts[i] = sympify(v)
 
         def _rot(axis, angle):
             """DCM for simple axis 1,2,or 3 rotations. """
@@ -553,6 +561,8 @@ class ReferenceFrame(object):
             a3 = int(rot_order[2])
             parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
                     * _rot(a1, amounts[0]))
+        elif rot_type == 'DCM':
+            parent_orient = amounts
         else:
             raise NotImplementedError('That is not an implemented rotation')
         #Reset the _dcm_cache of this frame, and remove it from the _dcm_caches
@@ -591,6 +601,8 @@ class ReferenceFrame(object):
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).normalize()
+        elif rot_type == 'DCM':
+            wvec = self._w_diff_dcm(parent)
         else:
             try:
                 from sympy.polys.polyerrors import CoercionFailed
