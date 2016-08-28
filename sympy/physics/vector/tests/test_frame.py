@@ -1,4 +1,4 @@
-from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
+from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
 
@@ -196,3 +196,9 @@ def test_partial_velocity():
 
     assert N.partial_velocity(N, u1) == 0
     assert A.partial_velocity(A, u1) == 0
+
+
+def test_issue_11498():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    A.orient(B, 'DCM', eye(3))
