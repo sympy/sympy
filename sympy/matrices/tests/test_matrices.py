@@ -2767,6 +2767,30 @@ def test_partial_pivoting():
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
     assert mm.rref()[0] == Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])
 
+    # issue #11549
+    m_mixed = Matrix([[6e-17, 1.0, 4],[ -1.0,   0, 8],[    0,   0, 1]])
+    m_float = Matrix([[6e-17, 1.0, 4.],[ -1.0,   0., 8.],[    0.,   0., 1.]])
+    m_inv = Matrix([[  0,    -1.0,  8.0],[1.0, 6.0e-17, -4.0],[  0,       0,    1]])
+    # this example is numerically unstable and involves a matrix with a norm >= 8,
+    # this comparing the difference of the results with 1e-15 is numerically sound.
+    assert (m_mixed.inv() - m_inv).norm() < 1e-15
+    assert (m_float.inv() - m_inv).norm() < 1e-15
+
+def test_iszero_substitution():
+    """ When doing numerical computations, all elements that pass
+    the iszerofunc test should be set to numerically zero if they
+    aren't already. """
+
+    # Matrix from issue #9060
+    m = Matrix([[0.9, -0.1, -0.2, 0],[-0.8, 0.9, -0.4, 0],[-0.1, -0.8, 0.6, 0]])
+    m_rref = m.rref(iszerofunc=lambda x: abs(x)<6e-15)[0]
+    m_correct = Matrix([[1.0,   0, -0.301369863013699, 0],[  0, 1.0, -0.712328767123288, 0],[  0,   0,                  0, 0]])
+    m_diff = m_rref - m_correct
+    assert m_diff.norm() < 1e-15
+    # if a zero-substitution wasn't made, this entry will be -1.11022302462516e-16
+    assert m_rref[2,2] == 0
+
+
 @slow
 def test_issue_11238():
     from sympy import Point

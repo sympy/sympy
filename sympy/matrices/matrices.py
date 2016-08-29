@@ -4616,12 +4616,18 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
 
     newly_determined = []
     col = list(col)
-    if all(isinstance(x, Float) for x in col):
-        # if everything is a Float, do partial pivoting
-        # by returning the maximum element
+    # a column that contains a mix of floats and integers
+    # but at least one float is considered a numerical
+    # column, and so we do partial pivoting
+    if all(isinstance(x, (Float, Integer)) for x in col) and any(isinstance(x, Float) for x in col):
         col_abs = [abs(x) for x in col]
         max_value = max(col_abs)
-        if max_value == 0:
+        if iszerofunc(max_value):
+            # just because iszerofunc returned True, doesn't
+            # mean the value is numerically zero.  Make sure
+            # to replace all entries with numerical zeros
+            if max_value != 0:
+                newly_determined = [(i, 0) for i,x in enumerate(col) if x != 0]
             return (None, None, False, newly_determined)
         index = col_abs.index(max_value)
         return (index, col[index], False, newly_determined)
@@ -4630,7 +4636,10 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     possible_zeros = []
     for i,x in enumerate(col):
         is_zero = iszerofunc(x)
-        if is_zero is False:
+        # is someone wrote a custom iszerofunc, it may return
+        # BooleanFalse or BooleanTrue instead of True or False,
+        # so use == for comparison instead of `is`
+        if is_zero == False:
             # we found something that is definitely not zero
             return (i, x, False, newly_determined)
         possible_zeros.append(is_zero)
@@ -4651,9 +4660,9 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero in (True, False):
+        if is_zero == True or is_zero == False:
             newly_determined.append( (i, simped) )
-        if is_zero is False:
+        if is_zero == False:
             return (i, simped, False, newly_determined)
         possible_zeros[i] = is_zero
 
