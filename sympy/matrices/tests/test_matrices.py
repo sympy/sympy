@@ -4,7 +4,7 @@ import random
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, sstr, diff)
+    sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (
@@ -2258,17 +2258,15 @@ def test_invertible_check():
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
-    # ... but sometimes it won't, so that is an insufficient test of
-    # whether something is invertible.
     m = Matrix([
         [-1, -1,  0],
         [ x,  1,  1],
         [ 1,  x, -1],
     ])
-    assert len(m.rref()[1]) == m.rows
+    assert len(m.rref()[1]) != m.rows
     # in addition, unless simplify=True in the call to rref, the identity
     # matrix will be returned even though m is not invertible
-    assert m.rref()[0] == eye(3)
+    assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
     raises(ValueError, lambda: m.inv(method="ADJ"))
     raises(ValueError, lambda: m.inv(method="GE"))
@@ -2747,3 +2745,24 @@ def test_issue_10658():
     assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
     assert A.extract([True, False, True], [False, True, False]) == \
         Matrix([[2], [8]])
+
+def test_opportunistic_simplification():
+    # this test relates to issue #10718, #9480, #11434
+
+    # issue #9480
+    m = Matrix([[-5 + 5*sqrt(2), -5], [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
+    assert m.rank() == 1
+
+    # issue #10781
+    m = Matrix([[3+3*sqrt(3)*I, -9],[4,-3+3*sqrt(3)*I]])
+    assert m.rref()[0] == Matrix([[1, -9/(3 + 3*sqrt(3)*I)], [0, 0]])
+
+    # issue #11434
+    ax,ay,bx,by,cx,cy,dx,dy,ex,ey,t0,t1 = symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    m = Matrix([[ax,ay,ax*t0,ay*t0,0],[bx,by,bx*t0,by*t0,0],[cx,cy,cx*t0,cy*t0,1],[dx,dy,dx*t0,dy*t0,1],[ex,ey,2*ex*t1-ex*t0,2*ey*t1-ey*t0,0]])
+    assert m.rank() == 4
+
+def test_partial_pivoting():
+    # example from https://en.wikipedia.org/wiki/Pivot_element
+    mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
+    assert mm.rref()[0] == Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])
