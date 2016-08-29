@@ -4626,6 +4626,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
         index = col_abs.index(max_value)
         return (index, col[index], False, newly_determined)
 
+    # PASS 1 (iszerofunc directly)
     possible_zeros = []
     for i,x in enumerate(col):
         is_zero = iszerofunc(x)
@@ -4640,6 +4641,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
         # no pivot
         return (None, None, False, newly_determined)
 
+    # PASS 2 (iszerofunc after simplify)
     # we haven't found any for-sure non-zeros, so
     # go through the elements iszerofunc couldn't
     # make a determination about and opportunistically
@@ -4660,6 +4662,24 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     if all(possible_zeros):
         # if everything is definitely zero, we have
         # no pivot
+        return (None, None, False, newly_determined)
+
+    # PASS 3 (.equals(0))
+    # some expressions fail to simplify to zero, but
+    # `.equals(0)` evaluates to True.  As a last-ditch
+    # attempt, apply `.equals` to these expressions
+    for i,x in enumerate(col):
+        if possible_zeros[i] is not None:
+            continue
+        if x.equals(S.Zero):
+            # `.iszero` may return False with
+            # an implicit assumption (e.g., `x.equals(0)`
+            # when `x` is a symbol), so only treat it
+            # as proved when `.equals(0)` returns True
+            possible_zeros[i] = True
+            newly_determined.append( (i, S.Zero) )
+
+    if all(possible_zeros):
         return (None, None, False, newly_determined)
 
     # at this point there is nothing that could definitely

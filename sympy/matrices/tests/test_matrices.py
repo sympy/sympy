@@ -2766,3 +2766,19 @@ def test_partial_pivoting():
     # example from https://en.wikipedia.org/wiki/Pivot_element
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
     assert mm.rref()[0] == Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])
+
+@slow
+def test_issue_11238():
+    from sympy import Point
+    xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
+    yy = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/(-3 + tan(13*pi/45)**2)
+    p1 = Point(0, 0)
+    p2 = Point(1, -sqrt(3))
+    p0 = Point(xx,yy)
+    m1 = Matrix([p1 - simplify(p0), p2 - simplify(p0)])
+    m2 = Matrix([p1 - p0, p2 - p0])
+    m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
+
+    assert m1.rank(simplify=True) == 1
+    assert m2.rank(simplify=True) == 1
+    assert m3.rank(simplify=True) == 1
