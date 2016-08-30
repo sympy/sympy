@@ -1,5 +1,5 @@
 """
-This module implements Kronecker Delta function.
+This module implements sums and products containing the Kronecker Delta function.
 
 References
 ==========
