@@ -1806,4 +1806,4 @@ def test_issue_11538():
 
     e1 = x - y**3 + 4
     e2 = x + y + 4 + 4 * E
-    assert solve([e1,e2],x,y) != []
+    assert len(solve([e1,e2],x,y)) == 3
