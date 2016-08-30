@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols
+from sympy import Matrix, simplify, Symbol, symbols, zeros
 from sympy.physics.vector import Point, ReferenceFrame
 from sympy.physics.mechanics import inertia, Body
 from sympy.utilities.pytest import raises
