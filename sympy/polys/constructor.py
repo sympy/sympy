@@ -9,7 +9,6 @@ from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.utilities import public
 from sympy.core import sympify
-from sympy.core import NumberSymbol
 
 
 def _construct_simple(coeffs, opt):
@@ -123,12 +122,8 @@ def _construct_composite(coeffs, opt):
         return None
 
     if opt.composite is None:
-        for gen in gens:
-            if gen.is_number:
-                if isinstance(gen, NumberSymbol) and not gen.is_algebraic:
-                    continue
-                # generators are number-like so lets better use EX
-                return None
+        if any(gen.is_number and gen.is_algebraic for gen in gens):
+            return None # generators are number-like so lets better use EX
 
         all_symbols = set([])
 

@@ -124,15 +124,15 @@ def test_precision():
 
 def test_issue_11538():
     dom = ZZ[E]
-    assert construct_domain(E) == (dom, dom.convert(E))
+    assert construct_domain(E)[0] == ZZ[E]
     dom = ZZ[x,E]
     assert construct_domain(x**2 + 2*x + E) == \
-           (dom, dom.convert(x**2 + 2*x + E))
+           (dom,dom.convert(x**2 + 2*x + E))
     dom = ZZ[pi]
-    assert construct_domain(pi) == (dom, dom.convert(pi))
+    assert construct_domain(pi) == (dom,dom.convert(pi))
     dom = ZZ[y,pi]
     assert construct_domain(y**2 + pi) == \
-           (dom, dom.convert(y**2 + pi))
+           (dom,dom.convert(y**2 + pi))
     dom = EX
     assert construct_domain(x + y + GoldenRatio) == \
-           (dom, dom.convert(x + y + GoldenRatio))
+           (dom,dom.convert(x + y + GoldenRatio))

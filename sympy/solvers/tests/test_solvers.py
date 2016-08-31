@@ -1796,13 +1796,13 @@ def test_issue_9567():
 
 def test_issue_11538():
     assert solve(x + E) == [-E]
-    assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
+    assert solve(x**2 + E) == [-I*sqrt(E),I*sqrt(E)]
     assert solve(x**3 + 2*E) == [
         -cbrt(2 * E),
         cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
         cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
     assert solve([x + 4,y + E],x,y) == {x:-4,y:-E}
-    assert solve([x**2 + 4,y + E],x,y) == [(-2*I, -E), (2*I, -E)]
+    assert solve([x**2 + 4,y + E],x,y) == [(-2*I,-E),(2*I,-E)]
 
     e1 = x - y**3 + 4
     e2 = x + y + 4 + 4 * E
