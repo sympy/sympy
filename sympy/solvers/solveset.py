@@ -514,9 +514,19 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return (result
-            if isinstance(result, Complement)
-            else FiniteSet(*[s for s in result if checksol(f, symbol, s) is True]))
+    if isinstance(result, Complement):
+        solution_set = result
+    else:
+        f_set = []  # solutions for FiniteSet
+        c_set = []  # solutions for ConditionSet
+        for s in result:
+            if checksol(f, symbol, s):
+                f_set.append(s)
+            else:
+                c_set.append(s)
+        solution_set = FiniteSet(*f_set) + ConditionSet(*c_set)
+
+    return solution_set
 
 
 def _solve_abs(f, symbol, domain):

@@ -1512,7 +1512,7 @@ def test_issue_11174():
 def test_issue_11534():
     # eq and eq2 should give the same solution as a Complement
     eq = -y + x/sqrt(-x**2 + 1)
-    eq2 = -y**2 + x**2/(-x**2 +1)
+    eq2 = -y**2 + x**2/(-x**2 + 1)
     soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
     assert solveset(eq, x, S.Reals) == soln
     assert solveset(eq2, x, S.Reals) == soln
