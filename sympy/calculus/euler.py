@@ -1,5 +1,5 @@
 """
-This module implements a method to find 
+This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
 from itertools import combinations_with_replacement
