@@ -1026,14 +1026,14 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     raise ValueError("Log does not exist")
 
 
-def _discrete_log_pollard_rho(n, a, b, order=None):
+def _discrete_log_pollard_rho(n, a, b, order=None, retries=10):
     a %= n
     b %= n
 
     if order is None:
         order = n_order(b, n)
 
-    for i in range(10):
+    for i in range(retries):
         aa = randint(1, order - 1)
         ba = randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
