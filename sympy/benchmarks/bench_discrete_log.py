@@ -84,4 +84,3 @@ if __name__ == '__main__':
             data_set_3,
         ]
     bench_discrete_log(data_set, algo)
-
