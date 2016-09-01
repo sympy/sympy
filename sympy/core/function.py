@@ -1130,8 +1130,8 @@ class Derivative(Expr):
         # expression at all. Note, this cannnot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
-        if evaluate and all(isinstance(ix[0], Symbol) for ix in variable_count):
-            symbol_set = set(sc[0] for sc in variable_count if sc[0].is_Symbol)
+        if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
+            symbol_set = set(sc[0] for sc in variable_count)
             if symbol_set.difference(expr.free_symbols):
                 return S.Zero
 
