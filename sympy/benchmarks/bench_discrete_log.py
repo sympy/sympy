@@ -51,7 +51,7 @@ data_set_3 = [
     ]
 
 
-def bench_discrete_log(data, algo=None):
+def bench_discrete_log(data_set, algo=None):
     if algo is None:
         f = discrete_log
     elif algo == 'trial':
