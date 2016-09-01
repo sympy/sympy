@@ -24,6 +24,7 @@ Financial and Infrastructure Support
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
   * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
+  * in 2016 for 7 students (`GSoC 2016 <https://github.com/sympy/sympy/wiki/GSoC-2016-report>`_)
 
 * `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:
@@ -32,6 +33,8 @@ Financial and Infrastructure Support
   * 1 GSoC 2008 student (Fredrik)
   * 2 GSoC 2009 students (Freddie and Priit)
   * 4 GSoC 2010 students (Aaron, Christian, Matthew and Øyvind)
+  * 7 GSoC 2015 students
+  * 1 GSoC 2016 student (James)
 
 * `Portland State University (PSU) <http://www.pdx.edu/>`_ has hosted following
   GSoC students:
@@ -41,6 +44,8 @@ Financial and Infrastructure Support
   * 1 student (Addison) in 2010
 
 * `The Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+
+* `The Ruby Science Foundation <http://www.sciruby.com/>`_: SciRuby hosted 1 GSoC 2016 student (Rajith)
 
 * Several 13-17 year old pre-university students contributed as part of
   Google's `Code-In
