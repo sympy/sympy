@@ -1,3 +1,6 @@
+from sympy import KroneckerDelta, diff, Piecewise, And
+from sympy import Sum
+
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
@@ -13,6 +16,7 @@ B = MatrixSymbol('B', m, l)
 C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
+w = MatrixSymbol('w', n, 1)
 
 
 def test_shape():
@@ -260,3 +264,11 @@ def test_Zero_power():
     assert z2**3 == MatPow(z2, 3).doit()
     assert z2**0 == Identity(3)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+
+
+def test_matrixelement_diff():
+    from sympy import Dummy
+    dexpr = diff((D*w)[k,0], w[p,0])
+    _k = dexpr.atoms(Dummy).pop()
+    assert dexpr == Sum(KroneckerDelta(_k, p)*D[k, _k], (_k, 0, n - 1))
+    assert dexpr.doit().args[0][0] == D[k, p]
