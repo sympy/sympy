@@ -1171,6 +1171,18 @@ class AccumulationBounds(AtomicExpr):
                 return self
 
     def union(self, other):
+        """
+        Returns the union of 'self' and 'other'.
+        Here 'other' can be an instance of FiniteSet or AccumulationBounds.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds, FiniteSet
+        >>> AccumBounds(1, 3).union(AccumBounds(2, 4))
+        <1, 4>
+
+        """
         # TODO : Devise a better method for Union of AccumBounds
         # this method is not actually correct and
         # can be made better
