@@ -9,7 +9,7 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint
+from random import randint, seed
 
 
 
@@ -1026,12 +1026,15 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     raise ValueError("Log does not exist")
 
 
-def _discrete_log_pollard_rho(n, a, b, order=None, retries=10):
+def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     a %= n
     b %= n
 
     if order is None:
         order = n_order(b, n)
+
+    if rseed is not None:
+        seed(rseed)
 
     for i in range(retries):
         aa = randint(1, order - 1)
