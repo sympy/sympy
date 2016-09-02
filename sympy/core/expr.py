@@ -40,25 +40,66 @@ class Expr(Basic, EvalfMixin):
         temporarily converts the non-Symbol vars in Symbols when performing
         the differentiation.
 
-        Note, see the docstring of Derivative for how this should work
-        mathematically. In particular, note that expr.subs(yourclass, Symbol)
-        should be well-defined on a structural level, or this will lead to
-        inconsistent results.
+        Non-symbol _diff_wrt=True variables must also implement a
+        _eval_derivative_wrt method. See Expr._eval_derivative_wrt
+        for details.
 
         Examples
         ========
 
-        >>> from sympy import Expr
+        >>> from sympy import Expr, Dummy
         >>> e = Expr()
         >>> e._diff_wrt
         False
         >>> class MyClass(Expr):
         ...     _diff_wrt = True
         ...
+        ...     def _eval_derivative_wrt(self, expr, new_name):
+        ...         new_self = Dummy(new_name)
+        ...         new_expr = expr.subs(self, new_self)
+        ...         return (new_expr, new_self)
+        ...
         >>> (2*MyClass()).diff(MyClass())
         2
         """
         return False
+
+    def _eval_derivative_wrt(self, expr, new_name):
+        """Transform derivative wrt a non-symbol variable to one wrt a symbol.
+
+        When taking the derivative of an expression with respect to (wrt) a
+        non-symbol variable with _diff_wrt=True, then this method is used to
+        create a new expression and a corresponding symbol variable.
+
+        Returns a tuple of new expr and symbol, or None if the transformation
+        could not be performed. The default implementation returns a tuple of
+        the 'new_expr' and 'new_self' where 'new_self' is a Dummy variable and
+        new_expr is a new expression in which 'self' is replaced with 'new_self'.
+
+        Examples
+        ========
+
+        >>> from sympy import Expr, Dummy
+        >>> from sympy.abc import x, y
+        >>> class MyClass(Expr):
+        ...     _diff_wrt = True
+        ...
+        ...     def _eval_derivative_wrt(self, expr, new_name):
+        ...         if expr.has(y):
+        ...             return None
+        ...         new_self = Dummy(new_name)
+        ...         new_expr = expr.subs(self, new_self)
+        ...         return (new_expr, new_self)
+        ...
+        >>> (x*MyClass()).diff(MyClass())
+        x
+        >>> (y*MyClass()).diff(MyClass())
+        Derivative(y*MyClass(), MyClass())
+        """
+        from sympy import Dummy
+        new_self = Dummy(new_name)
+        new_expr = expr.subs(self, new_self)
+        return (new_expr, new_self)
 
     @cacheit
     def sort_key(self, order=None):
@@ -608,6 +649,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
+        from sympy.solvers.solvers import solve
         from sympy.solvers.solveset import solveset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
@@ -922,9 +964,8 @@ class Expr(Basic, EvalfMixin):
 
     def as_terms(self):
         """Transform an expression to a list of terms. """
-        from .add import Add
-        from .mul import Mul
-        from .exprtools import decompose_power
+        from sympy.core import Add, Mul, S
+        from sympy.core.exprtools import decompose_power
 
         gens, terms = set([]), []
 

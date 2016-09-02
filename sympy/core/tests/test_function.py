@@ -525,7 +525,7 @@ def test_diff_wrt():
     assert f(
         sin(x)).diff(x) == Subs(Derivative(f(x), x), (x,), (sin(x),))*cos(x)
 
-    assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
+    assert diff(f(g(x)), g(x)) == Derivative(f(g(x)), g(x))
 
 
 def test_diff_wrt_func_subs():
