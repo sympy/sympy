@@ -397,11 +397,7 @@ def opt_cse(exprs, order='canonical', verbose=False):
         if c:
             c_mul = m.func(*c)
             if nc:
-                if c_mul == 1:
-                    new_obj = m.func(*nc)
-                else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
-                opt_subs[m] = new_obj
+                opt_subs[m] = m.func(c_mul, m.func(*nc), evaluate=False)
             if len(c) > 1:
                 commutative_muls.add(c_mul)
 
