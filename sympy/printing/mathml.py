@@ -441,7 +441,7 @@ class MathMLPrinter(Printer):
 
 def mathml(expr, **settings):
     """Returns the MathML representation of expr"""
-    return MathMLPrinter(settings).doprint(sympify(expr))
+    return MathMLPrinter(settings).doprint(expr)
 
 
 def print_mathml(expr, **settings):
