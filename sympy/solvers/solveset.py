@@ -524,7 +524,7 @@ def _solve_radical(f, symbol, solveset_solver):
                 f_set.append(s)
             else:
                 c_set.append(s)
-        solution_set = FiniteSet(*f_set) + ConditionSet(*c_set)
+        solution_set = FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
 
     return solution_set
 
