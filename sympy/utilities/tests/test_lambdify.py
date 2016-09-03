@@ -518,6 +518,24 @@ def test_tensorflow_piecewise():
     assert func(a).eval(session=s, feed_dict={a: 0}) == 0
     assert func(a).eval(session=s, feed_dict={a: 1}) == 1
 
+def test_tensorflow_multi_max():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+def test_tensorflow_multi_min():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Min(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
 def test_tensorflow_relational():
     if not tensorflow:
         skip("tensorflow not installed.")
