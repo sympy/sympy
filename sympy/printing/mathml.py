@@ -147,7 +147,7 @@ class MathMLPrinter(Printer):
 
     def _print_MatrixBase(self, m):
         x = self.dom.createElement('matrix')
-        for i in range(m.lines):
+        for i in range(m.rows):
             x_r = self.dom.createElement('matrixrow')
             for j in range(m.cols):
                 x_r.appendChild(self._print(m[i, j]))

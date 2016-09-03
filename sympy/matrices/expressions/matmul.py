@@ -257,7 +257,7 @@ def refine_MatMul(expr, assumptions):
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
     >>> print(expr)
-    X*X'
+    X*X.T
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I
