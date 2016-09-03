@@ -243,15 +243,17 @@ class CommonMatrix(object):
         raise NotImplementedError("Subclasses must implement this method")
     def _eval_is_invertible(self, method, iszerofunc):
         det = self.det(method) if method else self.det()
-        is_zero = iszerofunc(det) or S.Zero.equals(det)
-        if is_zero:
-            return False
+        is_zero = iszerofunc(det)
+        if is_zero is None:
+            is_zero = S.Zero.equals(det)
         if is_zero is None:
             # sometimes the iszero and equality checks is
             # ambiguous, so fall back to row reduction
             rref = self.rref(iszerofunc=iszerofunc, simplify=True)
             if any(S.Zero.equals(rref[i,i]) for i in range(rref.rows)):
                 return False
+        if is_zero:
+            return False
         return True
     def _eval_is_nilpotent(self):
         raise NotImplementedError("Subclasses must implement this method")
