@@ -705,13 +705,16 @@ def sum_expand(self, limits=None):
 
     #finally we try to factor out any common terms
     #and remove the from the sum if independent
-    result = factor_terms(result)
-    i, d = result.as_independent(*sum_vars)
-    if isinstance(result, Add):
-        result = i * Sum(1, *limits) + Sum(d, *limits)
+    retv = factor_terms(result)
+    #avoid doing anything bad
+    if not result.is_commutative:
+        return Sum(result, *limits)
+
+    i, d = retv.as_independent(*sum_vars)
+    if isinstance(retv, Add):
+        return i * Sum(1, *limits) + Sum(d, *limits)
     else:
-        result = i * Sum(d, *limits)
-    return result
+        return Sum(i + d, *limits)
 
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
