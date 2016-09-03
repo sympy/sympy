@@ -269,6 +269,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
+    def _eval_expand_mul(self, **hints):
+        """
+        Attempt to pull out constant terms of the sum and put them outside the sum
+        """
+        from sympy.simplify.simplify import sum_expand
+        return sum_expand(self.func(self.function.expand(**hints), *self.limits))
+
+
     def _eval_simplify(self, ratio=1.7, measure=None):
         from sympy.simplify.simplify import sum_expand, sum_combine
         from sympy.core.function import expand
