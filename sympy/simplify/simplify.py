@@ -714,7 +714,7 @@ def factor_sum(self, limits=None):
     if isinstance(retv, Add):
         return i * Sum(1, *limits) + Sum(d, *limits)
     else:
-        return Sum(i + d, *limits)
+        return i * Sum(d, *limits)
 
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
