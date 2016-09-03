@@ -51,6 +51,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_number = False
     is_Atom = False
     is_Symbol = False
+    is_symbol = False
     is_Indexed = False
     is_Dummy = False
     is_Wild = False
