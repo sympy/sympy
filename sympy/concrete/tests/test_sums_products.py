@@ -735,12 +735,18 @@ def test_simplify():
     assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
         == Sum(Function('f')(x), (x, a, b))
     assert simplify(Sum(c * x, (x, a, b)) - c * Sum(x, (x, a, b))) == 0
+    assert simplify(c * (Sum(x, (x, a, b))  + y)) == c * (y + Sum(x, (x, a, b)))
+    assert simplify(c * (Sum(x, (x, a, b)) + y * Sum(x, (x, a, b)))) == \
+        c * (y + 1) * Sum(x, (x, a, b))
     assert simplify(Sum(Sum(c * x, (x, a, b)), (y, a, b))) == \
-                c * simplify(Sum(x, (x, a, b), (y, a, b)))
+                c * Sum(x, (x, a, b), (y, a, b))
     assert simplify(Sum((3 + y) * Sum(c * x, (x, a, b)), (y, a, b))) == \
-                simplify(Sum(c * (3 + y) * Sum(x, (x, a, b)), (y, a, b))) 
+                c * Sum((3 + y), (y, a, b)) * Sum(x, (x, a, b))
     assert simplify(Sum((3 + t) * Sum(c * t, (x, a, b)), (y, a, b))) == \
-                d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
+                c*t*(t + 3)*Sum(1, (x, a, b))*Sum(1, (y, a, b))
+    assert simplify(Sum(Sum(d * t, (x, a, b - 1)) + \
+                Sum(d * t, (x, b, c)), (t, a, b))) == \
+                    d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
 
 
 def test_change_index():

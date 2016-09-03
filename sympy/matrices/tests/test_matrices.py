@@ -12,7 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
-from sympy.core.compatibility import long, iterable, u, range
+from sympy.core.compatibility import long, iterable, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve

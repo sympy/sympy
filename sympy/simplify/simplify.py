@@ -615,8 +615,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 def sum_simplify(s):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy.core.function import expand
 
-    terms = Add.make_args(s)
+    terms = Add.make_args(expand(s))
     s_t = [] # Sum Terms
     o_t = [] # Other Terms
 
@@ -632,21 +633,8 @@ def sum_simplify(s):
             mul_terms = Mul.make_args(term)
             for mul_term in mul_terms:
                 if isinstance(mul_term, Sum):
-                    #this may be something of the form
-                    # x * Sum(whatever)
-                    # OR
-                    # x1 * Sum(whatever) + x2 * Sum(whatever)...
-                    #hence we turn it into an add list, and add to sum terms
                     r = mul_term._eval_simplify()
                     sum_terms.extend(Add.make_args(r))
-                elif mul_term.has(Sum):
-                    #as above, we need to turn this into an add list
-                    r = sum_simplify(mul_term)
-                    for rarg in Add.make_args(r):
-                        if r.has(Sum):
-                            sum_terms.append(rarg)
-                        else:
-                            other = other * rarg
                 else:
                     other = other * mul_term
             if len(sum_terms):
@@ -696,7 +684,7 @@ def sum_combine(s_t):
 
     return used, s_t
 
-def sum_factor(self, limits=None):
+def sum_expand(self, limits=None):
     """Helper function for Sum simplification
 
        if limits is specified, "self" is the inner part of a sum
@@ -719,10 +707,6 @@ def sum_factor(self, limits=None):
     #and remove the from the sum if independent
     result = factor_terms(result)
     i, d = result.as_independent(*sum_vars)
-    #if either part is zero, we need to change to 1
-    #as this results from a factorization
-    if i == 0: i = 1
-    if d == 0: d = 1
     if isinstance(result, Add):
         result = i * Sum(1, *limits) + Sum(d, *limits)
     else:
@@ -756,7 +740,7 @@ def sum_add(self, other, method=0):
     if type(rself) == type(rother):
         if method == 0:
             if rself.limits == rother.limits:
-                return sum_factor(Sum(rself.function + rother.function, *rself.limits))
+                return sum_expand(Sum(rself.function + rother.function, *rself.limits))
         elif method == 1:
             if simplify(rself.function - rother.function) == 0:
                 if len(rself.limits) == len(rother.limits) == 1:
@@ -769,9 +753,9 @@ def sum_add(self, other, method=0):
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return sum_factor(Sum(rself.function, (i, x1, y2)))
+                            return sum_expand(Sum(rself.function, (i, x1, y2)))
                         elif x1 == y2 + 1:
-                            return sum_factor(Sum(rself.function, (i, x2, y1)))
+                            return sum_expand(Sum(rself.function, (i, x2, y1)))
 
     return Add(self, other)
 
