@@ -9,13 +9,14 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
+from sympy.core.decorators import call_highest_priority
 
-from .matrices import MatrixBase, ShapeError, a2idx
-from .dense import Matrix
+from .matrices import CommonMatrix, MatrixBase, ShapeError, a2idx
+from .dense import Matrix, DenseMatrix
 import collections
 
 
-class SparseMatrix(MatrixBase):
+class SparseMatrix(DenseMatrix):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
@@ -36,6 +37,7 @@ class SparseMatrix(MatrixBase):
     ========
     sympy.matrices.dense.Matrix
     """
+    _op_priority = 10.02
 
     def __init__(self, *args):
 
@@ -253,6 +255,38 @@ class SparseMatrix(MatrixBase):
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
+    def _eval_row_insert(self, irow, other):
+        if not isinstance(other, SparseMatrix):
+            other = SparseMatrix(other)
+        new_smat = {}
+        # make room for the new rows
+        for key, val in self._smat.items():
+            row, col = key
+            if row >= irow:
+                row += other.rows
+            new_smat[(row, col)] = val
+        # add other's keys
+        for key, val in other._smat.items():
+            row, col = key
+            new_smat[(row + irow, col)] = val
+        return self._new(self.rows + other.rows, self.cols, new_smat)
+
+    def _eval_col_insert(self, icol, other):
+        if not isinstance(other, SparseMatrix):
+            other = SparseMatrix(other)
+        new_smat = {}
+        # make room for the new rows
+        for key, val in self._smat.items():
+            row, col = key
+            if col >= icol:
+                col += other.cols
+            new_smat[(row, col)] = val
+        # add other's keys
+        for key, val in other._smat.items():
+            row, col = key
+            new_smat[(row, col + icol)] = val
+        return self._new(self.rows, self.cols + other.cols, new_smat)
+
     def _eval_trace(self):
         """Calculate the trace of a square matrix.
 
@@ -324,6 +358,17 @@ class SparseMatrix(MatrixBase):
             conj._smat[key] = value.conjugate()
         return conj
 
+    def _eval_integral_pow(self, n):
+        # n >= 0 is an integer, always
+        a = self.as_mutable()
+        b = SparseMatrix.eye(self.rows)
+        # use iterated squaring to compute the power
+        b = MatrixBase._exp_by_squaring(b, a, n)
+        return self._new(b.rows, b.cols, b._smat, copy=False)
+
+    def _eval_values(self):
+        return [val for key,val in self._smat.items()]
+
     def multiply(self, other):
         """Fast multiplication exploiting the sparsity of the matrix.
 
@@ -367,6 +412,7 @@ class SparseMatrix(MatrixBase):
                     M._smat.pop(i, None)
         return M
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """Multiply self and other, watching for non-matrix entities.
 
@@ -397,6 +443,7 @@ class SparseMatrix(MatrixBase):
 
     __matmul__ = __mul__
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         """Return product the same type as other (if a Matrix).
 
@@ -421,6 +468,7 @@ class SparseMatrix(MatrixBase):
 
     __rmatmul__ = __rmul__
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         """Add other to self, efficiently if possible.
 
@@ -447,7 +495,7 @@ class SparseMatrix(MatrixBase):
         if isinstance(other, SparseMatrix):
             return self.add(other)
         elif isinstance(other, MatrixBase):
-            return other._new(other + self)
+            return other._new(other + Matrix(self))
         else:
             raise NotImplementedError(
                 "Cannot add %s to %s" %
@@ -516,7 +564,7 @@ class SparseMatrix(MatrixBase):
                 M._smat.pop(i, None)
         return M
 
-    def extract(self, rowsList, colsList):
+    def _eval_extract(self, rowsList, colsList):
         urow = list(uniq(rowsList))
         ucol = list(uniq(colsList))
         smat = {}
@@ -546,7 +594,6 @@ class SparseMatrix(MatrixBase):
                 if i_previous != i:
                     rv = rv.col_insert(i, rv.col(i_previous))
         return rv
-    extract.__doc__ = MatrixBase.extract.__doc__
 
     @property
     def is_hermitian(self):
@@ -613,22 +660,7 @@ class SparseMatrix(MatrixBase):
             return all((k[1], k[0]) in self._smat and
                 self[k] == self[(k[1], k[0])] for k in self._smat)
 
-    def has(self, *patterns):
-        """Test whether any subexpression matches any of the patterns.
-
-        Examples
-        ========
-
-        >>> from sympy import SparseMatrix, Float
-        >>> from sympy.abc import x, y
-        >>> A = SparseMatrix(((1, x), (0.2, 3)))
-        >>> A.has(x)
-        True
-        >>> A.has(y)
-        False
-        >>> A.has(Float)
-        True
-        """
+    def _eval_has(self, *patterns):
         return any(self[key].has(*patterns) for key in self._smat)
 
     def applyfunc(self, f):
@@ -834,41 +866,6 @@ class SparseMatrix(MatrixBase):
 
         return L, D
 
-    def _lower_triangular_solve(self, rhs):
-        """Fast algorithm for solving a lower-triangular system,
-        exploiting the sparsity of the given matrix.
-        """
-        rows = [[] for i in range(self.rows)]
-        for i, j, v in self.row_list():
-            if i > j:
-                rows[i].append((j, v))
-        X = rhs.copy()
-        for i in range(self.rows):
-            for j, v in rows[i]:
-                X[i, 0] -= v*X[j, 0]
-            X[i, 0] /= self[i, i]
-        return self._new(X)
-
-    def _upper_triangular_solve(self, rhs):
-        """Fast algorithm for solving an upper-triangular system,
-        exploiting the sparsity of the given matrix.
-        """
-        rows = [[] for i in range(self.rows)]
-        for i, j, v in self.row_list():
-            if i < j:
-                rows[i].append((j, v))
-        X = rhs.copy()
-        for i in range(self.rows - 1, -1, -1):
-            rows[i].reverse()
-            for j, v in rows[i]:
-                X[i, 0] -= v*X[j, 0]
-            X[i, 0] /= self[i, i]
-        return self._new(X)
-
-    def _diagonal_solve(self, rhs):
-        "Diagonal solve."
-        return self._new(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
-
     def _cholesky_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
         # having difficulties, try uncommenting to make sure that the
@@ -876,8 +873,8 @@ class SparseMatrix(MatrixBase):
 
         #assert self.is_symmetric()
         L = self._cholesky_sparse()
-        Y = L._lower_triangular_solve(rhs)
-        rv = L.T._upper_triangular_solve(Y)
+        Y = L._eval_lower_triangular_solve(rhs)
+        rv = L.T._eval_upper_triangular_solve(Y)
         return rv
 
     def _LDL_solve(self, rhs):
@@ -887,9 +884,9 @@ class SparseMatrix(MatrixBase):
 
         #assert self.is_symmetric()
         L, D = self._LDL_sparse()
-        Z = L._lower_triangular_solve(rhs)
-        Y = D._diagonal_solve(Z)
-        return L.T._upper_triangular_solve(Y)
+        Z = L._eval_lower_triangular_solve(rhs)
+        Y = D._eval_diagonal_solve(Z)
+        return L.T._eval_upper_triangular_solve(Y)
 
     def cholesky(self):
         """
@@ -1127,18 +1124,13 @@ class SparseMatrix(MatrixBase):
         return len(self._smat)
 
     @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls(r, c, {})
+    def _zeros(cls, rows, cols):
+        return cls(rows, cols, {})
 
     @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        return cls(n, n, {(i, i): S.One for i in range(n)})
+    def _eye(cls, rows, cols):
+        one = cls._sympify(1)
+        return cls(rows, cols, {(i,i): one for i in range(min(rows, cols))})
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod

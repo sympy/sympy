@@ -21,6 +21,7 @@ from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
+from sympy.core.decorators import call_highest_priority
 
 from types import FunctionType
 
@@ -73,18 +74,269 @@ class DeferredVector(Symbol, NotIterable):
         return "DeferredVector('%s')" % (self.name)
 
 
+class CommonMatrix(object):
+    """Naive implementation of matrix methods. Algorithms
+    here should only rely on basic matrix properties like
+    shape, indexing, etc.  Subclasses should implement more
+    efficient versions of most of these methods.
+
+    All input to these functions is assumed to be sanitized"""
+
+    # methods all subclasses should implement
+    # these should never be called directly by the users
+    # and all input should already be sanitized
+    def _new(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    @classmethod
+    def _zeros(cls, rows, cols):
+        raise NotImplementedError("Subclasses must implement this method")
+    @classmethod
+    def _eye(cls, rows, cols):
+        one = cls._sympify(1)
+        ret = cls._zeros(rows, cols)
+        for i in range(min(rows, cols)):
+            ret[i,i] = one
+    @classmethod
+    def _ones(cls, rows, cols):
+        one = cls._sympify(1)
+        ret = cls._zeros(rows, cols)
+        for i in range(rows):
+            for j in range(cols):
+                ret[i,j] = one
+        return ret
+    def _eval_extract(self, rowsList, colsList):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_trace(self):
+        return sum(self[i,i] for i in range(self.rows))
+    def _eval_inverse(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_inverse_GE(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_transpose(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_conjugate(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_add(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_scalar_mul(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_scalar_rmul(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_matrix_mul(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_elementwise_mul(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_pow(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_integral_pow(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_cholesky(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_LDLdecomposition(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_lower_triangular_solve(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_upper_triangular_solve(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_diagonal_solve(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_LUsolve(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_LUdecomposition(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_LUdecomposition_Simple(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_LUdecompositionFF(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_cofactorMatrix(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_minorMatrix(self, i, j):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_QRdecomposition(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_QRsolve(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_values(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_norm(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_rref(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_diagonalize(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_row_join(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_col_join(self, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_row_insert(self, row, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_col_insert(self, col, other):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_dual(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_has(self, *patterns):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def _eval_adjoint(self):
+        return self.transpose().conjugate()
+    def _eval_adjugate(self, method):
+        return self.cofactorMatrix(method).transpose()
+    def _eval_atoms(self, *types):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz_charpoly(self, x, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz_det(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz_eigenvals(self, **flags):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz_minors(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_berkowitz_charpoly(self, x, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_cofactor(self, i, j, method):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_columnspace(self, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_condition_number(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_copy(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_cross(self, b):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_det(self, method):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_det_LU_decomposition(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_det_bareis(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_doit(self, **kwargs):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_dot(self, b):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_eigenvals(self, **flags):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_eigenvects(self, **flags):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_evalf(self, prec, **options):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_exp(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_expand(self, deep, modulus, power_base, power_exp, mul, log, multinomial, basic, **hints):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_gauss_jordan_solve(self, b, freevar):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_get_diag_blocks(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_inv_mod(self, m):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_inverse_ADJ(self, iszerofunc):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_inverse_LU(self, iszerofunc):
+        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+    def _eval_is_anti_symmetric(self, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_is_diagonal(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_is_diagonalizable(self, reals_only, clear_subproducts):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_is_invertible(self, method, iszerofunc):
+        det = self.det(method) if method else self.det()
+        is_zero = iszerofunc(det) or S.Zero.equals(det)
+        if is_zero:
+            return False
+        if is_zero is None:
+            # sometimes the iszero and equality checks is
+            # ambiguous, so fall back to row reduction
+            rref = self.rref(iszerofunc=iszerofunc, simplify=True)
+            if any(S.Zero.equals(rref[i,i]) for i in range(rref.rows)):
+                return False
+        return True
+    def _eval_is_nilpotent(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_is_symbolic(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_is_symmetric(self, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_jacobian(self, X):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_jordan_cell(self, eigenval, n):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_jordan_cells(self, calc_transformation):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_jordan_form(self, calc_transformation):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_key2bounds(self, keys):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_key2ij(self, key):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_left_eigenvects(self, **flags):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_minorEntry(self, i, j, method):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_multiply(self, b):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_evalf(self, prec, **options):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_norm(self, ord):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_nullspace(self, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_permuteBkwd(self, perm):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_permuteFwd(self, perm):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_pinv(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_pinv_solve(self, B, arbitrary_matrix):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_print_nonzero(self, symb):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_project(self, v):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_rank(self, iszerofunc, simplify):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_refine(self, assumptions):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_replace(self, F, G, map):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_singular_values(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_solve(self, rhs, method):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_solve_least_squares(self, rhs, method):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_subs(self, *args, **kwargs):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_vec(self):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_vech(self, diagonal, check_symmetry):
+        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_xreplace(self, rule):
+        raise NotImplementedError("Subclasses must implement this method")
+
+
 class MatrixBase(object):
 
     # Added just for numpy compatibility
     __array_priority__ = 11
+    __hash__ = None
+    _class_priority = 3
+    # this method is called on all values passed
+    # to the matrix.  If you want something special
+    # like `float(x)` called on each element, don't
+    # forget to override this.
+    _sympify = staticmethod(sympify)
+    _Zero = _sympify.__func__(0)    # static methods are not callable during class construction
+    _One = _sympify.__func__(1)     # so we call via the __func__ attribute
 
     is_Matrix = True
     is_Identity = None
-    _class_priority = 3
-    _sympify = staticmethod(sympify)
 
-    __hash__ = None # Mutable
-
+    #
+    # Utility functions for Matrices
+    #
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
@@ -144,6 +396,10 @@ class MatrixBase(object):
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
                 return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+
+            # Matrix-like object
+            elif hasattr(args[0], 'rows') and hasattr(args[0], 'cols') and hasattr(args[0], '__iter__'):
+                return args[0].rows, args[0].cols, args[0]
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
@@ -228,6 +484,76 @@ class MatrixBase(object):
 
         return rows, cols, flat_list
 
+    @classmethod
+    def hstack(cls, *args):
+        """Return a matrix formed by joining args horizontally (i.e.
+        by repeated application of row_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.hstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0, 2, 0],
+        [0, 1, 0, 2]])
+        """
+        return reduce(cls.row_join, args)
+
+    @classmethod
+    def vstack(cls, *args):
+        """Return a matrix formed by joining args vertically (i.e.
+        by repeated application of col_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.vstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0],
+        [0, 1],
+        [2, 0],
+        [0, 2]])
+        """
+        return reduce(cls.col_join, args)
+
+    @staticmethod
+    def _exp_by_squaring(base, mat, n):
+        """Compute base*mat**n by iterated squaring.
+        No copies of any matrices are made."""
+        a = mat
+        b = base
+        # Use the binary expansion to compute
+        # the power.  Recall all multiplication operations
+        # are in-place
+        while n > 0:
+            if n % 2 == 1:
+                b *= a
+                n -= 1
+            if n == 0:
+                break
+            a *= a
+            n //= 2
+        return b
+
+    @staticmethod
+    def _back_substitute(tri, vec):
+        """Use back substitution to solve the system.
+        Thus function returns a list, not a Matrix."""
+
+        # back substitution to solve R*x = y:
+        # We build up the result "backwards" in the vector 'x' and reverse it
+        # only in the end.
+        x = []
+        n = tri.rows
+        for j in range(n - 1, -1, -1):
+            tmp = vec[j, :]
+            for k in range(j + 1, n):
+                tmp -= tri[j, k]*x[n - 1 - k]
+            x.append(tmp / tri[j, j])
+        return [row._mat for row in reversed(x)]
+
     def _setitem(self, key, value):
         """Helper to set value at location given by key.
 
@@ -298,6 +624,73 @@ class MatrixBase(object):
                 return i, j, self._sympify(value)
             return
 
+    def jacobian(self, X):
+        """Calculates the Jacobian matrix (derivative of a vectorial function).
+
+        Parameters
+        ==========
+
+        self : vector of expressions representing functions f_i(x_1, ..., x_n).
+        X : set of x_i's in order, it can be a list or a Matrix
+
+        Both self and X can be a row or a column matrix in any order
+        (i.e., jacobian() should always work).
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Matrix
+        >>> from sympy.abc import rho, phi
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+        >>> Y = Matrix([rho, phi])
+        >>> X.jacobian(Y)
+        Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)],
+        [   2*rho,             0]])
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+        >>> X.jacobian(Y)
+        Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)]])
+
+        See Also
+        ========
+
+        hessian
+        wronskian
+        """
+        if not isinstance(X, MatrixBase):
+            X = self._new(X)
+        # Both X and self can be a row or a column matrix, so we need to make
+        # sure all valid combinations work, but everything else fails:
+        if self.shape[0] == 1:
+            m = self.shape[1]
+        elif self.shape[1] == 1:
+            m = self.shape[0]
+        else:
+            raise TypeError("self must be a row or a column matrix")
+        if X.shape[0] == 1:
+            n = X.shape[1]
+        elif X.shape[1] == 1:
+            n = X.shape[0]
+        else:
+            raise TypeError("X must be a row or a column matrix")
+
+        # m is the number of functions and n is the number of variables
+        # computing the Jacobian is now easy:
+        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
+
+    def __getattr__(self, attr):
+        if attr in ('diff', 'integrate', 'limit'):
+            def doit(*args):
+                item_doit = lambda item: getattr(item, attr)(*args)
+                return self.applyfunc(item_doit)
+            return doit
+        else:
+            raise AttributeError(
+                "%s has no attribute %s." % (self.__class__.__name__, attr))
+
     def copy(self):
         """
         Returns the copy of a matrix.
@@ -313,11 +706,11 @@ class MatrixBase(object):
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._mat)
+        return self._new(self)
 
     def trace(self):
         """
-        Returns the trace of a matrix i.e. the sum of the
+        Returns the trace of a square matrix i.e. the sum of the
         diagonal elements.
 
         Examples
@@ -464,7 +857,7 @@ class MatrixBase(object):
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""
-        return self.T.C
+        return self._eval_adjoint()
 
     @property
     def H(self):
@@ -564,12 +957,15 @@ class MatrixBase(object):
         """
         return (self.rows, self.cols)
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
 
+    @call_highest_priority('__sub__')
     def __rsub__(self, a):
         return (-self) + a
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
@@ -598,106 +994,64 @@ class MatrixBase(object):
         matrix_multiply_elementwise
         """
         if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.cols != B.rows:
+            if self.cols != other.rows:
                 raise ShapeError("Matrices size mismatch.")
-            if A.cols == 0:
-                return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
-            try:
-                blst = B.T.tolist()
-            except AttributeError:
-                # If B is a MatrixSymbol, B.T.tolist does not exist
-                return NotImplemented
-            alst = A.tolist()
-            return classof(A, B)._new(A.rows, B.cols, lambda i, j:
-                reduce(lambda k, l: k + l,
-                    [a_ik * b_kj for a_ik, b_kj in zip(alst[i], blst[j])]))
+            return self._eval_matrix_mul(other)
         else:
-            return self._new(self.rows, self.cols,
-                [i*other for i in self._mat])
+            return self._eval_scalar_mul(other)
 
-    __matmul__ = __mul__
 
-    def __rmul__(self, a):
-        if getattr(a, 'is_Matrix', False):
-            return self._new(a)*self
-        return self._new(self.rows, self.cols, [a*i for i in self._mat])
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        if getattr(other, 'is_Matrix', False):
+            return other.as_mutable()*self
+        return self._eval_scalar_rmul(other)
 
-    __rmatmul__ = __rmul__
+    @call_highest_priority('__rmatmul__')
+    def __matmul__(self, other):
+        return self.__mul__(other)
 
-    def __pow__(self, num):
-        from sympy.matrices import eye, diag, MutableMatrix
-        from sympy import binomial
+    @call_highest_priority('__matmul__')
+    def __rmatmul__(self, other):
+        return self.__rmul__(other)
 
+    @call_highest_priority('__rpow__')
+    def __pow__(self, n):
         if not self.is_square:
             raise NonSquareMatrixError()
-        if isinstance(num, int) or isinstance(num, Integer):
-            n = int(num)
-            if n < 0:
-                return self.inv()**-n   # A**-2 = (A**-1)**2
-            a = eye(self.cols)
-            s = self
-            while n:
-                if n % 2:
-                    a *= s
-                    n -= 1
-                if not n:
-                    break
-                s *= s
-                n //= 2
-            return self._new(a)
-        elif isinstance(num, (Expr, float)):
+        if isinstance(n, (int, float, Integer, Expr)):
+            n = sympify(n)
+            if isinstance(n, (int, Integer)):
+                if n < 0:
+                    return self.inv().__pow__(-n)
+                return self._eval_integral_pow(n)
+            return self._eval_pow(n)
+        raise TypeError(
+            "Only SymPy expressions or int objects are supported as exponent for matrices")
 
-            def jordan_cell_power(jc, n):
-                N = jc.shape[0]
-                l = jc[0, 0]
-                for i in range(N):
-                        for j in range(N-i):
-                                bn = binomial(n, i)
-                                if isinstance(bn, binomial):
-                                        bn = bn._eval_expand_func()
-                                jc[j, i+j] = l**(n-i)*bn
-
-            P, jordan_cells = self.jordan_cells()
-            # Make sure jordan_cells matrices are mutable:
-            jordan_cells = [MutableMatrix(j) for j in jordan_cells]
-            for j in jordan_cells:
-                jordan_cell_power(j, num)
-            return self._new(P*diag(*jordan_cells)*P.inv())
-        else:
-            raise TypeError(
-                "Only SymPy expressions or int objects are supported as exponent for matrices")
-
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
         if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.shape != B.shape:
+            if self.shape != other.shape:
                 raise ShapeError("Matrix size mismatch.")
-            alst = A.tolist()
-            blst = B.tolist()
-            ret = [S.Zero]*A.rows
-            for i in range(A.shape[0]):
-                ret[i] = [j + k for j, k in zip(alst[i], blst[i])]
-            rv = classof(A, B)._new(ret)
-            if 0 in A.shape:
-                rv = rv.reshape(*A.shape)
-            return rv
+            return self._eval_add(other)
         raise TypeError('cannot add matrix and %s' % type(other))
 
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return self + other
 
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return self*(S.One / other)
 
+    @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         return self.__div__(other)
 
     def __neg__(self):
-        return -1*self
+        return self._eval_scalar_mul(-1)
 
     def multiply(self, b):
         """Returns self*b
@@ -847,7 +1201,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._cholesky()
+        return self._eval_cholesky()
 
     def LDLdecomposition(self):
         """Returns the LDL Decomposition (L, D) of matrix A,
@@ -887,7 +1241,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
-        return self._LDLdecomposition()
+        return self._eval_LDLdecomposition()
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -911,7 +1265,7 @@ class MatrixBase(object):
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower:
             raise ValueError("Matrix must be lower triangular.")
-        return self._lower_triangular_solve(rhs)
+        return self._eval_lower_triangular_solve(rhs)
 
     def upper_triangular_solve(self, rhs):
         """Solves Ax = B, where A is an upper triangular matrix.
@@ -934,7 +1288,7 @@ class MatrixBase(object):
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper:
             raise TypeError("Matrix is not upper triangular.")
-        return self._upper_triangular_solve(rhs)
+        return self._eval_upper_triangular_solve(rhs)
 
     def cholesky_solve(self, rhs):
         """Solves Ax = B using Cholesky decomposition,
@@ -955,15 +1309,15 @@ class MatrixBase(object):
         pinv_solve
         """
         if self.is_symmetric():
-            L = self._cholesky()
+            L = self.cholesky()
         elif self.rows >= self.cols:
-            L = (self.T*self)._cholesky()
+            L = (self.T*self).cholesky()
             rhs = self.T*rhs
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
-        return (L.T)._upper_triangular_solve(Y)
+        Y = L.lower_triangular_solve(rhs)
+        return (L.T)._eval_upper_triangular_solve(Y)
 
     def diagonal_solve(self, rhs):
         """Solves Ax = B efficiently, where A is a diagonal Matrix,
@@ -994,7 +1348,7 @@ class MatrixBase(object):
             raise TypeError("Matrix should be diagonal")
         if rhs.rows != self.rows:
             raise TypeError("Size mis-match")
-        return self._diagonal_solve(rhs)
+        return self._eval_diagonal_solve(rhs)
 
     def LDLsolve(self, rhs):
         """Solves Ax = B using LDL decomposition,
@@ -1033,9 +1387,9 @@ class MatrixBase(object):
         else:
             raise NotImplementedError('Under-determined System. '
                                       'Try M.gauss_jordan_solve(rhs)')
-        Y = L._lower_triangular_solve(rhs)
-        Z = D._diagonal_solve(Y)
-        return (L.T)._upper_triangular_solve(Z)
+        Y = L.lower_triangular_solve(rhs)
+        Z = D._eval_diagonal_solve(Y)
+        return (L.T).upper_triangular_solve(Z)
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
@@ -1169,18 +1523,19 @@ class MatrixBase(object):
         [9, 11]])
         """
 
-        cols = self.cols
-        flat_list = self._mat
+        if not is_sequence(rowsList) or not is_sequence(colsList):
+            raise TypeError("rowsList and colsList must be iterable")
+        # ensure rowsList and colsList are lists of integers
         if rowsList and all(isinstance(i, bool) for i in rowsList):
             rowsList = [index for index, item in enumerate(rowsList) if item]
-
         if colsList and all(isinstance(i, bool) for i in colsList):
             colsList = [index for index, item in enumerate(colsList) if item]
 
+        # ensure everything is in range
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
-        return self._new(len(rowsList), len(colsList),
-                lambda i, j: flat_list[rowsList[i]*cols + colsList[j]])
+
+        return self._eval_extract(rowsList, colsList)
 
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
@@ -1252,10 +1607,8 @@ class MatrixBase(object):
         set([x])
         """
 
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
-        else:
+        types = tuple(t if isinstance(t, type) else type(t) for t in types)
+        if not types:
             types = (Atom,)
         result = set()
         for i in self:
@@ -1275,7 +1628,7 @@ class MatrixBase(object):
         set([x])
         """
 
-        return set().union(*[i.free_symbols for i in self])
+        return set().union(*(i.free_symbols for i in self))
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1368,7 +1721,7 @@ class MatrixBase(object):
         return self.applyfunc(lambda x: refine(x, assumptions))
 
     def doit(self, **kwargs):
-        return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
+        return self.applyfunc(lambda x: x.doit())
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
@@ -1404,7 +1757,7 @@ class MatrixBase(object):
             s.append("[%s]" % ''.join(line))
         print('\n'.join(s))
 
-    def LUsolve(self, rhs, iszerofunc=_iszero):
+    def LUsolve(self, other, iszerofunc=_iszero):
         """Solve the linear system Ax = rhs for x where A = self.
 
         This is for symbolic matrices, for real or complex ones use
@@ -1423,25 +1776,9 @@ class MatrixBase(object):
         pinv_solve
         LUdecomposition
         """
-        if rhs.rows != self.rows:
-            raise ShapeError("`self` and `rhs` must have the same number of rows.")
-
-        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        n = self.rows
-        b = rhs.permuteFwd(perm).as_mutable()
-        # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y*scale)
-        # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
-                scale = A[i, j]
-                b.zip_row_op(i, j, lambda x, y: x - y*scale)
-            scale = A[i, i]
-            b.row_op(i, lambda x, _: x/scale)
-        return rhs.__class__(b)
+        if self.rows != other.rows:
+            raise ShapeError("`self` and `other` must have the same number of rows.")
+        return self._eval_LUsolve(other, iszerofunc)
 
     def LUdecomposition(self, iszerofunc=_iszero):
         """Returns the decomposition LU and the row swaps p.
@@ -1471,18 +1808,7 @@ class MatrixBase(object):
         LUdecompositionFF
         LUsolve
         """
-        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        L = self.zeros(self.rows)
-        U = self.zeros(self.rows)
-        for i in range(self.rows):
-            for j in range(self.rows):
-                if i > j:
-                    L[i, j] = combined[i, j]
-                else:
-                    if i == j:
-                        L[i, i] = 1
-                    U[i, j] = combined[i, j]
-        return L, U, p
+        return self._eval_LUdecomposition()
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero):
         """Returns A comprised of L, U (L's diag entries are 1) and
@@ -1497,32 +1823,7 @@ class MatrixBase(object):
         """
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
-        n = self.rows
-        A = self.as_mutable()
-        p = []
-        # factorization
-        for j in range(n):
-            for i in range(j):
-                for k in range(i):
-                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
-            pivot = -1
-            for i in range(j, n):
-                for k in range(j):
-                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
-                # find the first non-zero pivot, includes any expression
-                if pivot == -1 and not iszerofunc(A[i, j]):
-                    pivot = i
-            if pivot < 0:
-                # this result is based on iszerofunc's analysis of the possible pivots, so even though
-                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
-                raise ValueError("No nonzero pivot found; inversion failed.")
-            if pivot != j:  # row must be swapped
-                A.row_swap(pivot, j)
-                p.append([pivot, j])
-            scale = 1 / A[j, j]
-            for i in range(j + 1, n):
-                A[i, j] = A[i, j]*scale
-        return A, p
+        return self._eval_LUdecomposition_Simple(iszerofunc)
 
     def LUdecompositionFF(self):
         """Compute a fraction-free LU decomposition.
@@ -1543,35 +1844,7 @@ class MatrixBase(object):
         LUdecomposition_Simple
         LUsolve
         """
-        from sympy.matrices import SparseMatrix
-        zeros = SparseMatrix.zeros
-        eye = SparseMatrix.eye
-
-        n, m = self.rows, self.cols
-        U, L, P = self.as_mutable(), eye(n), eye(n)
-        DD = zeros(n, n)
-        oldpivot = 1
-
-        for k in range(n - 1):
-            if U[k, k] == 0:
-                for kpivot in range(k + 1, n):
-                    if U[kpivot, k]:
-                        break
-                else:
-                    raise ValueError("Matrix is not full rank")
-                U[k, k:], U[kpivot, k:] = U[kpivot, k:], U[k, k:]
-                L[k, :k], L[kpivot, :k] = L[kpivot, :k], L[k, :k]
-                P[k, :], P[kpivot, :] = P[kpivot, :], P[k, :]
-            L[k, k] = Ukk = U[k, k]
-            DD[k, k] = oldpivot*Ukk
-            for i in range(k + 1, n):
-                L[i, k] = Uik = U[i, k]
-                for j in range(k + 1, m):
-                    U[i, j] = (Ukk*U[i, j] - U[k, j]*Uik) / oldpivot
-                U[i, k] = 0
-            oldpivot = Ukk
-        DD[n - 1, n - 1] = oldpivot
-        return P, L, DD, U
+        return self._eval_LUdecompositionFF()
 
     def cofactorMatrix(self, method="berkowitz"):
         """Return a matrix containing the cofactor of each element.
@@ -1584,9 +1857,7 @@ class MatrixBase(object):
         minorMatrix
         adjugate
         """
-        out = self._new(self.rows, self.cols, lambda i, j:
-                self.cofactor(i, j, method))
-        return out
+        return self._eval_cofactorMatrix()
 
     def minorEntry(self, i, j, method="berkowitz"):
         """Calculate the minor of an element.
@@ -1616,10 +1887,7 @@ class MatrixBase(object):
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
                 "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        M = self.as_mutable()
-        M.row_del(i)
-        M.col_del(j)
-        return self._new(M)
+        return self._eval_minorMatrix(i, j)
 
     def cofactor(self, i, j, method="berkowitz"):
         """Calculate the cofactor of an element.
@@ -1635,63 +1903,6 @@ class MatrixBase(object):
             return self.minorEntry(i, j, method)
         else:
             return -1*self.minorEntry(i, j, method)
-
-    def jacobian(self, X):
-        """Calculates the Jacobian matrix (derivative of a vectorial function).
-
-        Parameters
-        ==========
-
-        self : vector of expressions representing functions f_i(x_1, ..., x_n).
-        X : set of x_i's in order, it can be a list or a Matrix
-
-        Both self and X can be a row or a column matrix in any order
-        (i.e., jacobian() should always work).
-
-        Examples
-        ========
-
-        >>> from sympy import sin, cos, Matrix
-        >>> from sympy.abc import rho, phi
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-        >>> Y = Matrix([rho, phi])
-        >>> X.jacobian(Y)
-        Matrix([
-        [cos(phi), -rho*sin(phi)],
-        [sin(phi),  rho*cos(phi)],
-        [   2*rho,             0]])
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
-        >>> X.jacobian(Y)
-        Matrix([
-        [cos(phi), -rho*sin(phi)],
-        [sin(phi),  rho*cos(phi)]])
-
-        See Also
-        ========
-
-        hessian
-        wronskian
-        """
-        if not isinstance(X, MatrixBase):
-            X = self._new(X)
-        # Both X and self can be a row or a column matrix, so we need to make
-        # sure all valid combinations work, but everything else fails:
-        if self.shape[0] == 1:
-            m = self.shape[1]
-        elif self.shape[1] == 1:
-            m = self.shape[0]
-        else:
-            raise TypeError("self must be a row or a column matrix")
-        if X.shape[0] == 1:
-            n = X.shape[1]
-        elif X.shape[1] == 1:
-            n = X.shape[0]
-        else:
-            raise TypeError("X must be a row or a column matrix")
-
-        # m is the number of functions and n is the number of variables
-        # computing the Jacobian is now easy:
-        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
     def QRdecomposition(self):
         """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
@@ -1740,37 +1951,10 @@ class MatrixBase(object):
         LUdecomposition
         QRsolve
         """
-        cls = self.__class__
-        mat = self.as_mutable()
-
-        if not mat.rows >= mat.cols:
+        if not self.rows >= self.cols:
             raise MatrixError(
                 "The number of rows must be greater than columns")
-        n = mat.rows
-        m = mat.cols
-        rank = n
-        row_reduced = mat.rref()[0]
-        for i in range(row_reduced.rows):
-            if row_reduced.row(i).norm() == 0:
-                rank -= 1
-        if not rank == mat.cols:
-            raise MatrixError("The rank of the matrix must match the columns")
-        Q, R = mat.zeros(n, m), mat.zeros(m)
-        for j in range(m):      # for each column vector
-            tmp = mat[:, j]     # take original v
-            for i in range(j):
-                # subtract the project of mat on new vector
-                tmp -= Q[:, i]*mat[:, j].dot(Q[:, i])
-                tmp.expand()
-            # normalize it
-            R[j, j] = tmp.norm()
-            Q[:, j] = tmp / R[j, j]
-            if Q[:, j].norm() != 1:
-                raise NotImplementedError(
-                    "Could not normalize the vector %d." % j)
-            for i in range(j):
-                R[i, j] = Q[:, i].dot(mat[:, j])
-        return cls(Q), cls(R)
+        return self._eval_QRdecomposition()
 
     def QRsolve(self, b):
         """Solve the linear system 'Ax = b'.
@@ -1801,21 +1985,7 @@ class MatrixBase(object):
         pinv_solve
         QRdecomposition
         """
-
-        Q, R = self.as_mutable().QRdecomposition()
-        y = Q.T*b
-
-        # back substitution to solve R*x = y:
-        # We build up the result "backwards" in the vector 'x' and reverse it
-        # only in the end.
-        x = []
-        n = R.rows
-        for j in range(n - 1, -1, -1):
-            tmp = y[j, :]
-            for k in range(j + 1, n):
-                tmp -= R[j, k]*x[n - 1 - k]
-            x.append(tmp / R[j, j])
-        return self._new([row._mat for row in reversed(x)])
+        return self._eval_QRsolve(b)
 
     def cross(self, b):
         """Return the cross product of `self` and `b` relaxing the condition
@@ -1897,7 +2067,7 @@ class MatrixBase(object):
         else:
             raise ShapeError("Dimensions incorrect for dot product.")
 
-    def multiply_elementwise(self, b):
+    def multiply_elementwise(self, other):
         """Return the Hadamard product (elementwise product) of A and B
 
         Examples
@@ -1918,13 +2088,13 @@ class MatrixBase(object):
         dot
         multiply
         """
-        from sympy.matrices import matrix_multiply_elementwise
-
-        return matrix_multiply_elementwise(self, b)
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must match")
+        return self._eval_elementwise_mul(other)
 
     def values(self):
         """Return non-zero values of self."""
-        return [i for i in flatten(self.tolist()) if not i.is_zero]
+        return self._eval_values()
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
@@ -1974,8 +2144,8 @@ class MatrixBase(object):
         normalized
         """
         # Row or Column Vector Norms
-        vals = list(self.values()) or [0]
         if self.rows == 1 or self.cols == 1:
+            vals = list(self.values()) or [0]
             if ord == 2 or ord is None:  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i)**2 for i in vals)))
 
@@ -1996,22 +2166,20 @@ class MatrixBase(object):
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
         # Matrix Norms
-        else:
-            if ord == 2:  # Spectral Norm
-                # Maximum singular value
-                return Max(*self.singular_values())
+        if ord == 2:  # Spectral Norm
+            # Maximum singular value
+            return Max(*self.singular_values())
 
-            elif ord == -2:
-                # Minimum singular value
-                return Min(*self.singular_values())
+        elif ord == -2:
+            # Minimum singular value
+            return Min(*self.singular_values())
 
-            elif (ord is None or isinstance(ord, string_types) and ord.lower() in
-                    ['f', 'fro', 'frobenius', 'vector']):
-                # Reshape as vector and send back to norm function
-                return self.vec().norm(ord=2)
+        elif (ord is None or isinstance(ord, string_types) and ord.lower() in
+                ['f', 'fro', 'frobenius', 'vector']):
+            # Reshape as vector and send back to norm function
+            return self.vec().norm(ord=2)
 
-            else:
-                raise NotImplementedError("Matrix Norms under development")
+        raise NotImplementedError("Matrix Norms under development")
 
     def normalized(self):
         """Return the normalized version of ``self``.
@@ -2023,9 +2191,7 @@ class MatrixBase(object):
         """
         if self.rows != 1 and self.cols != 1:
             raise ShapeError("A Matrix must be a vector to normalize.")
-        norm = self.norm()
-        out = self.applyfunc(lambda i: i / norm)
-        return out
+        return self._eval_scalar_mul(1 / self.norm())
 
     def project(self, v):
         """Return the projection of ``self`` onto the line containing ``v``.
@@ -2622,6 +2788,15 @@ class MatrixBase(object):
                     return False
         return True
 
+    def is_invertible(self, method=None, iszerofunc=_iszero):
+        """Tests whether the matrix is invertible by testing
+        if the determinant is zero.  `method` is passed to
+        the determinant function if it is not None.  `iszerofunc`
+        is used to test for zeroness."""
+        if not self.is_square:
+            raise NonSquareMatrixError("Only square matrices can be invertible")
+        return self._eval_is_invertible(method, iszerofunc)
+
     def det(self, method="bareis"):
         """Computes the matrix determinant using the method "method".
 
@@ -2765,8 +2940,7 @@ class MatrixBase(object):
         transpose
         berkowitz
         """
-
-        return self.cofactorMatrix(method).T
+        return self._eval_adjugate(method)
 
     def inverse_LU(self, iszerofunc=_iszero):
         """Calculates the inverse using LU decomposition.
@@ -2779,13 +2953,10 @@ class MatrixBase(object):
         inverse_ADJ
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
-
-        ok = self.rref(simplify=True)[0]
-        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
+        if not self.is_invertible(iszerofunc=iszerofunc):
             raise ValueError("Matrix det == 0; not invertible.")
-
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self._eval_inverse_LU(iszerofunc=iszerofunc)
 
     def inverse_GE(self, iszerofunc=_iszero):
         """Calculates the inverse using Gaussian elimination.
@@ -2797,16 +2968,11 @@ class MatrixBase(object):
         inverse_LU
         inverse_ADJ
         """
-        from .dense import Matrix
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
-
-        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
-        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
+        if not self.is_invertible(iszerofunc=iszerofunc):
             raise ValueError("Matrix det == 0; not invertible.")
-
-        return self._new(red[:, big.rows:])
+        return self._eval_inverse_GE(iszerofunc=iszerofunc)
 
     def inverse_ADJ(self, iszerofunc=_iszero):
         """Calculates the inverse using the adjugate matrix and a determinant.
@@ -2820,6 +2986,9 @@ class MatrixBase(object):
         """
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
+        if not self.is_invertible(method="berkowitz", iszerofunc=iszerofunc):
+            raise ValueError("Matrix det == 0; not invertible.")
+
 
         d = self.berkowitz_det()
         zero = d.equals(0)
@@ -2850,36 +3019,7 @@ class MatrixBase(object):
         [1, 0],
         [0, 1]]), [0, 1])
         """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-        # pivot: index of next row to contain a pivot
-        pivot, r = 0, self.as_mutable()
-        # pivotlist: indices of pivot variables (non-free)
-        pivotlist = []
-        for i in range(r.cols):
-            if pivot == r.rows:
-                break
-            if simplify:
-                r[pivot, i] = simpfunc(r[pivot, i])
-            if iszerofunc(r[pivot, i]):
-                for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
-                        r[k, i] = simpfunc(r[k, i])
-                    if not iszerofunc(r[k, i]):
-                        r.row_swap(pivot, k)
-                        break
-                else:
-                    continue
-            scale = r[pivot, i]
-            r.row_op(pivot, lambda x, _: x / scale)
-            for j in range(r.rows):
-                if j == pivot:
-                    continue
-                scale = r[j, i]
-                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
-            pivotlist.append(i)
-            pivot += 1
-        return self._new(r), pivotlist
+        return self._eval_rref(iszerofunc, simplify)
 
     def rank(self, iszerofunc=_iszero, simplify=False):
         """
@@ -3092,7 +3232,6 @@ class MatrixBase(object):
 
         return berk + tuple(map(tuple, polys))
 
-
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
 
@@ -3177,7 +3316,7 @@ class MatrixBase(object):
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
 
     def eigenvals(self, **flags):
-        """Return eigen values using the berkowitz_eigenvals routine.
+        """Return eigenvalues using the berkowitz_eigenvals routine.
 
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
@@ -3244,6 +3383,7 @@ class MatrixBase(object):
             if not basis:
                 # The nullspace routine failed, try it again with simplification
                 basis = tmp.nullspace(simplify=simplify)
+                print(basis, tmp)
                 if not basis:
                     raise NotImplementedError(
                         "Can't evaluate eigenvector for eigenvalue %s" % r)
@@ -3358,89 +3498,6 @@ class MatrixBase(object):
             return S.Zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
-
-    def __getattr__(self, attr):
-        if attr in ('diff', 'integrate', 'limit'):
-            def doit(*args):
-                item_doit = lambda item: getattr(item, attr)(*args)
-                return self.applyfunc(item_doit)
-            return doit
-        else:
-            raise AttributeError(
-                "%s has no attribute %s." % (self.__class__.__name__, attr))
-
-    def integrate(self, *args):
-        """Integrate each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.integrate((x, ))
-        Matrix([
-        [x**2/2, x*y],
-        [     x,   0]])
-        >>> M.integrate((x, 0, 2))
-        Matrix([
-        [2, 2*y],
-        [2,   0]])
-
-        See Also
-        ========
-
-        limit
-        diff
-        """
-        return self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].integrate(*args))
-
-    def limit(self, *args):
-        """Calculate the limit of each element in the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.limit(x, 2)
-        Matrix([
-        [2, y],
-        [1, 0]])
-
-        See Also
-        ========
-
-        integrate
-        diff
-        """
-        return self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].limit(*args))
-
-    def diff(self, *args):
-        """Calculate the derivative of each element in the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.diff(x)
-        Matrix([
-        [1, 0],
-        [0, 0]])
-
-        See Also
-        ========
-
-        integrate
-        limit
-        """
-        return self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].diff(*args))
 
     def vec(self):
         """Return the Matrix converted into a one column matrix by stacking columns
@@ -3619,24 +3676,7 @@ class MatrixBase(object):
         if not self.is_diagonalizable(reals_only, False):
             self._diagonalize_clear_subproducts()
             raise MatrixError("Matrix is not diagonalizable")
-        else:
-            if self._eigenvects is None:
-                self._eigenvects = self.eigenvects(simplify=True)
-            if sort:
-                self._eigenvects.sort(key=default_sort_key)
-                self._eigenvects.reverse()
-            diagvals = []
-            P = self._new(self.rows, 0, [])
-            for eigenval, multiplicity, vects in self._eigenvects:
-                for k in range(multiplicity):
-                    diagvals.append(eigenval)
-                    vec = vects[k]
-                    if normalize:
-                        vec = vec / vec.norm()
-                    P = P.col_insert(P.cols, vec)
-            D = diag(*diagvals)
-            self._diagonalize_clear_subproducts()
-            return (P, D)
+        return self._eval_diagonalize(reals_only, sort, normalize)
 
     def is_diagonalizable(self, reals_only=False, clear_subproducts=True):
         """Check if matrix is diagonalizable.
@@ -4011,17 +4051,24 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, Float
+        >>> from sympy import Matrix, SparseMatrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
+        >>> B = SparseMatrix(((1, x), (0.2, 3)))
         >>> A.has(x)
         True
         >>> A.has(y)
         False
         >>> A.has(Float)
         True
+        >>> B.has(x)
+        True
+        >>> B.has(y)
+        False
+        >>> B.has(Float)
+        True
         """
-        return any(a.has(*patterns) for a in self._mat)
+        return self._eval_has(*patterns)
 
     def dual(self):
         """Returns the dual of a matrix, which is:
@@ -4035,68 +4082,9 @@ class MatrixBase(object):
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy import LeviCivita
-        from sympy.matrices import zeros
+        return self._eval_dual()
 
-        M, n = self[:, :], self.rows
-        work = zeros(n)
-        if self.is_symmetric():
-            return work
-
-        for i in range(1, n):
-            for j in range(1, n):
-                acum = 0
-                for k in range(1, n):
-                    acum += LeviCivita(i, j, 0, k)*M[0, k]
-                work[i, j] = acum
-                work[j, i] = -acum
-
-        for l in range(1, n):
-            acum = 0
-            for a in range(1, n):
-                for b in range(1, n):
-                    acum += LeviCivita(0, l, a, b)*M[a, b]
-            acum /= 2
-            work[0, l] = -acum
-            work[l, 0] = acum
-
-        return work
-
-    @classmethod
-    def hstack(cls, *args):
-        """Return a matrix formed by joining args horizontally (i.e.
-        by repeated application of row_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.hstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0, 2, 0],
-        [0, 1, 0, 2]])
-        """
-        return reduce(cls.row_join, args)
-
-    @classmethod
-    def vstack(cls, *args):
-        """Return a matrix formed by joining args vertically (i.e.
-        by repeated application of col_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.vstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0],
-        [0, 1],
-        [2, 0],
-        [0, 2]])
-        """
-        return reduce(cls.col_join, args)
-
-    def row_join(self, rhs):
+    def row_join(self, other):
         """Concatenates two matrices along self's last and rhs's first column
 
         Examples
@@ -4117,21 +4105,17 @@ class MatrixBase(object):
         row
         col_join
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(rhs)
+            return type(self)(other)
 
-        if self.rows != rhs.rows:
+        if self.rows != other.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-        newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
-        newmat[:, :self.cols] = self
-        newmat[:, self.cols:] = rhs
-        return type(self)(newmat)
+        return self._eval_row_join(other)
 
-    def col_join(self, bott):
-        """Concatenates two matrices along self's last and bott's first row
+    def col_join(self, other):
+        """Concatenates two matrices along self's last and other's first row
 
         Examples
         ========
@@ -4155,17 +4139,14 @@ class MatrixBase(object):
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(bott)
+            return type(self)(other)
 
-        if self.cols != bott.cols:
+        if self.cols != other.cols:
             raise ShapeError(
-                "`self` and `bott` must have the same number of columns.")
-        newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
-        newmat[:self.rows, :] = self
-        newmat[self.rows:, :] = bott
-        return type(self)(newmat)
+                "`self` and `other` must have the same number of columns.")
+        return self._eval_col_join(other)
 
-    def row_insert(self, pos, mti):
+    def row_insert(self, pos, other):
         """Insert one or more rows at the given row position.
 
         Examples
@@ -4190,10 +4171,10 @@ class MatrixBase(object):
         from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(mti)
+            return type(self)(other)
 
         if pos == 0:
-            return mti.col_join(self)
+            return other.col_join(self)
         elif pos < 0:
             pos = self.rows + pos
         if pos < 0:
@@ -4201,18 +4182,13 @@ class MatrixBase(object):
         elif pos > self.rows:
             pos = self.rows
 
-        if self.cols != mti.cols:
+        if self.cols != other.cols:
             raise ShapeError(
-                "`self` and `mti` must have the same number of columns.")
+                "`self` and `other` must have the same number of columns.")
 
-        newmat = self.zeros(self.rows + mti.rows, self.cols)
-        i, j = pos, pos + mti.rows
-        newmat[:i, :] = self[:i, :]
-        newmat[i: j, :] = mti
-        newmat[j:, :] = self[i:, :]
-        return newmat
+        return self._eval_row_insert(pos, other)
 
-    def col_insert(self, pos, mti):
+    def col_insert(self, pos, other):
         """Insert one or more columns at the given column position.
 
         Examples
@@ -4233,13 +4209,12 @@ class MatrixBase(object):
         col
         row_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(mti)
+            return type(self)(other)
 
         if pos == 0:
-            return mti.row_join(self)
+            return other.row_join(self)
         elif pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -4247,15 +4222,10 @@ class MatrixBase(object):
         elif pos > self.cols:
             pos = self.cols
 
-        if self.rows != mti.rows:
-            raise ShapeError("self and mti must have the same number of rows.")
+        if self.rows != other.rows:
+            raise ShapeError("self and other must have the same number of rows.")
 
-        newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
-        i, j = pos, pos + mti.cols
-        newmat[:, :i] = self[:, :i]
-        newmat[:, i:j] = mti
-        newmat[:, j:] = self[:, i:]
-        return type(self)(newmat)
+        return self._eval_col_insert(pos, other)
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
@@ -4275,9 +4245,7 @@ class MatrixBase(object):
         [G(0), G(1)],
         [G(1), G(2)]])
         """
-        M = self[:, :]
-
-        return M.applyfunc(lambda x: x.replace(F, G, map))
+        return self.applyfunc(lambda x: x.replace(F, G, map))
 
     def pinv(self):
         """Calculate the Moore-Penrose pseudoinverse of the matrix.
@@ -4539,6 +4507,30 @@ class MatrixBase(object):
         else:
             return sol, tau
 
+    @classmethod
+    def zeros(cls, rows, cols=None):
+        """Return a rows x cols matrix of zeros or
+        a rows x rows matrix of zeros if cols is omitted."""
+        cols = rows if cols is None else cols
+        rows, cols = as_int(rows), as_int(cols)
+        return cls._zeros(rows, cols)
+
+    @classmethod
+    def eye(cls, rows, cols=None):
+        """Return a rows x cols matrix of zeros
+        with ones on the diagonal, or a rows x rows matrix
+        of zeros with ones on the diagonal if cols is omitted."""
+        cols = rows if cols is None else cols
+        rows, cols = as_int(rows), as_int(cols)
+        return cls._eye(rows, cols)
+
+    @classmethod
+    def ones(cls, rows, cols=None):
+        """Return a rows x cols matrix of ones or
+        a rows x rows matrix of ones if cols is omitted."""
+        cols = rows if cols is None else cols
+        rows, cols = as_int(rows), as_int(cols)
+        return cls._ones(rows, cols)
 
 def classof(A, B):
     """

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
 from sympy.core.sympify import converter as sympify_converter
 
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrices import MatrixBase, CommonMatrix
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.sparse import SparseMatrix, MutableSparseMatrix
 from sympy.matrices.expressions import MatrixExpr
@@ -36,6 +36,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     # iterable
     _iterable = True
 
+    _op_priority = 10.001
     _class_priority = 8
 
     @classmethod
@@ -86,10 +87,8 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         return sympify(diff.is_zero)
 
     adjoint = MatrixBase.adjoint
-    conjugate = MatrixBase.conjugate
     # C and T are defined in MatrixExpr...I don't know why C alone
     # needs to be defined here
-    C = MatrixBase.C
 
     as_mutable = DenseMatrix.as_mutable
     _eval_trace = DenseMatrix._eval_trace

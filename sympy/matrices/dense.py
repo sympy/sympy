@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 import random
+from types import FunctionType
 from sympy import Derivative
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, as_int, range
+from sympy.core.compatibility import is_sequence, default_sort_key, as_int, range, reduce
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
@@ -16,8 +17,8 @@ from sympy.simplify import simplify as _simplify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
-from sympy.matrices.matrices import (MatrixBase,
-    ShapeError, a2idx, classof)
+from sympy.matrices.matrices import (MatrixBase, MatrixError,
+    ShapeError, CommonMatrix, a2idx, classof)
 
 
 def _iszero(x):
@@ -25,7 +26,304 @@ def _iszero(x):
     return x.is_zero
 
 
-class DenseMatrix(MatrixBase):
+class InplaceMatrix(object):
+    """A Matrix-like object where all operations happen
+    in place.  This is meant to be used inside Matrix
+    classes and should not be used directly. It has
+    very few safety checks, and is optimized for efficiency."""
+
+    def __init__(self, rows, cols, elements, copy=False):
+        if rows*cols != len(elements):
+            raise ValueError("elements must have length rows*cols")
+        self.rows = rows
+        self.cols = cols
+        if copy:
+            elements = list(elements)
+        self._mat = elements
+
+    __hash__ = None
+
+    def copy(self):
+        return self.__class__(self.rows, self.cols, self._mat, copy=True)
+
+    @classmethod
+    def zeros(cls, a, b=None):
+        b = a if b == None else b
+        return cls(a, b, [S.Zero]*(a*b))
+
+    @classmethod
+    def ones(cls, a, b=None):
+        b = a if b == None else b
+        return cls(a, b, [S.One]*(a*b))
+
+    @classmethod
+    def eye(cls, a, b=None):
+        b = a if b == None else b
+        ret = cls(a, b, [S.Zero]*(a*b))
+        for i in range(min(a,b)):
+            ret[i,i] = S.One
+        return ret
+
+    def applyfunc(self, f):
+        for i,x in enumerate(self._mat):
+            self._mat[i] = f(x)
+
+    def __repr__(self):
+        return "{}({}, {}, {})".format(self.__class__.__name__, self.rows, self.cols, self._mat)
+
+    def __len__(self):
+        return self.rows*self.cols
+
+    def __iter__(self):
+        return self._mat.__iter__()
+
+    def __add__(self, other):
+        if self.rows != other.rows or \
+           self.cols != other.cols or \
+           len(self._mat) != len(other._mat):
+            raise ValueError("Wrong sized Matrices {} {}".format(self, other))
+        # cache self._mat for performance
+        mat = self._mat
+        for i,x in enumerate(other._mat):
+            mat[i] += x
+        return self
+
+    def _scalar_mul(self, other):
+        # cache self._mat for performance
+        mat = self._mat
+        for i in range(len(self._mat)):
+            mat[i] *= other
+        return self
+
+    def _scalar_rmul(self, other):
+        # cache self._mat for performance
+        mat = self._mat
+        for i in range(len(self._mat)):
+            mat[i] = other*self._mat[i]
+        return self
+
+    def __mul__(self, other):
+        if self.cols != other.rows:
+            raise ValueError("Dimension mismatch when multiplying {} and {}".format(self, other))
+        # allocate space for the new matrix
+        new_mat_rows = self.rows
+        new_mat_cols = other.cols
+        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+
+        def get_coord(i):
+            return (i // new_mat_cols, i % new_mat_cols)
+        # cache these methods for minor speedups
+        row_indices = self._row_indices
+        if hasattr(other, '_col_indices'):
+            col_indices = other._col_indices
+        else:
+            # this allows us to multiply by a Matrix,
+            cls_col_indices = self.__class__._col_indices
+            col_indices = lambda i: cls_col_indices(other, i)
+
+        # if we multiply an n x 0 with a 0 x m, the
+        # expected behavior is to produce an n x m matrix of zeros
+        if self.cols != 0 and other.rows != 0:
+            # cache self._mat and other._mat for performance
+            mat = self._mat
+            other_mat = other._mat
+            for i in range(len(new_mat)):
+                row, col = get_coord(i)
+                vec = (mat[a]*other_mat[b] for a,b \
+                        in zip(row_indices(row), col_indices(col)))
+                # `sum` and `Add` cannot be used here because
+                # `sum([a])` returns 0+a, which mixes scalars with
+                # other types of objects in block matrices, and
+                # `Add(a,b)` fails for block matrices
+                new_mat[i] = reduce(lambda a,b: a + b, vec)
+        # make sure the operation is in-place
+        self._mat[:] = new_mat
+        self.rows, self.cols = new_mat_rows, new_mat_cols
+        return self
+
+    def _elementwise_mul(self, other):
+        if self.rows != other.rows or \
+           self.cols != other.cols or \
+           len(self._mat) != len(other._mat):
+            raise ValueError("Wrong sized Matrices {} {}".format(self, other))
+        # cache self._mat for performance
+        mat = self._mat
+        for i,x in enumerate(other._mat):
+            mat[i] *= x
+        return self
+
+    def __neg__(self):
+        return self._scalar_mul(-1)
+
+    def _row_indices(self, i):
+        """Return an interable that will give the indices of
+        the elements in row i"""
+        if i < 0 or i >= self.rows:
+            raise ValueError("i must be a valid row")
+        return range(self.cols*i, self.cols*(i+1))
+
+    def _col_indices(self, i):
+        """Return an interable that will give the indices of
+        the elements in column i"""
+        if i < 0 or i >= self.cols:
+            raise ValueError("i must be a valid column")
+        return range(i, len(self._mat), self.cols)
+
+    def _index_to_coord(self, i):
+        """Return the matrix coordinates of the element
+        at position `i` in the flattened matrix."""
+        return (i // self.cols, i % self.cols)
+
+    def _coord_to_index(self, i, j):
+        """Return the index in _mat corresponding
+        to the (i,j) position in the matrix. """
+        return i*self.cols + j
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            i, j = key
+            if isinstance(i, slice) or isinstance(j, slice):
+                # if the coordinates are not slices, make them so
+                # and expand the slices so they don't contain `None`
+                row_slice, col_slice = self._normalize_slices(i, j)
+
+                return InplaceMatrixView(self, row_slice, col_slice)
+
+            # if the key is a tuple of ints, change
+            # it to an array index
+            key = self._coord_to_index(i,j)
+        return self._mat[key]
+
+    def __setitem__(self, key, val):
+        """Set item by index or tuple containing a mix
+        of coordinates and slices."""
+        if isinstance(key, tuple):
+            i, j = key
+            if isinstance(i, slice) or isinstance(j, slice):
+                row_slice, col_slice = self._normalize_slices(i, j)
+                inplace_mat = InplaceMatrixView(self, row_slice, col_slice)
+                if len(inplace_mat) != len(val):
+                    raise ValueError("Attempting to assign {} values to {} positions".format(len(val), len(inplace_mat)))
+                # when we have an appropriate view, we can set items directly
+                for i,v in enumerate(val):
+                    inplace_mat[i] = v
+                return
+            else:
+                self._set((i, j), val)
+                return
+        self._set(key, val)
+
+    def _set(self, coord, val):
+        """Set an element in the matrix.  If coord is a tuple,
+        those coordinates will be set.  Otherwise, that index will
+        be set."""
+        if isinstance(coord, tuple):
+            i, j = coord
+            key = self._coord_to_index(i, j)
+            self._mat[key] = val
+            return
+        self._mat[coord] = val
+
+    def _normalize_slices(self, row_slice, col_slice):
+        """Ensure that row_slice and col_slice don't have
+        `None` in their arguments.  Any integers are converted
+        to slices of length 1"""
+        if not isinstance(row_slice, slice):
+            row_slice = slice(row_slice, row_slice+1, None)
+        row_slice = slice(*row_slice.indices(self.rows))
+
+        if not isinstance(col_slice, slice):
+            col_slice = slice(col_slice, col_slice+1, None)
+        col_slice = slice(*col_slice.indices(self.cols))
+
+        return (row_slice, col_slice)
+
+    def row_op(self, i, f):
+        i0 = i*self.cols
+        ri = self._mat[i0: i0 + self.cols]
+        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, list(range(self.cols))) ]
+        return self
+
+    def col_op(self, i, f):
+        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
+        return self
+
+    def row_swap(self, i, j):
+        for k in range(0, self.cols):
+            self[i, k], self[j, k] = self[j, k], self[i, k]
+        return self
+
+    def col_swap(self, i, j):
+        for k in range(0, self.rows):
+            self[k, i], self[k, j] = self[k, j], self[k, i]
+        return self
+
+    def zip_row_op(self, i, k, f):
+        i0 = i*self.cols
+        k0 = k*self.cols
+
+        ri = self._mat[i0: i0 + self.cols]
+        rk = self._mat[k0: k0 + self.cols]
+
+        self._mat[i0: i0 + self.cols] = [ f(x, y) for x, y in zip(ri, rk) ]
+
+
+class InplaceMatrixView(InplaceMatrix):
+    """A view of an InplaceMatrix.  Assigning values
+    to elements of the InplaceMatrixView will affect the
+    values in the InplaceMatrix.  `row_slice` and `col_slice`
+    must be non-empty slices without `None` for any argument."""
+    def __init__(self, inplace_mat, row_slice, col_slice):
+        if None in (row_slice.start, row_slice.stop, row_slice.step, \
+                    col_slice.start, col_slice.stop, col_slice.step):
+            raise ValueError("slice objects cannot contain None")
+
+        self.row_slice = row_slice
+        self.col_slice = col_slice
+        self.inplace_mat = inplace_mat
+
+        self._mat = inplace_mat._mat
+        self.rows = (row_slice.stop - row_slice.start) // row_slice.step
+        self.cols = (col_slice.stop - col_slice.start) // col_slice.step
+
+    def copy(self):
+        raise Exception("Cannot copy an InplaceMatrixView")
+
+    def _coord_to_true_index(self, i, j):
+        """Returns the index in self.inplace_mat._mat corresponding
+        to the (i,j) position in the View."""
+        true_i = self.row_slice.start + i*self.row_slice.step
+        true_j = self.col_slice.start + j*self.col_slice.step
+        return self.inplace_mat._coord_to_index(true_i, true_j)
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            i, j = key
+            if isinstance(i, slice) or isinstance(j, slice):
+                raise NotImplementedError("Slices of views are not yet implemented")
+            key = self._coord_to_index(i,j)
+
+        # adjust the key based on the offsets of the slice
+        i, j = self._index_to_coord(key)
+        key = self._coord_to_true_index(i, j)
+
+        return self._mat[key]
+
+    def _set(self, coord, val):
+        # we can easily convert coordinates to indices
+        # using _coord_to_true_index, so if we sent an
+        # index, convert it to a coord and work from there.
+        if not isinstance(coord, tuple):
+            coord = self._index_to_coord(coord)
+        i, j = coord
+        key = self._coord_to_true_index(i, j)
+        self._mat[key] = val
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+class DenseMatrix(CommonMatrix, MatrixBase):
 
     is_MatrixExpr = False
 
@@ -97,6 +395,320 @@ class DenseMatrix(MatrixBase):
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
+
+    def _eval_extract(self, rowsList, colsList):
+        mat = self._mat
+        cols = self.cols
+        indices = (i*cols + j for i in rowsList for j in colsList)
+        return self._new(len(rowsList), len(colsList), list(mat[i] for i in indices), copy=False)
+    #def _eval_trace(self):
+    #    return MatrixBase.trace(self)
+    #def _eval_inverse(self, method=None, **kwargs):
+    #    return MatrixBase.inv(self, method, **kwargs)
+    def _eval_inverse_GE(self, iszerofunc=_iszero):
+        aug = self.row_join(Matrix.eye(self.rows))
+        aug_rref = aug.rref(iszerofunc=_iszero, simplify=True)[0]
+        if any(iszerofunc(aug_rref[i,i]) for i in range(aug_rref.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
+        return self._new(self.rows, self.cols, aug_rref[:, self.cols:])
+    #def _eval_transpose(self):
+    #    return MatrixBase.transpose(self)
+    #def _eval_conjugate(self):
+    #    return MatrixBase.conjugate(self)
+    def _eval_add(self, other):
+        # we assume both arguments are dense matrices since
+        # sparse matrices have a higher priority
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a.__add__(b)
+        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_scalar_mul(self, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a._scalar_mul(other)
+        return self._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_scalar_rmul(self, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a._scalar_rmul(other)
+        return self._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_matrix_mul(self, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a.__mul__(b)
+        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_elementwise_mul(self, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a._elementwise_mul(b)
+        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_integral_pow(self, n):
+        # n >= 0 is an integer, always
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = InplaceMatrix.eye(self.rows)
+        # use iterated squaring to compute the power
+        b = MatrixBase._exp_by_squaring(b, a, n)
+        return self._new(b.rows, b.cols, b._mat, copy=False)
+    def _eval_pow(self, n):
+        from sympy.matrices import eye, diag, MutableMatrix
+        from sympy import binomial
+
+        def jordan_cell_power(jc, n):
+            N = jc.shape[0]
+            l = jc[0, 0]
+            for i in range(N):
+                    for j in range(N-i):
+                            bn = binomial(n, i)
+                            if isinstance(bn, binomial):
+                                    bn = bn._eval_expand_func()
+                            jc[j, i+j] = l**(n-i)*bn
+
+        P, jordan_cells = self.jordan_cells()
+        # Make sure jordan_cells matrices are mutable:
+        jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+        for j in jordan_cells:
+            jordan_cell_power(j, n)
+        return self._new(P*diag(*jordan_cells)*P.inv())
+    #def _eval_cholesky(self):
+    #    return MatrixBase.cholesky(self)
+    #def _eval_LDLdecomposition(self):
+    #    return MatrixBase.LDLdecomposition(self)
+    #def _eval_lower_triangular_solve(self, other):
+    #    return MatrixBase.lower_triangular_solve(self, other)
+    #def _eval_upper_triangular_solve(self, other):
+    #    return MatrixBase.upper_triangular_solve(self, other)
+    def _eval_diagonal_solve(self, other):
+        return self._new(other.rows, other.cols, lambda i, j: other[i, j] / self[i, i])
+    def _eval_LUsolve(self, other, iszerofunc=_iszero):
+        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
+        n = self.rows
+        b = other.permuteFwd(perm).as_mutable()
+        # forward substitution, all diag entries are scaled to 1
+        for i in range(n):
+            for j in range(i):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
+        # backward substitution
+        for i in range(n - 1, -1, -1):
+            for j in range(i + 1, n):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
+            scale = A[i, i]
+            b.row_op(i, lambda x, _: x/scale)
+        return other._new(b)
+    def _eval_LUdecomposition(self, iszerofunc=_iszero):
+        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
+        L = InplaceMatrix.zeros(self.rows)
+        U = InplaceMatrix.zeros(self.rows)
+        for i in range(self.rows):
+            for j in range(self.rows):
+                if i > j:
+                    L[i, j] = combined[i, j]
+                else:
+                    if i == j:
+                        L[i, i] = 1
+                    U[i, j] = combined[i, j]
+        return self._new(L.rows, L.cols, L), self._new(U.rows, U.cols, U), p
+    def _eval_LUdecomposition_Simple(self, iszerofunc=_iszero):
+        n = self.rows
+        A = self.as_mutable()
+        p = []
+        # factorization
+        for j in range(n):
+            for i in range(j):
+                for k in range(i):
+                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
+            pivot = -1
+            for i in range(j, n):
+                for k in range(j):
+                    A[i, j] = A[i, j] - A[i, k]*A[k, j]
+                # find the first non-zero pivot, includes any expression
+                if pivot == -1 and not iszerofunc(A[i, j]):
+                    pivot = i
+            if pivot < 0:
+                # this result is based on iszerofunc's analysis of the possible pivots, so even though
+                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
+                raise ValueError("No nonzero pivot found; inversion failed.")
+            if pivot != j:  # row must be swapped
+                A.row_swap(pivot, j)
+                p.append([pivot, j])
+            scale = 1 / A[j, j]
+            for i in range(j + 1, n):
+                A[i, j] = A[i, j]*scale
+        return A, p
+    def _eval_LUdecompositionFF(self):
+        from sympy.matrices import SparseMatrix
+        zeros = SparseMatrix.zeros
+        eye = SparseMatrix.eye
+
+        n, m = self.rows, self.cols
+        U, L, P = self.as_mutable(), eye(n), eye(n)
+        DD = zeros(n, n)
+        oldpivot = 1
+
+        for k in range(n - 1):
+            if U[k, k] == 0:
+                for kpivot in range(k + 1, n):
+                    if U[kpivot, k]:
+                        break
+                else:
+                    raise ValueError("Matrix is not full rank")
+                U[k, k:], U[kpivot, k:] = U[kpivot, k:], U[k, k:]
+                L[k, :k], L[kpivot, :k] = L[kpivot, :k], L[k, :k]
+                P[k, :], P[kpivot, :] = P[kpivot, :], P[k, :]
+            L[k, k] = Ukk = U[k, k]
+            DD[k, k] = oldpivot*Ukk
+            for i in range(k + 1, n):
+                L[i, k] = Uik = U[i, k]
+                for j in range(k + 1, m):
+                    U[i, j] = (Ukk*U[i, j] - U[k, j]*Uik) / oldpivot
+                U[i, k] = 0
+            oldpivot = Ukk
+        DD[n - 1, n - 1] = oldpivot
+        return P, L, DD, U
+    def _eval_cofactorMatrix(self, method="berkowitz"):
+        out = self._new(self.rows, self.cols, lambda i, j:
+                self.cofactor(i, j, method))
+        return out
+    def _eval_minorMatrix(self, i, j):
+        M = self.as_mutable()
+        M.row_del(i)
+        M.col_del(j)
+        return self._new(M)
+    def _eval_QRdecomposition(self):
+        mat = self.as_mutable()
+
+        n = mat.rows
+        m = mat.cols
+        rank = n
+        row_reduced = mat.rref()[0]
+        for i in range(row_reduced.rows):
+            if row_reduced.row(i).norm() == 0:
+                rank -= 1
+        if not rank == mat.cols:
+            raise MatrixError("The rank of the matrix must match the columns")
+        Q, R = mat.zeros(n, m), mat.zeros(m)
+        for j in range(m):      # for each column vector
+            tmp = mat[:, j]     # take original v
+            for i in range(j):
+                # subtract the project of mat on new vector
+                tmp -= Q[:, i]*mat[:, j].dot(Q[:, i])
+                tmp.expand()
+            # normalize it
+            R[j, j] = tmp.norm()
+            Q[:, j] = tmp / R[j, j]
+            if Q[:, j].norm() != 1:
+                raise NotImplementedError(
+                    "Could not normalize the vector %d." % j)
+            for i in range(j):
+                R[i, j] = Q[:, i].dot(mat[:, j])
+        return self._new(Q), self._new(R)
+    def _eval_QRsolve(self, other):
+        Q, R = self.as_mutable().QRdecomposition()
+        y = Q.T*other
+        return self._new(MatrixBase._back_substitute(R, y))
+    def _eval_values(self):
+        return [i for i in self if not i.is_zero]
+    def _eval_rref(self, iszerofunc=_iszero, simplify=False):
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
+        # pivot: index of next row to contain a pivot
+        pivot, r = 0, self.as_mutable()
+        # pivotlist: indices of pivot variables (non-free)
+        pivotlist = []
+        for i in range(r.cols):
+            if pivot == r.rows:
+                break
+            if simplify:
+                r[pivot, i] = simpfunc(r[pivot, i])
+            if iszerofunc(r[pivot, i]):
+                for k in range(pivot, r.rows):
+                    if simplify and k > pivot:
+                        r[k, i] = simpfunc(r[k, i])
+                    if not iszerofunc(r[k, i]):
+                        r.row_swap(pivot, k)
+                        break
+                else:
+                    continue
+            scale = r[pivot, i]
+            r.row_op(pivot, lambda x, _: x / scale)
+            for j in range(r.rows):
+                if j == pivot:
+                    continue
+                scale = r[j, i]
+                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
+            pivotlist.append(i)
+            pivot += 1
+        return (self._new(r), pivotlist)
+    def _eval_diagonalize(self, reals_only=False, sort=False, normalize=False):
+        # if we've made it here, we're diagonalizable
+        if self._eigenvects is None:
+            self._eigenvects = self.eigenvects(simplify=True)
+        if sort:
+            self._eigenvects.sort(key=default_sort_key)
+            self._eigenvects.reverse()
+        diagvals = []
+        P = self._new(self.rows, 0, [])
+        for eigenval, multiplicity, vects in self._eigenvects:
+            for k in range(multiplicity):
+                diagvals.append(eigenval)
+                vec = vects[k]
+                if normalize:
+                    vec = vec / vec.norm()
+                P = P.col_insert(P.cols, vec)
+        D = diag(*diagvals)
+        self._diagonalize_clear_subproducts()
+        return (P, D)
+    def _eval_dual(self):
+        from sympy import LeviCivita
+        from sympy.matrices import zeros
+
+        M, n = self[:, :], self.rows
+        work = zeros(n)
+        if self.is_symmetric():
+            return work
+
+        for i in range(1, n):
+            for j in range(1, n):
+                acum = 0
+                for k in range(1, n):
+                    acum += LeviCivita(i, j, 0, k)*M[0, k]
+                work[i, j] = acum
+                work[j, i] = -acum
+
+        for l in range(1, n):
+            acum = 0
+            for a in range(1, n):
+                for b in range(1, n):
+                    acum += LeviCivita(0, l, a, b)*M[a, b]
+            acum /= 2
+            work[0, l] = -acum
+            work[l, 0] = acum
+
+        return work
+    def _eval_row_join(self, other):
+        a = InplaceMatrix.zeros(self.rows, self.cols + other.cols)
+        a[:, :self.cols] = self
+        a[:, self.cols:] = other
+        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_col_join(self, other):
+        a = InplaceMatrix.zeros(self.rows + other.rows, self.cols)
+        a[:self.rows, :] = self
+        a[self.rows:, :] = other
+        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_row_insert(self, row, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        pos = row*self.cols
+        a._mat[pos:pos] = other
+        a.rows += other.rows
+        return self._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_col_insert(self, col, other):
+        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        for i in reversed(range(self.rows)):
+            pos = col + i*self.cols
+            a._mat[pos:pos] = other[i,:]
+        a.cols += other.cols
+        return self._new(a.rows, a.cols, a._mat, copy=False)
+    def _eval_has(self, *patterns):
+        return any(a.has(*patterns) for a in self._mat)
 
     @property
     def is_Identity(self):
@@ -188,22 +800,6 @@ class DenseMatrix(MatrixBase):
         """
         return self[:, j]
 
-    def _eval_trace(self):
-        """Calculate the trace of a square matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> eye(3).trace()
-        3
-
-        """
-        trace = 0
-        for i in range(self.cols):
-            trace += self._mat[i*self.cols + i]
-        return trace
-
     def _eval_determinant(self):
         return self.det()
 
@@ -246,9 +842,7 @@ class DenseMatrix(MatrixBase):
         H: Hermite conjugation
         D: Dirac conjugation
         """
-        out = self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].conjugate())
-        return out
+        return self.applyfunc(lambda x: x.conjugate())
 
     def _eval_adjoint(self):
         return self.T.C
@@ -380,7 +974,7 @@ class DenseMatrix(MatrixBase):
     def __ne__(self, other):
         return not self == other
 
-    def _cholesky(self):
+    def _eval_cholesky(self):
         """Helper function of cholesky.
         Without the error checks.
         To be used privately. """
@@ -393,7 +987,7 @@ class DenseMatrix(MatrixBase):
                     sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
-    def _LDLdecomposition(self):
+    def _eval_LDLdecomposition(self):
         """Helper function of LDLdecomposition.
         Without the error checks.
         To be used privately.
@@ -408,7 +1002,7 @@ class DenseMatrix(MatrixBase):
                 for k in range(i))
         return self._new(L), self._new(D)
 
-    def _lower_triangular_solve(self, rhs):
+    def _eval_lower_triangular_solve(self, rhs):
         """Helper function of function lower_triangular_solve.
         Without the error checks.
         To be used privately.
@@ -422,7 +1016,7 @@ class DenseMatrix(MatrixBase):
                     for k in range(i))) / self[i, i]
         return self._new(X)
 
-    def _upper_triangular_solve(self, rhs):
+    def _eval_upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
         X = zeros(self.rows, rhs.cols)
@@ -433,12 +1027,6 @@ class DenseMatrix(MatrixBase):
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
                     for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
-
-    def _diagonal_solve(self, rhs):
-        """Helper function of function diagonal_solve,
-        without the error checks, to be used privately.
-        """
-        return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
@@ -515,72 +1103,14 @@ class DenseMatrix(MatrixBase):
         return cls._new(self.rows, self.cols, [])
 
     @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls._new(r, c, [cls._sympify(0)]*r*c)
+    def _zeros(cls, rows, cols):
+        return cls._new(rows, cols, [cls._sympify(0)]*rows*cols)
 
     @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        mat = [cls._sympify(0)]*n*n
-        mat[::n + 1] = [cls._sympify(1)]*n
-        return cls._new(n, n, mat)
-
-    ############################
-    # Mutable matrix operators #
-    ############################
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return super(DenseMatrix, self).__add__(_force_mutable(other))
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return super(DenseMatrix, self).__radd__(_force_mutable(other))
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        return super(DenseMatrix, self).__sub__(_force_mutable(other))
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return super(DenseMatrix, self).__rsub__(_force_mutable(other))
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    @call_highest_priority('__rmul__')
-    def __matmul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmatmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__div__')
-    def __div__(self, other):
-        return super(DenseMatrix, self).__div__(_force_mutable(other))
-
-    @call_highest_priority('__truediv__')
-    def __truediv__(self, other):
-        return super(DenseMatrix, self).__truediv__(_force_mutable(other))
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        return super(DenseMatrix, self).__pow__(other)
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        raise NotImplementedError("Matrix Power not defined")
+    def _eye(cls, rows, cols):
+        mat = [cls._sympify(0)]*rows*cols
+        mat[::(cols + 1)] = [cls._sympify(1)]*rows
+        return cls._new(rows, cols, mat)
 
 
 def _force_mutable(x):
@@ -600,7 +1130,14 @@ def _force_mutable(x):
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+        # if the copy flag was set to False, the input was rows, cols, [list]
+        # and we should not create a copy of the list.
+        if not kwargs.get('copy', True):
+            if len(args) != 3:
+                raise TypeError("'copy' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
