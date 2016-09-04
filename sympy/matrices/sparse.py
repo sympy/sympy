@@ -37,6 +37,7 @@ class SparseMatrix(DenseMatrix):
     ========
     sympy.matrices.dense.Matrix
     """
+    _default_inverse_method = "LDL"
     _op_priority = 10.02
 
     def __init__(self, *args):

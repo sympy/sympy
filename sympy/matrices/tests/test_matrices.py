@@ -1332,11 +1332,11 @@ def test_vech():
 
     m = Matrix([[1, x*(x + y)], [y*x + x**2, 1]])
     m_vech = m.vech(diagonal=False)
-    assert m_vech[0] == x*(x + y)
+    assert m_vech[0].equals(x*(x + y))
 
     m = Matrix([[1, x*(x + y)], [y*x, 1]])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
-    assert m_vech[0] == y*x
+    assert m_vech[0].equals(y*x)
 
 
 def test_vech_errors():

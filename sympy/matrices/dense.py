@@ -326,6 +326,7 @@ class InplaceMatrixView(InplaceMatrix):
 class DenseMatrix(CommonMatrix, MatrixBase):
 
     is_MatrixExpr = False
+    _default_inverse_method = "GE"
 
     _op_priority = 10.01
     _class_priority = 4
@@ -909,6 +910,10 @@ class DenseMatrix(CommonMatrix, MatrixBase):
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
+
+    @classmethod
+    def _eval_create_with_diag(cls, *entries):
+        return diag(*entries)
 
     def _eval_diff(self, *args, **kwargs):
         if kwargs.pop("evaluate", True):
