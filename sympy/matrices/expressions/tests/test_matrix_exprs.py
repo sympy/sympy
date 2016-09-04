@@ -267,8 +267,9 @@ def test_Zero_power():
 
 
 def test_matrixelement_diff():
-    from sympy import Dummy
     dexpr = diff((D*w)[k,0], w[p,0])
-    _k = dexpr.atoms(Dummy).pop()
-    assert dexpr == Sum(KroneckerDelta(_k, p)*D[k, _k], (_k, 0, n - 1))
-    assert dexpr.doit().args[0][0] == D[k, p]
+
+    assert w[k, p].diff(w[k, p]) == 1
+    assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
+    assert str(dexpr) == "Sum(KroneckerDelta(_k, p)*D[k, _k], (_k, 0, n - 1))"
+    assert str(dexpr.doit()) == 'Piecewise((D[k, p], And(0 <= p, p <= n - 1)), (0, True))'
