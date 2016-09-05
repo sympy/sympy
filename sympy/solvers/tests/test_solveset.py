@@ -436,14 +436,25 @@ def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
+    fset = [S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+            -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 +
+            40*re(1/((-S(1)/2 - sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
+            sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
+            I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               40*im(1/((-S(1)/2 - sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)]
+    cset = [40*re(1/((-S(1)/2 + sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 -
+            sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 +
+            S(5)/3 +
+            I*(40*im(1/((-S(1)/2 + sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
 
-    assert sol == FiniteSet(*[S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
-        -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 + 40*re(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
-        sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
-        I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
-        sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)])
+    assert sol._args[0] == FiniteSet(*fset)
+    assert sol._args[1] == ConditionSet(
+        R,
+        Eq(sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1), 0),
+        FiniteSet(*cset))
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
