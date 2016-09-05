@@ -1130,10 +1130,9 @@ class Derivative(Expr):
         # expression at all. Note, this cannnot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
-        if evaluate:
-            from sympy import IndexedBase
-            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols).difference(expr.atoms(IndexedBase)):
+        if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
+            symbol_set = set(sc[0] for sc in variable_count)
+            if symbol_set.difference(expr.free_symbols):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
@@ -2569,4 +2568,4 @@ def nfloat(expr, n=15, exponent=False):
         lambda x: isinstance(x, Function)))
 
 
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol

@@ -92,8 +92,6 @@ NUMPY_TRANSLATIONS = {
 TENSORFLOW_TRANSLATIONS = {
     "Abs": "abs",
     "ceiling": "ceil",
-    "Max": "maximum",
-    "Min": "minimum",
     "im": "imag",
     "ln": "log",
     "Mod": "mod",
