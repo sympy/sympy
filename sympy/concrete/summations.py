@@ -301,7 +301,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 o_t.append(term)
 
         #next try to combine any interior sums for further simplification
-        result = Add(*o_t, sum_combine(s_t))
+        result = Add(sum_combine(s_t), *o_t)
 
         return factor_sum(result, limits=self.limits)
 

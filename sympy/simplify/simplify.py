@@ -651,7 +651,7 @@ def sum_simplify(s):
             o_t.append(term)
 
 
-    result = Add(*o_t, sum_combine(s_t))
+    result = Add(sum_combine(s_t), *o_t)
 
     return result
 
