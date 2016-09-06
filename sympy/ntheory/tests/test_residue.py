@@ -5,8 +5,10 @@ from sympy.core.compatibility import range
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius
-from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
+    sqrt_mod_iter, mobius, discrete_log
+from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
+    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
+    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
 from sympy.polys.domains import ZZ
 from sympy.utilities.pytest import raises
 
@@ -213,3 +215,9 @@ def test_residue():
     assert mobius(p) == -1
     raises(TypeError, lambda: mobius(x))
     raises(ValueError, lambda: mobius(i))
+
+    assert _discrete_log_trial_mul(191, 19**123, 19) == 123
+    assert _discrete_log_shanks_steps(2456747, 3**321, 3) == 321
+    assert _discrete_log_pollard_rho(24567899, 3**333, 3) == 333
+    assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(432751500361, 7**324, 7) == 324
