@@ -74,6 +74,14 @@ def test_horner():
     assert horner(4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y, wrt=y) == ((
         4*x + 2)*y*x + (2*x + 1)*x)*y
 
+    assert horner(2*x*y + 7*x*y*z + 9*y*z,method='random').expand() == \
+        2*x*y + 7*x*y*z + 9*y*z
+    assert horner(x*y - 10*x*y*z - 9*y*z**4,method='random-greedy').expand() == \
+        x*y - 10*x*y*z - 9*y*z**4
+    assert horner(x*y + x*y*z + y*z + y**2*z,method='default') == \
+        x*y*(z + 1) + y*(y*z + z)
+    assert horner(x*y + x*y*z + y*z + y**2*z,method='greedy') == \
+        y*(x*(z + 1) + y*z + z)
 
 def test_interpolate():
     assert interpolate([1, 4, 9, 16], x) == x**2

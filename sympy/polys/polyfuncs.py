@@ -19,6 +19,9 @@ from sympy.core import S, Basic, Add, Mul, symbols
 
 from sympy.core.compatibility import range
 
+from random import choice
+
+import re
 
 @public
 def symmetrize(F, *gens, **args):
@@ -152,6 +155,12 @@ def symmetrize(F, *gens, **args):
         else:
             return result + (polys,)
 
+def nmult(expr):
+    """ returns number of multiplications in expression
+    """
+    s = str(expr)
+    p = re.findall('\*\*[0-9]+[\*\)\ ]',s)
+    return s.count('*')-2*s.count('**') + sum(int(d[2:-1])-1 for d in p)
 
 @public
 def horner(f, *gens, **args):
@@ -161,11 +170,17 @@ def horner(f, *gens, **args):
     Among other applications, evaluation of a polynomial at a point is optimal
     when it is applied using the Horner scheme ([1]).
 
+    For multivariate polynomials, the order of the variables factored can be
+    determined by different algorithms. The greedy approach can give better
+    results than the default approach without much increase in computation time.
+    Methods implemented and selected using the 'method' argument include:
+    'default', 'greedy', 'random', 'random-greedy' and 'best' (exhaustive search).
+
     Examples
     ========
 
     >>> from sympy.polys.polyfuncs import horner
-    >>> from sympy.abc import x, y, a, b, c, d, e
+    >>> from sympy.abc import x, y, z, a, b, c, d, e, k, l, m, q, r, s, t
 
     >>> horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5)
     x*(x*(x*(9*x + 8) + 7) + 6) + 5
@@ -181,11 +196,30 @@ def horner(f, *gens, **args):
     >>> horner(f, wrt=y)
     y*(x*y*(4*x + 2) + x*(2*x + 1))
 
+    >>> g = x*y - 11*x*y*z + 4*y*z
+
+    >>> horner(g,method='best')
+    y*(x + z*(-11*x + 4))
+
+    >>> h = a*b*c*d*e + 2*a*b*c*e*k - a*b*e*k*l +  4*a*b*e*k + 5*b*c*e*m*k*q - \
+        7*b*c*k*r*s*t
+
+    >>> horner(h)
+    a*b*(c*(d*e + 2*e*k) + e*k*(-l + 4)) + 5*b*c*e*k*m*q - 7*b*c*k*r*s*t
+
+    >>> horner(h,method='greedy')
+    b*(-7*c*k*r*s*t + e*(a*(c*d + k*(2*c - l + 4)) + 5*c*k*m*q))
+
+
     References
     ==========
     [1] - http://en.wikipedia.org/wiki/Horner_scheme
 
     """
+    method = 'default'
+    if 'method' in args:
+        method = args['method']
+        args.pop('method')
     allowed_flags(args, [])
 
     try:
@@ -193,16 +227,97 @@ def horner(f, *gens, **args):
     except PolificationFailed as exc:
         return exc.expr
 
+    args['method'] = method
+
     form, gen = S.Zero, F.gen
 
     if F.is_univariate:
         for coeff in F.all_coeffs():
             form = form*gen + coeff
     else:
-        F, gens = Poly(F, gen), gens[1:]
+        if 'wrt' in args:
+            F, gens = Poly(F, gen), gens[1:]
 
-        for coeff in F.all_coeffs():
-            form = form*gen + horner(coeff, *gens, **args)
+            for coeff in F.all_coeffs():
+                form = form*gen + horner(coeff, *gens, **args)
+        elif method == 'random': # randomly select a variable to factor
+            N = len(F.gens)**2
+            minmul = len(str(F.as_expr))
+            for i in range(N):
+                gen = choice(F.gens)
+                F2 = Poly(F, gen)
+                form = S.Zero
+                args['method'] = 'random-helper'
+                gens = tuple(d for d in gens if d != gen)
+                for coeff in F2.all_coeffs():
+                    form = form*gen + horner(coeff, *gens, **args)
+                nmul = nmult(form)
+                if nmul < minmul:
+                    minform = form
+                    minmul = nmul
+            form = minform
+        elif method == 'random-helper':
+            gen = choice(F.gens)
+            F = Poly(F, gen)
+            form = S.Zero
+            gens = tuple(d for d in gens if d != gen)
+            for coeff in F.all_coeffs():
+                form = form*gen + horner(coeff, *gens, **args)
+        elif method == 'random-greedy': # a mixture of random and greedy
+            N = len(F.gens)**2
+            s = str(F.as_expr)
+            ls = len(s)//2
+            minmul = len(s)
+            for i in range(N):
+                maxgen = max(((s.count(str(gen)),gen) for gen in F.gens),key=lambda x:x[0])[1]
+                gen = choice(list(F.gens)+[maxgen]*ls)
+                F2 = Poly(F, gen)
+                form = S.Zero
+                args['method'] = 'random-greedy-helper'
+                gens = tuple(d for d in gens if d != gen)
+                for coeff in F2.all_coeffs():
+                    form = form*gen + horner(coeff, *gens, **args)
+                nmul = nmult(form)
+                if nmul < minmul:
+                    minform = form
+                    minmul = nmul
+            form = minform
+        elif method == 'random-greedy-helper':
+            s = str(F.as_expr)
+            ls = len(s)//2
+            maxgen = max(((s.count(str(gen)),gen) for gen in F.gens), key=lambda x:x[0])[1]
+            gen = choice(list(F.gens)+[maxgen]*ls)
+            F = Poly(F, gen)
+            form = S.Zero
+            gens = tuple(d for d in gens if d != gen)
+            for coeff in F.all_coeffs():
+                form = form*gen + horner(coeff, *gens, **args)
+        elif method == 'greedy': # factor out the variable that occurs most often
+            s = str(F.as_expr)
+            gen = max(((s.count(str(gen)),gen) for gen in F.gens), key=lambda x:x[0])[1]
+            F = Poly(F, gen)
+            form = S.Zero
+            gens = tuple(d for d in gens if d != gen)
+            for coeff in F.all_coeffs():
+                form = form*gen + horner(coeff, *gens, **args)
+        elif method == 'best': # exhaustive search
+            minmul = len(str(F.as_expr))
+            for gen in F.gens:
+                F2 = Poly(F, gen)
+                form = S.Zero
+                gens2 = tuple(gens)
+                for coeff in F2.all_coeffs():
+                    form = form*gen + horner(coeff, *gens2, **args)
+                nmul = nmult(form)
+                if nmul < minmul:
+                    minform = form
+                    minmul = nmul
+            form = minform
+        else: # default
+            F, gens = Poly(F, gen), gens[1:]
+
+            for coeff in F.all_coeffs():
+                form = form*gen + horner(coeff, *gens, **args)
 
     return form
 
