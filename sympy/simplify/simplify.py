@@ -651,20 +651,15 @@ def sum_simplify(s):
             o_t.append(term)
 
 
-    used, s_t = sum_combine(s_t)
-    result = Add(*o_t)
-
-    for i, s_term in enumerate(s_t):
-        if not used[i]:
-            result = Add(result, s_term)
+    result = Add(*o_t, sum_combine(s_t))
 
     return result
 
 def sum_combine(s_t):
     """Helper function for Sum simplification
 
-       Returns the updated sum_term list s_t, and a boolean list used
-       that indicates whether the sum term has been changed
+       Attempts to simplify a list of sums, by combining limits / sum function's
+       returns the simplified sum
     """
     from sympy.concrete.summations import Sum
 
@@ -682,9 +677,14 @@ def sum_combine(s_t):
                             s_term1 = s_t[i]
                             used[j] = True
 
-    return used, s_t
+    result = S.Zero
+    for i, s_term in enumerate(s_t):
+        if not used[i]:
+            result = Add(result, s_term)
 
-def sum_expand(self, limits=None):
+    return result
+
+def factor_sum(self, limits=None):
     """Helper function for Sum simplification
 
        if limits is specified, "self" is the inner part of a sum
@@ -743,7 +743,7 @@ def sum_add(self, other, method=0):
     if type(rself) == type(rother):
         if method == 0:
             if rself.limits == rother.limits:
-                return sum_expand(Sum(rself.function + rother.function, *rself.limits))
+                return factor_sum(Sum(rself.function + rother.function, *rself.limits))
         elif method == 1:
             if simplify(rself.function - rother.function) == 0:
                 if len(rself.limits) == len(rother.limits) == 1:
@@ -756,9 +756,9 @@ def sum_add(self, other, method=0):
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return sum_expand(Sum(rself.function, (i, x1, y2)))
+                            return factor_sum(Sum(rself.function, (i, x1, y2)))
                         elif x1 == y2 + 1:
-                            return sum_expand(Sum(rself.function, (i, x2, y1)))
+                            return factor_sum(Sum(rself.function, (i, x2, y1)))
 
     return Add(self, other)
 

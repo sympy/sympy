@@ -715,7 +715,7 @@ def test_simplify():
         Sum(x*(3*x + 1), (x, a, b))
     assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
         4 * y * Sum(z, (z, n, k))) + 1 == \
-            4*y*Sum(z, (z, n, k)) + 3*Sum(x * (x**2 + 1), (x, n, k)) + 1
+            4*y*Sum(z, (z, n, k)) + 3*Sum(x**3 + x, (x, n, k)) + 1
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
@@ -822,13 +822,13 @@ def test_factor_expand_subs():
 
     # test expand
     assert Sum(x+1,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(1,(x,1,y))
-    assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + a*Sum(x**2,(x,1,y))
+    assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(a*x**2,(x,1,y))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
-        == x*Sum(x**n, (n, -1, oo)) + x*Sum(n*x**n, (n, -1, oo))
+        == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
         == Sum(n*x**(n+1), (n, -1, oo)) + Sum(x**(n+1), (n, -1, oo))
     assert Sum(a*n+a*n**2,(n,0,4)).expand() \
-        == a*Sum(n,(n,0,4)) + a*Sum(n**2,(n,0,4))
+        == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
     assert Sum(x**a*x**n,(x,0,3)) \
         == Sum(x**(a+n),(x,0,3)).expand(power_exp=True)
     assert Sum(x**(a+n),(x,0,3)) \
