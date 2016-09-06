@@ -1266,7 +1266,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
-        if order < 100000:
+        if order < 1000000000000:
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
