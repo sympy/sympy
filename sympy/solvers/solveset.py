@@ -23,7 +23,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet)
+                        Union, ConditionSet, ImageSet, Complement)
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
@@ -514,7 +514,19 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    return FiniteSet(*[s for s in result if checksol(f, symbol, s) is True])
+    if isinstance(result, Complement):
+        solution_set = result
+    else:
+        f_set = []  # solutions for FiniteSet
+        c_set = []  # solutions for ConditionSet
+        for s in result:
+            if checksol(f, symbol, s):
+                f_set.append(s)
+            else:
+                c_set.append(s)
+        solution_set = FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
+
+    return solution_set
 
 
 def _solve_abs(f, symbol, domain):
@@ -742,7 +754,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         A set of values for `symbol` for which `f` is True or is equal to
         zero. An `EmptySet` is returned if `f` is False or nonzero.
         A `ConditionSet` is returned as unsolved object if algorithms
-        to evaluatee complete solution are not yet implemented.
+        to evaluate complete solution are not yet implemented.
 
     `solveset` claims to be complete in the solution set that it returns.
 
