@@ -4666,7 +4666,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             return (i, simped, False, newly_determined)
         possible_zeros[i] = is_zero
 
-    # after simplifying some things that we're recognized
+    # after simplifying, some things that were recognized
     # as zeros might be zeros
     if all(possible_zeros):
         # if everything is definitely zero, we have
