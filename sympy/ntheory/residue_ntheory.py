@@ -62,7 +62,7 @@ def _primitive_root_prime_iter(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
 
     Examples
     ========
@@ -90,8 +90,8 @@ def primitive_root(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
-    [2] P. Hackman "Elementary Number Theory" (2009),  Chapter C
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [2] P. Hackman "Elementary Number Theory" (2009), Chapter C
 
     Parameters
     ==========
@@ -186,7 +186,8 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+
     """
     s = trailing(p - 1)
     t = p >> s
@@ -212,7 +213,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
 
 def sqrt_mod(a, p, all_roots=False):
     """
-    find a root of ``x**2 = a mod p``
+    Find a root of ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -264,7 +265,7 @@ def sqrt_mod(a, p, all_roots=False):
 
 def _product(*iters):
     """
-    cartesian product generator
+    Cartesian product generator
 
     Notes
     =====
@@ -298,7 +299,7 @@ def _product(*iters):
 
 def sqrt_mod_iter(a, p, domain=int):
     """
-    iterate over solutions to ``x**2 = a mod p``
+    Iterate over solutions to ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -358,7 +359,7 @@ def sqrt_mod_iter(a, p, domain=int):
 
 def _sqrt_mod_prime_power(a, p, k):
     """
-    find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
+    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
 
     Parameters
     ==========
@@ -370,9 +371,9 @@ def _sqrt_mod_prime_power(a, p, k):
     References
     ==========
 
-    [1] P. Hackman "Elementary Number Theory" (2009),  page 160
-    [2] http://www.numbertheory.org/php/squareroot.html
-    [3] [Gathen99]_
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
+    .. [2] http://www.numbertheory.org/php/squareroot.html
+    .. [3] [Gathen99]_
 
     Examples
     ========
@@ -412,7 +413,6 @@ def _sqrt_mod_prime_power(a, p, k):
         return sorted([ZZ(res), ZZ(p - res)])
 
     if k > 1:
-        f = factorint(a)
         # see Ref.[2]
         if p == 2:
             if a % 8 != 1:
@@ -476,7 +476,7 @@ def _sqrt_mod_prime_power(a, p, k):
 
 def _sqrt_mod1(a, p, n):
     """
-    find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
+    Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
     see http://www.numbertheory.org/php/squareroot.html
     """
@@ -622,7 +622,8 @@ def is_nthpow_residue(a, n, m):
     References
     ==========
 
-    P. Hackman "Elementary Number Theory" (2009),  page 76
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
+
     """
     a, n, m = [as_int(i) for i in (a, n, m)]
     if m <= 0:
@@ -699,7 +700,8 @@ def _nthroot_mod1(s, q, p, all_roots):
     References
     ==========
 
-    [1] A. M. Johnston "A Generalized qth Root Algorithm"
+    .. [1] A. M. Johnston "A Generalized qth Root Algorithm"
+
     """
     g = primitive_root(p)
     if not isprime(q):
@@ -749,7 +751,7 @@ def _nthroot_mod1(s, q, p, all_roots):
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
-    find the solutions to ``x**n = a mod p``
+    Find the solutions to ``x**n = a mod p``
 
     Parameters
     ==========
@@ -829,15 +831,24 @@ def quadratic_residues(p):
 
 
 def legendre_symbol(a, p):
-    """
-    Returns
-    =======
+    r"""
+    Returns the Legendre symbol `(a / p)`.
 
-    1. 0 if a is multiple of p
-    2. 1 if a is a quadratic residue of p
-    3. -1 otherwise
+    For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
+    defined as
 
-    p should be an odd prime by definition
+    .. math ::
+        \genfrac(){}{}{a}{p} = \begin{cases}
+             0 & \text{if } p \text{ divides } a\\
+             1 & \text{if } a \text{ is a quadratic residue modulo } p\\
+            -1 & \text{if } a \text{ is a quadratic nonresidue modulo } p
+        \end{cases}
+
+    Parameters
+    ==========
+
+    a : integer
+    p : odd prime
 
     Examples
     ========
@@ -866,16 +877,37 @@ def legendre_symbol(a, p):
 
 
 def jacobi_symbol(m, n):
-    """
-    Returns the product of the legendre_symbol(m, p)
-    for all the prime factors, p, of n.
+    r"""
+    Returns the Jacobi symbol `(m / n)`.
 
-    Returns
-    =======
+    For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
+    is defined as the product of the Legendre symbols corresponding to the
+    prime factors of ``n``:
 
-    1. 0 if m cong 0 mod(n)
-    2. 1 if x**2 cong m mod(n) has a solution
-    3. -1 otherwise
+    .. math ::
+        \genfrac(){}{}{m}{n} =
+            \genfrac(){}{}{m}{p^{1}}^{\alpha_1}
+            \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
+            ...
+            \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
+            \text{ where } n =
+                p_1^{\alpha_1}
+                p_2^{\alpha_2}
+                ...
+                p_k^{\alpha_k}
+
+    Like the Legendre symbol, if the Jacobi symbol `\genfrac(){}{}{m}{n} = -1`
+    then ``m`` is a quadratic nonresidue modulo ``n``.
+
+    But, unlike the Legendre symbol, if the Jacobi symbol
+    `\genfrac(){}{}{m}{n} = 1` then ``m`` may or may not be a quadratic residue
+    modulo ``n``.
+
+    Parameters
+    ==========
+
+    m : integer
+    n : odd positive integer
 
     Examples
     ========
@@ -887,7 +919,7 @@ def jacobi_symbol(m, n):
     >>> jacobi_symbol(60, 121)
     1
 
-    The relationship between the jacobi_symbol and legendre_symbol can
+    The relationship between the ``jacobi_symbol`` and ``legendre_symbol`` can
     be demonstrated as follows:
 
     >>> L = legendre_symbol

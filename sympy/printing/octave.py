@@ -392,6 +392,11 @@ class OctaveCodePrinter(CodePrinter):
                                               self._print(expr.args[0]))
 
 
+    def _print_sinc(self, expr):
+        #Note: Divide by pi because Octave implements normalized sinc function.
+        return "sinc(%s)" % self._print(expr.args[0]/S.Pi)
+
+
     def _print_hankel1(self, expr):
         return "besselh(%s, 1, %s)" % (self._print(expr.order),
                                        self._print(expr.argument))
@@ -431,6 +436,12 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_airybiprime(self, expr):
         return "airy(3, %s)" % self._print(expr.args[0])
+
+
+    def _print_LambertW(self, expr):
+        # argument order is reversed
+        args = ", ".join([self._print(x) for x in reversed(expr.args)])
+        return "lambertw(" + args + ")"
 
 
     def _print_Piecewise(self, expr):

@@ -4,7 +4,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Symbol
+from sympy.core import S, Add, Symbol, Mod
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
@@ -216,7 +216,8 @@ class LatexPrinter(Printer):
         elif expr.is_Mul:
             if not first and _coeff_isneg(expr):
                 return True
-
+        if any([expr.has(x) for x in (Mod,)]):
+            return True
         if (not last and
             any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
             return True
@@ -231,6 +232,8 @@ class LatexPrinter(Printer):
         things.
         """
         if expr.is_Relational:
+            return True
+        if any([expr.has(x) for x in (Mod,)]):
             return True
         return False
 
@@ -1220,6 +1223,8 @@ class LatexPrinter(Printer):
             if expr.p < 0:
                 sign = "- "
                 p = -p
+            if self._settings['fold_short_frac']:
+                return r"%s%d / %d" % (sign, p, expr.q)
             return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
@@ -1380,6 +1385,13 @@ class LatexPrinter(Printer):
             return self._print(x)
         return ' '.join(map(parens, expr.args))
 
+    def _print_Mod(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(%s\bmod{%s}\right)^{%s}' % (self.parenthesize(expr.args[0],
+                    PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]), self._print(exp))
+        return r'%s\bmod{%s}' % (self.parenthesize(expr.args[0],
+                PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]))
+
     def _print_HadamardProduct(self, expr):
         from sympy import Add, MatAdd, MatMul
 
@@ -1435,6 +1447,12 @@ class LatexPrinter(Printer):
                 self._print(expr.args[1]), self._print(expr.args[0]))
         if exp:
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
+    def _print_SingularityFunction(self, expr):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1605,7 +1623,7 @@ class LatexPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(' + \ldots')
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1858,11 +1876,17 @@ class LatexPrinter(Printer):
         contents = self._print(p.args[0])
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
-    def _print_totient(self, expr):
-        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+    def _print_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\phi\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\phi\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_reduced_totient(self, expr):
-        return r'\lambda\left( %s \right)' %  self._print(expr.args[0])
+    def _print_reduced_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\lambda\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\lambda\left(%s\right)' % self._print(expr.args[0])
 
     def _print_divisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
@@ -1883,6 +1907,19 @@ class LatexPrinter(Printer):
         if exp is not None:
             return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
         return r"\sigma^*%s" % tex
+
+    def _print_primenu(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\nu\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\nu\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_primeomega(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\Omega\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
 
 def translate(s):
     r'''
@@ -1946,7 +1983,7 @@ def latex(expr, **settings):
     8 \sqrt{2} \mu^{\frac{7}{2}}
 
     >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{\frac{7}{2}}$
+    $8 \sqrt{2} \tau^{7 / 2}$
 
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}

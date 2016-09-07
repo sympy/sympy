@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
-        coset_enumeration_r, coset_enumeration_c)
-from sympy.combinatorics.free_group import free_group
+        coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
+from sympy.combinatorics.free_groups import free_group
 
 """
 References
@@ -13,6 +13,10 @@ References
 [2] John J. Cannon; Lucien A. Dimino; George Havas; Jane M. Watson
 Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490.
 "Implementation and Analysis of the Todd-Coxeter Algorithm"
+
+[3] PROC. SECOND  INTERNAT. CONF. THEORY OF GROUPS, CANBERRA 1973,
+pp. 347-356. "A Reidemeister-Schreier program" by George Havas.
+http://staff.itee.uq.edu.au/havas/1973cdhw.pdf
 
 """
 
@@ -139,12 +143,13 @@ def test_coset_enumeration():
     # E₁ from [2] Pg. 474
     F, r, s, t = free_group("r, s, t")
     E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
-    C_r = coset_enumeration_r(E1, [r])
-    C_r.compress(); C_r.standardize()
-    C_c = coset_enumeration_c(E1, [r])
-    C_c.compress(); C_c.standardize()
+    C_r = coset_enumeration_r(E1, [])
+    C_r.compress()
+    C_c = coset_enumeration_c(E1, [])
+    C_c.compress()
     table2 = [[0, 0, 0, 0, 0, 0]]
     assert C_r.table == table2
+    # test for issue #11449
     assert C_c.table == table2
 
     # Cox group from [2] Pg. 474
@@ -687,6 +692,27 @@ def test_coset_enumeration():
     assert C_c.table == table4
 
 
+def test_look_ahead():
+    # Section 3.2 [Test Example] Example (d) from [2]
+    F, a, b, c = free_group("a, b, c")
+    f = FpGroup(F, [a**11, b**5, c**4, (a*c)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
+    H = [c, b, c**2]
+    table0 = [[1, 2, 0, 0, 0, 0],
+              [3, 0, 4, 5, 6, 7],
+              [0, 8, 9, 10, 11, 12],
+              [5, 1, 10, 13, 14, 15],
+              [16, 5, 16, 1, 17, 18],
+              [4, 3, 1, 8, 19, 20],
+              [12, 21, 22, 23, 24, 1],
+              [25, 26, 27, 28, 1, 24],
+              [2, 10, 5, 16, 22, 28],
+              [10, 13, 13, 2, 29, 30]]
+    CosetTable.max_stack_size = 10
+    C_c = coset_enumeration_c(f, H)
+    C_c.compress(); C_c.standardize()
+    assert C_c.table[: 10] == table0
+
+
 def test_low_index_subgroups():
     F, x, y = free_group("x, y")
 
@@ -773,3 +799,52 @@ def test_low_index_subgroups():
            [6, 6, 6, 3], [5, 5, 3, 5], [8, 8, 8, 4], [7, 7, 4, 7]]]
     for i in range(len(t3)):
         assert L[i].table == t3[i]
+
+
+def test_subgroup_presentations():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**3, y**5, (x*y)**2])
+    H = [x*y, x**-1*y**-1*x*y*x]
+    p1 = reidemeister_presentation(f, H)
+    assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
+
+    f = FpGroup(F, [x**3, y**3, (x*y)**3])
+    H = [x*y, x*y**-1]
+    p2 = reidemeister_presentation(f, H)
+    assert str(p2) == "((x_0, y_0), (x_0**3, y_0**3, x_0*y_0*x_0*y_0*x_0*y_0))"
+
+    f = FpGroup(F, [x**2*y**2, y**-1*x*y*x**-3])
+    H = [x]
+    p3 = reidemeister_presentation(f, H)
+    assert str(p3) == "((x_0,), (x_0**4,))"
+
+    f = FpGroup(F, [x**3*y**-3, (x*y)**3, (x*y**-1)**2])
+    H = [x]
+    p4 = reidemeister_presentation(f, H)
+    assert str(p4) == "((x_0,), (x_0**6,))"
+
+    # this presentation can be improved, the most simplified form
+    # of presentation is <a, b | a^11, b^2, (a*b)^3, (a^4*b*a^-5*b)^2>
+    # See [2] Pg 474 group PSL_2(11)
+    # This is the group PSL_2(11)
+    F, a, b, c = free_group("a, b, c")
+    f = FpGroup(F, [a**11, b**5, c**4, (b*c**2)**2, (a*b*c)**3, (a**4*c**2)**3, b**2*c**-1*b**-1*c, a**4*b**-1*a**-1*b])
+    H = [a, b, c**2]
+    k = ("((a_0, b_1, c_3), "
+        "(c_3**3, b_1**5, a_0**4*b_1**-2*a_0**-1*b_1**2, "
+        "c_3*b_1**-2*c_3*b_1**-2*c_3*b_1**-2, b_1**-1*a_0*b_1**2*c_3**-1*b_1**-1*a_0*b_1**2*c_3**-1, "
+        "a_0**11, a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*c_3, "
+        "a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
+        "a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
+        "a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
+        "b_1**-2*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*a_0*b_1**2*c_3**-1*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2, "
+        "b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
+        "b_1**2*c_3*b_1**-2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1*c_3, "
+        "b_1**2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1**-2*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
+        "c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1, "
+        "c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2, "
+        "b_1**2*a_0*b_1**2*c_3**-1*b_1**-1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*b_1**2*c_3**-1*b_1**2*c_3*b_1*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1, "
+        "c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0*c_3**-1*b_1*a_0*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0, "
+        "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
+        )
+    assert str(reidemeister_presentation(f, H)) == k
