@@ -299,14 +299,98 @@ class MatrixBase(object):
             return
 
     def copy(self):
+        """
+        Returns the copy of a matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.copy()
+        Matrix([
+        [1, 2],
+        [3, 4]])
+
+        """
         return self._new(self.rows, self.cols, self._mat)
 
     def trace(self):
+        """
+        Returns the trace of a matrix i.e. the sum of the
+        diagonal elements.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.trace()
+        5
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
     def inv(self, method=None, **kwargs):
+        """
+        Return the inverse of a matrix.
+
+        CASE 1: If the matrix is a dense matrix.
+
+        Return the matrix inverse using the method indicated (default
+        is Gauss elimination).
+
+        kwargs
+        ======
+
+        method : ('GE', 'LU', or 'ADJ')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          GE .... inverse_GE(); default
+          LU .... inverse_LU()
+          ADJ ... inverse_ADJ()
+
+        See Also
+        ========
+
+        inverse_LU
+        inverse_GE
+        inverse_ADJ
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
+
+        CASE 2: If the matrix is a sparse matrix.
+
+        Return the matrix inverse using Cholesky or LDL (default).
+
+        kwargs
+        ======
+
+        method : ('CH', 'LDL')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          LDL ... inverse_LDL(); default
+          CH .... inverse_CH()
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
         if method is not None:
@@ -314,7 +398,7 @@ class MatrixBase(object):
         return self._eval_inverse(**kwargs)
 
     def inv_mod(self, m):
-        r"""
+        """
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
@@ -354,11 +438,26 @@ class MatrixBase(object):
         return K_inv
 
     def transpose(self):
+        """
+        Returns the transpose of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.transpose()
+        Matrix([
+        [1, 3],
+        [2, 4]])
+
+        """
         return self._eval_transpose()
 
     T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
+        """ Returns the conjugate of the matrix."""
         return self._eval_conjugate()
 
     C = property(conjugate, None, None, "By-element conjugation.")

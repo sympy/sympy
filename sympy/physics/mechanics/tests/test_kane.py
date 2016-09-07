@@ -29,10 +29,15 @@ def test_one_dof():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         KM.kanes_equations(FL, BL)
+
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
+
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+
     assert (KM.linearize(A_and_B=True, new_method=True)[0] ==
             Matrix([[0, 1], [-k/m, -c/m]]))
 
@@ -88,6 +93,9 @@ def test_two_dof():
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
 
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
+
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -111,6 +119,8 @@ def test_pend():
     rhs = MM.inv() * forcing
     rhs.simplify()
     assert expand(rhs[0]) == expand(-g / l * sin(q))
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
 
 def test_rolling_disc():
@@ -177,6 +187,8 @@ def test_rolling_disc():
     rhs.simplify()
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
+    assert simplify(KM.rhs() -
+                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
 
     # This code tests our output vs. benchmark values. When r=g=m=1, the
     # critical speed (where all eigenvalues of the linearized equations are 0)

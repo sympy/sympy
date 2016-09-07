@@ -1050,6 +1050,13 @@ class Ei(Function):
 
     @classmethod
     def eval(cls, z):
+        if z is S.Zero:
+            return S.NegativeInfinity
+        elif z is S.Infinity:
+            return S.Infinity
+        elif z is S.NegativeInfinity:
+            return S.Zero
+
         if not z.is_polar and z.is_negative:
             # Note: is this a good idea?
             return Ei(polar_lift(z)) - pi*I

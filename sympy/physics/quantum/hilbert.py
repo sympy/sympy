@@ -8,7 +8,7 @@ Authors:
 from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -417,7 +417,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u(' ') + u('\N{N-ARY CIRCLED TIMES OPERATOR}') + u(' ')))
+                    pform = prettyForm(*pform.right(u' ' + u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
                 else:
                     pform = prettyForm(*pform.right(' x '))
         return pform
@@ -528,7 +528,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u(' ') + u('\N{CIRCLED PLUS}') + u(' ')))
+                    pform = prettyForm(*pform.right(u' \N{CIRCLED PLUS} '))
                 else:
                     pform = prettyForm(*pform.right(' + '))
         return pform

@@ -810,7 +810,7 @@ class Float(Number):
         prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
-        elif isinstance(num, str):
+        elif isinstance(num, string_types):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():

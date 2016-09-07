@@ -231,6 +231,20 @@ class CCodePrinter(CodePrinter):
         else:
             return name
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
+
+    def _print_sinc(self, expr):
+        from sympy.functions.elementary.trigonometric import sin
+        from sympy.core.relational import Ne
+        from sympy.functions import Piecewise
+        _piecewise = Piecewise(
+            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
+        return self._print(_piecewise)
+
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.rel_op
@@ -300,7 +314,8 @@ def ccode(expr, assign_to=None, **settings):
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values
         are their desired C string representations. Alternatively, the
         dictionary value can be a list of tuples i.e. [(argument_test,
-        cfunction_string)].  See below for examples.
+        cfunction_string)] or [(argument_test, cfunction_formater)]. See below
+        for examples.
     dereference : iterable, optional
         An iterable of symbols that should be dereferenced in the printed code
         expression. These would be values passed by address to the function.
@@ -342,6 +357,13 @@ def ccode(expr, assign_to=None, **settings):
     >>> func = Function('func')
     >>> ccode(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
     'f(fabs(x) + CEIL(x))'
+
+    or if the C-function takes a subset of the original arguments:
+
+    >>> ccode(2**x + 3**x, user_functions={'Pow': [
+    ...   (lambda b, e: b == 2, lambda b, e: 'exp2(%s)' % e),
+    ...   (lambda b, e: b != 2, 'pow')]})
+    'exp2(x) + pow(3, x)'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise

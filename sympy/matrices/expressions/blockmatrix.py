@@ -139,8 +139,8 @@ class BlockMatrix(MatrixExpr):
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
         Matrix([
-        [X',  0],
-        [Z', Y']])
+        [X.T,  0],
+        [Z.T, Y.T]])
         >>> _.transpose()
         Matrix([
         [X, Z],

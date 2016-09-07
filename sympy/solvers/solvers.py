@@ -1,4 +1,4 @@
-﻿"""
+"""
 This module contain solvers for all kinds of equations:
 
     - algebraic or transcendental, use solve()
@@ -237,7 +237,7 @@ def checksol(f, symbol, sol=None, **flags):
                     sol[k] = simplify(sol[k])
             # start over without the failed expanded form, possibly
             # with a simplified solution
-            val = f.subs(sol)
+            val = simplify(f.subs(sol))
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
@@ -245,16 +245,6 @@ def checksol(f, symbol, sol=None, **flags):
                 if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
-        elif attempt == 3:
-            val = powsimp(val)
-        elif attempt == 4:
-            val = cancel(val)
-        elif attempt == 5:
-            val = val.expand()
-        elif attempt == 6:
-            val = together(val)
-        elif attempt == 7:
-            val = powsimp(val)
         else:
             # if there are no radicals and no functions then this can't be
             # zero anymore -- can it?
@@ -309,7 +299,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, **assumptions):
+def check_assumptions(expr, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -317,8 +307,7 @@ def check_assumptions(expr, **assumptions):
     Examples
     ========
 
-       >>> from sympy import Symbol, pi, I, exp
-       >>> from sympy.solvers.solvers import check_assumptions
+       >>> from sympy import Symbol, pi, I, exp, check_assumptions
 
        >>> check_assumptions(-5, integer=True)
        True
@@ -335,12 +324,21 @@ def check_assumptions(expr, **assumptions):
        >>> check_assumptions(-2*x - 5, real=True, positive=True)
        False
 
+       To check assumptions of ``expr`` against another variable or expression,
+       pass the expression or variable as ``against``.
+
+       >>> check_assumptions(2*x + 1, x)
+       True
+
        `None` is returned if check_assumptions() could not conclude.
 
        >>> check_assumptions(2*x - 1, real=True, positive=True)
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
+    if against is not None:
+        assumptions = against.assumptions0
+
     expr = sympify(expr)
 
     result = True
