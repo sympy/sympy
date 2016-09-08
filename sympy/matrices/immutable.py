@@ -39,34 +39,14 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _op_priority = 10.001
     _class_priority = 8
 
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
-            return args[0]
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-        rows = Integer(rows)
-        cols = Integer(cols)
-        mat = Tuple(*flat_list)
-        return Basic.__new__(cls, rows, cols, mat)
-
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
-    @property
-    def shape(self):
-        return tuple([int(i) for i in self.args[:2]])
-
-    @property
-    def _mat(self):
-        return list(self.args[2])
+    def __setitem__(self, *args):
+        raise TypeError("Cannot set values of ImmutableMatrix")
 
     def _entry(self, i, j):
         return DenseMatrix.__getitem__(self, (i, j))
-
-    __getitem__ = DenseMatrix.__getitem__
-
-    def __setitem__(self, *args):
-        raise TypeError("Cannot set values of ImmutableMatrix")
 
     def _eval_Eq(self, other):
         """Helper method for Equality with matrices.
@@ -85,6 +65,26 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
             return None
         diff = self - other
         return sympify(diff.is_zero)
+
+    @property
+    def _mat(self):
+        return list(self.args[2])
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
+            return args[0]
+        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+        rows = Integer(rows)
+        cols = Integer(cols)
+        mat = Tuple(*flat_list)
+        return Basic.__new__(cls, rows, cols, mat)
+
+    @property
+    def shape(self):
+        return tuple([int(i) for i in self.args[:2]])
+
+    __getitem__ = DenseMatrix.__getitem__
 
     adjoint = MatrixBase.adjoint
     # C and T are defined in MatrixExpr...I don't know why C alone
@@ -144,6 +144,9 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     _class_priority = 9
 
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
     @classmethod
     def _new(cls, *args, **kwargs):
         s = MutableSparseMatrix(*args)
@@ -156,8 +159,8 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         obj._smat = s._smat
         return obj
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
@@ -165,8 +168,5 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     subs = MatrixBase.subs
 
     xreplace = MatrixBase.xreplace
-
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
 
     _eval_Eq = ImmutableMatrix._eval_Eq
