@@ -628,7 +628,12 @@ class MatrixBase(object):
 
     def __pow__(self, num):
         from sympy.matrices import eye, diag, MutableMatrix
-        from sympy import binomial
+        from sympy import binomial	
+        import inspect
+
+        if type(num) != int and inspect.stack()[1][3] != "doit":
+            from sympy.matrices.expressions.matpow import MatPow
+            return MatPow(self,num)
 
         if not self.is_square:
             raise NonSquareMatrixError()
