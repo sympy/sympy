@@ -125,7 +125,7 @@ def test_ellipse_geom():
     # so only test up to the desired precision
     def lines_close(l1, l2, prec):
         """ tests whether l1 and 12 are within 10**(-prec)
-        of eachother """
+        of each other """
         return abs(l1.p1 - l2.p1) < 10**(-prec) and abs(l1.p2 - l2.p2) < 10**(-prec)
     def line_list_close(ll1, ll2, prec):
         return all(lines_close(l1, l2, prec) for l1, l2 in zip(ll1, ll2))

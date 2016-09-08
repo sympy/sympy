@@ -124,8 +124,8 @@ class Point(GeometryEntity):
     def is_collinear(*args):
         """Is a sequence of points collinear?
 
-        Test whether or not a set of points are collinear. Returns True if
-        the set of points are collinear, or False otherwise.
+        Test whether or not a set of points is collinear. Returns True if
+        the set of points are collinear and False otherwise.
 
         Parameters
         ==========
@@ -136,27 +136,6 @@ class Point(GeometryEntity):
         =======
 
         is_collinear : boolean
-
-        Notes
-        =====
-
-        Slope is preserved everywhere on a line, so the slope between
-        any two points on the line should be the same. Take the first
-        two points, p1 and p2, and create a translated point v1
-        with p1 as the origin. Now for every other point we create
-        a translated point, vi with p1 also as the origin. Note that
-        these translations preserve slope since everything is
-        consistently translated to a new origin of p1. Since slope
-        is preserved then we have the following equality:
-
-              * v1_slope = vi_slope
-              * v1.y/v1.x = vi.y/vi.x (due to translation)
-              * v1.y*vi.x = vi.y*v1.x
-              * v1.y*vi.x - vi.y*v1.x = 0           (*)
-
-        Hence, if we have a vi such that the equality in (*) is False
-        then the points are not collinear. We do this test for every
-        point in the list, and if all pass then they are collinear.
 
         See Also
         ========
@@ -192,7 +171,7 @@ class Point(GeometryEntity):
 
     def is_scalar_multiple(self, p2):
         """Returns whether `p1` and `p2` are scalar multiples
-        of eachother.
+        of each other.
         """
         p1, p2 = Point.pointify(self), Point.pointify(p2)
 
@@ -202,7 +181,7 @@ class Point(GeometryEntity):
             return simplify(x1*y2-x2*y1) == 0
 
         # if the vectors p1 and p2 are linearly dependent, then they must
-        # be scalar multiples of eachother
+        # be scalar multiples of each other
         m = Matrix([p1.args, p2.args])
         # XXX: issue #9480 we need `simplify=True` otherwise the
         # rank may be computed incorrectly
@@ -289,7 +268,7 @@ class Point(GeometryEntity):
         # and translate to every point to the origin
         # XXX: issue #11238 we need to pre-simplify otherwise
         # the rank calculation will be incorrect
-        origin = simplify(Point.pointify(points[0]))
+        origin = Point.pointify(points[0])
         points = [Point.pointify(p, dimension=origin.ambient_dimension) - origin for p in points[1:]]
 
         m = Matrix([p.args for p in points])

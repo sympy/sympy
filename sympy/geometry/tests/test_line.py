@@ -223,7 +223,7 @@ def test_line_geom():
     m = symbols('m', real=True)
     l = Line((0, 5), slope=m)
     p = Point(2, 3)
-    assert simplify(l.distance(p) - 2*abs(m + 1)/sqrt(m**2 + 1)).is_zero
+    assert (l.distance(p) - 2*abs(m + 1)/sqrt(m**2 + 1)).equals(0)
     # Ray to point
     r = Ray(p1, p2)
     assert r.distance(Point(-1, -1)) == sqrt(2)

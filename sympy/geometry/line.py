@@ -52,6 +52,9 @@ class LinearEntity(GeometrySet):
     Attributes
     ==========
 
+    ambient_dimension
+    direction
+    length
     p1
     p2
     points
@@ -127,41 +130,6 @@ class LinearEntity(GeometrySet):
 
         """
         return self.args[1]
-
-    @property
-    def coefficients(self):
-        """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
-
-        See Also
-        ========
-
-        sympy.geometry.line.Line.equation
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> from sympy.abc import x, y
-        >>> p1, p2 = Point(0, 0), Point(5, 3)
-        >>> l = Line(p1, p2)
-        >>> l.coefficients
-        (-3, 5, 0)
-
-        >>> p3 = Point(x, y)
-        >>> l2 = Line(p1, p3)
-        >>> l2.coefficients
-        (-y, x, 0)
-
-        """
-        p1, p2 = self.points
-        if p1.x == p2.x:
-            return (S.One, S.Zero, -p1.x)
-        elif p1.y == p2.y:
-            return (S.Zero, S.One, -p1.y)
-        return tuple([simplify(i) for i in
-               (self.p1.y - self.p2.y,
-                self.p2.x - self.p1.x,
-                self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
     @property
     def direction(self):
@@ -317,7 +285,7 @@ class LinearEntity(GeometrySet):
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
-        return l1.direction.dot(l2.direction) == S.Zero
+        return S.Zero.equals(l1.direction.dot(l2.direction))
 
     def angle_between(l1, l2):
         """The angle formed between the two linear entities.
@@ -514,6 +482,7 @@ class LinearEntity(GeometrySet):
         if p in self:
             return p
         l = self.perpendicular_line(p)
+        # The intersection should be unique, so unpack the singleton
         p2, = Intersection(Line(self.p1, self.p2), l)
 
         return Segment(p, p2)
@@ -635,6 +604,7 @@ class LinearEntity(GeometrySet):
             projected = Intersection(self, projected)
             # if we happen to have intersected in only a point, return that
             if projected.is_FiniteSet and len(projected) == 1:
+                # projected is a set of size 1, so unpack it in `a`
                 a, = projected
                 return a
             return projected
@@ -1642,13 +1612,14 @@ class Segment(LinearEntity):
         if isinstance(other, Point):
             if Point.is_collinear(other, self.p1, self.p2):
                 d1, d2 = other - self.p1, other - self.p2
-                d = self.direction
+                d = self.p2 - self.p1
                 # without the call to simplify, sympy cannot tell that an expression
                 # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
                 # determined, raise an Undecidable error
                 try:
-                    # The unit tests assume contains returns a true bool, not a sympy bool
-                    return bool( simplify(d.dot(d1)) >= S.Zero and simplify((-d).dot(d2)) >= S.Zero )
+                    # the triangle inequality says that |d1|+|d2| >= |d| and is strict
+                    # only if other lies in the line segment
+                    return bool(Eq(simplify(abs(d1) + abs(d2) - abs(d)), 0))
                 except TypeError:
                     raise Undecidable("Cannot determine if {} is in {}".format(other, self))
         if isinstance(other, Segment):
@@ -1835,6 +1806,41 @@ class Line2D(LinearEntity2D, Line):
         else:
             raise ValueError('A 2nd Point or keyword "slope" must be used.')
         return LinearEntity2D.__new__(cls, p1, p2, **kwargs)
+
+    @property
+    def coefficients(self):
+        """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line.equation
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> from sympy.abc import x, y
+        >>> p1, p2 = Point(0, 0), Point(5, 3)
+        >>> l = Line(p1, p2)
+        >>> l.coefficients
+        (-3, 5, 0)
+
+        >>> p3 = Point(x, y)
+        >>> l2 = Line(p1, p3)
+        >>> l2.coefficients
+        (-y, x, 0)
+
+        """
+        p1, p2 = self.points
+        if p1.x == p2.x:
+            return (S.One, S.Zero, -p1.x)
+        elif p1.y == p2.y:
+            return (S.Zero, S.One, -p1.y)
+        return tuple([simplify(i) for i in
+               (self.p1.y - self.p2.y,
+                self.p2.x - self.p1.x,
+                self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
     def equation(self, x='x', y='y'):
         """The equation of the line: ax + by + c.
