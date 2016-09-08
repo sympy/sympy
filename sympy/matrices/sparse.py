@@ -16,7 +16,7 @@ from .dense import Matrix, DenseMatrix
 import collections
 
 
-class SparseMatrix(DenseMatrix):
+class SparseMatrix(CommonMatrix, MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 

@@ -184,11 +184,24 @@ class CommonMatrix(object):
     def _eval_cofactorMatrix(self, method):
         return self._new(self.rows, self.cols, lambda i, j: self.cofactor(i, j, method))
 
-    def _eval_col_insert(self, col, other):
-        raise NotImplementedError("Subclasses must implement this method")
+    def _eval_col_insert(self, col, pos):
+        cols = self.cols
+        insert_cols = col.cols
+        def entry(i, j):
+            if j < pos:
+                return self[i, j]
+            elif pos <= j < pos + col.cols:
+                return other[i, j - pos]
+            return other[i, j - cols - pos]
+        return self._new(self.rows, self.cols + other.cols, lambda i, j: entry(i,j))
 
     def _eval_col_join(self, other):
-        raise NotImplementedError("Subclasses must implement this method")
+        cols = self.cols
+        def entry(i, j):
+            if j < cols:
+                return self[i, j]
+            return other[i, j - cols]
+        return classof(self, other)._new(self.rows, self.cols + other.cols, lambda i, j: entry(i,j))
 
     def _eval_columnspace(self, simpfunc):
         reduced, pivots = self.rref(simplify=simpfunc)
@@ -926,7 +939,12 @@ class CommonMatrix(object):
         raise NotImplementedError("Subclasses must implement this method")
 
     def _eval_row_join(self, other):
-        raise NotImplementedError("Subclasses must implement this method")
+        rows = self.rows
+        def entry(i, j):
+            if i < rows:
+                return self[i, j]
+            return other[i - rows, j]
+        return classof(self, other)._new(self.rows + other.rows, self.cols, lambda i, j: entry(i,j))
 
     def _eval_rref(self, iszerofunc, simplify):
         simpfunc = simplify if isinstance(
