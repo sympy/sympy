@@ -144,6 +144,18 @@ class SparseMatrix(DenseMatrix):
             return False
         return len(self._smat) == self.rows
 
+    def equals(self, other, failing_expression=False):
+        if self.shape != other.shape:
+            return False
+        other = self._new(other)
+        for a,b in zip(self._smat, other._smat):
+            iszero = S.Zero.equals(a - b)
+            if iszero is None and failing_expression:
+                return (a,b)
+            if iszero is False:
+                return False
+        return True
+
     def tolist(self):
         """Convert this sparse matrix into a list of nested Python lists.
 
