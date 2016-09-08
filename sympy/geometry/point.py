@@ -158,9 +158,7 @@ class Point(GeometryEntity):
         args = [Point.pointify(p) for p in args]
 
         # Coincident points are irrelevant; use only unique points.
-        # XXX: the current workaround for issue #11238 relies on the points
-        # being in a specific order, so don't let `set` change the order
-        #args = list(set(args))
+        args = list(set(args))
 
         if len(args) == 0:
             return False
@@ -183,9 +181,7 @@ class Point(GeometryEntity):
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of each other
         m = Matrix([p1.args, p2.args])
-        # XXX: issue #9480 we need `simplify=True` otherwise the
-        # rank may be computed incorrectly
-        return m.rank(simplify=True) < 2
+        return m.rank() < 2
 
     @property
     def length(self):
@@ -266,15 +262,11 @@ class Point(GeometryEntity):
 
         # make sure we're genuinely points
         # and translate to every point to the origin
-        # XXX: issue #11238 we need to pre-simplify otherwise
-        # the rank calculation will be incorrect
         origin = Point.pointify(points[0])
         points = [Point.pointify(p, dimension=origin.ambient_dimension) - origin for p in points[1:]]
 
         m = Matrix([p.args for p in points])
-        # XXX: issue #9480 we need `simplify=True` otherwise the
-        # rank may be computed incorrectly
-        return m.rank(simplify=True)
+        return m.rank()
 
     @staticmethod
     def project(a, b):
