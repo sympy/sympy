@@ -762,30 +762,6 @@ class DenseMatrix(CommonMatrix, MatrixBase):
             for i in range(0, len(self), self.cols)]
 
 
-def matrix_multiply_elementwise(A, B):
-    """Return the Hadamard product (elementwise product) of A and B
-
-    >>> from sympy.matrices import matrix_multiply_elementwise
-    >>> from sympy.matrices import Matrix
-    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> matrix_multiply_elementwise(A, B)
-    Matrix([
-    [  0, 10, 200],
-    [300, 40,   5]])
-
-    See Also
-    ========
-
-    __mul__
-    """
-    if A.shape != B.shape:
-        raise ShapeError()
-    shape = A.shape
-    return classof(A, B)._new(shape[0], shape[1],
-        lambda i, j: A[i, j]*B[i, j])
-
-
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
@@ -1704,6 +1680,30 @@ def jordan_cell(eigenval, n):
         out[i, i + 1] = S.One
     out[n - 1, n - 1] = eigenval
     return out
+
+
+def matrix_multiply_elementwise(A, B):
+    """Return the Hadamard product (elementwise product) of A and B
+
+    >>> from sympy.matrices import matrix_multiply_elementwise
+    >>> from sympy.matrices import Matrix
+    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> matrix_multiply_elementwise(A, B)
+    Matrix([
+    [  0, 10, 200],
+    [300, 40,   5]])
+
+    See Also
+    ========
+
+    __mul__
+    """
+    if A.shape != B.shape:
+        raise ShapeError()
+    shape = A.shape
+    return classof(A, B)._new(shape[0], shape[1],
+        lambda i, j: A[i, j]*B[i, j])
 
 
 def ones(r, c=None):
