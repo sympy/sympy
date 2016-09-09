@@ -42,7 +42,7 @@ The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Comp
 Where ``equations`` may be in the form of ``Eq`` instances or expressions
 that are assumed to be equal to zero.
 
-Please note that there is an another function called as ``solve`` which
+Please note that there is another function called ``solve`` which
 can also be used to solve equations. The syntax is ``solve(equations, variables)``
 However, it is recommended to use ``solveset`` instead.
 

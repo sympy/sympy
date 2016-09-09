@@ -436,14 +436,25 @@ def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
+    fset = [S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+            -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 +
+            40*re(1/((-S(1)/2 - sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
+            sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
+            I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               40*im(1/((-S(1)/2 - sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)]
+    cset = [40*re(1/((-S(1)/2 + sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 -
+            sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 +
+            S(5)/3 +
+            I*(40*im(1/((-S(1)/2 + sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
 
-    assert sol == FiniteSet(*[S(5)/3 + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
-        -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 + 40*re(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9 +
-        sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + S(5)/3 +
-        I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
-        sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(1/((-S(1)/2 -
-        sqrt(3)*I/2)*(S(251)/27 + sqrt(111)*I/9)**(S(1)/3)))/9)])
+    assert sol._args[0] == FiniteSet(*fset)
+    assert sol._args[1] == ConditionSet(
+        R,
+        Eq(sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1), 0),
+        FiniteSet(*cset))
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -1496,6 +1507,7 @@ def test_issue_8715():
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
 
+
 def test_issue_11174():
     r, t = symbols('r t')
     eq = z**2 + exp(2*x) - sin(y)
@@ -1506,3 +1518,12 @@ def test_issue_11174():
     s = -sqrt(r)*Abs(tan(t))/(sqrt(tan(t)**2 + 1)*tan(t))
     soln = Intersection(S.Reals, FiniteSet(s))
     assert solveset(eq, x, S.Reals) == soln
+
+
+def test_issue_11534():
+    # eq and eq2 should give the same solution as a Complement
+    eq = -y + x/sqrt(-x**2 + 1)
+    eq2 = -y**2 + x**2/(-x**2 + 1)
+    soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
+    assert solveset(eq, x, S.Reals) == soln
+    assert solveset(eq2, x, S.Reals) == soln

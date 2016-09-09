@@ -1,5 +1,5 @@
 from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, symbols, Dummy, ImmutableMatrix as Matrix)
+                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -425,10 +425,12 @@ class ReferenceFrame(object):
             defined in relation to.
         rot_type : str
             The type of orientation matrix that is being created. Supported
-            types are 'Body', 'Space', 'Quaternion', and 'Axis'. See examples
+            types are 'Body', 'Space', 'Quaternion', 'Axis', and 'DCM'. See examples
             for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
+            In case of rot_type='DCM', value must be a sympy.matrices.MatrixBase object
+            (or subclasses of it).
         rot_order : str
             If applicable, the order of a series of rotations.
 
@@ -436,7 +438,7 @@ class ReferenceFrame(object):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> from sympy import symbols
+        >>> from sympy import symbols, eye, ImmutableMatrix
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
@@ -468,20 +470,33 @@ class ReferenceFrame(object):
 
         >>> B.orient(N, 'Quaternion', [q0, q1, q2, q3])
 
-        Last is Axis. This is a rotation about an arbitrary, non-time-varying
+        Next is Axis. This is a rotation about an arbitrary, non-time-varying
         axis by some angle. The axis is supplied as a Vector. This is how
         simple rotations are defined.
 
         >>> B.orient(N, 'Axis', [q1, N.x + 2 * N.y])
 
+        Last is DCM (Direction Cosine Matrix). This is a rotation matrix given manually.
+
+        >>> B.orient(N, 'DCM', eye(3))
+        >>> B.orient(N, 'DCM', ImmutableMatrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+
         """
 
         from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
-        amounts = list(amounts)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+
+        # Allow passing a rotation matrix manually.
+        if rot_type == 'DCM':
+            # When rot_type == 'DCM', then amounts must be a Matrix type object
+            # (e.g. sympy.matrices.dense.MutableDenseMatrix).
+            if not isinstance(amounts, MatrixBase):
+                raise TypeError("Amounts must be a sympy Matrix type object.")
+        else:
+            amounts = list(amounts)
+            for i, v in enumerate(amounts):
+                if not isinstance(v, Vector):
+                    amounts[i] = sympify(v)
 
         def _rot(axis, angle):
             """DCM for simple axis 1,2,or 3 rotations. """
@@ -553,6 +568,8 @@ class ReferenceFrame(object):
             a3 = int(rot_order[2])
             parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
                     * _rot(a1, amounts[0]))
+        elif rot_type == 'DCM':
+            parent_orient = amounts
         else:
             raise NotImplementedError('That is not an implemented rotation')
         #Reset the _dcm_cache of this frame, and remove it from the _dcm_caches
@@ -591,6 +608,8 @@ class ReferenceFrame(object):
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).normalize()
+        elif rot_type == 'DCM':
+            wvec = self._w_diff_dcm(parent)
         else:
             try:
                 from sympy.polys.polyerrors import CoercionFailed

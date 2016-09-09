@@ -62,7 +62,7 @@ def _primitive_root_prime_iter(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
 
     Examples
     ========
@@ -90,8 +90,8 @@ def primitive_root(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
-    [2] P. Hackman "Elementary Number Theory" (2009),  Chapter C
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [2] P. Hackman "Elementary Number Theory" (2009), Chapter C
 
     Parameters
     ==========
@@ -186,7 +186,8 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+
     """
     s = trailing(p - 1)
     t = p >> s
@@ -370,9 +371,9 @@ def _sqrt_mod_prime_power(a, p, k):
     References
     ==========
 
-    [1] P. Hackman "Elementary Number Theory" (2009),  page 160
-    [2] http://www.numbertheory.org/php/squareroot.html
-    [3] [Gathen99]_
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
+    .. [2] http://www.numbertheory.org/php/squareroot.html
+    .. [3] [Gathen99]_
 
     Examples
     ========
@@ -621,7 +622,8 @@ def is_nthpow_residue(a, n, m):
     References
     ==========
 
-    P. Hackman "Elementary Number Theory" (2009),  page 76
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
+
     """
     a, n, m = [as_int(i) for i in (a, n, m)]
     if m <= 0:
@@ -698,7 +700,8 @@ def _nthroot_mod1(s, q, p, all_roots):
     References
     ==========
 
-    [1] A. M. Johnston "A Generalized qth Root Algorithm"
+    .. [1] A. M. Johnston "A Generalized qth Root Algorithm"
+
     """
     g = primitive_root(p)
     if not isprime(q):
