@@ -9,7 +9,7 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint, seed
+from random import randint, Random
 
 
 
@@ -1109,12 +1109,13 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     if order is None:
         order = n_order(b, n)
 
+    prng = Random()
     if rseed is not None:
-        seed(rseed)
+        prng.seed(rseed)
 
     for i in range(retries):
-        aa = randint(1, order - 1)
-        ba = randint(1, order - 1)
+        aa = prng.randint(1, order - 1)
+        ba = prng.randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
 
         c = xa % 3
