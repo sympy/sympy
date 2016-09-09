@@ -7,7 +7,8 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff)
+    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
+    DotProduct, Eq)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -20,6 +21,7 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 numexpr = import_module('numexpr')
+tensorflow = import_module('tensorflow')
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -152,6 +154,14 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
+def test_tensorflow_transl():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
+    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert tens in tensorflow.__dict__
 
 def test_numpy_translation_abs():
     if not numpy:
@@ -218,7 +228,7 @@ def test_sqrt():
 
 
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -248,7 +258,7 @@ def test_vector_discontinuous():
 
 
 def test_trig_symbolic():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     assert abs(d[0] + 1) < 0.0001
     assert abs(d[1] - 0) < 0.0001
@@ -315,6 +325,21 @@ def test_numpy_transpose():
     f = lambdify((x), A.T, modules="numpy")
     numpy.testing.assert_array_equal(f(2), numpy.array([[1, 0], [2, 1]]))
 
+def test_numpy_dotproduct():
+    if not numpy:
+        skip("numpy not installed")
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='numpy')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='numpy')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='numpy')
+
+    assert f1(1, 2, 3) == \
+           f2(1, 2, 3) == \
+           f3(1, 2, 3) == \
+           f4(1, 2, 3) == \
+           numpy.array([14])
+
 def test_numpy_inverse():
     if not numpy:
         skip("numpy not installed.")
@@ -331,6 +356,11 @@ def test_numpy_old_matrix():
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
+def test_python_div_zero_issue_11306():
+    if not numpy:
+        skip("numpy not installed.")
+    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
+    lambdify([x, y], p, modules='numpy')(0, 1)
 
 def test_issue9474():
     mods = [None, 'math']
@@ -439,6 +469,82 @@ def test_numexpr_userfunctions():
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
 
+def test_tensorflow_basic_math():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.constant(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_placeholders():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+def test_tensorflow_variables():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.Variable(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    s.run(tensorflow.initialize_all_variables())
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_logical_operations():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Not(And(Or(x, y), y))
+    func = lambdify([x, y], expr, modules="tensorflow")
+    a = tensorflow.constant(False)
+    b = tensorflow.constant(True)
+    s = tensorflow.Session()
+    assert func(a, b).eval(session=s) == 0
+
+def test_tensorflow_piecewise():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
+    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+def test_tensorflow_multi_max():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+def test_tensorflow_multi_min():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Min(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
+def test_tensorflow_relational():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = x >= 0
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 1})
+
 def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
@@ -500,6 +606,23 @@ def test_imps():
     # Error for functions with same name and different implementation
     f2 = implemented_function("f", lambda x: x + 101)
     raises(ValueError, lambda: lambdify(x, f(f2(x))))
+
+
+def test_imps_errors():
+    # Test errors that implemented functions can return, and still be able to
+    # form expressions.
+    # See: https://github.com/sympy/sympy/issues/10810
+    for val, error_class in product((0, 0., 2, 2.0),
+                                    (AttributeError, TypeError, ValueError)):
+
+        def myfunc(a):
+            if a == 0:
+                raise error_class
+            return 1
+
+        f = implemented_function('f', myfunc)
+        expr = f(val)
+        assert expr == f(val)
 
 
 def test_imps_wrong_args():
@@ -634,3 +757,13 @@ def test_Min_Max():
     # see gh-10375
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
+
+def test_Indexed():
+    # Issue #10934
+    if not numpy:
+        skip("numpy not installed")
+
+    a = IndexedBase('a')
+    i, j = symbols('i j')
+    b = numpy.array([[1, 2], [3, 4]])
+    assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10

@@ -517,12 +517,10 @@ def get_motion_params(frame, **kwargs):
         return (acc, vel, kwargs['position'])
 
 
-def partial_velocity(vel_list, u_list, frame):
-    """Returns a list of partial velocities.
-
-    For a list of velocity or angular velocity vectors the partial derivatives
-    with respect to the supplied generalized speeds are computed, in the
-    specified ReferenceFrame.
+def partial_velocity(vel_vecs, gen_speeds, frame):
+    """Returns a list of partial velocities with respect to the provided
+    generalized speeds in the given reference frame for each of the supplied
+    velocity vectors.
 
     The output is a list of lists. The outer list has a number of elements
     equal to the number of supplied velocity vectors. The inner lists are, for
@@ -532,12 +530,13 @@ def partial_velocity(vel_list, u_list, frame):
     Parameters
     ==========
 
-    vel_list : list
-        List of velocities of Point's and angular velocities of ReferenceFrame's
-    u_list : list
-        List of independent generalized speeds.
+    vel_vecs : iterable
+        An iterable of velocity vectors (angular or linear).
+    gen_speeds : iterable
+        An iterable of generalized speeds.
     frame : ReferenceFrame
-        The ReferenceFrame the partial derivatives are going to be taken in.
+        The reference frame that the partial derivatives are going to be taken
+        in.
 
     Examples
     ========
@@ -549,24 +548,27 @@ def partial_velocity(vel_list, u_list, frame):
     >>> N = ReferenceFrame('N')
     >>> P = Point('P')
     >>> P.set_vel(N, u * N.x)
-    >>> vel_list = [P.vel(N)]
-    >>> u_list = [u]
-    >>> partial_velocity(vel_list, u_list, N)
+    >>> vel_vecs = [P.vel(N)]
+    >>> gen_speeds = [u]
+    >>> partial_velocity(vel_vecs, gen_speeds, N)
     [[N.x]]
 
     """
-    if not iterable(vel_list):
-        raise TypeError('Provide velocities in an iterable')
-    if not iterable(u_list):
-        raise TypeError('Provide speeds in an iterable')
-    list_of_pvlists = []
-    for i in vel_list:
-        pvlist = []
-        for j in u_list:
-            vel = i.diff(j, frame)
-            pvlist += [vel]
-        list_of_pvlists += [pvlist]
-    return list_of_pvlists
+
+    if not iterable(vel_vecs):
+        raise TypeError('Velocity vectors must be contained in an iterable.')
+
+    if not iterable(gen_speeds):
+        raise TypeError('Generalized speeds must be contained in an iterable')
+
+    vec_partials = []
+    for vec in vel_vecs:
+        partials = []
+        for speed in gen_speeds:
+            partials.append(vec.diff(speed, frame, var_in_dcm=False))
+        vec_partials.append(partials)
+
+    return vec_partials
 
 
 def dynamicsymbols(names, level=0):

@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import inspect
+import sys
 
 from sympy.external import import_module
 
@@ -220,7 +221,11 @@ def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     broadcastables = dim_handling(inputs, **kwargs)
 
     # Remove keyword arguments corresponding to dim_handling
-    dim_names = inspect.getargspec(dim_handling)[0]
+    if sys.version_info < (3,):
+        dim_names = inspect.getargspec(dim_handling)[0]
+    else:
+        param = inspect.signature(dim_handling).parameters.items()
+        dim_names = [n for n,p in param if p.kind == p.POSITIONAL_OR_KEYWORD]
     theano_kwargs = dict((k, v) for k, v in kwargs.items()
                                 if k not in dim_names)
 

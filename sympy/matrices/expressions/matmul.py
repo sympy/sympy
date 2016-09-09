@@ -64,6 +64,9 @@ class MatMul(MatrixExpr):
         if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
             return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
         result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        if not X.cols.is_number:
+            # Don't waste time in result.doit() if the sum bounds are symbolic
+            expand = False
         return result.doit() if expand else result
 
     def as_coeff_matrices(self):
@@ -254,14 +257,22 @@ def refine_MatMul(expr, assumptions):
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
     >>> print(expr)
-    X*X'
+    X*X.T
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I
     """
     newargs = []
-    last = expr.args[0]
-    for arg in expr.args[1:]:
+    exprargs = []
+
+    for args in expr.args:
+        if args.is_Matrix:
+            exprargs.append(args)
+        else:
+            newargs.append(args)
+
+    last = exprargs[0]
+    for arg in exprargs[1:]:
         if arg == last.T and ask(Q.orthogonal(arg), assumptions):
             last = Identity(arg.shape[0])
         elif arg == last.conjugate() and ask(Q.unitary(arg), assumptions):

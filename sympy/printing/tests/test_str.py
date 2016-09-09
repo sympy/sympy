@@ -327,6 +327,15 @@ def test_Poly():
     assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+    assert str(Poly(2*x + x**5, x)) == "Poly(x**5 + 2*x, x, domain='ZZ')"
+
+    assert str(Poly(3**(2*x), 3**x)) == "Poly((3**x)**2, 3**x, domain='ZZ')"
+    assert str(Poly((x**2)**x)) == "Poly(((x**2)**x), (x**2)**x, domain='ZZ')"
+
+    assert str(Poly((x + y)**3, (x + y), expand=False)
+                ) == "Poly((x + y)**3, x + y, domain='ZZ')"
+    assert str(Poly((x - 1)**2, (x - 1), expand=False)
+                ) == "Poly((x - 1)**2, x - 1, domain='ZZ')"
 
     assert str(
         Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"

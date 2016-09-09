@@ -1,5 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
+from collections import Mapping
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -50,6 +51,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_number = False
     is_Atom = False
     is_Symbol = False
+    is_Indexed = False
     is_Dummy = False
     is_Wild = False
     is_Function = False
@@ -833,7 +835,7 @@ class Basic(with_metaclass(ManagedProperties)):
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
-            elif isinstance(sequence, (Dict, dict)):
+            elif isinstance(sequence, (Dict, Mapping)):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
@@ -849,15 +851,20 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i in range(len(sequence)):
-            o, n = sequence[i]
-            so, sn = sympify(o), sympify(n)
-            if not isinstance(so, Basic):
-                if type(o) is str:
-                    so = Symbol(o)
-            sequence[i] = (so, sn)
-            if _aresame(so, sn):
-                sequence[i] = None
-                continue
+            s = list(sequence[i])
+            for j, si in enumerate(s):
+                try:
+                    si = sympify(si, strict=True)
+                except SympifyError:
+                    if type(si) is str:
+                        si = Symbol(si)
+                    else:
+                        # if it can't be sympified, skip it
+                        sequence[i] = None
+                        break
+                s[j] = si
+            else:
+                sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -1125,6 +1132,28 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> x.has(x)
         True
 
+        Note ``has`` is a structural algorithm with no knowledge of
+        mathematics. Consider the following half-open interval:
+
+        >>> from sympy.sets import Interval
+        >>> i = Interval.Lopen(0, 5); i
+        (0, 5]
+        >>> i.args
+        (0, 5, True, False)
+        >>> i.has(4)  # there is no "4" in the arguments
+        False
+        >>> i.has(0)  # there *is* a "0" in the arguments
+        True
+
+        Instead, use ``contains`` to determine whether a number is in the
+        interval or not:
+
+        >>> i.contains(4)
+        True
+        >>> i.contains(0)
+        False
+
+
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
         returned when the list of patterns is empty.
@@ -1385,8 +1414,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # restore subexpressions in mapping
                 for o, n in mask:
                     r = {o: n}
-                    mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.items()])
+                    mapping = {k.xreplace(r): v.xreplace(r)
+                        for k, v in mapping.items()}
             return rv, mapping
 
     def find(self, query, group=False):
@@ -1710,7 +1739,7 @@ def _atomic(e):
     try:
         free = e.free_symbols
     except AttributeError:
-        return set([e])
+        return {e}
     atoms = set()
     for p in pot:
         if p in seen:

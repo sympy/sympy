@@ -929,6 +929,11 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+        else:
+            if b == True and c == False:
+                return a
+            if b == False and c == True:
+                return Not(a)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
@@ -1677,7 +1682,7 @@ def _find_predicates(expr):
 
     """
     if not isinstance(expr, BooleanFunction):
-        return set([expr])
+        return {expr}
     return set().union(*(_find_predicates(i) for i in expr.args))
 
 

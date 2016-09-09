@@ -183,8 +183,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
-            if isinstance(i, Idx):
-                i = i.label
 
             newf = eval_sum(f, (i, a, b))
             if newf is None:
@@ -235,7 +233,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # don't want to differentiate wrt any free symbol in the upper or lower
         # limits
         # XXX remove this test for free_symbols when the default _eval_derivative is in
-        if x not in self.free_symbols:
+        if x.is_Indexed:
+            from sympy import IndexedBase
+            if x.base not in self.atoms(IndexedBase):
+                return S.Zero
+        elif x not in self.free_symbols:
             return S.Zero
 
         # get limits and the function
@@ -252,8 +254,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return None
             df = Derivative(f, x, evaluate=True)
             rv = self.func(df, limit)
-            if limit[0] not in df.free_symbols:
-                rv = rv.doit()
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
@@ -355,8 +355,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = self.function
 
         if len(sequence_term.free_symbols) > 1:
-            raise NotImplementedError("convergence checking for more that one symbol "
-                                        "containing series is not handled")
+            raise NotImplementedError("convergence checking for more than one symbol "
+                                      "containing series is not handled")
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return S.true
@@ -487,7 +487,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return dirich2
 
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
-                                    "is not yet implemented" % (sequence_term))
+                                  "is not yet implemented" % (sequence_term))
 
     def is_absolutely_convergent(self):
         """

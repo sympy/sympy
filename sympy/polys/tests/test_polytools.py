@@ -58,6 +58,7 @@ from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.simplify import simplify
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
@@ -461,21 +462,21 @@ def test_Poly__unify():
 
 
 def test_Poly_free_symbols():
-    assert Poly(x**2 + 1).free_symbols == set([x])
-    assert Poly(x**2 + y*z).free_symbols == set([x, y, z])
-    assert Poly(x**2 + y*z, x).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z)).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z), x).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([x, y, z])
+    assert Poly(x**2 + 1).free_symbols == {x}
+    assert Poly(x**2 + y*z).free_symbols == {x, y, z}
+    assert Poly(x**2 + y*z, x).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z)).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z), x).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == {x, y, z}
 
 
 def test_PurePoly_free_symbols():
     assert PurePoly(x**2 + 1).free_symbols == set([])
     assert PurePoly(x**2 + y*z).free_symbols == set([])
-    assert PurePoly(x**2 + y*z, x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + y*z, x).free_symbols == {y, z}
     assert PurePoly(x**2 + sin(y*z)).free_symbols == set([])
-    assert PurePoly(x**2 + sin(y*z), x).free_symbols == set([y, z])
-    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z), x).free_symbols == {y, z}
+    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == {y, z}
 
 
 def test_Poly__eq__():
@@ -2264,7 +2265,7 @@ def test_factor():
 
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
-    assert factor_list(sqrt(3), x) == (1, [(3, S.Half)])
+    assert factor_list(sqrt(3), x) == (sqrt(3), [])
     assert factor_list((-1)**x, x) == (1, [(-1, x)])
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
@@ -2881,8 +2882,7 @@ def test_cancel():
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
-    assert cancel(expr) == expr
-
+    assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3157,3 +3157,14 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None
+
+
+def test_factor_terms():
+    # issue 7067
+    assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+
+
+def test_issue_11198():
+    assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
+    assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])

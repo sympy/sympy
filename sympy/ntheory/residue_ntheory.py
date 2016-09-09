@@ -7,8 +7,10 @@ from sympy.core.numbers import igcd, igcdex
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
-from .factor_ import factorint, trailing, totient
+from .factor_ import factorint, trailing, totient, multiplicity
 from random import randint
+
+
 
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
@@ -52,6 +54,7 @@ def n_order(a, n):
             exponent = exponent // p
     return order
 
+
 def _primitive_root_prime_iter(p):
     """
     Generates the primitive roots for a prime ``p``
@@ -59,7 +62,7 @@ def _primitive_root_prime_iter(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
 
     Examples
     ========
@@ -79,6 +82,7 @@ def _primitive_root_prime_iter(p):
             yield a
         a += 1
 
+
 def primitive_root(p):
     """
     Returns the smallest primitive root or None
@@ -86,8 +90,8 @@ def primitive_root(p):
     References
     ==========
 
-    [1] W. Stein "Elementary Number Theory" (2011), page 44
-    [2] P. Hackman "Elementary Number Theory" (2009),  Chapter C
+    .. [1] W. Stein "Elementary Number Theory" (2011), page 44
+    .. [2] P. Hackman "Elementary Number Theory" (2009), Chapter C
 
     Parameters
     ==========
@@ -143,6 +147,7 @@ def primitive_root(p):
 
     return next(_primitive_root_prime_iter(p))
 
+
 def is_primitive_root(a, p):
     """
     Returns True if ``a`` is a primitive root of ``p``
@@ -173,6 +178,7 @@ def is_primitive_root(a, p):
         a = a % p
     return n_order(a, p) == totient(p)
 
+
 def _sqrt_mod_tonelli_shanks(a, p):
     """
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
@@ -180,7 +186,8 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+
     """
     s = trailing(p - 1)
     t = p >> s
@@ -203,9 +210,10 @@ def _sqrt_mod_tonelli_shanks(a, p):
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
     return x
 
+
 def sqrt_mod(a, p, all_roots=False):
     """
-    find a root of ``x**2 = a mod p``
+    Find a root of ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -254,9 +262,10 @@ def sqrt_mod(a, p, all_roots=False):
     except StopIteration:
         return None
 
+
 def _product(*iters):
     """
-    cartesian product generator
+    Cartesian product generator
 
     Notes
     =====
@@ -290,7 +299,7 @@ def _product(*iters):
 
 def sqrt_mod_iter(a, p, domain=int):
     """
-    iterate over solutions to ``x**2 = a mod p``
+    Iterate over solutions to ``x**2 = a mod p``
 
     Parameters
     ==========
@@ -350,7 +359,7 @@ def sqrt_mod_iter(a, p, domain=int):
 
 def _sqrt_mod_prime_power(a, p, k):
     """
-    find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
+    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
 
     Parameters
     ==========
@@ -362,9 +371,9 @@ def _sqrt_mod_prime_power(a, p, k):
     References
     ==========
 
-    [1] P. Hackman "Elementary Number Theory" (2009),  page 160
-    [2] http://www.numbertheory.org/php/squareroot.html
-    [3] [Gathen99]_
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
+    .. [2] http://www.numbertheory.org/php/squareroot.html
+    .. [3] [Gathen99]_
 
     Examples
     ========
@@ -404,7 +413,6 @@ def _sqrt_mod_prime_power(a, p, k):
         return sorted([ZZ(res), ZZ(p - res)])
 
     if k > 1:
-        f = factorint(a)
         # see Ref.[2]
         if p == 2:
             if a % 8 != 1:
@@ -465,9 +473,10 @@ def _sqrt_mod_prime_power(a, p, k):
             r = (r - fr*frinv) % px
         return [r, px - r]
 
+
 def _sqrt_mod1(a, p, n):
     """
-    find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
+    Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
     see http://www.numbertheory.org/php/squareroot.html
     """
@@ -613,15 +622,66 @@ def is_nthpow_residue(a, n, m):
     References
     ==========
 
-    P. Hackman "Elementary Number Theory" (2009),  page 76
+    .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
+
     """
+    a, n, m = [as_int(i) for i in (a, n, m)]
+    if m <= 0:
+        raise ValueError('m must be > 0')
+    if n < 0:
+        raise ValueError('n must be >= 0')
+    if a < 0:
+        raise ValueError('a must be >= 0')
+    if n == 0:
+        if m == 1:
+            return False
+        return a == 1
     if n == 1:
         return True
     if n == 2:
         return is_quad_residue(a, m)
+    return _is_nthpow_residue_bign(a, n, m)
+
+
+def _is_nthpow_residue_bign(a, n, m):
+    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    # assert n > 2
+    # assert a > 0 and m > 0
+    if primitive_root(m) is None:
+        # assert m >= 8
+        for prime, power in factorint(m).items():
+            if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
+                return False
+        return True
     f = totient(m)
     k = f // igcd(f, n)
     return pow(a, k, m) == 1
+
+
+def _is_nthpow_residue_bign_prime_power(a, n, p, k):
+    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
+    does/doesn't exist."""
+    # assert a > 0
+    # assert n > 2
+    # assert p is prime
+    # assert k > 0
+    if a % p:
+        if p != 2:
+            return _is_nthpow_residue_bign(a, n, pow(p, k))
+        if n & 1:
+            return True
+        c = trailing(n)
+        return a % pow(2, min(c + 2, k)) == 1
+    else:
+        a %= pow(p, k)
+        if not a:
+            return True
+        mu = multiplicity(p, a)
+        if mu % n:
+            return False
+        pm = pow(p, mu)
+        return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
+
 
 def _nthroot_mod2(s, q, p):
     f = factorint(q)
@@ -632,6 +692,7 @@ def _nthroot_mod2(s, q, p):
         s = _nthroot_mod1(s, qx, p, False)
     return s
 
+
 def _nthroot_mod1(s, q, p, all_roots):
     """
     Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``
@@ -639,7 +700,8 @@ def _nthroot_mod1(s, q, p, all_roots):
     References
     ==========
 
-    [1] A. M. Johnston "A Generalized qth Root Algorithm"
+    .. [1] A. M. Johnston "A Generalized qth Root Algorithm"
+
     """
     g = primitive_root(p)
     if not isprime(q):
@@ -686,9 +748,10 @@ def _nthroot_mod1(s, q, p, all_roots):
         return res
     return min(res)
 
+
 def nthroot_mod(a, n, p, all_roots=False):
     """
-    find the solutions to ``x**n = a mod p``
+    Find the solutions to ``x**n = a mod p``
 
     Parameters
     ==========
@@ -714,10 +777,10 @@ def nthroot_mod(a, n, p, all_roots=False):
         return sqrt_mod(a, p , all_roots)
     f = totient(p)
     # see Hackman "Elementary Number Theory" (2009), page 76
-    if pow(a, f // igcd(f, n), p) != 1:
+    if not is_nthpow_residue(a, n, p):
         return None
-    if not isprime(p):
-        raise NotImplementedError
+    if primitive_root(p) == None:
+        raise NotImplementedError("Not Implemented for m without primitive root")
 
     if (p - 1) % n == 0:
         return _nthroot_mod1(a, n, p, all_roots)
@@ -749,6 +812,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
 
+
 def quadratic_residues(p):
     """
     Returns the list of quadratic residues.
@@ -767,15 +831,24 @@ def quadratic_residues(p):
 
 
 def legendre_symbol(a, p):
-    """
-    Returns
-    =======
+    r"""
+    Returns the Legendre symbol `(a / p)`.
 
-    1. 0 if a is multiple of p
-    2. 1 if a is a quadratic residue of p
-    3. -1 otherwise
+    For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
+    defined as
 
-    p should be an odd prime by definition
+    .. math ::
+        \genfrac(){}{}{a}{p} = \begin{cases}
+             0 & \text{if } p \text{ divides } a\\
+             1 & \text{if } a \text{ is a quadratic residue modulo } p\\
+            -1 & \text{if } a \text{ is a quadratic nonresidue modulo } p
+        \end{cases}
+
+    Parameters
+    ==========
+
+    a : integer
+    p : odd prime
 
     Examples
     ========
@@ -804,16 +877,37 @@ def legendre_symbol(a, p):
 
 
 def jacobi_symbol(m, n):
-    """
-    Returns the product of the legendre_symbol(m, p)
-    for all the prime factors, p, of n.
+    r"""
+    Returns the Jacobi symbol `(m / n)`.
 
-    Returns
-    =======
+    For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
+    is defined as the product of the Legendre symbols corresponding to the
+    prime factors of ``n``:
 
-    1. 0 if m cong 0 mod(n)
-    2. 1 if x**2 cong m mod(n) has a solution
-    3. -1 otherwise
+    .. math ::
+        \genfrac(){}{}{m}{n} =
+            \genfrac(){}{}{m}{p^{1}}^{\alpha_1}
+            \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
+            ...
+            \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
+            \text{ where } n =
+                p_1^{\alpha_1}
+                p_2^{\alpha_2}
+                ...
+                p_k^{\alpha_k}
+
+    Like the Legendre symbol, if the Jacobi symbol `\genfrac(){}{}{m}{n} = -1`
+    then ``m`` is a quadratic nonresidue modulo ``n``.
+
+    But, unlike the Legendre symbol, if the Jacobi symbol
+    `\genfrac(){}{}{m}{n} = 1` then ``m`` may or may not be a quadratic residue
+    modulo ``n``.
+
+    Parameters
+    ==========
+
+    m : integer
+    n : odd positive integer
 
     Examples
     ========
@@ -825,7 +919,7 @@ def jacobi_symbol(m, n):
     >>> jacobi_symbol(60, 121)
     1
 
-    The relationship between the jacobi_symbol and legendre_symbol can
+    The relationship between the ``jacobi_symbol`` and ``legendre_symbol`` can
     be demonstrated as follows:
 
     >>> L = legendre_symbol
@@ -840,8 +934,8 @@ def jacobi_symbol(m, n):
     is_quad_residue, legendre_symbol
     """
     m, n = as_int(m), as_int(n)
-    if not n % 2:
-        raise ValueError("n should be an odd integer")
+    if n < 0 or not n % 2:
+        raise ValueError("n should be an odd positive integer")
     if m < 0 or m > n:
         m = m % n
     if not m:
@@ -852,19 +946,21 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    s = trailing(m)
-    m = m >> s
-    if s % 2 and n % 8 in [3, 5]:
-        j *= -1
-
-    while m != 1:
+    if m < 0:
+        m = -m
+        if n % 4 == 3:
+            j = -j
+    while m != 0:
+        while m % 2 == 0 and m > 0:
+            m >>= 1
+            if n % 8 in [3, 5]:
+                j = -j
+        m, n = n, m
         if m % 4 == 3 and n % 4 == 3:
-            j *= -1
-        m, n = n % m, m
-        s = trailing(m)
-        m = m >> s
-        if s % 2 and n % 8 in [3, 5]:
-            j *= -1
+            j = -j
+        m %= n
+    if n != 1:
+        j = 0
     return j
 
 

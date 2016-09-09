@@ -21,6 +21,7 @@ from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
 from sympy.core.compatibility import is_sequence
 from sympy.core.decorators import deprecated
+from sympy.sets import Intersection
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point
@@ -169,18 +170,8 @@ class LinearEntity(GeometrySet):
         Returns
         =======
 
-        True : if the set of linear entities are concurrent,
+        True : if the set of linear entities intersect in one point
         False : otherwise.
-
-        Notes
-        =====
-
-        Simply take the first two lines and find their intersection.
-        If there is no intersection, then the first two lines were
-        parallel and had no intersection so concurrency is impossible
-        amongst the whole set. Otherwise, check to see if the
-        intersection point of the first two lines is a member on
-        the rest of the lines. If so, the lines are concurrent.
 
         See Also
         ========
@@ -203,24 +194,10 @@ class LinearEntity(GeometrySet):
 
         """
 
-        # Concurrency requires intersection at a single point; One linear
-        # entity cannot be concurrent.
-        if len(lines) <= 1:
-            return False
-
-        try:
-            # Get the intersection (if parallel)
-            p = lines[0].intersection(lines[1])
-            if len(p) == 0:
-                return False
-
-            # Make sure the intersection is on every linear entity
-            for line in lines[2:]:
-                if p[0] not in line:
-                    return False
+        common_points = Intersection(*lines)
+        if common_points.is_FiniteSet and len(common_points) == 1:
             return True
-        except AttributeError:
-            return False
+        return False
 
     def is_parallel(l1, l2):
         """Are two linear entities parallel?
@@ -1189,7 +1166,7 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
-    @deprecated(useinstead="equals", deprecated_since_version="0.7.7")
+    @deprecated(useinstead="equals", deprecated_since_version="1.0")
     def equal(self, other):
         return self.equals(other)
 

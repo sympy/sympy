@@ -184,7 +184,7 @@ def test_C18():
 
 @XFAIL
 def test_C19():
-    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 34*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
 def test_C20():
@@ -493,8 +493,8 @@ def test_H17():
 @XFAIL
 def test_H18():
     # Factor over complex rationals.
-    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 53)
-    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)(x + 1 + 4*I)
+    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 153)
+    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)*(x + 1 + 4*I)
     assert test == good
 
 
@@ -866,7 +866,7 @@ def test_M5():
 
 def test_M6():
     assert set(solveset(x**7 - 1, x)) == \
-        set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
+        {cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)}
     # The paper asks for exp terms, but sin's and cos's may be acceptable;
     # if the results are simplified, exp terms appear for all but
     # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which
@@ -1196,6 +1196,7 @@ def test_N8():
                Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
+@XFAIL
 def test_N9():
     x = Symbol('x')
     assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
@@ -1215,7 +1216,6 @@ def test_N11():
     assert solveset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
-@XFAIL
 def test_N12():
     x = Symbol('x')
     assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
@@ -1234,14 +1234,12 @@ def test_N14():
                                          Interval(pi/2, oo, True, True))
 
 
-@XFAIL
 def test_N15():
     r, t = symbols('r t')
     # raises NotImplementedError: only univariate inequalities are supported
     solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
 
 
-@XFAIL
 def test_N16():
     r, t = symbols('r t')
     solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
@@ -1825,7 +1823,7 @@ def test_R4():
 #Time= 2690 msecs
 #                      (- n + k - 1) binomial(n + 1, k)
 #(d15)               - --------------------------------
-#				                       n
+#                                     n
 #                                   2 2  (n + 1)
 #
 #(c16) factcomb(makefact(%));
@@ -2261,8 +2259,8 @@ def test_U12():
     # (c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
     #    => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
     # factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
-    # 				       4
-    # (d41) 			 (10 x y + 15 x  + 8) dx dy dz
+    #                      4
+    # (d41)              (10 x y + 15 x  + 8) dx dy dz
     raise NotImplementedError(
         "External diff of differential form not supported")
 

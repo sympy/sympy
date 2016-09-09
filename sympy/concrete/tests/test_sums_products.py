@@ -531,16 +531,18 @@ def test_Sum_doit():
     s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
+    assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((1, And(-oo < n, n < oo)), (0, True))
+    assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == Piecewise((x, And(-oo < n, n < oo)), (0, True))
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
-        3*Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
-    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
-        f(1) + f(2) + f(3)
-    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
-        Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
+           3 * Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+    assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
+           f(1) + f(2) + f(3)
+    assert Sum(f(n) * Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
+           Sum(Piecewise((f(n), And(Le(0, n), n < oo)), (0, True)), (n, 1, oo))
     l = Symbol('l', integer=True, positive=True)
-    assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
-        Sum(f(l), (l, 1, oo))
+    assert Sum(f(l) * Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
+           Sum(f(l), (l, 1, oo))
 
     # issue 2597
     nmax = symbols('N', integer=True, positive=True)
@@ -586,7 +588,7 @@ def test_eval_diff():
     assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
     e = Sum(x*y, (x, 1, a))
     assert e.diff(a) == Derivative(e, a)
-    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y).doit() == \
         Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == 24
 
 
@@ -654,22 +656,22 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set([y])
-        assert func(2, (x, 1, y)).free_symbols == set([y])
+        assert func(0, (x, 1, y)).free_symbols == {y}
+        assert func(2, (x, 1, y)).free_symbols == {y}
         assert func(x, (x, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y)).free_symbols == set([x, y])
-        assert func(x, (y, 1, 2)).free_symbols == set([x])
-        assert func(x, (y, 1, 1)).free_symbols == set([x])
-        assert func(x, (y, 1, z)).free_symbols == set([x, z])
+        assert func(x, (x, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y)).free_symbols == {x, y}
+        assert func(x, (y, 1, 2)).free_symbols == {x}
+        assert func(x, (y, 1, 1)).free_symbols == {x}
+        assert func(x, (y, 1, z)).free_symbols == {x, z}
         assert func(x, (x, 1, y), (y, 1, 2)).free_symbols == set()
-        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == set([z])
-        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
-        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
-    assert Sum(1, (x, 1, y)).free_symbols == set([y])
+        assert func(x, (x, 1, y), (y, 1, z)).free_symbols == {z}
+        assert func(x, (x, 1, y), (y, 1, y)).free_symbols == {y}
+        assert func(x, (y, 1, y), (y, 1, z)).free_symbols == {x, z}
+    assert Sum(1, (x, 1, y)).free_symbols == {y}
     # free_symbols answers whether the object *as written* has free symbols,
     # not whether the evaluated expression has free symbols
-    assert Product(1, (x, 1, y)).free_symbols == set([y])
+    assert Product(1, (x, 1, y)).free_symbols == {y}
 
 
 def test_conjugate_transpose():
@@ -836,7 +838,7 @@ def test_issue_2787():
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
     assert res == Piecewise(
-        (n*p, And(Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p/Abs(p - 1) <= 1)),
+        (n*p, p/Abs(p - 1) <= 1),
         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
         True))
 
@@ -857,8 +859,8 @@ def test_indexed_idx_sum():
     assert Product(r, (i, 0, 3)).doit() == prod([r.xreplace({i: j}) for j in range(4)])
 
     j = symbols('j', integer=True)
-    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: Idx(j+k)}) for k in range(3)])
-    assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: Idx(j+k)}) for k in range(3)])
+    assert Sum(r, (i, j, j+2)).doit() == sum([r.xreplace({i: j+k}) for k in range(3)])
+    assert Product(r, (i, j, j+2)).doit() == prod([r.xreplace({i: j+k}) for k in range(3)])
 
     k = Idx('k', range=(1, 3))
     A = IndexedBase('A')
@@ -936,6 +938,15 @@ def test_convergent_failing():
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_6966():
+    i, k, m = symbols('i k m', integer=True)
+    z_i, q_i = symbols('z_i q_i')
+    a_k = Sum(-q_i*z_i/k,(i,1,m))
+    b_k = a_k.diff(z_i)
+    assert isinstance(b_k, Sum)
+    assert b_k == Sum(-q_i/k,(i,1,m))
 
 
 def test_issue_10156():

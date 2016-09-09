@@ -7,9 +7,13 @@ The dense matrix is stored as a list of lists.
 
 from sympy.matrices.densetools import col, eye, augment
 from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
-from sympy import sqrt, var
+from sympy.core.symbol import symbols
 from sympy.core.compatibility import range
+from sympy.core.power import isqrt
+
 import copy
+
+
 
 def row_echelon(matlist, K):
     """
@@ -135,7 +139,7 @@ def cholesky(matlist, K):
             for k in range(j):
                 a += L[i][k]*L[j][k]
             if i == j:
-                L[i][j] = int(sqrt(new_matlist[i][j] - a))
+                L[i][j] = isqrt(new_matlist[i][j] - a)
             else:
                 L[i][j] = (new_matlist[i][j] - a)/L[j][j]
     return L, conjugate_transpose(L, K)
@@ -304,10 +308,8 @@ def LU_solve(matlist, variable, constant, K):
     """
     new_matlist = copy.deepcopy(matlist)
     nrow = len(new_matlist)
-    y = []
     L, U = LU(new_matlist, K)
-    for i in range(nrow):
-        y.append([var('y' + str(i))])
+    y = [[i] for i in symbols('y:%i' % nrow)]
     forward_substitution(L, y, constant, K)
     backward_substitution(U, variable, y, K)
     return variable
@@ -349,10 +351,8 @@ def cholesky_solve(matlist, variable, constant, K):
     """
     new_matlist = copy.deepcopy(matlist)
     nrow = len(new_matlist)
-    y = []
     L, Lstar = cholesky(new_matlist, K)
-    for i in range(nrow):
-        y.append([var('y' + str(i))])
+    y = [[i] for i in symbols('y:%i' % nrow)]
     forward_substitution(L, y, constant, K)
     backward_substitution(Lstar, variable, y, K)
     return variable

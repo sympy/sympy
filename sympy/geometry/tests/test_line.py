@@ -105,6 +105,7 @@ def test_line_geom():
     l3_1 = Line(Point(5, x1), Point(-Rational(3, 5), x1))
     assert Line.are_concurrent(l1) is False
     assert Line.are_concurrent(l1, l3)
+    assert Line.are_concurrent(l1, l1, l1, l3)
     assert Line.are_concurrent(l1, l3, l3_1)
     assert Line.are_concurrent(l1, l1_1, l3) is False
 

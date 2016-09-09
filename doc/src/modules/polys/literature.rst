@@ -78,7 +78,7 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
 
-.. [Collins67] G.E. Collins, Subresultants and Reduced Polynomial 
+.. [Collins67] G.E. Collins, Subresultants and Reduced Polynomial
    Remainder Sequences. J. ACM 14 (1967) 128-142
 
 .. [BrownTraub71] W.S. Brown, J.F. Traub, On Euclid's Algorithm and

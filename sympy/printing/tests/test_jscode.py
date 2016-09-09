@@ -167,7 +167,7 @@ def test_jscode_loops_matrix_vector():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
+        '      y[i] = A[n*i + j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -207,7 +207,7 @@ def test_jscode_loops_add():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
+        '      y[i] = A[n*i + j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -235,7 +235,7 @@ def test_jscode_loops_multiple_contractions():
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
         '         for (var l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        '            y[i] = a[%s]*b[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -305,14 +305,14 @@ def test_jscode_loops_multiple_terms():
     s2 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
+        '      y[i] = a[%s]*b[k] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = a[%s]*b[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )
@@ -361,6 +361,6 @@ def test_Matrix_printing():
         "M[3] = q[1] + q[2];\n"
         "M[4] = q[3];\n"
         "M[5] = 5;\n"
-        "M[6] = 2*q[4]*1/q[1];\n"
-        "M[7] = 4 + Math.sqrt(q[0]);\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")

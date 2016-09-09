@@ -88,6 +88,84 @@ class LambdaPrinter(StrPrinter):
         ]
         return ''.join(result)
 
+class TensorflowPrinter(LambdaPrinter):
+    """
+    Tensorflow printer which handles vectorized piecewise functions,
+    logical operators, etc.
+    """
+
+    def _print_And(self, expr):
+        "Logical And printer"
+        # We have to override LambdaPrinter because it uses Python 'and' keyword.
+        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
+        return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Or(self, expr):
+        "Logical Or printer"
+        # We have to override LambdaPrinter because it uses Python 'or' keyword.
+        # If LambdaPrinter didn't define it, we could use StrPrinter's
+        # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
+        return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Not(self, expr):
+        "Logical Not printer"
+        # We have to override LambdaPrinter because it uses Python 'not' keyword.
+        # If LambdaPrinter didn't define it, we would still have to define our
+        #     own because StrPrinter doesn't define it.
+        return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
+
+    def _print_Min(self, expr, **kwargs):
+        from sympy import Min
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'minimum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Min(*expr.args[1:]), **kwargs))
+
+    def _print_Max(self, expr, **kwargs):
+        from sympy import Max
+        if len(expr.args) == 1:
+            return self._print(expr.args[0], **kwargs)
+
+        return 'maximum({0}, {1})'.format(
+            self._print(expr.args[0], **kwargs),
+            self._print(Max(*expr.args[1:]), **kwargs))
+
+    def _print_Piecewise(self, expr, **kwargs):
+        from sympy import Piecewise
+        e, cond = expr.args[0].args
+        if len(expr.args) == 1:
+            return 'select({0}, {1}, {2})'.format(
+                self._print(cond, **kwargs),
+                self._print(e, **kwargs),
+                0)
+
+        return 'select({0}, {1}, {2})'.format(
+            self._print(cond, **kwargs),
+            self._print(e, **kwargs),
+            self._print(Piecewise(*expr.args[1:]), **kwargs))
+
+    def _print_Relational(self, expr):
+        "Relational printer for Equality and Unequality"
+        op = {
+            '==' :'equal',
+            '!=' :'not_equal',
+            '<'  :'less',
+            '<=' :'less_equal',
+            '>'  :'greater',
+            '>=' :'greater_equal',
+        }
+        if expr.rel_op in op:
+            lhs = self._print(expr.lhs)
+            rhs = self._print(expr.rhs)
+            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
+                                               lhs=lhs,
+                                               rhs=rhs)
+        return super(TensorflowPrinter, self)._print_Relational(expr)
+
+
 class NumPyPrinter(LambdaPrinter):
     """
     Numpy printer which handles vectorized piecewise functions,
@@ -107,6 +185,17 @@ class NumPyPrinter(LambdaPrinter):
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
+
+    def _print_DotProduct(self, expr):
+        # DotProduct allows any shape order, but numpy.dot does matrix
+        # multiplication, so we have to make sure it gets 1 x n by n x 1.
+        arg1, arg2 = expr.args
+        if arg1.shape[0] != 1:
+            arg1 = arg1.T
+        if arg2.shape[1] != 1:
+            arg2 = arg2.T
+
+        return "dot(%s, %s)" % (self._print(arg1), self._print(arg2))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"

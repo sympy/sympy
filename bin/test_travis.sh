@@ -5,6 +5,10 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_SETUP}" == "true" ]]; then
+    python bin/test_setup.py
+fi
+
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc
@@ -20,6 +24,7 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
+    ./bin/test -k tensorflow
 fi
 
 # We change directories to make sure that we test the installed version of

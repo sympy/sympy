@@ -387,7 +387,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             # none of the patterns matched
             disliked += product
     # add terms now for each key
-    collected = dict([(k, Add(*v)) for k, v in collected.items()])
+    collected = {k: Add(*v) for k, v in collected.items()}
 
     if disliked is not S.Zero:
         collected[S.One] = disliked
@@ -957,6 +957,11 @@ def fraction(expr, exact=False):
             if ex.is_negative:
                 if ex is S.NegativeOne:
                     denom.append(b)
+                elif exact:
+                    if ex.is_constant():
+                        denom.append(Pow(b, -ex))
+                    else:
+                        numer.append(term)
                 else:
                     denom.append(Pow(b, -ex))
             elif ex.is_positive:
@@ -973,8 +978,10 @@ def fraction(expr, exact=False):
             denom.append(d)
         else:
             numer.append(term)
-
-    return Mul(*numer), Mul(*denom)
+    if exact:
+        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
+    else:
+        return Mul(*numer), Mul(*denom)
 
 
 def numer(expr):

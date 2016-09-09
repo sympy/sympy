@@ -270,6 +270,12 @@ def test_new_relational():
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
+    assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
+    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
+    assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
+    assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
+    assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
 
 
 def test_relational_bool_output():
@@ -661,6 +667,37 @@ def test_issue_10304():
     assert d.is_comparable is False  # if this fails, find a new d
     e = 1 + d*I
     assert simplify(Eq(e, 0)) is S.false
+
+
+def test_issue_10401():
+    x = symbols('x')
+    fin = symbols('inf', finite=True)
+    inf = symbols('inf', infinite=True)
+    inf2 = symbols('inf2', infinite=True)
+    zero = symbols('z', zero=True)
+    nonzero = symbols('nz', zero=False, finite=True)
+
+    assert Eq(1/(1/x + 1), 1).func is Eq
+    assert Eq(1/(1/x + 1), 1).subs(x, S.ComplexInfinity) is S.true
+    assert Eq(1/(1/fin + 1), 1) is S.false
+
+    T, F = S.true, S.false
+    assert Eq(fin, inf) is F
+    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf/inf2, 0) is F
+    assert Eq(inf/fin, 0) is F
+    assert Eq(fin/inf, 0) is T
+    assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+
+
+    assert Eq(fin/(fin + 1), 1) is S.false
+
+    o = symbols('o', odd=True)
+    assert Eq(o, 2*o) is S.false
+
+    p = symbols('p', positive=True)
+    assert Eq(p/(p - 1), 1) is F
+
 
 def test_issue_10633():
     assert Eq(True, False) == False

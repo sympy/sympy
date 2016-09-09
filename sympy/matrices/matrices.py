@@ -20,6 +20,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
+from sympy.assumptions.refine import refine
 
 from types import FunctionType
 
@@ -298,14 +299,98 @@ class MatrixBase(object):
             return
 
     def copy(self):
+        """
+        Returns the copy of a matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.copy()
+        Matrix([
+        [1, 2],
+        [3, 4]])
+
+        """
         return self._new(self.rows, self.cols, self._mat)
 
     def trace(self):
+        """
+        Returns the trace of a matrix i.e. the sum of the
+        diagonal elements.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.trace()
+        5
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
     def inv(self, method=None, **kwargs):
+        """
+        Return the inverse of a matrix.
+
+        CASE 1: If the matrix is a dense matrix.
+
+        Return the matrix inverse using the method indicated (default
+        is Gauss elimination).
+
+        kwargs
+        ======
+
+        method : ('GE', 'LU', or 'ADJ')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          GE .... inverse_GE(); default
+          LU .... inverse_LU()
+          ADJ ... inverse_ADJ()
+
+        See Also
+        ========
+
+        inverse_LU
+        inverse_GE
+        inverse_ADJ
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
+
+        CASE 2: If the matrix is a sparse matrix.
+
+        Return the matrix inverse using Cholesky or LDL (default).
+
+        kwargs
+        ======
+
+        method : ('CH', 'LDL')
+
+        Notes
+        =====
+
+        According to the ``method`` keyword, it calls the appropriate method:
+
+          LDL ... inverse_LDL(); default
+          CH .... inverse_CH()
+
+        Raises
+        ------
+        ValueError
+            If the determinant of the matrix is zero.
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
         if method is not None:
@@ -313,7 +398,7 @@ class MatrixBase(object):
         return self._eval_inverse(**kwargs)
 
     def inv_mod(self, m):
-        r"""
+        """
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
         Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
@@ -353,11 +438,26 @@ class MatrixBase(object):
         return K_inv
 
     def transpose(self):
+        """
+        Returns the transpose of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.transpose()
+        Matrix([
+        [1, 3],
+        [2, 4]])
+
+        """
         return self._eval_transpose()
 
     T = property(transpose, None, None, "Matrix transposition.")
 
     def conjugate(self):
+        """ Returns the conjugate of the matrix."""
         return self._eval_conjugate()
 
     C = property(conjugate, None, None, "By-element conjugation.")
@@ -504,7 +604,11 @@ class MatrixBase(object):
                 raise ShapeError("Matrices size mismatch.")
             if A.cols == 0:
                 return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
-            blst = B.T.tolist()
+            try:
+                blst = B.T.tolist()
+            except AttributeError:
+                # If B is a MatrixSymbol, B.T.tolist does not exist
+                return NotImplemented
             alst = A.tolist()
             return classof(A, B)._new(A.rows, B.cols, lambda i, j:
                 reduce(lambda k, l: k + l,
@@ -997,6 +1101,7 @@ class MatrixBase(object):
 
         For a list of possible inversion methods, see the .inv() docstring.
         """
+
         if not self.is_square:
             if self.rows < self.cols:
                 raise ValueError('Under-determined system. '
@@ -1053,9 +1158,25 @@ class MatrixBase(object):
         [2],
         [8]])
 
+        RowsList or colsList can also be a list of booleans, in which case
+        the rows or columns corresponding to the True values will be selected:
+
+        >>> m.extract([0, 1, 2, 3], [True, False, True])
+        Matrix([
+        [0,  2],
+        [3,  5],
+        [6,  8],
+        [9, 11]])
         """
+
         cols = self.cols
         flat_list = self._mat
+        if rowsList and all(isinstance(i, bool) for i in rowsList):
+            rowsList = [index for index, item in enumerate(rowsList) if item]
+
+        if colsList and all(isinstance(i, bool) for i in colsList):
+            colsList = [index for index, item in enumerate(colsList) if item]
+
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),
@@ -1225,6 +1346,26 @@ class MatrixBase(object):
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
     _eval_simplify = simplify
+
+    def refine(self, assumptions=True):
+        """Apply refine to each element of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
+        >>> x = Symbol('x')
+        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
+        Matrix([
+        [ Abs(x)**2, sqrt(x**2)],
+        [sqrt(x**2),  Abs(x)**2]])
+        >>> _.refine(Q.real(x))
+        Matrix([
+        [  x**2, Abs(x)],
+        [Abs(x),   x**2]])
+
+        """
+        return self.applyfunc(lambda x: refine(x, assumptions))
 
     def doit(self, **kwargs):
         return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
@@ -2064,6 +2205,8 @@ class MatrixBase(object):
         >>> a.is_nilpotent()
         False
         """
+        if not self:
+            return True
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
@@ -2718,22 +2861,30 @@ class MatrixBase(object):
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
-            if iszerofunc(r[pivot, i]):
-                for k in range(pivot, r.rows):
-                    if simplify and k > pivot:
-                        r[k, i] = simpfunc(r[k, i])
-                    if not iszerofunc(r[k, i]):
-                        r.row_swap(pivot, k)
-                        break
-                else:
-                    continue
-            scale = r[pivot, i]
-            r.row_op(pivot, lambda x, _: x / scale)
+
+            pivot_offset, pivot_val, assumed_nonzero, newly_determined = _find_reasonable_pivot(r[pivot:, i], iszerofunc, simpfunc)
+            # `_find_reasonable_pivot` may have simplified
+            # some elements along the way.  If they were simplified
+            # and then determined to be either zero or non-zero for
+            # sure, they are stored in the `newly_determined` list
+            for (offset, val) in newly_determined:
+                r[pivot + offset, i] = val
+
+            # if `pivot_offset` is None, this column has no
+            # pivot
+            if pivot_offset is None:
+                continue
+
+            # swap the pivot column into place
+            pivot_pos = pivot + pivot_offset
+            r.row_swap(pivot, pivot_pos)
+
+            r.row_op(pivot, lambda x, _: x / pivot_val)
             for j in range(r.rows):
                 if j == pivot:
                     continue
-                scale = r[j, i]
-                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
+                pivot_val = r[j, i]
+                r.zip_row_op(j, pivot, lambda x, y: x - pivot_val*y)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
@@ -2878,15 +3029,18 @@ class MatrixBase(object):
 
            >>> M = Matrix([[x, y, z], [1, 0, 0], [y, z, x]])
 
-           >>> p, q, r = M.berkowitz()
+           >>> p, q, r, s = M.berkowitz()
 
-           >>> p # 1 x 1 M's sub-matrix
+           >>> p # 0 x 0 M's sub-matrix
+           (1,)
+
+           >>> q # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> q # 2 x 2 M's sub-matrix
+           >>> r # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> r # 3 x 3 M's sub-matrix
+           >>> s # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2908,6 +3062,9 @@ class MatrixBase(object):
         berkowitz_eigenvals
         """
         from sympy.matrices import zeros
+        berk = ((1,),)
+        if not self:
+            return berk
 
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -2941,7 +3098,8 @@ class MatrixBase(object):
         for i, T in enumerate(transforms):
             polys.append(T*polys[i])
 
-        return tuple(map(tuple, polys))
+        return berk + tuple(map(tuple, polys))
+
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method.
@@ -2968,7 +3126,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        sign, minors = S.NegativeOne, []
+        sign, minors = S.One, []
 
         for poly in self.berkowitz():
             minors.append(sign*poly[-1])
@@ -3037,6 +3195,9 @@ class MatrixBase(object):
         # unless the nsimplify flag indicates that this has already
         # been done, e.g. in eigenvects
         mat = self
+
+        if not mat:
+            return {}
         if flags.pop('rational', True):
             if any(v.has(Float) for v in mat):
                 mat = mat._new(mat.rows, mat.cols,
@@ -3201,7 +3362,8 @@ class MatrixBase(object):
 
         singular_values
         """
-
+        if not self:
+            return S.Zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
@@ -3963,11 +4125,14 @@ class MatrixBase(object):
         row
         col_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(rhs)
+
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
@@ -3995,11 +4160,14 @@ class MatrixBase(object):
         col
         row_join
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(bott)
+
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
-
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows + bott.rows, self.cols)
         newmat[:self.rows, :] = self
         newmat[self.rows:, :] = bott
@@ -4027,6 +4195,11 @@ class MatrixBase(object):
         row
         col_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
@@ -4068,6 +4241,11 @@ class MatrixBase(object):
         col
         row_insert
         """
+        from sympy.matrices import MutableMatrix
+        # Allows you to build a matrix even if it is null matrix
+        if not self:
+            return type(self)(mti)
+
         if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
@@ -4080,7 +4258,6 @@ class MatrixBase(object):
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
 
-        from sympy.matrices import MutableMatrix
         newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
         newmat[:, :i] = self[:, :i]
@@ -4418,3 +4595,105 @@ def a2idx(j, n=None):
         if not (j >= 0 and j < n):
             raise IndexError("Index out of range: a[%s]" % (j, ))
     return int(j)
+
+def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
+    """ Find the lowest index of an item in `col` that is
+    suitable for a pivot.  If `col` consists only of
+    Floats, the pivot with the largest norm is returned.
+    Otherwise, the first element where `iszerofunc` returns
+    False is used.  If `iszerofunc` doesn't return false,
+    items are simplified and retested until a suitable
+    pivot is found.
+
+    Returns a 4-tuple
+        (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
+    where pivot_offset is the index of the pivot, pivot_val is
+    the (possibly simplified) value of the pivot, assumed_nonzero
+    is True if an assumption that the pivot was non-zero
+    was made without being probed, and newly_determined are
+    elements that were simplified during the process of pivot
+    finding."""
+
+    newly_determined = []
+    col = list(col)
+    # a column that contains a mix of floats and integers
+    # but at least one float is considered a numerical
+    # column, and so we do partial pivoting
+    if all(isinstance(x, (Float, Integer)) for x in col) and any(isinstance(x, Float) for x in col):
+        col_abs = [abs(x) for x in col]
+        max_value = max(col_abs)
+        if iszerofunc(max_value):
+            # just because iszerofunc returned True, doesn't
+            # mean the value is numerically zero.  Make sure
+            # to replace all entries with numerical zeros
+            if max_value != 0:
+                newly_determined = [(i, 0) for i,x in enumerate(col) if x != 0]
+            return (None, None, False, newly_determined)
+        index = col_abs.index(max_value)
+        return (index, col[index], False, newly_determined)
+
+    # PASS 1 (iszerofunc directly)
+    possible_zeros = []
+    for i,x in enumerate(col):
+        is_zero = iszerofunc(x)
+        # is someone wrote a custom iszerofunc, it may return
+        # BooleanFalse or BooleanTrue instead of True or False,
+        # so use == for comparison instead of `is`
+        if is_zero == False:
+            # we found something that is definitely not zero
+            return (i, x, False, newly_determined)
+        possible_zeros.append(is_zero)
+
+    # by this point, we've found no certain non-zeros
+    if all(possible_zeros):
+        # if everything is definitely zero, we have
+        # no pivot
+        return (None, None, False, newly_determined)
+
+    # PASS 2 (iszerofunc after simplify)
+    # we haven't found any for-sure non-zeros, so
+    # go through the elements iszerofunc couldn't
+    # make a determination about and opportunistically
+    # simplify to see if we find something
+    for i,x in enumerate(col):
+        if possible_zeros[i] is not None:
+            continue
+        simped = simpfunc(x)
+        is_zero = iszerofunc(simped)
+        if is_zero == True or is_zero == False:
+            newly_determined.append( (i, simped) )
+        if is_zero == False:
+            return (i, simped, False, newly_determined)
+        possible_zeros[i] = is_zero
+
+    # after simplifying, some things that were recognized
+    # as zeros might be zeros
+    if all(possible_zeros):
+        # if everything is definitely zero, we have
+        # no pivot
+        return (None, None, False, newly_determined)
+
+    # PASS 3 (.equals(0))
+    # some expressions fail to simplify to zero, but
+    # `.equals(0)` evaluates to True.  As a last-ditch
+    # attempt, apply `.equals` to these expressions
+    for i,x in enumerate(col):
+        if possible_zeros[i] is not None:
+            continue
+        if x.equals(S.Zero):
+            # `.iszero` may return False with
+            # an implicit assumption (e.g., `x.equals(0)`
+            # when `x` is a symbol), so only treat it
+            # as proved when `.equals(0)` returns True
+            possible_zeros[i] = True
+            newly_determined.append( (i, S.Zero) )
+
+    if all(possible_zeros):
+        return (None, None, False, newly_determined)
+
+    # at this point there is nothing that could definitely
+    # be a pivot.  To maintain compatibility with existing
+    # behavior, we'll assume that an illdetermined thing is
+    # non-zero.  We should probably raise a warning in this case
+    i = possible_zeros.index(None)
+    return (i, col[i], True, newly_determined)

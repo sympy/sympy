@@ -42,7 +42,7 @@ The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Comp
 Where ``equations`` may be in the form of ``Eq`` instances or expressions
 that are assumed to be equal to zero.
 
-Please note that there is an another function called as ``solve`` which
+Please note that there is another function called ``solve`` which
 can also be used to solve equations. The syntax is ``solve(equations, variables)``
 However, it is recommended to use ``solveset`` instead.
 
@@ -70,7 +70,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
 In future we would be able to use linsolve directly from ``solveset``. Following
-is an example of the syntax of ``linsolve``. 
+is an example of the syntax of ``linsolve``.
 
 * List of Equations Form:
 

@@ -174,6 +174,8 @@ class Routine(object):
                 raise ValueError("Unknown Routine result: %s" % r)
             symbols.update(r.expr.free_symbols)
 
+        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
+
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
@@ -358,6 +360,7 @@ class ResultBase(object):
 
     __repr__ = __str__
 
+
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine."""
 
@@ -404,6 +407,7 @@ class OutputArgument(Argument, ResultBase):
 
     __repr__ = __str__
 
+
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine."""
 
@@ -420,6 +424,7 @@ class InOutArgument(Argument, ResultBase):
             self.result_var)
 
     __repr__ = __str__
+
 
 class Result(Variable, ResultBase):
     """An expression for a return value.
@@ -524,13 +529,22 @@ class CodeGen(object):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
         symbols = expressions.free_symbols - local_vars - global_vars
+        new_symbols = set([])
+        new_symbols.update(symbols)
+
+        for symbol in symbols:
+            if isinstance(symbol, Idx):
+                new_symbols.remove(symbol)
+                new_symbols.update(symbol.args[1].free_symbols)
+        symbols = new_symbols
+
         # Decide whether to use output argument or return value
         return_val = []
         output_args = []
@@ -610,7 +624,7 @@ class CodeGen(object):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1077,8 +1091,8 @@ class FCodeGen(CodeGen):
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         # check that symbols are unique with ignorecase
         for r in routines:
-            lowercase = set([str(x).lower() for x in r.variables])
-            orig_case = set([str(x) for x in r.variables])
+            lowercase = {str(x).lower() for x in r.variables}
+            orig_case = {str(x) for x in r.variables}
             if len(lowercase) < len(orig_case):
                 raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
@@ -1150,13 +1164,19 @@ class JuliaCodeGen(CodeGen):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Julia supports multiple return values
         return_vals = []
@@ -1213,7 +1233,7 @@ class JuliaCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1357,13 +1377,19 @@ class OctaveCodeGen(CodeGen):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
 
         # symbols that should be arguments
-        symbols = expressions.free_symbols - local_vars - global_vars
+        old_symbols = expressions.free_symbols - local_vars - global_vars
+        symbols = set([])
+        for s in old_symbols:
+            if isinstance(s, Idx):
+                symbols.update(s.args[1].free_symbols)
+            else:
+                symbols.add(s)
 
         # Octave supports multiple return values
         return_vals = []
@@ -1416,7 +1442,7 @@ class OctaveCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:

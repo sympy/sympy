@@ -128,7 +128,7 @@ def test_piecewise():
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x, a < 0), (y, True))
-    assert f.free_symbols == set([x, y, a])
+    assert f.free_symbols == {x, y, a}
 
 
 def test_piecewise_integrate():

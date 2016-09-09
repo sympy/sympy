@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
-from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -53,6 +52,8 @@ class re(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -100,7 +101,7 @@ class re(Function):
                 * im(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_rewrite_as_im(self, arg):
-        return self.args[0] - im(self.args[0])
+        return self.args[0] - S.ImaginaryUnit*im(self.args[0])
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
@@ -144,6 +145,8 @@ class im(Function):
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
+            return S.NaN
+        elif arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_real:
             return S.Zero
@@ -203,7 +206,7 @@ class im(Function):
         return sage.imag_part(self.args[0]._sage_())
 
     def _eval_rewrite_as_re(self, arg):
-        return self.args[0] - re(self.args[0])
+        return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
@@ -465,9 +468,11 @@ class Abs(Function):
                     if base.func is cls and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_positive == True:
+                if base.is_nonnegative:
                     return base**re(exponent)
-                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                return
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
@@ -493,7 +498,7 @@ class Abs(Function):
             return
         if arg != conj and arg != -conj:
             ignore = arg.atoms(Abs)
-            abs_free_arg = arg.xreplace(dict([(i, Dummy(real=True)) for i in ignore]))
+            abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
             unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
@@ -736,7 +741,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u('\N{DAGGER}'))
+            pform = pform**prettyForm(u'\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform
@@ -1074,9 +1079,9 @@ def polarify(eq, subs=True, lift=False):
     eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
-    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.free_symbols])
+    reps = {s: Dummy(s.name, polar=True) for s in eq.free_symbols}
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.items()])
+    return eq, {r: s for s, r in reps.items()}
 
 
 def _unpolarify(eq, exponents_only, pause=False):
