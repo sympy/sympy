@@ -191,9 +191,9 @@ class CommonMatrix(object):
             if j < pos:
                 return self[i, j]
             elif pos <= j < pos + col.cols:
-                return other[i, j - pos]
-            return other[i, j - cols - pos]
-        return self._new(self.rows, self.cols + other.cols, lambda i, j: entry(i,j))
+                return col[i, j - pos]
+            return col[i, j - cols - pos]
+        return self._new(self.rows, self.cols + col.cols, lambda i, j: entry(i,j))
 
     def _eval_col_join(self, other):
         cols = self.cols
@@ -582,16 +582,16 @@ class CommonMatrix(object):
             self._diagonalize_clear_subproducts()
         return res
 
-    def _eval_is_hermetian(self):
-        def cond():
-            yield self.is_square
-            yield fuzzy_and(
-                    self[i, i].is_real for i in range(self.rows))
-            yield fuzzy_and(
-                    (self[i, j] - self[j, i].conjugate()).is_zero
-                    for i in range(self.rows)
-                    for j in range(i + 1, self.cols))
-        return fuzzy_and(i for i in cond())
+    def _eval_is_hermetian(self, simpfunc):
+        mat = self - self.adjoint()
+        return mat.applyfunc(simpfunc).is_zero
+
+    def _eval_is_Identity(self):
+        def dirac(i,j):
+            if i == j:
+                return 1
+            return 0
+        return all(self[i,j] == dirac(i, j) for i in range(self.rows) for j in range(self.cols))
 
     def _eval_is_invertible(self, method, iszerofunc):
         det = self.det(method) if method else self.det()
@@ -629,7 +629,7 @@ class CommonMatrix(object):
 
     def _eval_is_symmetric(self, simpfunc):
         mat = self - self.transpose()
-        return all(simpfunc(x).is_zero for x in mat)
+        return mat.applyfunc(simpfunc).is_zero
 
     def _eval_jacobian(self, X, n, m):
         # m is the number of functions and n is the number of variables
@@ -810,7 +810,9 @@ class CommonMatrix(object):
         return other._new(b)
 
     def _eval_matrix_mul(self, other):
-        return self._new(self.rows, other.cols, lambda i, j: self[i,:].dot(other[:,j]))
+        def entry(i, j):
+            return sum(self[i,k]*other[k,j] for k in range(self.cols))
+        return self._new(self.rows, other.cols, entry)
 
     def _eval_minorEntry(self, i, j, method):
         return self.minorMatrix(i, j).det(method)
@@ -1012,6 +1014,9 @@ class CommonMatrix(object):
         t = self.T
         return (t*self).inv(method=method)*t*rhs
 
+    def _eval_tolist(self):
+        return [list(self[i,:]) for i in range(self.rows)]
+
     def _eval_trace(self):
         return sum(self[i,i] for i in range(self.rows))
 
@@ -1048,8 +1053,10 @@ class CommonMatrix(object):
         ret = cls._zeros(rows, cols)
         for i in range(min(rows, cols)):
             ret[i,i] = one
-    def _new(self):
+
+    def _new(self, *args, **kwargs):
         raise NotImplementedError("Subclasses must implement this method")
+
     @classmethod
     def _ones(cls, rows, cols):
         one = cls._sympify(1)
@@ -1058,6 +1065,7 @@ class CommonMatrix(object):
             for j in range(cols):
                 ret[i,j] = one
         return ret
+
     @classmethod
     def _zeros(cls, rows, cols):
         raise NotImplementedError("Subclasses must implement this method")
@@ -1073,11 +1081,11 @@ class MatrixBase(object):
     # like `float(x)` called on each element, don't
     # forget to override this.
     _sympify = staticmethod(sympify)
-    _Zero = _sympify.__func__(0)    # static methods are not callable during class construction
-    _One = _sympify.__func__(1)     # so we call via the __func__ attribute
     _default_inverse_method = "GE"
+    _iterable = True # make sure that is_sequence returns true for matrices inheriting from MatrixBase
 
     is_Matrix = True
+    is_MatrixExpr = False
     is_Identity = None
 
     #
@@ -1165,6 +1173,8 @@ class MatrixBase(object):
         else:
             return self._eval_scalar_mul(other)
 
+    def __ne__(self, other):
+        return not self == other
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
@@ -2022,6 +2032,30 @@ class MatrixBase(object):
             simplify, FunctionType) else _simplify
         return self._eval_columnspace(simpfunc)
 
+    def col(self, j):
+        """Elementary column selector.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> eye(2).col(0)
+        Matrix([
+        [1],
+        [0]])
+
+        See Also
+        ========
+
+        row
+        col_op
+        col_swap
+        col_del
+        col_join
+        col_insert
+        """
+        return self[:, j]
+
     def condition_number(self):
         """Returns the condition number of a matrix.
 
@@ -2045,7 +2079,24 @@ class MatrixBase(object):
         return self._eval_condition_number()
 
     def conjugate(self):
-        """By-element conjugation.
+        """Return the by-element conjugation.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import I
+        >>> a = SparseMatrix(((1, 2 + I), (3, 4), (I, -I)))
+        >>> a
+        Matrix([
+        [1, 2 + I],
+        [3,     4],
+        [I,    -I]])
+        >>> a.C
+        Matrix([
+        [ 1, 2 - I],
+        [ 3,     4],
+        [-I,     I]])
 
         See Also
         ========
@@ -3006,7 +3057,7 @@ class MatrixBase(object):
         return self._eval_is_diagonalizable(reals_only, clear_subproducts)
 
     @property
-    def is_hermitian(self):
+    def is_hermitian(self, simplify=True):
         """Checks if the matrix is Hermitian.
 
         In a Hermitian matrix element i,j is the complex conjugate of
@@ -3036,7 +3087,18 @@ class MatrixBase(object):
         """
         if not self.is_square:
             return False
-        return self._eval_is_hermetian()
+
+        simpfunc = simplify
+        if not isinstance(simplify, FunctionType):
+            simpfunc = _simplify if simplify else lambda x: x
+
+        return self._eval_is_hermetian(simpfunc)
+
+    @property
+    def is_Identity(self):
+        if not self.is_square:
+            return False
+        return self._eval_is_Identity()
 
     def is_invertible(self, method=None, iszerofunc=_iszero):
         """Tests whether the matrix is invertible by testing
@@ -4382,6 +4444,28 @@ class MatrixBase(object):
                 "`self` and `rhs` must have the same number of rows.")
         return self._eval_row_join(other)
 
+    def row(self, i):
+        """Elementary row selector.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> eye(2).row(0)
+        Matrix([[1, 0]])
+
+        See Also
+        ========
+
+        col
+        row_op
+        row_swap
+        row_del
+        row_join
+        row_insert
+        """
+        return self[i, :]
+
     def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
@@ -4622,6 +4706,37 @@ class MatrixBase(object):
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
+    def tolist(self):
+        """Return the Matrix as a nested Python list.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, ones
+        >>> m = Matrix(3, 3, range(9))
+        >>> m
+        Matrix([
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8]])
+        >>> m.tolist()
+        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        >>> ones(3, 0).tolist()
+        [[], [], []]
+
+        When there are no rows then it will not be possible to tell how
+        many columns were in the original matrix:
+
+        >>> ones(0, 3).tolist()
+        []
+
+        """
+        if not self.rows:
+            return []
+        if not self.cols:
+            return [[] for i in range(self.rows)]
+        return self._eval_tolist()
+
     def trace(self):
         """
         Returns the trace of a square matrix i.e. the sum of the
@@ -4653,6 +4768,24 @@ class MatrixBase(object):
         Matrix([
         [1, 3],
         [2, 4]])
+
+        >>> from sympy import Matrix, I
+        >>> m=Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
+        >>> m.transpose()
+        Matrix([
+        [    1, 3],
+        [2 + I, 4]])
+        >>> m.T == m.transpose()
+        True
+
+        See Also
+        ========
+
+        conjugate: By-element conjugation
 
         """
         return self._eval_transpose()

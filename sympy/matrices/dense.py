@@ -338,7 +338,6 @@ class InplaceMatrixView(InplaceMatrix):
 
 
 class DenseMatrix(CommonMatrix, MatrixBase):
-    is_MatrixExpr = False
     _default_inverse_method = "GE"
 
     _op_priority = 10.01
@@ -417,9 +416,6 @@ class DenseMatrix(CommonMatrix, MatrixBase):
             if isinstance(key, slice):
                 return self._mat[key]
             return self._mat[a2idx(key)]
-
-    def __ne__(self, other):
-        return not self == other
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
@@ -515,29 +511,6 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         return self._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_transpose(self):
-        """Matrix transposition.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, I
-        >>> m=Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        Matrix([
-        [1, 2 + I],
-        [3,     4]])
-        >>> m.transpose()
-        Matrix([
-        [    1, 3],
-        [2 + I, 4]])
-        >>> m.T == m.transpose()
-        True
-
-        See Also
-        ========
-
-        conjugate: By-element conjugation
-        """
         a = []
         for i in range(self.cols):
             a.extend(self._mat[i::self.cols])
@@ -602,30 +575,6 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         """
         return Matrix(self)
 
-    def col(self, j):
-        """Elementary column selector.
-
-        Examples
-        ========
-
-        >>> from sympy import eye
-        >>> eye(2).col(0)
-        Matrix([
-        [1],
-        [0]])
-
-        See Also
-        ========
-
-        row
-        col_op
-        col_swap
-        col_del
-        col_join
-        col_insert
-        """
-        return self[:, j]
-
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
         trying to prove that the elements are equivalent, returning True
@@ -670,18 +619,6 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         except AttributeError:
             return False
 
-    @property
-    def is_Identity(self):
-        if not self.is_square:
-            return False
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        for i in range(self.rows):
-            for j in range(i + 1, self.cols):
-                if self[i, j] or self[j, i]:
-                    return False
-        return True
-
     def reshape(self, rows, cols):
         """Reshape the matrix. Total number of elements must remain the same.
 
@@ -707,67 +644,9 @@ class DenseMatrix(CommonMatrix, MatrixBase):
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
         return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
 
-    def row(self, i):
-        """Elementary row selector.
-
-        Examples
-        ========
-
-        >>> from sympy import eye
-        >>> eye(2).row(0)
-        Matrix([[1, 0]])
-
-        See Also
-        ========
-
-        col
-        row_op
-        row_swap
-        row_del
-        row_join
-        row_insert
-        """
-        return self[i, :]
-
-    def tolist(self):
-        """Return the Matrix as a nested Python list.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, ones
-        >>> m = Matrix(3, 3, range(9))
-        >>> m
-        Matrix([
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]])
-        >>> m.tolist()
-        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        >>> ones(3, 0).tolist()
-        [[], [], []]
-
-        When there are no rows then it will not be possible to tell how
-        many columns were in the original matrix:
-
-        >>> ones(0, 3).tolist()
-        []
-
-        """
-        if not self.rows:
-            return []
-        if not self.cols:
-            return [[] for i in range(self.rows)]
-        return [self._mat[i: i + self.cols]
-            for i in range(0, len(self), self.cols)]
-
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
     def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
         # if the copy flag was set to False, the input was rows, cols, [list]
         # and we should not create a copy of the list.
         if not kwargs.get('copy', True):
@@ -781,6 +660,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self.cols = cols
         self._mat = list(flat_list)  # create a shallow copy
         return self
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
 
     def __setitem__(self, key, value):
         """

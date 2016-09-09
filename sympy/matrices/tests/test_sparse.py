@@ -584,3 +584,14 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+
+def test_applyfunc():
+    a = SparseMatrix([1,0])
+    b = Matrix([2, 1])
+    assert a.applyfunc(lambda x: x+1) == b
+
+def test_has():
+    a = SparseMatrix([[1,0],[0,1]])
+    b = SparseMatrix([[1,1],[1,1]])
+    assert a.has(S.Zero)
+    assert not b.has(S.Zero)

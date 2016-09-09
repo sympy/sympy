@@ -40,12 +40,13 @@ class SparseMatrix(CommonMatrix, MatrixBase):
     _default_inverse_method = "LDL"
     _op_priority = 10.02
 
-    def __init__(self, *args):
+    def __new__(cls, *args, **kwargs):
+        self = object.__new__(cls)
         if len(args) == 1 and isinstance(args[0], SparseMatrix):
             self.rows = args[0].rows
             self.cols = args[0].cols
             self._smat = dict(args[0]._smat)
-            return
+            return self
 
         self._smat = {}
 
@@ -88,39 +89,7 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                     value = _list[self.cols*i + j]
                     if value:
                         self._smat[(i, j)] = value
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        """Add other to self, efficiently if possible.
-
-        When adding a non-sparse matrix, the result is no longer
-        sparse.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye
-        >>> A = SparseMatrix(eye(3)) + SparseMatrix(eye(3))
-        >>> B = SparseMatrix(eye(3)) + eye(3)
-        >>> A
-        Matrix([
-        [2, 0, 0],
-        [0, 2, 0],
-        [0, 0, 2]])
-        >>> A == B
-        True
-        >>> isinstance(A, SparseMatrix) and isinstance(B, SparseMatrix)
-        False
-
-        """
-        if isinstance(other, SparseMatrix):
-            return self.add(other)
-        elif isinstance(other, MatrixBase):
-            return other._new(other + Matrix(self))
-        else:
-            raise NotImplementedError(
-                "Cannot add %s to %s" %
-                tuple([c.__class__.__name__ for c in (other, self)]))
+        return self
 
     def __eq__(self, other):
         try:
@@ -172,82 +141,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         i, j = divmod(a2idx(key, len(self)), self.cols)
         return self._smat.get((i, j), S.Zero)
 
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        """Multiply self and other, watching for non-matrix entities.
-
-        When multiplying be a non-sparse matrix, the result is no longer
-        sparse.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye, zeros
-        >>> I = SparseMatrix(eye(3))
-        >>> I*I == I
-        True
-        >>> Z = zeros(3)
-        >>> I*Z
-        Matrix([
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0]])
-        >>> I*2 == 2*I
-        True
-        """
-        if isinstance(other, SparseMatrix):
-            return self.multiply(other)
-        if isinstance(other, MatrixBase):
-            return other._new(self*self._new(other))
-        return self.scalar_multiply(other)
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __neg__(self):
-        """Negate all elements of self.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye
-        >>> -SparseMatrix(eye(3))
-        Matrix([
-        [-1,  0,  0],
-        [ 0, -1,  0],
-        [ 0,  0, -1]])
-
-        """
-
-        rv = self.copy()
-        for k, v in rv._smat.items():
-            rv._smat[k] = -v
-        return rv
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        """Return product the same type as other (if a Matrix).
-
-        When multiplying be a non-sparse matrix, the result is no longer
-        sparse.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, SparseMatrix
-        >>> A = Matrix(2, 2, range(1, 5))
-        >>> S = SparseMatrix(2, 2, range(2, 6))
-        >>> A*S == S*A
-        False
-        >>> (isinstance(A*S, SparseMatrix) ==
-        ...  isinstance(S*A, SparseMatrix) == False)
-        True
-        """
-        if isinstance(other, MatrixBase):
-            return other*other._new(self)
-        return self.scalar_multiply(other)
-
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
@@ -296,6 +189,20 @@ class SparseMatrix(CommonMatrix, MatrixBase):
 
         return C
 
+    def _eval_add(self, other):
+        """If `other` is a SparseMatrix, add efficiently. Otherwise,
+        do standard addition."""
+        if not isinstance(other, SparseMatrix):
+            return self + self._new(other)
+
+        smat = {}
+        zero = self._sympify(0)
+        for key in set().union(self._smat.keys(), other._smat.keys()):
+            sum = self._smat.get(key, zero) + other._smat.get(key, zero)
+            if sum != 0:
+                smat[key] = sum
+        return self._new(self.rows, self.cols, smat)
+
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
             other = SparseMatrix(other)
@@ -313,36 +220,8 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         return self._new(self.rows, self.cols + other.cols, new_smat)
 
     def _eval_conjugate(self):
-        """Return the by-element conjugation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> from sympy import I
-        >>> a = SparseMatrix(((1, 2 + I), (3, 4), (I, -I)))
-        >>> a
-        Matrix([
-        [1, 2 + I],
-        [3,     4],
-        [I,    -I]])
-        >>> a.C
-        Matrix([
-        [ 1, 2 - I],
-        [ 3,     4],
-        [-I,     I]])
-
-        See Also
-        ========
-
-        transpose: Matrix transposition
-        H: Hermite conjugation
-        D: Dirac conjugation
-        """
-        conj = self.copy()
-        for key, value in self._smat.items():
-            conj._smat[key] = value.conjugate()
-        return conj
+        smat = {key: val.conjugate() for key,val in self._smat.items()}
+        return self._new(self.rows, self.cols, smat)
 
     def _eval_extract(self, rowsList, colsList):
         urow = list(uniq(rowsList))
@@ -376,12 +255,23 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         return rv
 
     def _eval_has(self, *patterns):
-        return any(self[key].has(*patterns) for key in self._smat)
+        # if the matrix has any zeros, see if S.Zero
+        # has the pattern.  If _smat is full length,
+        # the matrix has no zeros.
+        zhas = S.Zero.has(*patterns)
+        if len(self._smat) == self.rows*self.cols:
+            zhas = False
+        return any(self[key].has(*patterns) for key in self._smat) or zhas
+
+    def _eval_is_Identity(self):
+        if not all(self[i, i] == 1 for i in range(self.rows)):
+            return False
+        return len(self._smat) == self.rows
 
     def _eval_integral_pow(self, n):
         # n >= 0 is an integer, always
         a = self.as_mutable()
-        b = SparseMatrix.eye(self.rows)
+        b = self.eye(self.rows).as_mutable()
         # use iterated squaring to compute the power
         b = MatrixBase._exp_by_squaring(b, a, n)
         return self._new(b.rows, b.cols, b._smat, copy=False)
@@ -438,6 +328,31 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             rv /= scale
         return self._new(rv)
 
+    def _eval_matrix_mul(self, other):
+        """Fast multiplication exploiting the sparsity of the matrix."""
+        if not isinstance(other, SparseMatrix):
+            return self*self._new(other)
+
+        # if we made it here, we're both sparse matrices
+        # create quick lookups for rows and cols
+        row_lookup = defaultdict(dict)
+        for (i,j), val in self._smat.items():
+            row_lookup[i][j] = val
+        col_lookup = defaultdict(dict)
+        for (i,j), val in other._smat.items():
+            col_lookup[j][i] = val
+
+        smat = {}
+        for row in row_lookup.keys():
+            for col in col_lookup.keys():
+                # find the common indices of non-zero entries.
+                # these are the only things that need to be multiplied.
+                indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
+                if indices:
+                    val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
+                    smat[(row, col)] = val
+        return self._new(self.rows, other.cols, smat)
+
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
             other = SparseMatrix(other)
@@ -454,21 +369,11 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             new_smat[(row + irow, col)] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
 
-    def _eval_trace(self):
-        """Calculate the trace of a square matrix.
+    def _eval_scalar_mul(self, other):
+        return self.applyfunc(lambda x: x*other)
 
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> eye(3).trace()
-        3
-
-        """
-        trace = S.Zero
-        for i in range(self.cols):
-            trace += self._smat.get((i, i), 0)
-        return trace
+    def _eval_scalar_rmul(self, other):
+        return self.applyfunc(lambda x: other*x)
 
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
@@ -487,11 +392,8 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         [1, 3],
         [2, 4]])
         """
-        tran = self.zeros(self.cols, self.rows)
-        for key, value in self._smat.items():
-            key = key[1], key[0]  # reverse
-            tran._smat[key] = value
-        return tran
+        smat = {(j,i): val for (i,j),val in self._smat.items()}
+        return self._new(self.cols, self.rows, smat)
 
     def _eval_values(self):
         return [val for key,val in self._smat.items()]
@@ -552,49 +454,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
     def _zeros(cls, rows, cols):
         return cls(rows, cols, {})
 
-    def add(self, other):
-        """Add two sparse matrices with dictionary representation.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye, ones
-        >>> SparseMatrix(eye(3)).add(SparseMatrix(ones(3)))
-        Matrix([
-        [2, 1, 1],
-        [1, 2, 1],
-        [1, 1, 2]])
-        >>> SparseMatrix(eye(3)).add(-SparseMatrix(eye(3)))
-        Matrix([
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0]])
-
-        Only the non-zero elements are stored, so the resulting dictionary
-        that is used to represent the sparse matrix is empty:
-
-        >>> _._smat
-        {}
-
-        See Also
-        ========
-
-        multiply
-        """
-        if not isinstance(other, SparseMatrix):
-            raise ValueError('only use add with %s, not %s' %
-                tuple([c.__class__.__name__ for c in (self, other)]))
-        if self.shape != other.shape:
-            raise ShapeError()
-        M = self.copy()
-        for i, v in other._smat.items():
-            v = M[i] + v
-            if v:
-                M._smat[i] = v
-            else:
-                M._smat.pop(i, None)
-        return M
-
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
 
@@ -616,14 +475,15 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self.copy()
-        for k, v in self._smat.items():
-            fv = f(v)
-            if fv:
-                out._smat[k] = fv
-            else:
-                out._smat.pop(k, None)
-        return out
+        # test to see if `f` does anything to zero
+        zero = self._sympify(0)
+        if f(zero) is zero:
+            # only apply to nonzero elements
+            smat = {key: f(val) for key,val in self._smat.items()}
+        else:
+            smat = {(i, j): f(self[i,j]) for i in range(self.rows) for j in range(self.cols)}
+
+        return self._new(self.rows, self.cols, smat)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
@@ -701,26 +561,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
-    def col(self, j):
-        """Returns column j from self as a column vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.col(0)
-        Matrix([
-        [1],
-        [3]])
-
-        See Also
-        ========
-        row
-        col_list
-        """
-        return self[:, j]
-
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
 
@@ -735,79 +575,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             if iszero is False:
                 return False
         return True
-
-    @property
-    def is_hermitian(self):
-        """Checks if the matrix is Hermitian.
-
-        In a Hermitian matrix element i,j is the complex conjugate of
-        element j,i.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> from sympy import I
-        >>> from sympy.abc import x
-        >>> a = SparseMatrix([[1, I], [-I, 1]])
-        >>> a
-        Matrix([
-        [ 1, I],
-        [-I, 1]])
-        >>> a.is_hermitian
-        True
-        >>> a[0, 0] = 2*I
-        >>> a.is_hermitian
-        False
-        >>> a[0, 0] = x
-        >>> a.is_hermitian
-        >>> a[0, 1] = a[1, 0]*I
-        >>> a.is_hermitian
-        False
-        """
-        def cond():
-            d = self._smat
-            yield self.is_square
-            if len(d) <= self.rows:
-                yield fuzzy_and(
-                    d[i, i].is_real for i, j in d if i == j)
-            else:
-                yield fuzzy_and(
-                    d[i, i].is_real for i in range(self.rows) if (i, i) in d)
-            yield fuzzy_and(
-                    ((self[i, j] - self[j, i].conjugate()).is_zero
-                    if (j, i) in d else False) for (i, j) in d)
-        return fuzzy_and(i for i in cond())
-
-    @property
-    def is_Identity(self):
-        if not self.is_square:
-            return False
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        return len(self._smat) == self.rows
-
-    def is_symmetric(self, simplify=True):
-        """Return True if self is symmetric.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, eye
-        >>> M = SparseMatrix(eye(3))
-        >>> M.is_symmetric()
-        True
-        >>> M[0, 2] = 1
-        >>> M.is_symmetric()
-        False
-        """
-        if simplify:
-            return all((k[1], k[0]) in self._smat and
-                not (self[k] - self[(k[1], k[0])]).simplify()
-                for k in self._smat)
-        else:
-            return all((k[1], k[0]) in self._smat and
-                self[k] == self[(k[1], k[0])] for k in self._smat)
 
     def LDLdecomposition(self):
         """
@@ -848,7 +615,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                 'positive-definite matrices')
 
         return self._new(L), self._new(D)
-
 
     def liupc(self):
         """Liu's algorithm, for pre-determination of the Elimination Tree of
@@ -893,37 +659,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                 if virtual[c] == inf:
                     parent[c] = virtual[c] = r
         return R, parent
-
-    def multiply(self, other):
-        """Fast multiplication exploiting the sparsity of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, ones
-        >>> A, B = SparseMatrix(ones(4, 3)), SparseMatrix(ones(3, 4))
-        >>> A.multiply(B) == 3*ones(4)
-        True
-
-        See Also
-        ========
-
-        add
-        """
-        A = self
-        B = other
-        # sort B's row_list into list of rows
-        Blist = [[] for i in range(B.rows)]
-        for i, j, v in B.row_list():
-            Blist[i].append((j, v))
-        Cdict = defaultdict(int)
-        for k, j, Akj in A.row_list():
-            for n, Bjn in Blist[j]:
-                temp = Akj*Bjn
-                Cdict[k, n] += temp
-        rv = self.zeros(A.rows, B.cols)
-        rv._smat = {k: v for k, v in Cdict.items() if v}
-        return rv
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""
@@ -1011,35 +746,9 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             Lrow[k] = list(sorted(set(Lrow[k])))
         return Lrow
 
-    def row(self, i):
-        """Returns column i from self as a row vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.row(0)
-        Matrix([[1, 2]])
-
-        See Also
-        ========
-        col
-        row_list
-        """
-        return self[i,:]
-
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
-        M = self.zeros(*self.shape)
-        if scalar:
-            for i in self._smat:
-                v = scalar*self._smat[i]
-                if v:
-                    M._smat[i] = v
-                else:
-                    M._smat.pop(i, None)
-        return M
+        return self._eval_scalar_mul(scalar)
 
     def solve_least_squares(self, rhs, method='LDL'):
         """Return the least-square fit to the data.
@@ -1112,31 +821,6 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         else:
             return self.inv(method=method)*rhs
 
-    def tolist(self):
-        """Convert this sparse matrix into a list of nested Python lists.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix, ones
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.tolist()
-        [[1, 2], [3, 4]]
-
-        When there are no rows then it will not be possible to tell how
-        many columns were in the original matrix:
-
-        >>> SparseMatrix(ones(0, 3)).tolist()
-        []
-
-        """
-        if not self.rows:
-            return []
-        if not self.cols:
-            return [[] for i in range(self.rows)]
-        I, J = self.shape
-        return [[self[i, j] for j in range(J)] for i in range(I)]
-
     RL = property(row_list, None, None, "Alternate faster representation")
 
     CL = property(col_list, None, None, "Alternate faster representation")
@@ -1145,7 +829,7 @@ class SparseMatrix(CommonMatrix, MatrixBase):
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args)
+        return cls(*args, **kwargs)
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
