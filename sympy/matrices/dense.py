@@ -334,7 +334,7 @@ class InplaceMatrixView(InplaceMatrix):
         self._mat[key] = val
 
     def copy(self):
-        raise Exception("Cannot copy an InplaceMatrixView")
+        raise NotImplementedError("Cannot copy an InplaceMatrixView")
 
 
 class DenseMatrix(CommonMatrix, MatrixBase):
@@ -390,8 +390,11 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if isinstance(key, tuple):
-            i, j = key
+        if is_sequence(key):
+            try:
+                i, j = key
+            except ValueError:
+                raise ValueError('Invalid Matrix Index {}'.format(key))
             try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]

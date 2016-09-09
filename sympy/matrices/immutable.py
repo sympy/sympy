@@ -132,7 +132,7 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 
     @property
     def _smat(self):
-        return dict(self.args[2])
+        return {tuple(key): val for key,val in self.args[2].items()}
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")

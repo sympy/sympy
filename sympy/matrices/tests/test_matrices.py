@@ -3,7 +3,7 @@ import random
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
+    S, Symbol, Tuple, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
@@ -91,6 +91,7 @@ def test_fancy_index_matrix():
             [0, 2, 1, 2, 1],
             [3, 5, 4, 5, 4],
             [6, 8, 7, 8, 7]])
+        assert a[Tuple(0,0)] == 0
 
     a = SparseMatrix.zeros(3)
     a[1, 2] = 2

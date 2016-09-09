@@ -103,8 +103,11 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             return False
 
     def __getitem__(self, key):
-        if isinstance(key, tuple):
-            i, j = key
+        if is_sequence(key):
+            try:
+                i, j = key
+            except ValueError:
+                raise ValueError('Invalid Matrix Index {}'.format(key))
             try:
                 i, j = self.key2ij(key)
                 return self._smat.get((i, j), S.Zero)

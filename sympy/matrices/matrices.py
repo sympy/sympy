@@ -345,7 +345,10 @@ class CommonMatrix(object):
 
         return self._new(work)
 
-    def _eval_eigenvects(self, simplify, primitive, chop):
+    def _eval_eigenvects(self, **flags):
+        simplify = flags.get('simplify', True)
+        primitive = bool(flags.get('simplify', False))
+        chop = flags.pop('chop', False)
         # roots doesn't like Floats, so replace them with Rationals
         float = False
         mat = self
@@ -355,7 +358,7 @@ class CommonMatrix(object):
                 v, rational=True) for v in mat])
             flags['rational'] = False  # to tell eigenvals not to do this
 
-        out, vlist = [], mat.eigenvals()
+        out, vlist = [], mat.eigenvals(**flags)
         vlist = list(vlist.items())
         vlist.sort(key=default_sort_key)
 
@@ -2450,10 +2453,7 @@ class MatrixBase(object):
         evaluated with evalf. If it is desired to removed small imaginary
         portions during the evalf step, pass a value for the ``chop`` flag.
         """
-        simplify = flags.get('simplify', True)
-        primitive = bool(flags.get('simplify', False))
-        chop = flags.pop('chop', False)
-        return self._eval_eigenvects(simplify, primitive, chop)
+        return self._eval_eigenvects(**flags)
 
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
@@ -3296,7 +3296,7 @@ class MatrixBase(object):
         If the matrix is already simplified, you may speed-up is_symmetric()
         test by using 'simplify=False'.
 
-        >>> m.is_symmetric(simplify=False)
+        >>> bool(m.is_symmetric(simplify=False))
         False
         >>> m1 = m.expand()
         >>> m1.is_symmetric(simplify=False)
