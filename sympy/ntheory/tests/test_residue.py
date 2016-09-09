@@ -5,8 +5,10 @@ from sympy.core.compatibility import range
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius
-from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
+    sqrt_mod_iter, mobius, discrete_log
+from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
+    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
+    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
 from sympy.polys.domains import ZZ
 from sympy.utilities.pytest import raises
 
@@ -213,3 +215,24 @@ def test_residue():
     assert mobius(p) == -1
     raises(TypeError, lambda: mobius(x))
     raises(ValueError, lambda: mobius(i))
+
+    assert _discrete_log_trial_mul(587, 2**7, 2) == 7
+    assert _discrete_log_trial_mul(941, 7**18, 7) == 18
+    assert _discrete_log_trial_mul(389, 3**81, 3) == 81
+    assert _discrete_log_trial_mul(191, 19**123, 19) == 123
+    assert _discrete_log_shanks_steps(442879, 7**2, 7) == 2
+    assert _discrete_log_shanks_steps(874323, 5**19, 5) == 19
+    assert _discrete_log_shanks_steps(6876342, 7**71, 7) == 71
+    assert _discrete_log_shanks_steps(2456747, 3**321, 3) == 321
+    assert _discrete_log_pollard_rho(6013199, 2**6, 2, rseed=0) == 6
+    assert _discrete_log_pollard_rho(6138719, 2**19, 2, rseed=0) == 19
+    assert _discrete_log_pollard_rho(36721943, 2**40, 2, rseed=0) == 40
+    assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
+    assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
+    assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
+    assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
+    assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(587, 2**9, 2) == 9
+    assert discrete_log(2456747, 3**51, 3) == 51
+    assert discrete_log(32942478, 11**127, 11) == 127
+    assert discrete_log(432751500361, 7**324, 7) == 324
