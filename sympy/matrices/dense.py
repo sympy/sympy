@@ -40,7 +40,7 @@ def _iszero(x):
     return x.is_zero
 
 
-class InplaceMatrix(object):
+class _InplaceMatrix(object):
     """A Matrix-like object where all operations happen
     in place.  This is meant to be used inside Matrix
     classes and should not be used directly. It has
@@ -75,7 +75,7 @@ class InplaceMatrix(object):
                 # and expand the slices so they don't contain `None`
                 row_slice, col_slice = self._normalize_slices(i, j)
 
-                return InplaceMatrixView(self, row_slice, col_slice)
+                return _InplaceMatrixView(self, row_slice, col_slice)
 
             # if the key is a tuple of ints, change
             # it to an array index
@@ -140,7 +140,7 @@ class InplaceMatrix(object):
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
                 row_slice, col_slice = self._normalize_slices(i, j)
-                inplace_mat = InplaceMatrixView(self, row_slice, col_slice)
+                inplace_mat = _InplaceMatrixView(self, row_slice, col_slice)
                 if len(inplace_mat) != len(val):
                     raise ValueError("Attempting to assign {} values to {} positions".format(len(val), len(inplace_mat)))
                 # when we have an appropriate view, we can set items directly
@@ -281,7 +281,7 @@ class InplaceMatrix(object):
         self._mat[i0: i0 + self.cols] = [ f(x, y) for x, y in zip(ri, rk) ]
 
 
-class InplaceMatrixView(InplaceMatrix):
+class _InplaceMatrixView(_InplaceMatrix):
     """A view of an InplaceMatrix.  Assigning values
     to elements of the InplaceMatrixView will affect the
     values in the InplaceMatrix.  `row_slice` and `col_slice`
@@ -426,13 +426,13 @@ class DenseMatrix(CommonMatrix, MatrixBase):
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = _InplaceMatrix(other.rows, other.cols, other._mat)
         a.__add__(b)
         return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_col_insert(self, col, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
         for i in reversed(range(self.rows)):
             pos = col + i*self.cols
             a._mat[pos:pos] = other[i,:]
@@ -440,7 +440,7 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         return self._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_col_join(self, other):
-        a = InplaceMatrix.zeros(self.rows + other.rows, self.cols)
+        a = _InplaceMatrix.zeros(self.rows + other.rows, self.cols)
         a[:self.rows, :] = self
         a[self.rows:, :] = other
         return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
@@ -459,8 +459,8 @@ class DenseMatrix(CommonMatrix, MatrixBase):
             return Derivative(self, *args, **kwargs)
 
     def _eval_elementwise_mul(self, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = _InplaceMatrix(other.rows, other.cols, other._mat)
         a._elementwise_mul(b)
         return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
 
@@ -475,8 +475,8 @@ class DenseMatrix(CommonMatrix, MatrixBase):
 
     def _eval_integral_pow(self, n):
         # n >= 0 is an integer, always
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = InplaceMatrix.eye(self.rows)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = _InplaceMatrix.eye(self.rows)
         # use iterated squaring to compute the power
         b = MatrixBase._exp_by_squaring(b, a, n)
         return self._new(b.rows, b.cols, b._mat, copy=False)
@@ -485,31 +485,31 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         return self.inv(method, **kwargs)
 
     def _eval_matrix_mul(self, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = InplaceMatrix(other.rows, other.cols, other._mat)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        b = _InplaceMatrix(other.rows, other.cols, other._mat)
         a.__mul__(b)
         return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_row_insert(self, row, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
         pos = row*self.cols
         a._mat[pos:pos] = other
         a.rows += other.rows
         return self._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_row_join(self, other):
-        a = InplaceMatrix.zeros(self.rows, self.cols + other.cols)
+        a = _InplaceMatrix.zeros(self.rows, self.cols + other.cols)
         a[:, :self.cols] = self
         a[:, self.cols:] = other
         return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_scalar_mul(self, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
         a._scalar_mul(other)
         return self._new(a.rows, a.cols, a._mat, copy=False)
 
     def _eval_scalar_rmul(self, other):
-        a = InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
+        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
         a._scalar_rmul(other)
         return self._new(a.rows, a.cols, a._mat, copy=False)
 

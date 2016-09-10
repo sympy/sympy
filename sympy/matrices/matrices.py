@@ -5129,7 +5129,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     i = possible_zeros.index(None)
     return (i, col[i], True, newly_determined)
 
-class MatrixWrapper(object):
+class _MatrixWrapper(object):
     """Wrapper class providing the minimum functionality
     for a matrix-like object: .rows, .cols, .shape, indexability,
     and iterability.  CommonMatrix math operations should work
@@ -5155,5 +5155,5 @@ def _matrixify(mat):
         return mat
     if hasattr(mat, 'shape'):
         if len(mat.shape) == 2:
-            return MatrixWrapper(mat)
+            return _MatrixWrapper(mat)
     return mat
