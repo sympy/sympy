@@ -817,6 +817,11 @@ class CommonMatrix(object):
             return sum(self[i,k]*other[k,j] for k in range(self.cols))
         return self._new(self.rows, other.cols, entry)
 
+    def _eval_matrix_rmul(self, other):
+        def entry(i, j):
+            return sum(other[i,k]*self[k,j] for k in range(other.cols))
+        return self._new(other.rows, self.cols, entry)
+
     def _eval_minorEntry(self, i, j, method):
         return self.minorMatrix(i, j).det(method)
 
@@ -1097,11 +1102,21 @@ class MatrixBase(object):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
-        if getattr(other, 'is_Matrix', False):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape'):
             if self.shape != other.shape:
                 raise ShapeError("Matrix size mismatch.")
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
             return self._eval_add(other)
-        raise TypeError('cannot add matrix and %s' % type(other))
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return CommonMatrix._eval_add(self, other)
+
+        raise TypeError('cannot add %s and %s' % type(self), type(other))
 
     def __array__(self):
         from .dense import matrix2numpy
@@ -1169,12 +1184,26 @@ class MatrixBase(object):
 
         matrix_multiply_elementwise
         """
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[1] != other.shape[0]:
+                raise ShapeError("Matrix size mismatch.")
+
+        # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            if self.cols != other.rows:
-                raise ShapeError("Matrices size mismatch.")
             return self._eval_matrix_mul(other)
-        else:
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return CommonMatrix._eval_matrix_mul(self, other)
+
+        try:
             return self._eval_scalar_mul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
 
     def __ne__(self, other):
         return not self == other
@@ -1209,9 +1238,26 @@ class MatrixBase(object):
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[0] != other.shape[1]:
+                raise ShapeError("Matrix size mismatch.")
+
+        # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return other.as_mutable()*self
-        return self._eval_scalar_rmul(other)
+            return other._new(other.as_mutable()*self)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return CommonMatrix._eval_matrix_rmul(self, other)
+
+        try:
+            return self._eval_scalar_rmul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
 
     @call_highest_priority('__sub__')
     def __rsub__(self, a):
@@ -5082,3 +5128,32 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     # non-zero.  We should probably raise a warning in this case
     i = possible_zeros.index(None)
     return (i, col[i], True, newly_determined)
+
+class MatrixWrapper(object):
+    """Wrapper class providing the minimum functionality
+    for a matrix-like object: .rows, .cols, .shape, indexability,
+    and iterability.  CommonMatrix math operations should work
+    on matrix-like objects.  For example, wrapping a numpy
+    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """
+    is_MatrixLike = True
+    def __init__(self, mat, shape=None):
+        self.mat = mat
+        self.rows, self.cols = mat.shape if shape is None else shape
+    def __getattr__(self, attr):
+        """Most attribute access is passed straight through
+        to the stored matrix"""
+        return getattr(self.mat, attr)
+    def __getitem__(self, key):
+        return self.mat.__getitem__(key)
+
+def _matrixify(mat):
+    """If `mat` is a Matrix or is matrix-like,
+    return a Matrix or MatrixWrapper object.  Otherwise
+    `mat` is passed through without modification."""
+    if getattr(mat, 'is_Matrix', False):
+        return mat
+    if hasattr(mat, 'shape'):
+        if len(mat.shape) == 2:
+            return MatrixWrapper(mat)
+    return mat
