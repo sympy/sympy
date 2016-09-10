@@ -604,7 +604,7 @@ class CommonMatrix(object):
         if is_zero is None:
             # sometimes the iszero and equality checks is
             # ambiguous, so fall back to row reduction
-            rref = self.rref(iszerofunc=iszerofunc, simplify=True)
+            rref, pivots = self.rref(iszerofunc=iszerofunc, simplify=True)
             if any(S.Zero.equals(rref[i,i]) for i in range(rref.rows)):
                 return False
         if is_zero:
@@ -941,9 +941,8 @@ class CommonMatrix(object):
         return self._new(MatrixBase._back_substitute(R, y))
 
     def _eval_rank(self, iszerofunc, simplify):
-        row_reduced = self.rref(iszerofunc=iszerofunc, simplify=simplify)
-        rank = len(row_reduced[-1])
-        return rank
+        rref, pivots = self.rref(iszerofunc=iszerofunc, simplify=simplify)
+        return len(pivots)
 
     def _eval_row_insert(self, row, other):
         raise NotImplementedError("Subclasses must implement this method")
