@@ -1390,7 +1390,9 @@ class MatrixBase(object):
 
             # Matrix-like object
             elif hasattr(args[0], 'rows') and hasattr(args[0], 'cols') and hasattr(args[0], '__iter__'):
-                return args[0].rows, args[0].cols, args[0]
+                # make sure to sympify the input
+                flat_list = [cls._sympify(x) for x in args[0]]
+                return args[0].rows, args[0].cols, flat_list
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
