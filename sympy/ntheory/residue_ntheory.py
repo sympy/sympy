@@ -3,12 +3,13 @@
 from __future__ import print_function, division
 
 from sympy.core.singleton import S
-from sympy.core.numbers import igcd, igcdex
+from sympy.core.numbers import igcd, igcdex, mod_inverse
+from sympy.core.power import isqrt
 from sympy.core.compatibility import as_int, range
 from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint
+from random import randint, Random
 
 
 
@@ -1020,3 +1021,286 @@ class mobius(Function):
             if any(i > 1 for i in a.values()):
                 return S.Zero
             return S.NegativeOne**len(a)
+
+
+def _discrete_log_trial_mul(n, a, b, order=None):
+    """
+    Trial multiplication algorithm for computing the discrete logarithm of
+    ``a`` to the base ``b`` modulo ``n``.
+
+    The algorithm finds the discrete logarithm using exhaustive search. This
+    naive method is used as fallback algorithm of ``discrete_log`` when the
+    group order is very small.
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_trial_mul
+    >>> _discrete_log_trial_mul(41, 15, 7)
+    3
+
+    See also
+    ========
+
+    discrete_log
+    """
+    a %= n
+    b %= n
+    if order is None:
+        order = n
+    x = 1
+    k = 1
+    for i in range(order):
+        if x == a:
+            return i
+        x = x * b % n
+    raise ValueError("Log does not exist")
+
+
+def _discrete_log_shanks_steps(n, a, b, order=None):
+    """
+    Baby-step giant-step algorithm for computing the discrete logarithm of
+    ``a`` to the base ``b`` modulo ``n``.
+
+    The algorithm is a time-memory trade-off of the method of exhaustive
+    search. It uses `O(sqrt(m))` memory, where `m` is the group order.
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_shanks_steps
+    >>> _discrete_log_shanks_steps(41, 15, 7)
+    3
+
+    See also
+    ========
+
+    discrete_log
+    """
+    a %= n
+    b %= n
+    if order is None:
+        order = n_order(b, n)
+    m = isqrt(order) + 1
+    T = dict()
+    x = 1
+    for i in range(m):
+        T[x] = i
+        x = x * b % n
+    z = mod_inverse(b, n)
+    z = pow(z, m, n)
+    x = a
+    for i in range(m):
+        if x in T:
+            return i * m + T[x]
+        x = x * z % n
+    raise ValueError("Log does not exist")
+
+
+def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
+    """
+    Pollard's Rho algorithm for computing the discrete logarithm of ``a`` to
+    the base ``b`` modulo ``n``.
+
+    It is a randomized algorithm with the same expected running time as
+    ``_discrete_log_shanks_steps``, but requires a negligible amount of memory.
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_pollard_rho
+    >>> _discrete_log_pollard_rho(227, 3**7, 3)
+    7
+
+    See also
+    ========
+
+    discrete_log
+    """
+    a %= n
+    b %= n
+
+    if order is None:
+        order = n_order(b, n)
+
+    prng = Random()
+    if rseed is not None:
+        prng.seed(rseed)
+
+    for i in range(retries):
+        aa = prng.randint(1, order - 1)
+        ba = prng.randint(1, order - 1)
+        xa = pow(b, aa, n) * pow(a, ba, n) % n
+
+        c = xa % 3
+        if c == 0:
+            xb = a * xa % n
+            ab = aa
+            bb = (ba + 1) % order
+        elif c == 1:
+            xb = xa * xa % n
+            ab = (aa + aa) % order
+            bb = (ba + ba) % order
+        else:
+            xb = b * xa % n
+            ab = (aa + 1) % order
+            bb = ba
+
+        for j in range(order):
+            c = xa % 3
+            if c == 0:
+                xa = a * xa % n
+                ba = (ba + 1) % order
+            elif c == 1:
+                xa = xa * xa % n
+                aa = (aa + aa) % order
+                ba = (ba + ba) % order
+            else:
+                xa = b * xa % n
+                aa = (aa + 1) % order
+
+            c = xb % 3
+            if c == 0:
+                xb = a * xb % n
+                bb = (bb + 1) % order
+            elif c == 1:
+                xb = xb * xb % n
+                ab = (ab + ab) % order
+                bb = (bb + bb) % order
+            else:
+                xb = b * xb % n
+                ab = (ab + 1) % order
+
+            c = xb % 3
+            if c == 0:
+                xb = a * xb % n
+                bb = (bb + 1) % order
+            elif c == 1:
+                xb = xb * xb % n
+                ab = (ab + ab) % order
+                bb = (bb + bb) % order
+            else:
+                xb = b * xb % n
+                ab = (ab + 1) % order
+
+            if xa == xb:
+                r = (ba - bb) % order
+                if r != 0:
+                    return mod_inverse(r, order) * (ab - aa) % order
+                break
+
+    raise ValueError("Pollard's Rho failed to find logarithm")
+
+
+def _discrete_log_pohlig_hellman(n, a, b, order=None):
+    """
+    Pohlig-Hellman algorithm for computing the discrete logarithm of ``a`` to
+    the base ``b`` modulo ``n``.
+
+    In order to compute the discrete logarithm, the algorithm takes advantage
+    of the factorization of the group order. It is more efficient when the
+    group order factors into many small primes.
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_pohlig_hellman
+    >>> _discrete_log_pohlig_hellman(251, 210, 71)
+    197
+
+    See also
+    ========
+
+    discrete_log
+    """
+    from .modular import crt
+    a %= n
+    b %= n
+
+    if order is None:
+        order = n_order(b, n)
+
+    f = factorint(order)
+    l = [0] * len(f)
+
+    for i, (pi, ri) in enumerate(f.items()):
+        for j in range(ri):
+            gj = pow(b, l[i], n)
+            aj = pow(a * mod_inverse(gj, n), order // pi**(j + 1), n)
+            bj = pow(b, order // pi, n)
+            cj = discrete_log(n, aj, bj, pi, True)
+            l[i] += cj * pi**j
+
+    d, _ = crt([pi**ri for pi, ri in f.items()], l)
+    return d
+
+
+def discrete_log(n, a, b, order=None, prime_order=None):
+    """
+    Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``.
+
+    This is a recursive function to reduce the discrete logarithm problem in
+    cyclic groups of composite order to the problem in cyclic groups of prime
+    order.
+
+    It employs different algorithms depending on the problem (subgroup order
+    size, prime order or not):
+
+        * Trial multiplication
+        * Baby-step giant-step
+        * Pollard's Rho
+        * Pohlig-Hellman
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DiscreteLogarithm.html
+    .. [2] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import discrete_log
+    >>> discrete_log(41, 15, 7)
+    3
+
+    """
+    if order is None:
+        order = n_order(b, n)
+
+    if prime_order is None:
+        prime_order = isprime(order)
+
+    if order < 1000:
+        return _discrete_log_trial_mul(n, a, b, order)
+    elif prime_order:
+        if order < 1000000000000:
+            return _discrete_log_shanks_steps(n, a, b, order)
+        return _discrete_log_pollard_rho(n, a, b, order)
+
+    return _discrete_log_pohlig_hellman(n, a, b, order)
