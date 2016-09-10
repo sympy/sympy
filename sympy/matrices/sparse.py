@@ -829,7 +829,7 @@ class SparseMatrix(CommonMatrix, MatrixBase):
     CL = property(col_list, None, None, "Alternate faster representation")
 
 
-class MutableSparseMatrix(SparseMatrix, MatrixBase):
+class MutableSparseMatrix(SparseMatrix):
     @classmethod
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)

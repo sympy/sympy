@@ -648,7 +648,7 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
 
 
-class MutableDenseMatrix(DenseMatrix, MatrixBase):
+class MutableDenseMatrix(DenseMatrix):
     def __new__(cls, *args, **kwargs):
         # if the copy flag was set to False, the input was rows, cols, [list]
         # and we should not create a copy of the list.
