@@ -48,6 +48,12 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             self._smat = dict(args[0]._smat)
             return self
 
+        if not kwargs.get('copy', True):
+            if len(args) != 3:
+                raise TypeError("'copy' requires a matrix be initialized as rows,cols,[list]")
+            self.rows, self.cols, self._smat = args
+            return self
+
         self._smat = {}
 
         if len(args) == 3:
@@ -103,6 +109,7 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             return False
 
     def __getitem__(self, key):
+        self_smat = self._smat # cache for speed
         if is_sequence(key):
             try:
                 i, j = key
@@ -110,7 +117,7 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                 raise ValueError('Invalid Matrix Index {}'.format(key))
             try:
                 i, j = self.key2ij(key)
-                return self._smat.get((i, j), S.Zero)
+                return self_smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
@@ -138,11 +145,11 @@ class SparseMatrix(CommonMatrix, MatrixBase):
             L = []
             for i in range(lo, hi):
                 m, n = divmod(i, self.cols)
-                L.append(self._smat.get((m, n), S.Zero))
+                L.append(self_smat.get((m, n), S.Zero))
             return L
 
         i, j = divmod(a2idx(key, len(self)), self.cols)
-        return self._smat.get((i, j), S.Zero)
+        return self_smat.get((i, j), S.Zero)
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
@@ -198,10 +205,14 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         if not isinstance(other, SparseMatrix):
             return self + self._new(other)
 
+        # cache the smat dicts for faster access (this especially
+        # helps for immutable matrices whose `._smat` attribute is
+        # a computed property).
+        self_smat, other_smat = self._smat, other._smat
         smat = {}
         zero = self._sympify(0)
-        for key in set().union(self._smat.keys(), other._smat.keys()):
-            sum = self._smat.get(key, zero) + other._smat.get(key, zero)
+        for key in set().union(self_smat.keys(), other_smat.keys()):
+            sum = self_smat.get(key, zero) + other_smat.get(key, zero)
             if sum != 0:
                 smat[key] = sum
         return self._new(self.rows, self.cols, smat)
@@ -230,17 +241,18 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         urow = list(uniq(rowsList))
         ucol = list(uniq(colsList))
         smat = {}
-        if len(urow)*len(ucol) < len(self._smat):
+        self_smat = self._smat # chache for performance
+        if len(urow)*len(ucol) < len(self_smat):
             # there are fewer elements requested than there are elements in the matrix
             for i, r in enumerate(urow):
                 for j, c in enumerate(ucol):
-                    smat[i, j] = self._smat.get((r, c), 0)
+                    smat[i, j] = self_smat.get((r, c), 0)
         else:
             # most of the request will be zeros so check all of self's entries,
             # keeping only the ones that are desired
-            for rk, ck in self._smat:
+            for rk, ck in self_smat:
                 if rk in urow and ck in ucol:
-                    smat[(urow.index(rk), ucol.index(ck))] = self._smat[(rk, ck)]
+                    smat[(urow.index(rk), ucol.index(ck))] = self_smat[(rk, ck)]
 
         rv = self._new(len(urow), len(ucol), smat)
         # rv is nominally correct but there might be rows/cols
@@ -478,15 +490,25 @@ class SparseMatrix(CommonMatrix, MatrixBase):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
+        smat = {}
         # test to see if `f` does anything to zero
         zero = self._sympify(0)
         if f(zero) is zero:
             # only apply to nonzero elements
-            smat = {key: f(val) for key,val in self._smat.items()}
+            for key,val in self._smat.items():
+                v = f(val)
+                # since we have to check if v is zero, this is faster than a
+                # dictionary comprehension
+                if v:
+                    smat[key] = v
         else:
-            smat = {(i, j): f(self[i,j]) for i in range(self.rows) for j in range(self.cols)}
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    v = f(self[i,j])
+                    if v:
+                        smat[(i,j)] = v
 
-        return self._new(self.rows, self.cols, smat)
+        return self._new(self.rows, self.cols, smat, copy=False)
 
     def cholesky(self):
         """

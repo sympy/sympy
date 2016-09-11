@@ -42,7 +42,12 @@ class ImmutableMatrix(DenseMatrix, MatrixExpr):
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+        if not kwargs.get('copy', True):
+            if len(args) != 3:
+                raise TypeError("'copy' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
         rows = Integer(rows)
         cols = Integer(cols)
         mat = Tuple(*flat_list)
