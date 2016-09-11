@@ -340,9 +340,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     return expr
 
 
-#def numpy_to_sympy(a):
-
-
 def _sympify(a):
     """
     Short version of sympify for internal usage for __add__ and __eq__ methods
