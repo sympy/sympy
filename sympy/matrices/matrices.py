@@ -1095,6 +1095,12 @@ class MatrixBase(object):
     is_MatrixExpr = False
     is_Identity = None
 
+    # these must be set at the end of the appropriate modules to avoid
+    # circular imports.  They should be set to the class of the mutable/immutable
+    # variants.  E.g., DenseMatrix._mutable_variant == MutableDenseMatrix
+    _mutable_variant = None
+    _immutable_variant = None # to avoid a circular import, this must be set in immutable.py
+
     #
     # Utility functions for Matrices
     #
@@ -1744,6 +1750,35 @@ class MatrixBase(object):
         berkowitz
         """
         return self._eval_adjugate(method)
+
+    def as_immutable(self):
+        """Returns an Immutable version of this Matrix"""
+        if self._immutable_variant:
+            # if we're already immutable, no need to copy ourself
+            if type(self) is self._immutable_variant:
+                return self
+            return self._immutable_variant._new(self)
+        raise NotImplementedError("No immutable variant of {} found".format(self.__class__))
+
+    def as_mutable(self):
+        """Returns a mutable version of this matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1, 1] = 5 # Can set values in Y
+        >>> Y
+        Matrix([
+        [1, 2],
+        [3, 5]])
+        """
+        if self._mutable_variant:
+            # we always need to create a copy of ourself if we're mutable
+            return self._mutable_variant._new(self)
+        raise NotImplementedError("No mutable variant of {} found".format(self.__class__))
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.

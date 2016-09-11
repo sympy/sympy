@@ -145,3 +145,8 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 # the object is non-zero
 # See https://github.com/sympy/sympy/issues/7213
 ImmutableSparseMatrix.is_zero = SparseMatrix.is_zero
+
+# these must be set after the classes are defined and one must be careful to
+# avoid circular imports
+DenseMatrix._immutable_variant = ImmutableMatrix
+SparseMatrix._immutable_variant = ImmutableSparseMatrix
