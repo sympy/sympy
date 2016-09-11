@@ -512,6 +512,30 @@ def test_sympify_set():
     assert sympify(set()) == EmptySet()
 
 
+def test_numpy():
+    try:
+        import numpy as np
+
+        assert sympify(np.bool_(1)) == True
+        assert sympify(np.int_(123)) == np.int_(123)
+        assert sympify(np.intc(123)) == np.intc(123)
+        assert sympify(np.intp(123)) == np.intp(123)
+        assert sympify(np.int8(-123)) == np.int8(-123)
+        assert sympify(np.int16(-123)) == np.int16(-123)
+        assert sympify(np.int32(123)) == np.int32(123)
+        assert sympify(np.int64(123)) == np.int64(123)
+        assert sympify(np.uint8(123)) == np.uint8(123)
+        assert sympify(np.uint16(1234)) == np.uint16(1234)
+        assert sympify(np.uint32(1234)) == np.uint32(1234)
+        assert sympify(np.uint64(1234)) == np.uint64(1234)
+        assert sympify(np.float16(1234.12)) == np.float16(1234.12)
+        assert sympify(np.float32(1234.1234)) == np.float32(1234.1234)
+        assert sympify(np.float64(1234.12345)) == np.float64(1234.12345)
+        assert sympify(np.complex64(1 + 2j)) == 1.0 + 2.0*I
+        assert sympify(np.complex128(1 + 2j)) == 1.0 + 2.0*I
+    except ImportError:
+        print('numpy not installed.Abort numpy tests.')
+
 @XFAIL
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
