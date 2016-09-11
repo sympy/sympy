@@ -267,7 +267,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         pass
 
 
-    #Support for basic numpy datatypes
+    #Support for basic numpy datatypes.
     if type(a).__module__ == 'numpy':
         import numpy as np
         try:
@@ -275,7 +275,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         except RuntimeError:
             return sympify(np.float64(a))
             #Exception case is for float128 which
-            #has no native python equivalent
+            #has no native python equivalent.
 
 
     if not isinstance(a, string_types):
