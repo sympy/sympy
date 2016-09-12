@@ -212,57 +212,99 @@ def opt_cse(exprs, order='canonical'):
 
     ## Process Adds and commutative Muls
 
-    def _match_common_args(Func, funcs):
-        if order != 'none':
-            funcs = list(ordered(funcs))
-        else:
-            funcs = sorted(funcs, key=lambda x: len(x.args))
-
-        func_args = [set(e.args) for e in funcs]
-        for i in range(len(func_args)):
-            for j in range(i + 1, len(func_args)):
-                com_args = func_args[i].intersection(func_args[j])
-                if len(com_args) > 1:
-                    com_func = Func(*com_args)
-
-                    # for all sets, replace the common symbols by the function
-                    # over them, to allow recursive matches
-
-                    diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | {com_func}
-                    if diff_i:
-                        opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
-                                                  evaluate=False)
-
-                    diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | {com_func}
-                    opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
-                                              evaluate=False)
-
-                    for k in range(j + 1, len(func_args)):
-                        if not com_args.difference(func_args[k]):
-                            diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | {com_func}
-                            opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
-                                                      evaluate=False)
-
-    # split muls into commutative
-    comutative_muls = set()
+    # split muls into commutative/noncommutative
+    commutative_muls = set()
+    noncommutative_muls = set()
+    noncommutative_matmuls = set()
     for m in muls:
         c, nc = m.args_cnc(cset=True)
-        if c:
-            c_mul = m.func(*c)
-            if nc:
-                if c_mul == 1:
-                    new_obj = m.func(*nc)
-                else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
-                opt_subs[m] = new_obj
-            if len(c) > 1:
-                comutative_muls.add(c_mul)
+        c_mul = m.func(*c)
+        nc_mul = m.func(*nc)
+        if nc:
+            if c_mul == 1:
+                new_obj = nc_mul
+            else:
+                new_obj = m.func(c_mul, nc_mul, evaluate=False)
+            if isinstance(nc_mul, Mul):
+                noncommutative_muls.add(nc_mul)
+            elif isinstance(nc_mul, MatMul):
+                noncommutative_matmuls.add(nc_mul)
+            opt_subs[m] = new_obj
+        if len(c) > 1:
+            commutative_muls.add(c_mul)
 
-    _match_common_args(Add, adds)
-    _match_common_args(Mul, comutative_muls)
+    opt_subs.update(match_common_args(Add, adds, order=order))
+    opt_subs.update(match_common_args(Mul, commutative_muls, order=order))
+
+    opt_subs.update(match_common_args_nc(Mul, noncommutative_muls))
+    opt_subs.update(match_common_args_nc(MatMul, noncommutative_matmuls))
+
+    return opt_subs
+
+
+def match_common_args(Func, funcs, order='canonical'):
+    opt_subs = {}
+
+    if order != 'none':
+        funcs = list(ordered(funcs))
+    else:
+        funcs = sorted(funcs, key=lambda x: len(x.args))
+
+    func_args = [set(e.args) for e in funcs]
+    for i in range(len(func_args)):
+        for j in range(i + 1, len(func_args)):
+            com_args = func_args[i].intersection(func_args[j])
+            if len(com_args) > 1:
+                com_func = Func(*com_args)
+
+                # for all sets, replace the common symbols by the function
+                # over them, to allow recursive matches
+
+                diff_i = func_args[i].difference(com_args)
+                func_args[i] = diff_i | set([com_func])
+                if diff_i:
+                    opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
+                                              evaluate=False)
+
+                diff_j = func_args[j].difference(com_args)
+                func_args[j] = diff_j | set([com_func])
+                opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
+                                          evaluate=False)
+
+                for k in range(j + 1, len(func_args)):
+                    if not com_args.difference(func_args[k]):
+                        diff_k = func_args[k].difference(com_args)
+                        func_args[k] = diff_k | set([com_func])
+                        opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
+                                                  evaluate=False)
+
+    return opt_subs
+
+def match_common_args_nc(Func, funcs):
+    from sympy.utilities.iterables import flatten
+    from itertools import takewhile
+    opt_subs = {}
+    func_args = [e.args for e in funcs]
+    # ([a, b, c], [1, 2, 3]) -> [a, b, c, Marker, 1, 2, 3]
+    combined_func_args = flatten(zip(func_args, [Marker]*len(func_args)))[:-1]
+    while True:
+        repl = shortest_repeated_subsequence(combined_func_args)
+        if not repl:
+            break
+        # [1, 2, 3] -> [Func(1, 2), 3]
+        replace_subsequence(combined_func_args, repl, Func(*repl, evaluate=False))
+
+    # [a, b, Marker, (a, b), c] -> {Func(a, b): Func(a, b), Func(a, b, c):
+    #                               Func(Func(a, b), c)}
+    combined_func_args_iter = iter(combined_func_args)
+    for func in funcs:
+        res = list(takewhile(lambda x: x != Marker, combined_func_args_iter))
+        if len(res) == 1:
+            # Avoid MatMul(MatMul(x, y, evaluate=False), evaluate=False),
+            # which doesn't denest.
+            opt_subs[func] = res[0]
+        else:
+            opt_subs[func] = Func(*res, evaluate=False)
 
     return opt_subs
 
@@ -378,6 +420,11 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             if isinstance(orig_expr, MatrixExpr):
                 sym = MatrixSymbol(sym.name, orig_expr.rows,
                     orig_expr.cols)
+            elif orig_expr.is_commutative == False:
+                # Ideally we would match all assumptions, but there doesn't
+                # seem to be a simple way to do that, and commutative is the
+                # most important one to keep.
+                sym = sym.func(sym.name, commutative=False)
 
             subs[orig_expr] = sym
             replacements.append((sym, new_expr))
@@ -536,3 +583,116 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         return replacements, reduced_exprs
 
     return postprocess(replacements, reduced_exprs)
+
+
+# ====== Some iterable helpers for some of the algorithms above =====
+
+class Marker:
+    pass
+
+# XXX: Should this go in sympy.utilities.iterables?
+def shortest_repeated_subsequence(S, ignore=(Marker,)):
+    """
+    Given a sequence S, find the shortest repeated subsequence of length >= 2
+
+    A subsequence is only considered a repeated subsequence if it can't be
+    extended in every instance. For example, [a, b] is not a subsequence of
+    [a, b, c, a, b, c] because every occurrence of [a, b] can be extended to
+    [a, b, c].
+
+    If no repeated subsequence is found, returns None.
+
+    The input sequence should support iteration, indexing, and slicing.
+
+    To use concurrently with multiple sequences, concatenate them separated by
+    markers (custom markers can be passed in through the 'ignore' parameter').
+
+    Examples
+    ========
+
+    In the examples here, we use strings. A more common example for SymPy
+    would be the args of a noncommutative Mul.
+
+    >>> from sympy.simplify.cse_main import shortest_repeated_subsequence
+    >>> s = 'abcabc'
+    >>> shortest_repeated_subsequence(s)
+    'abc'
+    >>> print(shortest_repeated_subsequence('abc'))
+    None
+
+    >>> strings = 'abc', 'babc', 'abca'
+    >>> marker = '$'
+    >>> S = marker.join(strings)
+    >>> S
+    'abc$babc$abca'
+    >>> shortest_repeated_subsequence(S, ignore=[marker])
+    'abc'
+    """
+    from sympy import oo
+
+    # This is based on the longest_common_substring algorithm, for instance,
+    # at
+    # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring#Python3. We
+    # build a matrix to keep track of common subsequence of S with itself. For instance, for
+    # the sequence [a, b, c, a, b], we would have
+
+    #        a  b  c  a  b
+    #   [[0, 0, 0, 0, 0, 0],
+    # a  [0, 0, 0, 0, 1, 0],
+    # b  [0, 0, 0, 0, 0, 2],
+    # c  [0, 0, 0, 0, 0, 0],
+    # a  [0, 1, 0, 0, 0, 0],
+    # b  [0, 0, 2, 0, 0, 0]]
+
+    # (the leading row and column of 0s are used so we can always reference
+    # the previous row and column). Each entry in the matrix represents the
+    # longest subsequence ending in those two entries. We additionally keep
+    # the diagonal zero, so that we don't consider the entire sequence to be a
+    # common subsequence with itself.
+
+    m = [[0] * (1 + len(S)) for i in range(1 + len(S))]
+
+    shortest, x_shortest = oo, 0
+    for x in range(1, 1 + len(S)):
+        if S[x-1] in ignore:
+            continue
+        for y in range(1, 1 + len(S)):
+            if x == y:
+                continue
+            if S[x - 1] == S[y - 1]:
+                m[x][y] = (m[x-1][y-1] + 1)
+
+    # Now we traverse the matrix from the bottom up, keeping track diagonal
+    # "runs" (representing the same subsequence), and look for the shortest
+    # one that is >= 2 in length. If there are ties, the earliest one will be
+    # returned, but it would be easy to extend this to return all shortest
+    # subsequences.
+
+    seen = {}
+    for row in reversed(m):
+        seen = dict([(i-1, seen[i]-1) for i in seen if seen[i]])
+        for x in range(len(row)):
+            if row[x] >= 2 and x not in seen:
+                if row[x] < shortest:
+                    shortest = row[x]
+                    x_shortest = x
+                seen[x] = row[x]
+
+    if shortest == oo:
+        return None
+    return S[x_shortest - shortest: x_shortest]
+
+
+def replace_subsequence(l, a, b):
+    """
+    Replace subsequence a with b in-place in l.
+
+    >>> from sympy.simplify.cse_main import replace_subsequence
+    >>> l = [1, 2, 1, 2, 3]
+    >>> replace_subsequence(l, [1, 2], 4)
+    >>> l
+    [4, 4, 3]
+    """
+    for i in range(len(l) - len(a) + 1):
+        if l[i:i+len(a)] == a:
+            l[i:i+len(a)] = [b]

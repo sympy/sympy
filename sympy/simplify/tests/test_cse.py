@@ -2,14 +2,16 @@ import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-                   IndexedBase, Idx, Piecewise, O)
+                   IndexedBase, Idx, Piecewise, O, Mul)
 from sympy.simplify.cse_opts import sub_pre, sub_post
+from sympy.simplify.cse_main import (replace_subsequence,
+    shortest_repeated_subsequence, match_common_args, match_common_args_nc)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
-    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
-from sympy.matrices.expressions import MatrixSymbol
+from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import MatrixSymbol, MatMul
 
 from sympy.core.compatibility import range
 
@@ -145,34 +147,74 @@ def test_multiple_expressions():
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
-
-@XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
-    l = [A*B*C, A*C]
-    assert cse(l) == ([], l)
-    l = [A*B*C, A*B]
-    assert cse(l) == ([(x0, A*B)], [x0*C, x0])
-
-
-# Test if CSE of non-commutative Mul terms is disabled
-def test_bypass_non_commutatives():
-    A, B, C = symbols('A B C', commutative=False)
-    l = [A*B*C, A*C]
-    assert cse(l) == ([], l)
-    l = [A*B*C, A*B]
-    assert cse(l) == ([], l)
-    l = [B*C, A*B*C]
-    assert cse(l) == ([], l)
-
-
-@XFAIL # CSE fails when replacing non-commutative sub-expressions
-def test_non_commutative_order():
-    A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
+
+    l = [A*B*C, A*C]
+    assert cse(l) == ([], l)
     l = [B+C, A*(B+C)]
     assert cse(l) == ([(x0, B+C)], [x0, A*x0])
 
+    repl, exprs = cse(B*A*A + A*A)
+    assert (repl, exprs) == ([(x0, A**2)], [B*x0 + x0])
+    repl, exprs = cse(B*A*A - A*A*B)
+    assert (repl, exprs) == ([(x0, A**2)], [B*x0 - x0*B])
+    assert repl[0][0].is_commutative == False
+    assert exprs[0] != 0
+
+# cse on noncommutative Mul. When this works the test below it should be removed.
+def test_noncommutative_mul_cse():
+    A, B, C, D, E, x0, x1, x2, x3 = symbols('A B C D E x0 x1 x2 x3', commutative=False)
+    l = [A*B*C, A*B]
+    repls, exprs = cse(l)
+    assert (repls, exprs) == ([(x0, A*B)], [x0*C, x0])
+    assert repls[0][0].is_commutative == False
+
+    l = [B*C, A*B*C]
+    assert cse(l) == ([(x0, B*C)], [x0, A*x0])
+
+    l = [A*B*C, A*C]
+    assert cse(l) == ([], l)
+
+    # Almost the same expression as in the test_match_common_args_nc test
+    # below, except avoiding duplicate terms, since those aren't supported yet
+    # (#10228).
+    a = A*E*B*A*C*D*E
+    b = A*E*B*A*D*E
+    c = E*B*C*D*E
+
+    repls, exprs = cse([a, b, c])
+    assert repls == [(x0, E*B), (x1, A*x0*A), (x2, D*E), (x3, C*x2)]
+    assert exprs == [x1*x3, x1*x2, x0*x3]
+    assert Tuple(*exprs).subs(reversed(repls)) == Tuple(a, b, c)
+
+@XFAIL
+def test_noncommutative_mul_powers_cse():
+    # Issue #10228
+    A, B, C, x0 = symbols('A B C x0', commutative=False)
+    l = [A*A*B, A*B]
+    assert cse(l) == ([(x0, A*B)], [A*x0, x0])
+
+def test_cse_matmul():
+    n = symbols('n', integer=True)
+    M = MatrixSymbol('M', n, n)
+    N = MatrixSymbol('N', n, n)
+    x = MatrixSymbol('x', n, 1)
+
+    x0 = MatrixSymbol('x0', n, n)
+
+    l = [N*M, N*M*x]
+    repls, exprs = cse(l)
+    assert (repls, exprs) == ([(x0, N*M)], [x0, x0*x])
+    assert repls[0][0].shape == (n, n)
+
+    x0 = MatrixSymbol('x0', n, 1)
+
+    l = [M*x, N*M*x]
+    repls, exprs = cse(l)
+    assert (repls, exprs) == ([(x0, M*x)], [x0, N*x0])
+    assert repls[0][0].shape == (n, 1)
 
 @XFAIL
 def test_powers():
@@ -399,3 +441,151 @@ def test_issue_8891():
         ans = ([(x0, x + y)], [x0, cls([[x0, 0], [0, 0]])])
         assert res == ans
         assert isinstance(res[1][-1], cls)
+
+def test_replace_subsequence():
+    l = [1, 2, 3, 2, 3, 4]
+    replace_subsequence(l, [2, 3], 5)
+    assert l == [1, 5, 5, 4]
+
+    l = [1, 2, 1, 2, 3]
+    replace_subsequence(l, [1, 2, 3], 4)
+    assert l == [1, 2, 4]
+
+    l = [1, 2, 1, 2, 1, 2]
+    replace_subsequence(l, [1, 2], 3)
+    assert l == [3, 3, 3]
+
+
+def test_shortest_repeated_subsequence():
+    a, b, c = 'aabacde', 'aabade', 'abcde'
+    abc = '$'.join([a, b, c])
+    assert shortest_repeated_subsequence(abc, ignore='$') in ['ab', 'de']
+
+    aa = '$'.join([a, a])
+    assert shortest_repeated_subsequence(aa, ignore='$') == a
+
+    ab = '$'.join([a, b])
+    assert shortest_repeated_subsequence(ab, ignore='$') == 'de'
+
+    assert shortest_repeated_subsequence('xxx') == 'xx'
+    assert shortest_repeated_subsequence('xxxx') == 'xx'
+    assert shortest_repeated_subsequence('xxxxx') == 'xx'
+
+    def _cse_str(S):
+        """
+        A mock version of the cse algorithm using strings
+
+        """
+        S = '$'.join(S)
+        n = 0
+        repls = {}
+        while True:
+            rep = shortest_repeated_subsequence(S, ignore='$')
+            if not rep:
+                break
+            repls[str(n)] = rep
+            S = S.replace(rep, str(n))
+            n += 1
+
+        return repls, S.split('$')
+
+    def _replace_cse(strs, replacement_dict):
+        """
+        Undo _cse_str.
+        """
+        for i in sorted(replacement_dict, reverse=True):
+            strs = [x.replace(i, replacement_dict[i]) for x in strs]
+        return strs
+
+    repl, strs = _cse_str([a, b, c])
+    assert (repl, strs) == ({'0': 'de', '1': 'c0', '2': 'ab', '3': 'a2a'}, ['31', '30', '21'])
+    assert _replace_cse(strs, repl) == [a, b, c]
+
+    S = ['sandollar', 'sandlot', 'handler', 'grand', 'pantry']
+    repl, strs = _cse_str(S)
+    assert (repl, strs) == ({'0': 'an', '1': '0d', '2': '1l'}, ['s1ollar',
+        's2ot', 'h2er', 'gr1', 'p0try'])
+    assert _replace_cse(strs, repl) == S
+
+    repl, strs = _cse_str(['xxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['0x'])
+    assert _replace_cse(strs, repl) == ['xxx']
+
+    repl, strs = _cse_str(['xxxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['00'])
+    assert _replace_cse(strs, repl) == ['xxxx']
+
+    repl, strs = _cse_str(['xxxxx'])
+    assert (repl, strs) == ({'0': 'xx'}, ['00x'])
+    assert _replace_cse(strs, repl) == ['xxxxx']
+
+    repl, strs = _cse_str(['xxxxxx'])
+    assert (repl, strs) == ({'0': 'xx', '1': '00'}, ['10'])
+    assert _replace_cse(strs, repl) == ['xxxxxx']
+
+def test_match_common_args():
+    # Test that evaluate=False actually works
+    assert Mul(x, Mul(y, z, evaluate=False), evaluate=False).args == (x, Mul(y, z,
+        evaluate=False))
+
+    opt_subs = match_common_args(Mul, [x*y*z, x*y*w])
+    assert set(opt_subs.keys()) == set([x*y*z, x*y*w])
+
+    # The evaluate=False Muls could be in any order. cse uses a custom
+    # substitution routine that handles this.
+    assert set(opt_subs[x*y*z].args) in [set([Mul(x, y, evaluate=False), z]),
+        set([Mul(y, x, evaluate=False), z])]
+    assert set(opt_subs[x*y*w].args) in [set([Mul(x, y, evaluate=False), w]),
+        set([Mul(y, x, evaluate=False), w])]
+
+def test_match_common_args_nc():
+    A, B, C, D, E = symbols('A B C D E', commutative=False)
+
+    # We have to use evaluate=False to prevent A*A from becoming A**2. This is
+    # handled in cse as a pre-transformation.
+    m = lambda *x: Mul(*x, evaluate=False)
+
+    # Test that evaluate=False actually works
+    assert m(A, m(B, C)).args == (A, m(B, C))
+
+    a = m(A, A, B, A, C, D, E)
+    b = m(A, A, B, A, D, E)
+    c = m(A, B, C, D, E)
+
+    opt_subs = match_common_args_nc(Mul, [a, b, c])
+
+    # This is the same example from test_shortest_repeated_subsequence()
+    # above.
+
+    # ({'0': 'de', '1': 'c0', '2': 'ab', '3': 'a2a'}, ['31', '30', '21'])
+
+    assert opt_subs == {
+        a: m(m(A, m(A, B), A), m(C, m(D, E))),
+        b: m(m(A, m(A, B), A), m(D, E)),
+        c: m(m(A, B), m(C, m(D, E))),
+    }
+
+    X = Symbol("X", commutative=False)
+
+    expr = m(X, X, X, X, X)
+    opt_subs = match_common_args_nc(Mul, [expr])
+
+    assert opt_subs == {expr: m(m(X, X), m(X, X), X)}
+
+    n = symbols('n', integer=True)
+    M = MatrixSymbol('M', n, n)
+    N = MatrixSymbol('N', n, n)
+    x = MatrixSymbol('x', n, 1)
+
+    # Make sure evaluate=False works with MatMul
+    assert MatMul(M, MatMul(N, x, evaluate=False), evaluate=False).args ==\
+        (M, MatMul(N, x, evaluate=False))
+
+    expr1 = N*M*x
+    expr2 = N*M
+    opt_subs = match_common_args_nc(MatMul, [expr1, expr2])
+
+    assert opt_subs == {
+        expr1: MatMul(MatMul(N, M, evaluate=False), x, evaluate=False),
+        expr2: MatMul(N, M, evaluate=False),
+    }
