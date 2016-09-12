@@ -1171,7 +1171,7 @@ class Derivative(Expr):
         unhandled_non_symbol = False
         nderivs = 0  # how many derivatives were performed
         for v in variablegen:
-            is_symbol = v.is_Symbol
+            is_symbol = v.is_symbol
 
             if unhandled_non_symbol:
                 obj = None
@@ -1186,7 +1186,7 @@ class Derivative(Expr):
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
-                        if not old_v.is_Symbol and obj.is_Derivative:
+                        if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
                             # symbol
                             obj = Subs(obj, v, old_v)
@@ -1264,7 +1264,7 @@ class Derivative(Expr):
         symbol_part = []
         non_symbol_part = []
         for v in vars:
-            if not v.is_Symbol:
+            if not v.is_symbol:
                 if len(symbol_part) > 0:
                     sorted_vars.extend(sorted(symbol_part,
                                               key=default_sort_key))

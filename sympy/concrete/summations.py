@@ -5,7 +5,7 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild
+from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
@@ -233,11 +233,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # don't want to differentiate wrt any free symbol in the upper or lower
         # limits
         # XXX remove this test for free_symbols when the default _eval_derivative is in
-        if x.is_Indexed:
-            from sympy import IndexedBase
-            if x.base not in self.atoms(IndexedBase):
-                return S.Zero
-        elif x not in self.free_symbols:
+        if isinstance(x, Symbol) and x not in self.free_symbols:
             return S.Zero
 
         # get limits and the function

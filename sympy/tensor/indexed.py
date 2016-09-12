@@ -134,6 +134,7 @@ class Indexed(Expr):
     is_commutative = True
     is_Indexed = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
@@ -345,6 +346,7 @@ class IndexedBase(Expr, NotIterable):
     """
     is_commutative = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
@@ -487,6 +489,7 @@ class Idx(Expr):
     is_finite = True
     is_real = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
     _diff_wrt = True
 
