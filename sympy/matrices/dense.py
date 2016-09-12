@@ -553,6 +553,31 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         out = self._new(self.rows, self.cols, list(map(f, self._mat)))
         return out
 
+    def as_immutable(self):
+        """Returns an Immutable version of this Matrix
+        """
+        from .immutable import ImmutableMatrix as cls
+        if self.rows and self.cols:
+            return cls._new(self.tolist())
+        return cls._new(self.rows, self.cols, [])
+
+    def as_mutable(self):
+        """Returns a mutable version of this matrix
+
+        Examples
+        ========
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1, 1] = 5 # Can set values in Y
+        >>> Y
+        Matrix([
+        [1, 2],
+        [3, 5]])
+        """
+        return Matrix(self)
+
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
         trying to prove that the elements are equivalent, returning True
@@ -687,6 +712,9 @@ class MutableDenseMatrix(DenseMatrix):
         if rv is not None:
             i, j, value = rv
             self._mat[i*self.cols + j] = value
+
+    def as_mutable(self):
+        return self.copy()
 
     def col_del(self, i):
         """Delete the given column.
@@ -988,7 +1016,6 @@ class MutableDenseMatrix(DenseMatrix):
 
 
 Matrix = MutableMatrix = MutableDenseMatrix
-DenseMatrix._mutable_variant = MutableDenseMatrix
 
 ###########
 # Numpy Utility Functions:

@@ -488,6 +488,28 @@ class SparseMatrix(CommonMatrix, MatrixBase):
 
         return self._new(self.rows, self.cols, smat)
 
+    def as_immutable(self):
+        """Returns an Immutable version of this Matrix."""
+        from .immutable import ImmutableSparseMatrix
+        return ImmutableSparseMatrix(self)
+
+    def as_mutable(self):
+        """Returns a mutable version of this matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ImmutableMatrix
+        >>> X = ImmutableMatrix([[1, 2], [3, 4]])
+        >>> Y = X.as_mutable()
+        >>> Y[1, 1] = 5 # Can set values in Y
+        >>> Y
+        Matrix([
+        [1, 2],
+        [3, 5]])
+        """
+        return MutableSparseMatrix(self)
+
     def cholesky(self):
         """
         Returns the Cholesky decomposition L of a matrix A
@@ -868,6 +890,9 @@ class MutableSparseMatrix(SparseMatrix):
                 self._smat[(i, j)] = value
             elif (i, j) in self._smat:
                 del self._smat[(i, j)]
+
+    def as_mutable(self):
+        return self.copy()
 
     __hash__ = None
 
@@ -1257,6 +1282,3 @@ class MutableSparseMatrix(SparseMatrix):
 
         """
         self.row_op(i, lambda v, j: f(v, self[k, j]))
-
-
-SparseMatrix._mutable_variant = MutableSparseMatrix
