@@ -5,7 +5,6 @@ from types import FunctionType
 from sympy import Derivative
 
 from sympy.core.basic import Basic
-from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence, default_sort_key, as_int, range, reduce
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
