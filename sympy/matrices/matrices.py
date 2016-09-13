@@ -225,12 +225,13 @@ class MatrixBase(object):
         else:
             raise TypeError("Only SymPy expressions or int objects are supported as exponent for matrices")
     def __pow__(self, num):
-        if(type(sympify(num)) == type(sympify(0))):
+        sympy_type = type(sympify(num))
+        if(sympy_type == type(sympify(0))):
             from sympy.matrices import eye
             return eye(self.cols)
-        elif(type(sympify(num)) == type(sympify(1))):
+        elif(sympy_type == type(sympify(1))):
             return self
-        elif(type(sympify(num)) != type(sympify(2))):
+        elif(sympy_type != type(sympify(2)) and sympy_type != type(sympify(-1))):
             from sympy.matrices.expressions.matpow import MatPow
             return MatPow(self,num)
         else:
