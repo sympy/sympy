@@ -600,3 +600,59 @@ class Idx(Expr):
     @property
     def free_symbols(self):
         return {self}
+
+    def __le__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return False
+        return super(Idx, self).__le__(other)
+
+    def __ge__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return False
+        return super(Idx, self).__ge__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return False
+        return super(Idx, self).__lt__(other)
+
+    def __gt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return False
+        return super(Idx, self).__gt__(other)
