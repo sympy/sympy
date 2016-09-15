@@ -727,16 +727,16 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity, LinearEntity3D
         x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
-        o = Point.pointify(o, dimension=3, ensure_point=False)
-        if isinstance(o, Point3D):
-            d = k.xreplace(dict(zip((x, y, z), o.args)))
-            return d.equals(0)
-        elif isinstance(o, (LinearEntity, LinearEntity3D)):
+        if isinstance(o, (LinearEntity, LinearEntity3D)):
             t = Dummy()
             d = Point3D(o.arbitrary_point(t))
             e = k.subs([(x, d.x), (y, d.y), (z, d.z)])
             return e.equals(0)
-        else:
+        try:
+            o = Point.pointify(o, dimension=3, strict=True)
+            d = k.xreplace(dict(zip((x, y, z), o.args)))
+            return d.equals(0)
+        except TypeError:
             return False
 
     def is_coplanar(self, o):

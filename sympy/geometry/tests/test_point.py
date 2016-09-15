@@ -7,6 +7,7 @@ from sympy.matrices import Matrix
 from sympy.utilities.pytest import raises
 
 
+
 def test_point():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -81,7 +82,7 @@ def test_point():
     assert p4 * 5 == Point(5, 5)
     assert p4 / 5 == Point(0.2, 0.2)
 
-    raises(ValueError, lambda: Point(0, 0) + 10)
+    raises(TypeError, lambda: Point(0, 0) + 10)
 
     # Point differences should be simplified
     assert Point(x*(x - 1), y) - Point(x**2 - x, y + 1) == Point(0, -1)
@@ -89,7 +90,7 @@ def test_point():
     a, b = Rational(1, 2), Rational(1, 3)
     assert Point(a, b).evalf(2) == \
         Point(a.n(2), b.n(2))
-    raises(ValueError, lambda: Point(1, 2) + 1)
+    raises(TypeError, lambda: Point(1, 2) + 1)
 
     # test transformations
     p = Point(1, 0)
@@ -161,7 +162,7 @@ def test_point3D():
     assert p4 * 5 == Point3D(5, 5, 5)
     assert p4 / 5 == Point3D(0.2, 0.2, 0.2)
 
-    raises(ValueError, lambda: Point3D(0, 0, 0) + 10)
+    raises(TypeError, lambda: Point3D(0, 0, 0) + 10)
 
     # Point differences should be simplified
     assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
@@ -170,7 +171,7 @@ def test_point3D():
     a, b = Rational(1, 2), Rational(1, 3)
     assert Point(a, b).evalf(2) == \
         Point(a.n(2), b.n(2))
-    raises(ValueError, lambda: Point(1, 2) + 1)
+    raises(TypeError, lambda: Point(1, 2) + 1)
 
     # test transformations
     p = Point3D(1, 1, 1)
@@ -181,7 +182,7 @@ def test_point3D():
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
     # Test __new__
-    assert Point3D(Point3D(1, 2, 3), 4, 5, evaluate=False) ==  Point3D(1, 2, 3)
+    assert Point3D(0.1, 0.2, evaluate=False).args[0].is_Float
 
 
     # Test length property returns correctly
@@ -222,8 +223,10 @@ def test_point3D():
     assert p.equals(x1) == False
 
     # Test __sub__
-    p_2d = Point(0, 0)
-    raises(ValueError, lambda: (p - p_2d))
+    p_4d = Point(0, 0, 0, 1)
+    raises(ValueError, lambda: (p - p_4d))
+    p_4d3d = Point(0, 0, 1, 0)
+    assert p - p_4d3d == Point(1, 1, 0)
 
 
 def test_Point2D():
@@ -266,21 +269,14 @@ def test_arguments():
     """Functions accepting `Point` objects in `geometry`
     should also accept tuples, lists, and generators and
     automatically convert them to points."""
-    class RepeatableGenerator(object):
-        """ this object has an `__iter__` but no `__len__`,
-        so it's just like a generator """
-        def __init__(self, l):
-            self.l = l
-        def __iter__(self):
-            return iter(self.l)
 
-    singles2d = ((1,2), [1,2], RepeatableGenerator((1,2)), Point(1,2))
+    singles2d = ((1,2), [1,2], Point(1,2))
     doubles2d = subsets(singles2d, 2)
     p2d = Point2D(1,2)
-    singles3d = ((1,2,3), [1,2,3], RepeatableGenerator((1,2,3)), Point(1,2,3))
+    singles3d = ((1,2,3), [1,2,3], Point(1,2,3))
     doubles3d = subsets(singles3d, 2)
     p3d = Point3D(1,2,3)
-    singles4d = ((1,2,3,4), [1,2,3,4], RepeatableGenerator((1,2,3,4)), Point(1,2,3,4))
+    singles4d = ((1,2,3,4), [1,2,3,4], Point(1,2,3,4))
     doubles4d = subsets(singles4d, 2)
     p4d = Point(1,2,3,4)
 
@@ -306,7 +302,6 @@ def test_arguments():
     for func in test_double:
         for p in doubles2d:
             getattr(p3d, func)(*p)
-    p3d.are_coplanar((1,2,3), [1,2,2], RepeatableGenerator((3,3,2)))
 
     # test 4D
     test_double = ['is_collinear']
@@ -318,3 +313,16 @@ def test_arguments():
     for func in test_double:
         for p in doubles4d:
             getattr(p4d, func)(*p)
+
+    # test evaluate=False for ops
+    x = Symbol('x')
+    a = Point(0, 1)
+    assert a + (0.1, x) == Point(0.1, 1 + x)
+    a = Point(0, 1)
+    assert a/10.0 == Point(0.0, 0.1)
+    a = Point(0, 1)
+    assert a*10.0 == Point(0.0, 10.0)
+
+    # test evaluate=False when changing dimensions
+    assert Point.pointify(Point(.1, .2, evaluate=False), dimension=4) == \
+        Point(.1, .2, 0, 0, evaluate=False)

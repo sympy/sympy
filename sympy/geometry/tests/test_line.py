@@ -10,7 +10,7 @@ from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import raises
 
-import warnings
+
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
@@ -552,9 +552,7 @@ def test_line3d():
 
     # Test contains
     pt2d = Point(1.0, 1.0)
-    with warnings.catch_warnings(record=True) as w:
-        assert perp_1.contains(pt2d) is False
-        assert len(w) == 1
+    assert perp_1.contains(pt2d) is False
 
     # Test equals
     assert perp_1.equals(pt2d) is False
@@ -579,11 +577,9 @@ def test_line3d():
     posz = Ray3D(p1, Point3D(0, 0, 1))
     assert posy.contains(p1) is True
     assert posz.contains(p1) is True
-    with warnings.catch_warnings(record=True) as w:
-        assert posz.contains(pt2d) is False
-        assert len(w) == 1
+    assert posz.contains(pt2d) is False
     ray1 = Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0))
-    raises(ValueError, lambda: ray1.contains([]))
+    assert ray1.contains([]) is False
 
     # Test equals
     assert negz.equals(pt2d) is False
@@ -595,7 +591,7 @@ def test_line3d():
 
     # Begin Segment
     seg1 = Segment3D(p1, Point3D(1, 0, 0))
-    raises(ValueError, lambda: seg1.contains([]))
+    assert seg1.contains([]) is True
     seg2= Segment3D(Point3D(2, 2, 2), Point3D(3, 2, 2))
     assert seg1.contains(seg2) is False
 
@@ -657,21 +653,13 @@ def test_arguments():
     automatically convert them to points."""
     from sympy import subsets
 
-    class RepeatableGenerator(object):
-        """ this object has an `__iter__` but no `__len__`,
-        so it's just like a generator """
-        def __init__(self, l):
-            self.l = l
-        def __iter__(self):
-            return iter(self.l)
-
-    singles2d = ((1,2), [1,3], RepeatableGenerator((1,4)), Point(1,5))
+    singles2d = ((1,2), [1,3], Point(1,5))
     doubles2d = subsets(singles2d, 2)
     l2d = Line(Point2D(1,2), Point2D(2,3))
-    singles3d = ((1,2,3), [1,2,4], RepeatableGenerator((1,2,5)), Point(1,2,6))
+    singles3d = ((1,2,3), [1,2,4], Point(1,2,6))
     doubles3d = subsets(singles3d, 2)
     l3d = Line(Point3D(1,2,3), Point3D(1, 1, 2))
-    singles4d = ((1,2,3,4), [1,2,3,5], RepeatableGenerator((1,2,3,6)), Point(1,2,3,7))
+    singles4d = ((1,2,3,4), [1,2,3,5], Point(1,2,3,7))
     doubles4d = subsets(singles4d, 2)
     l4d = Line(Point(1,2,3,4), Point(2,2,2,2))
 

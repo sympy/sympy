@@ -72,8 +72,8 @@ class LinearEntity(GeometrySet):
     """
 
     def __new__(cls, p1, p2, **kwargs):
-        p1 = Point.pointify(p1)
-        p2 = Point.pointify(p2)
+        p1, p2 = Point.normalize_dimensions(None,
+            Point.pointify(p1), Point.pointify(p2))
         if p1 == p2:
             # sometimes we return a single point if we are not given two unique
             # points. This is done in the specific subclass
@@ -588,7 +588,8 @@ class LinearEntity(GeometrySet):
 
         """
 
-        other = Point.pointify(other, ensure_geometry_entity=True, ensure_point=False)
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
 
         def proj_point(p):
             return Point.project(p - self.p1, self.direction) + self.p1
@@ -702,12 +703,9 @@ class LinearEntity(GeometrySet):
                 return []
             return [Segment(seg2.p1, seg1.p2)]
 
-        try:
-            other = Point.pointify(other, ensure_geometry_entity=True, ensure_point=False)
-        except (TypeError, ValueError):
-            raise GeometryError("`other` must be a GeometricEntity, not {}".format(other))
-
-        if isinstance(other, Point):
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, self.ambient_dimension)
+        if other.is_Point:
             if self.contains(other):
                 return [other]
             else:
@@ -1041,12 +1039,8 @@ class Line(LinearEntity):
         True
 
         """
-        other = Point.pointify(other, ensure_point=False)
-
-        if hasattr(other, 'ambient_dimension') and other.ambient_dimension != self.ambient_dimension:
-            warnings.warn("Testing containment for objects of different ambient dimensions", RuntimeWarning)
-            return False
-
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if isinstance(other, Point):
             return Point.is_collinear(other, self.p1, self.p2)
         if isinstance(other, LinearEntity):
@@ -1080,7 +1074,8 @@ class Line(LinearEntity):
         2*sqrt(6)/3
 
         """
-        other = Point.pointify(other, dimension=self.ambient_dimension)
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if self.contains(other):
             return S.Zero
         return self.perpendicular_segment(other).length
@@ -1218,7 +1213,8 @@ class Ray(LinearEntity):
         4*sqrt(3)/3
 
         """
-        other = Point.pointify(other, dimension=self.ambient_dimension)
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if self.contains(other):
             return S.Zero
 
@@ -1292,12 +1288,8 @@ class Ray(LinearEntity):
         >>> r.contains(r1)
         False
         """
-        other = Point.pointify(other, ensure_point=False)
-
-        if hasattr(other, 'ambient_dimension') and other.ambient_dimension != self.ambient_dimension:
-            warnings.warn("Testing containment for objects of different ambient dimensions", RuntimeWarning)
-            return False
-
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
                 # if we're in the direction of the ray, our
@@ -1480,7 +1472,7 @@ class Segment(LinearEntity):
         """
         l = self.perpendicular_line(self.midpoint)
         if p is not None:
-            p2 = Point.pointify(p)
+            p2 = Point.pointify(p, dimension=self.ambient_dimension)
             if p2 in l:
                 return Segment(self.midpoint, p2)
         else:
@@ -1565,7 +1557,8 @@ class Segment(LinearEntity):
         >>> s.distance((10, 15, 12))
         sqrt(341)
         """
-        other = Point.pointify(other, ensure_point=False)
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if isinstance(other, Point):
             vp1 = other - self.p1
             vp2 = other - self.p2
@@ -1603,12 +1596,8 @@ class Segment(LinearEntity):
         True
         """
 
-        other = Point.pointify(other, ensure_point=False)
-
-        if hasattr(other, 'ambient_dimension') and other.ambient_dimension != self.ambient_dimension:
-            warnings.warn("Testing containment for objects of different ambient dimensions", RuntimeWarning)
-            return False
-
+        if not isinstance(other, GeometryEntity):
+            other = Point.pointify(other, dimension=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(other, self.p1, self.p2):
                 d1, d2 = other - self.p1, other - self.p2
@@ -1802,7 +1791,7 @@ class Line2D(LinearEntity2D, Line):
                 dx = 1
                 dy = slope
             # XXX avoiding simplification by adding to coords directly
-            p2 = Point(p1.x + dx, p1.y + dy)
+            p2 = Point(p1.x + dx, p1.y + dy, evaluate=False)
         else:
             raise ValueError('A 2nd Point or keyword "slope" must be used.')
         return LinearEntity2D.__new__(cls, p1, p2, **kwargs)
@@ -2257,15 +2246,9 @@ class Line3D(LinearEntity3D, Line):
         if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
-            try:
-                p1 = Point.pointify(p1, dimension=3)
-            except ValueError:
-                p1 = Point3D(p1)
+            p1 = Point.pointify(p1, dimension=3)
         if pt is not None and len(direction_ratio) == 0:
-            try:
-                pt = Point.pointify(pt, dimension=3)
-            except ValueError:
-                pt = Point3D(pt)
+            pt = Point.pointify(pt, dimension=3)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2363,15 +2346,9 @@ class Ray3D(LinearEntity3D, Ray):
         if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
-            try:
-                p1 = Point.pointify(p1, dimension=3)
-            except ValueError:
-                p1 = Point3D(p1)
+            p1 = Point.pointify(p1, dimension=3)
         if pt is not None and len(direction_ratio) == 0:
-            try:
-                pt = Point.pointify(pt, dimension=3)
-            except ValueError:
-                pt = Point3D(pt)
+            pt = Point.pointify(pt, dimension=3)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2525,11 +2502,8 @@ class Segment3D(LinearEntity3D, Segment):
         #   if p1.x != p2.x then p1.x < p2.x
         #   if p1.x == p2.x then p1.y < p2.y
         #   The z-coordinate will not come into picture while ordering
-        try:
-            p1 = Point.pointify(p1, dimension=3)
-            p2 = Point.pointify(p2, dimension=3)
-        except ValueError:
-            p1, p2 = Point3D(p1), Point3D(p2)
+        p1 = Point.pointify(p1, dimension=3)
+        p2 = Point.pointify(p2, dimension=3)
 
         if p1 == p2:
             return p1
