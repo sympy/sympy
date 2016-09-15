@@ -980,6 +980,82 @@ class Interval(Set, EvalfMixin):
 
         return _sympify(expr)
 
+    def _add(self, other):
+        """
+        Additions in interval arithmetic
+        https://en.wikipedia.org/wiki/Interval_arithmetic
+        """
+        if isinstance(other, Interval):
+            return Interval(self.start + other.start, self.end + other.end, self.left_open | other.left_open, self.right_open | other.right_open)
+        raise NotImplementedError()
+
+    def _sub(self, other):
+        """
+        Subtractions in interval arithmetic
+        https://en.wikipedia.org/wiki/Interval_arithmetic
+        """
+        if isinstance(other, Interval):
+            return Interval(self.start - other.end, self.end - other.start, self.left_open | other.right_open, self.right_open | other.left_open)
+        raise NotImplementedError()
+
+    def _mul(self, other):
+        """
+        Multiplications in interval arithmetic
+        https://en.wikipedia.org/wiki/Interval_arithmetic
+        """
+        if isinstance(other, Interval):
+            comvals = (
+                (self.start * other.start, self.left_open | other.left_open),
+                (self.start * other.end, self.left_open | other.right_open),
+                (self.end * other.start, self.right_open | other.left_open),
+                (self.end * other.end, self.right_open | other.right_open),
+            )
+            minval, minopen = min(comvals, key=lambda x: x)
+            maxval, maxopen = max(comvals, key=lambda x: x)
+            return Interval(
+                minval,
+                maxval,
+                minopen,
+                maxopen
+            )
+        raise NotImplementedError()
+
+    def _div(self, other):
+        """
+        Divisions in interval arithmetic
+        https://en.wikipedia.org/wiki/Interval_arithmetic
+        """
+        if isinstance(other, Interval):
+            if (other.start*other.end).is_negative:
+                from sympy import oo
+                return Interval(-oo, oo)
+            return self._mul(Interval(1/other.end, 1/other.start, other.right_open, other.left_open))
+        raise NotImplementedError()
+
+    def _pow(self, exponent):
+        """
+        Powers in interval arithmetic
+        https://en.wikipedia.org/wiki/Interval_arithmetic
+        """
+        exponent = sympify(exponent)
+        if exponent.is_odd:
+            return Interval(self.start**exponent, self.end**exponent, self.left_open, self.right_open)
+        if exponent.is_even:
+            if (self.start*self.end).is_negative:
+                if -self.start > self.end:
+                    left_limit = self.start
+                    left_open = self.right_open
+                else:
+                    left_limit = self.end
+                    left_open = self.left_open
+                return Interval(S.Zero, left_limit ** exponent, S.Zero not in self, left_open)
+            elif self.start.is_negative and self.end.is_negative:
+                return Interval(self.end**exponent, self.start**exponent, self.right_open, self.left_open)
+            else:
+                return Interval(self.start**exponent, self.end**exponent, self.left_open, self.right_open)
+
+        raise NotImplementedError()
+
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
         from sympy.solvers.solveset import solveset
