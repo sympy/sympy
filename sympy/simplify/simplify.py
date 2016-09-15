@@ -684,7 +684,7 @@ def sum_combine(s_t):
 
     return result
 
-def factor_sum(self, limits=None):
+def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
     """Helper function for Sum simplification
 
        if limits is specified, "self" is the inner part of a sum
@@ -705,7 +705,7 @@ def factor_sum(self, limits=None):
 
     #finally we try to factor out any common terms
     #and remove the from the sum if independent
-    retv = factor_terms(result)
+    retv = factor_terms(result, radical=radical, clear=clear, fraction=fraction, sign=sign)
     #avoid doing anything bad
     if not result.is_commutative:
         return Sum(result, *limits)
