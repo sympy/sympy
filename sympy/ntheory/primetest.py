@@ -151,15 +151,12 @@ def _lucas_sequence(n, P, Q, k):
             V = (V*V - 2) % n
             b -= 1
             if (k >> (b - 1)) & 1:
-                t = U*D
-                U = U*P + V
+                U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
-                U >>= 1
-                V = V*P + t
                 if V & 1:
                     V += n
-                V >>= 1
+                U, V = U >> 1, V >> 1
     elif P == 1 and Q == -1:
         # Small optimization for 50% of Selfridge parameters.
         while b > 1:
@@ -171,15 +168,12 @@ def _lucas_sequence(n, P, Q, k):
                 Qk = 1
             b -= 1
             if (k >> (b-1)) & 1:
-                t = U*D
-                U = U + V
+                U, V = U + V, V + U*D
                 if U & 1:
                     U += n
-                U >>= 1
-                V = V + t
                 if V & 1:
                     V += n
-                V >>= 1
+                U, V = U >> 1, V >> 1
                 Qk = -1
     else:
         # The general case with any P and Q.
@@ -189,20 +183,15 @@ def _lucas_sequence(n, P, Q, k):
             Qk *= Qk
             b -= 1
             if (k >> (b - 1)) & 1:
-                t = U*D
-                U = U*P + V
+                U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
-                U >>= 1
-                V = V*P + t
                 if V & 1:
                     V += n
-                V >>= 1
+                U, V = U >> 1, V >> 1
                 Qk *= Q
             Qk %= n
-    U %= n
-    V %= n
-    return _int_tuple(U, V, Qk)
+    return _int_tuple(U % n, V % n, Qk)
 
 
 def _lucas_selfridge_params(n):
