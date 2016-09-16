@@ -522,7 +522,7 @@ class Max(MinMaxBase, Application):
     3
     >>> Max(p, -2)
     p
-    >>> Max(x, y)                   #doctest: +SKIP
+    >>> Max(x, y)
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True
@@ -618,7 +618,7 @@ class Min(MinMaxBase, Application):
     -2
     >>> Min(p, -3)
     -3
-    >>> Min(x, y)                   
+    >>> Min(x, y)                   #doctest: +SKIP
     Min(x, y)
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)
@@ -627,7 +627,7 @@ class Min(MinMaxBase, Application):
     ========
 
     Max : find maximum values
-   """
+    """
     zero = S.NegativeInfinity
     identity = S.Infinity
 
