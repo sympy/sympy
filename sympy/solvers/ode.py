@@ -2035,7 +2035,7 @@ def odesimp(eq, func, order, constants, hint):
 
     >>> pprint(odesimp(eq, f(x), 1, set([C1]),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
-    ... )) #doctest: +SKIP
+    ... ))
         x
     --------- = C1
        /f(x)\
@@ -3322,7 +3322,7 @@ def ode_Bernoulli(eq, func, order, match):
                     d                n
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
-        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral')) #doctest: +SKIP
+        >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'))
                                                                                        1
                                                                                       ----
                                                                                      1 - n

@@ -378,15 +378,15 @@ def init_session(ipython=None, pretty_print=True, order=None,
     >>> sin(x) #doctest: +SKIP
     NameError: name 'x' is not defined
     >>> init_session() #doctest: +SKIP
-    >>> sin(x) #doctest: +SKIP
+    >>> sin(x)
     sin(x)
-    >>> sqrt(5) #doctest: +SKIP
+    >>> sqrt(5)
       ___
     \/ 5
     >>> init_session(pretty_print=False) #doctest: +SKIP
-    >>> sqrt(5) #doctest: +SKIP
+    >>> sqrt(5)
     sqrt(5)
-    >>> y + x + y**2 + x**2 #doctest: +SKIP
+    >>> y + x + y**2 + x**2
     x**2 + x + y**2 + y
     >>> init_session(order='grlex') #doctest: +SKIP
     >>> y + x + y**2 + x**2 #doctest: +SKIP
@@ -397,7 +397,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     >>> init_session(order='old') #doctest: +SKIP
     >>> x**2 + y**2 + x + y #doctest: +SKIP
     x + y + x**2 + y**2
-    >>> theta = Symbol('theta') #doctest: +SKIP
+    >>> theta = Symbol('theta')
     >>> theta #doctest: +SKIP
     theta
     >>> init_session(use_unicode=True) #doctest: +SKIP

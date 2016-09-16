@@ -526,9 +526,9 @@ class Max(MinMaxBase, Application):
     Max(x, y)
     >>> Max(x, y) == Max(y, x)
     True
-    >>> Max(x, Max(y, z))           #doctest: +SKIP
+    >>> Max(x, Max(y, z))
     Max(x, y, z)
-    >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
+    >>> Max(n, 8, p, 7, -oo)
     Max(8, p)
     >>> Max (1, x, oo)
     oo
@@ -618,7 +618,7 @@ class Min(MinMaxBase, Application):
     -2
     >>> Min(p, -3)
     -3
-    >>> Min(x, y)                   #doctest: +SKIP
+    >>> Min(x, y)
     Min(x, y)
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)

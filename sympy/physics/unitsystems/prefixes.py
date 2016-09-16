@@ -93,7 +93,7 @@ def prefix_unit(unit, prefixes):
         >>> from sympy.physics.unitsystems.systems import mks
         >>> m = mks["m"]
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> prefix_unit(m, pref)  #doctest: +SKIP
+        >>> prefix_unit(m, pref)
         [cm, dm, mm]
     """
 
