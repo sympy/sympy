@@ -123,7 +123,7 @@ class Polygon(GeometrySet):
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
-        vertices = [Point.pointify(a, dimension=2, **kwargs) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -142,6 +142,7 @@ class Polygon(GeometrySet):
                 shared.add(p)
             else:
                 got.add(p)
+        del got
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
@@ -519,7 +520,7 @@ class Polygon(GeometrySet):
         [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
-        p = Point.pointify(p, dimension=2)
+        p = Point(p, dim=2)
         if p in self.vertices or any(p in s for s in self.sides):
             return False
 
@@ -1081,7 +1082,7 @@ class RegularPolygon(Polygon):
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
-        c = Point.pointify(c, dimension=2, **kwargs)
+        c = Point(c, dim=2, **kwargs)
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
@@ -1555,7 +1556,7 @@ class RegularPolygon(Polygon):
 
         """
         if pt:
-            pt = Point.pointify(pt, dimension=2)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         if x != y:
             return Polygon(*self.vertices).scale(x, y)
@@ -1693,7 +1694,7 @@ class Triangle(Polygon):
             msg = "Triangle instantiates with three points or a valid keyword."
             raise GeometryError(msg)
 
-        vertices = [Point.pointify(a, dimension=2, **kwargs) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -2003,6 +2004,8 @@ class Triangle(Polygon):
         Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
+        if not a.intersection(b):
+            print(a,b,a.intersection(b))
         return a.intersection(b)[0]
 
     @property

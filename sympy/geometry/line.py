@@ -35,14 +35,10 @@ from sympy.matrices import Matrix
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from .util import _symbol
+from sympy.utilities.misc import Undecidable
 
 import warnings
 
-# TODO: this should be placed elsewhere and reused in other modules
-
-
-class Undecidable(ValueError):
-    pass
 
 
 class LinearEntity(GeometrySet):
@@ -71,9 +67,8 @@ class LinearEntity(GeometrySet):
 
     """
 
-    def __new__(cls, p1, p2, **kwargs):
-        p1, p2 = Point.normalize_dimensions(None,
-            Point.pointify(p1), Point.pointify(p2))
+    def __new__(cls, p1, p2=None, **kwargs):
+        p1, p2 = Point.normalize_dimensions(Point(p1), Point(p2))
         if p1 == p2:
             # sometimes we return a single point if we are not given two unique
             # points. This is done in the specific subclass
@@ -133,7 +128,35 @@ class LinearEntity(GeometrySet):
 
     @property
     def direction(self):
-        """The direction vector of the LinearEntity"""
+        """The direction vector of the LinearEntity.
+
+        Returns
+        =======
+
+        p : a Point; the ray from the origin to this point is the
+            direction of `self`
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Line
+        >>> a, b = (1, 1), (1, 3)
+        >>> Line(a, b).direction
+        Point2D(0, 2)
+        >>> Line(b, a).direction
+        Point2D(0, -2)
+
+        This can be reported so the distance from the origin is 1:
+
+        >>> Line(b, a).direction.unit
+        Point2D(0, -1)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.unit
+
+        """
         return self.p2 - self.p1
 
     @staticmethod
@@ -378,7 +401,7 @@ class LinearEntity(GeometrySet):
         True
 
         """
-        p = Point.pointify(p, dimension=self.ambient_dimension)
+        p = Point(p, dim=self.ambient_dimension)
         return Line(p, p + self.direction)
 
     def perpendicular_line(self, p):
@@ -421,7 +444,7 @@ class LinearEntity(GeometrySet):
         True
 
         """
-        p = Point.pointify(p, dimension=self.ambient_dimension)
+        p = Point(p, dim=self.ambient_dimension)
         if p in self:
             p = p + self.direction.orthogonal_direction
         return Line(p, self.projection(p))
@@ -478,7 +501,7 @@ class LinearEntity(GeometrySet):
         Segment3D(Point3D(4/3, 4/3, 4/3), Point3D(4, 0, 0))
 
         """
-        p = Point.pointify(p, dimension=self.ambient_dimension)
+        p = Point(p, dim=self.ambient_dimension)
         if p in self:
             return p
         l = self.perpendicular_line(p)
@@ -589,7 +612,7 @@ class LinearEntity(GeometrySet):
         """
 
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
 
         def proj_point(p):
             return Point.project(p - self.p1, self.direction) + self.p1
@@ -704,7 +727,7 @@ class LinearEntity(GeometrySet):
             return [Segment(seg2.p1, seg1.p2)]
 
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if other.is_Point:
             if self.contains(other):
                 return [other]
@@ -713,7 +736,8 @@ class LinearEntity(GeometrySet):
         elif isinstance(other, LinearEntity):
             # break into cases based on whether
             # the lines are parallel, non-parallel intersecting, or skew
-            rank = Point.affine_rank(self.p1, self.p2, other.p1, other.p2)
+            pts = Point.normalize_dimensions(self.p1, self.p2, other.p1, other.p2)
+            rank = Point.affine_rank(*pts)
 
             if rank == 1:
                 # we're collinear
@@ -732,17 +756,19 @@ class LinearEntity(GeometrySet):
                     return intersect_parallel_segments(self, other)
             elif rank == 2:
                 # we're in the same plane
+                l1 = Line(*pts[:2])
+                l2 = Line(*pts[2:])
 
                 # check to see if we're parallel.  If we are, we can't
                 # be intersecting, since the collinear case was already
                 # handled
-                if self.direction.is_scalar_multiple(other.direction):
+                if l1.direction.is_scalar_multiple(l2.direction):
                     return []
 
                 # find the intersection as if everything were lines
                 # by solving the equation t*d + p1 == s*d' + p1'
-                m = Matrix([self.direction, -other.direction]).transpose()
-                v = Matrix([other.p1 - self.p1]).transpose()
+                m = Matrix([l1.direction, -l2.direction]).transpose()
+                v = Matrix([l2.p1 - l1.p1]).transpose()
 
                 # we cannot use m.solve(v) because that only works for square matrices
                 m_rref, pivots = m.col_insert(2, v).rref(simplify=True)
@@ -750,7 +776,7 @@ class LinearEntity(GeometrySet):
                 if len(pivots) != 2:
                     raise GeometryError("Failed when solving Mx=b when M={} and b={}".format(m,v))
                 coeff = m_rref[0,2]
-                line_intersection = self.direction*coeff + self.p1
+                line_intersection = l1.direction*coeff + self.p1
 
                 # if we're both lines, we can skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
@@ -968,19 +994,22 @@ class Line(LinearEntity):
     x
     """
 
-    def __new__(cls, p1, *pts, **kwargs):
+    def __new__(cls, p1, p2=None, **kwargs):
         if isinstance(p1, LinearEntity):
-            ambient_dim = len(p1.p1)
+            if p2:
+                raise ValueError('If p1 is a LinearEntity, p2 must be None.')
+            dim = len(p1.p1)
         else:
-            if iterable(p1) and not hasattr(p1, '__len__'):
-                p1 = tuple(p1)
-            ambient_dim = len(p1)
+            p1 = Point(p1)
+            dim = len(p1)
+            if p2 is not None or isinstance(p2, Point) and p2.ambient_dimension != dim:
+                p2 = Point(p2)
 
-        if ambient_dim == 2:
-            return Line2D(p1, *pts, **kwargs)
-        elif ambient_dim == 3:
-            return Line3D(p1, *pts, **kwargs)
-        return LinearEntity.__new__(cls, p1, *pts, **kwargs)
+        if dim == 2:
+            return Line2D(p1, p2, **kwargs)
+        elif dim == 3:
+            return Line3D(p1, p2, **kwargs)
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of line. Gives
@@ -1040,7 +1069,7 @@ class Line(LinearEntity):
 
         """
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             return Point.is_collinear(other, self.p1, self.p2)
         if isinstance(other, LinearEntity):
@@ -1075,7 +1104,7 @@ class Line(LinearEntity):
 
         """
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if self.contains(other):
             return S.Zero
         return self.perpendicular_segment(other).length
@@ -1147,16 +1176,16 @@ class Ray(LinearEntity):
     1
 
     """
-    def __new__(cls, p1, *pts, **kwargs):
-        if isinstance(p1, LinearEntity):
-            ambient_dim = len(p1.p1)
-        else:
-            ambient_dim = len(p1)
+    def __new__(cls, p1, p2=None, **kwargs):
+        p1 = Point(p1)
+        if p2 is not None:
+            p1, p2 = Point.normalize_dimensions(p1, Point(p2))
+        dim = len(p1)
 
-        if ambient_dim == 2:
-            return Ray2D(p1, *pts, **kwargs)
-        elif ambient_dim == 3:
-            return Ray3D(p1, *pts, **kwargs)
+        if dim == 2:
+            return Ray2D(p1, p2, **kwargs)
+        elif dim == 3:
+            return Ray3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, *pts, **kwargs)
 
     @property
@@ -1214,7 +1243,7 @@ class Ray(LinearEntity):
 
         """
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if self.contains(other):
             return S.Zero
 
@@ -1289,7 +1318,7 @@ class Ray(LinearEntity):
         False
         """
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
                 # if we're in the direction of the ray, our
@@ -1393,17 +1422,15 @@ class Segment(LinearEntity):
     Point3D(5/2, 2, 8)
 
     """
-    def __new__(cls, p1, *pts, **kwargs):
-        if isinstance(p1, LinearEntity):
-            ambient_dim = len(p1.p1)
-        else:
-            ambient_dim = len(p1)
+    def __new__(cls, p1, p2, **kwargs):
+        p1, p2 = Point.normalize_dimensions(Point(p1), Point(p2))
+        dim = len(p1)
 
-        if ambient_dim == 2:
-            return Segment2D(p1, *pts, **kwargs)
-        elif ambient_dim == 3:
-            return Segment3D(p1, *pts, **kwargs)
-        return LinearEntity.__new__(cls, p1, *pts, **kwargs)
+        if dim == 2:
+            return Segment2D(p1, p2, **kwargs)
+        elif dim == 3:
+            return Segment3D(p1, p2, **kwargs)
+        return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Segment gives
@@ -1472,11 +1499,10 @@ class Segment(LinearEntity):
         """
         l = self.perpendicular_line(self.midpoint)
         if p is not None:
-            p2 = Point.pointify(p, dimension=self.ambient_dimension)
+            p2 = Point(p, dim=self.ambient_dimension)
             if p2 in l:
                 return Segment(self.midpoint, p2)
-        else:
-            return l
+        return l
 
     @property
     def length(self):
@@ -1558,7 +1584,7 @@ class Segment(LinearEntity):
         sqrt(341)
         """
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             vp1 = other - self.p1
             vp2 = other - self.p2
@@ -1597,7 +1623,7 @@ class Segment(LinearEntity):
         """
 
         if not isinstance(other, GeometryEntity):
-            other = Point.pointify(other, dimension=self.ambient_dimension)
+            other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(other, self.p1, self.p2):
                 d1, d2 = other - self.p1, other - self.p2
@@ -1718,7 +1744,7 @@ class LinearEntity2D(LinearEntity):
         True
 
         """
-        p = Point.pointify(p, dimension=self.ambient_dimension)
+        p = Point(p, dim=self.ambient_dimension)
         # any two lines in R^2 intersect, so blindly making
         # a line through p in an orthogonal direction will work
         return Line(p, p + self.direction.orthogonal_direction)
@@ -1771,12 +1797,14 @@ class Line2D(LinearEntity2D, Line):
     """
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
         if isinstance(p1, LinearEntity):
-            p1, pt = p1.args
+            if pt is not None:
+                raise ValueError('When p1 is a LinearEntity, pt should be None')
+            p1, pt = Point.normalize_dimensions(*p1.args, dim=2)
         else:
-            p1 = Point.pointify(p1, dimension=2)
+            p1 = Point(p1, dim=2)
         if pt is not None and slope is None:
             try:
-                p2 = Point.pointify(pt, dimension=2)
+                p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
                 raise ValueError('The 2nd argument was not a valid Point. '
                 'If it was a slope, enter it with keyword "slope".')
@@ -1948,10 +1976,10 @@ class Ray2D(LinearEntity2D, Ray):
 
     """
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
-        p1 = Point.pointify(p1, dimension=2)
+        p1 = Point(p1, dim=2)
         if pt is not None and angle is None:
             try:
-                p2 = Point.pointify(pt, dimension=2)
+                p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
@@ -2101,8 +2129,8 @@ class Segment2D(LinearEntity2D, Segment):
         # Reorder the two points under the following ordering:
         #   if p1.x != p2.x then p1.x < p2.x
         #   if p1.x == p2.x then p1.y < p2.y
-        p1 = Point.pointify(p1, dimension=2)
-        p2 = Point.pointify(p2, dimension=2)
+        p1 = Point(p1, dim=2)
+        p2 = Point(p2, dim=2)
         if p1 == p2:
             return p1
         if (p1.x > p2.x) == True:
@@ -2153,8 +2181,8 @@ class LinearEntity3D(LinearEntity):
     """
 
     def __new__(cls, p1, p2, **kwargs):
-        p1 = Point3D.pointify(p1, dimension=3)
-        p2 = Point3D.pointify(p2, dimension=3)
+        p1 = Point3D(p1, dim=3)
+        p2 = Point3D(p2, dim=3)
         if p1 == p2:
             # if it makes sense to return a Point, handle in subclass
             raise ValueError(
@@ -2244,11 +2272,13 @@ class Line3D(LinearEntity3D, Line):
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
         if isinstance(p1, LinearEntity3D):
+            if pt is not None:
+                raise ValueError('if p1 is a LinearEntity, pt must be None.')
             p1, pt = p1.args
         else:
-            p1 = Point.pointify(p1, dimension=3)
+            p1 = Point(p1, dim=3)
         if pt is not None and len(direction_ratio) == 0:
-            pt = Point.pointify(pt, dimension=3)
+            pt = Point(pt, dim=3)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2344,11 +2374,13 @@ class Ray3D(LinearEntity3D, Ray):
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
         if isinstance(p1, LinearEntity3D):
+            if pt is not None:
+                raise ValueError('If p1 is a LinearEntity, pt must be None')
             p1, pt = p1.args
         else:
-            p1 = Point.pointify(p1, dimension=3)
+            p1 = Point(p1, dim=3)
         if pt is not None and len(direction_ratio) == 0:
-            pt = Point.pointify(pt, dimension=3)
+            pt = Point(pt, dim=3)
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
@@ -2502,8 +2534,8 @@ class Segment3D(LinearEntity3D, Segment):
         #   if p1.x != p2.x then p1.x < p2.x
         #   if p1.x == p2.x then p1.y < p2.y
         #   The z-coordinate will not come into picture while ordering
-        p1 = Point.pointify(p1, dimension=3)
-        p2 = Point.pointify(p2, dimension=3)
+        p1 = Point(p1, dim=3)
+        p2 = Point(p2, dim=3)
 
         if p1 == p2:
             return p1
