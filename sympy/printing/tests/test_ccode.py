@@ -6,7 +6,7 @@ from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter
+from sympy.printing.ccode import CCodePrinter, C99CodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
@@ -516,3 +516,6 @@ def test_ccode_For():
     assert sol == ("for (x = 0; x < 10; x += 2) {\n"
                    "   y *= x;\n"
                    "}")
+
+def test_C99CodePrinter():
+    assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'

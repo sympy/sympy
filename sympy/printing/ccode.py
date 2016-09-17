@@ -293,6 +293,48 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+class C99CodePrinter(CCodePrinter):
+
+    def _print_Infinity(self, expr):
+        return 'INFINITY'
+
+    def _print_NegativeInfinity(self, expr):
+        return '-INFINITY'
+
+    def _print_NaN(self, expr):
+        return 'NAN'
+
+    def _print_fma(self, expr):  # fused mutiply-add
+        return 'fma({0}, {1}, {2})'.format(*map(self._print, expr.args))
+
+    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
+        return 'log10({0})'.format(self._print(expr.args[0]))
+
+    def _print_cbrt(self, expr):
+        return 'cbrt({0})'.format(self._print(expr.args[0]))
+
+    def _print_hypot(self, expr):
+        return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
+
+    def _print_expm1(self, expr):
+        return 'expm1({0})'.format(self._print(expr.args[0]))
+
+    def _print_log1p(self, expr):
+        return 'log1p({0})'.format(self._print(expr.args[0]))
+
+    def _print_exp2(self, expr):
+        return 'exp2({0})'.format(self._print(expr.args[0]))
+
+    def _print_log2(self, expr):
+        return 'log2({0})'.format(self._print(expr.args[0]))
+
+    def _print_lgamma(self, expr):
+        return 'lgamma({0})'.format(self._print(expr.args[0]))
+
+    def _print_tgamma(self, expr):
+        return 'tgamma({0})'.format(self._print(expr.args[0]))
+
+
 
 def ccode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c code
