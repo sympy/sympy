@@ -51,7 +51,8 @@ class Point(GeometryEntity):
     ======
 
     TypeError : When instantiating with anything but a Point or sequence
-    ValueError : when instantiating with a sequence with length < 2
+    ValueError : when instantiating with a sequence with length < 2 or
+        when trying to reduce dimensions if keyward `warn` is True.
 
     See Also
     ========
@@ -111,6 +112,8 @@ class Point(GeometryEntity):
         if len(coords) > dimension:
             if any(i for i in coords[dimension:]):
                 raise ValueError('too many nonzero dimensions')
+            if kwargs.get('warn', False):
+                raise ValueError('reducing dimensions')
             coords = coords[:dimension]  # truncate 0s
         elif dimension > len(coords):
             coords += (S.Zero,)*(dimension - len(coords))  # pad w/ 0s
@@ -181,13 +184,16 @@ class Point(GeometryEntity):
         >>> Point.normalize_dimensions(a, b, dim=4)
         [Point(1, 2, 0, 0), Point(1, 2, 3, 0)]
 
-        But iff truncation would result in losing a non-zero dimension,
+        But if truncation would result in losing a non-zero dimension,
         a ValueError is raised:
 
         >>> Point.normalize_dimensions(a, b, dim=2)
         Traceback (most recent call last):
         ...
         ValueError: Point has too many dimensions
+
+        To raise a ValueError whenever dimensions are being lost
+        set the keyword `warn` to True.
         """
         if not points:
             raise ValueError('Must provide 1 or more Points.')
@@ -197,8 +203,9 @@ class Point(GeometryEntity):
         dim = kwargs.get('dim',
             max(i._size for i in points) if minimal else
             max(i.ambient_dimension for i in points))
+        warn = kwargs.get('warn', False)
         if not all(a.ambient_dimension == dim for a in points):
-            points = [Point(a, dim=dim) for a in points]
+            points = [Point(a, dim=dim, warn=warn) for a in points]
         return points
 
     def __contains__(self, item):
@@ -208,10 +215,6 @@ class Point(GeometryEntity):
     def are_coplanar(*points):
         """Return True if the points lie in a unique plane.
 
-        All two dimensional points are coplanar: they lie in the
-        x-y plane.  Three dimensional points are coplanar only
-        if they are not collinear and thus define a unique plane.
-
         Parameters
         ==========
 
@@ -220,8 +223,7 @@ class Point(GeometryEntity):
         Raises
         ======
 
-        ValueError : if there is a dimension mismatch in point given.
-        NotImplementedError : for dimensions higher than 3
+        ValueError : if less than 3 unique points are given
 
         Returns
         =======
@@ -243,16 +245,54 @@ class Point(GeometryEntity):
         False
 
         """
-        if not points:
-            return False
-        points = [Point(i) for i in points]
-        dim = points[0].ambient_dimension
-        if not all(i.ambient_dimension == dim for i in points):
-            raise ValueError('dimensions of all Points must be the same')
-        if points[0].ambient_dimension < 4:
-            cls = points[0]
-            return cls.are_coplanar(*points)
-        raise NotImplementedError('dimension higher than 3')
+        points = Point.normalize_dimensions(*
+            [Point(i) for i in points])
+        points = list(uniq(points))
+        if len(points) < 3:
+            raise ValueError('must provide 3 or more unique points')
+        return Point.affine_rank(*points) == 2
+
+    def is_collinear(self, *points):
+        """Is `self` in line with the given sequence of points?
+
+        Test whether or not a set of points is collinear. Returns True if
+        the set of points are collinear and False otherwise.
+
+        Parameters
+        ==========
+
+        points : sequence of Point
+
+        Returns
+        =======
+
+        is_collinear : boolean
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> from sympy.abc import x
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)
+        >>> Point.is_collinear(p1, p2, p3, p4)
+        True
+        >>> Point.is_collinear(p1, p2, p3, p5)
+        False
+
+        """
+        points = (self,) + points
+        points = Point.normalize_dimensions(*
+            [Point(i) for i in points])
+        points = list(uniq(points))
+        if len(points) < 2:
+            raise ValueError('must provide 2 or more unique points')
+        return Point.affine_rank(*points) == 1
 
     def is_concyclic(self, *points):
         """Do `self` and the given sequence of points lie in a circle?
@@ -298,51 +338,6 @@ class Point(GeometryEntity):
         if args[0].ambient_dimension != 2:
             raise NotImplementedError
         return args[0].is_concyclic(*args[1:])
-
-    def is_collinear(self, *points):
-        """Is `self` in line with the given sequence of points?
-
-        Test whether or not a set of points is collinear. Returns True if
-        the set of points are collinear and False otherwise.
-
-        Parameters
-        ==========
-
-        points : sequence of Point
-
-        Returns
-        =======
-
-        is_collinear : boolean
-
-        See Also
-        ========
-
-        sympy.geometry.line.Line
-
-        Examples
-        ========
-
-        >>> from sympy import Point
-        >>> from sympy.abc import x
-        >>> p1, p2 = Point(0, 0), Point(1, 1)
-        >>> p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)
-        >>> Point.is_collinear(p1, p2, p3, p4)
-        True
-        >>> Point.is_collinear(p1, p2, p3, p5)
-        False
-
-        """
-        args = (self,) + points
-        args = Point.normalize_dimensions(*[Point(p) for p in args])
-
-        args = list(uniq(args))
-        if len(args) < 2:
-            return False
-        if len(args) == 2:
-            return True
-
-        return Point.affine_rank(*args) == 1
 
     def is_scalar_multiple(self, p):
         """Returns whether each dimension of `p` is a scalar multiple
@@ -441,7 +436,7 @@ class Point(GeometryEntity):
     def unit(self):
         """Return the Point that is in the same direction as `self`
         and a distance of 1 from the origin"""
-        return self/self.distance(self.origin)
+        return self/abs(self)
 
     @staticmethod
     def affine_rank(*points):
@@ -854,13 +849,6 @@ class Point2D(Point):
 
         return (self.x, self.y, self.x, self.y)
 
-    @staticmethod
-    def are_coplanar(*points):
-        points = [Point(i) for i in points]
-        if all(i.ambient_dimension == 2 for i in points):
-            return True  # all 2D points lie in the x-y plane
-        return Point.are_coplanar(*points)  # raise error there
-
     def is_concyclic(self, *points):
         """Is a sequence of points concyclic?
 
@@ -1214,27 +1202,6 @@ class Point3D(Point):
         False
         """
         return Point.is_collinear(*points)
-
-    @staticmethod
-    def are_coplanar(*points):
-        from sympy.geometry.plane import Plane, Line
-        points = [Point(i) for i in points]
-        if any(i.ambient_dimension != 3 for i in points):
-            return Point.are_coplanar(*points)  # raise error there
-        points = list(uniq(points))
-        if len(points) > 2:
-            line = Line(*points[:2])
-            # keep only the first 2 points and any others that are
-            # not collinear
-            points = line.args + tuple(p for p in points[2:] if p not in line)
-        if len(points) < 3:
-            return False
-        if len(points) == 3:
-            return True
-        plane = Plane(*points[:3])
-        if all(p in plane for p in points[3:]):
-            return True
-        return False
 
     def intersection(self, other):
         """The intersection between this point and another point.

@@ -4,7 +4,7 @@ from sympy import I, Rational, Symbol, pi, sqrt
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
-from sympy.utilities.iterables import subsets, permutations
+from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises
 
 
@@ -49,8 +49,9 @@ def test_point():
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
     p1_3 = Point(x1 + 1, x1)
-    assert Point.is_collinear(p3) is False
-    assert p3.is_collinear() is False
+    raises(ValueError, lambda: Point.is_collinear(p3))
+    raises(ValueError, lambda: Point.is_collinear(p3, Point(p3, dim=4)))
+    raises(ValueError, lambda: p3.is_collinear())
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
@@ -68,8 +69,8 @@ def test_point():
     p2_3 = Point(-x_pos, 0)
     p2_4 = Point(0, -x_pos)
     p2_5 = Point(x_pos, 5)
-    assert Point.is_concyclic(p2_1)
-    assert Point.is_concyclic(p2_1, p2_2)
+    raises(ValueError, lambda: Point.is_concyclic(p2_1))
+    raises(ValueError, lambda: Point.is_concyclic(p2_1, p2_2))
     assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_4)
     for pts in permutations((p2_1, p2_2, p2_3, p2_5)):
         assert Point.is_concyclic(*pts) is False
@@ -152,7 +153,7 @@ def test_point3D():
     p1_3 = Point3D(x1 + 1, x1, x1)
     # like coplanar, points are collinear only if they define
     # a unique line
-    assert Point3D.are_collinear(p3) is False
+    raises(ValueError, lambda: Point3D.are_collinear(p3))
     assert Point3D.are_collinear(p3, p4)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
@@ -197,7 +198,8 @@ def test_point3D():
     raises(TypeError, lambda: Point3D.are_collinear(p, x))
 
     # Test are_coplanar
-    assert Point.are_coplanar() is False
+    raises(ValueError, lambda: Point.are_coplanar())
+    raises(ValueError, lambda: Point.are_coplanar((1, 2), (1, 2, 0), (1, 3, 0)))
     raises(ValueError, lambda: Point.are_coplanar((1, 2), (1, 2, 3)))
     raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
     raises(ValueError, lambda: Point3D.are_coplanar((1, 2), (1, 2, 3)))
@@ -206,7 +208,7 @@ def test_point3D():
     planar3 = Point3D(-1, 1, 1)
     assert Point3D.are_coplanar(p, planar2, planar3) == True
     assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
-    assert Point.are_coplanar(p, planar2) == False  # not unique
+    raises(ValueError, lambda: Point.are_coplanar(p, planar2))
     planar2 = Point3D(1, 1, 2)
     planar3 = Point3D(1, 1, 3)
     assert Point3D.are_coplanar(p, planar2, planar3) == False  # line, not plane
@@ -281,13 +283,15 @@ def test_arguments():
     automatically convert them to points."""
 
     singles2d = ((1,2), [1,2], Point(1,2))
-    doubles2d = subsets(singles2d, 2)
+    singles2d2 = ((1,3), [1,3], Point(1,3))
+    doubles2d = cartes(singles2d, singles2d2)
     p2d = Point2D(1,2)
     singles3d = ((1,2,3), [1,2,3], Point(1,2,3))
     doubles3d = subsets(singles3d, 2)
     p3d = Point3D(1,2,3)
     singles4d = ((1,2,3,4), [1,2,3,4], Point(1,2,3,4))
-    doubles4d = subsets(singles4d, 2)
+    singles4d2 = ((1,3), [1,3], Point(1,3))
+    doubles4d = cartes(singles4d, singles4d2)
     p4d = Point(1,2,3,4)
 
     # test 2D
