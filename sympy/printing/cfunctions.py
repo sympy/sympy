@@ -1,3 +1,4 @@
+import math
 from sympy.core import S
 from sympy.core.symbol import Dummy
 from sympy.core.function import Lambda
@@ -41,19 +42,24 @@ class log1p(Function):
         return log(self.args[0] + S.One)
     
     def _eval_rewrite_as_log(self, arg):
-        return log(arg + 1)
+        return log(arg + S.One)
     
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
     
     @classmethod
     def eval(cls, arg):
-        return log.eval(arg + S.One)
+        print(arg, arg.is_Float)
+        if not arg.is_Float:  # not safe to add 1 to Float
+            return log.eval(arg + S.One)
+        # if arg.is_Float and arg.is_real and arg > -1:
+        #     return S(math.log1p(arg))
+        # else:
     
     def _eval_is_real(self):
-        return (self.args[0] - S.One).is_positive
+        return (self.args[0] + S.One).is_nonnegative
     
     def _eval_is_finite(self):
-        if (self.args[0] - S.One).is_zero:
+        if (self.args[0] + S.One).is_zero:
             return False
         return self.args[0].is_finite
     
@@ -74,10 +80,22 @@ class exp2(Function):
     def _eval_expand_func(self, **hints):
         return _Two**self.args[0]
 
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_number:
+            return _Two**arg
+
     
 class log2(Function):
     nargs = 1
     _imp_ = Lambda(_dummy, log(_dummy)/log(_Two))
     
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_number:
+            result = log.eval(arg, base=_Two)
+            if result.is_Atom:
+                return result
+
     def _eval_expand_func(self, **hints):
         return log(self.args[0])/log(_Two)
