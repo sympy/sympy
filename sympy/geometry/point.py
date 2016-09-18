@@ -10,19 +10,22 @@ Point3D
 
 from __future__ import division, print_function
 
-from sympy.core import S, sympify
+from sympy.core import S, sympify, Expr
 from sympy.core.numbers import Number
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, is_sequence, as_int
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from sympy.matrices import Matrix
+from sympy.core.relational import Eq
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
 from sympy.core.add import Add
 from sympy.sets import FiniteSet
+from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
 
@@ -47,9 +50,9 @@ class Point(GeometryEntity):
     Raises
     ======
 
-    TypeError
-        When trying to add or subtract points with different dimensions.
-        When `intersection` is called with object other than a Point.
+    TypeError : When instantiating with anything but a Point or sequence
+    ValueError : when instantiating with a sequence with length < 2 or
+        when trying to reduce dimensions if keyward `warn` is True.
 
     See Also
     ========
@@ -80,17 +83,40 @@ class Point(GeometryEntity):
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
-        if iterable(args[0]):
-            if isinstance(args[0], Point) and not evaluate:
-                return args[0]
-            args = args[0]
+        # unpack into coords
+        if len(args) == 1:
+            coords = args[0]
+        else:
+            coords = args
 
-        # unpack the arguments into a friendly Tuple
-        # if we were already a Point, we're doing an excess
-        # iteration, but we'll worry about efficiency later
-        coords = Tuple(*args)
-        if any(a.is_number and im(a) for a in coords):
-            raise ValueError('Imaginary coordinates not permitted.')
+        # check args and handle quickly handle Point instances
+        if not is_sequence(coords) and not isinstance(coords, Point):
+            raise TypeError(filldedent('''
+                Expecting sequence of coordinates, not `{}`'''
+                .format(func_name(coords))))
+        dimension = as_int(kwargs.get('dim', len(coords)))
+        if isinstance(coords, Point):
+            if dimension == len(coords):
+                return coords
+            evaluate = False
+            coords = Tuple(*coords)
+        else:
+            coords = Tuple(*coords)
+            # check only coords that weren't in a Point already
+            if any(a.is_number and im(a) for a in coords):
+                raise ValueError('Imaginary coordinates not permitted.')
+            if not all(isinstance(a, Expr) for a in coords):
+                raise TypeError('Coordinates must be valid SymPy expressions.')
+
+        # adjust size
+        if len(coords) > dimension:
+            if any(i for i in coords[dimension:]):
+                raise ValueError('too many nonzero dimensions')
+            if kwargs.get('warn', False):
+                raise ValueError('reducing dimensions')
+            coords = coords[:dimension]  # truncate 0s
+        elif dimension > len(coords):
+            coords += (S.Zero,)*(dimension - len(coords))  # pad w/ 0s
 
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
@@ -98,31 +124,136 @@ class Point(GeometryEntity):
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
-        if len(coords) == 0:
-            raise ValueError("A point must have at least one coordinate")
-        if len(coords) == 2:
-            return Point2D(coords, **kwargs)
-        if len(coords) == 3:
-            return Point3D(coords, **kwargs)
 
+        # return 2D or 3D instances
+        if len(coords) == 2:
+            kwargs['_ok'] = True
+            return Point2D(*coords, **kwargs)
+        elif len(coords) == 3:
+            kwargs['_ok'] = True
+            return Point3D(*coords, **kwargs)
+        elif len(coords) < 2:
+            raise ValueError('Point requires 2 or more coordinates or a dimension > 1.')
+
+        # the general Point
         return GeometryEntity.__new__(cls, *coords)
 
     is_Point = True
 
+    @property
+    def _size(p):
+        # return the location of the highest nonzero dimension
+        # or 2, whichever is greater
+        return max([1] + [i for i,x in enumerate(p) if x != 0]) + 1
+
+    @staticmethod
+    def normalize_dimensions(*points, **kwargs):
+        """Return all Points with the same dimensions.
+
+        Set the keyword `dim` to the desired number of dimensions.
+        If it is not given then the smallest dimension necessary to
+        capture all non-zero coordinates will be used; but if the
+        keyword `max` is True then all dimensions will match the
+        largest dimension present.
+
+        Raises
+        ======
+
+        ValueError : no points are given or when attempting to
+            truncate a nonzero dimension
+        TypeError : an element was not a Point instance
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+
+        By default, extra dimensions with zero elements are trimmed:
+
+        >>> Point.normalize_dimensions(Point(1, 2, 0), Point(1, 2, 3, 0))
+        [Point3D(1, 2, 0), Point3D(1, 2, 3)]
+
+        Zeros will be padded onto Points that are too short:
+
+        >>> a, b = Point(1, 2), Point(1, 2, 3)
+        >>> Point.normalize_dimensions(a, b)
+        [Point3D(1, 2, 0), Point3D(1, 2, 3)]
+
+        The keyword `dim` will force a given dimension:
+
+        >>> Point.normalize_dimensions(a, b, dim=4)
+        [Point(1, 2, 0, 0), Point(1, 2, 3, 0)]
+
+        But if truncation would result in losing a non-zero dimension,
+        a ValueError is raised:
+
+        >>> Point.normalize_dimensions(a, b, dim=2)
+        Traceback (most recent call last):
+        ...
+        ValueError: Point has too many dimensions
+
+        To raise a ValueError whenever dimensions are being lost
+        set the keyword `warn` to True.
+        """
+        if not points:
+            raise ValueError('Must provide 1 or more Points.')
+        if not all(isinstance(i, Point) for i in points):
+            raise TypeError('all elements must be Points')
+        minimal = not kwargs.get('max', False)
+        dim = kwargs.get('dim',
+            max(i._size for i in points) if minimal else
+            max(i.ambient_dimension for i in points))
+        warn = kwargs.get('warn', False)
+        if not all(a.ambient_dimension == dim for a in points):
+            points = [Point(a, dim=dim, warn=warn) for a in points]
+        return points
+
     def __contains__(self, item):
         return item in self.args
 
-    def is_concyclic(*args):
-        # Coincident points are irrelevant and can confuse this algorithm.
-        # Use only unique points.
-        args = list(set(args))
-        if not all(isinstance(p, Point) for p in args):
-            raise TypeError('Must pass only Point objects')
+    @staticmethod
+    def are_coplanar(*points):
+        """Return True if the points lie in a unique plane.
 
-        return args[0].is_concyclic(*args[1:])
+        Parameters
+        ==========
 
-    def is_collinear(*args):
-        """Is a sequence of points collinear?
+        A set of points
+
+        Raises
+        ======
+
+        ValueError : if less than 3 unique points are given
+
+        Returns
+        =======
+
+        boolean
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p1 = Point3D(1, 2, 2)
+        >>> p2 = Point3D(2, 7, 2)
+        >>> p3 = Point3D(0, 0, 2)
+        >>> p4 = Point3D(1, 1, 2)
+        >>> Point3D.are_coplanar(p1, p2, p3, p4)
+        True
+        >>> p5 = Point3D(0, 1, 3)
+        >>> Point3D.are_coplanar(p1, p2, p3, p5)
+        False
+
+        """
+        points = Point.normalize_dimensions(*
+            [Point(i) for i in points])
+        points = list(uniq(points))
+        if len(points) < 3:
+            raise ValueError('must provide 3 or more unique points')
+        return Point.affine_rank(*points) == 2
+
+    def is_collinear(self, *points):
+        """Is `self` in line with the given sequence of points?
 
         Test whether or not a set of points is collinear. Returns True if
         the set of points are collinear and False otherwise.
@@ -155,32 +286,76 @@ class Point(GeometryEntity):
         False
 
         """
-        args = [Point.pointify(p) for p in args]
+        points = (self,) + points
+        points = Point.normalize_dimensions(*
+            [Point(i) for i in points])
+        points = list(uniq(points))
+        if len(points) < 2:
+            raise ValueError('must provide 2 or more unique points')
+        return Point.affine_rank(*points) == 1
 
-        # Coincident points are irrelevant; use only unique points.
-        args = list(set(args))
+    def is_concyclic(self, *points):
+        """Do `self` and the given sequence of points lie in a circle?
 
-        if len(args) == 0:
-            return False
-        if len(args) <= 2:
-            return True
+        Returns True if the set of points are concyclic and
+        False otherwise.
 
-        return Point.affine_rank(*args) == 1
+        Parameters
+        ==========
 
-    def is_scalar_multiple(self, p2):
-        """Returns whether `p1` and `p2` are scalar multiples
-        of each other.
+        points : sequence of Point
+
+        Raises
+        ======
+
+        NotImplementedError : raised when the points are planar but have
+            a dimension other than 2
+
+        Returns
+        =======
+
+        is_concyclic : boolean
+
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> from sympy.abc import x
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)
+        >>> Point.is_collinear(p1, p2, p3, p4)
+        True
+        >>> Point.is_collinear(p1, p2, p3, p5)
+        False
+
         """
-        p1, p2 = Point.pointify(self), Point.pointify(p2)
+        args = (self,) + points
+        args = Point.normalize_dimensions(*[Point(p) for p in args])
+        args = list(uniq(args))
+        if not Point.are_coplanar(*args):
+            return False
+        if args[0].ambient_dimension != 2:
+            raise NotImplementedError
+        return args[0].is_concyclic(*args[1:])
 
+    def is_scalar_multiple(self, p):
+        """Returns whether each dimension of `p` is a scalar multiple
+        of those of `self`.
+        """
+        s, o = Point.normalize_dimensions(self, Point(p))
         # 2d points happen a lot, so optimize this function call
-        if p1.ambient_dimension == 2:
-            (x1,y1), (x2,y2) = p1.args, p2.args
-            return simplify(x1*y2-x2*y1) == 0
+        if s.ambient_dimension == 2:
+            (x1, y1), (x2, y2) = s.args, o.args
+            rv = (x1*y2 - x2*y1).equals(0)
+            if rv is None:
+                raise Undecidable(filldedent(
+                    '''can't determine if %s is a scalar multiple of
+                    %s''' % (self, p)))
 
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of each other
-        m = Matrix([p1.args, p2.args])
+        m = Matrix([s.args, o.args])
         return m.rank() < 2
 
     @property
@@ -202,7 +377,7 @@ class Point(GeometryEntity):
     def origin(self):
         """A point of all zeros of the same ambient dimension
         as the current point"""
-        return Point([0]*len(self))
+        return Point([0]*len(self), evaluate=False)
 
     @property
     def is_zero(self):
@@ -233,21 +408,35 @@ class Point(GeometryEntity):
 
     @property
     def orthogonal_direction(self):
-        """Returns a non-zero point in a direction
-        orthogonal to `self`."""
+        """Returns a non-zero point in the x-y plane that is
+        orthogonal to the line containing `self` and the origin.
 
-        dim = self.ambient_dimension
-        if dim == 1 and self[0] != S.Zero:
-            raise ValueError("No orthogonal direction")
+        Examples
+        ========
 
+        >>> from sympy.geometry import Line, Point
+        >>> a = Point(1, 2, 3)
+        >>> a.orthogonal_direction
+        Point2D(-2, 1)
+        >>> b = _
+        >>> Line(b, b.origin).is_perpendicular(Line(a, a.origin))
+        True
+        """
         # if a coordinate is zero, we can put a 1 there and zeros elsewhere
         if self[0] == S.Zero:
-            return Point([1] + (dim - 1)*[0])
+            return Point2D(1, 0)
         if self[1] == S.Zero:
-            return Point([0,1] + (dim - 2)*[0])
-        # if the first two coordinates aren't zero, we can create a non-zero
-        # orthogonal vector by swapping them, negating one, and padding with zeros
-        return Point([-self[1], self[0]] + (dim - 2)*[0])
+            return Point2D(0, 1)
+        # if the first two coordinates aren't zero, we can create a
+        # non-zero orthogonal vector by swapping them and negating
+        # one (x is arbitrarily chosen)
+        return Point2D(-self[1], self[0])
+
+    @property
+    def unit(self):
+        """Return the Point that is in the same direction as `self`
+        and a distance of 1 from the origin"""
+        return self/abs(self)
 
     @staticmethod
     def affine_rank(*points):
@@ -261,60 +450,52 @@ class Point(GeometryEntity):
             raise TypeError("Must have at least one point")
 
         # make sure we're genuinely points
-        # and translate to every point to the origin
-        origin = Point.pointify(points[0])
-        points = [Point.pointify(p, dimension=origin.ambient_dimension) - origin for p in points[1:]]
+        # and translate every point to the origin
+        points = Point.normalize_dimensions(*[Point(i) for i in points])
+        origin = points[0]
+        points = [p - origin for p in points[1:]]
 
         m = Matrix([p.args for p in points])
         return m.rank()
 
     @staticmethod
     def project(a, b):
-        """Project the point `a` onto the non-zero point `b`."""
-        a, b = Point.pointify(a), Point.pointify(b)
+        """Project the point `a` onto the line between the origin
+        and point `b` along the normal direction.
+
+        Parameters
+        ==========
+
+        a : Point
+        b : Point
+
+        Returns
+        =======
+
+        p : Point
+
+        See Also
+        ========
+
+        sympy.geometry.line.LinearEntity.projection
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Line, Point
+        >>> a = Point(1, 2)
+        >>> b = Point(2, 5)
+        >>> z = a.origin
+        >>> p = Point.project(a, b)
+        >>> Line(p, a).is_perpendicular(Line(p, b))
+        True
+        >>> Point.is_collinear(z, p, b)
+        True
+        """
+        a, b = Point.normalize_dimensions(Point(a), Point(b))
         if b.is_zero:
             raise ValueError("Cannot project to the zero vector.")
-        if a.ambient_dimension != b.ambient_dimension:
-            raise ValueError("Points must be of the same dimension")
-
         return b*(a.dot(b) / b.dot(b))
-
-    @staticmethod
-    def pointify(a, dimension=None, ensure_geometry_entity=True, ensure_point=True, **kwargs):
-        """If `a` is a `Point` or a non-iterable, it is left alone.
-        Otherwise, it is converted to a point with `kwargs` passed along
-        to `Point()`. If `dimension` is set (default `None`), a dimension check is carried out.
-        If `ensure_geometry_entity` is set (default `True`), a type check for GeometryEntity
-        is carried out and the return value will be a GeometryEntity.
-        If `ensure_point` is set (default `True`), a type check for Point is carried out
-        and the return value will be a Point."""
-
-        if isinstance(a, Point):
-            if dimension and a.ambient_dimension != dimension:
-                raise ValueError("Point {} must be of dimension {}.".format(a, dimension))
-            return a
-
-        # any interable that is traversed in a canonical way
-        # (which excludes things like FiniteSets) can be turned
-        # into a point.  This check can be made more general, but for now
-        # exclude known bad objects
-        if iterable(a) and not isinstance(a, (FiniteSet, set, dict)):
-            # in the special case of 2 and 3 dimensions, let the constructor
-            # ensure the dimension is correct.  In particular, the convention
-            # for Point3D is to allow being called with only two arguments
-            # and silently add a zero as the last coordinate.
-            if dimension == 2:
-                return Point.pointify(Point2D(a, **kwargs))
-            elif dimension == 3:
-                return Point.pointify(Point3D(a, **kwargs))
-            return Point.pointify(Point(a, **kwargs), dimension)
-
-        if ensure_geometry_entity and not isinstance(a, GeometryEntity):
-            raise TypeError("{} must be a GeometryEntity".format(a))
-        if ensure_point and not isinstance(a, Point):
-            raise TypeError("{} must be a Point".format(a))
-
-        return a
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
@@ -333,6 +514,7 @@ class Point(GeometryEntity):
         ========
 
         sympy.geometry.line.Segment.length
+        sympy.geometry.point.Point.taxicab_distance
 
         Examples
         ========
@@ -348,8 +530,8 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
-        return sqrt(sum([(a - b)**2 for a, b in zip(
-            self.args, p.args if isinstance(p, Point) else p)]))
+        s, p = Point.normalize_dimensions(self, Point(p))
+        return sqrt(sum([(a - b)**2 for a, b in zip(s, p)]))
 
     def taxicab_distance(self, p):
         """The Taxicab Distance from self to point p.
@@ -370,7 +552,7 @@ class Point(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.Point.distance
+        sympy.geometry.point.Point.distance
 
         Examples
         ========
@@ -381,8 +563,8 @@ class Point(GeometryEntity):
         7
 
         """
-        p = Point.pointify(p)
-        return sum(abs(a - b) for a, b in zip(self.args, p.args))
+        s, p = Point.normalize_dimensions(self, Point(p))
+        return sum(abs(a - b) for a, b in zip(s, p))
 
     def midpoint(self, p):
         """The midpoint between self and point p.
@@ -411,8 +593,16 @@ class Point(GeometryEntity):
         Point2D(7, 3)
 
         """
-        p = Point.pointify(p)
-        return Point([simplify((a + b)*S.Half) for a, b in zip(self.args, p.args)])
+        s, p = Point.normalize_dimensions(self, Point(p))
+        return Point([simplify((a + b)*S.Half) for a, b in zip(s, p)])
+
+    def dot(self, p):
+        """Return dot product of self with another Point."""
+        if not is_sequence(p):
+            p = Point(p)  # raise the error via Point
+        # sum could return native python floats, we'd like to ensure the
+        # return value is a sympy object, so wrap in S()
+        return S(sum(a*b for a, b in zip(self, p)))
 
     def evalf(self, prec=None, **options):
         """Evaluate the coordinates of the point.
@@ -477,29 +667,23 @@ class Point(GeometryEntity):
         [Point2D(0, 0)]
 
         """
-        other = Point.pointify(other, ensure_point=False)
+        if not isinstance(other, GeometryEntity):
+            other = Point(other)
         if isinstance(other, Point):
-            if len(self) != len(other):
-                raise ValueError("Points must be of the same dimension to intersect")
             if self == other:
                 return [self]
+            p1, p2 = Point.normalize_dimensions(self, other)
+            if p1 == self and p1 == p2:
+                return [self]
             return []
-
         return other.intersection(self)
-
-    def dot(self, p2):
-        """Return dot product of self with another Point."""
-        p2 = Point.pointify(p2, dimension=self.ambient_dimension)
-        # sum could return native python floats, we'd like to ensure the
-        # return value is a sympy object, so wrap in S()
-        return S(sum(a*b for a,b in zip(self, p2)))
 
     def equals(self, other):
         """Returns whether the coordinates of self and other agree."""
         # a point is equal to another point if all its components are equal
-        if not isinstance(other, Point) or len(self.args) != len(other.args):
+        if not isinstance(other, Point) or len(self) != len(other):
             return False
-        return all(a.equals(b) for a,b in zip(self.args, other.args))
+        return all(a.equals(b) for a,b in zip(self, other))
 
     def __len__(self):
         return len(self.args)
@@ -527,45 +711,41 @@ class Point(GeometryEntity):
         sympy.geometry.entity.translate
 
         """
+        try:
+            o = Point(other)
+            if self._size != o._size:
+                s, o = Point.normalize_dimensions(self, Point(other))
+            else:
+                s = self
+        except TypeError:
+            raise GeometryError("Don't know how to add {} and a Point object".format(other))
 
-        if iterable(other):
-            coords = [simplify(a + b) for a, b in zip(self, other)]
-            if len(coords) != self.ambient_dimension:
-                raise ValueError("Points must have the same number of dimensions")
-            if all(isinstance(c, Number) for c in coords):
-                return Point(coords, evaluate=False)
-            return Point(coords)
-        raise GeometryError("Don't know how to add {} and a Point object".format(other))
+        coords = [simplify(a + b) for a, b in zip(s, o)]
+        return Point(coords, evaluate=False)
 
     def __sub__(self, other):
         """Subtract two points, or subtract a factor from this point's
         coordinates."""
-        return self + (-x for x in other)
+        return self + [-x for x in other]
 
     def __mul__(self, factor):
         """Multiply point's coordinates by a factor."""
         factor = sympify(factor)
         coords = [simplify(x*factor) for x in self.args]
-        if all(isinstance(c, Number) for c in coords):
-            return Point(coords, evaluate=False)
-        return Point(coords)
+        return Point(coords, evaluate=False)
 
     def __div__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
-        if all(isinstance(c, Number) for c in coords):
-            return Point(coords, evaluate=False)
-        return Point(coords)
+        return Point(coords, evaluate=False)
 
     __truediv__ = __div__
 
     def __neg__(self):
         """Negate the point."""
         coords = [-x for x in self.args]
-        if all(isinstance(c, Number) for c in coords):
-            return Point(coords, evaluate=False)
-        return Point(coords)
+        return Point(coords, evaluate=False)
 
     def __abs__(self):
         """Returns the distance between this point and the origin."""
@@ -622,28 +802,10 @@ class Point2D(Point):
 
     """
     def __new__(cls, *args, **kwargs):
-        eval = kwargs.get('evaluate', global_evaluate[0])
-        check = True
-        if isinstance(args[0], Point2D):
-            if not eval:
-                return args[0]
-            args = args[0].args
-            check = False
-        else:
-            if iterable(args[0]):
-                args = args[0]
-        coords = Tuple(*args)
-        if len(coords) != 2:
-            raise ValueError(
-                "Only two dimensional points may be initialized with `Point2D`")
-        if check:
-            if any(a.is_number and im(a) for a in coords):
-                raise ValueError('Imaginary args not permitted.')
-        if eval:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
-        return GeometryEntity.__new__(cls, *coords)
+        if not kwargs.pop('_ok', False):
+            kwargs['dim'] = 2
+            args = Point(*args, **kwargs)
+        return GeometryEntity.__new__(cls, *args)
 
     def __contains__(self, item):
         return item == self
@@ -687,7 +849,7 @@ class Point2D(Point):
 
         return (self.x, self.y, self.x, self.y)
 
-    def is_concyclic(*points):
+    def is_concyclic(self, *points):
         """Is a sequence of points concyclic?
 
         Test whether or not a sequence of points are concyclic (i.e., they lie
@@ -712,9 +874,8 @@ class Point2D(Point):
         Notes
         =====
 
-        No points are not considered to be concyclic. One or two points
-        are definitely concyclic and three points are conyclic iff they
-        are not collinear.
+        One or two points always lie on some circle; three points
+        are conyclic iff they are not collinear.
 
         For more than three points, create a circle from the first three
         points. If the circle cannot be created (i.e., they are collinear)
@@ -734,25 +895,22 @@ class Point2D(Point):
         False
 
         """
-        if len(points) == 0:
-            return False
+        points = (self,) + points
         if len(points) <= 2:
             return True
-        points = [Point.pointify(p) for p in points]
+        points = [Point(p, dim=2) for p in points]
+        first3 = Point.is_collinear(*points[:3])
         if len(points) == 3:
-            return (not Point.is_collinear(*points))
+            return (not first3)
 
-        try:
-            from .ellipse import Circle
-            c = Circle(points[0], points[1], points[2])
-            for point in points[3:]:
-                if point not in c:
-                    return False
-            return True
-        except GeometryError:
-            # Circle could not be created, because of collinearity of the
-            # three points passed in, hence they are not concyclic.
+        if first3:
             return False
+        from .ellipse import Circle
+        c = Circle(*points[:3])
+        for point in points[3:]:
+            if point not in c:  # XXX does this raise error if it can't be determined?
+                return False
+        return True
 
     def rotate(self, angle, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
@@ -780,7 +938,7 @@ class Point2D(Point):
 
         rv = self
         if pt is not None:
-            pt = Point.pointify(pt)
+            pt = Point(pt, dim=2)
             rv -= pt
         x, y = rv.args
         rv = Point(c*x - s*y, s*x + c*y)
@@ -811,7 +969,7 @@ class Point2D(Point):
 
         """
         if pt:
-            pt = Point.pointify(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return Point(self.x*x, self.y*y)
 
@@ -905,25 +1063,10 @@ class Point3D(Point):
 
     """
     def __new__(cls, *args, **kwargs):
-        eval = kwargs.get('evaluate', global_evaluate[0])
-        if isinstance(args[0], (Point, Point3D)):
-            if not eval:
-                return args[0]
-            args = args[0].args
-        else:
-            if iterable(args[0]):
-                args = args[0]
-        coords = Tuple(*args)
-        if len(coords) not in (2, 3):
-            raise TypeError(
-                "`Point3D` must be initilized with 2 or 3 components")
-        if len(coords) == 2:
-            coords += (S.Zero,)
-        if eval:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
-        return GeometryEntity.__new__(cls, *coords)
+        if not kwargs.pop('_ok', False):
+            kwargs['dim'] = 3
+            args = Point(*args, **kwargs)
+        return GeometryEntity.__new__(cls, *args)
 
     def __contains__(self, item):
         return item == self
@@ -1060,55 +1203,6 @@ class Point3D(Point):
         """
         return Point.is_collinear(*points)
 
-    @staticmethod
-    def are_coplanar(*points):
-        """
-
-        This function tests whether passed points are coplanar or not.
-        It uses the fact that the triple scalar product of three vectors
-        vanishes if the vectors are coplanar. Which means that the volume
-        of the solid described by them will have to be zero for coplanarity.
-
-        Parameters
-        ==========
-
-        A set of points 3D points
-
-        Returns
-        =======
-
-        boolean
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p1 = Point3D(1, 2, 2)
-        >>> p2 = Point3D(2, 7, 2)
-        >>> p3 = Point3D(0, 0, 2)
-        >>> p4 = Point3D(1, 1, 2)
-        >>> Point3D.are_coplanar(p1, p2, p3, p4)
-        True
-        >>> p5 = Point3D(0, 1, 3)
-        >>> Point3D.are_coplanar(p1, p2, p3, p5)
-        False
-
-        """
-        from sympy.geometry.plane import Plane
-        points = list(set(Point.pointify(p, dimension=3) for p in points))
-        if len(points) < 3:
-            raise ValueError('At least 3 points are needed to define a plane.')
-        a, b = points[:2]
-        for i, c in enumerate(points[2:]):
-            try:
-                p = Plane(a, b, c)
-                for j in (0, 1, i):
-                    points.pop(j)
-                return all(p.is_coplanar(i) for i in points)
-            except ValueError:
-                pass
-        raise ValueError('At least 3 non-collinear points needed to define plane.')
-
     def intersection(self, other):
         """The intersection between this point and another point.
 
@@ -1139,12 +1233,12 @@ class Point3D(Point):
         [Point3D(0, 0, 0)]
 
         """
-        other = Point.pointify(other, ensure_point=False)
+        if not isinstance(other, GeometryEntity):
+            other = Point(other, dim=3)
         if isinstance(other, Point3D):
             if self == other:
                 return [self]
             return []
-
         return other.intersection(self)
 
     def scale(self, x=1, y=1, z=1, pt=None):

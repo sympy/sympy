@@ -64,7 +64,7 @@ class Parabola(GeometrySet):
     def __new__(cls, focus=None, directrix=None, **kwargs):
 
         if focus:
-            focus = Point.pointify(focus, dimension=2)
+            focus = Point(focus, dim=2)
         else:
             focus = Point(0, 0)
 

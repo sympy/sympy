@@ -14,6 +14,7 @@ from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import uniq
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
@@ -48,10 +49,10 @@ class Plane(GeometryEntity):
 
     """
     def __new__(cls, p1, a=None, b=None, **kwargs):
-        p1 = Point3D.pointify(p1, dimension=3)
+        p1 = Point3D(p1, dim=3)
         if a and b:
-            p2 = Point.pointify(a, dimension=3)
-            p3 = Point.pointify(b, dimension=3)
+            p2 = Point(a, dim=3)
+            p3 = Point(b, dim=3)
             if Point3D.are_collinear(p1, p2, p3):
                 raise ValueError('Enter three non-collinear points')
             a = p1.direction_ratio(p2)
@@ -161,11 +162,7 @@ class Plane(GeometryEntity):
         >>> XY.projection((1, 1, 2))
         Point3D(1, 1, 0)
         """
-        try:
-            rv = Point.pointify(pt, dimension=3)
-        except ValueError:
-            rv = Point3D(pt)
-
+        rv = Point(pt, dim=3)
         if rv in self:
             return rv
         return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
@@ -443,7 +440,7 @@ class Plane(GeometryEntity):
         False
 
         """
-        planes = set(planes)
+        planes = list(uniq(planes))
         for i in planes:
             if not isinstance(i, Plane):
                 raise ValueError('All objects should be Planes but got %s' % i.func)
@@ -560,7 +557,7 @@ class Plane(GeometryEntity):
                 dir = (0, 0, 1)
             pts.append(pts[0] + Point3D(*dir))
 
-        p1, p2 = [Point.pointify(i, dimension=3) for i in pts]
+        p1, p2 = [Point(i, dim=3) for i in pts]
         l = Line3D(p1, p2)
         n = Line3D(p1, direction_ratio=self.normal_vector)
         if l in n:  # XXX should an error be raised instead?
@@ -664,9 +661,11 @@ class Plane(GeometryEntity):
 
         """
         from sympy.geometry.line import LinearEntity, LinearEntity3D
-        if isinstance(o, (Point, Point3D)):
+        if not isinstance(o, GeometryEntity):
+            o = Point(o, dim=3)
+        if isinstance(o, Point):
             if o in self:
-                return [Point.pointify(o, dimension=3)]
+                return [o]
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
@@ -727,16 +726,16 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity, LinearEntity3D
         x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
-        o = Point.pointify(o, dimension=3, ensure_point=False)
-        if isinstance(o, Point3D):
-            d = k.xreplace(dict(zip((x, y, z), o.args)))
-            return d.equals(0)
-        elif isinstance(o, (LinearEntity, LinearEntity3D)):
+        if isinstance(o, (LinearEntity, LinearEntity3D)):
             t = Dummy()
             d = Point3D(o.arbitrary_point(t))
             e = k.subs([(x, d.x), (y, d.y), (z, d.z)])
             return e.equals(0)
-        else:
+        try:
+            o = Point(o, dim=3, strict=True)
+            d = k.xreplace(dict(zip((x, y, z), o.args)))
+            return d.equals(0)
+        except TypeError:
             return False
 
     def is_coplanar(self, o):
