@@ -68,7 +68,7 @@ class LinearEntity(GeometrySet):
     """
 
     def __new__(cls, p1, p2=None, **kwargs):
-        p1, p2 = Point.normalize_dimensions(Point(p1), Point(p2))
+        p1, p2 = Point._normalize_dimension(p1, p2)
         if p1 == p2:
             # sometimes we return a single point if we are not given two unique
             # points. This is done in the specific subclass
@@ -736,7 +736,7 @@ class LinearEntity(GeometrySet):
         elif isinstance(other, LinearEntity):
             # break into cases based on whether
             # the lines are parallel, non-parallel intersecting, or skew
-            pts = Point.normalize_dimensions(self.p1, self.p2, other.p1, other.p2)
+            pts = Point._normalize_dimension(self.p1, self.p2, other.p1, other.p2)
             rank = Point.affine_rank(*pts)
 
             if rank == 1:
@@ -1179,7 +1179,7 @@ class Ray(LinearEntity):
     def __new__(cls, p1, p2=None, **kwargs):
         p1 = Point(p1)
         if p2 is not None:
-            p1, p2 = Point.normalize_dimensions(p1, Point(p2))
+            p1, p2 = Point._normalize_dimension(p1, Point(p2))
         dim = len(p1)
 
         if dim == 2:
@@ -1423,7 +1423,7 @@ class Segment(LinearEntity):
 
     """
     def __new__(cls, p1, p2, **kwargs):
-        p1, p2 = Point.normalize_dimensions(Point(p1), Point(p2))
+        p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
         dim = len(p1)
 
         if dim == 2:
@@ -1799,7 +1799,7 @@ class Line2D(LinearEntity2D, Line):
         if isinstance(p1, LinearEntity):
             if pt is not None:
                 raise ValueError('When p1 is a LinearEntity, pt should be None')
-            p1, pt = Point.normalize_dimensions(*p1.args, dim=2)
+            p1, pt = Point._normalize_dimension(*p1.args, dim=2)
         else:
             p1 = Point(p1, dim=2)
         if pt is not None and slope is None:

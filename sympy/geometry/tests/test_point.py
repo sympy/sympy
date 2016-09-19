@@ -7,6 +7,16 @@ from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises
 
+import traceback
+import warnings
+import sys
+
+# make warnings show tracebacks
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+    traceback.print_stack()
+    log = file if hasattr(file,'write') else sys.stderr
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+warnings.showwarning = warn_with_traceback
 
 
 def test_point():
@@ -49,9 +59,12 @@ def test_point():
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
     p1_3 = Point(x1 + 1, x1)
-    raises(ValueError, lambda: Point.is_collinear(p3))
-    raises(ValueError, lambda: Point.is_collinear(p3, Point(p3, dim=4)))
-    raises(ValueError, lambda: p3.is_collinear())
+    assert Point.is_collinear(p3)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert Point.is_collinear(p3, Point(p3, dim=4))
+        assert len(w) == 1
+    assert p3.is_collinear()
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
@@ -69,8 +82,8 @@ def test_point():
     p2_3 = Point(-x_pos, 0)
     p2_4 = Point(0, -x_pos)
     p2_5 = Point(x_pos, 5)
-    raises(ValueError, lambda: Point.is_concyclic(p2_1))
-    raises(ValueError, lambda: Point.is_concyclic(p2_1, p2_2))
+    assert Point.is_concyclic(p2_1)
+    assert Point.is_concyclic(p2_1, p2_2)
     assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_4)
     for pts in permutations((p2_1, p2_2, p2_3, p2_5)):
         assert Point.is_concyclic(*pts) is False
@@ -151,9 +164,7 @@ def test_point3D():
     p1_1 = Point3D(x1, x1, x1)
     p1_2 = Point3D(y2, y2, y2)
     p1_3 = Point3D(x1 + 1, x1, x1)
-    # like coplanar, points are collinear only if they define
-    # a unique line
-    raises(ValueError, lambda: Point3D.are_collinear(p3))
+    Point3D.are_collinear(p3)
     assert Point3D.are_collinear(p3, p4)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
@@ -186,7 +197,7 @@ def test_point3D():
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
     # Test __new__
-    assert Point3D(0.1, 0.2, evaluate=False).args[0].is_Float
+    assert Point3D(0.1, 0.2, evaluate=False, mutate_warn=False).args[0].is_Float
 
 
     # Test length property returns correctly
@@ -198,20 +209,21 @@ def test_point3D():
     raises(TypeError, lambda: Point3D.are_collinear(p, x))
 
     # Test are_coplanar
-    raises(ValueError, lambda: Point.are_coplanar())
-    raises(ValueError, lambda: Point.are_coplanar((1, 2), (1, 2, 0), (1, 3, 0)))
-    raises(ValueError, lambda: Point.are_coplanar((1, 2), (1, 2, 3)))
-    raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
-    raises(ValueError, lambda: Point3D.are_coplanar((1, 2), (1, 2, 3)))
+    assert Point.are_coplanar()
+    assert Point.are_coplanar((1, 2, 0), (1, 2, 0), (1, 3, 0))
+    assert Point.are_coplanar((1, 2, 0), (1, 2, 3))
+    with warnings.catch_warnings(record=True) as w:
+        raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
+    assert Point3D.are_coplanar((1, 2, 0), (1, 2, 3))
     assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
     planar2 = Point3D(1, -1, 1)
     planar3 = Point3D(-1, 1, 1)
     assert Point3D.are_coplanar(p, planar2, planar3) == True
     assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
-    raises(ValueError, lambda: Point.are_coplanar(p, planar2))
+    assert Point.are_coplanar(p, planar2)
     planar2 = Point3D(1, 1, 2)
     planar3 = Point3D(1, 1, 3)
-    assert Point3D.are_coplanar(p, planar2, planar3) == False  # line, not plane
+    assert Point3D.are_coplanar(p, planar2, planar3)  # line, not plane
     plane = Plane((1, 2, 1), (2, 1, 0), (3, 1, 2))
     assert Point.are_coplanar(*[plane.projection(((-1)**i, i)) for i in range(4)])
 
@@ -236,9 +248,13 @@ def test_point3D():
 
     # Test __sub__
     p_4d = Point(0, 0, 0, 1)
-    assert p - p_4d == Point(1, 1, 1, -1)
+    with warnings.catch_warnings(record=True) as w:
+        assert p - p_4d == Point(1, 1, 1, -1)
+        assert len(w) == 1
     p_4d3d = Point(0, 0, 1, 0)
-    assert p - p_4d3d == Point(1, 1, 0)
+    with warnings.catch_warnings(record=True) as w:
+        assert p - p_4d3d == Point(1, 1, 0, 0)
+        assert len(w) == 1
 
 
 def test_Point2D():
@@ -279,7 +295,7 @@ def test_concyclic_doctest_bug():
 
 def test_arguments():
     """Functions accepting `Point` objects in `geometry`
-    should also accept tuples, lists, and generators and
+    should also accept tuples and lists and
     automatically convert them to points."""
 
     singles2d = ((1,2), [1,2], Point(1,2))
@@ -290,8 +306,7 @@ def test_arguments():
     doubles3d = subsets(singles3d, 2)
     p3d = Point3D(1,2,3)
     singles4d = ((1,2,3,4), [1,2,3,4], Point(1,2,3,4))
-    singles4d2 = ((1,3), [1,3], Point(1,3))
-    doubles4d = cartes(singles4d, singles4d2)
+    doubles4d = subsets(singles4d, 2)
     p4d = Point(1,2,3,4)
 
     # test 2D
@@ -339,18 +354,11 @@ def test_arguments():
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)
-    u4 = Point(u, dim=4)
+    u4 = Point(u, dim=4, mutate_warn=False)
     assert u4.args == (.1, .2, 0, 0)
     assert all(i.is_Float for i in u4.args[:2])
     # and even when *not* changing dimensions
     assert all(i.is_Float for i in Point(u).args)
-
-
-def test__size():
-    assert Point(1, 0)._size == 2
-    assert Point(1, 0, 0)._size == 2
-    assert Point(0, 0, 1)._size == 3
-    assert Point(0, 0, 1, 0)._size == 3
 
 
 def test_unit():
@@ -359,24 +367,3 @@ def test_unit():
 
 def test_dot():
     raises(TypeError, lambda: Point(1, 2).dot(Line((0, 0), (1, 1))))
-
-
-def test_dimension_normalization():
-    a, b = Point(2, 0), Point(1, 0, 2)
-    a3 = Point(2, 0, 0)
-    b4 = Point(b, dim=4)
-    assert b4 == Point(1, 0, 2, 0)
-    assert Point.normalize_dimensions(a, b) == \
-        [a3, b]
-    assert Point.normalize_dimensions(a, b4) == \
-        [a3, b]
-    # issue 11617
-    assert Point(2, 0).distance(Point(1, 0, 2)) == sqrt(5)
-
-    assert Point(1, 2).dot((1, 2, 3)) == 5
-    assert Point(1, 2).midpoint((3, 4, 4)) == Point(2, 3, 2)
-    assert Point(1, 2).taxicab_distance((3, 4, 4)) == 8
-    assert Point(1, 2).distance((3, 4, 4)) == sqrt(2**2 + 2**2 + 4**2)
-    assert Point.project((1, 2), (0, 4, 0)) == Point(0, 2)
-    assert Point(1, 1).intersection((1,1,0)) == [Point(1, 1)]
-    assert Point(1, 1, 0).intersection((1,1)) == [Point(1, 1, 0)]

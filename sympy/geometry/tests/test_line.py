@@ -8,9 +8,18 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray, Segment, Tr
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
+import traceback
+import warnings
+import sys
 
+# make warnings show tracebacks
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+    traceback.print_stack()
+    log = file if hasattr(file,'write') else sys.stderr
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+warnings.showwarning = warn_with_traceback
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
@@ -294,7 +303,6 @@ def test_line_geom():
     assert intersection(l1, s1) == [s1]
     assert intersection(r1, l1) == [r1]
     assert intersection(s1, l1) == [s1]
-    assert s1.intersection(Line(Point(s1.p2, dim=3), Point(1, 2, 3))) == [s1.p2]
 
     entity1 = Segment(Point(-10, 10), Point(10, 10))
     entity2 = Segment(Point(-5, -5), Point(-5, 5))
@@ -412,17 +420,17 @@ def test_line3d():
     assert Segment3D((1, 0), (2, 0)).intersection(
         Segment3D((0, 0), (3, 0))) == [Segment3D((1, 0), (2, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((3, 0), (4, 0))) == [Point((3, 0))]
+        Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((2, 0), (5, 0))) == [Segment2D((3, 0), (2, 0))]
+        Segment3D((2, 0), (5, 0))) == [Segment3D((3, 0), (2, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (1, 0))) == [Segment2D((0, 0), (1, 0))]
+        Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (0, 0))) == [Point2D(0, 0)]
+        Segment3D((-2, 0), (0, 0))) == [Point3D(0, 0)]
     # issue 7757
     p = Ray3D(Point3D(1, 0, 0), Point3D(-1, 0, 0))
     q = Ray3D(Point3D(0, 1, 0), Point3D(0, -1, 0))
-    assert intersection(p, q) == [Point2D(0, 0)]
+    assert intersection(p, q) == [Point3D(0, 0, 0)]
 
     # Concurrency
     assert Line3D.are_concurrent(l1) is False
@@ -540,9 +548,9 @@ def test_line3d():
     assert Line3D((0, 0), (t, t)).perpendicular_line((0, 1, 0)).equals( \
         Line3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0)))
     assert Line3D((0, 0), (t, t)).perpendicular_segment((0, 1, 0)).equals( \
-        Segment2D(Point2D(0, 1), Point2D(1/2, 1/2)))
+        Segment3D((0, 1), (1/2, 1/2)))
     assert Line3D((0, 0), (t, t)).intersection(Line3D((0, 1), (t, t))) == \
-        [Point2D(t, t)]
+        [Point3D(t, t)]
     assert Line3D((0, 0, 0), (x, y, z)).contains((2*x, 2*y, 2*z))
 
     # Test is_perpendicular
@@ -551,7 +559,7 @@ def test_line3d():
     assert Line3D.is_perpendicular(parallel_1, parallel_2) is False
 
     # Test projection
-    assert parallel_1.projection(Point3D(5, 5, 0)) == Point2D(5, 0)
+    assert parallel_1.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert parallel_1.projection(parallel_2).equals( parallel_1 )
     raises(GeometryError, lambda: parallel_1.projection(Plane(p1, p2, p6)))
 
@@ -561,7 +569,9 @@ def test_line3d():
 
     # Test contains
     pt2d = Point(1.0, 1.0)
-    assert perp_1.contains(pt2d) is False
+    with warnings.catch_warnings(record=True) as w:
+        assert perp_1.contains(pt2d) is False
+        assert len(w) == 1
 
     # Test equals
     assert perp_1.equals(pt2d) is False
@@ -586,7 +596,9 @@ def test_line3d():
     posz = Ray3D(p1, Point3D(0, 0, 1))
     assert posy.contains(p1) is True
     assert posz.contains(p1) is True
-    assert posz.contains(pt2d) is False
+    with warnings.catch_warnings(record=True) as w:
+        assert posz.contains(pt2d) is False
+        assert len(w) == 1
     ray1 = Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0))
     assert ray1.contains([]) is False
 
@@ -604,7 +616,7 @@ def test_line3d():
     seg2= Segment3D(Point3D(2, 2, 2), Point3D(3, 2, 2))
     assert seg1.contains(seg2) is False
 
-
+@slow
 def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
@@ -695,4 +707,6 @@ def test_arguments():
             getattr(l4d, func)(p)
 
 def test_dimension_normalization():
-    assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
+    with warnings.catch_warnings(record=True) as w:
+        assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
+        assert len(w) == 1
