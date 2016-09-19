@@ -274,6 +274,13 @@ def test_issue_9214():
 
     assert Point3D.are_collinear(p1, p2, p3) is False
 
+def test_issue_11617():
+    p1 = Point3D(1,0,2)
+    p2 = Point2D(2,0)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert p1.distance(p2) == sqrt(5)
+        assert len(w) == 1
 
 def test_transform():
     p = Point(1, 1)

@@ -338,6 +338,7 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_symbol = True
     is_commutative = True
 
     def doit(self, **kwargs):
@@ -347,6 +348,16 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixElement):
+            return S.Zero
+
+        if self.args[0] != v.args[0]:
+            return S.Zero
+
+        from sympy import KroneckerDelta
+        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
 
 class MatrixSymbol(MatrixExpr):
