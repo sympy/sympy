@@ -1,6 +1,6 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, Ei, ceiling, sqrt,
+from sympy.functions import (Piecewise, sin, cos, Abs, beta, exp, Ei, ceiling, sqrt,
                              gamma, sign, zeta)
 from sympy.sets import Range
 from sympy.logic import ITE
@@ -531,6 +531,6 @@ def test_C99CodePrinter():
 
 
 def test_CXX17CodePrinter():
-    assert C99CodePrinter().doprint(beta(x, y)) == 'std::expint(x)'
-    assert C99CodePrinter().doprint(Ei(x)) == 'std::beta(x, y)'
-    assert C99CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
+    assert CXX17CodePrinter().doprint(beta(x, y)) == 'std::beta(x, y)'
+    assert CXX17CodePrinter().doprint(Ei(x)) == 'std::expint(x)'
+    assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'

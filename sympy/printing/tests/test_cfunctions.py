@@ -1,5 +1,8 @@
-from sympy import Symbol, exp, log, pi, S
-from sympy.printing.cfunctions import expm1, log1p, exp2, log2
+from sympy import symbols, Symbol, exp, log, pi, S, gamma, Rational
+from sympy.printing.cfunctions import (
+    expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, lgamma
+)
+
 
 def test_expm1():
     # Eval
@@ -87,3 +90,35 @@ def test_log2():
 
     # Diff
     assert log2(42*x).diff() - 1/(log(2)*x) == 0
+
+
+def test_fma():
+    x, y, z = symbols('x y z')
+
+    # Expand
+    assert fma(x, y, z).expand(func=True) - x*y - z == 0
+
+
+def test_log10():
+    x = Symbol('x')
+
+    # Expand
+    assert log10(x).expand(func=True) - log(x)/log(10) == 0
+
+def test_Cbrt():
+    x = Symbol('x')
+
+    # Expand
+    assert Cbrt(x).expand(func=True) - x**Rational(1, 3) == 0
+
+def test_hypot():
+    x, y = symbols('x y')
+
+    # Expand
+    assert hypot(x, y).expand(func=True) - (x**2 + y**2)**Rational(1, 2) == 0
+
+def test_lgamma():
+    x = Symbol('x')
+
+    # Expand
+    assert lgamma(x).expand(func=True) - log(gamma(x)) == 0

@@ -16,22 +16,24 @@ from sympy.core.function import Function, ArgumentIndexError
 
 _dummy = Dummy()
 
+def _expm1(x):
+    return exp(x) - S.One
+
+
 class expm1(Function):
     nargs = 1
-
-    _imp_ = Lambda(_dummy, exp(_dummy) - S.One)
 
     def fdiff(self, argindex=1):
         """
         Returns the first derivative of this function.
         """
         if argindex == 1:
-            return exp(self.args[0])
+            return exp(*self.args)
         else:
             raise ArgumentIndexError(self, argindex)
 
     def _eval_expand_func(self, **hints):
-        return exp(self.args[0]) - S.One
+        return _expm1(*self.args)
 
     def _eval_rewrite_as_exp(self, arg):
         return exp(arg) - S.One
@@ -51,10 +53,12 @@ class expm1(Function):
         return self.args[0].is_finite
 
 
+def _log1p(x):
+    return log(x + S.One)
+
+
 class log1p(Function):
     nargs = 1
-
-    _imp_ = Lambda(_dummy, log(_dummy + S.One))
 
 
     def fdiff(self, argindex=1):
@@ -68,10 +72,10 @@ class log1p(Function):
 
 
     def _eval_expand_func(self, **hints):
-        return log(self.args[0] + S.One)
+        return _log1p(*self.args)
 
     def _eval_rewrite_as_log(self, arg):
-        return log(arg + S.One)
+        return _log1p(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
@@ -99,12 +103,13 @@ class log1p(Function):
     def _eval_is_nonnegative(self):
         return self.args[0].is_nonnegative
 
-_Two = S.One*2
+_Two = S(2)
 
+def _exp2(x):
+    return Pow(_Two, x)
 
 class exp2(Function):
     nargs = 1
-    _imp_ = Lambda(_dummy, Pow(_Two, _dummy))
 
 
     def fdiff(self, argindex=1):
@@ -116,20 +121,26 @@ class exp2(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_rewrite_as_Pow(self, arg):
+        return _exp2(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
     def _eval_expand_func(self, **hints):
-        return Pow(_Two, self.args[0])
+        return _exp2(*self.args)
 
     @classmethod
     def eval(cls, arg):
         if arg.is_number:
-            return Pow(_Two, arg)
+            return _exp2(arg)
+
+
+def _log2(x):
+    return log(x)/log(_Two)
 
 
 class log2(Function):
     nargs = 1
-    _imp_ = Lambda(_dummy, log(_dummy)/log(_Two))
-
 
     def fdiff(self, argindex=1):
         """
@@ -151,32 +162,113 @@ class log2(Function):
             return arg.exp
 
     def _eval_expand_func(self, **hints):
-        return log(self.args[0])/log(_Two)
+        return _log2(*self.args)
+
+    def _eval_rewrite_as_log(self, arg):
+        return _log2(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
 
 _dummy0, _dummy1, _dummy2 = Dummy(), Dummy(), Dummy()
 
 
+def _fma(x, y, z):
+    return x*y + z
+
+
 class fma(Function):
     nargs = 3
-    _imp_ = Lambda((_dummy0, _dummy1, _dummy2), _dummy0*_dummy1 + _dummy2)
+
+    def _eval_expand_func(self, **hints):
+        return _fma(*self.args)
+
+    def _eval_rewrite_as_tractable(self, arg):
+        return _fma(arg)
+
+
+_Ten = S(10)
+
+
+def _log10(x):
+    return log(x)/log(_Ten)
 
 
 class log10(Function):
     nargs = 1
-    _imp_ = Lambda(_dummy, log(_dummy)/log(10))
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex == 1:
+            return S.One/(log(_Ten)*self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_number:
+            result = log.eval(arg, base=_Ten)
+            if result.is_Atom:
+                return result
+        elif arg.is_Pow and arg.base == _Ten:
+            return arg.exp
+
+    def _eval_expand_func(self, **hints):
+        return _log10(*self.args)
+
+    def _eval_rewrite_as_log(self, arg):
+        return _log10(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
+
+
+def _Cbrt(x):
+    return Pow(x, Rational(1, 3))
 
 
 class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
     nargs = 1
-    _imp_ = Lambda(_dummy, Pow(_dummy, Rational(1, 3)))
 
+    def _eval_expand_func(self, **hints):
+        return _Cbrt(*self.args)
+
+    def _eval_rewrite_as_Pow(self, arg):
+        return _Cbrt(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
+
+def _hypot(x, y):
+    return Pow(Pow(x, 2) + Pow(y, 2), Rational(1, 2))
 
 class hypot(Function):
     nargs = 2
-    _imp_ = Lambda((_dummy0, _dummy1), Pow(Pow(_dummy0, _Two) + Pow(_dummy1, _Two), Rational(1, _Two)))
+
+    def _eval_expand_func(self, **hints):
+        return _hypot(*self.args)
+
+    def _eval_rewrite_as_Pow(self, arg):
+        return _hypot(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
+
+def _lgamma(x):
+    return log(gamma(x))
 
 
 class lgamma(Function):
     nargs = 1
-    _imp_ = Lambda(_dummy, log(gamma(_dummy)))
+
+    def _eval_expand_func(self, **hints):
+        return _lgamma(*self.args)
+
+    def _eval_rewrite_as_gamma(self, arg):
+        return _lgamma(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_gamma
