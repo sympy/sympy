@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-"""Distutils based setup script for SymPy.
-
-This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
+"""Distutils based setup script for Symhis uses Distutils (http://python.org/sigs/distutils-sig/) the standard
 python mechanism for installing packages.  Optionally, you can use
 Setuptools (http://pythonhosted.org/setuptools/setuptools.html) to automatically
 handle dependencies.  For the easiest installation
