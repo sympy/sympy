@@ -335,6 +335,22 @@ class C99CodePrinter(CCodePrinter):
     # tgamma was already covered by 'known_functions' dict
 
 
+class CXX11CodePrinter(C99CodePrinter):
+    pass
+
+
+class CXX17CodePrinter(CXX11CodePrinter):
+
+    def _print_beta(self, expr):
+        return 'std::beta({0}, {1})'.format(*map(self._print, expr.args))
+
+    def _print_Ei(self, expr):
+        return 'std::expint({0})'.format(self._print(expr.args[0]))
+
+    def _print_zeta(self, expr):
+        return 'std::riemann_zeta({0})'.format(self._print(expr.args[0]))
+
+
 def ccode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c code
 

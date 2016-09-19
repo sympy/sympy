@@ -1,12 +1,12 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, Ei, ceiling, sqrt,
+                             gamma, sign, zeta)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter, C99CodePrinter
+from sympy.printing.ccode import CCodePrinter, C99CodePrinter, CXX17CodePrinter
 from sympy.printing.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, lgamma
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -523,8 +523,14 @@ def test_C99CodePrinter():
     assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
     assert C99CodePrinter().doprint(exp2(x)) == 'exp2(x)'
     assert C99CodePrinter().doprint(log2(x)) == 'log2(x)'
-    assert C99CodePrinter().doprint(fma(x)) == 'fma(x)'
+    assert C99CodePrinter().doprint(fma(x, y, -z)) == 'fma(x, y, -z)'
     assert C99CodePrinter().doprint(log10(x)) == 'log10(x)'
     assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
-    assert C99CodePrinter().doprint(hypot(x)) == 'hypot(x)'
+    assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
     assert C99CodePrinter().doprint(lgamma(x)) == 'lgamma(x)'
+
+
+def test_CXX17CodePrinter():
+    assert C99CodePrinter().doprint(beta(x, y)) == 'std::expint(x)'
+    assert C99CodePrinter().doprint(Ei(x)) == 'std::beta(x, y)'
+    assert C99CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
