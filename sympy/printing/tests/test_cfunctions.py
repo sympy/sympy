@@ -20,6 +20,9 @@ def test_expm1():
     assert expm1(x).is_real
     assert expm1(x).is_finite
 
+    # Diff
+    assert expm1(42*x).diff(x) - 42*exp(42*x) == 0
+
 
 def test_log1p():
     # Eval
@@ -53,6 +56,9 @@ def test_log1p():
     assert not log1p(x).is_nonnegative
     assert log1p(Symbol('o', nonnegative=True)).is_nonnegative
 
+    # Diff
+    assert log1p(42*x).diff(x) - 42/(42*x + 1) == 0
+
 
 def test_exp2():
     # Eval
@@ -62,6 +68,9 @@ def test_exp2():
 
     # Expand
     assert exp2(x).expand(func=True) - 2**x == 0
+
+    # Diff
+    assert exp2(42*x).diff(x) - 42*exp2(42*x)*log(2) == 0
 
 
 def test_log2():
@@ -75,3 +84,6 @@ def test_log2():
 
     # Expand
     assert log2(x).expand(func=True) - log(x)/log(2) == 0
+
+    # Diff
+    assert log2(42*x).diff() - 1/(log(2)*x) == 0

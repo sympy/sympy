@@ -293,6 +293,7 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+
 class C99CodePrinter(CCodePrinter):
 
     def _print_Infinity(self, expr):
@@ -310,7 +311,7 @@ class C99CodePrinter(CCodePrinter):
     def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
         return 'log10({0})'.format(self._print(expr.args[0]))
 
-    def _print_cbrt(self, expr):
+    def _print_Cbrt(self, expr):
         return 'cbrt({0})'.format(self._print(expr.args[0]))
 
     def _print_hypot(self, expr):
@@ -331,9 +332,7 @@ class C99CodePrinter(CCodePrinter):
     def _print_lgamma(self, expr):
         return 'lgamma({0})'.format(self._print(expr.args[0]))
 
-    def _print_tgamma(self, expr):
-        return 'tgamma({0})'.format(self._print(expr.args[0]))
-
+    # tgamma was already covered by 'known_functions' dict
 
 
 def ccode(expr, assign_to=None, **settings):

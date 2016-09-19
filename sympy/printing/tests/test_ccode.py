@@ -7,6 +7,7 @@ from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter, C99CodePrinter
+from sympy.printing.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, lgamma
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
@@ -519,3 +520,11 @@ def test_ccode_For():
 
 def test_C99CodePrinter():
     assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
+    assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
+    assert C99CodePrinter().doprint(exp2(x)) == 'exp2(x)'
+    assert C99CodePrinter().doprint(log2(x)) == 'log2(x)'
+    assert C99CodePrinter().doprint(fma(x)) == 'fma(x)'
+    assert C99CodePrinter().doprint(log10(x)) == 'log10(x)'
+    assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
+    assert C99CodePrinter().doprint(hypot(x)) == 'hypot(x)'
+    assert C99CodePrinter().doprint(lgamma(x)) == 'lgamma(x)'

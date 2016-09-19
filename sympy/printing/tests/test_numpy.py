@@ -1,5 +1,6 @@
 from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod
 from sympy.abc import x, i, j, a, b, c, d
+from sympy.printing.cfunctions import log1p, expm1
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.utilities.pytest import skip
@@ -109,3 +110,19 @@ def test_mod():
     a_ = np.array([2, 3, 4, 5])
     b_ = np.array([2, 3, 4, 5])
     assert np.array_equal(f(a_, b_), [0, 0, 0, 0])
+
+
+def test_expm1():
+    if not np:
+        skip("NumPy not installed")
+
+    f = lambdify((x,), expm1(x))
+    assert abs(f(1e-10) - 1e-10 - 5e-21) < 1e-22
+
+
+def test_log1p():
+    if not np:
+        skip("NumPy not installed")
+
+    f = lambdify((x,), log1p(x))
+    assert abs(f(1e-99) - 1e-99) < 1e-100
