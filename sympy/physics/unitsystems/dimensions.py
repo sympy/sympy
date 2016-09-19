@@ -46,7 +46,7 @@ class Dimension(Expr):
     subtraction is defined only when the two objects are the same dimension.
 
         >>> velocity = length.div(time)
-        >>> velocity
+        >>> velocity  #doctest: +SKIP
         {'length': 1, 'time': -1}
         >>> length.add(length)
         {'length': 1}
@@ -84,7 +84,7 @@ class Dimension(Expr):
             {'length': 1}
             >>> Dimension({"length": 1})
             {'length': 1}
-            >>> Dimension([("length", 1), ("time", -1)])
+            >>> Dimension([("length", 1), ("time", -1)])  #doctest: +SKIP
             {'length': 1, 'time': -1}
 
         """
