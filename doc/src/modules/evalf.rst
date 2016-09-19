@@ -58,7 +58,7 @@ number (for example if the expression contains symbols) will raise an exception.
 There is essentially no upper precision limit. The following command, for
 example, computes the first 100,000 digits of π/e:
 
-    >>> N(pi/E, 100000)
+    >>> N(pi/E, 100000) #doctest: +SKIP
     ...
 
 
@@ -343,7 +343,7 @@ digits in a fraction of a second with a simple command:
     >>> n = Symbol('n', integer=True)
     >>> R = 9801/sqrt(8)/Sum(f(4*n)*(1103+26390*n)/f(n)**4/396**(4*n),
     ...                         (n, 0, oo))
-    >>> N(R, 10000)
+    >>> N(R, 10000) #doctest: +SKIP
     3.141592653589793238462643383279502884197169399375105820974944592307816406286208
     99862803482534211706798214808651328230664709384460955058223172535940812848111745
     02841027019385211055596446229489549303819644288109756659334461284756482337867831
