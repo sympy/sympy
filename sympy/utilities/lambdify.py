@@ -315,7 +315,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     5
 
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
-    in other namespaces, unless the ``use_imps`` input parameter is False.
+    in other namespaces, unless the ``use_imps`` input parameter is ``False``
+    or 0 (the latter gives ``_imp_`` implementations lowest priority).
 
     """
     from sympy.core.symbol import Symbol
@@ -349,6 +350,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         if _module_present('numexpr', modules) and len(modules) > 1:
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
+    if use_imps == 0:
+        namespaces.append(_imp_namespace(expr))
     # fill namespace with first having highest priority
     namespace = {}
     for m in namespaces[::-1]:
