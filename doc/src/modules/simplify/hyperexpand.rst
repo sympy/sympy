@@ -13,9 +13,9 @@ Most of it is based on the papers [Roach1996]_ and [Roach1997]_.
 Recall that the hypergeometric function is (initially) defined as
 
 .. math ::
-    {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+    {}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
                      \middle| z \right)
-        = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
+        = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!}.
 
 It turns out that there are certain differential operators that can change the
@@ -56,12 +56,12 @@ don't go through zero. The `A(a_i)` and `B(b_j)` are called shift
 operators.
 
 It is also easy to show that `\frac{\mathrm{d}}{dz} {}_p F_q\left({a_p
-\atop b_q} \middle| z \right) = \frac{a_1 \dots a_p}{b_1 \dots b_q} {}_p
+\atop b_q} \middle| z \right) = \frac{a_1 \cdots a_p}{b_1 \cdots b_q} {}_p
 F_q\left({a_p + 1 \atop b_q + 1} \middle| z \right)`, where `a_p + 1` is
-the vector `a_1 + 1, a_2 + 1, \dots` and similarly for `b_q + 1`.
+the vector `a_1 + 1, a_2 + 1, \ldots` and similarly for `b_q + 1`.
 Combining this with the shift operators,  we arrive at one form of the
 Hypergeometric differential equation: `\left[ \frac{\mathrm{d}}{dz}
-\prod_{j=1}^q B(b_j) - \frac{a_1 \dots a_p}{(b_1-1) \dots (b_q-1)}
+\prod_{j=1}^q B(b_j) - \frac{a_1 \cdots a_p}{(b_1-1) \cdots (b_q-1)}
 \prod_{i=1}^p A(a_i) \right] {}_p F_q\left({a_p \atop b_q} \middle| z \right) =
 0`. This holds if all shift operators are defined, i.e. if no `a_i = 0`
 and no `b_j = 1`. Clearing denominators and multiplying through by z we
@@ -129,11 +129,11 @@ in `n`. It is also easy to see that
 we find:
 
   If `a_I - b_J \in \mathbb{Z}_{>0}`, then there exists a polynomial
-  `p(n) = p_0 + p_1 n + \dots` (of degree `a_I - b_J`) such
+  `p(n) = p_0 + p_1 n + \cdots` (of degree `a_I - b_J`) such
   that `\frac{(a_I)_n}{(b_J)_n} = p(n)` and `{}_p F_q\left({a_p
   \atop b_q} \middle| z \right) = \left(p_0 + p_1
   z\frac{\mathrm{d}}{\mathrm{d}z} + p_2
-  \left(z\frac{\mathrm{d}}{\mathrm{d}z}\right)^2 + \dots \right) {}_{p-1}
+  \left(z\frac{\mathrm{d}}{\mathrm{d}z}\right)^2 + \cdots \right) {}_{p-1}
   F_{q-1}\left({a_p^* \atop b_q^*} \middle| z \right)`.
 
 Thus any set of parameters `a_p, b_q` is reachable from a set of
@@ -260,7 +260,7 @@ Recall the general setup. We define
       \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,
 
 where `L` is a contour starting and ending at `+\infty`, enclosing all of the
-poles of `\Gamma(b_j - s)` for `j = 1, \dots, n` once in the negative
+poles of `\Gamma(b_j - s)` for `j = 1, \ldots, n` once in the negative
 direction, and no other poles. Also the integral is assumed absolutely
 convergent.
 
@@ -272,13 +272,13 @@ We now assume that whenever `b_j \equiv a_i \pmod{1}` for `i \le m`, `j > n`
 then `b_j < a_i`. This means that no quotient of the relevant gamma functions
 is a polynomial, and can always be achieved by "reduction of order". Fix a
 complex number `c` such that `\{b_i | b_i \equiv c \pmod{1}, i \le  m\}` is
-not empty. Enumerate this set as `b, b+k_1, \dots, b+k_u`, with `k_i`
+not empty. Enumerate this set as `b, b+k_1, \ldots, b+k_u`, with `k_i`
 non-negative integers. Enumerate similarly
-`\{a_j | a_j \equiv c \pmod{1}, j > n\}` as `b + l_1, \dots, b + l_v`.
+`\{a_j | a_j \equiv c \pmod{1}, j > n\}` as `b + l_1, \ldots, b + l_v`.
 Then `l_i > k_j` for all `i, j`. For finite confluence, we need to assume
 `v \ge u` for all such `c`.
 
-Let `c_1, \dots, c_w` be distinct `\pmod{1}` and exhaust the congruence classes
+Let `c_1, \ldots, c_w` be distinct `\pmod{1}` and exhaust the congruence classes
 of the `b_i`. I claim
 
 .. math :: G(z) = -\sum_{j=1}^w (F_j(z) + R_j(z)),
@@ -289,10 +289,10 @@ a sequence of poles, at mostly finitely many of them multiple poles. This is whe
 the `j`-th term comes from.
 
 Hence fix again `c`, enumerate the relevant `b_i` as
-`b, b + k_1, \dots, b + k_u`. We will look at the `a_j` corresponding to
-`a + l_1, \dots, a + l_u`. The other `a_i` are not treated specially. The
+`b, b + k_1, \ldots, b + k_u`. We will look at the `a_j` corresponding to
+`a + l_1, \ldots, a + l_u`. The other `a_i` are not treated specially. The
 corresponding gamma functions have poles at (potentially) `s = b + r` for
-`r = 0, 1, \dots`. For `r \ge l_u`, pole of the integrand is simple. We thus set
+`r = 0, 1, \ldots`. For `r \ge l_u`, pole of the integrand is simple. We thus set
 
 .. math :: R(z) = \sum_{r=0}^{l_u - 1} res_{s = r + b}.
 
