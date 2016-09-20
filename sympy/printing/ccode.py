@@ -83,6 +83,42 @@ reserved_words = ['auto',
                   'volatile']
 
 
+def get_math_macros():
+    """ Returns a dictionary with math-related macros from math.h/cmath
+
+    Note that these macros are not strictly required by the C/C++-standard.
+    For MSVC they are enabled by defining "_USE_MATH_DEFINES" (preferably
+    via a compilation flag).
+
+    Returns
+    -------
+    Dictionary mapping sympy expressions to strings (macro names)
+
+    """
+    from sympy.printing.cfunctions import log2, Sqrt
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.miscellaneous import sqrt
+
+    return {
+        S.Exp1: 'M_E',
+        log2(S.Exp1): 'M_LOG2E',
+        log(S.Exp1)/log(2): 'M_LOG2E',
+        log(2): 'M_LN2',
+        log(10): 'M_LN10',
+        S.Pi: 'M_PI',
+        S.Pi/2: 'M_PI_2',
+        S.Pi/4: 'M_PI_4',
+        1/S.Pi: 'M_1_PI',
+        2/S.Pi: 'M_2_PI',
+        2/sqrt(S.Pi): 'M_2_SQRTPI',
+        2/Sqrt(S.Pi): 'M_2_SQRTPI',
+        sqrt(2): 'M_SQRT2',
+        Sqrt(2): 'M_SQRT2',
+        1/sqrt(2): 'M_SQRT1_2',
+        1/Sqrt(2): 'M_SQRT1_2'
+    }
+
+
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
@@ -91,7 +127,7 @@ class CCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 17,
+        'precision': 15,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -148,6 +184,8 @@ class CCodePrinter(CodePrinter):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
+        elif expr.exp == 1/3 and self.language == 'C99':
+            return 'cbrt(%s)' % self._print(expr.base)
         else:
             return 'pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
@@ -295,6 +333,7 @@ class CCodePrinter(CodePrinter):
 
 
 class C99CodePrinter(CCodePrinter):
+    language = 'C99'
 
     def _print_Infinity(self, expr):
         return 'INFINITY'
@@ -310,6 +349,9 @@ class C99CodePrinter(CCodePrinter):
 
     def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
         return 'log10({0})'.format(self._print(expr.args[0]))
+
+    def _print_Sqrt(self, expr):
+        return 'sqrt({0})'.format(self._print(expr.args[0]))
 
     def _print_Cbrt(self, expr):
         return 'cbrt({0})'.format(self._print(expr.args[0]))
@@ -349,7 +391,7 @@ def ccode(expr, assign_to=None, **settings):
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
     precision : integer, optional
-        The precision for numbers such as pi [default=17].
+        The precision for numbers such as pi [default=15].
     user_functions : dict, optional
         A dictionary where the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values

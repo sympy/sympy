@@ -7,10 +7,12 @@ as a SymPy function for symbolic manipulation.
 """
 
 import math
-from sympy.core import Rational, S
+from sympy.core.singleton import S
+from sympy.core.numbers import Rational
 from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
-from sympy.functions import exp, log, sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import exp, log
 
 
 def _expm1(x):
@@ -48,6 +50,7 @@ class expm1(Function):
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
+
 
 
 def _log1p(x):
@@ -231,6 +234,32 @@ class log10(Function):
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
 
+def _Sqrt(x):
+    return Pow(x, S.Half)
+
+
+class Sqrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex == 1:
+            return Pow(self.args[0], -S.Half)/_Two
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def _eval_expand_func(self, **hints):
+        return _Sqrt(*self.args)
+
+    def _eval_rewrite_as_Pow(self, arg):
+        return _Sqrt(arg)
+
+    _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
 def _Cbrt(x):
     return Pow(x, Rational(1, 3))
 
@@ -281,3 +310,11 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
+class floor(Function):
+    nargs = 1
+
+
+class ceil(Function):
+    nargs = 1

@@ -40,12 +40,13 @@ reserved['C++17'] = []
 _math_functions = {
     'C++98': {
         'Mod': 'std::fmod',
+        'ceiling': 'std::ceil',
     }
 }
 
 # from http://en.cppreference.com/w/cpp/header/cmath
 for k in ('Abs', 'Pow', 'exp', 'log', 'log10', 'sqrt', 'sin', 'cos', 'tan',
-          'asin', 'acos', 'atan', 'atan2', 'sinh', 'cosh', 'tanh'):
+          'asin', 'acos', 'atan', 'atan2', 'sinh', 'cosh', 'tanh', 'floor'):
     _math_functions['C++98'][k] = 'std::' + k.lower()
 
 _math_functions['C++11'] = {

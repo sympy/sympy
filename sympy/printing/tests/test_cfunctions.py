@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, exp, log, pi, Rational, S
 from sympy.printing.cfunctions import (
-    expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot
+    expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot
 )
 
 
@@ -134,6 +134,17 @@ def test_Cbrt():
     # Diff
     assert Cbrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 3) - 1)/3 == 0
     assert Cbrt(42*x).diff(x) - Cbrt(42*x).expand(func=True).diff(x) == 0
+
+
+def test_Sqrt():
+    x = Symbol('x')
+
+    # Expand
+    assert Sqrt(x).expand(func=True) - x**Rational(1, 2) == 0
+
+    # Diff
+    assert Sqrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 2) - 1)/2 == 0
+    assert Sqrt(42*x).diff(x) - Sqrt(42*x).expand(func=True).diff(x) == 0
 
 
 def test_hypot():
