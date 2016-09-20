@@ -116,7 +116,7 @@ def test_expm1():
     if not np:
         skip("NumPy not installed")
 
-    f = lambdify((x,), expm1(x), 'numpy', use_imps=0)
+    f = lambdify((x,), expm1(x), 'numpy')
     assert abs(f(1e-10) - 1e-10 - 5e-21) < 1e-22
 
 
@@ -124,5 +124,5 @@ def test_log1p():
     if not np:
         skip("NumPy not installed")
 
-    f = lambdify((x,), log1p(x), 'numpy', use_imps=False)
+    f = lambdify((x,), log1p(x), 'numpy')
     assert abs(f(1e-99) - 1e-99) < 1e-100
