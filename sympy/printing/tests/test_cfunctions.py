@@ -1,6 +1,6 @@
-from sympy import symbols, Symbol, exp, log, pi, S, gamma, Rational
+from sympy import symbols, Symbol, exp, log, pi, Rational, S
 from sympy.printing.cfunctions import (
-    expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, lgamma
+    expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot
 )
 
 
@@ -25,6 +25,7 @@ def test_expm1():
 
     # Diff
     assert expm1(42*x).diff(x) - 42*exp(42*x) == 0
+    assert expm1(42*x).diff(x) - expm1(42*x).expand(func=True).diff(x) == 0
 
 
 def test_log1p():
@@ -61,6 +62,7 @@ def test_log1p():
 
     # Diff
     assert log1p(42*x).diff(x) - 42/(42*x + 1) == 0
+    assert log1p(42*x).diff(x) - log1p(42*x).expand(func=True).diff(x) == 0
 
 
 def test_exp2():
@@ -74,6 +76,7 @@ def test_exp2():
 
     # Diff
     assert exp2(42*x).diff(x) - 42*exp2(42*x)*log(2) == 0
+    assert exp2(42*x).diff(x) - exp2(42*x).diff(x) == 0
 
 
 def test_log2():
@@ -90,6 +93,7 @@ def test_log2():
 
     # Diff
     assert log2(42*x).diff() - 1/(log(2)*x) == 0
+    assert log2(42*x).diff() - log2(42*x).expand(func=True).diff(x) == 0
 
 
 def test_fma():
@@ -98,6 +102,17 @@ def test_fma():
     # Expand
     assert fma(x, y, z).expand(func=True) - x*y - z == 0
 
+    expr = fma(17*x, 42*y, 101*z)
+
+    # Diff
+    assert expr.diff(x) - expr.expand(func=True).diff(x) == 0
+    assert expr.diff(y) - expr.expand(func=True).diff(y) == 0
+    assert expr.diff(z) - expr.expand(func=True).diff(z) == 0
+
+    assert expr.diff(x) - 17*42*y == 0
+    assert expr.diff(y) - 17*42*x == 0
+    assert expr.diff(z) - 101 == 0
+
 
 def test_log10():
     x = Symbol('x')
@@ -105,11 +120,21 @@ def test_log10():
     # Expand
     assert log10(x).expand(func=True) - log(x)/log(10) == 0
 
+    # Diff
+    assert log10(42*x).diff(x) - 1/(log(10)*x) == 0
+    assert log10(42*x).diff(x) - log10(42*x).expand(func=True).diff(x) == 0
+
+
 def test_Cbrt():
     x = Symbol('x')
 
     # Expand
     assert Cbrt(x).expand(func=True) - x**Rational(1, 3) == 0
+
+    # Diff
+    assert Cbrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 3) - 1)/3 == 0
+    assert Cbrt(42*x).diff(x) - Cbrt(42*x).expand(func=True).diff(x) == 0
+
 
 def test_hypot():
     x, y = symbols('x y')
@@ -117,8 +142,10 @@ def test_hypot():
     # Expand
     assert hypot(x, y).expand(func=True) - (x**2 + y**2)**Rational(1, 2) == 0
 
-def test_lgamma():
-    x = Symbol('x')
+    # Diff
+    assert hypot(17*x, 42*y).diff(x).expand(func=True) - hypot(17*x, 42*y).expand(func=True).diff(x) == 0
+    assert hypot(17*x, 42*y).diff(y).expand(func=True) - hypot(17*x, 42*y).expand(func=True).diff(y) == 0
 
-    # Expand
-    assert lgamma(x).expand(func=True) - log(gamma(x)) == 0
+    assert hypot(17*x, 42*y).diff(x).expand(func=True) - 2*17*17*x*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
+    assert hypot(17*x, 42*y).diff(y).expand(func=True) - 2*42*42*y*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
+

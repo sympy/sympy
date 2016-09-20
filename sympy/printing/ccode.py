@@ -91,7 +91,7 @@ class CCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 15,
+        'precision': 17,
         'user_functions': {},
         'human': True,
         'contract': True,
@@ -329,26 +329,10 @@ class C99CodePrinter(CCodePrinter):
     def _print_log2(self, expr):
         return 'log2({0})'.format(self._print(expr.args[0]))
 
-    def _print_lgamma(self, expr):
+    def _print_loggamma(self, expr):
         return 'lgamma({0})'.format(self._print(expr.args[0]))
 
     # tgamma was already covered by 'known_functions' dict
-
-
-class CXX11CodePrinter(C99CodePrinter):
-    pass
-
-
-class CXX17CodePrinter(CXX11CodePrinter):
-
-    def _print_beta(self, expr):
-        return 'std::beta({0}, {1})'.format(*map(self._print, expr.args))
-
-    def _print_Ei(self, expr):
-        return 'std::expint({0})'.format(self._print(expr.args[0]))
-
-    def _print_zeta(self, expr):
-        return 'std::riemann_zeta({0})'.format(self._print(expr.args[0]))
 
 
 def ccode(expr, assign_to=None, **settings):
@@ -365,7 +349,7 @@ def ccode(expr, assign_to=None, **settings):
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
     precision : integer, optional
-        The precision for numbers such as pi [default=15].
+        The precision for numbers such as pi [default=17].
     user_functions : dict, optional
         A dictionary where the keys are string representations of either
         ``FunctionClass`` or ``UndefinedFunction`` instances and the values

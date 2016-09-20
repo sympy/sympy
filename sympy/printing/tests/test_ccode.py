@@ -1,13 +1,13 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
-from sympy.functions import (Piecewise, sin, cos, Abs, beta, exp, Ei, ceiling, sqrt,
-                             gamma, sign, zeta)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                             gamma, loggamma, sign)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter, C99CodePrinter, CXX17CodePrinter
-from sympy.printing.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, lgamma
+from sympy.printing.ccode import CCodePrinter, C99CodePrinter
+from sympy.printing.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
@@ -527,10 +527,4 @@ def test_C99CodePrinter():
     assert C99CodePrinter().doprint(log10(x)) == 'log10(x)'
     assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
     assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
-    assert C99CodePrinter().doprint(lgamma(x)) == 'lgamma(x)'
-
-
-def test_CXX17CodePrinter():
-    assert CXX17CodePrinter().doprint(beta(x, y)) == 'std::beta(x, y)'
-    assert CXX17CodePrinter().doprint(Ei(x)) == 'std::expint(x)'
-    assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
+    assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'

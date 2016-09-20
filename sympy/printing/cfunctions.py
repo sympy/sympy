@@ -7,14 +7,11 @@ as a SymPy function for symbolic manipulation.
 """
 
 import math
-from sympy.core import S, Rational
-from sympy.core.function import Lambda
+from sympy.core import Rational, S
+from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
-from sympy.core.symbol import Dummy
-from sympy.functions import gamma, exp, log
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.functions import exp, log, sqrt
 
-_dummy = Dummy()
 
 def _expm1(x):
     return exp(x) - S.One
@@ -170,15 +167,24 @@ class log2(Function):
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
 
-_dummy0, _dummy1, _dummy2 = Dummy(), Dummy(), Dummy()
-
-
 def _fma(x, y, z):
     return x*y + z
 
 
 class fma(Function):
     nargs = 3
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex in (1, 2):
+            return self.args[2 - argindex]
+        elif argindex == 3:
+            return S.One
+        else:
+            raise ArgumentIndexError(self, argindex)
+
 
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
@@ -232,6 +238,16 @@ def _Cbrt(x):
 class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
     nargs = 1
 
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex == 1:
+            return Pow(self.args[0], Rational(-_Two/3))/3
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
     def _eval_expand_func(self, **hints):
         return _Cbrt(*self.args)
 
@@ -243,10 +259,20 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
 
 
 def _hypot(x, y):
-    return Pow(Pow(x, 2) + Pow(y, 2), Rational(1, 2))
+    return sqrt(Pow(x, 2) + Pow(y, 2))
 
 class hypot(Function):
     nargs = 2
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex in (1, 2):
+            return 2*self.args[argindex-1]/(_Two*self.func(*self.args))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
 
     def _eval_expand_func(self, **hints):
         return _hypot(*self.args)
@@ -255,20 +281,3 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
-
-
-
-def _lgamma(x):
-    return log(gamma(x))
-
-
-class lgamma(Function):
-    nargs = 1
-
-    def _eval_expand_func(self, **hints):
-        return _lgamma(*self.args)
-
-    def _eval_rewrite_as_gamma(self, arg):
-        return _lgamma(arg)
-
-    _eval_rewrite_as_tractable = _eval_rewrite_as_gamma
