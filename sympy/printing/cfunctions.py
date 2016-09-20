@@ -310,11 +310,3 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
-
-
-class floor(Function):
-    nargs = 1
-
-
-class ceil(Function):
-    nargs = 1

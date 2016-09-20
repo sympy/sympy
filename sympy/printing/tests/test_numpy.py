@@ -150,18 +150,6 @@ def test_log2():
     assert abs(lambdify((a,), log2(a), 'numpy')(256) - 8) < 1e-16
 
 
-def test_Cbrt():
-    if not np:
-        skip("NumPy not installed")
-    assert abs(lambdify((a,), Cbrt(a), 'numpy')(8) - 2) < 1e-16
-
-
-def test_cbrt():
-    if not np:
-        skip("NumPy not installed")
-    assert abs(lambdify((a,), cbrt(a), 'numpy')(8) - 2) < 1e-16
-
-
 def test_Sqrt():
     if not np:
         skip("NumPy not installed")
