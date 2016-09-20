@@ -252,11 +252,24 @@ class NumPyPrinter(LambdaPrinter):
     def _print_Max(self, expr):
         return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
 
+    def _print_Pow(self, expr):
+        if expr.exp == -1:
+            return '{0}({1})'.format('reciprocal', self._print(expr.base))
+        elif expr.exp == 0.5:
+            return '{0}({1})'.format('sqrt', self._print(expr.base))
+        elif expr.exp == 1/3:
+            return '{0}({1})'.format('cbrt', self._print(expr.base))
+        else:
+            return '{0}({1}, {2})'.format('power', self._print(expr.base), self._print(expr.exp))
+
     def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
         return 'log10({0})'.format(self._print(expr.args[0]))
 
     def _print_Cbrt(self, expr):
         return 'cbrt({0})'.format(self._print(expr.args[0]))
+
+    def _print_Sqrt(self, expr):
+        return 'sqrt({0})'.format(self._print(expr.args[0]))
 
     def _print_hypot(self, expr):
         return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
