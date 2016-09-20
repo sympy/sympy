@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, GeneratorsError
+from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power, decompose_power_rat
@@ -268,14 +268,6 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             terms.append((coeff, elements))
 
         reprs.append(terms)
-
-    if not gens:
-        if len(exprs) == 1:
-            arg = exprs[0]
-        else:
-            arg = (exprs,)
-
-        raise GeneratorsNeeded("specify generators to give %s a meaning" % arg)
 
     gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}

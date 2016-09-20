@@ -15,11 +15,15 @@ from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import expr_from_dict, _dict_reorder, _parallel_dict_from_expr
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded, ExactQuotientFailed, MultivariatePolynomialError
+from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
+                                   _parallel_dict_from_expr)
+from sympy.polys.polyerrors import (
+    CoercionFailed, GeneratorsError,
+    ExactQuotientFailed, MultivariatePolynomialError)
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, build_options
+from sympy.polys.polyoptions import (Domain as DomainOpt,
+                                     Order as OrderOpt, build_options)
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.constructor import construct_domain
 from sympy.printing.defaults import DefaultPrinting
@@ -167,11 +171,8 @@ def sring(exprs, *symbols, **options):
         return (_ring, polys)
 
 def _parse_symbols(symbols):
-    if not symbols:
-        raise GeneratorsNeeded("generators weren't specified")
-
     if isinstance(symbols, string_types):
-        return _symbols(symbols, seq=True)
+        return _symbols(symbols, seq=True) if symbols else ()
     elif isinstance(symbols, Expr):
         return (symbols,)
     elif is_sequence(symbols):
@@ -214,14 +215,26 @@ class PolyRing(DefaultPrinting, IPolys):
 
             obj._one = [(obj.zero_monom, domain.one)]
 
-            codegen = MonomialOps(ngens)
-            obj.monomial_mul = codegen.mul()
-            obj.monomial_pow = codegen.pow()
-            obj.monomial_mulpow = codegen.mulpow()
-            obj.monomial_ldiv = codegen.ldiv()
-            obj.monomial_div = codegen.div()
-            obj.monomial_lcm = codegen.lcm()
-            obj.monomial_gcd = codegen.gcd()
+            if ngens:
+                # These expect monomials in at least one variable
+                codegen = MonomialOps(ngens)
+                obj.monomial_mul = codegen.mul()
+                obj.monomial_pow = codegen.pow()
+                obj.monomial_mulpow = codegen.mulpow()
+                obj.monomial_ldiv = codegen.ldiv()
+                obj.monomial_div = codegen.div()
+                obj.monomial_lcm = codegen.lcm()
+                obj.monomial_gcd = codegen.gcd()
+            else:
+                monunit = lambda a, b: ()
+                obj.monomial_mul = monunit
+                obj.monomial_pow = monunit
+                obj.monomial_mulpow = lambda a, b, c: ()
+                obj.monomial_ldiv = monunit
+                obj.monomial_div = monunit
+                obj.monomial_lcm = monunit
+                obj.monomial_gcd = monunit
+
 
             if order is lex:
                 obj.leading_expv = lambda f: max(f)
@@ -375,7 +388,10 @@ class PolyRing(DefaultPrinting, IPolys):
     def index(self, gen):
         """Compute index of ``gen`` in ``self.gens``. """
         if gen is None:
-            i = 0
+            if self.ngens:
+                i = 0
+            else:
+                i = -1  # indicate impossible choice
         elif isinstance(gen, int):
             i = gen
 
@@ -861,10 +877,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_squarefree(f):
+        if not f.ring.ngens:
+            return True
         return f.ring.dmp_sqf_p(f)
 
     @property
     def is_irreducible(f):
+        if not f.ring.ngens:
+            return True
         return f.ring.dmp_irreducible_p(f)
 
     @property
@@ -1588,6 +1608,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not f:
             return -oo
+        elif i < 0:
+            return 0
         else:
             return max([ monom[i] for monom in f.itermonoms() ])
 
@@ -1614,6 +1636,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not f:
             return -oo
+        elif i < 0:
+            return 0
         else:
             return min([ monom[i] for monom in f.itermonoms() ])
 
@@ -1749,7 +1773,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         p = self.ring.zero
         expv = self.leading_expv()
-        if expv:
+        if expv is not None:
             p[expv] = self[expv]
         return p
 

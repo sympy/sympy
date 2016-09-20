@@ -4139,9 +4139,8 @@ def _poly_from_expr(expr, opt):
     elif opt.expand:
         expr = expr.expand()
 
-    try:
-        rep, opt = _dict_from_expr(expr, opt)
-    except GeneratorsNeeded:
+    rep, opt = _dict_from_expr(expr, opt)
+    if not opt.gens:
         raise PolificationFailed(opt, orig, expr)
 
     monoms, coeffs = list(zip(*list(rep.items())))
@@ -4218,9 +4217,8 @@ def _parallel_poly_from_expr(exprs, opt):
         for i in _polys:
             exprs[i] = exprs[i].as_expr()
 
-    try:
-        reps, opt = _parallel_dict_from_expr(exprs, opt)
-    except GeneratorsNeeded:
+    reps, opt = _parallel_dict_from_expr(exprs, opt)
+    if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
     for k in opt.gens:
