@@ -75,9 +75,7 @@ didn't want to be mentioned. People with a * next to their names are not found
 in the metadata of the git history. This file is generated automatically by
 running `./bin/authors_update.py`.
 """
-# String indicating number of authors 
-header_extra = """There are total {authors_count} number of authors\n""".format(authors_count=len(git_people))
-
+header_extra = """There are a total of {authors_count} authors.\n""".format(authors_count=len(git_people))
 
 fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
     os.path.pardir, "AUTHORS")), "w")
