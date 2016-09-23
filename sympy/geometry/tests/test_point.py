@@ -198,7 +198,7 @@ def test_point3D():
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
     # Test __new__
-    assert Point3D(0.1, 0.2, evaluate=False, mutate_warn=False).args[0].is_Float
+    assert Point3D(0.1, 0.2, evaluate=False, on_morph=False).args[0].is_Float
 
 
     # Test length property returns correctly
@@ -227,6 +227,9 @@ def test_point3D():
     assert Point3D.are_coplanar(p, planar2, planar3)  # line, not plane
     plane = Plane((1, 2, 1), (2, 1, 0), (3, 1, 2))
     assert Point.are_coplanar(*[plane.projection(((-1)**i, i)) for i in range(4)])
+
+    # all 2D points are coplanar
+    assert Point.are_coplanar(Point(x, y), Point(x, x + y), Point(y, x + 2)) is True
 
     # Test Intersection
     assert planar2.intersection(Line3D(p, planar3)) == [Point3D(1, 1, 2)]
@@ -275,6 +278,7 @@ def test_issue_9214():
 
     assert Point3D.are_collinear(p1, p2, p3) is False
 
+
 def test_issue_11617():
     p1 = Point3D(1,0,2)
     p2 = Point2D(2,0)
@@ -282,6 +286,7 @@ def test_issue_11617():
     with warnings.catch_warnings(record=True) as w:
         assert p1.distance(p2) == sqrt(5)
         assert len(w) == 1
+
 
 def test_transform():
     p = Point(1, 1)
@@ -362,11 +367,15 @@ def test_arguments():
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)
-    u4 = Point(u, dim=4, mutate_warn=False)
+    u4 = Point(u, dim=4, on_morph=False)
+    u4 = Point(u, dim=4, on_morph='')
     assert u4.args == (.1, .2, 0, 0)
     assert all(i.is_Float for i in u4.args[:2])
     # and even when *not* changing dimensions
     assert all(i.is_Float for i in Point(u).args)
+
+    # never raise error if creating an origin
+    assert Point(dim=3, on_morph='error')
 
 
 def test_unit():
@@ -375,3 +384,11 @@ def test_unit():
 
 def test_dot():
     raises(TypeError, lambda: Point(1, 2).dot(Line((0, 0), (1, 1))))
+
+
+def test__normalize_dimension():
+    assert Point._normalize_dimension(Point(1, 2), Point(3, 4)) == [
+        Point(1, 2), Point(3, 4)]
+    assert Point._normalize_dimension(
+        Point(1, 2), Point(3, 4, 0), on_morph='') == [
+        Point(1, 2, 0), Point(3, 4, 0)]
