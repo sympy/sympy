@@ -741,6 +741,17 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
+    def _print_Reals(self, p):
+	return "S.Reals"
+
+    def _print_Naturals(self, p):
+        return "S.Naturals"
+
+    def _print_Complexes(self, p):
+        return "S.Complexes"
+
+    def _print_EmptySet(self, p):
+        return "S.EmptySet"
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
