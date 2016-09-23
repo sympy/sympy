@@ -56,7 +56,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             self.dtype == other.dtype and self.ext == other.ext
 
     def algebraic_field(self, *extension):
-        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
+        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension))
 
     def to_sympy(self, a):
