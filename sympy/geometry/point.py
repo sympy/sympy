@@ -402,9 +402,9 @@ class Point(GeometryEntity):
 
     @property
     def ambient_dimension(self):
-        """The dimension of the ambient space the point is in.
-        I.e., if the point is in R^n, the ambient dimension
-        will be n"""
+        """The dimension of the ambient space in which the point
+        is contained, e.g. the ambient dimension of a point in `R^n`
+        is `n`."""
         return getattr(self, '_ambient_dimension', len(self))
 
     @property
