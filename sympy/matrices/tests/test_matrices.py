@@ -213,7 +213,7 @@ def test_power():
         [a**n, a**(n-1)*n, 0],
         [0, a**n, 0],
         [0, 0, b**n]])
-    
+
     assert (A**2)**3 == A**6
     assert (A**(S(2)/3))**6 == A**4
     assert (A**(S(3)/4))**(S(4)/3) == A
