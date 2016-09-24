@@ -67,7 +67,10 @@ class MatPow(MatrixExpr):
         elif isinstance(base, MatrixBase) and exp.is_number:
             if exp is S.One:
                 return base
-            return base**exp
+            return base.evaluate_power(exp)
+        from sympy.core import Symbol
+        if(isinstance(base,MatrixBase) and isinstance(exp,Symbol)):
+            return base.evaluate_power(exp)
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
         elif exp is S.One:

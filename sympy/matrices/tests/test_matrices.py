@@ -196,24 +196,29 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
     A = Matrix([[33, 24], [48, 57]])
-    assert (A**(S(1)/2))[:] == [5, 2, 4, 7]
+    assert ((A**(S(1)/2)).doit())[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
     assert (A**(S(1)/2))**2 == A
 
-    assert Matrix([[1, 0], [1, 1]])**(S(1)/2) == Matrix([[1, 0], [S.Half, 1]])
-    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    assert (Matrix([[1, 0], [1, 1]])**(S(1)/2)).doit() == Matrix([[1, 0], [S.Half, 1]])
+    assert (Matrix([[1, 0], [1, 1]])**0.5).doit() == Matrix([[1.0, 0], [0.5, 1.0]])
     from sympy.abc import a, b, n
-    assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
-    assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
-    assert Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n == Matrix([
+    assert (Matrix([[1, a], [0, 1]])**n).doit() == Matrix([[1, a*n], [0, 1]])
+    assert (Matrix([[b, a], [0, b]])**n).doit() == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
+    assert (Matrix([[a, 1, 0], [0, a, 1], [0, 0, a]])**n).doit() == Matrix([
         [a**n, a**(n-1)*n, a**(n-2)*(n-1)*n/2],
         [0, a**n, a**(n-1)*n],
         [0, 0, a**n]])
-    assert Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n == Matrix([
+    assert (Matrix([[a, 1, 0], [0, a, 0], [0, 0, b]])**n).doit() == Matrix([
         [a**n, a**(n-1)*n, 0],
         [0, a**n, 0],
         [0, 0, b**n]])
-
+    
+    assert (A**2)**3 == A**6
+    assert (A**(S(2)/3))**6 == A**4
+    assert (A**(S(3)/4))**(S(4)/3) == A
+    assert (A**(1/n))**n == A
+    assert (A**(a/n))**(b*n) == A**(a*b)
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))

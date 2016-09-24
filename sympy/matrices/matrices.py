@@ -186,10 +186,9 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def __pow__(self, num):
+    def evaluate_power(self,num):
         from sympy.matrices import eye, diag, MutableMatrix
         from sympy import binomial
-
         if not self.is_square:
             raise NonSquareMatrixError()
         if isinstance(num, int) or isinstance(num, Integer):
@@ -208,16 +207,15 @@ class MatrixBase(object):
                 n //= 2
             return self._new(a)
         elif isinstance(num, (Expr, float)):
-
             def jordan_cell_power(jc, n):
                 N = jc.shape[0]
                 l = jc[0, 0]
                 for i in range(N):
-                        for j in range(N-i):
-                                bn = binomial(n, i)
-                                if isinstance(bn, binomial):
-                                        bn = bn._eval_expand_func()
-                                jc[j, i+j] = l**(n-i)*bn
+                    for j in range(N-i):
+                        bn = binomial(n, i)
+                        if isinstance(bn, binomial):
+                            bn = bn._eval_expand_func()
+                        jc[j, i+j] = l**(n-i)*bn
 
             P, jordan_cells = self.jordan_cells()
             # Make sure jordan_cells matrices are mutable:
@@ -226,8 +224,20 @@ class MatrixBase(object):
                 jordan_cell_power(j, num)
             return self._new(P*diag(*jordan_cells)*P.inv())
         else:
-            raise TypeError(
-                "Only SymPy expressions or int objects are supported as exponent for matrices")
+            raise TypeError("Only SymPy expressions or int objects are supported as exponent for matrices")
+
+    def __pow__(self, num):
+        sympy_type = type(sympify(num))
+        if(sympy_type == type(sympify(0))):
+            from sympy.matrices import eye
+            return eye(self.cols)
+        elif(sympy_type == type(sympify(1))):
+            return self
+        elif(sympy_type != type(sympify(2)) and sympy_type != type(sympify(-1))):
+            from sympy.matrices.expressions.matpow import MatPow
+            return MatPow(self,num)
+        else:
+            return self.evaluate_power(num)
 
     def __radd__(self, other):
         return self + other
