@@ -404,8 +404,7 @@ class Point(GeometryEntity):
     @property
     def ambient_dimension(self):
         """The dimension of the ambient space in which the point
-        is contained, e.g. the ambient dimension of a point in `R^n`
-        is `n`."""
+        is contained, e.g. the ambient dimension of a point in :math:`R^n` is :math:`n`."""
         return getattr(self, '_ambient_dimension', len(self))
 
     @property
