@@ -118,14 +118,18 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ``t`` is the optional parameter to be used by ``diop_solve()``.
     ``syms`` is an optional list of symbols which determines the
     order of the elements in the returned tuple.
-    By default, base solution will be returned. If ``permute`` is set to
-    True then permuted base solution will be returned, if there is possibility
-    of permutation(value or/and sign permutation).
-    e.g. For equation `a^4 + b^4 - (2^4 + 3^4)` solution is
-    `set([(2, 3)])` (By default, base solutiion ).
-    If ``permute`` is set to True then output :
-    `set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2),
-    (3, 2)])`
+
+    By default, only the base solution is returned. If ``permute`` is set to
+    True then permutations of the base solution and/or permutations of the
+    signs of the values will be returned when applicable.
+
+    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy.abc import a, b
+    >>> eq = a**4 + b**4 - (2**4 + 3**4)
+    >>> diophantine(eq)
+    set([(2, 3)])
+    >>> diophantine(eq, permute=True)
+    set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
 
     Details
     =======
@@ -136,7 +140,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diophantine
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
     set([(t_0, -t_0), (t_0, t_0)])
@@ -145,17 +148,13 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     set([(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)])
     >>> diophantine(x**2 + 3*x*y + 4*x)
     set([(0, n1), (3*t_0 - 4, -t_0)])
-    >>> from sympy import symbols
-    >>> a, b = symbols('a, b')
-    >>> diophantine(a**4 + b**4 - (2**4 + 3**4))
-    set([(2, 3)])
-    >>> diophantine(a**4 + b**4 - (2**4 + 3**4), permute=True)
-    set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
 
     See Also
     ========
 
     diop_solve()
+    sympy.utilities.iterables.permute_signs
+    sympy.utilities.iterables.signed_permutations
     """
 
     from sympy.utilities.iterables import (
@@ -408,7 +407,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-1, -2), (-1, 2), (1, -2), (1, 2)])
+    set([(-1, 2), (1, 2)])
 
     See Also
     ========
@@ -1041,9 +1040,11 @@ def _diop_quadratic(var, coeff, t):
 
         if D < 0:
             for solution in solns_pell:
-                s = P*Matrix([solution[0], solution[1]]) + Q
+                s1 = P*Matrix([solution[0], solution[1]]) + Q
+                s2 = P*Matrix([-solution[0], solution[1]]) + Q
                 try:
-                    sol.add(tuple([as_int(_) for _ in s]))
+                    sol.add(tuple([as_int(_) for _ in s1]))
+                    sol.add(tuple([as_int(_) for _ in s2]))
                 except ValueError:
                     pass
         else:

@@ -762,7 +762,7 @@ def test_diopcoverage():
     # it's ok if these pass some day when the solvers are implemented
     raises(NotImplementedError, lambda: diophantine(x**2 + y**2 + x*y + 2*y*z - 12))
     raises(NotImplementedError, lambda: diophantine(x**3 + y**2))
-    assert diop_quadratic(x**2 + y**2 - 1**2 - 3**4) == set([(1, 9)])
+    assert diop_quadratic(x**2 + y**2 - 1**2 - 3**4) == set([(-1, 9), (1, 9)])
 
 
 def test_holzer():
