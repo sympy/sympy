@@ -6,6 +6,15 @@ Point
 Point2D
 Point3D
 
+When methods of Point require 1 or more points as arguments, they
+can be passed as a sequence of coordinates or Points:
+
+>>> from sympy.geometry.point import Point
+>>> Point(1, 1).is_collinear((2, 2), (3, 4))
+False
+>>> Point(1, 1).is_collinear(Point(2, 2), Point(3, 4))
+False
+
 """
 
 from __future__ import division, print_function
@@ -45,10 +54,12 @@ class Point(GeometryEntity):
         exact types.
     dim : number of coordinates the point should have.  If coordinates
         are unspecified, they are padded with zeros.
-    mutate_warn : warn if the number of coordinates of a point are
-        changed.  Possible values are `'warn'`, `'error'`,
-        or `'False'` (default).  No warning or error is given if
-        `*args` is empty.
+    on_morph : indicates what should happen when the number of
+        coordinates of a point need to be changed by adding or
+        removing zeros.  Possible values are `'warn'`, `'error'`, or
+        `ignore` (default).  No warning or error is given when `*args`
+        is empty and `dim` is given. An error is always raised when
+        trying to remove nonzero coordinates.
 
 
     Attributes
@@ -63,7 +74,7 @@ class Point(GeometryEntity):
 
     TypeError : When instantiating with anything but a Point or sequence
     ValueError : when instantiating with a sequence with length < 2 or
-        when trying to reduce dimensions if keyward `mutate_warn='error'` is
+        when trying to reduce dimensions if keyword `on_morph='error'` is
         set.
 
     See Also
@@ -82,6 +93,8 @@ class Point(GeometryEntity):
     Point2D(1, 2)
     >>> Point(0, x)
     Point2D(0, x)
+    >>> Point(dim=4)
+    Point(0, 0, 0, 0)
 
     Floats are automatically converted to Rational unless the
     evaluate flag is False:
@@ -94,8 +107,7 @@ class Point(GeometryEntity):
     """
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
-        mutate_warn = kwargs.get('mutate_warn', False)
-        #mutate_warn = kwargs.get('mutate_warn', 'error')
+        on_morph = kwargs.get('on_morph', 'ignore')
 
         # unpack into coords
         coords = args[0] if len(args) == 1 else args
@@ -121,19 +133,27 @@ class Point(GeometryEntity):
         coords = Tuple(*coords)
         dim = kwargs.get('dim', len(coords))
 
-        if len(coords) != dim:
-            if mutate_warn:
-                message = ("Changing the number of coordinates in {} "
-                           "to {}").format(coords, dim)
-                if mutate_warn == "error":
-                    raise ValueError(message)
-                warnings.warn(message)
         if len(coords) < 2:
-            raise ValueError('Point requires 2 or more coordinates or a dimension > 1.')
+            raise ValueError(filldedent('''
+                Point requires 2 or more coordinates or
+                keyword `dim` > 1.'''))
+        if len(coords) != dim:
+                message = ("Dimension of {} needs to be changed"
+                           "from {} to {}.").format(coords, len(coords), dim)
+                if on_morph == 'ignore':
+                    pass
+                elif on_morph == "error":
+                    raise ValueError(message)
+                elif on_morph == 'warn':
+                    warnings.warn(message)
+                else:
+                    raise ValueError(filldedent('''
+                        on_morph value should be 'error',
+                        'warn' or 'ignore'.'''))
         if any(i for i in coords[dim:]):
-            raise ValueError('Too many nonzero dimensions')
+            raise ValueError('Nonzero coordinates cannot be removed.')
         if any(a.is_number and im(a) for a in coords):
-            raise ValueError('Imaginary coordinates not permitted.')
+            raise ValueError('Imaginary coordinates are not permitted.')
         if not all(isinstance(a, Expr) for a in coords):
             raise TypeError('Coordinates must be valid SymPy expressions.')
 
@@ -161,20 +181,22 @@ class Point(GeometryEntity):
     is_Point = True
 
     @classmethod
-    def _normalize_dimension(cls, *args, **kwargs):
-        """Ensure *args are all points with the same dimension.
-        By default `mutate_warn='warn'` is passed to the
+    def _normalize_dimension(cls, *points, **kwargs):
+        """Ensure that points have the same dimension.
+        By default `on_morph='warn'` is passed to the
         `Point` constructor."""
         # if we have a built-in ambient dimension, use it
         dim = getattr(cls, '_ambient_dimension', None)
         # override if we specified it
         dim = kwargs.get('dim', dim)
-        # if no dim was given, pick the longest thing in *args
+        # if no dim was given, use the highest dimensional point
         if dim is None:
-            dim = max(len(Point(a)) for a in args)
+            dim = max(i.ambient_dimension for i in points)
+        if all(i.ambient_dimension == dim for i in points):
+            return list(points)
         kwargs['dim'] = dim
-        kwargs['mutate_warn'] = kwargs.get('mutate_warn', 'warn')
-        return [Point(a, **kwargs) for a in args]
+        kwargs['on_morph'] = kwargs.get('on_morph', 'warn')
+        return [Point(i, **kwargs) for i in points]
 
     def __contains__(self, item):
         return item in self.args
@@ -182,7 +204,8 @@ class Point(GeometryEntity):
     @classmethod
     def are_coplanar(cls, *points):
         """Return True if there exists a plane in which all the points
-        lie.  If `len(points) < 3`, this is trivially satisfied.
+        lie.  A trivial True value is returned if `len(points) < 3 or
+        all Points are 2-dimensional.
 
         Parameters
         ==========
@@ -217,18 +240,22 @@ class Point(GeometryEntity):
         if len(points) <= 1:
             return True
 
-        points = cls._normalize_dimension(*points)
+        points = cls._normalize_dimension(*[Point(i) for i in points])
+        # quick exit if we are in 2D
+        if points[0].ambient_dimension == 2:
+            return True
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
 
-    def is_collinear(self, *points):
-        """Retursn `True` if there exists a line
+    def is_collinear(self, *args):
+        """Returns `True` if there exists a line
         that contains `self` and `points`.  Returns `False` otherwise.
+        A trivially True value is returned if no points are given.
 
         Parameters
         ==========
 
-        points : sequence of Point
+        args : sequence of Points
 
         Returns
         =======
@@ -253,21 +280,22 @@ class Point(GeometryEntity):
         False
 
         """
-        points = (self,) + points
-        points = Point._normalize_dimension(*points)
+        points = (self,) + args
+        points = Point._normalize_dimension(*[Point(i) for i in points])
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 1
 
-    def is_concyclic(self, *points):
+    def is_concyclic(self, *args):
         """Do `self` and the given sequence of points lie in a circle?
 
         Returns True if the set of points are concyclic and
-        False otherwise.
+        False otherwise. A trivial value of True is returned
+        if there are fewer than 2 other points.
 
         Parameters
         ==========
 
-        points : sequence of Point
+        args : sequence of Points
 
         Returns
         =======
@@ -279,36 +307,43 @@ class Point(GeometryEntity):
         ========
 
         >>> from sympy import Point
-        >>> from sympy.abc import x
-        >>> p1, p2 = Point(0, 0), Point(1, 1)
-        >>> p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)
-        >>> Point.is_collinear(p1, p2, p3, p4)
+
+        Define 4 points that are on the unit circle:
+
+        >>> p1, p2, p3, p4 = Point(1, 0), (0, 1), (-1, 0), (0, -1)
+
+        >>> p1.is_concyclic() == p1.is_concyclic(p2, p3, p4) == True
         True
-        >>> Point.is_collinear(p1, p2, p3, p5)
+
+        Define a point not on that circle:
+
+        >>> p = Point(1, 1)
+
+        >>> p.is_concyclic(p1, p2, p3)
         False
 
         """
-        args = (self,) + points
-        args = Point._normalize_dimension(*args)
-        args = list(uniq(args))
-        if not Point.affine_rank(*args) <= 2:
+        points = (self,) + args
+        points = Point._normalize_dimension(*[Point(i) for i in points])
+        points = list(uniq(points))
+        if not Point.affine_rank(*points) <= 2:
             return False
-        origin = args[0]
-        points = [p - origin for p in args]
+        origin = points[0]
+        points = [p - origin for p in points]
         # points are concyclic if they are coplanar and
         # there is a point c so that ||p_i-c|| == ||p_j-c|| for all
         # i and j.  Rearranging this equation gives us the following
         # condition: the matrix `mat` must not a pivot in the last
         # column.
-        mat = Matrix([list(p) + [p.dot(p)] for p in points])
+        mat = Matrix([list(i) + [i.dot(i)] for i in points])
         rref, pivots = mat.rref()
         if len(origin) not in pivots:
             return True
         return False
 
     def is_scalar_multiple(self, p):
-        """Returns whether each dimension of `p` is a scalar multiple
-        of those of `self`.
+        """Returns whether each coordinate of `self` is a scalar
+        multiple of the corresponding coordinate in point p.
         """
         s, o = Point._normalize_dimension(self, Point(p))
         # 2d points happen a lot, so optimize this function call
@@ -318,7 +353,7 @@ class Point(GeometryEntity):
             if rv is None:
                 raise Undecidable(filldedent(
                     '''can't determine if %s is a scalar multiple of
-                    %s''' % (self, p)))
+                    %s''' % (s, o)))
 
         # if the vectors p1 and p2 are linearly dependent, then they must
         # be scalar multiples of each other
@@ -368,9 +403,9 @@ class Point(GeometryEntity):
 
     @property
     def ambient_dimension(self):
-        """The dimension of the ambient space the point is in.
-        I.e., if the point is in R^n, the ambient dimension
-        will be n"""
+        """The dimension of the ambient space in which the point
+        is contained, e.g. the ambient dimension of a point in `R^n`
+        is `n`."""
         return getattr(self, '_ambient_dimension', len(self))
 
     @property
@@ -406,7 +441,7 @@ class Point(GeometryEntity):
         return self / abs(self)
 
     @staticmethod
-    def affine_rank(*points):
+    def affine_rank(*args):
         """The affine rank of a set of points is the dimension
         of the smallest affine space containing all the points.
         For example, if the points lie on a line (and are not all
@@ -414,16 +449,15 @@ class Point(GeometryEntity):
         but not a line, their affine rank is 2.  By convention, the empty
         set has affine rank -1."""
 
-        if len(points) == 0:
+        if len(args) == 0:
             return -1
-
         # make sure we're genuinely points
         # and translate every point to the origin
-        points = [Point(i) for i in points]
+        points = Point._normalize_dimension(*[Point(i) for i in args])
         origin = points[0]
-        points = [p - origin for p in points[1:]]
+        points = [i - origin for i in points[1:]]
 
-        m = Matrix([p.args for p in points])
+        m = Matrix([i.args for i in points])
         return m.rank()
 
     @staticmethod
@@ -669,16 +703,38 @@ class Point(GeometryEntity):
         return self.args[key]
 
     def __add__(self, other):
-        """Add other to self by incrementing self's coordinates by those of other.
+        """Add other to self by incrementing self's coordinates by
+        those of other.
+
+        Notes
+        =====
+
+        >>> from sympy.geometry.point import Point
+
+        When sequences of coordinates are passed to Point methods, they
+        are converted to a Point internally. This __add__ method does
+        not do that so if floating point values are used, a floating
+        point result (in terms of SymPy Floats) will be returned.
+
+        >>> Point(1, 2) + (.1, .2)
+        Point2D(1.1, 2.2)
+
+        If this is not desired, the `translate` method can be used or
+        another Point can be added:
+
+        >>> Point(1, 2).translate(.1, .2)
+        Point2D(11/10, 11/5)
+        >>> Point(1, 2) + Point(.1, .2)
+        Point2D(11/10, 11/5)
 
         See Also
         ========
 
-        sympy.geometry.entity.translate
+        sympy.geometry.point.Point.translate
 
         """
         try:
-            s, o = Point._normalize_dimension(self, other)
+            s, o = Point._normalize_dimension(self, Point(other, evaluate=False))
         except TypeError:
             raise GeometryError("Don't know how to add {} and a Point object".format(other))
 
@@ -691,7 +747,32 @@ class Point(GeometryEntity):
         return self + [-x for x in other]
 
     def __mul__(self, factor):
-        """Multiply point's coordinates by a factor."""
+        """Multiply point's coordinates by a factor.
+
+        Notes
+        =====
+
+        >>> from sympy.geometry.point import Point
+
+        When multiplying a Point by a floating point number,
+        the coordinates of the Point will be changed to Floats:
+
+        >>> Point(1, 2)*0.1
+        Point2D(0.1, 0.2)
+
+        If this is not desired, the `scale` method can be used or
+        else only multiply or divide by integers:
+
+        >>> Point(1, 2).scale(1.1, 1.1)
+        Point2D(11/10, 11/5)
+        >>> Point(1, 2)*11/10
+        Point2D(11/10, 11/5)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.scale
+        """
         factor = sympify(factor)
         coords = [simplify(x*factor) for x in self.args]
         return Point(coords, evaluate=False)
