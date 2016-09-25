@@ -57,7 +57,7 @@ class Point(GeometryEntity):
     on_morph : indicates what should happen when the number of
         coordinates of a point need to be changed by adding or
         removing zeros.  Possible values are `'warn'`, `'error'`, or
-        `False` (default).  No warning or error is given when `*args`
+        `ignore` (default).  No warning or error is given when `*args`
         is empty and `dim` is given. An error is always raised when
         trying to remove nonzero coordinates.
 
@@ -107,7 +107,7 @@ class Point(GeometryEntity):
     """
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
-        on_morph = kwargs.get('on_morph', False)
+        on_morph = kwargs.get('on_morph', 'ignore')
 
         # unpack into coords
         coords = args[0] if len(args) == 1 else args
@@ -138,17 +138,18 @@ class Point(GeometryEntity):
                 Point requires 2 or more coordinates or
                 keyword `dim` > 1.'''))
         if len(coords) != dim:
-            if on_morph:
                 message = ("Dimension of {} needs to be changed"
                            "from {} to {}.").format(coords, len(coords), dim)
-                if on_morph == "error":
+                if on_morph == 'ignore':
+                    pass
+                elif on_morph == "error":
                     raise ValueError(message)
                 elif on_morph == 'warn':
                     warnings.warn(message)
                 else:
                     raise ValueError(filldedent('''
                         on_morph value should be 'error',
-                        'warn' or False.'''))
+                        'warn' or 'ignore'.'''))
         if any(i for i in coords[dim:]):
             raise ValueError('Nonzero coordinates cannot be removed.')
         if any(a.is_number and im(a) for a in coords):

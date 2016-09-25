@@ -198,7 +198,7 @@ def test_point3D():
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
     # Test __new__
-    assert Point3D(0.1, 0.2, evaluate=False, on_morph=False).args[0].is_Float
+    assert Point3D(0.1, 0.2, evaluate=False, on_morph='ignore').args[0].is_Float
 
 
     # Test length property returns correctly
@@ -367,8 +367,7 @@ def test_arguments():
 
     # test evaluate=False when changing dimensions
     u = Point(.1, .2, evaluate=False)
-    u4 = Point(u, dim=4, on_morph=False)
-    u4 = Point(u, dim=4, on_morph='')
+    u4 = Point(u, dim=4, on_morph='ignore')
     assert u4.args == (.1, .2, 0, 0)
     assert all(i.is_Float for i in u4.args[:2])
     # and even when *not* changing dimensions
@@ -390,5 +389,5 @@ def test__normalize_dimension():
     assert Point._normalize_dimension(Point(1, 2), Point(3, 4)) == [
         Point(1, 2), Point(3, 4)]
     assert Point._normalize_dimension(
-        Point(1, 2), Point(3, 4, 0), on_morph='') == [
+        Point(1, 2), Point(3, 4, 0), on_morph='ignore') == [
         Point(1, 2, 0), Point(3, 4, 0)]
