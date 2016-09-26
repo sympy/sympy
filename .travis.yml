@@ -315,7 +315,7 @@ before_install:
   - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
         conda config --add channels conda-forge;
         conda config --add channels symengine;
-        conda install python-symengine=0.1.0.dev0+97c5a21;
+        conda install python-symengine=0.2.0;
     fi
   - |
     if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
