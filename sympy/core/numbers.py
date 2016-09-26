@@ -810,7 +810,7 @@ class Float(Number):
         prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
-        elif isinstance(num, str):
+        elif isinstance(num, string_types):
             _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
@@ -3143,7 +3143,7 @@ class NumberSymbol(AtomicExpr):
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
     r"""The `e` constant.
 
-    The transcendental number `e = 2.718281828\dots` is the base of the
+    The transcendental number `e = 2.718281828\ldots` is the base of the
     natural logarithm and of the exponential function, `e = \exp(1)`.
     Sometimes called Euler's number or Napier's constant.
 
@@ -3217,7 +3217,7 @@ E = S.Exp1
 class Pi(with_metaclass(Singleton, NumberSymbol)):
     r"""The `\pi` constant.
 
-    The transcendental number `\pi = 3.141592654\dots` represents the ratio
+    The transcendental number `\pi = 3.141592654\ldots` represents the ratio
     of a circle's circumference to its diameter, the area of the unit circle,
     the half-period of trigonometric functions, and many other things
     in mathematics.
@@ -3349,7 +3349,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.
 
-    `\gamma = 0.5772157\dots` (also called Euler's constant) is a mathematical
+    `\gamma = 0.5772157\ldots` (also called Euler's constant) is a mathematical
     constant recurring in analysis and number theory.  It is defined as the
     limiting difference between the harmonic series and the
     natural logarithm:
@@ -3409,7 +3409,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
     r"""Catalan's constant.
 
-    `K = 0.91596559\dots` is given by the infinite series
+    `K = 0.91596559\ldots` is given by the infinite series
 
     .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 

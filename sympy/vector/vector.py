@@ -7,7 +7,6 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
-from sympy.core.compatibility import u
 
 
 class Vector(BasisDependent):
@@ -345,6 +344,9 @@ class Vector(BasisDependent):
 class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
+
+    Unicode pretty forms in Python 2 should use the prefix ``u``.
+
     """
 
     def __new__(cls, name, index, system, pretty_str, latex_str):
@@ -365,7 +367,7 @@ class BaseVector(Vector, AtomicExpr):
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
-        obj._pretty_form = u(pretty_str)
+        obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 

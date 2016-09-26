@@ -8,7 +8,7 @@ from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
     Float, Matrix, Lambda, Piecewise, exp, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct)
+    DotProduct, Eq)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
@@ -21,6 +21,7 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 numexpr = import_module('numexpr')
+tensorflow = import_module('tensorflow')
 
 w, x, y, z = symbols('w,x,y,z')
 
@@ -153,6 +154,14 @@ def test_numpy_transl():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
+def test_tensorflow_transl():
+    if not tensorflow:
+        skip("tensorflow not installed")
+
+    from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
+    for sym, tens in TENSORFLOW_TRANSLATIONS.items():
+        assert sym in sympy.__dict__
+        assert tens in tensorflow.__dict__
 
 def test_numpy_translation_abs():
     if not numpy:
@@ -219,7 +228,7 @@ def test_sqrt():
 
 
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -249,7 +258,7 @@ def test_vector_discontinuous():
 
 
 def test_trig_symbolic():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], 'math')
     d = f(pi)
     assert abs(d[0] + 1) < 0.0001
     assert abs(d[1] - 0) < 0.0001
@@ -459,6 +468,82 @@ def test_numexpr_userfunctions():
     uf = implemented_function(Function('uf'), lambda x, y : 2*x*y+1)
     func = lambdify((x, y), uf(x, y), modules='numexpr')
     assert numpy.allclose(func(a, b), 2*a*b+1)
+
+def test_tensorflow_basic_math():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.constant(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_placeholders():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
+
+def test_tensorflow_variables():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(sin(x), Abs(1/(x+2)))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.Variable(0, dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    s.run(tensorflow.initialize_all_variables())
+    assert func(a).eval(session=s) == 0.5
+
+def test_tensorflow_logical_operations():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Not(And(Or(x, y), y))
+    func = lambdify([x, y], expr, modules="tensorflow")
+    a = tensorflow.constant(False)
+    b = tensorflow.constant(True)
+    s = tensorflow.Session()
+    assert func(a, b).eval(session=s) == 0
+
+def test_tensorflow_piecewise():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -1}) == -1
+    assert func(a).eval(session=s, feed_dict={a: 0}) == 0
+    assert func(a).eval(session=s, feed_dict={a: 1}) == 1
+
+def test_tensorflow_multi_max():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Max(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == 4
+
+def test_tensorflow_multi_min():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = Min(x, -x, x**2)
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: -2}) == -2
+
+def test_tensorflow_relational():
+    if not tensorflow:
+        skip("tensorflow not installed.")
+    expr = x >= 0
+    func = lambdify(x, expr, modules="tensorflow")
+    a = tensorflow.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.Session()
+    assert func(a).eval(session=s, feed_dict={a: 1})
 
 def test_integral():
     f = Lambda(x, exp(-x**2))

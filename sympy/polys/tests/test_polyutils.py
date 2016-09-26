@@ -230,7 +230,7 @@ def test__dict_from_expr_if_gens():
 
 
 def test__dict_from_expr_no_gens():
-    raises(GeneratorsNeeded, lambda: dict_from_expr(Integer(17)))
+    assert dict_from_expr(Integer(17)) == ({(): Integer(17)}, ())
 
     assert dict_from_expr(x) == ({(1,): Integer(1)}, (x,))
     assert dict_from_expr(y) == ({(1,): Integer(1)}, (y,))
@@ -240,7 +240,7 @@ def test__dict_from_expr_no_gens():
         x + y) == ({(1, 0): Integer(1), (0, 1): Integer(1)}, (x, y))
 
     assert dict_from_expr(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
-    raises(GeneratorsNeeded, lambda: dict_from_expr(sqrt(2), greedy=False))
+    assert dict_from_expr(sqrt(2), greedy=False) == ({(): sqrt(2)}, ())
 
     assert dict_from_expr(x*y, domain=ZZ[x]) == ({(1,): x}, (y,))
     assert dict_from_expr(x*y, domain=ZZ[y]) == ({(1,): y}, (x,))

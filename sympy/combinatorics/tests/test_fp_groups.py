@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
-from sympy.combinatorics.free_group import free_group
+from sympy.combinatorics.free_groups import free_group
 
 """
 References
@@ -143,12 +143,13 @@ def test_coset_enumeration():
     # E₁ from [2] Pg. 474
     F, r, s, t = free_group("r, s, t")
     E1 = FpGroup(F, [t**-1*r*t*r**-2, r**-1*s*r*s**-2, s**-1*t*s*t**-2])
-    C_r = coset_enumeration_r(E1, [r])
-    C_r.compress(); C_r.standardize()
-    C_c = coset_enumeration_c(E1, [r])
-    C_c.compress(); C_c.standardize()
+    C_r = coset_enumeration_r(E1, [])
+    C_r.compress()
+    C_c = coset_enumeration_c(E1, [])
+    C_c.compress()
     table2 = [[0, 0, 0, 0, 0, 0]]
     assert C_r.table == table2
+    # test for issue #11449
     assert C_c.table == table2
 
     # Cox group from [2] Pg. 474

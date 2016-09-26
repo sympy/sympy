@@ -1461,7 +1461,10 @@ def _rewrite_single(f, x, recursive=True):
                 for fac, g in terms:
                     r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
                                                    exponents_only=True), x)
-                    g = g.subs(subs).subs(z, x)
+                    try:
+                        g = g.subs(subs).subs(z, x)
+                    except ValueError:
+                        continue
                     # NOTE these substitutions can in principle introduce oo,
                     #      zoo and other absurdities. It shouldn't matter,
                     #      but better be safe.

@@ -158,6 +158,8 @@ def find_substitutions(integrand, symbol, u_var):
         new_integrand = test_subterm(u, u_diff)
         if new_integrand is not False:
             constant, new_integrand = new_integrand
+            if new_integrand == integrand.subs(symbol, u_var):
+                continue
             substitution = (u, constant, new_integrand)
             if substitution not in results:
                 results.append(substitution)

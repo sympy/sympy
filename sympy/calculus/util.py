@@ -102,6 +102,14 @@ def function_range(f, symbol, domain):
     from sympy.solvers.solveset import solveset
 
     vals = S.EmptySet
+    period = periodicity(f, symbol)
+    if not any(period is i for i in (None, S.Zero)):
+        inf = domain.inf
+        inf_period = S.Zero if inf.is_infinite else inf
+        sup_period = inf_period + period
+        periodic_interval = Interval(inf_period, sup_period)
+        domain = domain.intersect(periodic_interval)
+
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
     if isinstance(intervals, Interval):
@@ -657,10 +665,34 @@ class AccumulationBounds(AtomicExpr):
 
     @property
     def delta(self):
+        """
+        Returns the difference of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).delta
+        2
+
+        """
         return self.max - self.min
 
     @property
     def mid(self):
+        """
+        Returns the mean of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).mid
+        2
+
+        """
         return (self.min + self.max)/2
 
     @_sympifyit('other', NotImplemented)

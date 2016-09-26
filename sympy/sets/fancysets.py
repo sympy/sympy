@@ -242,6 +242,14 @@ class ImageSet(Set):
     9
     16
 
+    If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
+    `x` value is in `base_set` or not before passing it as args)
+
+    >>> squares.lamda(2)
+    4
+    >>> squares.lamda(S(1)/2)
+    1/4
+
     >>> n = Dummy('n')
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
     >>> dom = Interval(-1, 1)
@@ -428,6 +436,7 @@ class ImageSet(Set):
             n = self.lamda.variables[0]
             base_set = self.base_set
             new_inf, new_sup = None, None
+            new_lopen, new_ropen = other.left_open, other.right_open
 
             if f.is_real:
                 inverter = invert_real
@@ -454,7 +463,7 @@ class ImageSet(Set):
                 range_set = S.EmptySet
 
                 if all(i.is_real for i in (new_sup, new_inf)):
-                    new_interval = Interval(new_inf, new_sup)
+                    new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
                     range_set = base_set._intersect(new_interval)
                 else:
                     if other.is_subset(S.Reals):

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+"""Finitely Presented Groups and its algorithms. """
+
 from __future__ import print_function, division
 from sympy.core.basic import Basic
 from sympy.core import Symbol, Mod
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import flatten
-from sympy.combinatorics.free_group import FreeGroupElement, free_group, zero_mul_simp
+from sympy.combinatorics.free_groups import FreeGroupElement, free_group, zero_mul_simp
 
 from itertools import chain, product
 from bisect import bisect_left
@@ -43,6 +45,7 @@ class FpGroup(DefaultPrinting):
     The FpGroup would take a FreeGroup and a list/tuple of relators, the
     relators would be specified in such a way that each of them be equal to the
     identity of the provided free group.
+
     """
     is_group = True
     is_FpGroup = True
@@ -58,11 +61,112 @@ class FpGroup(DefaultPrinting):
         obj._relators = relators
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
+
+        # CosetTable instance on identity subgroup
+        obj._coset_table = None
+        # returns whether coset table on identity subgroup
+        # has been standardized
+        obj._is_standardized = False
+
+        obj._order = None
+        obj._center = None
         return obj
 
     @property
     def free_group(self):
         return self._free_group
+
+    def coset_enumeration(self, H, strategy="relator_based"):
+        """
+        Return an instance of ``coset table``, when Todd-Coxeter algorithm is
+        run over the ``self`` with ``H`` as subgroup, using ``strategy``
+        argument as strategy. The returned coset table is compressed but not
+        standardized.
+
+        """
+        if strategy == 'relator_based':
+            C = coset_enumeration_r(self, H)
+        else:
+            C = coset_enumeration_c(self, H)
+        C.compress()
+        return C
+
+    def standardize_coset_table(self):
+        """
+        Standardized the coset table ``self`` and makes the internal variable
+        ``_is_standardized`` equal to ``True``.
+
+        """
+        self._coset_table.standardize()
+        self._is_standardized = True
+
+    def coset_table(self, H, strategy="relator_based"):
+        """
+        Return the mathematical coset table of ``self`` in ``H``.
+
+        """
+        if not H:
+            if self._coset_table != None:
+                if not self._is_standardized:
+                    self.standardize_coset_table()
+            else:
+                C = self.coset_enumeration([], strategy)
+                self._coset_table = C
+                self.standardize_coset_table()
+            return self._coset_table.table
+        else:
+            C = self.coset_enumeration(H, strategy)
+            C.standardize()
+            return C.table
+
+    def order(self, strategy="relator_based"):
+        """
+        Returns the order of the finitely presented group ``self``. It uses
+        the coset enumeration with identity group as subgroup, i.e ``H=[]``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x, y**2])
+        >>> f.order(strategy="coset_table_based")
+        2
+
+        """
+        if self._order != None:
+            return self._order
+        if self._coset_table != None:
+            self._order = len(self._coset_table.table)
+        else:
+            self._coset_table = self.coset_enumeration([], strategy)
+            self._order = len(self._coset_table.table)
+        return self._order
+
+    def index(self, H, strategy="relator_based"):
+        """
+        Returns the index of subgroup ``H`` in group ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x**5, y**4, y*x*y**3*x**3])
+        >>> f.index([x])
+        4
+
+        """
+        # TODO: use |G:H| = |G|/|H| (currently H can't be made into a group)
+        # when we know |G| and |H|
+
+        if H == []:
+            return self.order()
+        else:
+            C = self.coset_enumeration(H, strategy)
+            return len(C.table)
 
     def relators(self):
         return tuple(self._relators)
@@ -98,7 +202,15 @@ class CosetTable(DefaultPrinting):
     # NOTE: We start with H as being only a list of words in generators
     #       of "fp_grp". Since `.subgroup` method has not been implemented.
 
-    """
+    r"""
+
+    Properties
+    ==========
+
+    [1] `0 \in \Omega` and `\tau(1) = \epsilon`
+    [2] `\alpha^x = \beta \Leftrightarrow \beta^{x^{-1}} = \alpha`
+    [3] If `\alpha^x = \beta`, then `H \tau(\alpha)x = H \tau(\beta)`
+    [4] `\forall \alpha \in \Omega, 1^{\tau(\alpha)} = \alpha`
 
     References
     ==========
@@ -114,7 +226,7 @@ class CosetTable(DefaultPrinting):
     # default limit for the number of cosets allowed in a
     # coset enumeration.
     coset_table_max_limit = 4096000
-    # maximun size of deduction stack above or equal to
+    # maximum size of deduction stack above or equal to
     # which it is emptied
     max_stack_size = 500
 
@@ -123,8 +235,10 @@ class CosetTable(DefaultPrinting):
         self.subgroup = subgroup
         # "p" is setup independent of Ω and n
         self.p = [0]
+        # a list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`
         self.A = list(chain.from_iterable((gen, gen**-1) \
                 for gen in self.fp_group.generators))
+        # the mathematical coset table which is a list of lists
         self.table = [[None]*len(self.A)]
         self.A_dict = {x: self.A.index(x) for x in self.A}
         self.A_dict_inv = {}
@@ -133,15 +247,21 @@ class CosetTable(DefaultPrinting):
                 self.A_dict_inv[x] = self.A_dict[x] + 1
             else:
                 self.A_dict_inv[x] = self.A_dict[x] - 1
+        # used in the coset-table based method of coset enumeration. Each of
+        # the element is called a "deduction" which is the form (α, x) whenever
+        # a value is assigned to α^x during a definition or "deduction process"
         self.deduction_stack = []
 
     @property
     def omega(self):
-        """Set of live cosets
-        """
+        """Set of live cosets. """
         return [coset for coset in range(len(self.p)) if self.p[coset] == coset]
 
     def copy(self):
+        """
+        Return a shallow copy of Coset Table instance ``self``.
+
+        """
         self_copy = self.__class__(self.fp_group, self.subgroup)
         self_copy.table = [list(perm_rep) for perm_rep in self.table]
         self_copy.p = list(self.p)
@@ -156,89 +276,147 @@ class CosetTable(DefaultPrinting):
 
     @property
     def n(self):
-        """The number 'n' represents the length of the sublist containing the
+        """The number `n` represents the length of the sublist containing the
         live cosets.
+
         """
         if not self.table:
             return 0
         return max(self.omega) + 1
 
-    # Pg 152 [1]
+    # Pg. 152 [1]
     def is_complete(self):
-        """
+        r"""
         The coset table is called complete if it has no undefined entries
-        on the live cosets; that is, α^x is defined for all α ∈ Ω and x ∈ A.
+        on the live cosets; that is, `\alpha^x` is defined for all
+        `\alpha \in \Omega` and `x \in A`.
+
         """
         return not any([None in self.table[coset] for coset in self.omega])
 
     # Pg. 153 [1]
     def define(self, alpha, x):
-        A = self.A
-        if len(self.table) == CosetTable.coset_table_max_limit:
-            # abort the further generation of cosets
-            return
-        self.table.append([None]*len(A))
-        # beta is the new coset generated
-        beta = len(self.table) - 1
-        self.p.append(beta)
-        self.table[alpha][self.A_dict[x]] = beta
-        self.table[beta][self.A_dict_inv[x]] = alpha
+        r"""
+        This routine is used in the relator-based strategy of Todd-Coxeter
+        algorithm if some `\alpha^x` is undefined. We check whether there is
+        space available for defining a new coset. If there is enough space
+        then we remedy this by adjoining a new coset `\beta` to `\Omega`
+        (i.e to set of live cosets) and put that equal to `\alpha^x`, then
+        make an assignment satisfying Property[1]. If there is not enough space
+        then we halt the Coset Table creation. The maximum amount of space that
+        can be used by Coset Table can be manipulated using the class variable
+        ``CosetTable.coset_table_max_limit``.
 
-    def define_f(self, alpha, x):
+        See Also
+        ========
+        define_c
+
+        """
         A = self.A
-        if len(self.table) == CosetTable.coset_table_max_limit:
+        table = self.table
+        len_table = len(table)
+        if len_table == CosetTable.coset_table_max_limit:
             # abort the further generation of cosets
-            return
-        self.table.append([None]*len(A))
+            raise ValueError("the coset enumeration has defined more than "
+                    "%s cosets. Try with a greater value max number of cosets "
+                    % CosetTable.coset_table_max_limit)
+        table.append([None]*len(A))
         # beta is the new coset generated
-        beta = len(self.table) - 1
+        beta = len_table
         self.p.append(beta)
-        self.table[alpha][self.A_dict[x]] = beta
-        self.table[beta][self.A_dict_inv[x]] = alpha
+        table[alpha][self.A_dict[x]] = beta
+        table[beta][self.A_dict_inv[x]] = alpha
+
+    def define_c(self, alpha, x):
+        r"""
+        A variation of ``define`` routine, described on Pg. 165 [1], used in
+        the coset table-based strategy of Todd-Coxeter algorithm. It differs
+        from ``define`` routine in that for each definition it also adds the
+        tuple `(\alpha, x)` to the deduction stack.
+
+        See Also
+        ========
+        define
+
+        """
+        A = self.A
+        table = self.table
+        len_table = len(table)
+        if len_table == CosetTable.coset_table_max_limit:
+            # abort the further generation of cosets
+            raise ValueError("the coset enumeration has defined more than "
+                    "%s cosets. Try with a greater value max number of cosets "
+                    % CosetTable.coset_table_max_limit)
+        table.append([None]*len(A))
+        # beta is the new coset generated
+        beta = len_table
+        self.p.append(beta)
+        table[alpha][self.A_dict[x]] = beta
+        table[beta][self.A_dict_inv[x]] = alpha
         # append to deduction stack
         self.deduction_stack.append((alpha, x))
 
-    def scan_f(self, alpha, word):
-        # alpha is an integer representing a "coset"
+    def scan_c(self, alpha, word):
+        """
+        A variation of ``scan`` routine, described on pg. 165 of [1], which
+        puts at tuple, whenever a deduction occurs, to deduction stack.
+
+        See Also
+        ========
+        scan, scan_check, scan_and_fill, scan_and_fill_c
+
+        """
+        # α is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for alpha=0 and w in Y (i.e generating set of H)
-        # 2. alpha in omega (set of live cosets), w in R (relators)
+        # 1. for α=0 and w in Y (i.e generating set of H)
+        # 2. α in Ω (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
         # list of union of generators and their inverses
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             if f != b:
-                self.coincidence_f(f, b)
+                self.coincidence_c(f, b)
             return
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
             # run the "coincidence" routine
-            self.coincidence_f(f, b)
+            self.coincidence_c(f, b)
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
     # α, β coincide, i.e. α, β represent the pair of cosets where
     # coincidence occurs
-    def coincidence_f(self, alpha, beta):
+    def coincidence_c(self, alpha, beta):
         """
+        A variation of ``coincidence`` routine used in the coset-table based
+        method of coset enumeration. The only difference being on addition of
+        a new coset in coset table(i.e new coset introduction), then it is
+        appended to ``deduction_stack``.
+
+        See Also
+        ========
+        coincidence
+
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         p = self.p
         l = 0
         # behaves as a queue
@@ -247,41 +425,73 @@ class CosetTable(DefaultPrinting):
         while len(q) > 0:
             gamma = q.pop(0)
             for x in A_dict:
-                delta = self.table[gamma][A_dict[x]]
+                delta = table[gamma][A_dict[x]]
                 if delta is not None:
-                    self.table[delta][A_dict_inv[x]] = None
+                    table[delta][A_dict_inv[x]] = None
+                    # only line of difference from ``coincidence`` routine
                     self.deduction_stack.append((delta, x**-1))
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
-                    if self.table[mu][A_dict[x]] is not None:
-                        self.merge(nu, self.table[mu][A_dict[x]], q)
-                    elif self.table[nu][A_dict_inv[x]] is not None:
-                        self.merge(mu, self.table[nu][A_dict_inv[x]], q)
+                    if table[mu][A_dict[x]] is not None:
+                        self.merge(nu, table[mu][A_dict[x]], q)
+                    elif table[nu][A_dict_inv[x]] is not None:
+                        self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
-                        self.table[mu][A_dict[x]] = nu
-                        self.table[nu][A_dict_inv[x]] = mu
+                        table[mu][A_dict[x]] = nu
+                        table[nu][A_dict_inv[x]] = mu
 
     def scan(self, alpha, word):
-        # alpha is an integer representing a "coset"
+        r"""
+        ``scan`` performs a scanning process on the input ``word``.
+        It first locates the largest prefix ``s`` of ``word`` for which
+        `\alpha^s` is defined (i.e is not ``None``), ``s`` may be empty. Let
+        ``word=sv``, let ``t`` be the longest suffix of ``v`` for which
+        `\alpha^{t^{-1}}` is defined, and let ``v=ut``. Then three
+        possibilities are there:
+
+        1. If ``t=v``, then we say that the scan completes, and if, in addition
+        `\alpha^s = \alpha^{t^{-1}}`, then we say that the scan completes
+        correctly.
+
+        2. It can also happen that scan does not complete, but `|u|=1`; that
+        is, the word ``u`` consists of a single generator `x \in A`. In that
+        case, if `\alpha^s = \beta` and `\alpha^{t^{-1}} = \gamma`, then we can
+        set `\beta^x = \gamma` and `\gamma^{x^{-1}} = \beta`. These assignments
+        are known as deductions and enable the scan to complete correctly.
+
+        3. See ``coicidence`` routine for explanation of third condition.
+
+        Notes
+        =====
+        The code for the procedure of scanning `\alpha \in \Omega`
+        under `w \in A*` is defined on pg. 155 [1]
+
+        See Also
+        ========
+        scan_c, scan_check, scan_and_fill, scan_and_fill_c
+
+        """
+        # α is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for alpha=0 and w in Y (i.e generating set of H)
-        # 2. alpha in omega (set of live cosets), w in R (relators)
+        # 1. for α=0 and w in Y (i.e generating set of H)
+        # 2. α in Ω (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             if f != b:
                 self.coincidence(f, b)
             return
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -289,37 +499,43 @@ class CosetTable(DefaultPrinting):
             self.coincidence(f, b)
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
         # otherwise scan is incomplete and yields no information
 
     # used in the low-index subgroups algorithm
     def scan_check(self, alpha, word):
-        """
-        Another version of "scan" routine, it checks whether α scans correctly
-        under w, it is a straightforward modification of "scan". "scan_check"
-        return false (rather than calling "coincidence") if the scan completes
-        incorrectly; otherwise it returns true.
+        r"""
+        Another version of ``scan`` routine, described on, it checks whether
+        `\alpha` scans correctly under `word`, it is a straightforward
+        modification of ``scan``. ``scan_check`` returns ``False`` (rather than
+        calling ``coincidence``) if the scan completes incorrectly; otherwise
+        it returns ``True``.
+
+        See Also
+        ========
+        scan, scan_c, scan_and_fill, scan_and_fill_c
 
         """
-        # alpha is an integer representing a "coset"
+        # α is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for alpha=0 and w in Y (i.e generating set of H)
-        # 2. alpha in omega (set of live cosets), w in R (relators)
+        # 1. for α=0 and w in Y (i.e generating set of H)
+        # 2. α in Ω (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         f = alpha
         i = 0
         r = len(word)
         b = alpha
         j = r - 1
-        while i <= j and self.table[f][A_dict[word[i]]] is not None:
-            f = self.table[f][A_dict[word[i]]]
+        while i <= j and table[f][A_dict[word[i]]] is not None:
+            f = table[f][A_dict[word[i]]]
             i += 1
         if i > j:
             return f == b
-        while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-            b = self.table[b][A_dict_inv[word[j]]]
+        while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+            b = table[b][A_dict_inv[word[j]]]
             j -= 1
         if j < i:
             # we have an incorrect completed scan with coincidence f ~ b
@@ -327,11 +543,31 @@ class CosetTable(DefaultPrinting):
             return False
         elif j == i:
             # deduction process
-            self.table[f][A_dict[word[i]]] = b
-            self.table[b][A_dict_inv[word[i]]] = f
+            table[f][A_dict[word[i]]] = b
+            table[b][A_dict_inv[word[i]]] = f
         return True
 
     def merge(self, k, lamda, q):
+        """
+        Input: 'k', 'lamda' being the two class representatives to be merged.
+        =====
+
+        Merge two classes with representatives ``k`` and ``lamda``, described
+        on Pg. 157 [1] (for pseudocode), start by putting ``p[k] = lamda``.
+        It is more efficient to choose the new representative from the larger
+        of the two classes being merged, i.e larger among ``k`` and ``lamda``.
+        procedure ``merge`` performs the merging operation, adds the deleted
+        class representative to the queue ``q``.
+
+        Notes
+        =====
+        Pg. 86-87 [1] contains a description of this method.
+
+        See Also
+        ========
+        coincidence, rep
+
+        """
         p = self.p
         phi = self.rep(k)
         psi = self.rep(lamda)
@@ -342,6 +578,42 @@ class CosetTable(DefaultPrinting):
             q.append(v)
 
     def rep(self, k):
+        r"""
+        Input: `k \in [0 \ldots n-1]`, as for ``self`` only array ``p`` is used
+        =====
+        Output: Representative of the class containing ``k``.
+        ======
+
+        Returns the representative of `\sim` class containing ``k``, it also
+        makes some modification to array ``p`` of ``self`` to ease further
+        computations, described on Pg. 157 [1].
+
+        The information on classes under `\sim` is stored in array `p` of
+        ``self`` argument, which will always satisfy the property:
+
+        `p[\alpha] \sim \alpha` and `p[\alpha]=\alpha \iff \alpha=rep(\alpha)`
+        `\forall \in [0 \ldots n-1]`.
+
+        So, for `\alpha \in [0 \ldots n-1]`, we find `rep(self, \alpha)` by
+        continually replacing `\alpha` by `p[\alpha]` until it becomes
+        constant (i.e satisfies `p[\alpha] = \alpha`):w
+
+        To increase the efficiency of later ``rep`` calculations, whenever we
+        find `rep(self, \alpha)=\beta`, we set
+        `p[\gamma] = \beta \forall \gamma \in p-chain` from `\alpha` to `\beta`
+
+        Notes
+        =====
+        ``rep`` routine is also described on Pg. 85-87 [1] in Atkinson's
+        algorithm, this results from the fact that ``coincidence`` routine
+        introduces functionality similar to that introduced by the
+        ``minimal_block`` routine on Pg. 85-87 [1].
+
+        See also
+        ========
+        coincidence, merge
+
+        """
         p = self.p
         lamda = k
         rho = p[lamda]
@@ -356,13 +628,29 @@ class CosetTable(DefaultPrinting):
             rho = p[mu]
         return lamda
 
-    # α, β coincide, i.e. α, β represent the pair of cosets where
-    # coincidence occurs
+    # α, β coincide, i.e. α, β represent the pair of cosets
+    # where coincidence occurs
     def coincidence(self, alpha, beta):
-        """
+        r"""
+        The third situation described in ``scan`` routine is handled by this
+        routine, described on Pg. 156-161 [1].
+
+        The unfortunate situation when the scan completes but not correctly,
+        then ``coincidence`` routine is run. i.e when for some `i` with
+        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
+        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
+        `\gamma = \alph^{t-1}` are defined but unequal. This means that
+        `\beta` and `\gamma` represent the same coset of `H` in `G`. Described
+        on Pg. 156 [1]. ``rep``
+
+        See Also
+        ========
+        scan
+
         """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         p = self.p
         l = 0
         # behaves as a queue
@@ -371,23 +659,33 @@ class CosetTable(DefaultPrinting):
         while len(q) > 0:
             gamma = q.pop(0)
             for x in A_dict:
-                delta = self.table[gamma][A_dict[x]]
+                delta = table[gamma][A_dict[x]]
                 if delta is not None:
-                    self.table[delta][A_dict_inv[x]] = None
+                    table[delta][A_dict_inv[x]] = None
                     mu = self.rep(gamma)
                     nu = self.rep(delta)
-                    if self.table[mu][A_dict[x]] is not None:
-                        self.merge(nu, self.table[mu][A_dict[x]], q)
-                    elif self.table[nu][A_dict_inv[x]] is not None:
-                        self.merge(mu, self.table[nu][A_dict_inv[x]], q)
+                    if table[mu][A_dict[x]] is not None:
+                        self.merge(nu, table[mu][A_dict[x]], q)
+                    elif table[nu][A_dict_inv[x]] is not None:
+                        self.merge(mu, table[nu][A_dict_inv[x]], q)
                     else:
-                        self.table[mu][A_dict[x]] = nu
-                        self.table[nu][A_dict_inv[x]] = mu
+                        table[mu][A_dict[x]] = nu
+                        table[nu][A_dict_inv[x]] = mu
 
     # method used in the HLT strategy
     def scan_and_fill(self, alpha, word):
+        """
+        A modified version of ``scan`` routine used in the relator-based
+        method of coset enumeration, described on pg. 162-163 [1], which
+        follows the idea that whenever the procedure is called and the scan
+        is incomplete then it makes new definitions to enable the scan to
+        complete; i.e it fills in the gaps in the scan of the relator or
+        subgroup generator.
+
+        """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         r = len(word)
         f = alpha
         i = 0
@@ -396,28 +694,40 @@ class CosetTable(DefaultPrinting):
         # loop until it has filled the α row in the table.
         while True:
             # do the forward scanning
-            while i <= j and self.table[f][A_dict[word[i]]] is not None:
-                f = self.table[f][A_dict[word[i]]]
+            while i <= j and table[f][A_dict[word[i]]] is not None:
+                f = table[f][A_dict[word[i]]]
                 i += 1
             if i > j:
                 if f != b:
                     self.coincidence(f, b)
                 return
             # forward scan was incomplete, scan backwards
-            while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-                b = self.table[b][A_dict_inv[word[j]]]
+            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+                b = table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
                 self.coincidence(f, b)
             elif j == i:
-                self.table[f][A_dict[word[i]]] = b
-                self.table[b][A_dict_inv[word[i]]] = f
+                table[f][A_dict[word[i]]] = b
+                table[b][A_dict_inv[word[i]]] = f
             else:
                 self.define(f, word[i])
 
-    def scan_and_fill_f(self, alpha, word):
+    def scan_and_fill_c(self, alpha, word):
+        """
+        A modified version of ``scan`` routine, described on Pg. 165 second
+        para. [1], with modification similar to that of ``scan_anf_fill`` the
+        only difference being it calls the coincidence procedure used in the
+        coset-table based method i.e. the routine ``coincidence_c`` is used.
+
+        Also See
+        ========
+        scan, scan_and_fill
+
+        """
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         r = len(word)
         f = alpha
         i = 0
@@ -426,27 +736,36 @@ class CosetTable(DefaultPrinting):
         # loop until it has filled the α row in the table.
         while True:
             # do the forward scanning
-            while i <= j and self.table[f][A_dict[word[i]]] is not None:
-                f = self.table[f][A_dict[word[i]]]
+            while i <= j and table[f][A_dict[word[i]]] is not None:
+                f = table[f][A_dict[word[i]]]
                 i += 1
             if i > j:
                 if f != b:
-                    self.coincidence_f(f, b)
+                    self.coincidence_c(f, b)
                 return
             # forward scan was incomplete, scan backwards
-            while j >= i and self.table[b][A_dict_inv[word[j]]] is not None:
-                b = self.table[b][A_dict_inv[word[j]]]
+            while j >= i and table[b][A_dict_inv[word[j]]] is not None:
+                b = table[b][A_dict_inv[word[j]]]
                 j -= 1
             if j < i:
-                self.coincidence_f(f, b)
+                self.coincidence_c(f, b)
             elif j == i:
-                self.table[f][A_dict[word[i]]] = b
-                self.table[b][A_dict_inv[word[i]]] = f
+                table[f][A_dict[word[i]]] = b
+                table[b][A_dict_inv[word[i]]] = f
                 self.deduction_stack.append((f, word[i]))
             else:
-                self.define_f(f, word[i])
+                self.define_c(f, word[i])
 
+    # method used in the HLT strategy
     def look_ahead(self):
+        """
+        When combined with the HLT method this is known as HLT+Lookahead
+        method of coset enumeration, described on pg. 164 [1]. Whenever
+        ``define`` aborts due to lack of space available this procedure is
+        executed. This routine helps in recovering space resulting from
+        "coincidence" of cosets.
+
+        """
         R = self.fp_group.relators()
         p = self.p
         # complete scan all relators under all cosets(obviously live)
@@ -459,7 +778,17 @@ class CosetTable(DefaultPrinting):
 
     # Pg. 166
     def process_deductions(self, R_c_x, R_c_x_inv):
+        """
+        Processes the deductions that have been pushed onto ``deduction_stack``,
+        described on Pg. 166 [1] and is used in coset-table based enumeration.
+
+        See Also
+        ========
+        deduction_stack
+
+        """
         p = self.p
+        table = self.table
         while len(self.deduction_stack) > 0:
             if len(self.deduction_stack) >= CosetTable.max_stack_size:
                 self.look_ahead()
@@ -468,28 +797,34 @@ class CosetTable(DefaultPrinting):
                 alpha, x = self.deduction_stack.pop()
                 if p[alpha] == alpha:
                     for w in R_c_x:
-                        self.scan_f(alpha, w)
+                        self.scan_c(alpha, w)
                         if p[alpha] < alpha:
                             break
-            beta = self.table[alpha][self.A_dict[x]]
+            beta = table[alpha][self.A_dict[x]]
             if beta is not None and p[beta] == beta:
                 for w in R_c_x_inv:
-                    self.scan_f(beta, w)
+                    self.scan_c(beta, w)
                     if p[beta] < beta:
                         break
 
     def process_deductions_check(self, R_c_x, R_c_x_inv):
         """
-        A variation of "process_deductions", this calls "scan_check" wherever
-        "process_deductions" calls "scan".
+        A variation of ``process_deductions``, this calls ``scan_check``
+        wherever ``process_deductions`` calls ``scan``, described on Pg. [1].
+
+        See Also
+        ========
+        process_deductions
+
         """
         p = self.p
+        table = self.table
         while len(self.deduction_stack) > 0:
             alpha, x = self.deduction_stack.pop()
             for w in R_c_x:
                 if not self.scan_check(alpha, w):
                     return False
-            beta = self.table[alpha][self.A_dict[x]]
+            beta = table[alpha][self.A_dict[x]]
             if beta is not None:
                 for w in R_c_x_inv:
                     if not self.scan_check(beta, w):
@@ -497,8 +832,13 @@ class CosetTable(DefaultPrinting):
         return True
 
     def switch(self, beta, gamma):
-        """
-        Switch the elements β, γ of Ω in C
+        r"""Switch the elements `\beta, \gamma \in \Omega` of ``self``, used
+        by the ``standardize`` procedure, described on Pg. 167 [1].
+
+        See Also
+        ========
+        standardize
+
         """
         A = self.A
         A_dict = self.A_dict
@@ -517,16 +857,22 @@ class CosetTable(DefaultPrinting):
                         table[alpha][A_dict[x]] = beta
 
     def standardize(self):
-        """A coset table is standardized if when running through the cosets
-        and within each coset through the generator images (ignoring generator
-        inverses), the cosets appear in order of the integers 0, 1, 2, ... n.
-        "Standardize" reorders the elements of \Omega such that, if we scan
-        the coset table first by elements of \Omega and then by elements of A,
-        then the cosets occur in ascending order. `standardize()` is used at
-        the end of an enumeration to permute the cosets so that they occur in
-        some sort of standard order.
+        """
+        A coset table is standardized if when running through the cosets and
+        within each coset through the generator images (ignoring generator
+        inverses), the cosets appear in order of the integers
+        `0, 1, , \ldots, n`. "Standardize" reorders the elements of `\Omega`
+        such that, if we scan the coset table first by elements of `\Omega`
+        and then by elements of A, then the cosets occur in ascending order.
+        ``standardize()`` is used at the end of an enumeration to permute the
+        cosets so that they occur in some sort of standard order.
 
-        >>> from sympy.combinatorics.free_group import free_group
+        Notes
+        =====
+        procedure is described on pg. 167-168 [1], it also makes use of the
+        ``switch`` routine to replace by smaller integer value.
+
+        >>> from sympy.combinatorics.free_groups import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
 
@@ -555,29 +901,31 @@ class CosetTable(DefaultPrinting):
                     return
 
     # Compression of a Coset Table
-    # Pg. 167 5.2.3
     def compress(self):
-        """Removes the non-live cosets from the coset table
+        """Removes the non-live cosets from the coset table, described on
+        pg. 167 [1].
+
         """
         gamma = -1
         A = self.A
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
+        table = self.table
         chi = tuple([i for i in range(len(self.p)) if self.p[i] != i])
         for alpha in self.omega:
             gamma += 1
             if gamma != alpha:
                 # replace α by γ in coset table
                 for x in A:
-                    beta = self.table[alpha][A_dict[x]]
-                    self.table[gamma][A_dict[x]] = beta
-                    self.table[beta][A_dict_inv[x]] == gamma
+                    beta = table[alpha][A_dict[x]]
+                    table[gamma][A_dict[x]] = beta
+                    table[beta][A_dict_inv[x]] == gamma
         # all the cosets in the table are live cosets
         self.p = list(range(gamma + 1))
         # delete the useless coloumns
-        del self.table[len(self.p):]
+        del table[len(self.p):]
         # re-define values
-        for row in self.table:
+        for row in table:
             for j in range(len(self.A)):
                 row[j] -= bisect_left(chi, row[j])
 
@@ -602,7 +950,26 @@ class CosetTable(DefaultPrinting):
 # relator-based method
 def coset_enumeration_r(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    This is easier of the two implemented methods of coset enumeration.
+    and is often called the HLT method, after Hazelgrove, Leech, Trotter
+    The idea is that we make use of ``scan_and_fill`` makes new definitions
+    whenever the scan is incomplete to enable the scan to complete; this way
+    we fill in the gaps in the scan of the relator or subgroup generator,
+    that's why the name relator-based method.
+
+    # TODO: complete the docstring
+
+    See Also
+    ========
+    scan_and_fill,
+
+    References
+    ==========
+
+    [1] Holt, D., Eick, B., O'Brien, E.
+    "Handbook of computational group theory"
+
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
     >>> F, x, y = free_group("x, y")
 
@@ -737,9 +1104,10 @@ def coset_enumeration_r(fp_grp, Y):
         if p[alpha] == alpha:
             for w in R:
                 C.scan_and_fill(alpha, w)
+                # if α was eliminated during the scan then break
                 if p[alpha] < alpha:
                     break
-            if p[alpha] >= alpha:
+            if p[alpha] == alpha:
                 for x in A_dict:
                     if C.table[alpha][A_dict[x]] is None:
                         C.define(alpha, x)
@@ -751,7 +1119,7 @@ def coset_enumeration_r(fp_grp, Y):
 # coset-table based method
 def coset_enumeration_c(fp_grp, Y):
     """
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_c
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -779,17 +1147,19 @@ def coset_enumeration_c(fp_grp, Y):
         R_c_list.append(r)
         R_set.difference_update(r)
     for w in Y:
-        C.scan_and_fill_f(0, w)
+        C.scan_and_fill_c(0, w)
     for x in A:
         C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
-    i = 0
-    while i < len(C.omega):
-        alpha = C.omega[i]
-        i += 1
-        for x in C.A:
-            if C.table[alpha][C.A_dict[x]] is None:
-                C.define_f(alpha, x)
-                C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+    alpha = 0
+    while alpha < len(C.table):
+        if C.p[alpha] == alpha:
+            for x in C.A:
+                if C.p[alpha] != alpha:
+                    break
+                if C.table[alpha][C.A_dict[x]] is None:
+                    C.define_c(alpha, x)
+                    C.process_deductions(R_c_list[C.A_dict[x]], R_c_list[C.A_dict_inv[x]])
+        alpha += 1
     return C
 
 
@@ -800,7 +1170,7 @@ def coset_enumeration_c(fp_grp, Y):
 def low_index_subgroups(G, N, Y=[]):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
-    "G" upto a given index "N". This implements the method described in
+    ``G`` upto a given index ``N``. This implements the method described in
     [Sim94]. This procedure involves a backtrack search over incomplete Coset
     Tables, rather than over forced coincidences.
 
@@ -822,7 +1192,7 @@ def low_index_subgroups(G, N, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -880,8 +1250,10 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
 
 
 def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
-    """
-    It solves the problem of trying out each individual possibility for α^x.
+    r"""
+    Solves the problem of trying out each individual possibility
+    for `\alpha^x.
+
     """
     D = C.copy()
     A_dict = D.A_dict
@@ -903,8 +1275,8 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
 
 def first_in_class(C, Y=[]):
     """
-    Checks whether the subgroup H=G1 corresponding to the Coset Table could
-    possibly be the canonical representative of its conjugacy class.
+    Checks whether the subgroup ``H=G1`` corresponding to the Coset Table
+    could possibly be the canonical representative of its conjugacy class.
 
     Parameters
     ==========
@@ -924,7 +1296,7 @@ def first_in_class(C, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1105,7 +1477,7 @@ def rewrite(C, alpha, w):
     ========
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> F, x, y = free_group("x ,y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
@@ -1178,7 +1550,7 @@ def elimination_technique_2(C):
     seems superior in that we may select for elimination the generator with
     shortest equivalent string at each stage.
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
             reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
@@ -1213,9 +1585,7 @@ def elimination_technique_2(C):
     return C._schreier_generators, C._reidemeister_relators
 
 def simplify_presentation(C):
-    """
-    Relies upon `_simplification_technique_1` for its functioning.
-    """
+    """Relies upon ``_simplification_technique_1`` for its functioning. """
     rels = C._reidemeister_relators
     rels_arr = _simplification_technique_1(rels)
     group = C._schreier_free_group
@@ -1232,7 +1602,7 @@ def _simplification_technique_1(rels):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
@@ -1308,7 +1678,7 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_group import free_group
+    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 

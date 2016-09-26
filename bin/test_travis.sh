@@ -24,6 +24,7 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
+    ./bin/test -k tensorflow
 fi
 
 if [[ "${TEST_SYMENGINE}" == "true" ]]; then
