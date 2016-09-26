@@ -61,7 +61,18 @@ from sympy.core.compatibility import iterable, range
 
 @public
 class Poly(Expr):
-    """Generic class for representing polynomial expressions. """
+    """Generic class for representing polynomial expressions.
+        
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> poly(x*(x**2 + x - 1)**2)
+        Poly(x**5 + 2*x**4 - x**3 - 2*x**2 + x, x, domain='ZZ')
+
+    """
 
     __slots__ = ['rep', 'gens']
 
