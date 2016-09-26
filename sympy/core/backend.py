@@ -10,7 +10,8 @@ if USE_SYMENGINE:
         expand, Function, symbols, var, Add, Mul, Derivative)
     from symengine.sympy_compat import AppliedUndef
     #TODO: Fix this
-    from symengine import Matrix as ImmutableMatrix
+    from symengine.lib.symengine_wrapper import (Matrix as ImmutableMatrix,
+        MatrixBase)
 else:
     from sympy import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
@@ -19,4 +20,4 @@ else:
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative)
     from sympy.core.function import AppliedUndef
-    from sympy import ImmutableMatrix
+    from sympy import ImmutableMatrix, MatrixBase
