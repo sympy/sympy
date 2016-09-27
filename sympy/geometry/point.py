@@ -204,7 +204,7 @@ class Point(GeometryEntity):
     @classmethod
     def are_coplanar(cls, *points):
         """Return True if there exists a plane in which all the points
-        lie.  A trivial True value is returned if `len(points) < 3 or
+        lie.  A trivial True value is returned if `len(points) < 3` or
         all Points are 2-dimensional.
 
         Parameters
@@ -403,6 +403,7 @@ class Point(GeometryEntity):
 
     @property
     def ambient_dimension(self):
+        """Number of components this point has."""
         return getattr(self, '_ambient_dimension', len(self))
 
     @property
