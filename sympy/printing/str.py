@@ -742,7 +742,7 @@ class StrPrinter(Printer):
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
     def _print_Reals(self, p):
-	return "S.Reals"
+        return "S.Reals"
 
     def _print_Naturals(self, p):
         return "S.Naturals"
