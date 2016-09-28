@@ -202,7 +202,10 @@ class Curve(GeometrySet):
         Curve((-x, x), (x, 0, 1))
         """
         from sympy.matrices import Matrix, rot_axis3
-        pt = -Point(pt or (0, 0))
+        if pt:
+            pt = -Point(pt, dim=2)
+        else:
+            pt = Point(0,0)
         rv = self.translate(*pt.args)
         f = list(rv.functions)
         f.append(0)
@@ -227,7 +230,7 @@ class Curve(GeometrySet):
         Curve((2*x, x), (x, 0, 1))
         """
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         fx, fy = self.functions
         return self.func((fx*x, fy*y), self.limits)

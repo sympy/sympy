@@ -5,7 +5,7 @@ from sympy import Abs, Rational, Float, S, Symbol, cos, pi, sqrt, oo
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, Polygon, Ray, RegularPolygon, Segment, Triangle, are_similar,
                             convex_hull, intersection, Line)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
 
@@ -15,7 +15,7 @@ def feq(a, b):
     t_float = Float("1.0E-10")
     return -t_float < a - b < t_float
 
-
+@slow
 def test_polygon():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)

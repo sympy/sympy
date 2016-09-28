@@ -125,7 +125,7 @@ class Ellipse(GeometrySet):
         if center is None:
             center = Point(0, 0)
         else:
-            center = Point(center)
+            center = Point(center, dim=2)
 
         if len(center) != 2:
             raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
@@ -564,7 +564,7 @@ class Ellipse(GeometrySet):
         """
         c = self.center
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         h = self.hradius
         v = self.vradius
@@ -651,7 +651,7 @@ class Ellipse(GeometrySet):
         False
 
         """
-        p = Point(p)
+        p = Point(p, dim=2)
         if p in self:
             return False
 
@@ -702,7 +702,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.tangent_lines(Point(3, 0))
-        [Line(Point2D(3, 0), Point2D(3, -12))]
+        [Line2D(Point2D(3, 0), Point2D(3, -12))]
 
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
@@ -714,7 +714,7 @@ class Ellipse(GeometrySet):
         >>> p[1] = t # doctest: +SKIP
 
         """
-        p = Point(p)
+        p = Point(p, dim=2)
         if self.encloses_point(p):
             return []
 
@@ -835,9 +835,9 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
-        [Line(Point2D(0, 0), Point2D(1, 0))]
+        [Line2D(Point2D(0, 0), Point2D(1, 0))]
         >>> e.normal_lines(c)
-        [Line(Point2D(0, 0), Point2D(0, 1)), Line(Point2D(0, 0), Point2D(1, 0))]
+        [Line2D(Point2D(0, 0), Point2D(0, 1)), Line2D(Point2D(0, 0), Point2D(1, 0))]
 
         Off-axis points require the solution of a quartic equation. This
         often leads to very large expressions that may be of little practical
@@ -845,13 +845,13 @@ class Ellipse(GeometrySet):
         passing in the desired value:
 
         >>> e.normal_lines((3, 3), prec=2)
-        [Line(Point2D(-38/47, -85/31), Point2D(9/47, -21/17)),
-        Line(Point2D(19/13, -43/21), Point2D(32/13, -8/3))]
+        [Line2D(Point2D(-0.81, -2.7), Point2D(0.19, -1.2)),
+        Line2D(Point2D(1.5, -2.0), Point2D(2.5, -2.7))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
         """
-        p = Point(p)
+        p = Point(p, dim=2)
 
         # XXX change True to something like self.angle == 0 if the arbitrarily
         # rotated ellipse is introduced.
@@ -1334,7 +1334,7 @@ class Circle(Ellipse):
     def __new__(cls, *args, **kwargs):
         c, r = None, None
         if len(args) == 3:
-            args = [Point(a) for a in args]
+            args = [Point(a, dim=2) for a in args]
             if Point.is_collinear(*args):
                 raise GeometryError(
                     "Cannot construct a circle from three collinear points")
@@ -1344,7 +1344,7 @@ class Circle(Ellipse):
             r = t.circumradius
         elif len(args) == 2:
             # Assume (center, radius) pair
-            c = Point(args[0])
+            c = Point(args[0], dim=2)
             r = sympify(args[1])
 
         if not (c is None or r is None):
@@ -1526,7 +1526,7 @@ class Circle(Ellipse):
         """
         c = self.center
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         c = c.scale(x, y)
         x, y = [abs(i) for i in (x, y)]

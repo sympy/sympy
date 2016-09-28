@@ -77,9 +77,9 @@ class Polygon(GeometrySet):
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
     >>> Polygon(p1, p2)
-    Segment(Point2D(0, 0), Point2D(1, 0))
+    Segment2D(Point2D(0, 0), Point2D(1, 0))
     >>> Polygon(p1, p2, p5)
-    Segment(Point2D(0, 0), Point2D(3, 0))
+    Segment2D(Point2D(0, 0), Point2D(3, 0))
 
     While the sides of a polygon are not allowed to cross implicitly, they
     can do so explicitly. For example, a polygon shaped like a Z with the top
@@ -123,7 +123,7 @@ class Polygon(GeometrySet):
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
-        vertices = [Point(a) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -142,6 +142,7 @@ class Polygon(GeometrySet):
                 shared.add(p)
             else:
                 got.add(p)
+        del got
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
@@ -416,9 +417,9 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.sides
-        [Segment(Point2D(0, 0), Point2D(1, 0)),
-        Segment(Point2D(1, 0), Point2D(5, 1)),
-        Segment(Point2D(0, 1), Point2D(5, 1)), Segment(Point2D(0, 0), Point2D(0, 1))]
+        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
+        Segment2D(Point2D(1, 0), Point2D(5, 1)),
+        Segment2D(Point2D(0, 1), Point2D(5, 1)), Segment2D(Point2D(0, 0), Point2D(0, 1))]
 
         """
         res = []
@@ -519,7 +520,7 @@ class Polygon(GeometrySet):
         [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
-        p = Point(p)
+        p = Point(p, dim=2)
         if p in self.vertices or any(p in s for s in self.sides):
             return False
 
@@ -1081,7 +1082,7 @@ class RegularPolygon(Polygon):
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
-        c = Point(c)
+        c = Point(c, dim=2, **kwargs)
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
@@ -1555,7 +1556,7 @@ class RegularPolygon(Polygon):
 
         """
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         if x != y:
             return Polygon(*self.vertices).scale(x, y)
@@ -1693,7 +1694,7 @@ class Triangle(Polygon):
             msg = "Triangle instantiates with three points or a valid keyword."
             raise GeometryError(msg)
 
-        vertices = [Point(a) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -1937,7 +1938,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.altitudes[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2003,6 +2004,8 @@ class Triangle(Polygon):
         Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
+        if not a.intersection(b):
+            print(a,b,a.intersection(b))
         return a.intersection(b)[0]
 
     @property
@@ -2212,7 +2215,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medians[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2301,7 +2304,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.eulerline
-        Line(Point2D(0, 0), Point2D(1/2, 1/2))
+        Line2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         if self.is_equilateral():

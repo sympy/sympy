@@ -35,12 +35,15 @@ ordering_of_classes = [
     "Point2D",
     "Point3D",
     "Point",
+    "Segment2D",
+    "Ray2D",
+    "Line2D",
+    "Segment3D",
+    "Line3D",
+    "Ray3D",
     "Segment",
     "Ray",
     "Line",
-    "Line3D",
-    "Ray3D",
-    "Segment3D",
     "Plane",
     "Triangle",
     "RegularPolygon",
@@ -154,7 +157,7 @@ class GeometryEntity(Basic):
         """
         from sympy.geometry.point import Point
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return type(self)(*[a.scale(x, y) for a in self.args])  # if this fails, override this class
 
@@ -495,7 +498,12 @@ class GeometrySet(GeometryEntity, Set):
         from sympy.geometry import Point
 
         try:
-            inter = self.intersection(o)
+            # if o is a FiniteSet, find the intersection directly
+            # to avoid infinite recursion
+            if o.is_FiniteSet:
+                inter = FiniteSet(*(p for p in o if self.contains(p)))
+            else:
+                inter = self.intersection(o)
         except NotImplementedError:
             # sympy.sets.Set.reduce expects None if an object
             # doesn't know how to simplify
@@ -524,7 +532,7 @@ def scale(x, y, pt=None):
     rv[1, 1] = y
     if pt:
         from sympy.geometry.point import Point
-        pt = Point(pt)
+        pt = Point(pt, dim=2)
         tr1 = translate(*(-pt).args)
         tr2 = translate(*pt.args)
         return tr1*rv*tr2

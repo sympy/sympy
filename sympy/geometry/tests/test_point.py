@@ -1,10 +1,23 @@
 from __future__ import division
 
 from sympy import I, Rational, Symbol, pi, sqrt
-from sympy.geometry import Line, Point, Point2D, Point3D, Line3D
+from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
+from sympy.utilities.iterables import subsets, permutations, cartes
 from sympy.utilities.pytest import raises
+
+import traceback
+import warnings
+import sys
+
+# make warnings show tracebacks
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+    traceback.print_stack()
+    log = file if hasattr(file,'write') else sys.stderr
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+warnings.showwarning = warn_with_traceback
+warnings.simplefilter('always', UserWarning)     # make sure to show warnings every time they occurr
 
 
 def test_point():
@@ -48,6 +61,11 @@ def test_point():
     p1_2 = Point(y2, y2)
     p1_3 = Point(x1 + 1, x1)
     assert Point.is_collinear(p3)
+
+    with warnings.catch_warnings(record=True) as w:
+        assert Point.is_collinear(p3, Point(p3, dim=4))
+        assert len(w) == 1
+    assert p3.is_collinear()
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
@@ -68,8 +86,10 @@ def test_point():
     assert Point.is_concyclic(p2_1)
     assert Point.is_concyclic(p2_1, p2_2)
     assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_4)
-    assert Point.is_concyclic(p2_1, p2_2, p2_3, p2_5) is False
+    for pts in permutations((p2_1, p2_2, p2_3, p2_5)):
+        assert Point.is_concyclic(*pts) is False
     assert Point.is_concyclic(p4, p4 * 2, p4 * 3) is False
+    assert Point(0, 0).is_concyclic((1, 1), (2, 2), (2, 1)) is False
 
     assert p4.scale(2, 3) == Point(2, 3)
     assert p3.scale(2, 3) == p3
@@ -145,10 +165,7 @@ def test_point3D():
     p1_1 = Point3D(x1, x1, x1)
     p1_2 = Point3D(y2, y2, y2)
     p1_3 = Point3D(x1 + 1, x1, x1)
-    # according to the description in the docs, points are collinear
-    # if they like on a single line.  Thus a single point should always
-    # be collinear
-    assert Point3D.are_collinear(p3)
+    Point3D.are_collinear(p3)
     assert Point3D.are_collinear(p3, p4)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
     assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
@@ -181,7 +198,7 @@ def test_point3D():
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
     # Test __new__
-    assert Point3D(Point3D(1, 2, 3), 4, 5, evaluate=False) ==  Point3D(1, 2, 3)
+    assert Point3D(0.1, 0.2, evaluate=False, on_morph='ignore').args[0].is_Float
 
 
     # Test length property returns correctly
@@ -193,14 +210,26 @@ def test_point3D():
     raises(TypeError, lambda: Point3D.are_collinear(p, x))
 
     # Test are_coplanar
+    assert Point.are_coplanar()
+    assert Point.are_coplanar((1, 2, 0), (1, 2, 0), (1, 3, 0))
+    assert Point.are_coplanar((1, 2, 0), (1, 2, 3))
+    with warnings.catch_warnings(record=True) as w:
+        raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
+    assert Point3D.are_coplanar((1, 2, 0), (1, 2, 3))
+    assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
     planar2 = Point3D(1, -1, 1)
     planar3 = Point3D(-1, 1, 1)
     assert Point3D.are_coplanar(p, planar2, planar3) == True
     assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
-    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2))
+    assert Point.are_coplanar(p, planar2)
     planar2 = Point3D(1, 1, 2)
     planar3 = Point3D(1, 1, 3)
-    raises(ValueError, lambda: Point3D.are_coplanar(p, planar2, planar3))
+    assert Point3D.are_coplanar(p, planar2, planar3)  # line, not plane
+    plane = Plane((1, 2, 1), (2, 1, 0), (3, 1, 2))
+    assert Point.are_coplanar(*[plane.projection(((-1)**i, i)) for i in range(4)])
+
+    # all 2D points are coplanar
+    assert Point.are_coplanar(Point(x, y), Point(x, x + y), Point(y, x + 2)) is True
 
     # Test Intersection
     assert planar2.intersection(Line3D(p, planar3)) == [Point3D(1, 1, 2)]
@@ -222,8 +251,14 @@ def test_point3D():
     assert p.equals(x1) == False
 
     # Test __sub__
-    p_2d = Point(0, 0)
-    raises(ValueError, lambda: (p - p_2d))
+    p_4d = Point(0, 0, 0, 1)
+    with warnings.catch_warnings(record=True) as w:
+        assert p - p_4d == Point(1, 1, 1, -1)
+        assert len(w) == 1
+    p_4d3d = Point(0, 0, 1, 0)
+    with warnings.catch_warnings(record=True) as w:
+        assert p - p_4d3d == Point(1, 1, 0, 0)
+        assert len(w) == 1
 
 
 def test_Point2D():
@@ -243,11 +278,15 @@ def test_issue_9214():
 
     assert Point3D.are_collinear(p1, p2, p3) is False
 
+
 def test_issue_11617():
     p1 = Point3D(1,0,2)
     p2 = Point2D(2,0)
 
-    assert p1.distance(p2) == sqrt(5)
+    with warnings.catch_warnings(record=True) as w:
+        assert p1.distance(p2) == sqrt(5)
+        assert len(w) == 1
+
 
 def test_transform():
     p = Point(1, 1)
@@ -265,3 +304,90 @@ def test_concyclic_doctest_bug():
     p3, p4 = Point(0, 1), Point(-1, 2)
     assert Point.is_concyclic(p1, p2, p3)
     assert not Point.is_concyclic(p1, p2, p3, p4)
+
+
+def test_arguments():
+    """Functions accepting `Point` objects in `geometry`
+    should also accept tuples and lists and
+    automatically convert them to points."""
+
+    singles2d = ((1,2), [1,2], Point(1,2))
+    singles2d2 = ((1,3), [1,3], Point(1,3))
+    doubles2d = cartes(singles2d, singles2d2)
+    p2d = Point2D(1,2)
+    singles3d = ((1,2,3), [1,2,3], Point(1,2,3))
+    doubles3d = subsets(singles3d, 2)
+    p3d = Point3D(1,2,3)
+    singles4d = ((1,2,3,4), [1,2,3,4], Point(1,2,3,4))
+    doubles4d = subsets(singles4d, 2)
+    p4d = Point(1,2,3,4)
+
+    # test 2D
+    test_single = ['distance', 'is_scalar_multiple', 'taxicab_distance', 'midpoint', 'intersection', 'dot', 'equals', '__add__', '__sub__']
+    test_double = ['is_concyclic', 'is_collinear']
+    for p in singles2d:
+        Point2D(p)
+    for func in test_single:
+        for p in singles2d:
+            getattr(p2d, func)(p)
+    for func in test_double:
+        for p in doubles2d:
+            getattr(p2d, func)(*p)
+
+    # test 3D
+    test_double = ['is_collinear']
+    for p in singles3d:
+        Point3D(p)
+    for func in test_single:
+        for p in singles3d:
+            getattr(p3d, func)(p)
+    for func in test_double:
+        for p in doubles2d:
+            getattr(p3d, func)(*p)
+
+    # test 4D
+    test_double = ['is_collinear']
+    for p in singles4d:
+        Point(p)
+    for func in test_single:
+        for p in singles4d:
+            getattr(p4d, func)(p)
+    for func in test_double:
+        for p in doubles4d:
+            getattr(p4d, func)(*p)
+
+    # test evaluate=False for ops
+    x = Symbol('x')
+    a = Point(0, 1)
+    assert a + (0.1, x) == Point(0.1, 1 + x)
+    a = Point(0, 1)
+    assert a/10.0 == Point(0.0, 0.1)
+    a = Point(0, 1)
+    assert a*10.0 == Point(0.0, 10.0)
+
+    # test evaluate=False when changing dimensions
+    u = Point(.1, .2, evaluate=False)
+    u4 = Point(u, dim=4, on_morph='ignore')
+    assert u4.args == (.1, .2, 0, 0)
+    assert all(i.is_Float for i in u4.args[:2])
+    # and even when *not* changing dimensions
+    assert all(i.is_Float for i in Point(u).args)
+
+    # never raise error if creating an origin
+    assert Point(dim=3, on_morph='error')
+
+
+def test_unit():
+    assert Point(1, 1).unit == Point(sqrt(2)/2, sqrt(2)/2)
+
+
+def test_dot():
+    raises(TypeError, lambda: Point(1, 2).dot(Line((0, 0), (1, 1))))
+
+
+def test__normalize_dimension():
+    assert Point._normalize_dimension(Point(1, 2), Point(3, 4)) == [
+        Point(1, 2), Point(3, 4)]
+    assert Point._normalize_dimension(
+        Point(1, 2), Point(3, 4, 0), on_morph='ignore') == [
+        Point(1, 2, 0), Point(3, 4, 0)]

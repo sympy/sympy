@@ -523,7 +523,7 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line3d import LinearEntity3D
+    from sympy.geometry.line import LinearEntity3D
     from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
     # XXX update tests for coverage
