@@ -1218,8 +1218,8 @@ def special_diop_DN(D, N):
     (137, 38). Each tuple is in the form (x, y), i.e solution (7, 2) means
     that `x = 7` and `y = 2`.
 
-    >>> special_diop_DN(986, 1) # Solves equation x**2 - 986*y**2 = 1
-    [(49299, 1570)]
+    >>> special_diop_DN(2445, -20) # Solves equation x**2 - 2445*y**2 = -20
+    [(445, 9), (17625560, 356454), (698095554475, 14118073569)]
 
     See Also
     ========
