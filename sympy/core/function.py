@@ -194,7 +194,7 @@ class FunctionClass(ManagedProperties):
         numbers is returned:
 
         >>> Function('f').nargs
-        Naturals0()
+        S.Naturals0
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
@@ -210,7 +210,7 @@ class FunctionClass(ManagedProperties):
 
         >>> f = Function('f')
         >>> f(1).nargs
-        Naturals0()
+        S.Naturals0
         >>> len(f(1).args)
         1
         """
@@ -799,7 +799,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    Naturals0()
+    S.Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
