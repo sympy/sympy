@@ -3274,7 +3274,7 @@ def test_pretty_sets():
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
-    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
+    ascii_str = 'S.Reals'
     ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
@@ -5111,7 +5111,7 @@ def test_categories():
 
     # Test how diagrams are printed.
     d = Diagram()
-    assert pretty(d) == "EmptySet()"
+    assert pretty(d) == "S.EmptySet"
     assert upretty(d) == u"∅"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
@@ -5349,9 +5349,9 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
+    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ Naturals0()'
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ S.Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
 
 
