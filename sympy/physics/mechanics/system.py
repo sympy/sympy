@@ -1,4 +1,4 @@
-from sympy import eye, Matrix, zeros
+from sympy.core.backend import eye, Matrix, zeros
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics.functions import find_dynamicsymbols
 
