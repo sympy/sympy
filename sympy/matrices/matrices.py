@@ -186,11 +186,7 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-<<<<<<< Updated upstream
-    def evaluate_power(self,num):
-=======
     def _eval_power(self,num):
->>>>>>> Stashed changes
         from sympy.matrices import eye, diag, MutableMatrix
         from sympy import binomial
         if not self.is_square:
