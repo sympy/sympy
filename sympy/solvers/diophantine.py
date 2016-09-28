@@ -1087,11 +1087,11 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                         sol.append((sq, y))
 
                 return sol
-        
+
         elif 1 < N**2 < D:
             # It is much faster to call `special_diop_DN`.
             return special_diop_DN(D, N)
-        
+
         else:
             if N == 0:
                 return [(0, 0)]
@@ -1228,7 +1228,7 @@ def special_diop_DN(D, N):
 
     References
     ==========
-    
+
     .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
