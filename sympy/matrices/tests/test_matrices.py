@@ -196,9 +196,13 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
     A = Matrix([[33, 24], [48, 57]])
+<<<<<<< Updated upstream
     assert ((A**(S(1)/2)).doit())[:] == [5, 2, 4, 7]
+=======
+    assert ( (A**(S(1)/2)).doit() )[:] == [5, 2, 4, 7]
+>>>>>>> Stashed changes
     A = Matrix([[0, 4], [-1, 5]])
-    assert (A**(S(1)/2))**2 == A
+    assert ((A**(S(1)/2))**2).doit() == A
 
     assert (Matrix([[1, 0], [1, 1]])**(S(1)/2)).doit() == Matrix([[1, 0], [S.Half, 1]])
     assert (Matrix([[1, 0], [1, 1]])**0.5).doit() == Matrix([[1.0, 0], [0.5, 1.0]])

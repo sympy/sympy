@@ -186,7 +186,11 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
+<<<<<<< Updated upstream
     def evaluate_power(self,num):
+=======
+    def _eval_power(self,num):
+>>>>>>> Stashed changes
         from sympy.matrices import eye, diag, MutableMatrix
         from sympy import binomial
         if not self.is_square:
@@ -227,6 +231,7 @@ class MatrixBase(object):
             raise TypeError("Only SymPy expressions or int objects are supported as exponent for matrices")
 
     def __pow__(self, num):
+<<<<<<< Updated upstream
         sympy_type = type(sympify(num))
         if(sympy_type == type(sympify(0))):
             from sympy.matrices import eye
@@ -238,6 +243,19 @@ class MatrixBase(object):
             return MatPow(self,num)
         else:
             return self.evaluate_power(num)
+=======
+        sympy_num = sympify(num)
+        if sympy_num is S.Zero:
+            from sympy.matrices import eye
+            return eye(self.cols)
+        elif sympy_num is S.One:
+            return self
+        elif not isinstance(sympy_num,Integer) and sympy_num is not S.NegativeOne:
+            from sympy.matrices.expressions.matpow import MatPow
+            return MatPow(self,num)
+        else:
+            return MatrixBase._eval_power(self,num)
+>>>>>>> Stashed changes
 
     def __radd__(self, other):
         return self + other
@@ -4093,13 +4111,6 @@ class MatrixBase(object):
         (Matrix([
         [1, 0],
         [0, 1]]), [0, 1])
-        >>> rref_matrix, rref_pivots = m.rref()
-        >>> rref_matrix
-        Matrix([
-        [1, 0],
-        [0, 1]])
-        >>> rref_pivots
-        [0, 1]
         """
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
