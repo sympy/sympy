@@ -1139,7 +1139,7 @@ class AccumulationBounds(AtomicExpr):
         <2, 3>
 
         >>> AccumBounds(1, 3).intersection(AccumBounds(4, 6))
-        EmptySet()
+        S.EmptySet
 
         >>> AccumBounds(1, 4).intersection(FiniteSet(1, 2, 5))
         {1, 2}

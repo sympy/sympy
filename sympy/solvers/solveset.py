@@ -74,7 +74,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection((-oo, oo), {log(y)}))
+    (x, Intersection(S.Reals, {log(y)}))
 
     When does exp(x) == 1?
 
@@ -1230,7 +1230,7 @@ def linsolve(system, *symbols):
     * For an empty system linsolve returns empty set
 
     >>> linsolve([ ], x)
-    EmptySet()
+    S.EmptySet
 
     """
 
@@ -1369,7 +1369,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     * when you want soln should not satisfy eq `x + 1 = 0`
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
-    EmptySet()
+    S.EmptySet
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x - 1]), [y, x])
     {(1, -1)}
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])

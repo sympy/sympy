@@ -753,6 +753,9 @@ class StrPrinter(Printer):
     def _print_EmptySet(self, p):
         return "S.EmptySet"
 
+    def _print_Naturals0(self, p):
+        return "S.Naturals0"
+
 def sstr(expr, **settings):
     """Returns the expression as a string.
 

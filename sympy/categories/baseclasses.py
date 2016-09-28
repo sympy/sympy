@@ -567,8 +567,8 @@ class Diagram(Basic):
     >>> pprint(premises_keys, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.premises, use_unicode=False)
-    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+    {g*f:A-->C: S.EmptySet, id:A-->A: S.EmptySet, id:B-->B: S.EmptySet, id:C-->C:
+    S.EmptySet, f:A-->B: S.EmptySet, g:B-->C: S.EmptySet}
     >>> d = Diagram([f, g], {g * f: "unique"})
     >>> pprint(d.conclusions)
     {g*f:A-->C: {unique}}
@@ -763,7 +763,7 @@ class Diagram(Basic):
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
         >>> print(pretty(d.premises, use_unicode=False))
-        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+        {id:A-->A: S.EmptySet, id:B-->B: S.EmptySet, f:A-->B: S.EmptySet}
 
         """
         return self.args[0]

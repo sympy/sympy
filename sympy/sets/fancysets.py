@@ -541,9 +541,9 @@ class Range(Set):
         >>> Range(3)[:0]
         Range(0, 0, 1)
         >>> Range(3).intersect(Interval(4, oo))
-        EmptySet()
+        S.EmptySet
         >>> Range(3).intersect(Range(4, oo))
-        EmptySet()
+        S.EmptySet
 
     """
 

@@ -102,7 +102,7 @@ class Set(Basic):
         >>> n, m = symbols('n m')
         >>> a = imageset(Lambda(n, 2*n), S.Integers)
         >>> a.intersect(imageset(Lambda(m, 2*m + 1), S.Integers))
-        EmptySet()
+        S.EmptySet
 
         """
         return Intersection(self, other)
@@ -392,7 +392,7 @@ class Set(Basic):
         >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet()
         >>> A.powerset()
-        {EmptySet()}
+        {S.EmptySet}
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
@@ -1640,10 +1640,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     >>> from sympy import S, Interval
     >>> S.EmptySet
-    EmptySet()
+    S.EmptySet
 
     >>> Interval(1, 2).intersect(S.EmptySet)
-    EmptySet()
+    S.EmptySet
 
     See Also
     ========
