@@ -1071,6 +1071,9 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             return []
 
     else:  # D > 0
+        if D > N**2:
+            # It is much faster to call `special_diop_DN`.
+            return special_diop_DN(D, N)
         sD, _exact = integer_nthroot(D, 2)
         if _exact:
             if N == 0:
@@ -1182,6 +1185,89 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                                 break
 
                 return sol
+
+
+def special_diop_DN(D, N):
+    """
+    Solves the equation `x^2 - Dy^2 = N` for the special case `N**2 < D`.
+    It is better to call `diop_DN` rather than this function, as
+    the former checks the condition `N**2 < D`, and calls the latter only
+    if appropriate.
+
+    Usage
+    =====
+
+    ``special_diop_DN(D, N)``: D and N are integers as in `x^2 - Dy^2 = N`.
+
+    Details
+    =======
+
+    ``D`` and ``N`` correspond to D and N in the equation.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import special_diop_DN
+    >>> special_diop_DN(13, -3) # Solves equation x**2 - 13*y**2 = -3
+    [(7, 2), (137, 38)]
+
+    The output can be interpreted as follows: There are two fundamental
+    solutions to the equation `x^2 - 13y^2 = -3` given by (7, 2) and
+    (137, 38). Each tuple is in the form (x, y), i.e solution (7, 2) means
+    that `x = 7` and `y = 2`.
+
+    >>> special_diop_DN(986, 1) # Solves equation x**2 - 986*y**2 = 1
+    [(49299, 1570)]
+
+    See Also
+    ========
+
+    diop_DN()
+
+    References
+    ==========
+    
+    .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
+        Springer, 2015.
+    """
+    assert(N**2 < D)
+
+    sqrt_D = sqrt(D)
+    F = [1]
+    f = 2
+    while True:
+        f2 = f**2
+        if f2 > abs(N):
+            break
+        if N % f2 == 0:
+            F.append(f)
+        f += 1
+
+    P = [0]
+    Q = [1]
+    a = []
+    G = [0, 1]
+    B = [1, 0]
+
+    solutions = []
+
+    i = 0
+    while True:
+        a.append(floor((P[i] + sqrt_D) / Q[i]))
+        P.append(a[i]*Q[i] - P[i])
+        Q.append((D - P[i+1]**2)//Q[i])
+        G.append(a[i]*G[i+1] + G[i])
+        B.append(a[i]*B[i+1] + B[i])
+
+        for f in F:
+            if G[i+2]**2 - D*B[i+2]**2 == N // f**2:
+                solutions.append((f*G[i+2], f*B[i+2]))
+
+        i += 1
+        if Q[i] == 1 and i % 2 == 0:
+            break
+
+    return solutions
 
 
 def cornacchia(a, b, m):
