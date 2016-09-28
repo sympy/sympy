@@ -1071,9 +1071,6 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             return []
 
     else:  # D > 0
-        if D > N**2:
-            # It is much faster to call `special_diop_DN`.
-            return special_diop_DN(D, N)
         sD, _exact = integer_nthroot(D, 2)
         if _exact:
             if N == 0:
@@ -1090,6 +1087,11 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                         sol.append((sq, y))
 
                 return sol
+        
+        elif 1 < N**2 < D:
+            # It is much faster to call `special_diop_DN`.
+            return special_diop_DN(D, N)
+        
         else:
             if N == 0:
                 return [(0, 0)]
@@ -1189,9 +1191,9 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
 def special_diop_DN(D, N):
     """
-    Solves the equation `x^2 - Dy^2 = N` for the special case `N**2 < D`.
+    Solves the equation `x^2 - Dy^2 = N` for the special case `1 < N**2 < D`.
     It is better to call `diop_DN` rather than this function, as
-    the former checks the condition `N**2 < D`, and calls the latter only
+    the former checks the condition `1 < N**2 < D`, and calls the latter only
     if appropriate.
 
     Usage
@@ -1230,7 +1232,7 @@ def special_diop_DN(D, N):
     .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
-    assert(N**2 < D)
+    assert(1 < N**2 < D)
 
     sqrt_D = sqrt(D)
     F = [1]
