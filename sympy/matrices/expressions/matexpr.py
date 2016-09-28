@@ -134,15 +134,9 @@ class MatrixExpr(Basic):
         elif other is S.One:
             return self
 
-<<<<<<< Updated upstream
-        if(isinstance(self,MatPow)):
-            new_exp = sympify(self.exp * other)
-            if(isinstance(new_exp, Integer)):
-=======
         if isinstance(self,MatPow):
             new_exp = sympify(self.exp * other)
             if isinstance(new_exp, Integer):
->>>>>>> Stashed changes
                 return self.args[0] ** new_exp
             else:
                 return MatPow(self.args[0],new_exp)
