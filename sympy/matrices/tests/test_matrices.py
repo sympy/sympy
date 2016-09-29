@@ -196,7 +196,7 @@ def test_power():
     assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
     A = Matrix([[33, 24], [48, 57]])
-    assert ( (A**(S(1)/2)).doit() )[:] == [5, 2, 4, 7]
+    assert ((A**(S(1)/2)).doit())[:] == [5, 2, 4, 7]
     A = Matrix([[0, 4], [-1, 5]])
     assert ((A**(S(1)/2))**2).doit() == A
 

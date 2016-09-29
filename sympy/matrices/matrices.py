@@ -211,7 +211,7 @@ class MatrixBase(object):
                 N = jc.shape[0]
                 l = jc[0, 0]
                 for i in range(N):
-                    for j in range(N-i):
+                    for j in range(N - i):
                         bn = binomial(n, i)
                         if isinstance(bn, binomial):
                             bn = bn._eval_expand_func()
@@ -224,7 +224,7 @@ class MatrixBase(object):
                 jordan_cell_power(j, num)
             return self._new(P*diag(*jordan_cells)*P.inv())
         else:
-            raise TypeError("Only SymPy expressions or int objects are supported as exponent for matrices")
+            raise TypeError("Only SymPy expressions or int objects are supported as matrix exponents")
 
     def __pow__(self, num):
         sympy_num = sympify(num)

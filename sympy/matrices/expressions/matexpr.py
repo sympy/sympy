@@ -127,14 +127,14 @@ class MatrixExpr(Basic):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.NegativeOne and not isinstance(self,MatPow):
+        elif other is S.NegativeOne and not isinstance(self, MatPow):
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
         elif other is S.One:
             return self
 
-        if isinstance(self,MatPow):
+        if isinstance(self, MatPow):
             new_exp = sympify(self.exp * other)
             if isinstance(new_exp, Integer):
                 return self.args[0] ** new_exp
