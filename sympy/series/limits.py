@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-from sympy import Rational, Float
-
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
@@ -137,12 +135,6 @@ class Limit(Expr):
 
         if not e.has(z):
             return e
-
-        floating_point_vars = e.atoms(Float)
-        if floating_point_vars:
-            rational_subs = map(Rational, floating_point_vars)
-            repl_dict = dict(zip(floating_point_vars, rational_subs))
-            e = e.subs(repl_dict, simultaneous=True)
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
