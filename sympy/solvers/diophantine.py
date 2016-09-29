@@ -1232,42 +1232,44 @@ def special_diop_DN(D, N):
     .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
-    assert(1 < N**2 < D)
+    assert (1 < N ** 2 < D)
 
     sqrt_D = sqrt(D)
     F = [1]
     f = 2
     while True:
-        f2 = f**2
+        f2 = f ** 2
         if f2 > abs(N):
             break
         if N % f2 == 0:
             F.append(f)
         f += 1
 
-    P = [0]
-    Q = [1]
-    a = []
-    G = [0, 1]
-    B = [1, 0]
+    P = 0
+    Q = 1
+    G0, G1 = 0, 1
+    B0, B1 = 1, 0
 
     solutions = []
 
     i = 0
     while True:
-        a.append(floor((P[i] + sqrt_D) / Q[i]))
-        P.append(a[i]*Q[i] - P[i])
-        Q.append((D - P[i+1]**2)//Q[i])
-        G.append(a[i]*G[i+1] + G[i])
-        B.append(a[i]*B[i+1] + B[i])
+        a = floor((P + sqrt_D) / Q)
+        P = a * Q - P
+        Q = (D - P ** 2) // Q
+        G2 = a * G1 + G0
+        B2 = a * B1 + B0
 
         for f in F:
-            if G[i+2]**2 - D*B[i+2]**2 == N // f**2:
-                solutions.append((f*G[i+2], f*B[i+2]))
+            if G2 ** 2 - D * B2 ** 2 == N // f ** 2:
+                solutions.append((f * G2, f * B2))
 
         i += 1
-        if Q[i] == 1 and i % 2 == 0:
+        if Q == 1 and i % 2 == 0:
             break
+
+        G0, G1 = G1, G2
+        B0, B1 = B1, B2
 
     return solutions
 
