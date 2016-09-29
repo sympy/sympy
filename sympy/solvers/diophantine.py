@@ -1209,6 +1209,21 @@ def _special_diop_DN(D, N):
 
     ``D`` and ``N`` correspond to D and N in the equation.
 
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import _special_diop_DN
+    >>> _special_diop_DN(13, -3) # Solves equation x**2 - 13*y**2 = -3
+    [(7, 2), (137, 38)]
+
+    The output can be interpreted as follows: There are two fundamental
+    solutions to the equation `x^2 - 13y^2 = -3` given by (7, 2) and
+    (137, 38). Each tuple is in the form (x, y), i.e solution (7, 2) means
+    that `x = 7` and `y = 2`.
+
+    >>> _special_diop_DN(2445, -20) # Solves equation x**2 - 2445*y**2 = -20
+    [(445, 9), (17625560, 356454), (698095554475, 14118073569)]
+
     See Also
     ========
 
@@ -1228,13 +1243,13 @@ def _special_diop_DN(D, N):
     # assert (1 < N**2 < D) and (not integer_nthroot(D, 2)[1])
 
     sqrt_D = sqrt(D)
-    F = [(N,1)]
+    F = [(N, 1)]
     f = 2
     while True:
         f2 = f**2
         if f2 > abs(N):
             break
-        n,r = divmod(N, f2)
+        n, r = divmod(N, f2)
         if r == 0:
             F.append((n, f))
         f += 1
