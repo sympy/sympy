@@ -987,6 +987,7 @@ def _eval_sum_hyper(f, i, a):
     from sympy.functions import hyper
     from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
+    from sympy.core.numbers import Float
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
@@ -999,7 +1000,11 @@ def _eval_sum_hyper(f, i, a):
     hs = hypersimp(f, i)
     if hs is None:
         return None
-
+    
+    if isinstance(hs,Float):
+        from sympy.simplify.simplify import nsimplify
+        hs = nsimplify(hs)
+       
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)
     bot, botl = denom.as_coeff_mul(i)

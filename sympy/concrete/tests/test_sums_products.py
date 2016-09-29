@@ -255,6 +255,12 @@ def test_geometric_sums():
     #issue 9908:
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
 
+    #issue 11642:
+    assert Sum(0.5**n,(n, 1, oo)).doit() == 1.0
+    assert Sum(0.25**n,(n, 1, oo)).doit() == S(1)/3
+    assert Sum(0.99999**n,(n, 1, oo)).doit() == 99999
+    assert Sum(1.0**n,(n,1,oo)).doit() == oo
+    assert Sum(2.43**n,(n,1,oo)).doit() == oo
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
