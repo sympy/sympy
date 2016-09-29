@@ -464,8 +464,7 @@ def msubs(expr, *sub_dicts, **kwargs):
     elif hasattr(expr, 'msubs'):
         return expr.msubs(sub_dict)
     else:
-        func = lambda expr, sub_dict:_crawl(expr, _sub_func, sub_dict)
-
+        func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
