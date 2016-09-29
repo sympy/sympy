@@ -1232,7 +1232,8 @@ def _special_diop_DN(D, N):
     References
     ==========
 
-    .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
+    .. [1] Section 4.4.4 of the following book:
+        Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
 
