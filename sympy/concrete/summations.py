@@ -1000,11 +1000,11 @@ def _eval_sum_hyper(f, i, a):
     hs = hypersimp(f, i)
     if hs is None:
         return None
-    
+
     if isinstance(hs,Float):
         from sympy.simplify.simplify import nsimplify
         hs = nsimplify(hs)
-       
+
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)
     bot, botl = denom.as_coeff_mul(i)
