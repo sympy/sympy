@@ -1218,7 +1218,7 @@ def _special_diop_DN(D, N):
 
     The output can be interpreted as follows: There are two fundamental
     solutions to the equation `x^2 - 13y^2 = -3` given by (7, 2) and
-    (137, 38). Each tuple is in the form (x, y), i.e solution (7, 2) means
+    (137, 38). Each tuple is in the form (x, y), i.e. solution (7, 2) means
     that `x = 7` and `y = 2`.
 
     >>> _special_diop_DN(2445, -20) # Solves equation x**2 - 2445*y**2 = -20
