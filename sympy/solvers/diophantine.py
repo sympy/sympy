@@ -1233,13 +1233,13 @@ def special_diop_DN(D, N):
     .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
-    assert (1 < N ** 2 < D) and (not integer_nthroot(D, 2)[1])
+    assert (1 < N**2 < D) and (not integer_nthroot(D, 2)[1])
 
     sqrt_D = sqrt(D)
     F = [1]
     f = 2
     while True:
-        f2 = f ** 2
+        f2 = f**2
         if f2 > abs(N):
             break
         if N % f2 == 0:
@@ -1256,14 +1256,14 @@ def special_diop_DN(D, N):
     i = 0
     while True:
         a = floor((P + sqrt_D) / Q)
-        P = a * Q - P
-        Q = (D - P ** 2) // Q
-        G2 = a * G1 + G0
-        B2 = a * B1 + B0
+        P = a*Q - P
+        Q = (D - P**2) // Q
+        G2 = a*G1 + G0
+        B2 = a*B1 + B0
 
         for f in F:
-            if G2 ** 2 - D * B2 ** 2 == N // f ** 2:
-                solutions.append((f * G2, f * B2))
+            if G2**2 - D*B2**2 == N // f**2:
+                solutions.append((f*G2, f*B2))
 
         i += 1
         if Q == 1 and i % 2 == 0:
