@@ -476,3 +476,9 @@ def test_limit_seq():
             S(3) / 4)
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
+
+
+def test_limit_with_Float():
+    k = symbols("k")
+    assert limit(1.0 ** k, k, oo) == 1
+    assert limit(0.3*1.0**k, k, oo) == 5404319552844595/18014398509481984
