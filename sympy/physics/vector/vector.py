@@ -339,12 +339,20 @@ class Vector(object):
     def __rsub__(self, other):
         return (-1 * self) + other
 
-    def __str__(self, printer=None):
+    def __str__(self, printer=None, order=True):
         """Printing method. """
         from sympy.physics.vector.printing import VectorStrPrinter
-        ar = self.args  # just to shorten things
-        if len(ar) == 0:
+
+        if not order or len(self.args) == 1:
+            ar = list(self.args)
+        elif len(self.args) == 0:
             return str(0)
+        else:
+            d = {v[1]: v[0] for v in self.args}
+            keys = sorted(d.keys(), key=lambda x: x.index)
+            ar = []
+            for key in keys:
+                ar.append((d[key], key))
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
