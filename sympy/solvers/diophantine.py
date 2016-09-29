@@ -1191,7 +1191,8 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
 def special_diop_DN(D, N):
     """
-    Solves the equation `x^2 - Dy^2 = N` for the special case `1 < N**2 < D`.
+    Solves the equation `x^2 - Dy^2 = N` for the special case where
+    `1 < N**2 < D` and `D` is not a perfect square.
     It is better to call `diop_DN` rather than this function, as
     the former checks the condition `1 < N**2 < D`, and calls the latter only
     if appropriate.
@@ -1232,7 +1233,7 @@ def special_diop_DN(D, N):
     .. [1] Quadratic Diophantine Equations, T. Andreescu and D. Andrica,
         Springer, 2015.
     """
-    assert (1 < N ** 2 < D)
+    assert (1 < N ** 2 < D) and (not integer_nthroot(D, 2)[1])
 
     sqrt_D = sqrt(D)
     F = [1]
