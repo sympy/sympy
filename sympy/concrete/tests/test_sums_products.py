@@ -259,23 +259,23 @@ def test_geometric_sums():
     result = Sum(0.5**n,(n, 1, oo)).doit()
     assert result == 1
     assert result.is_Float
-    
+
     result = Sum(0.25**n,(n, 1, oo)).doit()
     assert result == S(1)/3
     assert result.is_Float
-    
+
     result = Sum(0.99999**n,(n, 1, oo)).doit()
     assert result == 99999
     assert result.is_Float
-    
+
     result = Sum(Rational(1,2)**n,(n, 1, oo)).doit()
     assert result == 1
     assert not result.is_Float
-    
+
     result = Sum(Rational(3,5)**n,(n, 1, oo)).doit()
     assert result == S(3)/2
     assert not result.is_Float
-    
+
     assert Sum(1.0**n,(n,1,oo)).doit() == oo
     assert Sum(2.43**n,(n,1,oo)).doit() == oo
 
