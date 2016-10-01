@@ -3,7 +3,7 @@ from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
 from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
 from .conditionset import ConditionSet
-from ..core.singleton import S
 
+from ..core.singleton import S
 Reals = S.Reals
 del S
