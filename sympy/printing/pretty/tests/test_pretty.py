@@ -3274,7 +3274,7 @@ def test_pretty_sets():
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
-    ascii_str = '{x | x ∊ ℝ ∧ sin(x) = 0}'
+    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
     ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
