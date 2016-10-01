@@ -1435,19 +1435,19 @@ class Poly(Expr):
         Polynomial pseudo-remainder of ``f`` by ``g``.
 
         Caveat: The function prem(f, g, x) can be safely used to compute
-          in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
+        in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
 
-          To safely compute Euclidean and Sturmian prs's in Z[x]
-          employ anyone of the corresponding functions found in
-          the module sympy.polys.subresultants_qq_zz. The functions
-          in the module with suffix _pg compute prs's in Z[x] employing
-          rem(f, g, x), whereas the functions with suffix _amv
-          compute prs's in Z[x] employing rem_z(f, g, x).
+        To safely compute Euclidean and Sturmian prs's in Z[x]
+        employ anyone of the corresponding functions found in
+        the module sympy.polys.subresultants_qq_zz. The functions
+        in the module with suffix _pg compute prs's in Z[x] employing
+        rem(f, g, x), whereas the functions with suffix _amv
+        compute prs's in Z[x] employing rem_z(f, g, x).
 
-          The function rem_z(f, g, x) differs from prem(f, g, x) in that
-          to compute the remainder polynomials in Z[x] it premultiplies
-          the divident times the absolute value of the leading coefficient
-          of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
+        The function rem_z(f, g, x) differs from prem(f, g, x) in that
+        to compute the remainder polynomials in Z[x] it premultiplies
+        the divident times the absolute value of the leading coefficient
+        of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
 
 
         Examples
@@ -1980,6 +1980,10 @@ class Poly(Expr):
         """
         Returns the leading monomial of ``f``.
 
+        The Leading monomial signifies the monomial having
+        the highest power of the principal generator in the
+        expression f.
+
         Examples
         ========
 
@@ -2011,6 +2015,10 @@ class Poly(Expr):
     def LT(f, order=None):
         """
         Returns the leading term of ``f``.
+
+        The Leading term signifies the term having
+        the highest power of the principal generator in the
+        expression f along with its coefficient.
 
         Examples
         ========
@@ -2436,7 +2444,32 @@ class Poly(Expr):
         return per(result)
 
     def revert(f, n):
-        """Compute ``f**(-1)`` mod ``x**n``. """
+        """
+        Compute ``f**(-1)`` mod ``x**n``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(1, x).revert(2)
+        Poly(1, x, domain='ZZ')
+
+        >>> Poly(1 + x, x).revert(1)
+        Poly(1, x, domain='ZZ')
+
+        >>> Poly(x**2 - 1, x).revert(1)
+        Traceback (most recent call last):
+        ...
+        NotReversible: only unity is reversible in a ring
+
+        >>> Poly(1/x, x).revert(1)
+        Traceback (most recent call last):
+        ...
+        PolynomialError: 1/x contains an element of the generators set
+
+        """
         if hasattr(f.rep, 'revert'):
             result = f.rep.revert(int(n))
         else:  # pragma: no cover
