@@ -152,7 +152,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
             if not is_sequence(syms):
                 raise TypeError(
                     'syms should be given as a sequence, e.g. a list')
-
+            syms = list(syms)
             if syms != var:
                 extra_syms = list(filter(lambda x: x not in var, syms))
                 syms_var = list(filter(lambda x: x in syms, var))
