@@ -1177,13 +1177,13 @@ class GammaInverseDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a, b = self.a, self.b
         return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
+
     def sample(self):
-	try :
-	     from scipy.stats import invgamma
-	except ImportError:
-	     raise ImportError("can't import invgamma from scipy.stats")
-	inv_gamma= invgamma.rvs(float(self.a),0,float(self.b))
-	return inv_gamma
+        try :
+            from scipy.stats import invgamma
+        except ImportError:
+            raise ImportError("can't import invgamma from scipy.stats")
+	    return invgamma.rvs(float(self.a), 0, float(self.b))
 	    	
 def GammaInverse(name, a, b):
     r"""
