@@ -1435,19 +1435,19 @@ class Poly(Expr):
         Polynomial pseudo-remainder of ``f`` by ``g``.
 
         Caveat: The function prem(f, g, x) can be safely used to compute
-        in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
+          in Z[x] _only_ subresultant polynomial remainder sequences (prs's).
 
-        To safely compute Euclidean and Sturmian prs's in Z[x]
-        employ anyone of the corresponding functions found in
-        the module sympy.polys.subresultants_qq_zz. The functions
-        in the module with suffix _pg compute prs's in Z[x] employing
-        rem(f, g, x), whereas the functions with suffix _amv
-        compute prs's in Z[x] employing rem_z(f, g, x).
+          To safely compute Euclidean and Sturmian prs's in Z[x]
+          employ anyone of the corresponding functions found in
+          the module sympy.polys.subresultants_qq_zz. The functions
+          in the module with suffix _pg compute prs's in Z[x] employing
+          rem(f, g, x), whereas the functions with suffix _amv
+          compute prs's in Z[x] employing rem_z(f, g, x).
 
-        The function rem_z(f, g, x) differs from prem(f, g, x) in that
-        to compute the remainder polynomials in Z[x] it premultiplies
-        the divident times the absolute value of the leading coefficient
-        of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
+          The function rem_z(f, g, x) differs from prem(f, g, x) in that
+          to compute the remainder polynomials in Z[x] it premultiplies
+          the divident times the absolute value of the leading coefficient
+          of the divisor raised to the power degree(f, x) - degree(g, x) + 1.
 
 
         Examples
