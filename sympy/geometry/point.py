@@ -105,6 +105,9 @@ class Point(GeometryEntity):
     Point2D(0.5, 0.25)
 
     """
+
+    is_Point = True
+
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         on_morph = kwargs.get('on_morph', 'ignore')
@@ -138,16 +141,16 @@ class Point(GeometryEntity):
                 Point requires 2 or more coordinates or
                 keyword `dim` > 1.'''))
         if len(coords) != dim:
-                message = ("Dimension of {} needs to be changed"
-                           "from {} to {}.").format(coords, len(coords), dim)
-                if on_morph == 'ignore':
-                    pass
-                elif on_morph == "error":
-                    raise ValueError(message)
-                elif on_morph == 'warn':
-                    warnings.warn(message)
-                else:
-                    raise ValueError(filldedent('''
+            message = ("Dimension of {} needs to be changed"
+                       "from {} to {}.").format(coords, len(coords), dim)
+            if on_morph == 'ignore':
+                pass
+            elif on_morph == "error":
+                raise ValueError(message)
+            elif on_morph == 'warn':
+                warnings.warn(message)
+            else:
+                raise ValueError(filldedent('''
                         on_morph value should be 'error',
                         'warn' or 'ignore'.'''))
         if any(i for i in coords[dim:]):
@@ -165,7 +168,7 @@ class Point(GeometryEntity):
         if evaluate:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
-                for f in coords.atoms(Float)]))
+                 for f in coords.atoms(Float)]))
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -178,7 +181,116 @@ class Point(GeometryEntity):
         # the general Point
         return GeometryEntity.__new__(cls, *coords)
 
-    is_Point = True
+    def __abs__(self):
+        """Returns the distance between this point and the origin."""
+        origin = Point([0]*len(self))
+        return Point.distance(origin, self)
+
+    def __add__(self, other):
+        """Add other to self by incrementing self's coordinates by
+        those of other.
+
+        Notes
+        =====
+
+        >>> from sympy.geometry.point import Point
+
+        When sequences of coordinates are passed to Point methods, they
+        are converted to a Point internally. This __add__ method does
+        not do that so if floating point values are used, a floating
+        point result (in terms of SymPy Floats) will be returned.
+
+        >>> Point(1, 2) + (.1, .2)
+        Point2D(1.1, 2.2)
+
+        If this is not desired, the `translate` method can be used or
+        another Point can be added:
+
+        >>> Point(1, 2).translate(.1, .2)
+        Point2D(11/10, 11/5)
+        >>> Point(1, 2) + Point(.1, .2)
+        Point2D(11/10, 11/5)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.translate
+
+        """
+        try:
+            s, o = Point._normalize_dimension(self, Point(other, evaluate=False))
+        except TypeError:
+            raise GeometryError("Don't know how to add {} and a Point object".format(other))
+
+        coords = [simplify(a + b) for a, b in zip(s, o)]
+        return Point(coords, evaluate=False)
+
+    def __contains__(self, item):
+        return item in self.args
+
+    def __div__(self, divisor):
+        """Divide point's coordinates by a factor."""
+        divisor = sympify(divisor)
+        coords = [simplify(x/divisor) for x in self.args]
+        return Point(coords, evaluate=False)
+
+    def __eq__(self, other):
+        if not isinstance(other, Point) or len(self.args) != len(other.args):
+            return False
+        return self.args == other.args
+
+    def __getitem__(self, key):
+        return self.args[key]
+
+    def __hash__(self):
+        return hash(self.args)
+
+    def __iter__(self):
+        return self.args.__iter__()
+
+    def __len__(self):
+        return len(self.args)
+
+    def __mul__(self, factor):
+        """Multiply point's coordinates by a factor.
+
+        Notes
+        =====
+
+        >>> from sympy.geometry.point import Point
+
+        When multiplying a Point by a floating point number,
+        the coordinates of the Point will be changed to Floats:
+
+        >>> Point(1, 2)*0.1
+        Point2D(0.1, 0.2)
+
+        If this is not desired, the `scale` method can be used or
+        else only multiply or divide by integers:
+
+        >>> Point(1, 2).scale(1.1, 1.1)
+        Point2D(11/10, 11/5)
+        >>> Point(1, 2)*11/10
+        Point2D(11/10, 11/5)
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point.scale
+        """
+        factor = sympify(factor)
+        coords = [simplify(x*factor) for x in self.args]
+        return Point(coords, evaluate=False)
+
+    def __neg__(self):
+        """Negate the point."""
+        coords = [-x for x in self.args]
+        return Point(coords, evaluate=False)
+
+    def __sub__(self, other):
+        """Subtract two points, or subtract a factor from this point's
+        coordinates."""
+        return self + [-x for x in other]
 
     @classmethod
     def _normalize_dimension(cls, *points, **kwargs):
@@ -198,8 +310,30 @@ class Point(GeometryEntity):
         kwargs['on_morph'] = kwargs.get('on_morph', 'warn')
         return [Point(i, **kwargs) for i in points]
 
-    def __contains__(self, item):
-        return item in self.args
+    @staticmethod
+    def affine_rank(*args):
+        """The affine rank of a set of points is the dimension
+        of the smallest affine space containing all the points.
+        For example, if the points lie on a line (and are not all
+        the same) their affine rank is 1.  If the points lie on a plane
+        but not a line, their affine rank is 2.  By convention, the empty
+        set has affine rank -1."""
+
+        if len(args) == 0:
+            return -1
+        # make sure we're genuinely points
+        # and translate every point to the origin
+        points = Point._normalize_dimension(*[Point(i) for i in args])
+        origin = points[0]
+        points = [i - origin for i in points[1:]]
+
+        m = Matrix([i.args for i in points])
+        return m.rank()
+
+    @property
+    def ambient_dimension(self):
+        """Number of components this point has."""
+        return getattr(self, '_ambient_dimension', len(self))
 
     @classmethod
     def are_coplanar(cls, *points):
@@ -246,6 +380,127 @@ class Point(GeometryEntity):
             return True
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
+
+    def distance(self, p):
+        """The Euclidean distance from self to point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        distance : number or symbolic expression.
+
+        See Also
+        ========
+
+        sympy.geometry.line.Segment.length
+        sympy.geometry.point.Point.taxicab_distance
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> p1.distance(p2)
+        5
+
+        >>> from sympy.abc import x, y
+        >>> p3 = Point(x, y)
+        >>> p3.distance(Point(0, 0))
+        sqrt(x**2 + y**2)
+
+        """
+        s, p = Point._normalize_dimension(self, Point(p))
+        return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+
+    def dot(self, p):
+        """Return dot product of self with another Point."""
+        if not is_sequence(p):
+            p = Point(p)  # raise the error via Point
+        return Add(*(a*b for a, b in zip(self, p)))
+
+    def equals(self, other):
+        """Returns whether the coordinates of self and other agree."""
+        # a point is equal to another point if all its components are equal
+        if not isinstance(other, Point) or len(self) != len(other):
+            return False
+        return all(a.equals(b) for a,b in zip(self, other))
+
+    def evalf(self, prec=None, **options):
+        """Evaluate the coordinates of the point.
+
+        This method will, where possible, create and return a new Point
+        where the coordinates are evaluated as floating point numbers to
+        the precision indicated (default=15).
+
+        Parameters
+        ==========
+
+        prec : int
+
+        Returns
+        =======
+
+        point : Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Rational
+        >>> p1 = Point(Rational(1, 2), Rational(3, 2))
+        >>> p1
+        Point2D(1/2, 3/2)
+        >>> p1.evalf()
+        Point2D(0.5, 1.5)
+
+        """
+        coords = [x.evalf(prec, **options) for x in self.args]
+        return Point(*coords, evaluate=False)
+
+    def intersection(self, other):
+        """The intersection between this point and another GeometryEntity.
+
+        Parameters
+        ==========
+
+        other : Point
+
+        Returns
+        =======
+
+        intersection : list of Points
+
+        Notes
+        =====
+
+        The return value will either be an empty list if there is no
+        intersection, otherwise it will contain this point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)
+        >>> p1.intersection(p2)
+        []
+        >>> p1.intersection(p3)
+        [Point2D(0, 0)]
+
+        """
+        if not isinstance(other, GeometryEntity):
+            other = Point(other)
+        if isinstance(other, Point):
+            if self == other:
+                return [self]
+            p1, p2 = Point._normalize_dimension(self, other)
+            if p1 == self and p1 == p2:
+                return [self]
+            return []
+        return other.intersection(self)
 
     def is_collinear(self, *args):
         """Returns `True` if there exists a line
@@ -341,6 +596,15 @@ class Point(GeometryEntity):
             return True
         return False
 
+    @property
+    def is_nonzero(self):
+        """True if any coordinate is nonzero, False if every coordinate is zero,
+        and None if it cannot be determined."""
+        is_zero = self.is_zero
+        if is_zero is None:
+            return None
+        return not is_zero
+
     def is_scalar_multiple(self, p):
         """Returns whether each coordinate of `self` is a scalar
         multiple of the corresponding coordinate in point p.
@@ -361,6 +625,17 @@ class Point(GeometryEntity):
         return m.rank() < 2
 
     @property
+    def is_zero(self):
+        """True if every coordinate is zero, False if any coordinate is not zero,
+        and None if it cannot be determined."""
+        nonzero = [x.is_nonzero for x in self.args]
+        if any(nonzero):
+            return False
+        if any(x is None for x in nonzero):
+            return None
+        return True
+
+    @property
     def length(self):
         """
         Treating a Point as a Line, this returns 0 for the length of a Point.
@@ -375,36 +650,41 @@ class Point(GeometryEntity):
         """
         return S.Zero
 
+    def midpoint(self, p):
+        """The midpoint between self and point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        midpoint : Point
+
+        See Also
+        ========
+
+        sympy.geometry.line.Segment.midpoint
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Point
+        >>> p1, p2 = Point(1, 1), Point(13, 5)
+        >>> p1.midpoint(p2)
+        Point2D(7, 3)
+
+        """
+        s, p = Point._normalize_dimension(self, Point(p))
+        return Point([simplify((a + b)*S.Half) for a, b in zip(s, p)])
+
     @property
     def origin(self):
         """A point of all zeros of the same ambient dimension
         as the current point"""
         return Point([0]*len(self), evaluate=False)
-
-    @property
-    def is_zero(self):
-        """True if every coordinate is zero, False if any coordinate is not zero,
-        and None if it cannot be determined."""
-        nonzero = [x.is_nonzero for x in self.args]
-        if any(nonzero):
-            return False
-        if any(x is None for x in nonzero):
-            return None
-        return True
-
-    @property
-    def is_nonzero(self):
-        """True if any coordinate is nonzero, False if every coordinate is zero,
-        and None if it cannot be determined."""
-        is_zero = self.is_zero
-        if is_zero is None:
-            return None
-        return not is_zero
-
-    @property
-    def ambient_dimension(self):
-        """Number of components this point has."""
-        return getattr(self, '_ambient_dimension', len(self))
 
     @property
     def orthogonal_direction(self):
@@ -431,32 +711,6 @@ class Point(GeometryEntity):
         # if the first two coordinates aren't zero, we can create a non-zero
         # orthogonal vector by swapping them, negating one, and padding with zeros
         return Point([-self[1], self[0]] + (dim - 2)*[0])
-
-    @property
-    def unit(self):
-        """Return the Point that is in the same direction as `self`
-        and a distance of 1 from the origin"""
-        return self / abs(self)
-
-    @staticmethod
-    def affine_rank(*args):
-        """The affine rank of a set of points is the dimension
-        of the smallest affine space containing all the points.
-        For example, if the points lie on a line (and are not all
-        the same) their affine rank is 1.  If the points lie on a plane
-        but not a line, their affine rank is 2.  By convention, the empty
-        set has affine rank -1."""
-
-        if len(args) == 0:
-            return -1
-        # make sure we're genuinely points
-        # and translate every point to the origin
-        points = Point._normalize_dimension(*[Point(i) for i in args])
-        origin = points[0]
-        points = [i - origin for i in points[1:]]
-
-        m = Matrix([i.args for i in points])
-        return m.rank()
 
     @staticmethod
     def project(a, b):
@@ -497,42 +751,6 @@ class Point(GeometryEntity):
             raise ValueError("Cannot project to the zero vector.")
         return b*(a.dot(b) / b.dot(b))
 
-    def distance(self, p):
-        """The Euclidean distance from self to point p.
-
-        Parameters
-        ==========
-
-        p : Point
-
-        Returns
-        =======
-
-        distance : number or symbolic expression.
-
-        See Also
-        ========
-
-        sympy.geometry.line.Segment.length
-        sympy.geometry.point.Point.taxicab_distance
-
-        Examples
-        ========
-
-        >>> from sympy.geometry import Point
-        >>> p1, p2 = Point(1, 1), Point(4, 5)
-        >>> p1.distance(p2)
-        5
-
-        >>> from sympy.abc import x, y
-        >>> p3 = Point(x, y)
-        >>> p3.distance(Point(0, 0))
-        sqrt(x**2 + y**2)
-
-        """
-        s, p = Point._normalize_dimension(self, Point(p))
-        return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
-
     def taxicab_distance(self, p):
         """The Taxicab Distance from self to point p.
 
@@ -566,232 +784,15 @@ class Point(GeometryEntity):
         s, p = Point._normalize_dimension(self, Point(p))
         return Add(*(abs(a - b) for a, b in zip(s, p)))
 
-    def midpoint(self, p):
-        """The midpoint between self and point p.
-
-        Parameters
-        ==========
-
-        p : Point
-
-        Returns
-        =======
-
-        midpoint : Point
-
-        See Also
-        ========
-
-        sympy.geometry.line.Segment.midpoint
-
-        Examples
-        ========
-
-        >>> from sympy.geometry import Point
-        >>> p1, p2 = Point(1, 1), Point(13, 5)
-        >>> p1.midpoint(p2)
-        Point2D(7, 3)
-
-        """
-        s, p = Point._normalize_dimension(self, Point(p))
-        return Point([simplify((a + b)*S.Half) for a, b in zip(s, p)])
-
-    def dot(self, p):
-        """Return dot product of self with another Point."""
-        if not is_sequence(p):
-            p = Point(p)  # raise the error via Point
-        return Add(*(a*b for a, b in zip(self, p)))
-
-    def evalf(self, prec=None, **options):
-        """Evaluate the coordinates of the point.
-
-        This method will, where possible, create and return a new Point
-        where the coordinates are evaluated as floating point numbers to
-        the precision indicated (default=15).
-
-        Parameters
-        ==========
-
-        prec : int
-
-        Returns
-        =======
-
-        point : Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Rational
-        >>> p1 = Point(Rational(1, 2), Rational(3, 2))
-        >>> p1
-        Point2D(1/2, 3/2)
-        >>> p1.evalf()
-        Point2D(0.5, 1.5)
-
-        """
-        coords = [x.evalf(prec, **options) for x in self.args]
-        return Point(*coords, evaluate=False)
+    @property
+    def unit(self):
+        """Return the Point that is in the same direction as `self`
+        and a distance of 1 from the origin"""
+        return self / abs(self)
 
     n = evalf
 
-    def intersection(self, other):
-        """The intersection between this point and another GeometryEntity.
-
-        Parameters
-        ==========
-
-        other : Point
-
-        Returns
-        =======
-
-        intersection : list of Points
-
-        Notes
-        =====
-
-        The return value will either be an empty list if there is no
-        intersection, otherwise it will contain this point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point
-        >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)
-        >>> p1.intersection(p2)
-        []
-        >>> p1.intersection(p3)
-        [Point2D(0, 0)]
-
-        """
-        if not isinstance(other, GeometryEntity):
-            other = Point(other)
-        if isinstance(other, Point):
-            if self == other:
-                return [self]
-            p1, p2 = Point._normalize_dimension(self, other)
-            if p1 == self and p1 == p2:
-                return [self]
-            return []
-        return other.intersection(self)
-
-    def equals(self, other):
-        """Returns whether the coordinates of self and other agree."""
-        # a point is equal to another point if all its components are equal
-        if not isinstance(other, Point) or len(self) != len(other):
-            return False
-        return all(a.equals(b) for a,b in zip(self, other))
-
-    def __len__(self):
-        return len(self.args)
-
-    def __iter__(self):
-        return self.args.__iter__()
-
-    def __eq__(self, other):
-        if not isinstance(other, Point) or len(self.args) != len(other.args):
-            return False
-        return self.args == other.args
-
-    def __hash__(self):
-        return hash(self.args)
-
-    def __getitem__(self, key):
-        return self.args[key]
-
-    def __add__(self, other):
-        """Add other to self by incrementing self's coordinates by
-        those of other.
-
-        Notes
-        =====
-
-        >>> from sympy.geometry.point import Point
-
-        When sequences of coordinates are passed to Point methods, they
-        are converted to a Point internally. This __add__ method does
-        not do that so if floating point values are used, a floating
-        point result (in terms of SymPy Floats) will be returned.
-
-        >>> Point(1, 2) + (.1, .2)
-        Point2D(1.1, 2.2)
-
-        If this is not desired, the `translate` method can be used or
-        another Point can be added:
-
-        >>> Point(1, 2).translate(.1, .2)
-        Point2D(11/10, 11/5)
-        >>> Point(1, 2) + Point(.1, .2)
-        Point2D(11/10, 11/5)
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point.translate
-
-        """
-        try:
-            s, o = Point._normalize_dimension(self, Point(other, evaluate=False))
-        except TypeError:
-            raise GeometryError("Don't know how to add {} and a Point object".format(other))
-
-        coords = [simplify(a + b) for a, b in zip(s, o)]
-        return Point(coords, evaluate=False)
-
-    def __sub__(self, other):
-        """Subtract two points, or subtract a factor from this point's
-        coordinates."""
-        return self + [-x for x in other]
-
-    def __mul__(self, factor):
-        """Multiply point's coordinates by a factor.
-
-        Notes
-        =====
-
-        >>> from sympy.geometry.point import Point
-
-        When multiplying a Point by a floating point number,
-        the coordinates of the Point will be changed to Floats:
-
-        >>> Point(1, 2)*0.1
-        Point2D(0.1, 0.2)
-
-        If this is not desired, the `scale` method can be used or
-        else only multiply or divide by integers:
-
-        >>> Point(1, 2).scale(1.1, 1.1)
-        Point2D(11/10, 11/5)
-        >>> Point(1, 2)*11/10
-        Point2D(11/10, 11/5)
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point.scale
-        """
-        factor = sympify(factor)
-        coords = [simplify(x*factor) for x in self.args]
-        return Point(coords, evaluate=False)
-
-    def __div__(self, divisor):
-        """Divide point's coordinates by a factor."""
-        divisor = sympify(divisor)
-        coords = [simplify(x/divisor) for x in self.args]
-        return Point(coords, evaluate=False)
-
     __truediv__ = __div__
-
-    def __neg__(self):
-        """Negate the point."""
-        coords = [-x for x in self.args]
-        return Point(coords, evaluate=False)
-
-    def __abs__(self):
-        """Returns the distance between this point and the origin."""
-        origin = Point([0]*len(self))
-        return Point.distance(origin, self)
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
@@ -853,36 +854,6 @@ class Point2D(Point):
 
     def __contains__(self, item):
         return item == self
-
-    @property
-    def x(self):
-        """
-        Returns the X coordinate of the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point2D
-        >>> p = Point2D(0, 1)
-        >>> p.x
-        0
-        """
-        return self.args[0]
-
-    @property
-    def y(self):
-        """
-        Returns the Y coordinate of the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point2D
-        >>> p = Point2D(0, 1)
-        >>> p.y
-        1
-        """
-        return self.args[1]
 
     @property
     def bounds(self):
@@ -954,6 +925,28 @@ class Point2D(Point):
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return Point(self.x*x, self.y*y)
 
+    def transform(self, matrix):
+        """Return the point after applying the transformation described
+        by the 3x3 Matrix, ``matrix``.
+
+        See Also
+        ========
+        geometry.entity.rotate
+        geometry.entity.scale
+        geometry.entity.translate
+        """
+        try:
+            col, row = matrix.shape
+            valid_matrix = matrix.is_square and col == 3
+        except AttributeError:
+            # We hit this block if matrix argument is not actually a Matrix.
+            valid_matrix = False
+        if not valid_matrix:
+            raise ValueError("The argument to the transform function must be " \
+            + "a 3x3 matrix")
+        x, y = self.args
+        return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
+
     def translate(self, x=0, y=0):
         """Shift the Point by adding x and y to the coordinates of the Point.
 
@@ -977,27 +970,35 @@ class Point2D(Point):
         """
         return Point(self.x + x, self.y + y)
 
-    def transform(self, matrix):
-        """Return the point after applying the transformation described
-        by the 3x3 Matrix, ``matrix``.
-
-        See Also
-        ========
-        geometry.entity.rotate
-        geometry.entity.scale
-        geometry.entity.translate
+    @property
+    def x(self):
         """
-        try:
-            col, row = matrix.shape
-            valid_matrix = matrix.is_square and col == 3
-        except AttributeError:
-            # We hit this block if matrix argument is not actually a Matrix.
-            valid_matrix = False
-        if not valid_matrix:
-            raise ValueError("The argument to the transform function must be " \
-            + "a 3x3 matrix")
-        x, y = self.args
-        return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
+        Returns the X coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point2D
+        >>> p = Point2D(0, 1)
+        >>> p.x
+        0
+        """
+        return self.args[0]
+
+    @property
+    def y(self):
+        """
+        Returns the Y coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point2D
+        >>> p = Point2D(0, 1)
+        >>> p.y
+        1
+        """
+        return self.args[1]
 
 class Point3D(Point):
     """A point in a 3-dimensional Euclidean space.
@@ -1055,102 +1056,6 @@ class Point3D(Point):
     def __contains__(self, item):
         return item == self
 
-    @property
-    def x(self):
-        """
-        Returns the X coordinate of the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p = Point3D(0, 1, 3)
-        >>> p.x
-        0
-        """
-        return self.args[0]
-
-    @property
-    def y(self):
-        """
-        Returns the Y coordinate of the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p = Point3D(0, 1, 2)
-        >>> p.y
-        1
-        """
-        return self.args[1]
-
-    @property
-    def z(self):
-        """
-        Returns the Z coordinate of the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p = Point3D(0, 1, 1)
-        >>> p.z
-        1
-        """
-        return self.args[2]
-
-    def direction_ratio(self, point):
-        """
-        Gives the direction ratio between 2 points
-
-        Parameters
-        ==========
-
-        p : Point3D
-
-        Returns
-        =======
-
-        list
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p1 = Point3D(1, 2, 3)
-        >>> p1.direction_ratio(Point3D(2, 3, 5))
-        [1, 1, 2]
-        """
-        return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
-
-    def direction_cosine(self, point):
-        """
-        Gives the direction cosine between 2 points
-
-        Parameters
-        ==========
-
-        p : Point3D
-
-        Returns
-        =======
-
-        list
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> p1 = Point3D(1, 2, 3)
-        >>> p1.direction_cosine(Point3D(2, 3, 5))
-        [sqrt(6)/6, sqrt(6)/6, sqrt(6)/3]
-        """
-        a = self.direction_ratio(point)
-        b = sqrt(Add(*(i**2 for i in a)))
-        return [(point.x - self.x) / b,(point.y - self.y) / b,
-                (point.z - self.z) / b]
-
     @staticmethod
     def are_collinear(*points):
         """Is a sequence of points collinear?
@@ -1186,6 +1091,57 @@ class Point3D(Point):
         False
         """
         return Point.is_collinear(*points)
+
+    def direction_cosine(self, point):
+        """
+        Gives the direction cosine between 2 points
+
+        Parameters
+        ==========
+
+        p : Point3D
+
+        Returns
+        =======
+
+        list
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p1 = Point3D(1, 2, 3)
+        >>> p1.direction_cosine(Point3D(2, 3, 5))
+        [sqrt(6)/6, sqrt(6)/6, sqrt(6)/3]
+        """
+        a = self.direction_ratio(point)
+        b = sqrt(Add(*(i**2 for i in a)))
+        return [(point.x - self.x) / b,(point.y - self.y) / b,
+                (point.z - self.z) / b]
+
+    def direction_ratio(self, point):
+        """
+        Gives the direction ratio between 2 points
+
+        Parameters
+        ==========
+
+        p : Point3D
+
+        Returns
+        =======
+
+        list
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p1 = Point3D(1, 2, 3)
+        >>> p1.direction_ratio(Point3D(2, 3, 5))
+        [1, 1, 2]
+        """
+        return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
     def intersection(self, other):
         """The intersection between this point and another point.
@@ -1252,29 +1208,6 @@ class Point3D(Point):
             return self.translate(*(-pt).args).scale(x, y, z).translate(*pt.args)
         return Point3D(self.x*x, self.y*y, self.z*z)
 
-    def translate(self, x=0, y=0, z=0):
-        """Shift the Point by adding x and y to the coordinates of the Point.
-
-        See Also
-        ========
-
-        rotate, scale
-
-        Examples
-        ========
-
-        >>> from sympy import Point3D
-        >>> t = Point3D(0, 1, 1)
-        >>> t.translate(2)
-        Point3D(2, 1, 1)
-        >>> t.translate(2, 2)
-        Point3D(2, 3, 1)
-        >>> t + Point3D(2, 2, 2)
-        Point3D(2, 3, 3)
-
-        """
-        return Point3D(self.x + x, self.y + y, self.z + z)
-
     def transform(self, matrix):
         """Return the point after applying the transformation described
         by the 4x4 Matrix, ``matrix``.
@@ -1298,3 +1231,71 @@ class Point3D(Point):
         x, y, z = self.args
         m = Transpose(matrix)
         return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
+
+    def translate(self, x=0, y=0, z=0):
+        """Shift the Point by adding x and y to the coordinates of the Point.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> t = Point3D(0, 1, 1)
+        >>> t.translate(2)
+        Point3D(2, 1, 1)
+        >>> t.translate(2, 2)
+        Point3D(2, 3, 1)
+        >>> t + Point3D(2, 2, 2)
+        Point3D(2, 3, 3)
+
+        """
+        return Point3D(self.x + x, self.y + y, self.z + z)
+
+    @property
+    def x(self):
+        """
+        Returns the X coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 3)
+        >>> p.x
+        0
+        """
+        return self.args[0]
+
+    @property
+    def y(self):
+        """
+        Returns the Y coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 2)
+        >>> p.y
+        1
+        """
+        return self.args[1]
+
+    @property
+    def z(self):
+        """
+        Returns the Z coordinate of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 1)
+        >>> p.z
+        1
+        """
+        return self.args[2]
