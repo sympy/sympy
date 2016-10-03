@@ -9,16 +9,16 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 
 
-def limit(e, z, z0, dir="+"):
+def limit(e, z, z0, dir="+-"):
     """
     Compute the limit of e(z) at the point z0.
 
     z0 can be any expression, including oo and -oo.
 
-    For dir="+" (default) it calculates the limit from the right
-    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
-    z0 (oo or -oo), the dir argument is determined from the direction
-    of the infinity (i.e., dir="-" for oo).
+    For dir="+-" (default) it calculates the bi-directional limit; for dir="+" it calculates the limit
+    from the right (z->z0+) and for dir="-" the limit from the left (z->z0-).
+    For infinite z0 (oo or -oo), the dir argument is determined from
+    the direction of the infinity (i.e., dir="-" for oo).
 
     Examples
     ========
@@ -41,8 +41,16 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-
-    return Limit(e, z, z0, dir).doit(deep=False)
+    
+    if dir == "+-":
+        llim = Limit(e, z, z0,dir="-").doit(deep=False)
+        rlim = Limit(e, z, z0,dir="+").doit(deep=False)
+        if llim == rlim:
+            return rlim
+        else:
+            return None
+    else:
+        return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):
