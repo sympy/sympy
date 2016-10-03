@@ -775,11 +775,11 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, bases=(AppliedUndef,), mod_dict=None, **kwargs):
-        mod_dict = mod_dict or {}
-        mod_dict.update(kwargs)
-        mod_dict['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, mod_dict)
+    def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
+        __dict__ = __dict__ or {}
+        __dict__.update(kwargs)
+        __dict__['__module__'] = None # For pickling
+        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
 
     def __instancecheck__(cls, instance):
