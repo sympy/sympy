@@ -1,4 +1,5 @@
 import sys
+import inspect
 import copy
 import pickle
 import warnings
@@ -25,6 +26,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S
 
+from sympy.external import import_module
+cloudpickle = import_module('cloudpickle')
+
 excluded_attrs = set(['_assumptions', '_mhash'])
 
 
@@ -40,6 +44,8 @@ def check(a, exclude=[], check_attr=True):
         protocols.extend([3])
     if sys.version_info >= (3,4):
         protocols.extend([4])
+    if cloudpickle:
+        protocols.extend([cloudpickle])
 
     for protocol in protocols:
         if protocol in exclude:
@@ -50,6 +56,8 @@ def check(a, exclude=[], check_attr=True):
                 # Classes can't be copied, but that's okay.
                 return
             b = protocol(a)
+        elif inspect.ismodule(protocol):
+            b = protocol.loads(protocol.dumps(a))
         else:
             b = pickle.loads(pickle.dumps(a, protocol))
 
@@ -162,6 +170,8 @@ def test_Singletons():
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
+    if cloudpickle:
+        copiers += [lambda x: cloudpickle.loads(cloudpickle.dumps(x))]
 
     for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
             oo, -oo, zoo, nan, S.GoldenRatio, S.EulerGamma, S.Catalan,
