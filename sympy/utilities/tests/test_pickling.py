@@ -1,3 +1,4 @@
+import sys
 import copy
 import pickle
 import warnings
@@ -19,7 +20,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY, PY3
+from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S
@@ -35,8 +36,11 @@ def check(a, exclude=[], check_attr=True):
 
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
-    if PY3:
+    if sys.version_info >= (3,):
         protocols.extend([3])
+    if sys.version_info >= (3,4):
+        protocols.extend([4])
+
     for protocol in protocols:
         if protocol in exclude:
             continue
@@ -151,8 +155,10 @@ def test_core_multidimensional():
 
 def test_Singletons():
     protocols = [0, 1, 2]
-    if PY3:
+    if sys.version_info >= (3,):
         protocols.extend([3])
+    if sys.version_info >= (3,4):
+        protocols.extend([4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
