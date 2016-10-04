@@ -35,9 +35,6 @@ excluded_attrs = set(['_assumptions', '_mhash'])
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    # Python 2.6+ warns about BasicException.message, for example.
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info >= (3,):
@@ -78,10 +75,6 @@ def check(a, exclude=[], check_attr=True):
                     assert getattr(b, i) == attr, "%s != %s" % (getattr(b, i), attr)
         c(a, b, d1)
         c(b, a, d2)
-
-    # reset filters
-    warnings.simplefilter("default", category=DeprecationWarning)
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
 #================== core =========================
 
