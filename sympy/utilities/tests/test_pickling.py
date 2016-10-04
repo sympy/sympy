@@ -54,7 +54,7 @@ def check(a, exclude=[], check_attr=True):
         if callable(protocol):
             if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
-                return
+                continue
             b = protocol(a)
         elif inspect.ismodule(protocol):
             b = protocol.loads(protocol.dumps(a))
