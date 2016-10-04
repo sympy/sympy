@@ -57,7 +57,6 @@ def test_basic1():
     assert limit(1/x,x,0,dir="+-") is None
     assert limit(sin(x)/x, x, 0,dir="+-") == 1
     assert limit(1/tan(x),x, 0,dir="+-") is None
-    
 
     # approaching 0
     # from dir="+"
@@ -489,5 +488,3 @@ def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
-
-

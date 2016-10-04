@@ -41,7 +41,7 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-    
+
     if dir == "+-":
         llim = Limit(e, z, z0,dir="-").doit(deep=False)
         rlim = Limit(e, z, z0,dir="+").doit(deep=False)
