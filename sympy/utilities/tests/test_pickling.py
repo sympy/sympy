@@ -137,8 +137,17 @@ def test_core_function():
         check(f)
 
 
+def test_core_undefinedfunctions():
+    f = Function("f")
+    # Full XFAILed test below
+    exclude = list(range(5))
+    if sys.version_info < (3,):
+        # https://github.com/cloudpipe/cloudpickle/issues/65
+        exclude.append(cloudpickle)
+    check(f, exclude=exclude)
+
 @XFAIL
-def test_core_dynamicfunctions():
+def test_core_undefinedfunctions_fail():
     # This fails because f is assumed to be a class at sympy.basic.function.f
     f = Function("f")
     check(f)
