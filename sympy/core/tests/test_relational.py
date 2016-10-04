@@ -266,7 +266,8 @@ def test_new_relational():
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
-                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                                     '<=', 'le', '>', 'gt', '<', 'lt', ':=',
+                                     '+=', '-=', '*=', '/=', '%='):
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
