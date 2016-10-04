@@ -42,7 +42,7 @@ def check(a, exclude=[], check_attr=True):
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info >= (3,):
         protocols.extend([3])
-    if sys.version_info >= (3,4):
+    if sys.version_info >= (3, 4):
         protocols.extend([4])
     if cloudpickle:
         protocols.extend([cloudpickle])
@@ -165,7 +165,7 @@ def test_Singletons():
     protocols = [0, 1, 2]
     if sys.version_info >= (3,):
         protocols.extend([3])
-    if sys.version_info >= (3,4):
+    if sys.version_info >= (3, 4):
         protocols.extend([4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
