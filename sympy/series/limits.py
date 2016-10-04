@@ -48,7 +48,7 @@ def limit(e, z, z0, dir="+"):
         if llim == rlim:
             return rlim
         else:
-            return None
+            raise ValueError("The limit does not exist! (left and right limits do not match)")
     else:
         return Limit(e, z, z0, dir).doit(deep=False)
 
