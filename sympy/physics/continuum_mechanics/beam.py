@@ -331,8 +331,8 @@ class Beam(object):
         """
         x = self.variable
         l = self.length
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        shear_curve = limit(self.shear_force(), x, l,dir="+")
+        moment_curve = limit(self.bending_moment(), x, l,dir="+")
         reaction_values = linsolve([shear_curve, moment_curve], reactions).args
         self._reaction_loads = dict(zip(reactions, reaction_values[0]))
         self._load = self._load.subs(self._reaction_loads)

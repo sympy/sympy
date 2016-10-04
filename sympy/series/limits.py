@@ -9,7 +9,7 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 
 
-def limit(e, z, z0, dir="+-"):
+def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
 

@@ -54,9 +54,9 @@ def test_basic1():
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
     #test bi-directional limits
-    assert limit(1/x,x,0) is None
-    assert limit(sin(x)/x, x, 0) == 1
-    assert limit(1/tan(x),x, 0) is None
+    assert limit(1/x,x,0,dir="+-") is None
+    assert limit(sin(x)/x, x, 0,dir="+-") == 1
+    assert limit(1/tan(x),x, 0,dir="+-") is None
     
 
     # approaching 0
@@ -66,7 +66,7 @@ def test_basic1():
     # Add
     assert limit(1 + 1/x, x, 0, dir='-') == -oo
     #bidirectional limit
-    assert limit(1 + 1/x, x, 0) is None
+    assert limit(1 + 1/x, x, 0,dir="+-") is None
     # Pow
     assert limit(x**(-2), x, 0, dir='-') == oo
     assert limit(x**(-3), x, 0, dir='-') == -oo
@@ -90,7 +90,7 @@ def test_basic2():
 def test_basic3():
     assert limit(1/x, x, 0, dir="+") == oo
     assert limit(1/x, x, 0, dir="-") == -oo
-    assert limit(1/x, x, 0) is None
+    assert limit(1/x, x, 0, dir="+-") is None
 
 
 def test_basic4():
@@ -491,8 +491,3 @@ def test_limit_with_Float():
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
 
 
-test_basic1()
-test_basic2()
-test_basic3()
-test_basic4()
-test_basic5()
