@@ -5,7 +5,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field, param_poly_rischDE)
+    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE)
 
 from sympy.abc import x, t, n
 
@@ -155,6 +155,20 @@ def test_param_poly_rischDE():
     assert A.nullspace() == [Matrix([3, -5, 1, -5, 1, 1])]
     p = -5*h[0] + h[1] + h[2]  # Poly(1, x)
     assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x)
+
+
+def test_param_rischDE():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    p1, px = Poly(1, x, field=True), Poly(x, x, field=True)
+    G = [(p1, px), (p1, p1), (px, p1)]  # [1/x, 1, x]
+    h, A = param_rischDE(-p1, Poly(x**2, x, field=True), G, DE)
+    assert len(h) == 3
+    p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
+    V = A.nullspace()
+    assert len(V) == 2
+    assert V[0] == Matrix([-1, 1, 0, -1, 1, 0])
+    y = -p[0] + p[1] + 0*p[2]  # x
+    assert y.diff(x) - y/x**2 == 1 - 1/x  # Dy + f*y == -G0 + G1 + 0*G2
 
 def test_limited_integrate_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
