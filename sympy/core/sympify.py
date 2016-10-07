@@ -8,7 +8,6 @@ from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
-#from sympy.core.numbers import Float
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
