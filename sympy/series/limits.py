@@ -47,7 +47,6 @@ def limit(e, z, z0, dir="+"):
 
 def heuristics(e, z, z0, dir):
     rv = None
-
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
         if isinstance(rv, Limit):
@@ -118,13 +117,11 @@ class Limit(Expr):
         isyms.update(self.args[2].free_symbols)
         return isyms
 
-
     def doit(self, **hints):
         """Evaluates limit"""
         from sympy.series.limitseq import limit_seq
 
         e, z, z0, dir = self.args
-
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
@@ -167,6 +164,16 @@ class Limit(Expr):
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
+
+        #Check to see if e is a simple power series, like (-1/2)**x
+        if e.is_Pow and len(e.free_symbols) == 1:
+            k = e.free_symbols.pop()
+            if k == z:
+                try:
+                    if (abs(e.base) < 1 and z0 is S.Infinity) or (abs(e.base) > 1 and z0 is S.NegativeInfinity):
+                        return 0
+                except TypeError:
+                    pass
 
         try:
             r = gruntz(e, z, z0, dir)

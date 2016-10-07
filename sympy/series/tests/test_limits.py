@@ -52,7 +52,6 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
-
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0) == oo
@@ -67,7 +66,6 @@ def test_basic1():
     assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
     assert limit((1 + cos(x))**oo, x, 0) == oo
-
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -482,3 +480,10 @@ def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
+
+def test_limit_with_negatives():
+    j = Rational(1,-2)
+    k = Rational(-2,1)
+    assert limit(j**x,x,oo) == 0
+    assert limit(k**x,x,-oo) == 0
+    raises(NotImplementedError,lambda: limit(j**(x*y),x,oo))
