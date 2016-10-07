@@ -8,6 +8,7 @@ from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
+#from sympy.core.numbers import Float
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -266,16 +267,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
-    #Support for basic numpy datatypes.
-    if type(a).__module__ == 'numpy':
-        import numpy
-        if(numpy.isscalar(a)):
+        import numpy as np
+        if np.isscalar(a):
             try:
-                return sympify(numpy.asscalar(a))
+                return sympify(np.asscalar(a))
             except RuntimeError:
-                return sympify(numpy.float64(a))
-                #Exception case is for float128 which
-                #has no native python equivalent.
+                from sympy.core import Float
+                a = str(list(np.reshape(np.asarray(a),
+                                (1, np.size(a)))[0]))[1:-1]
+                return Float(a)
+                #Exception case is for float96,float128 which has no native
+                #python equivalent.It's better to not use this for
+                #all numpy floats as it's a bit slow.
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
