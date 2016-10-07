@@ -46,6 +46,7 @@ def limit(e, z, z0, dir="+"):
 
 
 def heuristics(e, z, z0, dir):
+
     rv = None
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
@@ -117,11 +118,13 @@ class Limit(Expr):
         isyms.update(self.args[2].free_symbols)
         return isyms
 
+
     def doit(self, **hints):
         """Evaluates limit"""
         from sympy.series.limitseq import limit_seq
 
         e, z, z0, dir = self.args
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
