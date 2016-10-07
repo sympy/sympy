@@ -266,6 +266,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
+    #Support for basic numpy datatypes
+    if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
             try:
