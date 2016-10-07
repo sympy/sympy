@@ -1178,6 +1178,14 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         a, b = self.a, self.b
         return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
 
+    def sample(self):
+        try :
+            from scipy.stats import invgamma
+        except ImportError:
+            raise ImportError("can't import invgamma function from scipy")
+        return invgamma.rvs(float(self.a), 0, float(self.b))
+
+
 def GammaInverse(name, a, b):
     r"""
     Create a continuous random variable with an inverse Gamma distribution.
