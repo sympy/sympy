@@ -772,7 +772,7 @@ class Float(Number):
             num = num._mpf_
 
         if prec is None:
-            dps = 15
+            dps = mpmath.mp.dps
             if isinstance(num, Float):
                 return num
             if isinstance(num, string_types) and _literal_float(num):
