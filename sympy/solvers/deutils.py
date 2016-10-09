@@ -14,13 +14,9 @@ from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
-def _preprocess(expr, func=None, hint='_Integral'):
+def _preprocess(expr, func=None):
     """Prepare expr for solving by making sure that differentiation
-    is done so that only func remains in unevaluated derivatives and
-    (if hint doesn't end with _Integral) that doit is applied to all
-    other derivatives. If hint is None, don't do any differentiation.
-    (Currently this may cause some simple differential equations to
-    fail.)
+    is done so that only func remains in unevaluated derivatives.
 
     In case func is None, an attempt will be made to autodetect the
     function to be solved for.
@@ -44,20 +40,6 @@ def _preprocess(expr, func=None, hint='_Integral'):
     >>> _preprocess(Derivative(f(y), z), f(y))
     (0, f(y))
 
-    Do others if the hint doesn't end in '_Integral' (the default
-    assumes that it does):
-
-    >>> _preprocess(Derivative(g(x), y), f(x))
-    (Derivative(g(x), y), f(x))
-    >>> _preprocess(Derivative(f(x), y), f(x), hint='')
-    (0, f(x))
-
-    Don't do any derivatives if hint is None:
-
-    >>> eq = Derivative(f(x) + 1, x) + Derivative(f(x), y)
-    >>> _preprocess(eq, f(x), hint=None)
-    (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
-
     If it's not clear what the function of interest is, it must be given:
 
     >>> eq = Derivative(f(x) + g(x), x)
@@ -68,19 +50,16 @@ def _preprocess(expr, func=None, hint='_Integral'):
     A ValueError was raised.
 
     """
-
     derivs = expr.atoms(Derivative)
     if not func:
         funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be '
                 'automatically detected for %s.' % expr)
-        func = funcs.pop()
+        func, = funcs
     fvars = set(func.args)
-    if hint is None:
-        return expr, func
-    reps = [(d, d.doit()) for d in derivs if not hint.endswith('_Integral') or
-            d.has(func) or set(d.variables) & fvars]
+    reps = [(d, d.doit()) for d in derivs if d.has(func) or
+            set(d.variables) & fvars]
     eq = expr.subs(reps)
     return eq, func
 
