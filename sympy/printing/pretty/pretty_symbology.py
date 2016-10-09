@@ -591,7 +591,9 @@ unicode_strings = {
     'XAnd' :                     u"\N{NAND}",
     'NOr' :                      u"\N{NOR}",
     'RightArrow' :               u"\N{RIGHTWARDS ARROW}",
+    'RightArrowSpaces' :         u" \N{RIGHTWARDS ARROW} ",
     'IdenticalTo' :              u"\N{IDENTICAL TO}",
+    'NotIdenticalTo' :           u"\N{NOT IDENTICAL TO}",
     'MultiplySign' :             u"\N{MULTIPLICATION SIGN}",
     'HorizontalEllipsis':        u"\N{HORIZONTAL ELLIPSIS}",
     'SmallElementOf' :           u"\N{SMALL ELEMENT OF}",
@@ -599,7 +601,7 @@ unicode_strings = {
     'LogicalAnd' :               u"\N{LOGICAL AND}",
     'DoubleStruckItalicSmallD' : u"\N{DOUBLE-STRUCK ITALIC SMALL D}",
     'RightArrow':                u"\N{RIGHTWARDS ARROW}",
-    'RightArrowFromBar' :        u"\N{RIGHTWARDS ARROW FROM BAR}",
+    'RightArrowFromBar' :        u" \N{RIGHTWARDS ARROW FROM BAR} ",
     'BoxDrawingsLightDownAndHorizontal' : u'\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}',
     'BoxDrawingsLightHorizontal':u'\N{BOX DRAWINGS LIGHT HORIZONTAL}',
     'SuperscriptPlusSign' :      u'\N{SUPERSCRIPT PLUS SIGN}',
@@ -612,5 +614,6 @@ unicode_strings = {
     'DoubleStruckCapitalQ' :     u'\N{DOUBLE-STRUCK CAPITAL Q}',
     'DoubleStruckCapitalR' :     u'\N{DOUBLE-STRUCK CAPITAL R}',
     'DoubleStruckCapitalC' :     u'\N{DOUBLE-STRUCK CAPITAL C}',
-    'DoubleStruckItalicSmallD' : u'\N{DOUBLE-STRUCK ITALIC SMALL D} '
+    'DoubleStruckItalicSmallD' : u'\N{DOUBLE-STRUCK ITALIC SMALL D} ',
+    'BoxDrawLightHorizontal&RightArrow' : u'\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'
 }    

@@ -158,7 +158,7 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-                return self._print_Equivalent(arg, altchar=u"\N{NOT IDENTICAL TO}")
+                return self._print_Equivalent(arg, altchar=unicode_strings['NotIdenticalTo'])
             if isinstance(arg, Implies):
                 return self._print_Implies(arg, altchar=unicode_strings['RightArrowWithStroke'])
 
@@ -572,7 +572,7 @@ class PrettyPrinter(Printer):
 
         LimArg = self._print(z)
         if self._use_unicode:
-            LimArg = prettyForm(*LimArg.right(u'\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'))
+            LimArg = prettyForm(*LimArg.right(unicode_strings['BoxDrawLightHorizontal&RightArrow']))
         else:
             LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
@@ -1130,7 +1130,7 @@ class PrettyPrinter(Printer):
             elif len(expr.variables):
                 pform = prettyForm(*pform.right(self._print(expr.variables[0])))
             if self._use_unicode:
-                pform = prettyForm(*pform.right(u" \N{RIGHTWARDS ARROW} "))
+                pform = prettyForm(*pform.right(unicode_strings['RightArrowSpaces']))
             else:
                 pform = prettyForm(*pform.right(" -> "))
             if len(expr.point) > 1:
