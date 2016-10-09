@@ -14,6 +14,19 @@ from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
+def _find_func(expr):
+    """
+    Autodetect the function to be solved for in expr.
+    """
+    derivs = expr.atoms(Derivative)
+    funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+    if len(funcs) != 1:
+        raise ValueError('The function cannot be '
+            'automatically detected for %s.' % expr)
+    func, = funcs
+    return func
+
+
 def _preprocess(expr, func=None):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives.
@@ -52,11 +65,7 @@ def _preprocess(expr, func=None):
     """
     derivs = expr.atoms(Derivative)
     if not func:
-        funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-        if len(funcs) != 1:
-            raise ValueError('The function cannot be '
-                'automatically detected for %s.' % expr)
-        func, = funcs
+        func = _find_func(expr)
     fvars = set(func.args)
     reps = [(d, d.doit()) for d in derivs if d.has(func) or
             set(d.variables) & fvars]
