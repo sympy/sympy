@@ -89,7 +89,8 @@ def trigintegrate(f, x, conds='piecewise'):
                 n_ = True
                 m_ = False
 
-            # Both n and m are odd and positive
+            # Both n and m are odd and positive or
+            # both are odd and negative.
             else:
                 n_ = n_ and (n < m)      # NB: careful here, one of the
                 m_ = m_ and not (n < m)  # conditions *must* be true
