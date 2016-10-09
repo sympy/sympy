@@ -1,5 +1,6 @@
-from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MatrixBase)
+from sympy.core.backend import (diff, expand, sin, cos, sympify,
+                   eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
+from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 

@@ -1,3 +1,5 @@
+import sys
+import inspect
 import copy
 import pickle
 import warnings
@@ -19,10 +21,13 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY, PY3
+from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S
+
+from sympy.external import import_module
+cloudpickle = import_module('cloudpickle')
 
 excluded_attrs = set(['_assumptions', '_mhash'])
 
@@ -30,13 +35,15 @@ excluded_attrs = set(['_assumptions', '_mhash'])
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    # Python 2.6+ warns about BasicException.message, for example.
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
-    if PY3:
+    if sys.version_info >= (3,):
         protocols.extend([3])
+    if sys.version_info >= (3, 4):
+        protocols.extend([4])
+    if cloudpickle:
+        protocols.extend([cloudpickle])
+
     for protocol in protocols:
         if protocol in exclude:
             continue
@@ -44,8 +51,10 @@ def check(a, exclude=[], check_attr=True):
         if callable(protocol):
             if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
-                return
+                continue
             b = protocol(a)
+        elif inspect.ismodule(protocol):
+            b = protocol.loads(protocol.dumps(a))
         else:
             b = pickle.loads(pickle.dumps(a, protocol))
 
@@ -66,10 +75,6 @@ def check(a, exclude=[], check_attr=True):
                     assert getattr(b, i) == attr, "%s != %s" % (getattr(b, i), attr)
         c(a, b, d1)
         c(b, a, d2)
-
-    # reset filters
-    warnings.simplefilter("default", category=DeprecationWarning)
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
 #================== core =========================
 
@@ -132,8 +137,17 @@ def test_core_function():
         check(f)
 
 
+def test_core_undefinedfunctions():
+    f = Function("f")
+    # Full XFAILed test below
+    exclude = list(range(5))
+    if sys.version_info < (3,):
+        # https://github.com/cloudpipe/cloudpickle/issues/65
+        exclude.append(cloudpickle)
+    check(f, exclude=exclude)
+
 @XFAIL
-def test_core_dynamicfunctions():
+def test_core_undefinedfunctions_fail():
     # This fails because f is assumed to be a class at sympy.basic.function.f
     f = Function("f")
     check(f)
@@ -151,11 +165,15 @@ def test_core_multidimensional():
 
 def test_Singletons():
     protocols = [0, 1, 2]
-    if PY3:
+    if sys.version_info >= (3,):
         protocols.extend([3])
+    if sys.version_info >= (3, 4):
+        protocols.extend([4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
+    if cloudpickle:
+        copiers += [lambda x: cloudpickle.loads(cloudpickle.dumps(x))]
 
     for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
             oo, -oo, zoo, nan, S.GoldenRatio, S.EulerGamma, S.Catalan,

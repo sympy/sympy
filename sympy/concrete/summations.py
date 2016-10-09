@@ -265,9 +265,41 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import sum_simplify
-        return sum_simplify(self)
+    def _eval_simplify(self, ratio=1.7, measure=None):
+        from sympy.simplify.simplify import factor_sum, sum_combine
+        from sympy.core.function import expand
+        from sympy.core.mul import Mul
+
+        #split the function into adds
+        terms = Add.make_args(expand(self.function))
+        s_t = [] # Sum Terms
+        o_t = [] # Other Terms
+
+        for term in terms:
+            if term.has(Sum):
+                #if there is an embedded sum here
+                #it is of the form x * (Sum(whatever))
+                #hence we make a Mul out of it, and simplify all interior sum terms
+                subterms = Mul.make_args(expand(term))
+                out_terms = []
+                for subterm in subterms:
+                    #go through each term
+                    if isinstance(subterm, Sum):
+                        #if it's a sum, simpify it
+                        out_terms.append(subterm._eval_simplify())
+                    else:
+                        #otherwise, add it as is
+                        out_terms.append(subterm)
+
+                #turn it back into a Mul
+                s_t.append(Mul(*out_terms))
+            else:
+                o_t.append(term)
+
+        #next try to combine any interior sums for further simplification
+        result = Add(sum_combine(s_t), *o_t)
+
+        return factor_sum(result, limits=self.limits)
 
     def _eval_summation(self, f, x):
         return None
@@ -955,6 +987,7 @@ def _eval_sum_hyper(f, i, a):
     from sympy.functions import hyper
     from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
+    from sympy.core.numbers import Float
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
@@ -967,6 +1000,10 @@ def _eval_sum_hyper(f, i, a):
     hs = hypersimp(f, i)
     if hs is None:
         return None
+
+    if isinstance(hs,Float):
+        from sympy.simplify.simplify import nsimplify
+        hs = nsimplify(hs)
 
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)

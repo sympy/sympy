@@ -1,8 +1,8 @@
 import warnings
 
 from sympy.core.compatibility import range
-from sympy import cos, Matrix, simplify, sin, solve, tan, pi
-from sympy import symbols, trigsimp, zeros
+from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
+from sympy import trigsimp, simplify, solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
                                      inertia, inertia_of_point_mass,
                                      Point, ReferenceFrame, RigidBody)
@@ -277,8 +277,8 @@ def test_non_central_inertia():
               mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
             -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
             0])
-    assert (trigsimp(fr_star.subs(vc_map).subs(u3, 0)).doit().expand() ==
-            fr_star_expected.expand())
+    t = trigsimp(fr_star.subs(vc_map).subs({u3: 0})).doit().expand()
+    assert ((fr_star_expected - t).expand() == zeros(3, 1))
 
     # define inertias of rigid bodies A, B, C about point D
     # I_S/O = I_S/S* + I_S*/O
@@ -292,8 +292,9 @@ def test_non_central_inertia():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         fr2, fr_star2 = km.kanes_equations(forces, bodies2)
-    assert (trigsimp(fr_star2.subs(vc_map).subs(u3, 0)).doit().expand() ==
-            fr_star_expected.expand())
+
+    t = trigsimp(fr_star2.subs(vc_map).subs({u3: 0})).doit()
+    assert (fr_star_expected - t).expand() == zeros(3, 1)
 
 def test_sub_qdot():
     # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
@@ -383,7 +384,7 @@ def test_sub_qdot():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
         fr, fr_star = km.kanes_equations(forces, bodies)
     assert (fr.expand() == fr_expected.expand())
-    assert (trigsimp(fr_star).expand() == fr_star_expected.expand())
+    assert ((fr_star_expected - trigsimp(fr_star)).expand() == zeros(3, 1))
 
 def test_sub_qdot2():
     # This test solves exercises 8.3 from Kane 1985 and defines

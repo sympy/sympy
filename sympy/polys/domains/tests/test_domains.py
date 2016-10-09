@@ -11,7 +11,6 @@ from sympy.polys.fields import field
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    GeneratorsNeeded,
     GeneratorsError,
     CoercionFailed,
     NotInvertible,
@@ -483,11 +482,13 @@ def test_Domain_convert():
 
 
 def test_PolynomialRing__init():
-    raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
+    R, = ring("", ZZ)
+    assert ZZ.poly_ring() == R.to_domain()
 
 
 def test_FractionField__init():
-    raises(GeneratorsNeeded, lambda: ZZ.frac_field())
+    F, = field("", ZZ)
+    assert ZZ.frac_field() == F.to_domain()
 
 
 def test_inject():
