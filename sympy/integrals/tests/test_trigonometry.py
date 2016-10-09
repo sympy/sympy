@@ -75,7 +75,7 @@ def test_trigintegrate_even():
 
 
 def test_trigintegrate_mixed():
-    assert trigintegrate(sin(x)*sec(x), x) == -log(sin(x)**2 - 1)/2
+    assert trigintegrate(sin(x)*sec(x), x) == -log(cos(x))
     assert trigintegrate(sin(x)*csc(x), x) == x
     assert trigintegrate(sin(x)*cot(x), x) == sin(x)
 
