@@ -580,3 +580,37 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+        
+        
+unicode_strings = {
+    'RightArrowWithStroke' :     u"\N{RIGHTWARDS ARROW WITH STROKE}",
+    'NotSign' :                  u"\N{NOT SIGN}",
+    'LogicalAnd' :               u"\N{LOGICAL AND}",
+    'LogicalOr' :                u"\N{LOGICAL OR}",
+    'XOr' :                      u"\N{XOR}",
+    'XAnd' :                     u"\N{NAND}",
+    'NOr' :                      u"\N{NOR}",
+    'RightArrow' :               u"\N{RIGHTWARDS ARROW}",
+    'IdenticalTo' :              u"\N{IDENTICAL TO}",
+    'MultiplySign' :             u"\N{MULTIPLICATION SIGN}",
+    'HorizontalEllipsis':        u"\N{HORIZONTAL ELLIPSIS}",
+    'SmallElementOf' :           u"\N{SMALL ELEMENT OF}",
+    'ElementOf' :                u" \N{ELEMENT OF} ",
+    'LogicalAnd' :               u"\N{LOGICAL AND}",
+    'DoubleStruckItalicSmallD' : u"\N{DOUBLE-STRUCK ITALIC SMALL D}",
+    'RightArrow':                u"\N{RIGHTWARDS ARROW}",
+    'RightArrowFromBar' :        u"\N{RIGHTWARDS ARROW FROM BAR}",
+    'BoxDrawingsLightDownAndHorizontal' : u'\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}',
+    'BoxDrawingsLightHorizontal':u'\N{BOX DRAWINGS LIGHT HORIZONTAL}',
+    'SuperscriptPlusSign' :      u'\N{SUPERSCRIPT PLUS SIGN}',
+    'SuperscriptMinus' :         u'\N{SUPERSCRIPT MINUS}',
+    'Dagger' :                   u'\N{DAGGER}',
+    'RightParenthesisUpperHook': u'\N{RIGHT PARENTHESIS UPPER HOOK}',
+    'SquareRoot' :               u'\N{SQUARE ROOT}',
+    'DoubleStruckCapitalZ%d' :   u'\N{DOUBLE-STRUCK CAPITAL Z}_%d',
+    'DoubleStruckCapitalZ' :     u'\N{DOUBLE-STRUCK CAPITAL Z}',
+    'DoubleStruckCapitalQ' :     u'\N{DOUBLE-STRUCK CAPITAL Q}',
+    'DoubleStruckCapitalR' :     u'\N{DOUBLE-STRUCK CAPITAL R}',
+    'DoubleStruckCapitalC' :     u'\N{DOUBLE-STRUCK CAPITAL C}',
+    'DoubleStruckItalicSmallD' : u'\N{DOUBLE-STRUCK ITALIC SMALL D} '
+}    
