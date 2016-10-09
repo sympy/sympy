@@ -266,7 +266,7 @@ from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy.solvers.deutils import _find_func, _preprocess, ode_order, _desolve
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -816,10 +816,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
-    if prep or func is None:
-        eq, func_ = _preprocess(eq, func)
-        if func is None:
-            func = func_
+    if func is None:
+        func = _find_func(eq)
+        prep = True
+    if prep:
+        eq = _preprocess(eq, func)
     x = func.args[0]
     f = func.func
     y = Dummy('y')
@@ -2218,7 +2219,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         ode = Eq(ode, 0)
     if func is None:
         try:
-            _, func = _preprocess(ode.lhs)
+            func = _find_func(ode.lhs)
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
@@ -5198,7 +5199,8 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
     if not func:
-        eq, func = _preprocess(eq)
+        func = _find_func(eq)
+        eq = _preprocess(eq, func)
     variables = func.args
     if len(variables) != 1:
         raise ValueError("ODE's have only one independent variable")
@@ -5531,7 +5533,8 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
     if not func:
-        eq, func = _preprocess(eq)
+        func = _find_func(eq)
+        eq = _preprocess(eq, func)
     variables = func.args
     if len(variables) != 1:
         raise ValueError("ODE's have only one independent variable")

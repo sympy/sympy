@@ -27,12 +27,9 @@ def _find_func(expr):
     return func
 
 
-def _preprocess(expr, func=None):
+def _preprocess(expr, func):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives.
-
-    In case func is None, an attempt will be made to autodetect the
-    function to be solved for.
 
     >>> from sympy.solvers.deutils import _preprocess
     >>> from sympy import Derivative, Function, Integral, sin
@@ -42,35 +39,23 @@ def _preprocess(expr, func=None):
     Apply doit to derivatives that contain more than the function
     of interest:
 
-    >>> _preprocess(Derivative(f(x) + x, x))
-    (Derivative(f(x), x) + 1, f(x))
+    >>> _preprocess(Derivative(f(x) + x, x), f(x))
+    Derivative(f(x), x) + 1
 
     Do others if the differentiation variable(s) intersect with those
     of the function of interest or contain the function of interest:
 
     >>> _preprocess(Derivative(g(x), y, z), f(y))
-    (0, f(y))
+    0
     >>> _preprocess(Derivative(f(y), z), f(y))
-    (0, f(y))
-
-    If it's not clear what the function of interest is, it must be given:
-
-    >>> eq = Derivative(f(x) + g(x), x)
-    >>> _preprocess(eq, g(x))
-    (Derivative(f(x), x) + Derivative(g(x), x), g(x))
-    >>> try: _preprocess(eq)
-    ... except ValueError: print("A ValueError was raised.")
-    A ValueError was raised.
-
+    0
     """
     derivs = expr.atoms(Derivative)
-    if not func:
-        func = _find_func(expr)
     fvars = set(func.args)
     reps = [(d, d.doit()) for d in derivs if d.has(func) or
             set(d.variables) & fvars]
-    eq = expr.subs(reps)
-    return eq, func
+    return expr.subs(reps)
+
 
 def ode_order(expr, func):
     """
@@ -159,9 +144,10 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         eq = eq.lhs - eq.rhs
 
     # preprocess the equation and find func if not given
-    if prep or func is None:
-        eq, func = _preprocess(eq, func)
-        prep = False
+    if func is None:
+        func = _find_func(eq)
+    if prep:
+        eq = _preprocess(eq, func)
 
     # type is an argument passed by the solve functions in ode and pde.py
     # that identifies whether the function caller is an ordinary
@@ -190,7 +176,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     # recursive calls.
     if kwargs.get('classify', True):
         hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
-        n=terms, x0=x0, prep=prep)
+        n=terms, x0=x0, prep=False)
 
     else:
         # Here is what all this means:
@@ -223,7 +209,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
         return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
-                      prep=prep, x0=x0, classify=False, order=hints['order'],
+                      prep=False, x0=x0, classify=False, order=hints['order'],
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
@@ -239,8 +225,9 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
-                classify=False, n=terms, order=hints['order'], match=hints[i], type=type)
+            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify,
+                prep=False, classify=False, n=terms, order=hints['order'],
+                match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True
         retdict['eq'] = eq

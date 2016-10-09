@@ -46,7 +46,7 @@ from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
 
-from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy.solvers.deutils import _find_func, _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
 from sympy.simplify.radsimp import collect
 
@@ -275,15 +275,16 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         raise NotImplementedError("Right now only partial "
             "differential equations of two variables are supported")
 
-    if prep or func is None:
-        prep, func_ = _preprocess(eq, func)
-        if func is None:
-            func = func_
-
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return classify_pde(eq.lhs - eq.rhs, func)
         eq = eq.lhs
+
+    if func is None:
+        func = _find_func(eq)
+        prep = True
+    if prep:
+        eq = _preprocess(eq, func)
 
     f = func.func
     x = func.args[0]
@@ -439,7 +440,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # If no function is given, try finding the function present.
     if func is None:
         try:
-            _, func = _preprocess(pde.lhs)
+            func = _find_func(pde.lhs)
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
