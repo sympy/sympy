@@ -79,8 +79,20 @@ def trigintegrate(f, x, conds='piecewise'):
 
         # take smallest n or m -- to choose simplest substitution
         if n_ and m_:
-            n_ = n_ and (n < m)  # NB: careful here, one of the
-            m_ = m_ and not (n < m)  # conditions *must* be true
+
+            # Make sure to choose the positive one
+            # otherwise an incorrect integral can occur.
+            if n < 0 and m > 0:
+                m_ = True
+                n_ = False
+            elif m < 0 and n > 0:
+                n_ = True
+                m_ = False
+
+            # Both n and m are odd and positive
+            else:
+                n_ = n_ and (n < m)      # NB: careful here, one of the
+                m_ = m_ and not (n < m)  # conditions *must* be true
 
         #  n      m       u=C        (n-1)/2    m
         # S(x) * C(x) dx  --> -(1-u^2)       * u  du
