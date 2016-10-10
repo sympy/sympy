@@ -627,8 +627,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         eq = _preprocess(eq, func)
 
         # See the docstring of _desolve for more details.
-        hints = _desolve(eq, func,
-            hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
+        hints = _desolve(eq, func, classifier=classify_ode,
+            hint=hint, simplify=True, xi=xi, eta=eta, ics=ics,
             x0=x0, n=n, **kwargs)
 
         all_ = hints.pop('all', False)
@@ -1286,6 +1286,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+classify_ode.kind = 'ODE'
+classify_ode.solve_func = 'dsolve'
+classify_ode.allhints = allhints
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""

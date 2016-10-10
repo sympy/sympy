@@ -175,7 +175,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     eq = _preprocess(eq, func)
 
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func, hint=hint, simplify=True, type='pde', **kwargs)
+    hints = _desolve(eq, func, hint=hint, simplify=True,
+        classifier=classify_pde, **kwargs)
     all_ = hints.pop('all', False)
 
     if all_:
@@ -394,6 +395,9 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+classify_pde.kind = 'PDE'
+classify_pde.solve_func = 'pdsolve'
+classify_pde.allhints = allhints
 
 
 def checkpdesol(pde, sol, func=None, solve_for_func=True):
