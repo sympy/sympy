@@ -165,6 +165,9 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
                            {'default': hint,
                             hint: kwargs['match'],
                             'order': kwargs['order']})
+    return _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms)
+
+def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms):
     if hints['order'] == 0:
         raise ValueError(
             str(eq) + " is not a differential equation in " + str(func))
@@ -195,7 +198,8 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
                     gethints.remove(i[:-len('_Integral')])
             # special cases
             for k in ["1st_homogeneous_coeff_best", "1st_power_series",
-                "lie_group", "2nd_power_series_ordinary", "2nd_power_series_regular"]:
+                    "lie_group", "2nd_power_series_ordinary",
+                    "2nd_power_series_regular"]:
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
