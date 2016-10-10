@@ -990,6 +990,16 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        if isinstance(other, Complement):
+            A, B = other.args
+            if A == S.UniversalSet:
+                if Intersection(B, self).is_EmptySet:
+                    return other
+                else:
+                    if B.is_subset(self):
+                        return S.UniversalSet
+                    else:
+                        return Complement(S.UniversalSet,Complement(B,self))
         if other.is_UniversalSet:
             return S.UniversalSet
         if other.is_Interval and self._is_comparable(other):

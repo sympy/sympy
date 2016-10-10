@@ -1056,3 +1056,13 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+def test_issue_9577():
+    un = S.UniversalSet
+    assert Union(Complement(un, Interval(1, 2)), Interval(3, 4)) == \
+            Complement(un, Interval(1, 2))
+    assert Union(Complement(un, Interval(1, 2)), Interval(1, 3)) == un
+    assert Union(un - Union(Interval(1, 2), Interval(3, 4)), Interval(1, 4)) == \
+            un
+    assert Union(S.UniversalSet - Interval(1, 4), Interval(2, 6)) == \
+            Intersection(S.UniversalSet, Complement(S.UniversalSet, Interval(1, 2, False, True)))
