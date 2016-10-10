@@ -144,13 +144,13 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
 
     hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
         n=terms, x0=x0, prep=False)
-    return _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms)
+    return _desolve_2(eq, func, hint, classifier, hints)
 
 def _filter_hints(hints, hint):
     return {
         'default': hint, hint: hints[hint], 'order': hints['order']}
 
-def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms):
+def _desolve_2(eq, func, hint, classifier, hints):
     if hints['order'] == 0:
         raise ValueError(
             str(eq) + " is not a differential equation in " + str(func))
@@ -169,12 +169,10 @@ def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, te
     if hint == 'default':
         newhint = hints['default']
         newhints = _filter_hints(hints, newhint)
-        return _desolve_2(eq, func, ics=ics, hint=newhint, hints=newhints,
-            simplify=simplify, x0=x0, xi=xi, eta=eta, terms=terms,
+        return _desolve_2(eq, func, hint=newhint, hints=newhints,
             classifier=classifier)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
-        failedhints = {}
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
         if hint == 'all_Integral':
             for i in hints:
@@ -188,8 +186,7 @@ def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, te
                     gethints.remove(k)
         for i in gethints:
             newhints = _filter_hints(hints, i)
-            sol = _desolve_2(eq, func, ics=ics, hint=i, hints=newhints,
-                simplify=simplify, x0=x0, xi=None, eta=None, terms=terms,
+            sol = _desolve_2(eq, func, hint=i, hints=newhints,
                 classifier=classifier)
             retdict[i] = sol
         retdict['all'] = True
