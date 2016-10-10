@@ -142,30 +142,13 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
     x0 = kwargs.get('x0', 0)
     terms = kwargs.get('n')
 
-    # Magic that should only be used internally.  Prevents classify_ode from
-    # being called more than it needs to be by passing its results through
-    # recursive calls.
-    if kwargs.get('classify', True):
-        hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
-            n=terms, x0=x0, prep=False)
-    else:
-        # Here is what all this means:
-        #
-        # hint:    The hint method given to _desolve() by the user.
-        # hints:   The dictionary of hints that match the DE, along with other
-        #          information (including the internal pass-through magic).
-        # default: The default hint to return, the first hint from allhints
-        #          that matches the hint; obtained from classify_ode().
-        # match:   Dictionary containing the match dictionary for each hint
-        #          (the parts of the DE for solving).  When going through the
-        #          hints in "all", this holds the match string for the current
-        #          hint.
-        # order:   The order of the DE, as determined by ode_order().
-        hints = kwargs.get('hint',
-                           {'default': hint,
-                            hint: kwargs['match'],
-                            'order': kwargs['order']})
+    hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
+        n=terms, x0=x0, prep=False)
     return _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms)
+
+def _filter_hints(hints, hint):
+    return {
+        'default': hint, hint: hints[hint], 'order': hints['order']}
 
 def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, terms):
     if hints['order'] == 0:
@@ -184,9 +167,10 @@ def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, te
             raise NotImplementedError(
                 "%s(): Cannot solve %s" % (classifier.solve_func, eq))
     if hint == 'default':
-        return _desolve(eq, func, ics=ics, hint=hints['default'],
-            simplify=simplify, x0=x0, classify=False, order=hints['order'],
-            match=hints[hints['default']], xi=xi, eta=eta, n=terms,
+        newhint = hints['default']
+        newhints = _filter_hints(hints, newhint)
+        return _desolve_2(eq, func, ics=ics, hint=newhint, hints=newhints,
+            simplify=simplify, x0=x0, xi=xi, eta=eta, terms=terms,
             classifier=classifier)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
@@ -203,9 +187,10 @@ def _desolve_2(eq, func, hint, classifier, ics, simplify, hints, xi, eta, x0, te
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify,
-                classify=False, n=terms, order=hints['order'],
-                match=hints[i], classifier=classifier)
+            newhints = _filter_hints(hints, i)
+            sol = _desolve_2(eq, func, ics=ics, hint=i, hints=newhints,
+                simplify=simplify, x0=x0, xi=None, eta=None, terms=terms,
+                classifier=classifier)
             retdict[i] = sol
         retdict['all'] = True
         return retdict
