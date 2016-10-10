@@ -98,7 +98,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
+def _desolve(eq, func, hint="default", ics=None, simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -131,24 +131,11 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     returned by classifier functions, and the values being the dict of form
     as mentioned above.
 
-    Key 'eq' is a common key to all the above mentioned hints which returns an
-    expression if eq given by user is an Equality.
-
     See Also
     ========
     classify_ode(ode.py)
     classify_pde(pde.py)
     """
-    prep = kwargs.pop('prep', True)
-    if isinstance(eq, Equality):
-        eq = eq.lhs - eq.rhs
-
-    # preprocess the equation and find func if not given
-    if func is None:
-        func = _find_func(eq)
-    if prep:
-        eq = _preprocess(eq, func)
-
     # type is an argument passed by the solve functions in ode and pde.py
     # that identifies whether the function caller is an ordinary
     # or partial differential equation. Accordingly corresponding
@@ -208,9 +195,9 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
-        return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
-                      prep=False, x0=x0, classify=False, order=hints['order'],
-                      match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
+        return _desolve(eq, func, ics=ics, hint=hints['default'],
+            simplify=simplify, x0=x0, classify=False, order=hints['order'],
+            match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
@@ -226,11 +213,10 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                     gethints.remove(k)
         for i in gethints:
             sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify,
-                prep=False, classify=False, n=terms, order=hints['order'],
+                classify=False, n=terms, order=hints['order'],
                 match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True
-        retdict['eq'] = eq
         return retdict
     elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
@@ -239,5 +225,5 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     else:
         # Key added to identify the hint needed to solve the equation
         hints['hint'] = hint
-    hints.update({'func': func, 'eq': eq})
+    hints['func'] = func
     return hints

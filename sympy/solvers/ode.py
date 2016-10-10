@@ -619,12 +619,18 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     else:
         given_hint = hint  # hint given by the user
 
+        # preprocess the equation and find func if not given
+        if isinstance(eq, Equality):
+            eq = eq.lhs - eq.rhs
+        if func is None:
+            func = _find_func(eq)
+        eq = _preprocess(eq, func)
+
         # See the docstring of _desolve for more details.
-        hints = _desolve(eq, func=func,
+        hints = _desolve(eq, func,
             hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
             x0=x0, n=n, **kwargs)
 
-        eq = hints.pop('eq', eq)
         all_ = hints.pop('all', False)
         if all_:
             retdict = {}

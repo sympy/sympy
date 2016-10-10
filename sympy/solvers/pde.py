@@ -162,16 +162,20 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     Eq(f(x, y), F(3*x - 2*y)*exp(-2*x/13 - 3*y/13))
 
     """
-
     given_hint = hint  # hint given by the user.
 
     if not solvefun:
         solvefun = Function('F')
 
+    # preprocess the equation and find func if not given
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+    if func is None:
+        func = _find_func(eq)
+    eq = _preprocess(eq, func)
+
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='pde', **kwargs)
-    eq = hints.pop('eq', False)
+    hints = _desolve(eq, func, hint=hint, simplify=True, type='pde', **kwargs)
     all_ = hints.pop('all', False)
 
     if all_:
