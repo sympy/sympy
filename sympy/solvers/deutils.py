@@ -144,21 +144,14 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
 
     hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
         n=terms, x0=x0, prep=False)
-    return _desolve_2(eq, func, hint, classifier, hints)
 
-def _filter_hints(hints, hint):
-    return {
-        'default': hint, hint: hints[hint], 'order': hints['order']}
-
-def _desolve_2(eq, func, hint, classifier, hints):
     if hints['order'] == 0:
         raise ValueError(
             str(eq) + " is not a differential equation in " + str(func))
 
-    allhints = classifier.allhints
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
-        if hint not in allhints and hint != 'default':
+        if hint not in classifier.allhints and hint != 'default':
             raise ValueError("Hint not recognized: " + hint)
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(
@@ -166,11 +159,10 @@ def _desolve_2(eq, func, hint, classifier, hints):
         else:
             raise NotImplementedError(
                 "%s(): Cannot solve %s" % (classifier.solve_func, eq))
+
     if hint == 'default':
-        newhint = hints['default']
-        newhints = _filter_hints(hints, newhint)
-        return _desolve_2(eq, func, hint=newhint, hints=newhints,
-            classifier=classifier)
+        hint = hints['default']
+        hints = _filter_hints(hints, hint)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
@@ -186,18 +178,20 @@ def _desolve_2(eq, func, hint, classifier, hints):
                     gethints.remove(k)
         for i in gethints:
             newhints = _filter_hints(hints, i)
-            sol = _desolve_2(eq, func, hint=i, hints=newhints,
-                classifier=classifier)
-            retdict[i] = sol
+            newhints.update({'hint': i, 'func': func})
+            retdict[i] = newhints
         retdict['all'] = True
         return retdict
-    elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
+    elif hint not in classifier.allhints:
         raise ValueError("Hint not recognized: " + hint)
     elif hint not in hints:
         raise ValueError(
             "%s %s does not match hint %s" % (classifier.kind, eq, hint))
-    else:
-        # Key added to identify the hint needed to solve the equation
-        hints['hint'] = hint
+    # Key added to identify the hint needed to solve the equation
+    hints['hint'] = hint
     hints['func'] = func
     return hints
+
+def _filter_hints(hints, hint):
+    return {
+        'default': hint, hint: hints[hint], 'order': hints['order']}
