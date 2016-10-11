@@ -568,7 +568,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='1st_exact')
     [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/sqrt(-cos(x)**2)) + 2*pi), Eq(f(x), acos(C1/sqrt(-cos(x)**2)))]
+    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', function=True)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
@@ -2060,6 +2060,8 @@ def odesimp(eq, func, order, constants, hint):
     # here should be raised accordingly, or constantsimp() rewritten to handle
     # an arbitrary number of constants.
     eq = constantsimp(eq, constants)
+    print(constants)
+    print(eq)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When CRootOf is implemented in solve(), we will want to return a CRootOf
@@ -2116,6 +2118,7 @@ def odesimp(eq, func, order, constants, hint):
         try:
             floats = any(i.is_Float for i in eq.atoms(Number))
             eqsol = solve(eq, func, force=True, rational=False if floats else None)
+            print(eqsol)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
