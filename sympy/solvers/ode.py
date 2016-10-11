@@ -2060,8 +2060,6 @@ def odesimp(eq, func, order, constants, hint):
     # here should be raised accordingly, or constantsimp() rewritten to handle
     # an arbitrary number of constants.
     eq = constantsimp(eq, constants)
-    print(constants)
-    print(eq)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When CRootOf is implemented in solve(), we will want to return a CRootOf
