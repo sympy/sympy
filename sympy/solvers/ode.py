@@ -2116,7 +2116,6 @@ def odesimp(eq, func, order, constants, hint):
         try:
             floats = any(i.is_Float for i in eq.atoms(Number))
             eqsol = solve(eq, func, force=True, rational=False if floats else None)
-            print(eqsol)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
