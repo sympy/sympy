@@ -1105,7 +1105,7 @@ def test_separable3():
     eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1/cos(x))
-    sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
+    sol12 = Eq(log(sin(f(x))), C1 + 2*x + 2*log(x - 1))
     sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
     assert dsolve(eq11, hint='separable') == sol11
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
@@ -2245,8 +2245,8 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        -asin(C1*exp(x)/x**2) + pi,
-        asin(C1*exp(x)/x**2)]
+        -asin(C1*exp(-x)/x**2) + pi,
+        asin(C1*exp(-x)/x**2)]
 
 def test_separable_reduced():
     f = Function('f')
