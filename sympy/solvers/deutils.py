@@ -106,10 +106,6 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
     If the hint provided to the function is "default", then a dict with
     the following keys are returned
 
-    'func'    - It provides the function for which the differential equation
-                has to be solved. This is useful when the expression has
-                more than one function in it.
-
     'default' - The default key as returned by classifier functions in ode
                 and pde.py
 
@@ -178,7 +174,7 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
                     gethints.remove(k)
         for i in gethints:
             newhints = _filter_hints(hints, i)
-            newhints.update({'hint': i, 'func': func})
+            newhints['hint'] = i
             retdict[i] = newhints
         retdict['all'] = True
         return retdict
@@ -189,7 +185,6 @@ def _desolve(eq, func, hint="default", ics=None, simplify=True,
             "%s %s does not match hint %s" % (classifier.kind, eq, hint))
     # Key added to identify the hint needed to solve the equation
     hints['hint'] = hint
-    hints['func'] = func
     return hints
 
 def _filter_hints(hints, hint):

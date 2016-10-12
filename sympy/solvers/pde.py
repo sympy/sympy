@@ -189,7 +189,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             'default': gethints['default']})
         for hint in hints:
             try:
-                rv = _helper_simplify(eq, hint, hints[hint]['func'],
+                rv = _helper_simplify(eq, hint, func,
                     hints[hint]['order'], hints[hint][hint], solvefun)
             except NotImplementedError as detail:
                 failed_hints[hint] = detail
@@ -199,8 +199,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return pdedict
 
     else:
-        return _helper_simplify(eq, hints['hint'],
-            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+        return _helper_simplify(eq, hints['hint'], func,
+            hints['order'], hints[hints['hint']], solvefun)
 
 
 def _helper_simplify(eq, hint, func, order, match, solvefun):

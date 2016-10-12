@@ -639,7 +639,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
-                    rv = _helper_simplify(eq, hint, hints[hint], simplify)
+                    rv = _helper_simplify(eq, func, hint, hints[hint], simplify)
                 except NotImplementedError as detail:
                     failed_hints[hint] = detail
                 else:
@@ -662,9 +662,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             # The key 'hint' stores the hint needed to be solved for.
             hint = hints['hint']
-            return _helper_simplify(eq, hint, hints, simplify)
+            return _helper_simplify(eq, func, hint, hints, simplify)
 
-def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
+def _helper_simplify(eq, func, hint, match, simplify=True, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -676,7 +676,6 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
         solvefunc = globals()['ode_' + hint]
-    func = r['func']
     order = r['order']
     match = r[hint]
 
