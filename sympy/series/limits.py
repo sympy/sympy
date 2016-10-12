@@ -173,11 +173,12 @@ class Limit(Expr):
             k = e.exp/z
             if k.is_Number and k > 0:
                 a = abs(e.base)
-                try:
-                    if (a < 1 and z0 is S.Infinity) or (a > 1 and z0 is S.NegativeInfinity):
-                        return 0
-                except TypeError:
-                    pass
+                if not a.has(z):
+                    try:
+                        if (a < 1 and z0 is S.Infinity) or (a > 1 and z0 is S.NegativeInfinity):
+                            return 0
+                    except TypeError:
+                        pass
 
         try:
             r = gruntz(e, z, z0, dir)
