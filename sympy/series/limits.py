@@ -169,11 +169,12 @@ class Limit(Expr):
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
         #Check to see if e is a simple power series, like (-1/2)**x
-        if e.is_Pow and len(e.free_symbols) == 1:
-            k = e.free_symbols.pop()
-            if k == z:
+        if e.is_Pow:
+            k = e.exp/z
+            if k.is_Number and k > 0:
+                a = abs(e.base)
                 try:
-                    if (abs(e.base) < 1 and z0 is S.Infinity) or (abs(e.base) > 1 and z0 is S.NegativeInfinity):
+                    if (a < 1 and z0 is S.Infinity) or (a > 1 and z0 is S.NegativeInfinity):
                         return 0
                 except TypeError:
                     pass
