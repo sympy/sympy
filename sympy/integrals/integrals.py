@@ -737,6 +737,7 @@ class Integral(AddWithLimits):
         from sympy.integrals.heurisch import heurisch, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
+        from sympy.concrete.summations import Sum
 
         if risch:
             try:
@@ -774,6 +775,9 @@ class Integral(AddWithLimits):
         poly = f.as_poly(x)
         if poly is not None and not meijerg:
             return poly.integrate().as_expr()
+
+        if isinstance(f, Sum) and not meijerg:
+            return f._eval_integral(x)
 
         if risch is not False:
             try:

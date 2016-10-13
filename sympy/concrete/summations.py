@@ -18,7 +18,7 @@ from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.core.compatibility import range
 from sympy.tensor.indexed import Idx
-
+from sympy.integrals import Integral
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -253,6 +253,28 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
+
+    def _eval_integral(self, x):
+        if isinstance(x, Symbol) and x not in self.free_symbols:
+            return x*self
+
+        f, limits = self.function, list(self.limits)
+
+        limit = limits.pop(-1)
+
+        if limits:
+            f = self.func(f, *limits)
+
+        if len(limit) == 3:
+            _, a, b = limit
+            if x in a.free_symbols or x in b.free_symbols:
+                return None
+            Iv = Integral(f, x).doit()
+            rv = self.func(Iv, limit)
+            return rv
+        else:
+            return NotImplementedError('Lower and upper bound expected.')
+
 
     def _eval_difference_delta(self, n, step):
         k, _, upper = self.args[-1]

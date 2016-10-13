@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction, summation
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -1168,3 +1168,9 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_issue_7827():
+    N = symbols('N', integer=True)
+    assert integrate(summation(sin(n*x),(n, 1, N)), x) == Sum(Piecewise((0, Eq(n, 0)), (-cos(n*x)/n, True)), (n, 1, N))
+    c = symbols('c', function=True)
+    assert integrate(Sum(c(n)*x**n, (n, 0, oo)), x) == Sum(Piecewise((c(n)*log(x), Eq(n, -1)), (x**(n + 1)*c(n)/(n + 1), True)), (n, 0, oo))
