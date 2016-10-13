@@ -26,14 +26,14 @@ def test_add():
         assert S(2) * 4 == Mul(2, 4)
         assert 4 * S(2) == Mul(2, 4)
 
-        assert S(6) / 3 == Mul(6, S(1)/ 3)
-        assert S(1)/3 * 6 == Mul(S(1)/ 3, 6)
+        assert S(6) / 3 == Mul(6, S(1) / 3)
+        assert S(1) / 3 * 6 == Mul(S(1) / 3, 6)
 		
         assert 9 ** S(2) == Pow(9, 2)
         assert S(2) ** 9 == Pow(2, 9)
 
         assert S(2) / 2 == Mul(2, S(1) / 2)
-        assert S(1)/2 * 2 == Mul(S(1) / 2, 2)
+        assert S(1) / 2 * 2 == Mul(S(1) / 2, 2)
 
         assert S(2) / 3 + 1 == Add(S(2) / 3, 1)
         assert 1 + S(2) / 3 == Add(1, S(2) / 3)	
