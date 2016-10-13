@@ -231,7 +231,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
     try:
         if a in sympy_classes:
             return a
@@ -265,6 +268,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         return a._sympy_()
     except AttributeError:
         pass
+
+    #Support for basic numpy datatypes
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            try:
+                return sympify(np.asscalar(a))
+            except RuntimeError:
+                from sympy.core import Float
+                a = str(list(np.reshape(np.asarray(a),
+                                (1, np.size(a)))[0]))[1:-1]
+                return Float(a)
+                #Exception case is for float96,float128 which has no native
+                #python equivalent.It's better to not use this for
+                #all numpy floats as it's a bit slow.
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
