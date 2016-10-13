@@ -63,6 +63,7 @@ def test_basic1():
         assert limit(1/x,x,0,dir="+-") is None
     except ValueError:
         assert True
+    assert limit(1/x,x,0,dir="+-",exc=False) is None
     # approaching 0
     # from dir="+"
     assert limit(1 + 1/x, x, 0,dir='+') == oo
