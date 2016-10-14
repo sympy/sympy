@@ -991,6 +991,12 @@ def test_solve_ics():
         [f(x), g(x)], ics={f(0): 1, g(0): 0}) == [Eq(f(x), exp(x)*cos(x)),
             Eq(g(x), exp(x)*sin(x))]
 
+    # Test cases where dsolve returns two solutions.
+    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(1): 0}) == [Eq(f(x),
+        -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
+    assert dsolve(diff(x**2*f(x)**2 - x, x), f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [Eq(f(x),
+        -sqrt(x - S(1)/2)/x), Eq(f(x), sqrt(x - S(1)/2)/x)]
+
     assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
         ics={f(0):1}, hint='1st_exact', simplify=False) == Eq(x*cos(f(x)) + f(x)**3/3, S(1)/3)
     assert dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x),
