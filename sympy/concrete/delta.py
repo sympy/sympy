@@ -1,5 +1,13 @@
-from __future__ import print_function, division
+"""
+This module implements sums and products containing the Kronecker Delta function.
 
+References
+==========
+
+- http://mathworld.wolfram.com/KroneckerDelta.html
+
+"""
+from __future__ import print_function, division
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, range

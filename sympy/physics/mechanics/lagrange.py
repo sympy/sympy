@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 __all__ = ['LagrangesMethod']
 
-from sympy import diff, zeros, Matrix, eye, sympify
+from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
         _f_list_parser)
@@ -33,6 +33,8 @@ class LagrangesMethod(object):
     forcelist : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
+    bodies : iterable
+        Iterable containing the rigid bodies and particles of the system.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
@@ -99,19 +101,19 @@ class LagrangesMethod(object):
     Please refer to the docstrings on each method for more details.
     """
 
-    def __init__(self, Lagrangian, qs, coneqs=None, forcelist=None,
-            frame=None, hol_coneqs=None, nonhol_coneqs=None):
+    def __init__(self, Lagrangian, qs, coneqs=None, forcelist=None, bodies=None,
+                 frame=None, hol_coneqs=None, nonhol_coneqs=None):
         """Supply the following for the initialization of LagrangesMethod
 
         Lagrangian : Sympifyable
 
-        qs: array_like
+        qs : array_like
             The generalized coordinates
 
-        hol_coneqs: array_like, optional
+        hol_coneqs : array_like, optional
             The holonomic constraint equations
 
-        nonhol_coneqs: array_like, optional
+        nonhol_coneqs : array_like, optional
             The nonholonomic constraint equations
 
         forcelist : iterable, optional
@@ -119,6 +121,10 @@ class LagrangesMethod(object):
             tuples which represent the force at a point or torque on a frame.
             This feature is primarily to account for the nonconservative forces
             and/or moments.
+
+        bodies : iterable, optional
+            Takes an iterable containing the rigid bodies and particles of the
+            system.
 
         frame : ReferenceFrame, optional
             Supply the inertial frame. This is used to determine the
@@ -139,6 +145,7 @@ class LagrangesMethod(object):
         self._forcelist = forcelist
         if frame and not isinstance(frame, ReferenceFrame):
             raise TypeError('frame must be a valid ReferenceFrame')
+        self._bodies = bodies
         self.inertial = frame
 
         self.lam_vec = Matrix()
@@ -458,6 +465,10 @@ class LagrangesMethod(object):
     @property
     def u(self):
         return self._qdots
+
+    @property
+    def bodies(self):
+        return self._bodies
 
     @property
     def forcelist(self):

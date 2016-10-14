@@ -303,6 +303,18 @@ def test_as_leading_term_stub():
     raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 
+def test_as_leading_term_deriv_integral():
+    # related to issue 11313
+    assert Derivative(x ** 3, x).as_leading_term(x) == 3*x**2
+    assert Derivative(x ** 3, y).as_leading_term(x) == 0
+
+    assert Integral(x ** 3, x).as_leading_term(x) == x**4/4
+    assert Integral(x ** 3, y).as_leading_term(x) == y*x**3
+
+    assert Derivative(exp(x), x).as_leading_term(x) == 1
+    assert Derivative(log(x), x).as_leading_term(x) == (1/x).as_leading_term(x)
+
+
 def test_atoms():
     assert x.atoms() == {x}
     assert (1 + x).atoms() == {x, S(1)}
@@ -622,6 +634,7 @@ def test_as_independent():
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
     eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
+    assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
 @XFAIL
 def test_call_2():
@@ -1134,6 +1147,7 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+    assert (x*y).coeff(z, 0) == x*y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1186,8 +1200,11 @@ def test_action_verbs():
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
     assert radsimp(1/(2 + sqrt(2))) == (1/(2 + sqrt(2))).radsimp()
+    assert radsimp(1/(a + b*sqrt(c)), symbolic=False) == \
+        (1/(a + b*sqrt(c))).radsimp(symbolic=False)
     assert powsimp(x**y*x**z*y**z, combine='all') == \
         (x**y*x**z*y**z).powsimp(combine='all')
+    assert (x**t*y**t).powsimp(force=True) == (x*y)**t
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
@@ -1213,7 +1230,9 @@ def test_as_coefficients_dict():
         [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
-    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+    assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
+        [0, 0, 0, 3.0, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
 
 
 def test_args_cnc():
@@ -1712,6 +1731,10 @@ def test_issue_7426():
     f2 = x % z
     assert f1.equals(f2) == False
 
+
+def test_issue_1112():
+    x = Symbol('x', positive=False)
+    assert (x > 0) is S.false
 
 def test_issue_10161():
     x = symbols('x', real=True)

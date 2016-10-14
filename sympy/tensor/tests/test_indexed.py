@@ -1,10 +1,11 @@
 from sympy.core import symbols, Symbol, Tuple, oo
 from sympy.core.compatibility import iterable, range
 from sympy.tensor.indexed import IndexException
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
+    GreaterThan, StrictLessThan
 
 
 def test_Idx_construction():
@@ -64,6 +65,83 @@ def test_Idx_fixed_bounds():
     assert Idx(x, (-oo, oo)).upper == oo
 
 
+def test_Idx_inequalities():
+    i14 = Idx("i14", (1, 4))
+    i79 = Idx("i79", (7, 9))
+    i46 = Idx("i46", (4, 6))
+    i35 = Idx("i35", (3, 5))
+
+    assert i14 <= 5
+    assert i14 < 5
+    assert not (i14 >= 5)
+    assert not (i14 > 5)
+
+    assert 5 >= i14
+    assert 5 > i14
+    assert not (5 <= i14)
+    assert not (5 < i14)
+
+    assert LessThan(i14, 5)
+    assert StrictLessThan(i14, 5)
+    assert not GreaterThan(i14, 5)
+    assert not StrictGreaterThan(i14, 5)
+
+    assert i14 <= 4
+    assert isinstance(i14 < 4, StrictLessThan)
+    assert isinstance(i14 >= 4, GreaterThan)
+    assert not (i14 > 4)
+
+    assert isinstance(i14 <= 1, LessThan)
+    assert not (i14 < 1)
+    assert i14 >= 1
+    assert isinstance(i14 > 1, StrictGreaterThan)
+
+    assert not (i14 <= 0)
+    assert not (i14 < 0)
+    assert i14 >= 0
+    assert i14 > 0
+
+    from sympy.abc import x
+
+    assert isinstance(i14 < x, StrictLessThan)
+    assert isinstance(i14 > x, StrictGreaterThan)
+    assert isinstance(i14 <= x, LessThan)
+    assert isinstance(i14 >= x, GreaterThan)
+
+    assert i14 < i79
+    assert i14 <= i79
+    assert not (i14 > i79)
+    assert not (i14 >= i79)
+
+    assert i14 <= i46
+    assert isinstance(i14 < i46, StrictLessThan)
+    assert isinstance(i14 >= i46, GreaterThan)
+    assert not (i14 > i46)
+
+    assert isinstance(i14 < i35, StrictLessThan)
+    assert isinstance(i14 > i35, StrictGreaterThan)
+    assert isinstance(i14 <= i35, LessThan)
+    assert isinstance(i14 >= i35, GreaterThan)
+
+    iNone1 = Idx("iNone1")
+    iNone2 = Idx("iNone2")
+
+    assert isinstance(iNone1 < iNone2, StrictLessThan)
+    assert isinstance(iNone1 > iNone2, StrictGreaterThan)
+    assert isinstance(iNone1 <= iNone2, LessThan)
+    assert isinstance(iNone1 >= iNone2, GreaterThan)
+
+
+@XFAIL
+def test_Idx_inequalities_current_fails():
+    i14 = Idx("i14", (1, 4))
+
+    assert S(5) >= i14
+    assert S(5) > i14
+    assert not (S(5) <= i14)
+    assert not (S(5) < i14)
+
+
 def test_Idx_func_args():
     i, a, b = symbols('i a b', integer=True)
     ii = Idx(i)
@@ -116,6 +194,10 @@ def test_IndexedBase_shape():
     assert b[i, j].func(*b[i, j].args) == b[i, j]
     raises(IndexException, lambda: b[i])
     raises(IndexException, lambda: b[i, i, j])
+    F = IndexedBase("F", shape=m)
+    assert F.shape == Tuple(m)
+    assert F[i].subs(i, j) == F[j]
+    raises(IndexException, lambda: F[i, j])
 
 
 def test_Indexed_constructor():
@@ -218,8 +300,7 @@ def test_differentiation():
     assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2
 
-    assert Sum(expr, (i, -oo, oo)).diff(hi) == oo
-    assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(2, (i, -oo, oo))
+    assert Sum(expr.diff(hi), (i, -oo, oo)).doit() == Sum(2, (i, -oo, oo)).doit()
     assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == oo
 
     expr = a * hj * hj / S(2)
@@ -254,4 +335,10 @@ def test_differentiation():
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (m, -oo, oo))
     assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]).doit() == a
     assert Sum(a*h[m], (n, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (n, -oo, oo))
-    assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]) == oo*a
+    assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]).doit() == oo*a
+
+
+def test_indexed_series():
+    A = IndexedBase("A")
+    i = symbols("i", integer=True)
+    assert sin(A[i]).series(A[i]) == A[i] - A[i]**3/6 + A[i]**5/120 + Order(A[i]**6, A[i])

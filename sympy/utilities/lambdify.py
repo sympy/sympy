@@ -16,6 +16,7 @@ from sympy.utilities.decorator import doctest_depends_on
 MATH = {}
 MPMATH = {}
 NUMPY = {}
+TENSORFLOW = {}
 SYMPY = {}
 NUMEXPR = {}
 
@@ -26,6 +27,7 @@ NUMEXPR = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
+TENSORFLOW_DEFAULT = {}
 SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
 
@@ -87,6 +89,16 @@ NUMPY_TRANSLATIONS = {
     "ImmutableDenseMatrix": "array",
 }
 
+TENSORFLOW_TRANSLATIONS = {
+    "Abs": "abs",
+    "ceiling": "ceil",
+    "im": "imag",
+    "ln": "log",
+    "Mod": "mod",
+    "conjugate": "conj",
+    "re": "real",
+}
+
 NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
@@ -94,6 +106,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import_module('tensorflow')",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -108,7 +121,7 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "sympy", "tensorflow".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
@@ -167,12 +180,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     """
     Returns a lambda function for fast calculation of numerical values.
 
-    If not specified differently by the user, SymPy functions are replaced as
-    far as possible by either python-math, numpy (if available) or mpmath
-    functions - exactly in this order. To change this behavior, the "modules"
-    argument can be used. It accepts:
+    If not specified differently by the user, ``modules`` defaults to
+    ``["numpy"]`` if NumPy is installed, and ``["math", "mpmath", "sympy"]``
+    if it isn't, that is, SymPy functions are replaced as far as possible by
+    either ``numpy`` functions if available, and Python's standard library
+    ``math``, or ``mpmath`` functions otherwise. To change this behavior, the
+    "modules" argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy", "tensorflow"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -301,6 +316,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
     in other namespaces, unless the ``use_imps`` input parameter is False.
+
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
@@ -309,18 +325,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     module_provided = True
     if modules is None:
         module_provided = False
-        # Use either numpy (if available) or python.math where possible.
-        # XXX: This leads to different behaviour on different systems and
-        #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
 
-        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
-            pass
+            # Use either numpy (if available) or python.math where possible.
+            # XXX: This leads to different behaviour on different systems and
+            #      might be the reason for irreproducible errors.
+            modules = ["math", "mpmath", "sympy"]
         else:
-            modules.insert(1, "numpy")
+            modules = ["numpy"]
 
     # Get the needed namespaces.
     namespaces = []
@@ -356,6 +370,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
 
+    if _module_present('tensorflow',namespaces) and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import TensorflowPrinter as printer
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
@@ -386,6 +404,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     namespace.update({'builtins':builtins, 'range':range})
 
     func = eval(lstr, namespace)
+    # For numpy lambdify, wrap all input arguments in arrays.
+    # This is a fix for gh-11306.
+    if module_provided and _module_present('numpy',namespaces):
+        def array_wrap(funcarg):
+            def wrapper(*argsx, **kwargsx):
+                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
+            return wrapper
+        func = array_wrap(func)
     # Apply the docstring
     sig = "func({0})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)

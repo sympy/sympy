@@ -255,6 +255,29 @@ def test_geometric_sums():
     #issue 9908:
     assert Sum(1/(n**3 - 1), (n, -oo, -2)).doit() == summation(1/(n**3 - 1), (n, -oo, -2))
 
+    #issue 11642:
+    result = Sum(0.5**n,(n, 1, oo)).doit()
+    assert result == 1
+    assert result.is_Float
+
+    result = Sum(0.25**n,(n, 1, oo)).doit()
+    assert result == S(1)/3
+    assert result.is_Float
+
+    result = Sum(0.99999**n,(n, 1, oo)).doit()
+    assert result == 99999
+    assert result.is_Float
+
+    result = Sum(Rational(1,2)**n,(n, 1, oo)).doit()
+    assert result == 1
+    assert not result.is_Float
+
+    result = Sum(Rational(3,5)**n,(n, 1, oo)).doit()
+    assert result == S(3)/2
+    assert not result.is_Float
+
+    assert Sum(1.0**n,(n,1,oo)).doit() == oo
+    assert Sum(2.43**n,(n,1,oo)).doit() == oo
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
@@ -588,7 +611,7 @@ def test_eval_diff():
     assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
     e = Sum(x*y, (x, 1, a))
     assert e.diff(a) == Derivative(e, a)
-    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y).doit() == \
         Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == 24
 
 
@@ -702,34 +725,51 @@ def test_simplify():
     y, t, v = symbols('y, t, v')
 
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
-        Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
+        Sum(y, (x, n, m), (y, a, k))) == Sum(y * (x + 1), (x, n, m), (y, a, k))
     assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
         Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
         Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
-        Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
+        Sum(x, (x, n, a)) + Sum(1, (x, n, k))
     assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
-        4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+        4 * Sum(z, (z, 0, 1))) == 4*Sum(z, (z, 0, 1)) + 3*Sum(x, (x, 0, 6))
     assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
-        Sum(3*x**2 + x, (x, a, b))
+        Sum(x*(3*x + 1), (x, a, b))
     assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
         4 * y * Sum(z, (z, n, k))) + 1 == \
-            y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
+            4*y*Sum(z, (z, n, k)) + 3*Sum(x**3 + x, (x, n, k)) + 1
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
-        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(x, (t, b+1, c))) == x * Sum(1, (t, a, c)) + y * Sum(1, (t, a, b))
     assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
-        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+        Sum(y, (t, a, b))) == x * Sum(1, (t, a, c)) + y * Sum(1, (t, a, b))
     assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
     assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
         Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b))) \
-        == Sum(x + y + z, (t, a, b))          # issue 8596
+        == (x + y + z) * Sum(1, (t, a, b))          # issue 8596
     assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + Sum(z, (t, a, b)) + \
-        Sum(v, (t, a, b))) == Sum(x + y + z + v, (t, a, b))  # issue 8596
+        Sum(v, (t, a, b))) == (x + y + z + v) * Sum(1, (t, a, b))  # issue 8596
+    assert simplify(Sum(x * y, (x, a, b)) / (3 * y)) == \
+        (Sum(x, (x, a, b)) / 3)
+    assert simplify(Sum(Function('f')(x) * y * z, (x, a, b)) / (y * z)) \
+        == Sum(Function('f')(x), (x, a, b))
+    assert simplify(Sum(c * x, (x, a, b)) - c * Sum(x, (x, a, b))) == 0
+    assert simplify(c * (Sum(x, (x, a, b))  + y)) == c * (y + Sum(x, (x, a, b)))
+    assert simplify(c * (Sum(x, (x, a, b)) + y * Sum(x, (x, a, b)))) == \
+        c * (y + 1) * Sum(x, (x, a, b))
+    assert simplify(Sum(Sum(c * x, (x, a, b)), (y, a, b))) == \
+                c * Sum(x, (x, a, b), (y, a, b))
+    assert simplify(Sum((3 + y) * Sum(c * x, (x, a, b)), (y, a, b))) == \
+                c * Sum((3 + y), (y, a, b)) * Sum(x, (x, a, b))
+    assert simplify(Sum((3 + t) * Sum(c * t, (x, a, b)), (y, a, b))) == \
+                c*t*(t + 3)*Sum(1, (x, a, b))*Sum(1, (y, a, b))
+    assert simplify(Sum(Sum(d * t, (x, a, b - 1)) + \
+                Sum(d * t, (x, b, c)), (t, a, b))) == \
+                    d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
 
 
 def test_change_index():
@@ -839,7 +879,7 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
         True))
 
 
@@ -938,6 +978,15 @@ def test_convergent_failing():
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_6966():
+    i, k, m = symbols('i k m', integer=True)
+    z_i, q_i = symbols('z_i q_i')
+    a_k = Sum(-q_i*z_i/k,(i,1,m))
+    b_k = a_k.diff(z_i)
+    assert isinstance(b_k, Sum)
+    assert b_k == Sum(-q_i/k,(i,1,m))
 
 
 def test_issue_10156():

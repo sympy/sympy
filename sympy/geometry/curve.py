@@ -86,167 +86,6 @@ class Curve(GeometrySet):
         if old == self.parameter:
             return Point(*[f.subs(old, new) for f in self.functions])
 
-    @property
-    def free_symbols(self):
-        """
-        Return a set of symbols other than the bound symbols used to
-        parametrically define the Curve.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t, a
-        >>> from sympy.geometry import Curve
-        >>> Curve((t, t**2), (t, 0, 2)).free_symbols
-        set()
-        >>> Curve((t, t**2), (t, a, 2)).free_symbols
-        set([a])
-        """
-        free = set()
-        for a in self.functions + self.limits[1:]:
-            free |= a.free_symbols
-        free = free.difference({self.parameter})
-        return free
-
-    @property
-    def functions(self):
-        """The functions specifying the curve.
-
-        Returns
-        =======
-
-        functions : list of parameterized coordinate functions.
-
-        See Also
-        ========
-
-        parameter
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
-        >>> C = Curve((t, t**2), (t, 0, 2))
-        >>> C.functions
-        (t, t**2)
-
-        """
-        return self.args[0]
-
-    @property
-    def parameter(self):
-        """The curve function variable.
-
-        Returns
-        =======
-
-        parameter : SymPy symbol
-
-        See Also
-        ========
-
-        functions
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
-        >>> C = Curve([t, t**2], (t, 0, 2))
-        >>> C.parameter
-        t
-
-        """
-        return self.args[1][0]
-
-    @property
-    def limits(self):
-        """The limits for the curve.
-
-        Returns
-        =======
-
-        limits : tuple
-            Contains parameter and lower and upper limits.
-
-        See Also
-        ========
-
-        plot_interval
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
-        >>> C = Curve([t, t**3], (t, -2, 2))
-        >>> C.limits
-        (t, -2, 2)
-
-        """
-        return self.args[1]
-
-    def rotate(self, angle=0, pt=None):
-        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
-
-        The default pt is the origin, Point(0, 0).
-
-        Examples
-        ========
-
-        >>> from sympy.geometry.curve import Curve
-        >>> from sympy.abc import x
-        >>> from sympy import pi
-        >>> Curve((x, x), (x, 0, 1)).rotate(pi/2)
-        Curve((-x, x), (x, 0, 1))
-        """
-        from sympy.matrices import Matrix, rot_axis3
-        pt = -Point(pt or (0, 0))
-        rv = self.translate(*pt.args)
-        f = list(rv.functions)
-        f.append(0)
-        f = Matrix(1, 3, f)
-        f *= rot_axis3(angle)
-        rv = self.func(f[0, :2].tolist()[0], self.limits)
-        if pt is not None:
-            pt = -pt
-            return rv.translate(*pt.args)
-        return rv
-
-    def scale(self, x=1, y=1, pt=None):
-        """Override GeometryEntity.scale since Curve is not made up of Points.
-
-        Examples
-        ========
-
-        >>> from sympy.geometry.curve import Curve
-        >>> from sympy import pi
-        >>> from sympy.abc import x
-        >>> Curve((x, x), (x, 0, 1)).scale(2)
-        Curve((2*x, x), (x, 0, 1))
-        """
-        if pt:
-            pt = Point(pt)
-            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
-        fx, fy = self.functions
-        return self.func((fx*x, fy*y), self.limits)
-
-    def translate(self, x=0, y=0):
-        """Translate the Curve by (x, y).
-
-        Examples
-        ========
-
-        >>> from sympy.geometry.curve import Curve
-        >>> from sympy import pi
-        >>> from sympy.abc import x
-        >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
-        Curve((x + 1, x + 2), (x, 0, 1))
-        """
-        fx, fy = self.functions
-        return self.func((fx + x, fy + y), self.limits)
-
     def arbitrary_point(self, parameter='t'):
         """
         A parameterized point on the curve.
@@ -303,6 +142,107 @@ class Curve(GeometrySet):
                 'and cannot be used as a parameter.' % tnew.name)
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
+    @property
+    def free_symbols(self):
+        """
+        Return a set of symbols other than the bound symbols used to
+        parametrically define the Curve.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t, a
+        >>> from sympy.geometry import Curve
+        >>> Curve((t, t**2), (t, 0, 2)).free_symbols
+        set()
+        >>> Curve((t, t**2), (t, a, 2)).free_symbols
+        set([a])
+        """
+        free = set()
+        for a in self.functions + self.limits[1:]:
+            free |= a.free_symbols
+        free = free.difference({self.parameter})
+        return free
+
+    @property
+    def functions(self):
+        """The functions specifying the curve.
+
+        Returns
+        =======
+
+        functions : list of parameterized coordinate functions.
+
+        See Also
+        ========
+
+        parameter
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve((t, t**2), (t, 0, 2))
+        >>> C.functions
+        (t, t**2)
+
+        """
+        return self.args[0]
+
+    @property
+    def limits(self):
+        """The limits for the curve.
+
+        Returns
+        =======
+
+        limits : tuple
+            Contains parameter and lower and upper limits.
+
+        See Also
+        ========
+
+        plot_interval
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([t, t**3], (t, -2, 2))
+        >>> C.limits
+        (t, -2, 2)
+
+        """
+        return self.args[1]
+
+    @property
+    def parameter(self):
+        """The curve function variable.
+
+        Returns
+        =======
+
+        parameter : SymPy symbol
+
+        See Also
+        ========
+
+        functions
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([t, t**2], (t, 0, 2))
+        >>> C.parameter
+        t
+
+        """
+        return self.args[1][0]
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the curve.
 
@@ -337,3 +277,66 @@ class Curve(GeometrySet):
         """
         t = _symbol(parameter, self.parameter)
         return [t] + list(self.limits[1:])
+
+    def rotate(self, angle=0, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        The default pt is the origin, Point(0, 0).
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy.abc import x
+        >>> from sympy import pi
+        >>> Curve((x, x), (x, 0, 1)).rotate(pi/2)
+        Curve((-x, x), (x, 0, 1))
+        """
+        from sympy.matrices import Matrix, rot_axis3
+        if pt:
+            pt = -Point(pt, dim=2)
+        else:
+            pt = Point(0,0)
+        rv = self.translate(*pt.args)
+        f = list(rv.functions)
+        f.append(0)
+        f = Matrix(1, 3, f)
+        f *= rot_axis3(angle)
+        rv = self.func(f[0, :2].tolist()[0], self.limits)
+        if pt is not None:
+            pt = -pt
+            return rv.translate(*pt.args)
+        return rv
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since Curve is not made up of Points.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import pi
+        >>> from sympy.abc import x
+        >>> Curve((x, x), (x, 0, 1)).scale(2)
+        Curve((2*x, x), (x, 0, 1))
+        """
+        if pt:
+            pt = Point(pt, dim=2)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        fx, fy = self.functions
+        return self.func((fx*x, fy*y), self.limits)
+
+    def translate(self, x=0, y=0):
+        """Translate the Curve by (x, y).
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import pi
+        >>> from sympy.abc import x
+        >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
+        Curve((x + 1, x + 2), (x, 0, 1))
+        """
+        fx, fy = self.functions
+        return self.func((fx + x, fy + y), self.limits)

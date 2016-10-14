@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit
+from sympy import Order, S, log, limit, lcm_list, pi
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -8,6 +8,7 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.utilities import filldedent
 
 
 def continuous_domain(f, symbol, domain):
@@ -101,6 +102,14 @@ def function_range(f, symbol, domain):
     from sympy.solvers.solveset import solveset
 
     vals = S.EmptySet
+    period = periodicity(f, symbol)
+    if not any(period is i for i in (None, S.Zero)):
+        inf = domain.inf
+        inf_period = S.Zero if inf.is_infinite else inf
+        sup_period = inf_period + period
+        periodic_interval = Interval(inf_period, sup_period)
+        domain = domain.intersect(periodic_interval)
+
     intervals = continuous_domain(f, symbol, domain)
     range_int = S.EmptySet
     if isinstance(intervals, Interval):
@@ -251,6 +260,198 @@ def not_empty_in(finset_intersection, *syms):
                                     for element in finite_set])
             _domain = Union(_domain, _domain_element)
         return _domain
+
+
+def periodicity(f, symbol, check=False):
+    """
+    Tests the given function for periodicity in the given symbol.
+
+    Parameters
+    ==========
+
+    f : Expr.
+        The concerned function.
+    symbol : Symbol
+        The variable for which the period is to be determined.
+    check : Boolean
+        The flag to verify whether the value being returned is a period or not.
+
+    Returns
+    =======
+
+    period
+        The period of the function is returned.
+        `None` is returned when the function is aperiodic or has a complex period.
+        The value of `0` is returned as the period of a constant function.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The value of the period computed cannot be verified.
+
+
+    Notes
+    =====
+
+    Currently, we do not support functions with a complex period.
+    The period of functions having complex periodic values such as `exp`, `sinh`
+    is evaluated to `None`.
+
+    The value returned might not be the "fundamental" period of the given
+    function i.e. it may not be the smallest periodic value of the function.
+
+    The verification of the period through the `check` flag is not reliable
+    due to internal simplification of the given expression. Hence, it is set
+    to `False` by default.
+
+    Examples
+    ========
+    >>> from sympy import Symbol, sin, cos, tan, exp
+    >>> from sympy.calculus.util import periodicity
+    >>> x = Symbol('x')
+    >>> f = sin(x) + sin(2*x) + sin(3*x)
+    >>> periodicity(f, x)
+    2*pi
+    >>> periodicity(sin(x)*cos(x), x)
+    pi
+    >>> periodicity(exp(tan(2*x) - 1), x)
+    pi/2
+    >>> periodicity(sin(4*x)**cos(2*x), x)
+    pi
+    >>> periodicity(exp(x), x)
+
+    """
+    from sympy import simplify, lcm_list
+    from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    from sympy.solvers.decompogen import decompogen
+
+    orig_f = f
+    f = simplify(orig_f)
+    period = None
+
+    if not f.has(symbol):
+        return S.Zero
+
+    if isinstance(f, TrigonometricFunction):
+        try:
+            period = f.period(symbol)
+        except NotImplementedError:
+            pass
+
+    if f.is_Pow:
+        base, expo = f.args
+        base_has_sym = base.has(symbol)
+        expo_has_sym = expo.has(symbol)
+
+        if base_has_sym and not expo_has_sym:
+            period = periodicity(base, symbol)
+
+        elif expo_has_sym and not base_has_sym:
+            period = periodicity(expo, symbol)
+
+        else:
+            period = _periodicity(f.args, symbol)
+
+    elif f.is_Mul:
+        coeff, g = f.as_independent(symbol, as_Add=False)
+        if isinstance(g, TrigonometricFunction) or coeff is not S.One:
+            period = periodicity(g, symbol)
+
+        else:
+            period = _periodicity(g.args, symbol)
+
+    elif f.is_Add:
+        k, g = f.as_independent(symbol)
+        if k is not S.Zero:
+            return periodicity(g, symbol)
+
+        period = _periodicity(g.args, symbol)
+
+    elif period is None:
+        from sympy.solvers.decompogen import compogen
+        g_s = decompogen(f, symbol)
+        num_of_gs = len(g_s)
+        if num_of_gs > 1:
+            for index, g in enumerate(reversed(g_s)):
+                start_index = num_of_gs - 1 - index
+                g = compogen(g_s[start_index:], symbol)
+                if g != f:
+                    period = periodicity(g, symbol)
+                    if period is None:
+                        continue
+
+                    else:
+                        break
+
+    if period is not None:
+        if check:
+            if orig_f.subs(symbol, symbol + period) == orig_f:
+                return period
+
+            else:
+                raise NotImplementedError(filldedent('''
+                    The period of the given function cannot be verified.
+                    Set check=False to obtain the value.'''))
+
+        return period
+
+    return None
+
+
+def _periodicity(args, symbol):
+    """Helper for periodicity to find the period of a list of simpler
+    functions. It uses the `lcim` method to find the least common period of
+    all the functions.
+    """
+    periods = []
+    for f in args:
+        period = periodicity(f, symbol)
+        if period is None:
+            return None
+
+        if period is not S.Zero:
+            periods.append(period)
+
+    if len(periods) > 1:
+        return lcim(periods)
+
+    return periods[0]
+
+
+def lcim(numbers):
+    """Returns the least common integral multiple of a list of numbers.
+
+    The numbers can be rational or irrational or a mixture of both.
+    `None` is returned for incommensurable numbers.
+
+    Examples
+    ========
+    >>> from sympy import S, pi
+    >>> from sympy.calculus.util import lcim
+    >>> lcim([S(1)/2, S(3)/4, S(5)/6])
+    15/2
+    >>> lcim([2*pi, 3*pi, pi, pi/2])
+    6*pi
+    >>> lcim([S(1), 2*pi])
+    """
+    result = None
+    if all(num.is_irrational for num in numbers):
+        factorized_nums = list(map(lambda num: num.factor(), numbers))
+        factors_num = list(map(lambda num: num.as_coeff_Mul(), factorized_nums))
+        term = factors_num[0][1]
+        if all(factor == term for coeff, factor in factors_num):
+            common_term = term
+            coeffs = [coeff for coeff, factor in factors_num]
+            result = lcm_list(coeffs)*common_term
+
+    elif all(num.is_rational for num in numbers):
+        result = lcm_list(numbers)
+
+    else:
+        pass
+
+    return result
 
 
 class AccumulationBounds(AtomicExpr):
@@ -464,10 +665,34 @@ class AccumulationBounds(AtomicExpr):
 
     @property
     def delta(self):
+        """
+        Returns the difference of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).delta
+        2
+
+        """
         return self.max - self.min
 
     @property
     def mid(self):
+        """
+        Returns the mean of maximum possible value attained by AccumulationBounds
+        object and minimum possible value attained by AccumulationBounds object.
+
+        Examples
+        ========
+
+        >>> from sympy import AccumBounds
+        >>> AccumBounds(1, 3).mid
+        2
+
+        """
         return (self.min + self.max)/2
 
     @_sympifyit('other', NotImplemented)

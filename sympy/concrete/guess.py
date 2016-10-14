@@ -46,9 +46,8 @@ def find_simple_recurrence_vector(l):
     """
     q1 = [0]
     q2 = [Integer(1)]
-    z = len(l) >> 1
+    b, z = 0, len(l) >> 1
     while len(q2) <= z:
-        b = 0
         while l[b]==0:
             b += 1
             if b == len(l):
@@ -66,14 +65,14 @@ def find_simple_recurrence_vector(l):
                 s -= l[j+1] * m[b-j-1]
             m.append(s/l[b])
         l = m
-        a, l[0] = l[0], 0
+        a = l[0]
         q = [0] * max(len(q2), b+len(q1))
         for k in range(len(q2)):
             q[k] = a*q2[k]
         for k in range(b, b+len(q1)):
             q[k] += q1[k-b]
         while q[-1]==0: q.pop() # because trailing zeros can occur
-        q1, q2 = q2, q
+        q1, q2, b = q2, q, 1
     return [0]
 
 @public

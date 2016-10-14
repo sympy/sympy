@@ -169,6 +169,9 @@ def test_manualintegrate_trig_substitution():
          (49*x**2 + 1)**(3*S.Half)/5764801 +
          3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
 
+def test_manualintegrate_trivial_substitution():
+    assert manualintegrate((exp(x) - exp(-x))/x, x) == \
+        -Integral(exp(-x)/x, x) + Integral(exp(x)/x, x)
 
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == Piecewise((acoth(x/2)/2, x**2 > 4), (atanh(x/2)/2, x**2 < 4))

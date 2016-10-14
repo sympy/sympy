@@ -1842,3 +1842,92 @@ class udivisor_sigma(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
+class primenu(Function):
+    r"""
+    Calculate the number of distinct prime factors for a positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primenu(n)`` or `\nu(n)` is:
+
+    .. math ::
+        \nu(n) = k.
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primenu
+    >>> primenu(1)
+    0
+    >>> primenu(30)
+    3
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return len(factorint(n).keys())
+
+
+class primeomega(Function):
+    r"""
+    Calculate the number of prime factors counting multiplicities for a
+    positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primeomega(n)``  or `\Omega(n)` is:
+
+    .. math ::
+        \Omega(n) = \sum_{i=1}^k m_i.
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primeomega
+    >>> primeomega(1)
+    0
+    >>> primeomega(20)
+    3
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return sum(factorint(n).values())
