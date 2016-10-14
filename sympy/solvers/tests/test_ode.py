@@ -1009,6 +1009,8 @@ def test_solve_ics():
     # XXX: Ought to be ValueError
     raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}))
 
+    # Degenerate case. f'(0) is identically 0.
+    raises(ValueError, lambda: solve_ics([Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1], {f(x).diff(x).subs(x, 0): 0}))
 
     EI, q, L = symbols('EI q L')
 

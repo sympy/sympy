@@ -798,6 +798,9 @@ def solve_ics(sols, funcs, constants, ics):
     if not solved_constants:
         raise NotImplementedError("Couldn't solve for initial conditions")
 
+    if solved_constants == True:
+        raise ValueError("Initial conditions did not produce any solutions for constants. Perhaps they are degenerate.")
+
     if len(solved_constants) > 1:
         raise NotImplementedError("Initial conditions produced too many solutions for constants")
 
