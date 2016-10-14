@@ -999,7 +999,7 @@ class Interval(Set, EvalfMixin):
                     if B.is_subset(self):
                         return S.UniversalSet
                     else:
-                        return Complement(S.UniversalSet,Complement(B,self))
+                        return Complement(S.UniversalSet, Complement(B, self))
         if other.is_UniversalSet:
             return S.UniversalSet
         if other.is_Interval and self._is_comparable(other):
@@ -1718,6 +1718,12 @@ class Complement(Set, EvalfMixin):
         B = self.args[1]
         return And(A.contains(other), Not(B.contains(other)))
 
+    def _complement(self, other):
+        A = self.args[0]
+        B = self.args[1]
+        if other == S.UniversalSet:
+            if A == S.UniversalSet or B == S.UniversalSet:
+                return B
 
 class EmptySet(with_metaclass(Singleton, Set)):
     """

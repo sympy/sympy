@@ -1065,4 +1065,7 @@ def test_issue_9577():
     assert Union(un - Union(Interval(1, 2), Interval(3, 4)), Interval(1, 4)) == \
             un
     assert Union(S.UniversalSet - Interval(1, 4), Interval(2, 6)) == \
-            Intersection(S.UniversalSet, Complement(S.UniversalSet, Interval(1, 2, False, True)))
+            Complement(S.UniversalSet, Interval(1, 2, False, True))
+    assert Intersection(S.UniversalSet - Union(Interval(1, 2), Interval(3, 4)),
+            Interval(1, 4)) == Complement(S.UniversalSet, Intersection(S.UniversalSet,
+            S.UniversalSet - Interval(2, 3,True,True)))
