@@ -554,9 +554,9 @@ def table():
         table.append("<%s>" % name)
         yield
         table.append("</%s>" % name)
-    @contextmanger
+    @contextmanager
     def a_href(link):
-        table.append("<a href=\""+"%s" % link + "\">")
+        table.append("<a href=\"%s\">" % link)
         yield
         table.append("</a>")
 
