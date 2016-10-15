@@ -2,6 +2,7 @@ from itertools import product
 import math
 
 import mpmath
+import warnings
 
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
@@ -357,10 +358,15 @@ def test_numpy_old_matrix():
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
 def test_python_div_zero_issue_11306():
+    warnings.filterwarnings("error")
     if not numpy:
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    try:
+        lambdify([x, y], p, modules='numpy')(0, 1)
+    except RuntimeWarning:
+        raises(RuntimeError, lambda: lambdify([x, y], p, modules='numpy')(0, 1))
+
 
 def test_issue9474():
     mods = [None, 'math']
