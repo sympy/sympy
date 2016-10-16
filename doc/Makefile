@@ -9,6 +9,8 @@ SPHINXVER    = 0.5
 SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
 PAPER        =
 
+LOGOFOLDER 	 = ./_build/logo/
+
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
@@ -143,8 +145,12 @@ man: man/isympy.xml
 _build/logo/sympy-notailtext-favicon.ico: logo
 
 logo: src/logo/sympy.svg
-	rm -rf _build/logo
-	mkdir -p _build/logo
-	$(PYTHON) ./generate_logos.py -d
-	@echo
-	@echo "Logo generated."
+	if [ -d "$(LOGOFOLDER)" ]; then \
+		echo "Directory already present." ; \
+	else \
+		mkdir -p $(LOGOFOLDER) ;\
+		$(PYTHON) ./generate_logos.py -d ;\
+		echo ; \
+		echo "Logo generated."; \
+	fi
+
