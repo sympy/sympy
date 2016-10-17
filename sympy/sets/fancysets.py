@@ -54,11 +54,11 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if not other.is_number:
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
-            return S.false
-        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
             return S.false
 
 
@@ -85,11 +85,11 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if not other.is_number:
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
-            return S.false
-        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
             return S.false
 
 
@@ -135,11 +135,11 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
-            return S.true
-        elif other.is_integer is False:
+        if not other.is_number:
             return S.false
-        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
+        elif other.is_integer:
+            return S.true
+        else:
             return S.false
 
 
@@ -1465,9 +1465,7 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return "S.Complexes"
 
     def _contains(self,other):
-        if isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
+        if not other.is_complex:
             return S.false
-        elif sympify(other).is_complex:
-            return S.true
         else:
-            return S.false
+            return S.true
