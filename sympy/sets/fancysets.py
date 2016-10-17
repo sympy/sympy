@@ -58,6 +58,9 @@ class Naturals(with_metaclass(Singleton, Set)):
             return S.true
         elif other.is_integer is False or other.is_positive is False:
             return S.false
+        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
+            return S.false
+
 
     def __iter__(self):
         i = self._inf
@@ -85,6 +88,8 @@ class Naturals0(Naturals):
         if other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
+            return S.false
+        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
             return S.false
 
 
@@ -134,6 +139,9 @@ class Integers(with_metaclass(Singleton, Set)):
             return S.true
         elif other.is_integer is False:
             return S.false
+        elif isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
+            return S.false
+
 
     def _union(self, other):
         intersect = Intersection(self, other)
@@ -1455,3 +1463,11 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
 
     def __repr__(self):
         return "S.Complexes"
+
+    def _contains(self,other):
+        if isinstance(other,Interval) or isinstance(other,FiniteSet) or isinstance(other,EmptySet):
+            return S.false
+        elif sympify(other).is_complex:
+            return S.true
+        else:
+            return S.false
