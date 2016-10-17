@@ -58,15 +58,11 @@ def find_simple_recurrence_vector(l):
                 for k in range(len(q2)):
                     q2[k] = int(q2[k]*c)
                 return q2
-        m = [Integer(1)/l[b]]
+        a = Integer(1)/l[b]
+        m = [a]
         for k in range(b+1, len(l)):
-            s = 0
-            for j in range(b, k):
-                s -= l[j+1] * m[b-j-1]
-            m.append(s/l[b])
-        l = m
-        a = l[0]
-        q = [0] * max(len(q2), b+len(q1))
+            m.append(-sum(l[j+1]*m[b-j-1] for j in range(b, k))*a)
+        l, q = m, [0] * max(len(q2), b+len(q1))
         for k in range(len(q2)):
             q[k] = a*q2[k]
         for k in range(b, b+len(q1)):
