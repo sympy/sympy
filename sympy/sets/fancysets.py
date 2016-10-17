@@ -13,6 +13,7 @@ from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet, imageset)
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities.misc import filldedent, func_name
+from sympy.core.symbol import Symbol
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -54,11 +55,11 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if not other.is_number:
-            return S.false
+        if isinstance(other,Symbol):
+            return None
         elif other.is_positive and other.is_integer:
             return S.true
-        elif other.is_integer is False or other.is_positive is False:
+        else:
             return S.false
 
 
@@ -85,11 +86,11 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if not other.is_number:
-            return S.false
+        if isinstance(other,Symbol):
+            return None
         elif other.is_integer and other.is_nonnegative:
             return S.true
-        elif other.is_integer is False or other.is_nonnegative is False:
+        else:
             return S.false
 
 
@@ -135,8 +136,8 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if not other.is_number:
-            return S.false
+        if isinstance(other,Symbol):
+            return None
         elif other.is_integer:
             return S.true
         else:
@@ -1465,7 +1466,9 @@ class Complexes(with_metaclass(Singleton, ComplexRegion)):
         return "S.Complexes"
 
     def _contains(self,other):
-        if not other.is_complex:
+        if isinstance(other,Symbol):
+            return None
+        elif not other.is_complex:
             return S.false
         else:
             return S.true
