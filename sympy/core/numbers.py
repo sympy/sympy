@@ -25,6 +25,7 @@ from mpmath.libmp.libmpf import (
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
+from .evaluate import global_evaluate
 
 rnd = mlib.round_nearest
 
@@ -446,7 +447,7 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity:
@@ -457,7 +458,7 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity:
@@ -468,7 +469,7 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity:
@@ -491,7 +492,7 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity or other is S.NegativeInfinity:
@@ -942,28 +943,28 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number) and other != 0:
+        if isinstance(other, Number) and other != 0 and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__div__(self, other)
@@ -972,26 +973,26 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
-        if isinstance(other, Rational) and other.q != 1:
+        if isinstance(other, Rational) and other.q != 1 and global_evaluate[0]:
             # calculate mod with Rationals, *then* round the result
             return Float(Rational.__mod__(Rational(self), other),
                 prec_to_dps(self._prec))
-        if isinstance(other, Float):
+        if isinstance(other, Float) and global_evaluate[0]:
             r = self/other
             if r == int(r):
                 prec = max([prec_to_dps(i)
                     for i in (self._prec, other._prec)])
                 return Float(0, prec)
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rmod__(self, other):
-        if isinstance(other, Float):
+        if isinstance(other, Float) and global_evaluate[0]:
             return other.__mod__(self)
-        if isinstance(other, Number):
+        if isinstance(other, Number) and global_evaluate[0]:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
@@ -1345,87 +1346,97 @@ class Rational(Number):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        if isinstance(other, Integer):
-            return Rational(self.p + self.q*other.p, self.q, 1)
-        elif isinstance(other, Rational):
-            #TODO: this can probably be optimized more
-            return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
-        elif isinstance(other, Float):
-            return other + self
-        else:
-            return Number.__add__(self, other)
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                return Rational(self.p + self.q*other.p, self.q, 1)
+            elif isinstance(other, Rational):
+                #TODO: this can probably be optimized more
+                return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
+            elif isinstance(other, Float):
+                return other + self
+            else:
+                return Number.__add__(self, other)
+        return Number.__add__(self, other)
     __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        if isinstance(other, Integer):
-            return Rational(self.p - self.q*other.p, self.q, 1)
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
-        elif isinstance(other, Float):
-            return -other + self
-        else:
-            return Number.__sub__(self, other)
-
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                return Rational(self.p - self.q*other.p, self.q, 1)
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
+            elif isinstance(other, Float):
+                return -other + self
+            else:
+                return Number.__sub__(self, other)
+        return Number.__sub__(self, other)
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        if isinstance(other, Integer):
-            return Rational(self.q*other.p - self.p, self.q, 1)
-        elif isinstance(other, Rational):
-            return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
-        elif isinstance(other, Float):
-            return -self + other
-        else:
-            return Number.__rsub__(self, other)
-
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                return Rational(self.q*other.p - self.p, self.q, 1)
+            elif isinstance(other, Rational):
+                return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
+            elif isinstance(other, Float):
+                return -self + other
+            else:
+                return Number.__rsub__(self, other)
+        return Number.__rsub__(self, other)
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        if isinstance(other, Integer):
-            return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
-        elif isinstance(other, Float):
-            return other*self
-        else:
-            return Number.__mul__(self, other)
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+            elif isinstance(other, Float):
+                return other*self
+            else:
+                return Number.__mul__(self, other)
+        return Number.__mul__(self, other)
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Integer):
-            if self.p and other.p == S.Zero:
-                return S.ComplexInfinity
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                if self.p and other.p == S.Zero:
+                    return S.ComplexInfinity
+                else:
+                    return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+            elif isinstance(other, Float):
+                return self*(1/other)
             else:
-                return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-        elif isinstance(other, Float):
-            return self*(1/other)
-        else:
-            return Number.__div__(self, other)
-
+                return Number.__div__(self, other)
+        return Number.__div__(self, other)
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        if isinstance(other, Integer):
-            return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
-        elif isinstance(other, Rational):
-            return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-        elif isinstance(other, Float):
-            return other*(1/self)
-        else:
-            return Number.__rdiv__(self, other)
-
+        if global_evaluate[0]:
+            if isinstance(other, Integer):
+                return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+            elif isinstance(other, Rational):
+                return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+            elif isinstance(other, Float):
+                return other*(1/self)
+            else:
+                return Number.__rdiv__(self, other)
+        return Number.__rdiv__(self, other)
     __truediv__ = __div__
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
-        if isinstance(other, Rational):
-            n = (self.p*other.q) // (other.p*self.q)
-            return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
-        if isinstance(other, Float):
-            # calculate mod with Rationals, *then* round the answer
-            return Float(self.__mod__(Rational(other)),
-                prec_to_dps(other._prec))
+        if global_evaluate[0]:
+            if isinstance(other, Rational):
+                n = (self.p*other.q) // (other.p*self.q)
+                return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
+            if isinstance(other, Float):
+                # calculate mod with Rationals, *then* round the answer
+                return Float(self.__mod__(Rational(other)),
+                    prec_to_dps(other._prec))
+            return Number.__mod__(self, other)
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1777,14 +1788,14 @@ class Integer(Rational):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        if isinstance(other, Integer):
+        if isinstance(other, Integer) and global_evaluate[0]:
             return Tuple(*(divmod(self.p, other.p)))
         else:
             return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
         from .containers import Tuple
-        if isinstance(other, integer_types):
+        if isinstance(other, integer_types) and global_evaluate[0]:
             return Tuple(*(divmod(other, self.p)))
         else:
             try:
@@ -1798,65 +1809,82 @@ class Integer(Rational):
 
     # TODO make it decorator + bytecodehacks?
     def __add__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(self.p + other)
-        elif isinstance(other, Integer):
-            return Integer(self.p + other.p)
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.q + other.p, other.q, 1)
-        return Rational.__add__(self, other)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(self.p + other)
+            elif isinstance(other, Integer):
+                return Integer(self.p + other.p)
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.q + other.p, other.q, 1)
+            return Rational.__add__(self, other)
+        else:
+            return Add(self, other)
 
     def __radd__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(other + self.p)
-        elif isinstance(other, Rational):
-            return Rational(other.p + self.p*other.q, other.q, 1)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(other + self.p)
+            elif isinstance(other, Rational):
+                return Rational(other.p + self.p*other.q, other.q, 1)
+            return Rational.__radd__(self, other)
         return Rational.__radd__(self, other)
 
     def __sub__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(self.p - other)
-        elif isinstance(other, Integer):
-            return Integer(self.p - other.p)
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.q - other.p, other.q, 1)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(self.p - other)
+            elif isinstance(other, Integer):
+                return Integer(self.p - other.p)
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.q - other.p, other.q, 1)
+            return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
     def __rsub__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(other - self.p)
-        elif isinstance(other, Rational):
-            return Rational(other.p - self.p*other.q, other.q, 1)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(other - self.p)
+            elif isinstance(other, Rational):
+                return Rational(other.p - self.p*other.q, other.q, 1)
+            return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
     def __mul__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(self.p*other)
-        elif isinstance(other, Integer):
-            return Integer(self.p*other.p)
-        elif isinstance(other, Rational):
-            return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(self.p*other)
+            elif isinstance(other, Integer):
+                return Integer(self.p*other.p)
+            elif isinstance(other, Rational):
+                return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
+            return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
 
     def __rmul__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(other*self.p)
-        elif isinstance(other, Rational):
-            return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(other*self.p)
+            elif isinstance(other, Rational):
+                return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+            return Rational.__rmul__(self, other)
         return Rational.__rmul__(self, other)
 
     def __mod__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(self.p % other)
-        elif isinstance(other, Integer):
-            return Integer(self.p % other.p)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(self.p % other)
+            elif isinstance(other, Integer):
+                return Integer(self.p % other.p)
+            return Rational.__mod__(self, other)
         return Rational.__mod__(self, other)
 
     def __rmod__(self, other):
-        if isinstance(other, integer_types):
-            return Integer(other % self.p)
-        elif isinstance(other, Integer):
-            return Integer(other.p % self.p)
+        if global_evaluate[0]:
+            if isinstance(other, integer_types):
+                return Integer(other % self.p)
+            elif isinstance(other, Integer):
+                return Integer(other.p % self.p)
+            return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
 
     def __eq__(self, other):
