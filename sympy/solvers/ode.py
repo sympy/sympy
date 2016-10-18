@@ -644,7 +644,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                     failed_hints[hint] = detail
                 else:
                     retdict[hint] = rv
-            func = hints[hint]['func']
 
             retdict['best'] = min(list(retdict.values()), key=lambda x:
                 ode_sol_simplicity(x, func, trysolving=not simplify))
