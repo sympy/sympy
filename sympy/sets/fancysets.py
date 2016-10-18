@@ -1360,6 +1360,10 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+
+        # If the other is a Set (FiniteSet, Interval, ...)
+        if isinstance(other,Set):
+            return False
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
