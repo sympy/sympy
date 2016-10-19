@@ -54,11 +54,11 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if isinstance(other,Set):
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
-            return S.false
-        elif isinstance(other,Set):
             return S.false
 
     def __iter__(self):
@@ -84,11 +84,11 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if isinstance(other,Set):
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
-            return S.false
-        elif isinstance(other,Set):
             return S.false
 
 
@@ -134,11 +134,11 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
+        if isinstance(other,Set):
+            return S.false
+        elif other.is_integer:
             return S.true
         elif other.is_integer is False:
-            return S.false
-        elif isinstance(other,Set):
             return S.false
 
     def _union(self, other):
