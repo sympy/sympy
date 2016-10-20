@@ -360,7 +360,7 @@ def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    raises(RuntimeError,lambda:lambdify([x, y], p, modules='numpy')(0, 1))
 
 def test_issue9474():
     mods = [None, 'math']
@@ -767,3 +767,4 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
+
