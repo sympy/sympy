@@ -570,7 +570,7 @@ def table():
             name = get_tarball_name(key)
             with tag('tr'):
                 with tag('td'):
-                    with a_href('https://github.com/sympy/sympy/releases/download/sympy-'+'%s' %version+'/'+'%s' %name):
+                    with a_href('https://github.com/sympy/sympy/releases/download/sympy-%s/%s' %(version,name)):
                         with tag('b'):
                             table.append(name)
                 with tag('td'):
