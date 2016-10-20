@@ -4,6 +4,7 @@ import random
 from sympy import Derivative
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -99,6 +100,9 @@ class DenseMatrix(MatrixBase):
                     i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
+                elif isinstance(i, Expr) and not i.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     i = [i]
                 if isinstance(j, slice):
@@ -106,6 +110,9 @@ class DenseMatrix(MatrixBase):
                     j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
+                elif isinstance(j, Expr) and not j.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     j = [j]
                 return self.extract(i, j)
