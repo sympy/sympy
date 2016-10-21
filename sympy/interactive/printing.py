@@ -12,23 +12,37 @@ from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
+_original_displayhook = None
+
+
 def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
+    from sympy.core.basic import Basic
     from sympy.core.compatibility import builtins
-
+    
+    if not getattr(sys.displayhook, 'is_sympy_displayhook', False):
+        global _original_displayhook
+        _original_displayhook = sys.displayhook
+    
     def _displayhook(arg):
         """Python's pretty-printer display hook.
-
-           This function was adapted from:
-
-            http://www.python.org/dev/peps/pep-0217/
-
+        
+        This function was adapted from:
+        
+        http://www.python.org/dev/peps/pep-0217/
+        
+        Chain multiple display hooks to work well together with other
+        Python packages e.g. Xonsh.
         """
-        if arg is not None:
+        if isinstance(arg, Basic):
             builtins._ = None
             print(stringify_func(arg, **settings))
             builtins._ = arg
+        else:
+            _original_displayhook(arg)
+    
+    _displayhook.is_sympy_displayhook = True
 
     sys.displayhook = _displayhook
 
