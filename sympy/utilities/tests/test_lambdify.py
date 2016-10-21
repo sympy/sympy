@@ -359,8 +359,9 @@ def test_numpy_old_matrix():
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
+    numpy.seterr(divide='raise')
     p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    raises(RuntimeError,lambda:lambdify([x, y], p, modules='numpy')(0, 1))
+    raises(FloatingPointError,lambda:lambdify([x, y], p, modules='numpy')(0, 1))
 
 def test_issue9474():
     mods = [None, 'math']

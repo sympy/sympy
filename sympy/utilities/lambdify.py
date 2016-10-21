@@ -409,11 +409,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
             def wrapper(*argsx, **kwargsx):
-                namespace['seterr'](divide='raise')
-                try:
-                    return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
-                except FloatingPointError as e:
-                    raise RuntimeError(e)
+                return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
             return wrapper
         func = array_wrap(func)
     # Apply the docstring
