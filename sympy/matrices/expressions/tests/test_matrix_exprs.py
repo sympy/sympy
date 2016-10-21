@@ -277,18 +277,19 @@ def test_matrixelement_diff():
 
 
 def test_MatrixElement_with_values():
-    M = Matrix([[2, 3], [4, 5]])
+    x, y, z, w = symbols("x y z w")
+    M = Matrix([[x, y], [z, w]])
     i, j = symbols("i, j")
     Mij = M[i, j]
     assert isinstance(Mij, MatrixElement)
     Ms = SparseMatrix([[2, 3], [4, 5]])
-    msij = M[i, j]
+    msij = Ms[i, j]
     assert isinstance(msij, MatrixElement)
     for oi, oj in [(0, 0), (0, 1), (1, 0), (1, 1)]:
         assert Mij.subs({i: oi, j: oj}) == M[oi, oj]
         assert msij.subs({i: oi, j: oj}) == Ms[oi, oj]
     A = MatrixSymbol("A", 2, 2)
-    assert A[0, 0].subs(A, M) == 2
+    assert A[0, 0].subs(A, M) == x
     assert A[i, j].subs(A, M) == M[i, j]
     assert M[i, j].subs(M, A) == A[i, j]
 
@@ -296,3 +297,11 @@ def test_MatrixElement_with_values():
     assert M[3*i - 2, j].subs({i: 1, j: 0}) == M[1, 0]
     assert isinstance(M[i, 0], MatrixElement)
     assert M[i, 0].subs(i, 0) == M[0, 0]
+    assert M[0, i].subs(i, 1) == M[0, 1]
+
+    assert M[i, j].diff(x) == Matrix([[1, 0], [0, 0]])[i, j]
+
+    raises(ValueError, lambda: M[i, 2])
+    raises(ValueError, lambda: M[i, -1])
+    raises(ValueError, lambda: M[2, i])
+    raises(ValueError, lambda: M[-1, i])

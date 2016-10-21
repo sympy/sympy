@@ -95,14 +95,18 @@ class DenseMatrix(MatrixBase):
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
+                if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
+                    if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
+                       ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                        raise ValueError("index out of boundary")
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
+
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
                     i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
-                elif isinstance(i, Expr) and not i.is_number:
-                    from sympy.matrices.expressions.matexpr import MatrixElement
-                    return MatrixElement(self, i, j)
                 else:
                     i = [i]
                 if isinstance(j, slice):
@@ -110,9 +114,6 @@ class DenseMatrix(MatrixBase):
                     j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
-                elif isinstance(j, Expr) and not j.is_number:
-                    from sympy.matrices.expressions.matexpr import MatrixElement
-                    return MatrixElement(self, i, j)
                 else:
                     j = [j]
                 return self.extract(i, j)
