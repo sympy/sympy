@@ -768,4 +768,3 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
-
