@@ -291,3 +291,8 @@ def test_MatrixElement_with_values():
     assert A[0, 0].subs(A, M) == 2
     assert A[i, j].subs(A, M) == M[i, j]
     assert M[i, j].subs(M, A) == A[i, j]
+
+    assert isinstance(M[3*i - 2, j], MatrixElement)
+    assert M[3*i - 2, j].subs({i: 1, j: 0}) == M[1, 0]
+    assert isinstance(M[i, 0], MatrixElement)
+    assert M[i, 0].subs(i, 0) == M[0, 0]
