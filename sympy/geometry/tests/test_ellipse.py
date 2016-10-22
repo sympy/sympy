@@ -269,6 +269,13 @@ def test_ellipse_geom():
     assert e.rotate(pi, (1, 2)) == Ellipse(Point(2, 4), 2, 1)
     raises(NotImplementedError, lambda: e.rotate(pi/3))
 
+    # Circle rotation tests (Issue #11743)
+    # Link - https://github.com/sympy/sympy/issues/11743
+    cir = Circle(Point(1, 0), 1)
+    assert cir.rotate(pi/2) == Circle(Point2D(0, 1), 1)
+    assert cir.rotate(pi/3) == Circle(Point2D(1/2, sqrt(3)/2), 1)
+    assert cir.rotate(pi/3,Point(1, 0)) == Circle(Point2D(1, 0), 1)
+    assert cir.rotate(pi/3,Point(0, 1)) == Circle(Point2D(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
