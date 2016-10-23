@@ -25,20 +25,20 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
-from sympy import S, Mul
+from sympy import S, Mul, eye
 from sympy.functions.elementary.exponential import exp
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, get_lines, Tensor, tensorhead
 from sympy.core.compatibility import range
 
 
-DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
+# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
 
 
 LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
 
 
-GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex, DiracSpinorIndex, DiracSpinorIndex], [[1], [1], [1]], comm=None, matrix_behavior=True)
+GammaMatrix = tensorhead("GammaMatrix", [LorentzIndex], [[1]], comm=None)
 
 
 def extract_type_tens(expression, component):
@@ -141,14 +141,13 @@ def simplify_gpgp(ex, sort=True):
                 if i == 0:
                     coeff = ex.coeff
                 tx = components[ai[1]](mu)*components[ai[1]](-mu)
-                tv.append(tx*DiracSpinorIndex.delta(ind1, ind2))
+                tv.append(tx)
                 break
 
         if tv:
             a = [x for j, x in enumerate(ta) if j not in elim]
             a.extend(tv)
             t = tensor_mul(*a)*coeff
-            t = t.contract_metric(DiracSpinorIndex.delta)
             return t
         else:
             return ex
@@ -294,22 +293,8 @@ def _trace_single_line(t):
             j = ncomps
         numG = j - i
         if numG == 0:
-            spinor_free = [_[0] for _ in t.free if _[0].tensor_index_type is DiracSpinorIndex]
             tcoeff = t.coeff
-            if len(spinor_free) == 2 and spinor_free[0].is_matrix_index and spinor_free[1].is_matrix_index:
-                # t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
-                # TODO: add procedure to close matrix indices.
-                from sympy.tensor.tensor import tensor_indices
-                mi1, mi2 = tensor_indices('mi1:3', DiracSpinorIndex)
-                t = t.substitute_indices((spinor_free[0], mi1), (spinor_free[1], -mi2))
-                t = t*DiracSpinorIndex.delta(mi2, -mi1)
-                #t = t.replace(lambda x: x.component == DiracSpinorIndex.delta, lambda x: DiracSpinorIndex.dim)
-                #t = t*DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0])
-                # TensMul(t, DiracSpinorIndex.delta(-spinor_free[1], -spinor_free[0]))
-                t = t.contract_metric(sg)
-                return t/tcoeff if tcoeff else t
-            else:
-                return t/tcoeff if tcoeff else t
+            return t/tcoeff if tcoeff else t
         if numG % 2 == 1:
             return TensMul.from_data(S.Zero, [], [], [])
         elif numG > 4:
@@ -434,7 +419,6 @@ def _kahane_simplify(expression):
     has to be handled separately
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
-    >>> from sympy.physics.hep.gamma_matrices import DiracSpinorIndex as DS,
     >>> from sympy.physics.hep.gamma_matrices import _kahane_simplify
     >>> from sympy.tensor.tensor import tensor_indices, TensAdd
     >>> i0, i1, i2 = tensor_indices('i0:3', LorentzIndex)    
@@ -480,20 +464,20 @@ def _kahane_simplify(expression):
     for gamma in gammas:
         assert gamma.component == GammaMatrix
 
-    free = [_ for _ in expression.free_in_args if _[1] == 0]
-    spinor_free = [_ for _ in expression.free_in_args if _[1] != 0]
+    free = expression.free
+    # spinor_free = [_ for _ in expression.free_in_args if _[1] != 0]
 
-    if len(spinor_free) == 2:
-        spinor_free.sort(key=lambda x: x[2])
-        assert spinor_free[0][1] == 1 and spinor_free[-1][1] == 2
-        assert spinor_free[0][2] == 0
-    elif spinor_free:
-        raise ValueError('spinor indices do not match')
+    # if len(spinor_free) == 2:
+    #     spinor_free.sort(key=lambda x: x[2])
+    #     assert spinor_free[0][1] == 1 and spinor_free[-1][1] == 2
+    #     assert spinor_free[0][2] == 0
+    # elif spinor_free:
+    #     raise ValueError('spinor indices do not match')
 
     dum = []
     for dum_pair in expression.dum:
         if expression.index_types[dum_pair[0]] == LorentzIndex:
-            dum.append((dum_pair[0]/3, dum_pair[1]/3))
+            dum.append((dum_pair[0], dum_pair[1]))
 
     dum = sorted(dum)
 
@@ -519,7 +503,7 @@ def _kahane_simplify(expression):
 
     free_pos = [None]*total_number
     for i in free:
-        free_pos[i[2]] = i[0]
+        free_pos[i[1]] = i[0]
 
     # `index_is_free` is a list of booleans, to identify index position
     # and whether that index is free or dummy.
@@ -547,7 +531,7 @@ def _kahane_simplify(expression):
     # of the algorithm ignores a scalar coefficient.
     resulting_coeff = S.One
 
-    # initialize a lisf of lists of indices. The outer list will contain all
+    # initialize a list of lists of indices. The outer list will contain all
     # additive tensor expressions, while the inner list will contain the
     # free indices (rearranged according to the algorithm).
     resulting_indices = [[]]
@@ -761,33 +745,7 @@ def _kahane_simplify(expression):
     elif isinstance(t, TensMul):
         t1 = t
     if t1:
-        spinor_free1 = [_ for _ in t1.free_in_args if _[1] % 3 != 0]  # if not _[0].is_matrix_index]
-        if spinor_free1:
-            # TODO: create method _get_trailing_matrix_indices_for_type ?
-            mat_ind1, mat_ind2 = [i for i in t1.get_free_indices() if i.is_matrix_index and i.tensor_index_type == DiracSpinorIndex]
-            new_mat_ind1 = TensorIndex(mat_ind1.name, mat_ind1.tensor_index_type, mat_ind1.is_up)
-            new_mat_ind2 = TensorIndex(mat_ind2.name, mat_ind2.tensor_index_type, mat_ind2.is_up)
-            if spinor_free: # and [i for i in spinor_free if not i[0].is_matrix_index] != []:
-                # if `spinor_free` is not an empty list, it means that the Dirac index line does not start and end with
-                # matrix indices. Replacing the original indices at the start and end:
-                t = t.substitute_indices((mat_ind1, spinor_free[0][0]), (mat_ind2, spinor_free[1][0]))
-            else:
-                # if `spinor_free` is an empty list, trailing matrix indices should be connected to each other:
-
-                # FIXME trace
-                t = t.substitute_indices((mat_ind1, new_mat_ind1), (mat_ind2, new_mat_ind2))
-                t = t*DiracSpinorIndex.delta(-new_mat_ind1, -new_mat_ind2)
-                t = simplify_lines(t)
-        else:
-            if spinor_free:
-                t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
-            else:
-                t = t*4
+        pass
     else:
-        # if there are no spinor indices in the resulting expression, add a Dirac delta.
-        if spinor_free:
-            t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
-        else:
-            # if there were no free spinor indices in the initial expression, the Dirac delta is contracted (i.e. is 4):
-            t = t*4
+        t *= eye(4)
     return t

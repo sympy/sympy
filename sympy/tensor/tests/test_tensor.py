@@ -10,7 +10,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.core.compatibility import range
 
 def _is_equal(arg1, arg2):
@@ -1177,6 +1177,7 @@ def test_hash():
     assert check_all(tsymmetry)
 
 
+@XFAIL
 def test_hidden_indices_for_matrix_multiplication():
     """
     This test function is expected to fail, as there is an inconstistency in
@@ -1190,11 +1191,11 @@ def test_hidden_indices_for_matrix_multiplication():
     m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
     s0, s1, s2 = tensor_indices('s0:3', S)
 
-    matl1 = TensorIndex('matl1', S, is_matrix_index=True)
-    matl2 = TensorIndex('matl2', S, is_matrix_index=True)
+    matl1 = TensorIndex('matl1', S)  #, is_matrix_index=True)
+    matl2 = TensorIndex('matl2', S)  #, is_matrix_index=True)
 
-    Ll1 = TensorIndex('Ll1', L, is_matrix_index=True)
-    Ll2 = TensorIndex('Ll2', L, is_matrix_index=True)
+    Ll1 = TensorIndex('Ll1', L)  #, is_matrix_index=True)
+    Ll2 = TensorIndex('Ll2', L)  #, is_matrix_index=True)
 
     A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
     B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)

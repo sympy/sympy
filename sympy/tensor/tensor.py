@@ -3492,7 +3492,8 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
-        assert tensor_head.rank - len(tensor_head._matrix_index_types) == len(indices)
+        if tensor_head.rank - len(tensor_head._matrix_index_types) != len(indices):
+            raise ValueError("wrong number of indices")
         obj._indices = indices
         obj._is_canon_bp = is_canon_bp
         obj._index_map = Tensor._build_index_map(indices, obj._index_structure)
