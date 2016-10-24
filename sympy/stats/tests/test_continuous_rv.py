@@ -328,6 +328,7 @@ def test_gompertz():
 def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
+    x = Symbol("x")
     X = Gumbel("x", beta, mu)
     assert density(X)(x) == exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
 

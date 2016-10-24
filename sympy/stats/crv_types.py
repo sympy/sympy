@@ -1270,6 +1270,7 @@ def Gumbel(name, beta, mu):
     ==========
     >>> from sympy.stats import Gumbel, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
+    >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
