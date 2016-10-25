@@ -75,7 +75,7 @@ for the u dots (time derivatives of the generalized speeds). ::
   >>> rhs = MM.inv() * forcing
   >>> kdd = KM.kindiffdict()
   >>> rhs = rhs.subs(kdd)
-  >>> rhs.simplify()
+  >>> _ = rhs.simplify()
   >>> mprint(rhs)
   Matrix([
   [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
