@@ -107,6 +107,8 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
+import collections
+
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
@@ -139,6 +141,8 @@ class Indexed(Expr):
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
+        from sympy.tensor.array.ndim_array import NDimArray
+        from sympy.matrices.matrices import MatrixBase
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
@@ -148,6 +152,8 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
+        if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+            return base[args]
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -156,6 +162,8 @@ class Indexed(Expr):
         return True
 
     def _eval_derivative(self, wrt):
+        from sympy.tensor.array.ndim_array import NDimArray
+
         if isinstance(wrt, Indexed) and wrt.base == self.base:
             if len(self.indices) != len(wrt.indices):
                 msg = "Different # of indices: d({!s})/d({!s})".format(self,
@@ -165,6 +173,9 @@ class Indexed(Expr):
             for index1, index2 in zip(self.indices, wrt.indices):
                 result *= KroneckerDelta(index1, index2)
             return result
+        elif isinstance(self.base, NDimArray):
+            from sympy.tensor.array import derive_by_array
+            return Indexed(derive_by_array(self.base, wrt), *self.args[1:])
         else:
             return S.Zero
 

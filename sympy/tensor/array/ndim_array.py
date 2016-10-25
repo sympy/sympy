@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify, Basic, Derivative, conjugate
+from sympy import Matrix, Integer, sympify, Basic, Derivative, conjugate, Expr
 
 
 class NDimArray(object):
@@ -85,6 +85,17 @@ class NDimArray(object):
             integer_index //= sh
         index.reverse()
         return tuple(index)
+
+    def _check_symbolic_index(self, index):
+        # Check if any index is symbolic:
+        tuple_index = (index if isinstance(index, tuple) else (index,))
+        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+            for i, nth_dim in zip(tuple_index, self.shape):
+                if ((i < 0) == True) or ((i >= nth_dim) == True):
+                    raise ValueError("index out of range")
+            from sympy.tensor import Indexed
+            return Indexed(self, *tuple_index)
+        return None
 
     def _setter_iterable_check(self, value):
         if isinstance(value, (collections.Iterable, Matrix, NDimArray)):

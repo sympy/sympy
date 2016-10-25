@@ -31,7 +31,22 @@ class DenseNDimArray(NDimArray):
         >>> a[1, 1]
         3
 
+        Symbolic index:
+
+        >>> from sympy.abc import i, j
+        >>> a[i, j]
+        [[0, 1], [2, 3]][i, j]
+
+        Replace `i` and `j` to get element `(1, 1)`:
+
+        >>> a[i, j].subs({i: 1, j: 1})
+        3
+
         """
+        syindex = self._check_symbolic_index(index)
+        if syindex is not None:
+            return syindex
+
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
 
             def slice_expand(s, dim):
@@ -117,12 +132,12 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    def __new__(cls, iterable=None, shape=None, **kwargs):
+        return cls._new(iterable, shape, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+    def _new(cls, iterable, shape, **kwargs):
+        shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
@@ -139,12 +154,12 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    def __new__(cls, iterable=None, shape=None, **kwargs):
+        return cls._new(iterable, shape, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+    def _new(cls, iterable, shape, **kwargs):
+        shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         flat_list = flatten(flat_list)
         self = object.__new__(cls)
         self._shape = shape
