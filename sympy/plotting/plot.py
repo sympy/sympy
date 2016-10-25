@@ -878,11 +878,14 @@ class MatplotlibBackend(BaseBackend):
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
+        aspect = self.parent.aspect_ratio
+        if aspect != 'auto':
+            aspect = float(aspect[1]) / aspect[0]
         if any(are_3D) and not all(are_3D):
             raise ValueError('The matplotlib backend can not mix 2D and 3D.')
         elif not any(are_3D):
             self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111)
+            self.ax = self.fig.add_subplot(111, aspect=aspect)
             self.ax.spines['left'].set_position('zero')
             self.ax.spines['right'].set_color('none')
             self.ax.spines['bottom'].set_position('zero')
@@ -897,7 +900,7 @@ class MatplotlibBackend(BaseBackend):
             mpl_toolkits = import_module('mpl_toolkits',
                                      __import__kwargs={'fromlist': ['mplot3d']})
             self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111, projection='3d')
+            self.ax = self.fig.add_subplot(111, projection='3d', aspect=aspect)
 
     def process_series(self):
         parent = self.parent
