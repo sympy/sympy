@@ -1,10 +1,10 @@
 from __future__ import division
 
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+from sympy import (Abs, And, Catalan, cos, Derivative, E, EulerGamma, exp,
     factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    Interval, Lambda, Limit, Matrix, nan, Not, O, Or, oo, pi, Pow, Rational,
+    Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols,
+    Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds)
 from sympy.core import Expr
@@ -188,6 +188,9 @@ def test_list():
     assert str([x**2, x*y + 1]) == sstr([x**2, x*y + 1]) == "[x**2, x*y + 1]"
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
+def test_Logic():
+    assert str(And(Not(x), Or(y, z))) == "(y | z) & (~x)"
+    assert str(Not(Or(x, y))) == "~(x | y)"
 
 def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
@@ -660,14 +663,15 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
+    # print(str(where(X > 0)))
+    assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
+    assert str(where(D > 4)) == "Domain: (Eq(d1, 5)) | (Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: (0 <= a) & (0 <= b) & (a < oo) & (b < oo)"
 
 
 def test_FiniteSet():

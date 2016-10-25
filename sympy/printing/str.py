@@ -4,7 +4,7 @@ A Printer for generating readable representation of most sympy classes.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Rational, Pow, Basic, Mul
+from sympy.core import S, Rational, Pow, Basic, Mul, Atom
 from sympy.core.mul import _keep_coeff
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -75,12 +75,28 @@ class StrPrinter(Printer):
         return "False"
 
     def _print_And(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        sub_exprs = []
+        for a in expr.args:
+            if isinstance(a, Atom):
+                sub_exprs.append(self._print(a))
+            else:
+                sub_exprs.append('(%s)' % self._print(a))
+        return ' & '.join(sorted(sub_exprs))
 
     def _print_Or(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        sub_exprs = []
+        for a in expr.args:
+            if isinstance(a, Atom):
+                sub_exprs.append(self._print(a))
+            else:
+                sub_exprs.append('(%s)' % self._print(a))
+        return ' | '.join(sorted(sub_exprs))
+
+    def _print_Not(self, expr):
+        if isinstance(expr.args[0], Atom):
+            return '~%s' % expr.args[0]
+        else:
+            return '~(%s)' % expr.args[0]
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
