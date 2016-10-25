@@ -1010,7 +1010,8 @@ def test_simplify():
                         [           1 + y, 2*((1 - 1*cos(pi*n))/(pi*n)) ]])
     eq = (1 + x)**2
     M = Matrix([[eq]])
-    M.simplify()
+    _M = M.simplify()
+    assert _M is M
     assert M == Matrix([[eq]])
     M.simplify(ratio=oo) == M
     assert M == Matrix([[eq.simplify(ratio=oo)]])
