@@ -136,6 +136,10 @@ def test_ndim_array_converting():
         assert dense_array[i] == matrix[i]
     assert matrix.shape == dense_array.shape
 
+    assert ImmutableDenseNDimArray(matrix) == dense_array
+    assert ImmutableDenseNDimArray(matrix.as_immutable()) == dense_array
+    assert ImmutableDenseNDimArray(matrix.as_mutable()) == dense_array
+
     sparse_array = ImmutableSparseNDimArray([1, 2, 3, 4], (2, 2))
     alist = sparse_array.tolist()
 
@@ -147,6 +151,10 @@ def test_ndim_array_converting():
     for i in range(len(sparse_array)):
         assert sparse_array[i] == matrix[i]
     assert matrix.shape == sparse_array.shape
+
+    assert ImmutableSparseNDimArray(matrix) == sparse_array
+    assert ImmutableSparseNDimArray(matrix.as_immutable()) == sparse_array
+    assert ImmutableSparseNDimArray(matrix.as_mutable()) == sparse_array
 
 
 def test_converting_functions():
