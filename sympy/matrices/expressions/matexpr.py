@@ -392,6 +392,9 @@ class MatrixSymbol(MatrixExpr):
     def _entry(self, i, j):
         return MatrixElement(self, i, j)
 
+    def args_cnc(self):
+        return [[],[self]]
+
     @property
     def free_symbols(self):
         return set((self,))
