@@ -1,4 +1,4 @@
-from sympy import I, symbols, Matrix
+from sympy import I, symbols, Matrix, MatrixSymbol
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -105,3 +105,10 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+def test_trace_of_TP_of_MatrixSymbol():
+    M = MatrixSymbol('M', x, x)
+    N = MatrixSymbol('N', x, x)
+    assert TP(M,N).is_Matrix == True
+    assert TP(M,N).is_square == True
+    assert Tr(TP(M,N)).doit() == Tr(M)*Tr(N)

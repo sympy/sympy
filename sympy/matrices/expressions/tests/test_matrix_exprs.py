@@ -260,3 +260,6 @@ def test_Zero_power():
     assert z2**3 == MatPow(z2, 3).doit()
     assert z2**0 == Identity(3)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+
+def test_args_cnc():
+    assert A.args_cnc() == [[], [A]]
