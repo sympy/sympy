@@ -109,6 +109,11 @@ def test_eval_trace():
 def test_trace_of_TP_of_MatrixSymbol():
     M = MatrixSymbol('M', x, x)
     N = MatrixSymbol('N', x, x)
+    y, z, w = symbols('y, z, w')
+    C = MatrixSymbol('C', y,w)
+    D = MatrixSymbol('D', w,y)
+    E = MatrixSymbol('E', z,z)
     assert TP(M,N).is_Matrix == True
     assert TP(M,N).is_square == True
+    assert TP(C,D,E).is_square == True
     assert Tr(TP(M,N)).doit() == Tr(M)*Tr(N)

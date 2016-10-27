@@ -6,6 +6,7 @@ from sympy import Expr, Add, Mul, Matrix, Pow, sympify, MatrixSymbol
 from sympy.core.compatibility import u, range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.core.mul import prod
 
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
@@ -123,7 +124,7 @@ class TensorProduct(Expr):
     @property
     def is_square(self):
         if self.is_Matrix:
-            return all(arg.is_square for arg in self.args)
+            return prod([arg.rows for arg in self.args]) == prod([arg.cols for arg in self.args])
         else:
             return False
 
