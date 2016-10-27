@@ -8,7 +8,7 @@ import re
 import collections
 
 
-_name_with_digits_p = re.compile(r'(^[a-zA-Z]+)([0-9]+)$')
+_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
 
 
 def split_super_sub(text):
