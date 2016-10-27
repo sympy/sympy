@@ -60,7 +60,6 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
-    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
     assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
