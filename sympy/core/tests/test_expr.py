@@ -1,12 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together, collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
+                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
+                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, HeldExpr)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1683,6 +1683,15 @@ def test_round():
     assert S.Infinity.round() == S.Infinity
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+
+def test_held_expression_HeldExpr():
+    x = symbols("x")
+    he = HeldExpr(1/x)
+    e1 = x*he
+    assert isinstance(e1, Mul)
+    assert e1.args == (x, he)
+    assert e1.doit() == 1
 
 
 def test_round_exception_nostr():
