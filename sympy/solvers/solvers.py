@@ -2711,6 +2711,20 @@ def nsolve(*args, **kwargs):
     >>> bounds = lambda i: (3.14*i, 3.14*(i + 1))
     >>> nsolve(f, bounds(100), solver='bisect', verify=False)
     315.730061685774
+
+    Alternatively, a function may be better behaved when the
+    denominator is ignored. Since this is not always the case, however,
+    the decision of what function to use is left to the discretion of
+    the user.
+
+    >>> eq = x**2/(1 - x)/(1 - 2*x)**2 - 100
+    >>> nsolve(eq, 0.46)
+    Traceback (most recent call last):
+    ...
+    ValueError: Could not find root within given tolerance. (10000 > 2.1684e-19)
+    Try another starting point or tweak arguments.
+    >>> nsolve(eq.as_numer_denom()[0], 0.46)
+    0.46792545969349058
     """
     # there are several other SymPy functions that use method= so
     # guard against that here
@@ -2762,7 +2776,9 @@ def nsolve(*args, **kwargs):
                 expected a one-dimensional and numerical function'''))
 
         # the function is much better behaved if there is no denominator
-        f = f.as_numer_denom()[0]
+        # but sending the numerator is left to the user since sometimes
+        # the function is better behaved when the denominator is present
+        # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
         return Float(findroot(f, x0, **kwargs))
