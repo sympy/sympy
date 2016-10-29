@@ -47,10 +47,6 @@ def _extract_exprs(proposition, assumptions, context):
 
 def get_relevant_facts(relevant_facts, exprs, use_known_facts=True):
     newexprs = set()
-    if use_known_facts:
-        for expr in exprs:
-            relevant_facts.add(get_known_facts_cnf().rcall(expr))
-
     for expr in exprs:
         for fact in fact_registry[expr.func]:
             newfact = fact.rcall(expr)
@@ -69,11 +65,16 @@ def get_all_relevant_facts(proposition, assumptions=True,
     # infinite loop in the future.
     i = 0
     relevant_facts = set()
-    assumptions = And.make_args(assumptions)
-    exprs = _extract_exprs(proposition, assumptions, context)
+    exprs = _extract_exprs(proposition, And.make_args(assumptions), context)
+    all_exprs = set()
     while exprs and i < iterations:
+        all_exprs |= exprs
         (relevant_facts, exprs) = get_relevant_facts(
             relevant_facts, exprs, use_known_facts=use_known_facts)
         i += 1
+
+    if use_known_facts:
+        for expr in all_exprs:
+            relevant_facts.add(get_known_facts_cnf().rcall(expr))
 
     return And(*relevant_facts)
