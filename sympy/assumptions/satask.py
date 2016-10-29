@@ -35,23 +35,18 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         raise ValueError("Inconsistent assumptions")
 
 
-def get_relevant_facts(proposition, assumptions=(True,),
-    context=global_assumptions, use_known_facts=True, exprs=None,
-    relevant_facts=None):
+def _extract_exprs(proposition, assumptions, context):
+    keys = proposition.atoms(AppliedPredicate)
+    # XXX: We need this since True/False are not Basic
+    keys |= Tuple(*assumptions).atoms(AppliedPredicate)
+    if context:
+        keys |= And(*context).atoms(AppliedPredicate)
 
+    return {key.args[0] for key in keys}
+
+
+def get_relevant_facts(relevant_facts, exprs, use_known_facts=True):
     newexprs = set()
-    if not exprs:
-        keys = proposition.atoms(AppliedPredicate)
-        # XXX: We need this since True/False are not Basic
-        keys |= Tuple(*assumptions).atoms(AppliedPredicate)
-        if context:
-            keys |= And(*context).atoms(AppliedPredicate)
-
-        exprs = {key.args[0] for key in keys}
-
-    if not relevant_facts:
-        relevant_facts = set([])
-
     if use_known_facts:
         for expr in exprs:
             relevant_facts.add(get_known_facts_cnf().rcall(expr))
@@ -67,21 +62,18 @@ def get_relevant_facts(proposition, assumptions=(True,),
 
 
 def get_all_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True, iterations=oo):
+        context=global_assumptions, use_known_facts=True, iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
     relevant_facts = set()
-    exprs = None
-    while exprs != set():
-        (relevant_facts, exprs) = get_relevant_facts(proposition,
-                And.make_args(assumptions), context,
-                use_known_facts=use_known_facts, exprs=exprs,
-                relevant_facts=relevant_facts)
+    assumptions = And.make_args(assumptions)
+    exprs = _extract_exprs(proposition, assumptions, context)
+    while exprs and i < iterations:
+        (relevant_facts, exprs) = get_relevant_facts(
+            relevant_facts, exprs, use_known_facts=use_known_facts)
         i += 1
-        if i >= iterations:
-            return And(*relevant_facts)
 
     return And(*relevant_facts)
