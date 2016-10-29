@@ -3,14 +3,14 @@ from __future__ import print_function, division
 from sympy.core import oo, Tuple
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.logic.inference import satisfiable
+from sympy.logic.algorithms.dpll2 import dpll_satisfiable as satisfiable
 from sympy.logic.boolalg import And
 from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
-    use_known_facts=True, iterations=oo):
+        use_known_facts=True, iterations=oo):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
         use_known_facts=use_known_facts, iterations=iterations)
 

@@ -15,8 +15,17 @@ from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.logic.boolalg import (
+    And, conjuncts, to_cnf, to_int_repr, _find_predicates)
 
+class KB(object):
+    def __init__(self, clauses):
+        symbols = set()
+        for clause in clauses:
+            symbols |= _find_predicates(clause)
+        self.symbols = sorted(symbols, key=default_sort_key)
+        self.variables = range(1, len(self.symbols) + 1)
+        self.data = to_int_repr(clauses, self.symbols)
 
 def dpll_satisfiable(expr, all_models=False):
     """
@@ -40,11 +49,11 @@ def dpll_satisfiable(expr, all_models=False):
         if all_models:
             return (f for f in [False])
         return False
-    symbols = sorted(_find_predicates(expr), key=default_sort_key)
-    symbols_int_repr = range(1, len(symbols) + 1)
-    clauses_int_repr = to_int_repr(clauses, symbols)
+    kb = KB(clauses)
+    return _satisfiable(kb, all_models=all_models)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+def _satisfiable(kb, all_models=False):
+    solver = SATSolver._from_KB(kb)
     models = solver._find_model()
 
     if all_models:
@@ -159,6 +168,10 @@ class SATSolver(object):
 
             for lit in self.clauses[i]:
                 self.occurrence_count[lit] += 1
+
+    @classmethod
+    def _from_KB(cls, kb):
+        return cls(kb.data, kb.variables, set(), kb.symbols)
 
     def _find_model(self):
         """
