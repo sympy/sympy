@@ -1,23 +1,36 @@
 from __future__ import print_function, division
 
-from sympy.core import oo, Tuple
+from sympy.core import oo
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as satisfiable
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, conjuncts, to_cnf
 from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
 
+class CNF(object):
+    def __init__(self, clauses=None):
+        if clauses is None:
+            clauses = set()
+        self.clauses = clauses
+
+    def add(self, proposition):
+        self.clauses |= conjuncts(to_cnf(proposition))
+
+
 def satask(proposition, assumptions=True, context=global_assumptions,
         use_known_facts=True, iterations=oo):
-    relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
+    ctx = CNF()
+    ctx.add(assumptions)
+    for c in context:
+        ctx.add(c)
+    relevant_facts = get_all_relevant_facts(proposition, ctx,
         use_known_facts=use_known_facts, iterations=iterations)
 
-    can_be_true = satisfiable(And(proposition, assumptions,
-        relevant_facts, *context))
-    can_be_false = satisfiable(And(~proposition, assumptions,
-        relevant_facts, *context))
+    assumptions = And(*ctx.clauses)
+    can_be_true = satisfiable(And(proposition, assumptions, relevant_facts))
+    can_be_false = satisfiable(And(~proposition, assumptions, relevant_facts))
 
     if can_be_true and can_be_false:
         return None
@@ -35,13 +48,10 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         raise ValueError("Inconsistent assumptions")
 
 
-def _extract_exprs(proposition, assumptions, context):
+def _extract_exprs(proposition, ctx):
     keys = proposition.atoms(AppliedPredicate)
-    # XXX: We need this since True/False are not Basic
-    keys |= Tuple(*assumptions).atoms(AppliedPredicate)
-    if context:
-        keys |= And(*context).atoms(AppliedPredicate)
-
+    for c in ctx.clauses:
+        keys |= c.atoms(AppliedPredicate)
     return {key.args[0] for key in keys}
 
 
@@ -57,15 +67,15 @@ def get_relevant_facts(relevant_facts, exprs, use_known_facts=True):
     return relevant_facts, newexprs - exprs
 
 
-def get_all_relevant_facts(proposition, assumptions=True,
-        context=global_assumptions, use_known_facts=True, iterations=oo):
+def get_all_relevant_facts(
+        proposition, ctx, use_known_facts=True, iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
     relevant_facts = set()
-    exprs = _extract_exprs(proposition, And.make_args(assumptions), context)
+    exprs = _extract_exprs(proposition, ctx)
     all_exprs = set()
     while exprs and i < iterations:
         all_exprs |= exprs
