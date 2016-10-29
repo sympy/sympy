@@ -1452,7 +1452,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
+        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
