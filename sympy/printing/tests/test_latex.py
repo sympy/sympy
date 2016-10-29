@@ -138,10 +138,10 @@ def test_latex_builtins():
 
 
 def test_latex_SingularityFunction():
-    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^ 5"
-    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^ 4"
-    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^ 4"
-    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^ n"
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^{5}"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^{4}"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^{4}"
+    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^{n}"
 
 
 def test_latex_cycle():
