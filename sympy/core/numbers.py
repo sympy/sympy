@@ -1059,11 +1059,9 @@ class Float(Number):
         if isinstance(other, Float):
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
         if isinstance(other, Number):
-            # numbers should compare at the same precision;
-            # all _as_mpf_val routines should be sure to abide
-            # by the request to change the prec if necessary; if
-            # they don't, the equality test will fail since it compares
-            # the mpf tuples
+            if isinstance(other, Rational):
+                return mlib.to_rational(self._mpf_) == (other.p, other.q)
+            # nan, oo, -oo
             ompf = other._as_mpf_val(self._prec)
             return bool(mlib.mpf_eq(self._mpf_, ompf))
         return False    # Float != non-Number
@@ -1519,7 +1517,7 @@ class Rational(Number):
                 # so we can just check equivalence of args
                 return self.p == other.p and self.q == other.q
             if isinstance(other, Float):
-                return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
+                return (self.p, self.q) == mlib.to_rational(other._mpf_)
         return False
 
     def __ne__(self, other):
