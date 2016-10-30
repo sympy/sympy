@@ -21,11 +21,16 @@ class CNF(object):
     def copy(self):
         return CNF(set(self.clauses))
 
+    @classmethod
+    def from_prop(cls, prop):
+        res = CNF()
+        res.add(prop)
+        return res
+
 
 def satask(proposition, assumptions=True, context=global_assumptions,
         use_known_facts=True, iterations=oo):
-    ctx = CNF()
-    ctx.add(assumptions)
+    ctx = CNF.from_prop(assumptions)
     for c in context:
         ctx.add(c)
 
@@ -92,7 +97,9 @@ def get_all_relevant_facts(
         i += 1
 
     if use_known_facts:
+        known_facts_CNF = CNF.from_prop(get_known_facts_cnf())
         for expr in all_exprs:
-            relevant_facts.add(get_known_facts_cnf().rcall(expr))
+            for p in known_facts_CNF.clauses:
+                relevant_facts.add(p.rcall(expr))
 
     return relevant_facts
