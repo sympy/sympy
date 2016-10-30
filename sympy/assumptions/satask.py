@@ -3,8 +3,8 @@ from __future__ import print_function, division
 from sympy.core import oo
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.logic.algorithms.dpll2 import dpll_satisfiable as satisfiable
-from sympy.logic.boolalg import And, conjuncts, to_cnf
+from sympy.logic.algorithms.dpll2 import KB, _satisfiable
+from sympy.logic.boolalg import conjuncts, to_cnf
 from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
@@ -17,6 +17,9 @@ class CNF(object):
 
     def add(self, proposition):
         self.clauses |= conjuncts(to_cnf(proposition))
+
+    def copy(self):
+        return CNF(set(self.clauses))
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
@@ -31,8 +34,11 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     for c in relevant_facts:
         ctx.add(c)
 
-    can_be_true = satisfiable(And(proposition, *ctx.clauses))
-    can_be_false = satisfiable(And(~proposition, *ctx.clauses))
+    ctx2 = ctx.copy()
+    ctx.add(proposition)
+    can_be_true = _satisfiable(KB(ctx.clauses))
+    ctx2.add(~proposition)
+    can_be_false = _satisfiable(KB(ctx2.clauses))
 
     if can_be_true and can_be_false:
         return None
