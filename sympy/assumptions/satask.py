@@ -25,12 +25,14 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     ctx.add(assumptions)
     for c in context:
         ctx.add(c)
+
     relevant_facts = get_all_relevant_facts(proposition, ctx,
         use_known_facts=use_known_facts, iterations=iterations)
+    for c in relevant_facts:
+        ctx.add(c)
 
-    assumptions = And(*ctx.clauses)
-    can_be_true = satisfiable(And(proposition, assumptions, relevant_facts))
-    can_be_false = satisfiable(And(~proposition, assumptions, relevant_facts))
+    can_be_true = satisfiable(And(proposition, *ctx.clauses))
+    can_be_false = satisfiable(And(~proposition, *ctx.clauses))
 
     if can_be_true and can_be_false:
         return None
@@ -87,4 +89,4 @@ def get_all_relevant_facts(
         for expr in all_exprs:
             relevant_facts.add(get_known_facts_cnf().rcall(expr))
 
-    return And(*relevant_facts)
+    return relevant_facts
