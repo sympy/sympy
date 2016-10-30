@@ -16,7 +16,7 @@ from heapq import heappush, heappop
 from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
 from sympy.logic.boolalg import (
-    And, conjuncts, to_cnf, to_int_repr, _find_predicates)
+    And, Or, Not, conjuncts, to_cnf, _find_predicates)
 
 class KB(object):
     def __init__(self, clauses):
@@ -24,8 +24,34 @@ class KB(object):
         for clause in clauses:
             symbols |= _find_predicates(clause)
         self.symbols = sorted(symbols, key=default_sort_key)
+        encoding = SATEncoding(self.symbols)
         self.variables = range(1, len(self.symbols) + 1)
-        self.data = to_int_repr(clauses, self.symbols)
+        self.data = [encoding.encode(clause) for clause in clauses]
+
+class SATEncoding(object):
+    def __init__(self, symbols):
+        self.symbols = symbols
+        n = len(self.symbols)
+        self.sym2num = dict(list(zip(self.symbols, list(range(1, n + 1)))))
+
+    def encode_arg(self, arg):
+        if arg.func is Not:
+            literal = arg.args[0]
+        else:
+            literal = arg
+        try:
+            value = self.sym2num[literal]
+        except KeyError:
+            n = len(self.symbols)
+            self.symbols.append(arg)
+            value = self.sym2num[arg] = n + 1
+        if arg.func is Not:
+            return -value
+        else:
+            return value
+
+    def encode(self, clause):
+        return {self.encode_arg(arg) for arg in Or.make_args(clause)}
 
 def dpll_satisfiable(expr, all_models=False):
     """
