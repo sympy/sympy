@@ -142,8 +142,9 @@ def test_latex_SingularityFunction():
     assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^{4}"
     assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^{4}"
     assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^{n}"
-
-
+    assert latex(SingularityFunction(x, 4, -2)) == r"{\langle x - 4 \rangle}^{-2}"
+    assert latex(SingularityFunction(x, 4, -1)) == r"{\langle x - 4 \rangle}^{-1}"
+    
 def test_latex_cycle():
     assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
     assert latex(Cycle(1, 2)(4, 5, 6)) == r"\left( 1\; 2\right)\left( 4\; 5\; 6\right)"
