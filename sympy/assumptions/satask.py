@@ -60,24 +60,26 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
 
+def _get_exprs(prop):
+    return {pred.args[0] for pred in prop.atoms(AppliedPredicate)}
 
 def _extract_exprs(proposition, ctx):
-    keys = proposition.atoms(AppliedPredicate)
+    exprs = _get_exprs(proposition)
     for c in ctx.clauses:
-        keys |= c.atoms(AppliedPredicate)
-    return {key.args[0] for key in keys}
+        exprs |= _get_exprs(c)
+    return exprs
 
 
-def get_relevant_facts(relevant_facts, exprs, use_known_facts=True):
+def get_relevant_facts(exprs):
     newexprs = set()
+    newfacts = set()
     for expr in exprs:
         for fact in fact_registry[expr.func]:
             newfact = fact.rcall(expr)
-            relevant_facts.add(newfact)
-            newexprs |= set([key.args[0] for key in
-                newfact.atoms(AppliedPredicate)])
+            newfacts.add(newfact)
+            newexprs |= _get_exprs(newfact)
 
-    return relevant_facts, newexprs - exprs
+    return newfacts, newexprs
 
 
 def get_all_relevant_facts(
@@ -92,8 +94,9 @@ def get_all_relevant_facts(
     all_exprs = set()
     while exprs and i < iterations:
         all_exprs |= exprs
-        (relevant_facts, exprs) = get_relevant_facts(
-            relevant_facts, exprs, use_known_facts=use_known_facts)
+        (newfacts, newexprs) = get_relevant_facts(exprs)
+        exprs = newexprs - all_exprs
+        relevant_facts |= newfacts
         i += 1
 
     if use_known_facts:
