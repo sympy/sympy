@@ -41,6 +41,15 @@ class EncodedCNF(object):
     def variables(self):
         return range(1, len(self.symbols) + 1)
 
+    def copy(self):
+        new_data = [set(clause) for clause in self.data]
+        return type(self)(new_data, self.encoding)
+
+    def add_prop(self, prop):
+        clauses = [self.encoding.encode(clause) for clause in conjuncts(to_cnf(prop))]
+        self.data += clauses
+
+
 class SATEncoding(object):
     def __init__(self, symbols):
         self.symbols = symbols

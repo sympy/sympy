@@ -72,11 +72,14 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         for expr in exprs:
             ctx &= known_facts_CNF.rcall(expr)
 
-    ctx2 = ctx.copy()
-    ctx.add(proposition)
-    can_be_true = ctx.satisfiable()
-    ctx2.add(~proposition)
-    can_be_false = ctx2.satisfiable()
+    sat_true = EncodedCNF.from_cnf(ctx)
+    sat_false = sat_true.copy()
+
+    sat_true.add_prop(proposition)
+    can_be_true = _satisfiable(sat_true)
+
+    sat_false.add_prop(~proposition)
+    can_be_false = _satisfiable(sat_false)
 
     if can_be_true and can_be_false:
         return None
