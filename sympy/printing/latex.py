@@ -1223,6 +1223,8 @@ class LatexPrinter(Printer):
             if expr.p < 0:
                 sign = "- "
                 p = -p
+            if self._settings['fold_short_frac']:
+                return r"%s%d / %d" % (sign, p, expr.q)
             return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
@@ -1450,7 +1452,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
+        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1981,7 +1983,7 @@ def latex(expr, **settings):
     8 \sqrt{2} \mu^{\frac{7}{2}}
 
     >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{\frac{7}{2}}$
+    $8 \sqrt{2} \tau^{7 / 2}$
 
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}

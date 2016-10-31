@@ -456,6 +456,7 @@ def test_imageset_intersect_interval():
     f9 = ImageSet(Lambda(n, exp(n)), S.Naturals0)
 
     assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f1.intersect(Interval(0, 2*pi, False, True)) == FiniteSet(0, pi)
     assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
     assert f3.intersect(Interval(-1, 1)) == S.EmptySet
     assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
@@ -677,3 +678,23 @@ def test_issue_9980():
                                     Interval(1, 5)*Interval(1, 3)), False)
     assert c1.func(*c1.args) == c1
     assert R.func(*R.args) == R
+
+def test_issue_11732():
+    interval12 = Interval(1, 2)
+    finiteset1234 = FiniteSet(1, 2, 3, 4)
+    pointComplex = Tuple(1, 5)
+
+    assert (interval12 in S.Naturals) == False
+    assert (interval12 in S.Naturals0) == False
+    assert (interval12 in S.Integers) == False
+    assert (interval12 in S.Complexes) == False
+
+    assert (finiteset1234 in S.Naturals) == False
+    assert (finiteset1234 in S.Naturals0) == False
+    assert (finiteset1234 in S.Integers) == False
+    assert (finiteset1234 in S.Complexes) == False
+
+    assert (pointComplex in S.Naturals) == False
+    assert (pointComplex in S.Naturals0) == False
+    assert (pointComplex in S.Integers) == False
+    assert (pointComplex in S.Complexes) == True

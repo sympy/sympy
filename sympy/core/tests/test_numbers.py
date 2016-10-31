@@ -3,7 +3,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin)
-from sympy.core.compatibility import long, u
+from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
@@ -482,6 +482,10 @@ def test_Float():
 
     assert Float(oo) == Float('+inf')
     assert Float(-oo) == Float('-inf')
+
+    # unicode
+    assert Float(u'0.73908513321516064100000000') == Float('0.73908513321516064100000000')
+    assert Float(u'0.73908513321516064100000000', 28) == Float('0.73908513321516064100000000', 28)
 
 
 def test_Float_default_to_highprec_from_str():

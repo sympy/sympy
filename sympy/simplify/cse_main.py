@@ -2,13 +2,14 @@
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
+from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple, igcd
+from sympy.core.numbers import Integer
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable, range, as_int
 from sympy.utilities.iterables import filter_symbols, \
-    numbered_symbols, sift, topological_sort, ordered
+    numbered_symbols, sift, topological_sort, ordered, subsets
 
 from . import cse_opts
 
@@ -136,7 +137,46 @@ def postprocess_for_cse(expr, optimizations):
     return expr
 
 
-def opt_cse(exprs, order='canonical'):
+def pairwise_most_common(sets):
+    """Return a list of `(s, L)` tuples where `s` is the largest subset
+    of elements that appear in pairs of sets given by `sets` and `L`
+    is a list of tuples giving the indices of the pairs of sets in
+    which those elements appeared. All `s` will be of the same length.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.cse_main import pairwise_most_common
+    >>> pairwise_most_common((
+    ...     set([1,2,3]),
+    ...     set([1,3,5]),
+    ...     set([1,2,3,4,5]),
+    ...     set([1,2,3,6])))
+    [(set([1, 3, 5]), [(1, 2)]), (set([1, 2, 3]), [(0, 2), (0, 3), (2, 3)])]
+    >>>
+    """
+    from sympy.utilities.iterables import subsets
+    from collections import defaultdict
+    most = -1
+    for i, j in subsets(list(range(len(sets))), 2):
+        com = sets[i] & sets[j]
+        if com and len(com) > most:
+            best = defaultdict(list)
+            best_keys = []
+            most = len(com)
+        if len(com) == most:
+            if com not in best_keys:
+                best_keys.append(com)
+            best[best_keys.index(com)].append((i,j))
+    if most == -1:
+        return []
+    for k in range(len(best)):
+        best_keys[k] = (best_keys[k], best[k])
+    best_keys.sort(key=lambda x: len(x[1]))
+    return best_keys
+
+
+def opt_cse(exprs, order='canonical', verbose=False):
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls
 
@@ -147,6 +187,8 @@ def opt_cse(exprs, order='canonical'):
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
+    verbose : bool
+        Print debug information (default=False)
 
     Returns
     -------
@@ -218,51 +260,149 @@ def opt_cse(exprs, order='canonical'):
         else:
             funcs = sorted(funcs, key=lambda x: len(x.args))
 
-        func_args = [set(e.args) for e in funcs]
-        for i in range(len(func_args)):
-            for j in range(i + 1, len(func_args)):
-                com_args = func_args[i].intersection(func_args[j])
-                if len(com_args) > 1:
-                    com_func = Func(*com_args)
+        if Func is Mul:
+            F = Pow
+            meth = 'as_powers_dict'
+            from sympy.core.add import _addsort as inplace_sorter
+        elif Func is Add:
+            F = Mul
+            meth = 'as_coefficients_dict'
+            from sympy.core.mul import _mulsort as inplace_sorter
+        else:
+            assert None  # expected Mul or Add
 
-                    # for all sets, replace the common symbols by the function
-                    # over them, to allow recursive matches
+        # ----------------- helpers ---------------------------
+        def ufunc(*args):
+            # return a well formed unevaluated function from the args
+            # SHARES Func, inplace_sorter
+            args = list(args)
+            inplace_sorter(args)
+            return Func(*args, evaluate=False)
 
-                    diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | {com_func}
-                    if diff_i:
-                        opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
-                                                  evaluate=False)
+        def as_dict(e):
+            # creates a dictionary of the expression using either
+            # as_coefficients_dict or as_powers_dict, depending on Func
+            # SHARES meth
+            d = getattr(e, meth, lambda: {a: S.One for a in e.args})()
+            for k in list(d.keys()):
+                try:
+                    as_int(d[k])
+                except ValueError:
+                    d[F(k, d.pop(k))] = S.One
+            return d
 
-                    diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | {com_func}
-                    opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
-                                              evaluate=False)
+        def from_dict(d):
+            # build expression from dict from
+            # as_coefficients_dict or as_powers_dict
+            # SHARES F
+            return ufunc(*[F(k, v) for k, v in d.items()])
 
-                    for k in range(j + 1, len(func_args)):
-                        if not com_args.difference(func_args[k]):
-                            diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | {com_func}
-                            opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
-                                                      evaluate=False)
+        def update(k):
+            # updates all of the info associated with k using
+            # the com_dict: func_dicts, func_args, opt_subs
+            # returns True if all values were updated, else None
+            # SHARES com_dict, com_func, func_dicts, func_args,
+            #        opt_subs, funcs, verbose
+            for di in com_dict:
+                # don't allow a sign to change
+                if com_dict[di] > func_dicts[k][di]:
+                    return
+            # remove it
+            if Func is Add:
+                take = min(func_dicts[k][i] for i in com_dict)
+                com_func_take = Mul(take, from_dict(com_dict), evaluate=False)
+            else:
+                take = igcd(*[func_dicts[k][i] for i in com_dict])
+                com_func_take = Pow(from_dict(com_dict), take, evaluate=False)
+            for di in com_dict:
+                func_dicts[k][di] -= take*com_dict[di]
+            # compute the remaining expression
+            rem = from_dict(func_dicts[k])
+            # reject hollow change, e.g extracting x + 1 from x + 3
+            if Func is Add and rem and rem.is_Integer and 1 in com_dict:
+                return
+            if verbose:
+                print('\nfunc %s (%s) \ncontains %s \nas %s \nleaving %s' %
+                    (funcs[k], func_dicts[k], com_func, com_func_take, rem))
+            # recompute the dict since some keys may now
+            # have corresponding values of 0; one could
+            # keep track of which ones went to zero but
+            # this seems cleaner
+            func_dicts[k] = as_dict(rem)
+            # update associated info
+            func_dicts[k][com_func] = take
+            func_args[k] = set(func_dicts[k])
+            # keep the constant separate from the remaining
+            # part of the expression, e.g. 2*(a*b) rather than 2*a*b
+            opt_subs[funcs[k]] = ufunc(rem, com_func_take)
+            # everything was updated
+            return True
+
+        def get_copy(i):
+            return [func_dicts[i].copy(), func_args[i].copy(), funcs[i], i]
+
+        def restore(dafi):
+            i = dafi.pop()
+            func_dicts[i], func_args[i], funcs[i] = dafi
+
+        # ----------------- end helpers -----------------------
+
+        func_dicts = [as_dict(f) for f in funcs]
+        func_args = [set(d) for d in func_dicts]
+        while True:
+            hit = pairwise_most_common(func_args)
+            if not hit or len(hit[0][0]) <= 1:
+                break
+            changed = False
+            for com_args, ij in hit:
+                take = len(com_args)
+                ALL = list(ordered(com_args))
+                while take >= 2:
+                    for com_args in subsets(ALL, take):
+                        com_func = Func(*com_args)
+                        com_dict = as_dict(com_func)
+                        for i, j in ij:
+                            dafi = None
+                            if com_func != funcs[i]:
+                                dafi = get_copy(i)
+                                ch = update(i)
+                                if not ch:
+                                    restore(dafi)
+                                    continue
+                            if com_func != funcs[j]:
+                                dafj = get_copy(j)
+                                ch = update(j)
+                                if not ch:
+                                    if dafi is not None:
+                                        restore(dafi)
+                                    restore(dafj)
+                                    continue
+                            changed = True
+                        if changed:
+                            break
+                    else:
+                        take -= 1
+                        continue
+                    break
+                else:
+                    continue
+                break
+            if not changed:
+                break
 
     # split muls into commutative
-    comutative_muls = set()
+    commutative_muls = set()
     for m in muls:
         c, nc = m.args_cnc(cset=True)
         if c:
             c_mul = m.func(*c)
             if nc:
-                if c_mul == 1:
-                    new_obj = m.func(*nc)
-                else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
-                opt_subs[m] = new_obj
+                opt_subs[m] = m.func(c_mul, m.func(*nc), evaluate=False)
             if len(c) > 1:
-                comutative_muls.add(c_mul)
+                commutative_muls.add(c_mul)
 
     _match_common_args(Add, adds)
-    _match_common_args(Mul, comutative_muls)
+    _match_common_args(Mul, commutative_muls)
 
     return opt_subs
 
@@ -394,6 +534,30 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             reduced_e = e
         reduced_exprs.append(reduced_e)
 
+    # don't allow hollow nesting
+    # e.g if p = [b + 2*d + e + f, b + 2*d + f + g, a + c + d + f + g]
+    # and R, C = cse(p) then
+    #     R = [(x0, d + f), (x1, b + d)]
+    #     C = [e + x0 + x1, g + x0 + x1, a + c + d + f + g]
+    # but the args of C[-1] should not be `(a + c, d + f + g)`
+    nested = [[i for i in f.args if isinstance(i, f.func)] for f in exprs]
+    for i in range(len(exprs)):
+        F = reduced_exprs[i].func
+        if not (F is Mul or F is Add):
+            continue
+        nested = [a for a in exprs[i].args if isinstance(a, F)]
+        args = []
+        for a in reduced_exprs[i].args:
+            if isinstance(a, F):
+                for ai in a.args:
+                    if isinstance(ai, F) and ai not in nested:
+                        args.extend(ai.args)
+                    else:
+                        args.append(ai)
+            else:
+                args.append(a)
+        reduced_exprs[i] = F(*args)
+
     return replacements, reduced_exprs
 
 
@@ -444,7 +608,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> from sympy import cse, SparseMatrix
     >>> from sympy.abc import x, y, z, w
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
-    ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
+    ([(x0, w + y + z)], [x0*(x + x0)/(w + x)**3])
 
     Note that currently, y + z will not get substituted if -y - z is used.
 

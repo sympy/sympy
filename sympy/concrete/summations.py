@@ -5,7 +5,7 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild
+from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.add import Add
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
@@ -233,11 +233,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # don't want to differentiate wrt any free symbol in the upper or lower
         # limits
         # XXX remove this test for free_symbols when the default _eval_derivative is in
-        if x.is_Indexed:
-            from sympy import IndexedBase
-            if x.base not in self.atoms(IndexedBase):
-                return S.Zero
-        elif x not in self.free_symbols:
+        if isinstance(x, Symbol) and x not in self.free_symbols:
             return S.Zero
 
         # get limits and the function
@@ -254,8 +250,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return None
             df = Derivative(f, x, evaluate=True)
             rv = self.func(df, limit)
-            if limit[0] not in df.free_symbols:
-                rv = rv.doit()
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
@@ -271,9 +265,41 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import sum_simplify
-        return sum_simplify(self)
+    def _eval_simplify(self, ratio=1.7, measure=None):
+        from sympy.simplify.simplify import factor_sum, sum_combine
+        from sympy.core.function import expand
+        from sympy.core.mul import Mul
+
+        #split the function into adds
+        terms = Add.make_args(expand(self.function))
+        s_t = [] # Sum Terms
+        o_t = [] # Other Terms
+
+        for term in terms:
+            if term.has(Sum):
+                #if there is an embedded sum here
+                #it is of the form x * (Sum(whatever))
+                #hence we make a Mul out of it, and simplify all interior sum terms
+                subterms = Mul.make_args(expand(term))
+                out_terms = []
+                for subterm in subterms:
+                    #go through each term
+                    if isinstance(subterm, Sum):
+                        #if it's a sum, simpify it
+                        out_terms.append(subterm._eval_simplify())
+                    else:
+                        #otherwise, add it as is
+                        out_terms.append(subterm)
+
+                #turn it back into a Mul
+                s_t.append(Mul(*out_terms))
+            else:
+                o_t.append(term)
+
+        #next try to combine any interior sums for further simplification
+        result = Add(sum_combine(s_t), *o_t)
+
+        return factor_sum(result, limits=self.limits)
 
     def _eval_summation(self, f, x):
         return None
@@ -357,8 +383,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = self.function
 
         if len(sequence_term.free_symbols) > 1:
-            raise NotImplementedError("convergence checking for more that one symbol "
-                                        "containing series is not handled")
+            raise NotImplementedError("convergence checking for more than one symbol "
+                                      "containing series is not handled")
 
         if lower_limit.is_finite and upper_limit.is_finite:
             return S.true
@@ -489,7 +515,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return dirich2
 
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
-                                    "is not yet implemented" % (sequence_term))
+                                  "is not yet implemented" % (sequence_term))
 
     def is_absolutely_convergent(self):
         """
@@ -961,6 +987,7 @@ def _eval_sum_hyper(f, i, a):
     from sympy.functions import hyper
     from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
+    from sympy.core.numbers import Float
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
@@ -973,6 +1000,10 @@ def _eval_sum_hyper(f, i, a):
     hs = hypersimp(f, i)
     if hs is None:
         return None
+
+    if isinstance(hs,Float):
+        from sympy.simplify.simplify import nsimplify
+        hs = nsimplify(hs)
 
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)

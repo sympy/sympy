@@ -260,6 +260,8 @@ def mrv(e, x):
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
+        if b == 1:
+            return SubsSet(), b
         if e.has(x):
             return mrv(exp(e * log(b)), x)
         else:
