@@ -35,8 +35,7 @@ class CNF(object):
         self.clauses |= other.clauses
         return self
 
-    def add_relevant_facts(self, proposition,
-                           use_known_facts=True, iterations=oo):
+    def add_relevant_facts(self, proposition, iterations=oo):
         # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
         # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it
         # until we stop getting new things. Hopefully this strategy won't lead
@@ -50,15 +49,14 @@ class CNF(object):
             exprs = newexprs - all_exprs
             self.extend(newfacts)
             i += 1
-
-        if use_known_facts:
-            known_facts_CNF = CNF.from_prop(get_known_facts_cnf())
-            for expr in all_exprs:
-                self &= known_facts_CNF.rcall(expr)
+        return all_exprs
 
     def rcall(self, expr):
         clauses = set(p.rcall(expr) for p in self.clauses)
         return CNF(clauses)
+
+    def satisfiable(self):
+        return _satisfiable(KB(self.clauses))
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
@@ -67,13 +65,18 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     for c in context:
         ctx.add(c)
 
-    ctx.add_relevant_facts(proposition, use_known_facts=use_known_facts,
-                           iterations=iterations)
+    exprs = ctx.add_relevant_facts(proposition, iterations=iterations)
+
+    if use_known_facts:
+        known_facts_CNF = CNF.from_prop(get_known_facts_cnf())
+        for expr in exprs:
+            ctx &= known_facts_CNF.rcall(expr)
+
     ctx2 = ctx.copy()
     ctx.add(proposition)
-    can_be_true = _satisfiable(KB(ctx.clauses))
+    can_be_true = ctx.satisfiable()
     ctx2.add(~proposition)
-    can_be_false = _satisfiable(KB(ctx2.clauses))
+    can_be_false = ctx2.satisfiable()
 
     if can_be_true and can_be_false:
         return None
