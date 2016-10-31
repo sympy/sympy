@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import oo
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.logic.algorithms.dpll2 import EncodedCNF, _satisfiable
+from sympy.logic.algorithms.dpll2 import SATEncoding, EncodedCNF, _satisfiable
 from sympy.logic.boolalg import conjuncts, to_cnf
 from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
@@ -69,10 +69,31 @@ def satask(proposition, assumptions=True, context=global_assumptions,
 
     if use_known_facts:
         known_facts_CNF = CNF.from_prop(get_known_facts_cnf())
-        for expr in exprs:
-            ctx &= known_facts_CNF.rcall(expr)
+        kf_encoded = EncodedCNF.from_cnf(known_facts_CNF)
 
-    sat_true = EncodedCNF.from_cnf(ctx)
+        def translate_literal(lit, delta):
+            if lit > 0:
+                return lit + delta
+            else:
+                return lit - delta
+
+        def translate_data(data, delta):
+            return [{translate_literal(i, delta) for i in clause} for clause in data]
+        data = []
+        symbols = []
+        n_lit = len(kf_encoded.encoding.symbols)
+        for i, expr in enumerate(exprs):
+            symbols += [pred(expr) for pred in kf_encoded.encoding.symbols]
+            data += translate_data(kf_encoded.data, i * n_lit)
+
+        encoding = SATEncoding(symbols)
+        sat_true = EncodedCNF(data, encoding)
+    else:
+        sat_true = EncodedCNF.from_cnf(ctx)
+
+    for clause in ctx.clauses:
+        sat_true.data.append(sat_true.encoding.encode(clause))
+
     sat_false = sat_true.copy()
 
     sat_true.add_prop(proposition)
