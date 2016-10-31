@@ -56,7 +56,7 @@ class CNF(object):
         return CNF(clauses)
 
     def satisfiable(self):
-        return _satisfiable(EncodedCNF(self.clauses))
+        return _satisfiable(EncodedCNF.from_cnf(self))
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,

@@ -19,13 +19,19 @@ from sympy.logic.boolalg import (
     And, Or, Not, conjuncts, to_cnf, _find_predicates)
 
 class EncodedCNF(object):
-    def __init__(self, clauses):
+    def __init__(self, data, encoding):
+        self.data = data
+        self.encoding = encoding
+
+    @classmethod
+    def from_cnf(cls, cnf):
         symbols = set()
-        for clause in clauses:
+        for clause in cnf.clauses:
             symbols |= _find_predicates(clause)
         symbols = sorted(symbols, key=default_sort_key)
-        self.encoding = SATEncoding(symbols)
-        self.data = [self.encoding.encode(clause) for clause in clauses]
+        encoding = SATEncoding(symbols)
+        data = [encoding.encode(clause) for clause in cnf.clauses]
+        return cls(data, encoding)
 
     @property
     def symbols(self):
@@ -77,12 +83,13 @@ def dpll_satisfiable(expr, all_models=False):
     False
 
     """
+    from sympy.assumptions.satask import CNF
     clauses = conjuncts(to_cnf(expr))
     if False in clauses:
         if all_models:
             return (f for f in [False])
         return False
-    kb = EncodedCNF(clauses)
+    kb = EncodedCNF.from_cnf(CNF(clauses))
     return _satisfiable(kb, all_models=all_models)
 
 def _satisfiable(kb, all_models=False):
