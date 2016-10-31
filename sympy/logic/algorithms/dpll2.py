@@ -18,15 +18,22 @@ from sympy import default_sort_key, ordered
 from sympy.logic.boolalg import (
     And, Or, Not, conjuncts, to_cnf, _find_predicates)
 
-class KB(object):
+class EncodedCNF(object):
     def __init__(self, clauses):
         symbols = set()
         for clause in clauses:
             symbols |= _find_predicates(clause)
-        self.symbols = sorted(symbols, key=default_sort_key)
-        encoding = SATEncoding(self.symbols)
-        self.variables = range(1, len(self.symbols) + 1)
-        self.data = [encoding.encode(clause) for clause in clauses]
+        symbols = sorted(symbols, key=default_sort_key)
+        self.encoding = SATEncoding(symbols)
+        self.data = [self.encoding.encode(clause) for clause in clauses]
+
+    @property
+    def symbols(self):
+        return self.encoding.symbols
+
+    @property
+    def variables(self):
+        return range(1, len(self.symbols) + 1)
 
 class SATEncoding(object):
     def __init__(self, symbols):
@@ -75,11 +82,11 @@ def dpll_satisfiable(expr, all_models=False):
         if all_models:
             return (f for f in [False])
         return False
-    kb = KB(clauses)
+    kb = EncodedCNF(clauses)
     return _satisfiable(kb, all_models=all_models)
 
 def _satisfiable(kb, all_models=False):
-    solver = SATSolver._from_KB(kb)
+    solver = SATSolver._from_encoded(kb)
     models = solver._find_model()
 
     if all_models:
@@ -196,7 +203,7 @@ class SATSolver(object):
                 self.occurrence_count[lit] += 1
 
     @classmethod
-    def _from_KB(cls, kb):
+    def _from_encoded(cls, kb):
         return cls(kb.data, kb.variables, set(), kb.symbols)
 
     def _find_model(self):

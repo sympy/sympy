@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import oo
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
-from sympy.logic.algorithms.dpll2 import KB, _satisfiable
+from sympy.logic.algorithms.dpll2 import EncodedCNF, _satisfiable
 from sympy.logic.boolalg import conjuncts, to_cnf
 from sympy.assumptions.ask_generated import get_known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
@@ -56,7 +56,7 @@ class CNF(object):
         return CNF(clauses)
 
     def satisfiable(self):
-        return _satisfiable(KB(self.clauses))
+        return _satisfiable(EncodedCNF(self.clauses))
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
