@@ -367,7 +367,7 @@ class LatexPrinter(Printer):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if _between_two_numbers_p[0].search(last_term_tex) and \
-                            _between_two_numbers_p[0].match(term_tex):
+                            _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
