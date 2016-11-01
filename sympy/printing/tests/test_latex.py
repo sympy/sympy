@@ -1,3 +1,9 @@
+from sympy.tensor.array import MutableDenseNDimArray
+
+from sympy.tensor.array import ImmutableSparseNDimArray
+
+from sympy.tensor.array import ImmutableDenseNDimArray
+
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
@@ -23,6 +29,9 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
+from sympy.tensor.array import Array
+from sympy.tensor.array import MutableSparseNDimArray
+from sympy.tensor.array import tensorproduct
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
@@ -895,6 +904,32 @@ def test_latex_matrix_with_functions():
                 r')}\end{matrix}\right]')
 
     assert latex(M) == expected
+
+
+def test_latex_NDimArray():
+    x, y, z, w = symbols("x y z w")
+
+    for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        M = ArrayType([[1 / x, y], [z, w]])
+        M1 = ArrayType([1 / x, y, z])
+
+        M2 = tensorproduct(M1, M)
+        M3 = tensorproduct(M, M)
+
+        assert latex(M) == '\\left[\\begin{matrix}\\frac{1}{x} & y\\\\z & w\\end{matrix}\\right]'
+        assert latex(M1) == "\\left[\\begin{matrix}\\frac{1}{x} & y & z\\end{matrix}\\right]"
+        assert latex(M2) == r"\left[\begin{matrix}" \
+                            r"\left[\begin{matrix}\frac{1}{x^{2}} & \frac{y}{x}\\\frac{z}{x} & \frac{w}{x}\end{matrix}\right] & " \
+                            r"\left[\begin{matrix}\frac{y}{x} & y^{2}\\y z & w y\end{matrix}\right] & " \
+                            r"\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right]" \
+                            r"\end{matrix}\right]"
+        assert latex(M3) == r"""\left[\begin{matrix}"""\
+                r"""\left[\begin{matrix}\frac{1}{x^{2}} & \frac{y}{x}\\\frac{z}{x} & \frac{w}{x}\end{matrix}\right] & """\
+                r"""\left[\begin{matrix}\frac{y}{x} & y^{2}\\y z & w y\end{matrix}\right]\\"""\
+                r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
+                r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
+                r"""\end{matrix}\right]"""
+        assert latex(ArrayType()) == "\\left[\\begin{matrix}\\end{matrix}\\right]"
 
 
 def test_latex_mul_symbol():
