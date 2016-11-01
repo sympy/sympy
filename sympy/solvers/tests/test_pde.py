@@ -66,6 +66,7 @@ def test_pde_separate_mul():
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
 
+
 def test_issue_11726():
     x, t = symbols("x t")
     f  = symbols("f", cls=Function)
@@ -75,6 +76,7 @@ def test_issue_11726():
     eq = u.diff(x, 2) - u.diff(t, 2)
     res = pde_separate(eq, u, [T(x), X(t)])
     assert res == [D(T(x), x, x)/T(x),D(X(t), t, t)/X(t)]
+
 
 def test_pde_classify():
     # When more number of hints are added, add tests for classifying here.
@@ -222,4 +224,3 @@ def test_pdsolve_variable_coeff():
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
     assert sol == Eq(u, exp((-y**2 + 2*y + 2*F(x))*exp(-2*x)/2))
-
