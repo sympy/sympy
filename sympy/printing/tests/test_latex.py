@@ -1,9 +1,3 @@
-from sympy.tensor.array import MutableDenseNDimArray
-
-from sympy.tensor.array import ImmutableSparseNDimArray
-
-from sympy.tensor.array import ImmutableDenseNDimArray
-
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, IndexedBase, Integral,
@@ -29,8 +23,8 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
-from sympy.tensor.array import Array
-from sympy.tensor.array import MutableSparseNDimArray
+from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
+                                MutableSparseNDimArray, MutableDenseNDimArray)
 from sympy.tensor.array import tensorproduct
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
