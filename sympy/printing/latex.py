@@ -1424,7 +1424,7 @@ class LatexPrinter(Printer):
             if self._settings['mode'] == 'inline':
                 mat_str = 'smallmatrix'
             else:
-                if (expr.rank() == 0) or ((expr.shape[-1] <= 10) == True):
+                if (expr.rank() == 0) or (expr.shape[-1] <= 10):
                     mat_str = 'matrix'
                 else:
                     mat_str = 'array'
