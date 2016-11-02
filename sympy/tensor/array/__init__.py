@@ -200,11 +200,9 @@ z*cos(y*z) + exp(x)
 
 """
 
-from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray
-from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray
+from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
+from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
+from .ndim_array import NDimArray
 from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
 
 Array = ImmutableDenseNDimArray
-NDimArray = ImmutableDenseNDimArray
-DenseNDimArray = ImmutableDenseNDimArray
-SparseNDimArray = ImmutableSparseNDimArray

@@ -5,7 +5,7 @@ import itertools
 
 from sympy.core.sympify import _sympify
 
-from sympy import Matrix, flatten, Basic, Tuple
+from sympy import Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
@@ -89,6 +89,8 @@ class DenseNDimArray(NDimArray):
         [1, 1, 1]])
 
         """
+        from sympy.matrices import Matrix
+
         if self.rank() != 2:
             raise ValueError('Dimensions must be of size of 2')
 
@@ -137,6 +139,8 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
+        from sympy.utilities.iterables import flatten
+
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         flat_list = flatten(flat_list)
@@ -159,6 +163,8 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
+        from sympy.utilities.iterables import flatten
+
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         flat_list = flatten(flat_list)
         self = object.__new__(cls)
