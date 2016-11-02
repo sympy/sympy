@@ -36,6 +36,7 @@ def test_interval_arguments():
     assert Interval(-oo, 0).left_open is true
     assert Interval(oo, -oo) == S.EmptySet
     assert Interval(oo, oo) == S.EmptySet
+    assert Interval(-oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
     e = Sum(x, (x, 1, 3))
