@@ -12,7 +12,9 @@ from sympy.physics import units
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically
-
+from sympy.integrals.meijerint import meijerint_definite
+from sympy import Abs
+from sympy.logic.boolalg import Or
 
 x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
 n = Symbol('n', integer=True)
@@ -1111,37 +1113,9 @@ def test_issue_2708():
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
-        Piecewise(
-            (   pi*Piecewise(
-                    (   -s/(pi*(-s**2 + 1)),
-                        Abs(s**2) < 1),
-                    (   1/(pi*s*(1 - 1/s**2)),
-                        Abs(s**(-2)) < 1),
-                    (   meijerg(
-                            ((S(1)/2,), (0, 0)),
-                            ((0, S(1)/2), (0,)),
-                            polar_lift(s)**2),
-                        True)
-                ),
-                And(
-                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
-                    Ne(s**2, 1))
-            ),
-            (
-                Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
-                True))
+            Piecewise((Piecewise((s/(s**2 - 1), Or(Abs(s**(-2)) < 1, Abs(s**2) < 1)), (pi*Piecewise((-s/(-pi*s**2 + pi), Abs(polar_lift(s)**2) < 1), (1/(pi*s - pi/s), Abs(polar_lift(s)**(-2)) < 1), (meijerg(((1/2,), (0, 0)), ((0, 1/2), (0,)), polar_lift(s)**2), True)), True)), And(Abs(periodic_argument(polar_lift(s)**2, oo)) < pi, Ne(s**2, 1), cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0)), (Integral(exp(-s*x)*cosh(x), (x, 0, oo)), True))
     assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
-        Piecewise(
-            (   -1/(s + 1)/2 - 1/(-s + 1)/2,
-                And(
-                    Ne(1/s, 1),
-                    Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
-                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
-            (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
-                True))
-
+            Piecewise((1/(s**2 - 1), And(Abs(periodic_argument(s, oo)) < pi/2, Abs(periodic_argument(s, oo)) <= pi/2, Ne(1/s, 1), cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)), (Integral(exp(-s*x)*sinh(x), (x, 0, oo)), True))
 
 def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
@@ -1168,3 +1142,6 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_issue_11742():
+    assert integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12)) == 16*pi

@@ -24,7 +24,6 @@ from sympy.functions.elementary.exponential import log
 from sympy.series import limit
 from sympy.series.order import Order
 
-
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -406,160 +405,171 @@ class Integral(AddWithLimits):
         undone_limits = []
         # ulj = free symbols of any undone limits' upper and lower limits
         ulj = set()
-        for xab in self.limits:
-            # compute uli, the free symbols in the
-            # Upper and Lower limits of limit I
-            if len(xab) == 1:
-                uli = set(xab[:1])
-            elif len(xab) == 2:
-                uli = xab[1].free_symbols
-            elif len(xab) == 3:
-                uli = xab[1].free_symbols.union(xab[2].free_symbols)
-            # this integral can be done as long as there is no blocking
-            # limit that has been undone. An undone limit is blocking if
-            # it contains an integration variable that is in this limit's
-            # upper or lower free symbols or vice versa
-            if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
-                undone_limits.append(xab)
-                ulj.update(uli)
-                function = self.func(*([function] + [xab]))
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
-                continue
-
-            # There are a number of tradeoffs in using the Meijer G method.
-            # It can sometimes be a lot faster than other methods, and
-            # sometimes slower. And there are certain types of integrals for
-            # which it is more likely to work than others.
-            # These heuristics are incorporated in deciding what integration
-            # methods to try, in what order.
-            # See the integrate() docstring for details.
-            def try_meijerg(function, xab):
-                ret = None
-                if len(xab) == 3 and meijerg is not False:
-                    x, a, b = xab
-                    try:
-                        res = meijerint_definite(function, x, a, b)
-                    except NotImplementedError:
-                        from sympy.integrals.meijerint import _debug
-                        _debug('NotImplementedError from meijerint_definite')
-                        res = None
-                    if res is not None:
-                        f, cond = res
-                        if conds == 'piecewise':
-                            ret = Piecewise((f, cond),
-                                          (self.func(function, (x, a, b)), True))
-                        elif conds == 'separate':
-                            if len(self.limits) != 1:
-                                raise ValueError('conds=separate not supported in '
-                                                 'multiple integrals')
-                            ret = f, cond
-                        else:
-                            ret = f
-                return ret
-
-            meijerg1 = meijerg
-            if len(xab) == 3 and xab[1].is_real and xab[2].is_real \
-                and not function.is_Poly and \
-                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
-                ret = try_meijerg(function, xab)
-                if ret is not None:
-                    function = ret
+        should_restart = True
+        do_try_meijerint = True
+        meijerint_returned_null = False
+        while should_restart :
+            should_restart = False
+            for xab in self.limits:
+                # compute uli, the free symbols in the
+                # Upper and Lower limits of limit I
+                if len(xab) == 1:
+                    uli = set(xab[:1])
+                elif len(xab) == 2:
+                    uli = xab[1].free_symbols
+                elif len(xab) == 3:
+                    uli = xab[1].free_symbols.union(xab[2].free_symbols)
+                # this integral can be done as long as there is no blocking
+                # limit that has been undone. An undone limit is blocking if
+                # it contains an integration variable that is in this limit's
+                # upper or lower free symbols or vice versa
+                if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
+                    undone_limits.append(xab)
+                    ulj.update(uli)
+                    function = self.func(*([function] + [xab]))
+                    factored_function = function.factor()
+                    if not isinstance(factored_function, Integral):
+                        function = factored_function
                     continue
-                else:
-                    meijerg1 = False
 
-            # If the special meijerg code did not succeed in finding a definite
-            # integral, then the code using meijerint_indefinite will not either
-            # (it might find an antiderivative, but the answer is likely to be
-            #  nonsensical).
-            # Thus if we are requested to only use Meijer G-function methods,
-            # we give up at this stage. Otherwise we just disable G-function
-            # methods.
-            if meijerg1 is False and meijerg is True:
-                antideriv = None
-            else:
-                antideriv = self._eval_integral(
-                    function, xab[0],
-                    meijerg=meijerg1, risch=risch, manual=manual,
-                    conds=conds)
-                if antideriv is None and meijerg1 is True:
+                # There are a number of tradeoffs in using the Meijer G method.
+                # It can sometimes be a lot faster than other methods, and
+                # sometimes slower. And there are certain types of integrals for
+                # which it is more likely to work than others.
+                # These heuristics are incorporated in deciding what integration
+                # methods to try, in what order.
+                # See the integrate() docstring for details.
+                def try_meijerg(function, xab):
+                    ret = None
+                    if len(xab) == 3 and meijerg is not False:
+                        x, a, b = xab
+                        try:
+                            res = meijerint_definite(function, x, a, b)
+                        except NotImplementedError:
+                            from sympy.integrals.meijerint import _debug
+                            _debug('NotImplementedError from meijerint_definite')
+                            res = None
+                        if res is not None:
+                            f, cond = res
+                            if conds == 'piecewise':
+                                ret = Piecewise((f, cond),
+                                            (self.func(function, (x, a, b)), True))
+                            elif conds == 'separate':
+                                if len(self.limits) != 1:
+                                    raise ValueError('conds=separate not supported in '
+                                                    'multiple integrals')
+                                ret = f, cond
+                            else:
+                                ret = f
+                    return ret
+
+                meijerg1 = meijerg
+                if len(xab)==3 and xab[1].is_real and xab[2].is_real \
+                    and not function.is_Poly and do_try_meijerint :
                     ret = try_meijerg(function, xab)
                     if ret is not None:
                         function = ret
+                        function = function.simplify()
                         continue
+                    else:
+                        do_try_meijerint = False
+                        if not meijerint_returned_null:
+                            meijerint_returned_null = True
+                            function = self.function
+                            should_restart = True
+                            break
+                        meijerg1 = False
 
-            if antideriv is None:
-                undone_limits.append(xab)
-                function = self.func(*([function] + [xab])).factor()
-                factored_function = function.factor()
-                if not isinstance(factored_function, Integral):
-                    function = factored_function
-                continue
-            else:
-                if len(xab) == 1:
-                    function = antideriv
+                # If the special meijerg code did not succeed in finding a definite
+                # integral, then the code using meijerint_indefinite will not either
+                # (it might find an antiderivative, but the answer is likely to be
+                #  nonsensical).
+                # Thus if we are requested to only use Meijer G-function methods,
+                # we give up at this stage. Otherwise we just disable G-function
+                # methods.
+                if meijerg1 is False and meijerg is True:
+                    antideriv = None
                 else:
-                    if len(xab) == 3:
-                        x, a, b = xab
-                    elif len(xab) == 2:
-                        x, b = xab
-                        a = None
+                    antideriv = self._eval_integral(
+                        function, xab[0],
+                        meijerg=meijerg1, risch=risch, manual=manual,
+                        conds=conds)
+                    if antideriv is None and meijerg1 is True:
+                        ret = try_meijerg(function, xab)
+                        if ret is not None:
+                            function = ret
+                            continue
+
+                if antideriv is None:
+                    undone_limits.append(xab)
+                    function = self.func(*([function] + [xab])).factor()
+                    factored_function = function.factor()
+                    if not isinstance(factored_function, Integral):
+                        function = factored_function
+                    continue
+                else:
+                    if len(xab) == 1:
+                        function = antideriv
                     else:
-                        raise NotImplementedError
+                        if len(xab) == 3:
+                            x, a, b = xab
+                        elif len(xab) == 2:
+                            x, b = xab
+                            a = None
+                        else:
+                            raise NotImplementedError
 
-                    if deep:
-                        if isinstance(a, Basic):
-                            a = a.doit(**hints)
-                        if isinstance(b, Basic):
-                            b = b.doit(**hints)
+                        if deep:
+                            if isinstance(a, Basic):
+                                a = a.doit(**hints)
+                            if isinstance(b, Basic):
+                                b = b.doit(**hints)
 
-                    if antideriv.is_Poly:
-                        gens = list(antideriv.gens)
-                        gens.remove(x)
+                        if antideriv.is_Poly:
+                            gens = list(antideriv.gens)
+                            gens.remove(x)
 
-                        antideriv = antideriv.as_expr()
+                            antideriv = antideriv.as_expr()
 
-                        function = antideriv._eval_interval(x, a, b)
-                        function = Poly(function, *gens)
-                    else:
-                        def is_indef_int(g, x):
-                            return (isinstance(g, Integral) and
-                                    any(i == (x,) for i in g.limits))
+                            function = antideriv._eval_interval(x, a, b)
+                            function = Poly(function, *gens)
+                        else:
+                            def is_indef_int(g, x):
+                                return (isinstance(g, Integral) and
+                                        any(i == (x,) for i in g.limits))
 
-                        def eval_factored(f, x, a, b):
-                            # _eval_interval for integrals with
-                            # (constant) factors
-                            # a single indefinite integral is assumed
-                            args = []
-                            for g in Mul.make_args(f):
-                                if is_indef_int(g, x):
-                                    args.append(g._eval_interval(x, a, b))
+                            def eval_factored(f, x, a, b):
+                                # _eval_interval for integrals with
+                                # (constant) factors
+                                # a single indefinite integral is assumed
+                                args = []
+                                for g in Mul.make_args(f):
+                                    if is_indef_int(g, x):
+                                        args.append(g._eval_interval(x, a, b))
+                                    else:
+                                        args.append(g)
+                                return Mul(*args)
+
+                            integrals, others = [], []
+                            for f in Add.make_args(antideriv):
+                                if any(is_indef_int(g, x)
+                                       for g in Mul.make_args(f)):
+                                    integrals.append(f)
                                 else:
-                                    args.append(g)
-                            return Mul(*args)
-
-                        integrals, others = [], []
-                        for f in Add.make_args(antideriv):
-                            if any(is_indef_int(g, x)
-                                   for g in Mul.make_args(f)):
-                                integrals.append(f)
-                            else:
-                                others.append(f)
-                        uneval = Add(*[eval_factored(f, x, a, b)
-                                       for f in integrals])
-                        try:
-                            evalued = Add(*others)._eval_interval(x, a, b)
-                            function = uneval + evalued
-                        except NotImplementedError:
-                            # This can happen if _eval_interval depends in a
-                            # complicated way on limits that cannot be computed
-                            undone_limits.append(xab)
-                            function = self.func(*([function] + [xab]))
-                            factored_function = function.factor()
-                            if not isinstance(factored_function, Integral):
-                                function = factored_function
+                                    others.append(f)
+                            uneval = Add(*[eval_factored(f, x, a, b)
+                                           for f in integrals])
+                            try:
+                                evalued = Add(*others)._eval_interval(x, a, b)
+                                function = uneval + evalued
+                            except NotImplementedError:
+                                # This can happen if _eval_interval depends in a
+                                # complicated way on limits that cannot be computed
+                                undone_limits.append(xab)
+                                function = self.func(*([function] + [xab]))
+                                factored_function = function.factor()
+                                if not isinstance(factored_function, Integral):
+                                    function = factored_function
         return function
 
     def _eval_derivative(self, sym):
