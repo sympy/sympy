@@ -340,11 +340,11 @@ def sqrt_mod_iter(a, p, domain=int):
             if a % px == 0:
                 rx = _sqrt_mod1(a, px, ex)
                 if not rx:
-                    raise StopIteration
+                    return
             else:
                 rx = _sqrt_mod_prime_power(a, px, ex)
                 if not rx:
-                    raise StopIteration
+                    return
             v.append(rx)
             pv.append(px**ex)
         mm, e, s = gf_crt1(pv, ZZ)
@@ -724,15 +724,7 @@ def _nthroot_mod1(s, q, p, all_roots):
         s1 = pow(s, f, p)
         y = pow(g, f, p)
         h = pow(g, f*q, p)
-        # find t discrete log of s1 base h, h**x = s1 mod p
-        # used a naive implementation
-        # TODO implement using Ref [1]
-        pr = 1
-        for t in range(p):
-            if pr == s1:
-                break
-            pr = pr*h % p
-
+        t = discrete_log(p, s1, h)
         g2 = pow(g, z*t, p)
         g3 = igcdex(g2, p)[0]
         r = r1*g3 % p

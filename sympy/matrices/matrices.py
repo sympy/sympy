@@ -4530,6 +4530,13 @@ class MatrixBase(object):
         (Matrix([
         [1, 0],
         [0, 1]]), [0, 1])
+        >>> rref_matrix, rref_pivots = m.rref()
+        >>> rref_matrix
+        Matrix([
+        [1, 0],
+        [0, 1]])
+        >>> rref_pivots
+        [0, 1]
         """
         return self._eval_rref(iszerofunc, simplify)
 

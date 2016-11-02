@@ -4,6 +4,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
@@ -117,6 +118,9 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                     i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
+                elif isinstance(i, Expr) and not i.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     if i >= self.rows:
                         raise IndexError('Row index out of bounds')
@@ -126,6 +130,9 @@ class SparseMatrix(CommonMatrix, MatrixBase):
                     j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
+                elif isinstance(j, Expr) and not j.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     if j >= self.cols:
                         raise IndexError('Col index out of bounds')

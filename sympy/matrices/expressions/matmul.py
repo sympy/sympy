@@ -120,9 +120,11 @@ class MatMul(MatrixExpr):
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
         coeff, matrices = self.as_coeff_matrices()
-        # I don't know how coeff could have noncommutative factors, but this
-        # handles it.
         coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+        if coeff_c == [1]:
+            coeff_c = []
+        elif coeff_c == set([1]):
+            coeff_c = set()
 
         return coeff_c, coeff_nc + matrices
 

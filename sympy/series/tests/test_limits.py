@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac)
+    binomial, simplify, frac, Float)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -476,3 +476,9 @@ def test_limit_seq():
             S(3) / 4)
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
+
+
+def test_limit_with_Float():
+    k = symbols("k")
+    assert limit(1.0 ** k, k, oo) == 1
+    assert limit(0.3*1.0**k, k, oo) == Float(0.3)

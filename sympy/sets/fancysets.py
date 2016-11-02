@@ -54,7 +54,9 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
             return S.false
@@ -82,7 +84,9 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
@@ -130,7 +134,9 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer:
             return S.true
         elif other.is_integer is False:
             return S.false
@@ -1354,6 +1360,10 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+
+        # If the other is not an Expression, and neither a Tuple
+        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+            return S.false
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()

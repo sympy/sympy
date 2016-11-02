@@ -110,6 +110,10 @@ matrix:
       virtualenv:
         system_site_packages: true
 
+    - python: 3.5
+      env:
+        - TEST_SYMENGINE="true"
+
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
     - python: 3.5
@@ -285,7 +289,7 @@ before_install:
       pip install "sphinx==1.3.1" doctr;
     fi
   - |
-    if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+    if [[ "${TEST_MATPLOTLIB}" == "true" || "${TEST_SYMENGINE}" == "true" ]]; then
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
         if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -307,6 +311,11 @@ before_install:
     if [[ "${TEST_THEANO}" == "true" ]]; then
         # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
         conda install theano;
+    fi
+  - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
+        conda config --add channels conda-forge;
+        conda config --add channels symengine;
+        conda install python-symengine=0.2.0;
     fi
   - |
     if [[ "${TEST_TENSORFLOW}" == "true" ]]; then

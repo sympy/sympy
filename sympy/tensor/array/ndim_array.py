@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import collections
-from sympy import Matrix, Integer, sympify, Basic, Derivative, conjugate
+from sympy import Integer, sympify, Basic, Derivative, Expr, MatrixBase
 
 
 class NDimArray(object):
@@ -86,8 +86,19 @@ class NDimArray(object):
         index.reverse()
         return tuple(index)
 
+    def _check_symbolic_index(self, index):
+        # Check if any index is symbolic:
+        tuple_index = (index if isinstance(index, tuple) else (index,))
+        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+            for i, nth_dim in zip(tuple_index, self.shape):
+                if ((i < 0) == True) or ((i >= nth_dim) == True):
+                    raise ValueError("index out of range")
+            from sympy.tensor import Indexed
+            return Indexed(self, *tuple_index)
+        return None
+
     def _setter_iterable_check(self, value):
-        if isinstance(value, (collections.Iterable, Matrix, NDimArray)):
+        if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
     @classmethod
@@ -121,7 +132,7 @@ class NDimArray(object):
             iterable, shape = cls._scan_iterable_shape(iterable)
 
         # Construct N-dim array from a Matrix:
-        elif shape is None and isinstance(iterable, Matrix):
+        elif shape is None and isinstance(iterable, MatrixBase):
             shape = iterable.shape
 
         # Construct N-dim array from another N-dim array:
@@ -307,21 +318,21 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
-        if isinstance(other, (collections.Iterable,NDimArray, Matrix)):
+        if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
         other = sympify(other)
         result_list = [i/other for i in self]

@@ -98,6 +98,12 @@ modifier_dict = {
 
 greek_letters_set = frozenset(greeks)
 
+_between_two_numbers_p = (
+    re.compile(r'[0-9][} ]*$'),  # search
+    re.compile(r'[{ ]*[-+0-9]'),  # match
+)
+
+
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
@@ -360,8 +366,8 @@ class LatexPrinter(Printer):
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
-                    if re.search("[0-9][} ]*$", last_term_tex) and \
-                            re.match("[{ ]*[-+0-9]", term_tex):
+                    if _between_two_numbers_p[0].search(last_term_tex) and \
+                            _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -1452,7 +1458,7 @@ class LatexPrinter(Printer):
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\langle %s \rangle}^ %s" % (shift, power)
+        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
