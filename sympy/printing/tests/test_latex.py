@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, HeldExpr)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1541,9 +1541,9 @@ def test_issue_10489():
     assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
 
 
-def test_latex_HeldExpr():
+def test_latex_UnevaluatedExpr():
     x = symbols("x")
-    he = HeldExpr(1/x)
+    he = UnevaluatedExpr(1/x)
     assert latex(he) == latex(1/x) == r"\frac{1}{x}"
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"

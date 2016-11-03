@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, HeldExpr)
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1685,13 +1685,23 @@ def test_round():
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
 
-def test_held_expression_HeldExpr():
+def test_held_expression_UnevaluatedExpr():
     x = symbols("x")
-    he = HeldExpr(1/x)
+    he = UnevaluatedExpr(1/x)
     e1 = x*he
+
     assert isinstance(e1, Mul)
     assert e1.args == (x, he)
     assert e1.doit() == 1
+
+    xx = Mul(x, x, evaluate=False)
+    assert xx != x**2
+
+    ue2 = UnevaluatedExpr(xx)
+    assert isinstance(ue2, UnevaluatedExpr)
+    assert ue2.args == (xx,)
+    assert ue2.doit() == x**2
+    assert ue2.doit(deep=False) == xx
 
 
 def test_round_exception_nostr():

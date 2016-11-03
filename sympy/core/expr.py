@@ -3261,18 +3261,18 @@ def _mag(x):
     return mag_first_dig
 
 
-class HeldExpr(Expr):
+class UnevaluatedExpr(Expr):
     """
     Expression that is not evaluated unless released.
 
     Examples
     ========
 
-    >>> from sympy import HeldExpr
+    >>> from sympy import UnevaluatedExpr
     >>> from sympy.abc import a, b, x, y
     >>> x*(1/x)
     1
-    >>> x*HeldExpr(1/x)
+    >>> x*UnevaluatedExpr(1/x)
     x*1/x
 
     """
@@ -3282,7 +3282,10 @@ class HeldExpr(Expr):
         return obj
 
     def doit(self, *args, **kwargs):
-        return self.args[0].doit(*args, **kwargs)
+        if kwargs.get("deep", True):
+            return self.args[0].doit(*args, **kwargs)
+        else:
+            return self.args[0]
 
 
 from .mul import Mul
