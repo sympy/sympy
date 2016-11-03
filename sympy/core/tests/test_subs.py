@@ -142,7 +142,7 @@ def test_dict_ambigous():   # see issue 3566
     assert e.subs({x: y, y: 2}) == 5
     # here, there are no obviously clashing keys or values
     # but the results depend on the order
-    assert exp(x/2 + y).subs({exp(y + 1): 2, x: 2}) == exp(y + 1)
+    assert exp(x/2 + y).subs({exp(y + 1): 2, x: 2}) == 2
 
 
 def test_deriv_sub_bug3():
@@ -481,8 +481,8 @@ def test_subs_dict():
 
     l = [(sin(x), 2), (x, 1)]
     assert (sin(x)).subs(l) == \
-           (sin(x)).subs(dict(l)) == 2
-    assert sin(x).subs(reversed(l)) == sin(1)
+           (sin(x)).subs(dict(l)) == \
+           sin(x).subs(reversed(l)) == 2
 
     expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
     reps = dict([
@@ -495,14 +495,13 @@ def test_subs_dict():
     assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
-    assert (x + y).subs(l) == 3 + x**2
-    assert (x + y).subs(reversed(l)) == 12
+    assert (x + y).subs(l) == (x + y).subs(reversed(l)) == 12
 
     # If changes are made to convert lists into dictionaries and do
     # a dictionary-lookup replacement, these tests will help to catch
     # some logical errors that might occur
     l = [(y, z + 2), (1 + z, 5), (z, 2)]
-    assert (y - 1 + 3*x).subs(l) == 5 + 3*x
+    assert (y - 1 + 3*x).subs(l) == 5 + 5*x
     l = [(y, z + 2), (z, 3)]
     assert (y - 2).subs(l) == 3
 

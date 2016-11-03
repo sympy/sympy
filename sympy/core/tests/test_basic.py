@@ -9,7 +9,7 @@ from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q
+from sympy import sin, Lambda, Q, exp_polar, exp, sin, cos, log
 
 from sympy.utilities.pytest import raises
 
@@ -179,6 +179,23 @@ def test_call():
     #assert (2*f)(x) == 2*f(x)
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
+
+
+def test_issue_6257():
+    x, y, z, t = symbols('x y z t')
+    assert (x*y).subs({y: z, z: 2}) == 2*x
+    assert (x*y).subs({y: z, z: t, t: 2}) == 2*x
+    r = exp_polar(0)*exp(exp_polar(0))
+    assert r.subs({exp_polar(0): 1}) == exp(1)
+    assert (y & x).subs({x: True, y: True}) is S.true
+    assert exp(x/2 + y).subs(dict([(exp(x/2 + y), 2), (x, 2)])) == 2
+    x, _x0, _x1, _x2, _x3 = symbols('x _x0 _x1 _x2 _x3')
+    mapping = [(cos(log(x**2)), _x0),
+               (sin(log(x**2)), _x2),
+               (log(x**2), _x3),
+               (x, _x1)]
+    assert (-2*sin(log(x**2))/x).subs(mapping) == -2*_x2/_x1
+
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral

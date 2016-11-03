@@ -748,7 +748,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> (x + y).subs(reps)
         6
         >>> (x + y).subs(reversed(reps))
-        x**2 + 2
+        6
 
         >>> (x**2 + x**4).subs(x**2, y)
         y**2 + y
@@ -866,6 +866,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 s[j] = si
             else:
                 sequence[i] = None if _aresame(*s) else tuple(s)
+
         sequence = list(filter(None, sequence))
 
         if unordered:
@@ -905,9 +906,58 @@ class Basic(with_metaclass(ManagedProperties)):
             reps[m] = S.One  # get rid of m
             return rv.xreplace(reps)
         else:
+            from sympy.utilities.iterables import topological_sort
+            from sympy.core.function import FunctionClass
             rv = self
-            for old, new in sequence:
+            if len(sequence) > 1 and \
+                    any([seq[-1].free_symbols or seq[0].is_Atom
+                         for seq in sequence]):
+                try:
+                    substitution = dict(args[0])
+
+                    def expr_key(expr):
+                        if expr.is_Number or not expr.free_symbols:
+                            return 0
+                        else:
+                            return len(expr.atoms())
+
+                    topo_sorted_subs = topological_sort(((list(set(substitution.keys() +
+                                                                   substitution.values())),
+                                                          sequence)),
+                                                        expr_key)
+
+                    def dummy_bigger_key(expr):
+                        if expr.is_Dummy:
+                            return 10
+                        else:
+                            return 0
+
+                    if any([el.is_Dummy for el in topo_sorted_subs]):
+                        sorted(topo_sorted_subs, dummy_bigger_key)
+                    sequence = [(item, substitution[item])
+                                for item in topo_sorted_subs
+                                if item in substitution.keys()]
+                except:
+                    # Graph of substitution can contain cycles.
+                    # In this case topological_sort() can't work and
+                    # sequence will not be changed
+                    pass
+            while sequence:
+                old, new = sequence.pop(0)
+                new = S(new)
                 rv = rv._subs(old, new, **kwargs)
+                new_sequence = list()
+                for older, newer in sequence:
+                    if isinstance(older, (FunctionClass, Dummy)):
+                        k, v = S(older), S(newer)
+                    elif not older.is_Number:
+                        k = S(older)._subs(old, new, **kwargs)
+                        v = S(newer)._subs(old, new, **kwargs)
+                    else:
+                        k = S(older)
+                        v = S(newer)._subs(old, new, **kwargs)
+                    new_sequence.append((k, v))
+                sequence = new_sequence
                 if not isinstance(rv, Basic):
                     break
             return rv
