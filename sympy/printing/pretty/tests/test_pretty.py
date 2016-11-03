@@ -8,6 +8,7 @@ from sympy import (
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
+from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
@@ -5563,3 +5564,44 @@ def test_pretty_Mod():
     assert upretty(Mod(x, 7) + 1) == ucode_str4
     assert pretty(2 * Mod(x, 7)) == ascii_str5
     assert upretty(2 * Mod(x, 7)) == ucode_str5
+
+
+def test_pretty_UnevaluatedExpr():
+    x = symbols('x')
+    he = UnevaluatedExpr(1/x)
+
+    ucode_str = \
+u("""\
+1\n\
+─\n\
+x\
+""")
+
+    assert upretty(he) == ucode_str
+
+    ucode_str = \
+u("""\
+   2\n\
+⎛1⎞ \n\
+⎜─⎟ \n\
+⎝x⎠ \
+""")
+
+    assert upretty(he**2) == ucode_str
+
+    ucode_str = \
+u("""\
+    1\n\
+1 + ─\n\
+    x\
+""")
+
+    assert upretty(he + 1) == ucode_str
+
+    ucode_str = \
+u('''\
+  1\n\
+x⋅─\n\
+  x\
+''')
+    assert upretty(x*he) == ucode_str

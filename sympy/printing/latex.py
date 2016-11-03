@@ -470,6 +470,9 @@ class LatexPrinter(Printer):
                 return tex % (self.parenthesize(expr.base, PRECEDENCE['Pow']),
                               self._print(expr.exp))
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def _print_Sum(self, expr):
         if len(expr.limits) == 1:
             tex = r"\sum_{%s=%s}^{%s} " % \

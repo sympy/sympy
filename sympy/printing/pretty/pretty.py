@@ -1469,6 +1469,9 @@ class PrettyPrinter(Printer):
 
         return self._print(b)**self._print(e)
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def __print_numer_denom(self, p, q):
         if q == 1:
             if p < 0:
