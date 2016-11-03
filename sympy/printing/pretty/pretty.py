@@ -1151,7 +1151,10 @@ class PrettyPrinter(Printer):
             pform = base**n
             return pform
         else:
-            return self._print_Function(e)
+            n = self._print(e.args[2])
+            shift = self._print(e.args[0]-e.args[1])
+            base = self._print_seq(shift, "<", ">", ' ')
+            return base**n
 
     def _print_gamma(self, e):
         if self._use_unicode:
