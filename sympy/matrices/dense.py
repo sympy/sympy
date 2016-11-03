@@ -522,6 +522,10 @@ class DenseMatrix(CommonMatrix, MatrixBase):
         a._scalar_rmul(other)
         return self._new(a.rows, a.cols, a._mat, copy=False)
 
+    def _eval_tolist(self):
+        cols, mat = self.cols, self._mat
+        return [mat[i*cols : (i + 1)*cols] for i in range(self.rows)]
+
     def _eval_transpose(self):
         a = []
         for i in range(self.cols):
