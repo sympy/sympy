@@ -71,7 +71,7 @@ def tensorcontraction(array, *contraction_axes):
     Examples
     ========
 
-    >>> from sympy.tensor.array import Array, tensorcontraction
+    >>> from sympy import Array, tensorcontraction
     >>> from sympy import Matrix, eye
     >>> tensorcontraction(eye(3), (0, 1))
     3
@@ -84,7 +84,7 @@ def tensorcontraction(array, *contraction_axes):
     Matrix multiplication may be emulated with a proper combination of
     ``tensorcontraction`` and ``tensorproduct``
 
-    >>> from sympy.tensor.array import tensorproduct
+    >>> from sympy import tensorproduct
     >>> from sympy.abc import a,b,c,d,e,f,g,h
     >>> m1 = Matrix([[a, b], [c, d]])
     >>> m2 = Matrix([[e, f], [g, h]])
@@ -178,7 +178,7 @@ def derive_by_array(expr, dx):
     Examples
     ========
 
-    >>> from sympy.tensor.array import derive_by_array
+    >>> from sympy import derive_by_array
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import cos
     >>> derive_by_array(cos(x*t), x)
@@ -223,7 +223,7 @@ def permutedims(expr, perm):
 
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import sin
-    >>> from sympy.tensor.array import Array, permutedims
+    >>> from sympy import Array, permutedims
     >>> a = Array([[x, y, z], [t, sin(x), 0]])
     >>> a
     [[x, y, z], [t, sin(x), 0]]

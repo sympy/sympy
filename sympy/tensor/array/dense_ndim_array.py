@@ -22,7 +22,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([0, 1, 2, 3], (2, 2))
         >>> a
         [[0, 1], [2, 3]]
@@ -79,7 +79,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1 for i in range(9)], (3, 3))
         >>> b = a.tomatrix()
         >>> b
@@ -108,7 +108,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1, 2, 3, 4, 5, 6], (2, 3))
         >>> a.shape
         (2, 3)
@@ -180,7 +180,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2,  2)
         >>> a[0,0] = 1
         >>> a[1,1] = 1
