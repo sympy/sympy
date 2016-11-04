@@ -1119,7 +1119,7 @@ def solve(f, *symbols, **flags):
     check = flags.get('check', True)
 
     # restore floats
-    if floats and solution and flags.get('rational', None) is None:
+    if floats and solution and flags.get('rational', True) is None:
         solution = nfloat(solution, exponent=False)
 
     if check and solution:  # assumption checking

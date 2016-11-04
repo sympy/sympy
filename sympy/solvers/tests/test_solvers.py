@@ -428,7 +428,7 @@ def test_solve_transcendental():
 
     # issue 7602
     a, b = symbols('a, b', real=True, negative=False)
-    assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b)) == \
+    assert str(solve(Eq(a, 0.5 - cos(pi*b)/2), b, rational = None)) == \
         '[-0.318309886183791*acos(-2.0*a + 1.0) + 2.0, 0.318309886183791*acos(-2.0*a + 1.0)]'
 
 
@@ -1244,7 +1244,7 @@ def test_issue_5912():
         set([S(1)/2 + sqrt(35)/10, -sqrt(35)/10 + S(1)/2])
     ans = solve(x**2 - x - 0.1, rational=False)
     assert len(ans) == 2 and all(a.is_Number for a in ans)
-    ans = solve(x**2 - x - 0.1)
+    ans = solve(x**2 - x - 0.1, rational = None)
     assert len(ans) == 2 and all(a.is_Number for a in ans)
 
 
