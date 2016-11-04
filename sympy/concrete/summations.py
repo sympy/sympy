@@ -1001,9 +1001,11 @@ def _eval_sum_hyper(f, i, a):
     if hs is None:
         return None
 
-    if isinstance(hs,Float):
+    f0 = f.subs(i, 0)
+    if isinstance(hs, Float):
         from sympy.simplify.simplify import nsimplify
         hs = nsimplify(hs)
+        f0 = nsimplify(f0)
 
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)
@@ -1033,7 +1035,7 @@ def _eval_sum_hyper(f, i, a):
     x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
 
-    return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+    return f0*hyperexpand(h), h.convergence_statement
 
 
 def eval_sum_hyper(f, i_a_b):
