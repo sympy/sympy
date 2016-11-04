@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols
+from sympy import S, Symbol, symbols
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction
 from sympy.utilities.pytest import raises
@@ -86,7 +86,7 @@ def test_Beam():
 
     # Test for slope distribution function
     p = b1.slope()
-    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3
+    q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + S(4000)/3
     assert p == q/(E*I)
 
     # Test for deflection distribution function

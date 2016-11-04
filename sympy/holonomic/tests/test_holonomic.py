@@ -182,7 +182,7 @@ def test_from_hyper():
     x = symbols('x')
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = hyper([1, 1], [S(3)/2], x**2/4)
-    q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + 4/3])
+    q = HolonomicFunction((4*x) + (5*x**2 - 8)*Dx + (x**3 - 4*x)*Dx**2, x, 1, [2*sqrt(3)*pi/9, -4*sqrt(3)*pi/27 + S(4)/3])
     r = from_hyper(p)
     assert r == q
     p = from_hyper(hyper([1], [S(3)/2], x**2/4))
@@ -239,7 +239,7 @@ def test_to_Sequence_Initial_Coniditons():
     q = [(HolonomicSequence(1 + (n**2 + 3*n + 2)*Sn**2, [0, 1]), 0)]
     assert p == q
     p = HolonomicFunction(Dx**2 + 1 + x**3*Dx, x, 0, [2, 3]).to_sequence()
-    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -1/2, 1/12]), 1)]
+    q = [(HolonomicSequence(n + Sn**2 + (n**2 + 7*n + 12)*Sn**4, [2, 3, -1, -S(1)/2, S(1)/12]), 1)]
     assert p == q
     p = HolonomicFunction(x**3*Dx**5 + 1 + Dx, x).to_sequence()
     q = [(HolonomicSequence(1 + (n + 1)*Sn + (n**5 - 5*n**3 + 4*n)*Sn**2), 0, 3)]
@@ -450,7 +450,7 @@ def test_expr_to_holonomic():
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
     p = expr_to_holonomic((sin(x)/x)**2)
     q = HolonomicFunction(8*x + (4*x**2 + 6)*Dx + 6*x*Dx**2 + x**2*Dx**3, x, 0, \
-        [1, 0, -2/3])
+        [1, 0, -S(2)/3])
     assert p == q
     p = expr_to_holonomic(1/(1+x**2)**2)
     q = HolonomicFunction(4*x + (x**2 + 1)*Dx, x, 0, [1])

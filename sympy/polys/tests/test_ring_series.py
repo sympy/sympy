@@ -178,7 +178,7 @@ def test_log():
         EX(1/a)*x + EX(log(a))
 
     p = x + x**2 + 3
-    assert rs_log(p, x, 10).compose(x, 5) == EX(log(3) + 19281291595/9920232)
+    assert rs_log(p, x, 10).compose(x, 5) == EX(log(3) + QQ(19281291595, 9920232))
 
 def test_exp():
     R, x = ring('x', QQ)
@@ -308,8 +308,8 @@ def test_tan():
         EX(tan(a)**2 + 1)*x + EX(tan(a))
 
     p = x + x**2 + 5
-    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + 67701870330562640 / \
-        668083460499)
+    assert rs_atan(p, x, 10).compose(x, 10) == EX(atan(5) + QQ(67701870330562640, \
+        668083460499))
 
 def test_cot():
     R, x, y = ring('x, y', QQ)
@@ -400,8 +400,8 @@ def test_atanh():
         EX(1/(a**2 - 1))*x + EX(atanh(a))
 
     p = x + x**2 + 5
-    assert rs_atanh(p, x, 10).compose(x, 10) == EX(-733442653682135/5079158784 \
-        + atanh(5))
+    assert rs_atanh(p, x, 10).compose(x, 10) == EX(-QQ(733442653682135, \
+        5079158784) + atanh(5))
 
 def test_sinh():
     R, x, y = ring('x, y', QQ)
