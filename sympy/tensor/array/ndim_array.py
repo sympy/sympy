@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import collections
-from sympy import Integer, sympify, Basic, Derivative, Expr, MatrixBase
+
+from sympy import Basic
 
 
 class NDimArray(object):
@@ -11,7 +12,7 @@ class NDimArray(object):
 
     Create an N-dim array of zeros:
 
-    >>> from sympy.tensor.array import MutableDenseNDimArray
+    >>> from sympy import MutableDenseNDimArray
     >>> a = MutableDenseNDimArray.zeros(2, 3, 4)
     >>> a
     [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
@@ -98,6 +99,7 @@ class NDimArray(object):
         return None
 
     def _setter_iterable_check(self, value):
+        from sympy.matrices.matrices import MatrixBase
         if isinstance(value, (collections.Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
@@ -119,6 +121,7 @@ class NDimArray(object):
 
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
+        from sympy.matrices.matrices import MatrixBase
 
         if shape is None and iterable is None:
             shape = ()
@@ -160,7 +163,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a
         [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -178,7 +181,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3, 3)
         >>> a.shape
         (3, 3)
@@ -193,7 +196,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3,4,5,6,3)
         >>> a.rank()
         5
@@ -208,7 +211,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy import ImmutableDenseNDimArray
         >>> from sympy.abc import x, y
         >>> M = ImmutableDenseNDimArray([[x, y], [1, x*y]])
         >>> M.diff(x)
@@ -223,7 +226,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import ImmutableDenseNDimArray
+        >>> from sympy import ImmutableDenseNDimArray
         >>> m = ImmutableDenseNDimArray([i*2+j for i in range(2) for j in range(2)], (2, 2))
         >>> m
         [[0, 1], [2, 3]]
@@ -238,7 +241,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2, 2)
         >>> a
         [[0, 0], [0, 0]]
@@ -277,7 +280,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1, 2, 3, 4], (2, 2))
         >>> a
         [[1, 2], [3, 4]]
@@ -318,6 +321,8 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
+        from sympy.matrices.matrices import MatrixBase
+
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
@@ -325,6 +330,8 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
+        from sympy.matrices.matrices import MatrixBase
+
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
         other = sympify(other)
@@ -332,6 +339,8 @@ class NDimArray(object):
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
+        from sympy.matrices.matrices import MatrixBase
+
         if isinstance(other, (collections.Iterable,NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
         other = sympify(other)
@@ -349,7 +358,7 @@ class NDimArray(object):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2, 3)
         >>> b = MutableDenseNDimArray.zeros(2, 3)
         >>> a == b
@@ -402,3 +411,9 @@ class NDimArray(object):
 
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
+
+
+from sympy.core.numbers import Integer
+from sympy.core.sympify import sympify
+from sympy.core.function import Derivative
+from sympy.core.expr import Expr
