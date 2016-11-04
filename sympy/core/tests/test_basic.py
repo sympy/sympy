@@ -186,7 +186,7 @@ def test_rewrite():
     f1 = sin(x) + cos(x)
     assert f1.rewrite(cos,exp) == exp(I*x)/2 + sin(x) + exp(-I*x)/2
     assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
-    f2 = sin(x)+cos(y)/gamma(z)
+    f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
 
 
