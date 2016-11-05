@@ -1451,6 +1451,8 @@ class LatexPrinter(Printer):
                     level_str[back_outer_i].append(r" & ".join(level_str[back_outer_i+1]))
                 else:
                     level_str[back_outer_i].append(block_str % (r"\\".join(level_str[back_outer_i+1])))
+                    if len(level_str[back_outer_i+1]) == 1:
+                        level_str[back_outer_i][-1] = r"\left[" + level_str[back_outer_i][-1] + r"\right]"
                 even = not even
                 level_str[back_outer_i+1] = []
 

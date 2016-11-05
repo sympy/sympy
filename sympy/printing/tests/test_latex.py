@@ -923,7 +923,15 @@ def test_latex_NDimArray():
                 r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
                 r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
                 r"""\end{matrix}\right]"""
-        assert latex(ArrayType()) == "\\left[\\begin{matrix}\\end{matrix}\\right]"
+        assert latex(ArrayType()) == r"\left[\begin{matrix}\end{matrix}\right]"
+
+        Mrow = ArrayType([[x, y, 1/z]])
+        Mcolumn = ArrayType([[x], [y], [1/z]])
+        Mcol2 = ArrayType([Mcolumn.tolist()])
+
+        assert latex(Mrow) == r"\left[\left[\begin{matrix}x & y & \frac{1}{z}\end{matrix}\right]\right]"
+        assert latex(Mcolumn) == r"\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]"
+        assert latex(Mcol2) == r'\left[\begin{matrix}\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]\end{matrix}\right]'
 
 
 def test_latex_mul_symbol():
