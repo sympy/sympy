@@ -2775,6 +2775,71 @@ u("""\
         assert pretty(M3) == ascii_str
         assert upretty(M3) == ucode_str
 
+        Mrow = ArrayType([[x, y, 1 / z]])
+        Mcolumn = ArrayType([[x], [y], [1 / z]])
+        Mcol2 = ArrayType([Mcolumn.tolist()])
+
+        ascii_str = \
+"""\
+[[      1]]\n\
+[[x  y  -]]\n\
+[[      z]]\
+"""
+        ucode_str = \
+    u("""\
+⎡⎡      1⎤⎤\n\
+⎢⎢x  y  ─⎥⎥\n\
+⎣⎣      z⎦⎦\
+""")
+        assert pretty(Mrow) == ascii_str
+        assert upretty(Mrow) == ucode_str
+
+        ascii_str = \
+"""\
+[x]\n\
+[ ]\n\
+[y]\n\
+[ ]\n\
+[1]\n\
+[-]\n\
+[z]\
+"""
+        ucode_str = \
+u("""\
+⎡x⎤\n\
+⎢ ⎥\n\
+⎢y⎥\n\
+⎢ ⎥\n\
+⎢1⎥\n\
+⎢─⎥\n\
+⎣z⎦\
+""")
+        assert pretty(Mcolumn) == ascii_str
+        assert upretty(Mcolumn) == ucode_str
+
+        ascii_str = \
+"""\
+[[x]]\n\
+[[ ]]\n\
+[[y]]\n\
+[[ ]]\n\
+[[1]]\n\
+[[-]]\n\
+[[z]]\
+"""
+        ucode_str = \
+u("""\
+⎡⎡x⎤⎤\n\
+⎢⎢ ⎥⎥\n\
+⎢⎢y⎥⎥\n\
+⎢⎢ ⎥⎥\n\
+⎢⎢1⎥⎥\n\
+⎢⎢─⎥⎥\n\
+⎣⎣z⎦⎦\
+""")
+        assert pretty(Mcol2) == ascii_str
+        assert upretty(Mcol2) == ucode_str
+
 
 def test_Adjoint():
     X = MatrixSymbol('X', 2, 2)

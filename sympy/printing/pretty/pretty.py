@@ -888,6 +888,8 @@ class PrettyPrinter(Printer):
                     level_str[back_outer_i].append(level_str[back_outer_i+1])
                 else:
                     level_str[back_outer_i].append(ImmutableMatrix(level_str[back_outer_i+1]))
+                    if len(level_str[back_outer_i + 1]) == 1:
+                        level_str[back_outer_i][-1] = ImmutableMatrix([[level_str[back_outer_i][-1]]])
                 even = not even
                 level_str[back_outer_i+1] = []
 
