@@ -1409,8 +1409,6 @@ class ComplexRegion(Set):
                 return ComplexRegion(new_r_interval*new_theta_interval,
                                     polar=True)
 
-        if other is S.Reals:
-            return other
 
         if other.is_subset(S.Reals):
             new_interval = []
