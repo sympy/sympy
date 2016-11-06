@@ -1443,8 +1443,9 @@ class ComplexRegion(Set):
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
 
-        if self == S.Complexes:
-            return self
+        # treat a subset of Reals as complex numbers
+        if other.is_subset(S.Reals):
+            return ComplexRegion(Union(self.sets, other*FiniteSet(0)), polar=self.polar)
 
         return None
 
