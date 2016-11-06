@@ -4,6 +4,8 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
+import itertools
+
 from sympy.core import S, Add, Symbol, Mod
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
@@ -1423,6 +1425,57 @@ class LatexPrinter(Printer):
 
     def _print_Identity(self, I):
         return r"\mathbb{I}"
+
+    def _print_NDimArray(self, expr):
+
+        mat_str = self._settings['mat_str']
+        if mat_str is None:
+            if self._settings['mode'] == 'inline':
+                mat_str = 'smallmatrix'
+            else:
+                if (expr.rank() == 0) or (expr.shape[-1] <= 10):
+                    mat_str = 'matrix'
+                else:
+                    mat_str = 'array'
+        block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        block_str = block_str.replace('%MATSTR%', mat_str)
+        if self._settings['mat_delim']:
+            left_delim = self._settings['mat_delim']
+            right_delim = self._delim_dict[left_delim]
+            block_str = r'\left' + left_delim + block_str + \
+                      r'\right' + right_delim
+
+        if expr.rank() == 0:
+            return block_str % ""
+
+        level_str = [[]] + [[] for i in range(expr.rank())]
+        shape_ranges = [list(range(i)) for i in expr.shape]
+        for outer_i in itertools.product(*shape_ranges):
+            level_str[-1].append(self._print(expr[outer_i]))
+            even = True
+            for back_outer_i in range(expr.rank()-1, -1, -1):
+                if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
+                    break
+                if even:
+                    level_str[back_outer_i].append(r" & ".join(level_str[back_outer_i+1]))
+                else:
+                    level_str[back_outer_i].append(block_str % (r"\\".join(level_str[back_outer_i+1])))
+                    if len(level_str[back_outer_i+1]) == 1:
+                        level_str[back_outer_i][-1] = r"\left[" + level_str[back_outer_i][-1] + r"\right]"
+                even = not even
+                level_str[back_outer_i+1] = []
+
+        out_str = level_str[0][0]
+
+        if expr.rank() % 2 == 1:
+            out_str = block_str % out_str
+
+        return out_str
+
+    _print_ImmutableDenseNDimArray = _print_NDimArray
+    _print_ImmutableSparseNDimArray = _print_NDimArray
+    _print_MutableDenseNDimArray = _print_NDimArray
+    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
