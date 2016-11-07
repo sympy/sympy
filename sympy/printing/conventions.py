@@ -26,7 +26,7 @@ def split_super_sub(text):
     """
     if len(text) == 0:
         return text, [], []
-    
+
     pos = 0
     name = None
     supers = []
