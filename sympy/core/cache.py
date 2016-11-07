@@ -209,3 +209,7 @@ elif USE_CACHE == 'debug':
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+
+import atexit
+# Clear the cache when the interpreter ends
+atexit.register(clear_cache)
