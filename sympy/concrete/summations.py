@@ -879,7 +879,7 @@ def eval_sum(f, limits):
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
-    value = eval_sum_symbolic(f.expand(), (i, a, b))
+    value = eval_sum_symbolic(f.expand(power_exp=False), (i, a, b))
     if value is not None:
         return value
     # Do it directly
