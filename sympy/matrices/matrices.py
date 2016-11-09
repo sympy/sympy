@@ -193,38 +193,95 @@ class MatrixBase(object):
         if not self.is_square:
             raise NonSquareMatrixError()
         if isinstance(num, int) or isinstance(num, Integer):
-            n = int(num)
-            if n < 0:
-                return self.inv()**-n   # A**-2 = (A**-1)**2
-            a = eye(self.cols)
-            s = self
-            while n:
-                if n % 2:
-                    a *= s
-                    n -= 1
-                if not n:
-                    break
-                s *= s
-                n //= 2
-            return self._new(a)
+            if (((num < 150000) and ((self.rows < 3) and (self.cols < 3)))
+                or ((num < 30000) and ((self.rows > 2) and (self.cols > 2)))):
+                n = int(num)
+                if n < 0:
+                    return self.inv()**-n   # A**-2 = (A**-1)**2
+                a = eye(self.cols)
+                s = self
+                while n:
+                    if n % 2:
+                        a *= s
+                        n -= 1
+                    if not n:
+                        break
+                    s *= s
+                    n //= 2
+                return self._new(a)
+            elif(((num > 149999) and ((self.rows < 3) and (self.cols < 3)))
+                or ((num > 29999) and ((self.rows > 2) and (self.cols > 2)))):
+                try:
+                    def jordan_cell_power(jc, n):
+                        N = jc.shape[0]
+                        l = jc[0, 0]
+                        for i in range(N):
+                                for j in range(N-i):
+                                        bn = binomial(n, i)
+                                        if isinstance(bn, binomial):
+                                                bn = bn._eval_expand_func()
+                                        jc[j, i+j] = l**(n-i)*bn
+
+                    P, jordan_cells = self.jordan_cells()
+                    # Make sure jordan_cells matrices are mutable:
+                    jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+                    for j in jordan_cells:
+                        jordan_cell_power(j, num)
+                    return self._new(P*diag(*jordan_cells)*P.inv())
+                except AttributeError:
+                    pass
+
+                    n = int(num)
+                    if n < 0:
+                        return self.inv()**-n   # A**-2 = (A**-1)**2
+                    a = eye(self.cols)
+                    s = self
+                    while n:
+                        if n % 2:
+                            a *= s
+                            n -= 1
+                        if not n:
+                            break
+                        s *= s
+                        n //= 2
+                    return self._new(a)
+
         elif isinstance(num, (Expr, float)):
 
-            def jordan_cell_power(jc, n):
-                N = jc.shape[0]
-                l = jc[0, 0]
-                for i in range(N):
-                        for j in range(N-i):
-                                bn = binomial(n, i)
-                                if isinstance(bn, binomial):
-                                        bn = bn._eval_expand_func()
-                                jc[j, i+j] = l**(n-i)*bn
+            try:
+                def jordan_cell_power(jc, n):
+                    N = jc.shape[0]
+                    l = jc[0, 0]
+                    for i in range(N):
+                            for j in range(N-i):
+                                    bn = binomial(n, i)
+                                    if isinstance(bn, binomial):
+                                            bn = bn._eval_expand_func()
+                                    jc[j, i+j] = l**(n-i)*bn
 
-            P, jordan_cells = self.jordan_cells()
-            # Make sure jordan_cells matrices are mutable:
-            jordan_cells = [MutableMatrix(j) for j in jordan_cells]
-            for j in jordan_cells:
-                jordan_cell_power(j, num)
-            return self._new(P*diag(*jordan_cells)*P.inv())
+                P, jordan_cells = self.jordan_cells()
+                # Make sure jordan_cells matrices are mutable:
+                jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+                for j in jordan_cells:
+                    jordan_cell_power(j, num)
+                return self._new(P*diag(*jordan_cells)*P.inv())
+            except AttributeError:
+                pass
+                n = int(num)
+                if n < 0:
+                    return self.inv()**-n   # A**-2 = (A**-1)**2
+                a = eye(self.cols)
+                s = self
+                while n:
+                    if n % 2:
+                        a *= s
+                        n -= 1
+                    if not n:
+                        break
+                    s *= s
+                    n //= 2
+                return self._new(a)
+
         else:
             raise TypeError(
                 "Only SymPy expressions or int objects are supported as exponent for matrices")
