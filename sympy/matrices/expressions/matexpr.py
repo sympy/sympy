@@ -419,6 +419,9 @@ class MatrixSymbol(MatrixExpr):
     def args_cnc(self):
         return [[],[self]]
 
+    def as_base_exp(self):
+        return self, S.One
+
     @property
     def free_symbols(self):
         return set((self,))
@@ -481,6 +484,9 @@ class Identity(MatrixExpr):
     def _eval_determinant(self):
         return S.One
 
+    # Dirty TensorProduct compatibility fix.
+    def args_cnc(self):
+        return [[],[self]]
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -528,6 +534,10 @@ class ZeroMatrix(MatrixExpr):
 
     def _entry(self, i, j):
         return S.Zero
+
+    # Dirty TensorProduct compatibility fix.
+    def args_cnc(self):
+        return [[],[self]]
 
     def __nonzero__(self):
         return False

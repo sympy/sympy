@@ -10,9 +10,10 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
 from sympy.matrices.matrices import MatrixBase
+from sympy.core.operations import AssocOp
 
 
-class MatMul(MatrixExpr):
+class MatMul(MatrixExpr, AssocOp):
     """
     A product of matrix expressions
 

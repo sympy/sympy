@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core.compatibility import reduce
 from operator import add
 
-from sympy.core import Add, Basic, sympify
+from sympy.core import Add, Basic, sympify, S
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
@@ -60,6 +60,12 @@ class MatAdd(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
+    def as_base_exp(self):
+        return self, S.One
+
+    def args_cnc(self):
+        return [[],[self]]
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

@@ -266,8 +266,6 @@ def test_Zero_power():
     assert z2**0 == Identity(3)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
 
-def test_args_cnc():
-    assert A.args_cnc() == [[], [A]]
 
 def test_matrixelement_diff():
     dexpr = diff((D*w)[k,0], w[p,0])

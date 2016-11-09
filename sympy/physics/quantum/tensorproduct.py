@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify, MatrixSymbol
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify, MatrixSymbol, MatAdd, MatMul
 from sympy.core.compatibility import range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
@@ -149,7 +149,10 @@ class TensorProduct(Expr):
         for arg in args:
             cp, ncp = arg.args_cnc()
             c_part.extend(list(cp))
-            nc_parts.append(Mul._from_args(ncp))
+            if all(isinstance(i, (MatrixSymbol, MatAdd, MatMul)) for i in ncp) and len(ncp) > 0:
+                nc_parts.append(MatMul._from_args(ncp))
+            else:
+                nc_parts.append(Mul._from_args(ncp))
         return c_part, nc_parts
 
     def _eval_adjoint(self):
