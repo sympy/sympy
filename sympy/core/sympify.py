@@ -430,7 +430,7 @@ def kernS(s):
         try:
             expr = sympify(s)
             break
-        except:  # the kern might cause unknown errors, so use bare except
+        except Exception as e:  # the kern might cause unknown errors, so catch any exception except(BaseException, SystemExit, KeyboardInterrupt and GeneratorExit)
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
                 hit = False
