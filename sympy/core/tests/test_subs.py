@@ -431,17 +431,27 @@ def test_derivative_subs():
 
 def test_derivative_subs2():
     x, y, z = symbols('x y z')
-    f, g = symbols('f g', cls=Function)
+    f_func, g_func = symbols('f g', cls=Function)
+    f, g = f_func(x, y, z), g_func(x, y, z)
     assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
     assert Derivative(f, x, y).subs(Derivative(f, y), g) == Derivative(g, x)
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), x, z), g) == Derivative(g, y))
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), z, y), g) == Derivative(g, x))
-    assert (Derivative(f(x, y, z), x, y, z).subs(
-                Derivative(f(x, y, z), z, y, x), g) == g)
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, x, z), g) == Derivative(g, y))
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, z, y), g) == Derivative(g, x))
+    assert (Derivative(f, x, y, z).subs(
+                Derivative(f, z, y, x), g) == g)
+
+    # Issue 9135
+    assert (Derivative(f, x, x, y).subs(
+                Derivative(f, y, y), g) == Derivative(f, x, x, y))
+    assert (Derivative(f, x, y, y, z).subs(
+                Derivative(f, x, y, y, y), g) == Derivative(f, x, y, y, z))
+
+    assert Derivative(f, x, y).subs(Derivative(f_func(x), x, y), g) == Derivative(f, x, y)
+
 
 def test_derivative_subs3():
     x = Symbol('x')
@@ -585,9 +595,9 @@ def test_issue_6559():
     # though this involves cse it generated a failure in Mul._eval_subs
     x0, x1 = symbols('x0 x1')
     e = -log(-12*sqrt(2) + 17)/24 - log(-2*sqrt(2) + 3)/12 + sqrt(2)/3
-    # XXX modify cse so x1 is eliminated and x0 = -sqrt(2)?
     assert cse(e) == (
-        [(x0, sqrt(2))], [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
+        [(x0, sqrt(2))],
+        [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
 
 
 def test_issue_5261():
@@ -655,6 +665,12 @@ def test_issue_5217():
     assert q == 4*x**2*y**2
     assert q.subs(sub) == 2*y**2*s
 
+
+def test_issue_10829():
+    from sympy.abc import x, y
+
+    assert (4**x).subs(2**x, y) == y**2
+    assert (9**x).subs(3**x, y) == y**2
 
 def test_pow_eval_subs_no_cache():
     # Tests pull request 9376 is working

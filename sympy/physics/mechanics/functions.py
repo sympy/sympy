@@ -8,9 +8,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
+from sympy import simplify
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -461,6 +461,8 @@ def msubs(expr, *sub_dicts, **kwargs):
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):
@@ -552,14 +554,15 @@ def _f_list_parser(fl, ref_frame):
     """Parses the provided forcelist composed of items
     of the form (obj, force).
     Returns a tuple containing:
-        vlist: The velocity (ang_vel for Frames, vel for Points) in
+        vel_list: The velocity (ang_vel for Frames, vel for Points) in
                 the provided reference frame.
-        flist: The forces.
+        f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
     """
     def flist_iter():
-        for obj, force in fl:
+        for pair in fl:
+            obj, force = pair
             if isinstance(obj, ReferenceFrame):
                 yield obj.ang_vel_in(ref_frame), force
             elif isinstance(obj, Point):
@@ -567,6 +570,10 @@ def _f_list_parser(fl, ref_frame):
             else:
                 raise TypeError('First entry in each forcelist pair must '
                                 'be a point or frame.')
-    unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
-    vel_list, f_list = unzip(list(flist_iter()))
+
+    if not fl:
+        vel_list, f_list = (), ()
+    else:
+        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+        vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list

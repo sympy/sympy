@@ -37,6 +37,7 @@ class Symbol(AtomicExpr, Boolean):
     __slots__ = ['name']
 
     is_Symbol = True
+    is_symbol = True
 
     @property
     def _diff_wrt(self):

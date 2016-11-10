@@ -10,7 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range)
+    ordered, range, PY3)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
@@ -737,6 +737,8 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
+            if start == S.Infinity or start == S.NegativeInfinity:
+                return S.EmptySet
             return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
@@ -911,6 +913,8 @@ class Interval(Set, EvalfMixin):
 
         See Set._union for docstring
         """
+        if other.is_UniversalSet:
+            return S.UniversalSet
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
@@ -930,9 +934,16 @@ class Interval(Set, EvalfMixin):
 
                 return Interval(start, end, left_open, right_open)
 
-        # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and sympify(other.contains(self.start)) is S.true) or
-                (self.right_open and sympify(other.contains(self.end)) is S.true)):
+        # If I have open end points and these endpoints are contained in other.
+        # But only in case, when endpoints are finite. Because
+        # interval does not contain oo or -oo.
+        open_left_in_other_and_finite = (self.left_open and
+                                         sympify(other.contains(self.start)) is S.true and
+                                         self.start.is_finite)
+        open_right_in_other_and_finite = (self.right_open and
+                                          sympify(other.contains(self.end)) is S.true and
+                                          self.end.is_finite)
+        if open_left_in_other_and_finite or open_right_in_other_and_finite:
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -1318,7 +1329,10 @@ class Union(Set, EvalfMixin):
             "roundrobin('ABC', 'D', 'EF') --> A D E B F C"
             # Recipe credited to George Sakkis
             pending = len(iterables)
-            nexts = itertools.cycle(iter(it).next for it in iterables)
+            if PY3:
+                nexts = itertools.cycle(iter(it).__next__ for it in iterables)
+            else:
+                nexts = itertools.cycle(iter(it).next for it in iterables)
             while pending:
                 try:
                     for next in nexts:
@@ -1512,22 +1526,6 @@ class Intersection(Set):
         # Handle Finite sets
         rv = Intersection._handle_finite_sets(args)
         if rv is not None:
-            # simplify symbolic intersection between a FiniteSet
-            # and an interval
-            if isinstance(rv, Intersection) and len(rv.args) == 2:
-                ivl, s = rv.args
-                if isinstance(s, FiniteSet) and len(s) == 1 and isinstance(ivl, Interval):
-                    e = list(s)[0]
-                    if e.free_symbols:
-                        rhs = Dummy()
-                        e, r = clear_coefficients(e, rhs)
-                        if r != rhs:
-                            iargs = list(ivl.args)
-                            iargs[0] = r.subs(rhs, ivl.start)
-                            iargs[1] = r.subs(rhs, ivl.end)
-                            if iargs[0] > iargs[1]:
-                                iargs = iargs[:2][::-1] + iargs[-2:][::-1]
-                            rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
             return rv
 
         # If any of the sets are unions, return a Union of Intersections
@@ -1616,7 +1614,7 @@ class Complement(Set, EvalfMixin):
         Simplify a :class:`Complement`.
 
         """
-        if B == S.UniversalSet:
+        if B == S.UniversalSet or A.is_subset(B):
             return EmptySet()
 
         if isinstance(B, Union):
@@ -2030,7 +2028,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
+    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
     >>> from sympy.abc import x, y
 
     >>> imageset(x, 2*x, Interval(0, 2))
@@ -2046,6 +2044,14 @@ def imageset(*args):
     ImageSet(Lambda(x, sin(x)), [-2, 1])
     >>> imageset(lambda y: x + y, Interval(-2, 1))
     ImageSet(Lambda(_x, _x + x), [-2, 1])
+
+    Expressions applied to the set of Integers are simplified
+    to show as few negatives as possible and linear expressions
+    are converted to a canonical form. If this is not desirable
+    then the unevaluated ImageSet should be used.
+
+    >>> imageset(x, -2*x + 5, S.Integers)
+    ImageSet(Lambda(x, 2*x + 1), Integers())
 
     See Also
     ========

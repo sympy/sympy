@@ -615,36 +615,54 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 def sum_simplify(s):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy.core.function import expand
 
-    terms = Add.make_args(s)
+    terms = Add.make_args(expand(s))
     s_t = [] # Sum Terms
     o_t = [] # Other Terms
 
     for term in terms:
         if isinstance(term, Mul):
-            constant = 1
             other = 1
-            s = 0
-            n_sum_terms = 0
-            for j in range(len(term.args)):
-                if isinstance(term.args[j], Sum):
-                    s = term.args[j]
-                    n_sum_terms = n_sum_terms + 1
-                elif term.args[j].is_number == True:
-                    constant = constant * term.args[j]
-                else:
-                    other = other * term.args[j]
-            if other == 1 and n_sum_terms == 1:
-                # Insert the constant inside the Sum
-                s_t.append(Sum(constant * s.function, *s.limits))
-            elif other != 1 and n_sum_terms == 1:
-                o_t.append(other * Sum(constant * s.function, *s.limits))
-            else:
+            sum_terms = []
+
+            if not term.has(Sum):
                 o_t.append(term)
+                continue
+
+            mul_terms = Mul.make_args(term)
+            for mul_term in mul_terms:
+                if isinstance(mul_term, Sum):
+                    r = mul_term._eval_simplify()
+                    sum_terms.extend(Add.make_args(r))
+                else:
+                    other = other * mul_term
+            if len(sum_terms):
+                #some simplification may have happened
+                #use if so
+                s_t.append(Mul(*sum_terms) * other)
+            else:
+                o_t.append(other)
         elif isinstance(term, Sum):
-            s_t.append(term)
+            #as above, we need to turn this into an add list
+            r = term._eval_simplify()
+            s_t.extend(Add.make_args(r))
         else:
             o_t.append(term)
+
+
+    result = Add(sum_combine(s_t), *o_t)
+
+    return result
+
+def sum_combine(s_t):
+    """Helper function for Sum simplification
+
+       Attempts to simplify a list of sums, by combining limits / sum function's
+       returns the simplified sum
+    """
+    from sympy.concrete.summations import Sum
+
 
     used = [False] * len(s_t)
 
@@ -654,43 +672,93 @@ def sum_simplify(s):
                 for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
                         temp = sum_add(s_term1, s_term2, method)
-                        if isinstance(temp, Sum):
+                        if isinstance(temp, Sum) or isinstance(temp, Mul):
                             s_t[i] = temp
                             s_term1 = s_t[i]
                             used[j] = True
 
-    result = Add(*o_t)
-
+    result = S.Zero
     for i, s_term in enumerate(s_t):
         if not used[i]:
             result = Add(result, s_term)
 
     return result
 
+def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
+    """Helper function for Sum simplification
+
+       if limits is specified, "self" is the inner part of a sum
+
+       Returns the sum with constant factors brought outside
+    """
+    from sympy.core.exprtools import factor_terms
+    from sympy.concrete.summations import Sum
+
+    result = self.function if limits is None else self
+    limits = self.limits if limits is None else limits
+    #avoid any confusion w/ as_independent
+    if result == 0:
+        return S.Zero
+
+    #get the summation variables
+    sum_vars = set([limit.args[0] for limit in limits])
+
+    #finally we try to factor out any common terms
+    #and remove the from the sum if independent
+    retv = factor_terms(result, radical=radical, clear=clear, fraction=fraction, sign=sign)
+    #avoid doing anything bad
+    if not result.is_commutative:
+        return Sum(result, *limits)
+
+    i, d = retv.as_independent(*sum_vars)
+    if isinstance(retv, Add):
+        return i * Sum(1, *limits) + Sum(d, *limits)
+    else:
+        return i * Sum(d, *limits)
 
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
+    from sympy import Mul
 
-    if type(self) == type(other):
+    #we know this is something in terms of a constant * a sum
+    #so we temporarily put the constants inside for simplification
+    #then simplify the result
+    def __refactor(val):
+        args = Mul.make_args(val)
+        sumv = next(x for x in args if isinstance(x, Sum))
+        constant = Mul(*[x for x in args if x != sumv])
+        return Sum(constant * sumv.function, *sumv.limits)
+
+    if isinstance(self, Mul):
+        rself = __refactor(self)
+    else:
+        rself = self
+
+    if isinstance(other, Mul):
+        rother = __refactor(other)
+    else:
+        rother = other
+
+    if type(rself) == type(rother):
         if method == 0:
-            if self.limits == other.limits:
-                return Sum(self.function + other.function, *self.limits)
+            if rself.limits == rother.limits:
+                return factor_sum(Sum(rself.function + rother.function, *rself.limits))
         elif method == 1:
-            if simplify(self.function - other.function) == 0:
-                if len(self.limits) == len(other.limits) == 1:
-                    i = self.limits[0][0]
-                    x1 = self.limits[0][1]
-                    y1 = self.limits[0][2]
-                    j = other.limits[0][0]
-                    x2 = other.limits[0][1]
-                    y2 = other.limits[0][2]
+            if simplify(rself.function - rother.function) == 0:
+                if len(rself.limits) == len(rother.limits) == 1:
+                    i = rself.limits[0][0]
+                    x1 = rself.limits[0][1]
+                    y1 = rself.limits[0][2]
+                    j = rother.limits[0][0]
+                    x2 = rother.limits[0][1]
+                    y2 = rother.limits[0][2]
 
                     if i == j:
                         if x2 == y1 + 1:
-                            return Sum(self.function, (i, x1, y2))
+                            return factor_sum(Sum(rself.function, (i, x1, y2)))
                         elif x1 == y2 + 1:
-                            return Sum(self.function, (i, x2, y1))
+                            return factor_sum(Sum(rself.function, (i, x2, y1)))
 
     return Add(self, other)
 
@@ -1288,14 +1356,16 @@ def clear_coefficients(expr, rhs=S.Zero):
     """
     was = None
     free = expr.free_symbols
-    while was != expr:
+    if expr.is_Rational:
+        return (S.Zero, rhs - expr)
+    while expr and was != expr:
         was = expr
         m, expr = (
             expr.as_content_primitive()
             if free else
-            factor_terms(expr).as_coeff_Mul())
+            factor_terms(expr).as_coeff_Mul(rational=True))
         rhs /= m
-        c, expr = expr.as_coeff_Add()
+        c, expr = expr.as_coeff_Add(rational=True)
         rhs -= c
     expr = signsimp(expr, evaluate = False)
     if _coeff_isneg(expr):

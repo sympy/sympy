@@ -260,6 +260,8 @@ def mrv(e, x):
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
+        if b == 1:
+            return SubsSet(), b
         if e.has(x):
             return mrv(exp(e * log(b)), x)
         else:
@@ -632,7 +634,7 @@ def gruntz(e, z, z0, dir="+"):
     file. It relies heavily on the series expansion. Most frequently, gruntz()
     is only used if the faster limit() function (which uses heuristics) fails.
     """
-    if not isinstance(z, Symbol):
+    if not z.is_Symbol:
         raise NotImplementedError("Second argument must be a Symbol")
 
     #convert all limits to the limit z->oo; sign of z is handled in limitinf

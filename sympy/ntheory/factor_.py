@@ -11,7 +11,7 @@ from .generate import sieve, primerange, nextprime
 from sympy.core import sympify
 from sympy.core.evalf import bitcount
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import igcd, Rational
+from sympy.core.numbers import igcd, ilcm, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, range
@@ -1529,6 +1529,18 @@ class totient(Function):
     """
     Calculate the Euler totient function phi(n)
 
+    ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
+    that are relatively prime to n.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+
+    Examples
+    ========
+
     >>> from sympy.ntheory import totient
     >>> totient(1)
     1
@@ -1550,6 +1562,54 @@ class totient(Function):
             t = 1
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
+            return t
+
+    def _eval_is_integer(self):
+        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+
+class reduced_totient(Function):
+    """
+    Calculate the Carmichael reduced totient function lambda(n)
+
+    ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
+    `k^m \equiv 1 \mod n` for all k relatively prime to n.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import reduced_totient
+    >>> reduced_totient(1)
+    1
+    >>> reduced_totient(8)
+    2
+    >>> reduced_totient(30)
+    4
+
+    See Also
+    ========
+
+    totient
+    """
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n < 1:
+                raise ValueError("n must be a positive integer")
+            factors = factorint(n)
+            t = 1
+            for p, k in factors.items():
+                if p == 2 and k > 2:
+                    t = ilcm(t, 2**(k - 2))
+                else:
+                    t = ilcm(t, (p - 1) * p**(k - 1))
             return t
 
     def _eval_is_integer(self):
@@ -1669,7 +1729,7 @@ def core(n, t=2):
     See Also
     ========
 
-    factorint
+    factorint, sympy.solvers.diophantine.square_factor
     """
 
     n = as_int(n)
@@ -1782,3 +1842,92 @@ class udivisor_sigma(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
+class primenu(Function):
+    r"""
+    Calculate the number of distinct prime factors for a positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primenu(n)`` or `\nu(n)` is:
+
+    .. math ::
+        \nu(n) = k.
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primenu
+    >>> primenu(1)
+    0
+    >>> primenu(30)
+    3
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return len(factorint(n).keys())
+
+
+class primeomega(Function):
+    r"""
+    Calculate the number of prime factors counting multiplicities for a
+    positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primeomega(n)``  or `\Omega(n)` is:
+
+    .. math ::
+        \Omega(n) = \sum_{i=1}^k m_i.
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primeomega
+    >>> primeomega(1)
+    0
+    >>> primeomega(20)
+    3
+
+    See Also
+    ========
+
+    factorint
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return sum(factorint(n).values())

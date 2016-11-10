@@ -1,12 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together, collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
+                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
+                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -301,6 +301,18 @@ def test_as_leading_term_stub():
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
     raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
+
+
+def test_as_leading_term_deriv_integral():
+    # related to issue 11313
+    assert Derivative(x ** 3, x).as_leading_term(x) == 3*x**2
+    assert Derivative(x ** 3, y).as_leading_term(x) == 0
+
+    assert Integral(x ** 3, x).as_leading_term(x) == x**4/4
+    assert Integral(x ** 3, y).as_leading_term(x) == y*x**3
+
+    assert Derivative(exp(x), x).as_leading_term(x) == 1
+    assert Derivative(log(x), x).as_leading_term(x) == (1/x).as_leading_term(x)
 
 
 def test_atoms():
@@ -622,6 +634,7 @@ def test_as_independent():
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
     eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
+    assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
 @XFAIL
 def test_call_2():
@@ -1134,6 +1147,7 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+    assert (x*y).coeff(z, 0) == x*y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1186,8 +1200,11 @@ def test_action_verbs():
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
     assert radsimp(1/(2 + sqrt(2))) == (1/(2 + sqrt(2))).radsimp()
+    assert radsimp(1/(a + b*sqrt(c)), symbolic=False) == \
+        (1/(a + b*sqrt(c))).radsimp(symbolic=False)
     assert powsimp(x**y*x**z*y**z, combine='all') == \
         (x**y*x**z*y**z).powsimp(combine='all')
+    assert (x**t*y**t).powsimp(force=True) == (x*y)**t
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
@@ -1213,7 +1230,9 @@ def test_as_coefficients_dict():
         [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
-    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+    assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
+        [0, 0, 0, 3.0, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
 
 
 def test_args_cnc():
@@ -1277,6 +1296,10 @@ def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
+def test_floordiv():
+    from sympy.functions.elementary.integers import floor
+    assert x // y == floor(x / y)
+
 
 def test_as_coeff_Mul():
     assert S(0).as_coeff_Mul() == (S.One, S.Zero)
@@ -1305,6 +1328,7 @@ def test_as_coeff_Add():
     assert (Integer(3) + x).as_coeff_Add() == (Integer(3), x)
     assert (Rational(3, 4) + x).as_coeff_Add() == (Rational(3, 4), x)
     assert (Float(5.0) + x).as_coeff_Add() == (Float(5.0), x)
+    assert (Float(5.0) + x).as_coeff_Add(rational=True) == (0, Float(5.0) + x)
 
     assert (Integer(3) + x + y).as_coeff_Add() == (Integer(3), x + y)
     assert (Rational(3, 4) + x + y).as_coeff_Add() == (Rational(3, 4), x + y)
@@ -1661,6 +1685,25 @@ def test_round():
     assert S.ComplexInfinity.round() == S.ComplexInfinity
 
 
+def test_held_expression_UnevaluatedExpr():
+    x = symbols("x")
+    he = UnevaluatedExpr(1/x)
+    e1 = x*he
+
+    assert isinstance(e1, Mul)
+    assert e1.args == (x, he)
+    assert e1.doit() == 1
+
+    xx = Mul(x, x, evaluate=False)
+    assert xx != x**2
+
+    ue2 = UnevaluatedExpr(xx)
+    assert isinstance(ue2, UnevaluatedExpr)
+    assert ue2.args == (xx,)
+    assert ue2.doit() == x**2
+    assert ue2.doit(deep=False) == xx
+
+
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
     # it's too slow
@@ -1707,6 +1750,10 @@ def test_issue_7426():
     f2 = x % z
     assert f1.equals(f2) == False
 
+
+def test_issue_1112():
+    x = Symbol('x', positive=False)
+    assert (x > 0) is S.false
 
 def test_issue_10161():
     x = symbols('x', real=True)

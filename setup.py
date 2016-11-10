@@ -63,13 +63,14 @@ if sys.version_info[:2] < (2, 7):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
+# python bin/generate_module_list.py
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
+    'sympy.codegen',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
@@ -85,6 +86,7 @@ modules = [
     'sympy.functions.special',
     'sympy.functions.special.benchmarks',
     'sympy.geometry',
+    'sympy.holonomic',
     'sympy.integrals',
     'sympy.integrals.benchmarks',
     'sympy.interactive',
@@ -98,6 +100,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.optics',
@@ -252,12 +255,12 @@ class run_benchmarks(Command):
         benchmarking.main(['sympy'])
 
 # Check that this list is uptodate against the result of the command:
-# $ python bin/generate_test_list.py
-
+# python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
+    'sympy.codegen.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
@@ -269,6 +272,7 @@ tests = [
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
+    'sympy.holonomic.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',
@@ -277,6 +281,7 @@ tests = [
     'sympy.matrices.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.optics.tests',
@@ -319,42 +324,43 @@ with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
 with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
     long_description = f.read().split('"""')[1]
 
-setup(name='sympy',
-      version=__version__,
-      description='Computer algebra system (CAS) in Python',
-      long_description=long_description,
-      author='SymPy development team',
-      author_email='sympy@googlegroups.com',
-      license='BSD',
-      keywords="Math CAS",
-      url='http://sympy.org',
-      packages=['sympy'] + modules + tests,
-      scripts=['bin/isympy'],
-      ext_modules=[],
-      package_data={
-          'sympy.utilities.mathml': ['data/*.xsl'],
-          'sympy.logic.benchmarks': ['input/*.cnf'],
-          },
-      data_files=[('share/man/man1', ['doc/man/isympy.1'])],
-      cmdclass={'test': test_sympy,
-                'bench': run_benchmarks,
-                'clean': clean,
-                'audit': audit},
-      classifiers=[
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Mathematics',
-        'Topic :: Scientific/Engineering :: Physics',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        ],
-      install_requires=['mpmath>=%s' % mpmath_version]
-      )
+if __name__ == '__main__':
+    setup(name='sympy',
+          version=__version__,
+          description='Computer algebra system (CAS) in Python',
+          long_description=long_description,
+          author='SymPy development team',
+          author_email='sympy@googlegroups.com',
+          license='BSD',
+          keywords="Math CAS",
+          url='http://sympy.org',
+          packages=['sympy'] + modules + tests,
+          scripts=['bin/isympy'],
+          ext_modules=[],
+          package_data={
+              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.logic.benchmarks': ['input/*.cnf'],
+              },
+          data_files=[('share/man/man1', ['doc/man/isympy.1'])],
+          cmdclass={'test': test_sympy,
+                    'bench': run_benchmarks,
+                    'clean': clean,
+                    'audit': audit},
+          classifiers=[
+            'License :: OSI Approved :: BSD License',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Mathematics',
+            'Topic :: Scientific/Engineering :: Physics',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.6',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.2',
+            'Programming Language :: Python :: 3.3',
+            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
+            ],
+          install_requires=['mpmath>=%s' % mpmath_version]
+          )

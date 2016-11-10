@@ -1367,28 +1367,27 @@ def classify_sysode(eq, funcs=None, **kwargs):
             derivs = eqs.atoms(Derivative)
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
-                order[func_] = 0
                 funcs.append(func_)
     funcs = list(set(funcs))
     if len(funcs) < len(eq):
         raise ValueError("Number of functions given is less than number of equations %s" % funcs)
     func_dict = dict()
     for func in funcs:
-        if not order[func]:
+        if not order.get(func, False):
             max_order = 0
             for i, eqs_ in enumerate(eq):
                 order_ = ode_order(eqs_,func)
                 if max_order < order_:
                     max_order = order_
                     eq_no = i
-        if eq_no in func_dict:
-            list_func = []
-            list_func.append(func_dict[eq_no])
-            list_func.append(func)
-            func_dict[eq_no] = list_func
-        else:
-            func_dict[eq_no] = func
-        order[func] = max_order
+            if eq_no in func_dict:
+                list_func = []
+                list_func.append(func_dict[eq_no])
+                list_func.append(func)
+                func_dict[eq_no] = list_func
+            else:
+                func_dict[eq_no] = func
+            order[func] = max_order
     funcs = [func_dict[i] for i in range(len(func_dict))]
     matching_hints['func'] = funcs
     for func in funcs:
@@ -2811,7 +2810,7 @@ def _handle_Integral(expr, func, order, hint):
         sol = (expr.doit()).subs(y, f(x))
         del y
     elif hint == "1st_exact_Integral":
-        sol = expr.subs(y, f(x))
+        sol = Eq(Subs(expr.lhs, y, f(x)), expr.rhs)
         del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
@@ -4339,8 +4338,6 @@ def ode_linear_coefficients(eq, func, order, match):
     >>> f = Function('f')
     >>> df = f(x).diff(x)
     >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
-    >>> dsolve(eq, hint='linear_coefficients')
-    [Eq(f(x), -x - sqrt(C1 + 7*x**2) - 1), Eq(f(x), -x + sqrt(C1 + 7*x**2) - 1)]
     >>> pprint(dsolve(eq, hint='linear_coefficients'))
                       ___________                     ___________
                    /         2                     /         2
@@ -4404,8 +4401,6 @@ def ode_separable_reduced(eq, func, order, match):
     >>> f = Function('f')
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
-    >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (-sqrt(C1*x**2 + 1) + 1)/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
                  ___________                ___________
                 /     2                    /     2
@@ -4812,7 +4807,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
 
-    eqs = expand_mul(eqs)
+    eqs = _mexpand(eqs)
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
@@ -7460,21 +7455,10 @@ def sysode_linear_3eq_order1(match_):
     r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
     r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
     r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
-    forcing = [S(0), S(0), S(0)]
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                forcing[i] += j
-    if not (forcing[0].has(t) or forcing[1].has(t) or forcing[2].has(t)):
-        # We can handle homogeneous case and simple constant forcings
-        r['d1'] = -forcing[0]
-        r['d2'] = -forcing[1]
-        r['d3'] = -forcing[2]
-    else:
-        # Issue #9244: nonhomogeneous linear systems are not supported
-        raise NotImplementedError("Only homogeneous problems are supported" +
-                                  " (and constant inhomogeneity)")
-
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':

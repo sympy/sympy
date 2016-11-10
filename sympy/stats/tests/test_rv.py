@@ -4,7 +4,8 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
 from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
+from sympy.stats.rv import (ProductPSpace, rs_swap, Density, NamedArgsMixin,
+        RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
 from sympy.abc import x
@@ -81,6 +82,10 @@ def test_RandomSymbol_diff():
     X = Normal('x', 0, 1)
     assert (2*X).diff(X)
 
+
+def test_random_symbol_no_pspace():
+    x = RandomSymbol(Symbol('x'))
+    assert x.pspace == PSpace()
 
 def test_overlap():
     X = Normal('x', 0, 1)

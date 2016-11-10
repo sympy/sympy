@@ -68,8 +68,8 @@ def test_re():
     assert re((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2)
 
-    assert re(x).rewrite(im) == x - im(x)
-    assert (x + re(y)).rewrite(re, im) == x + y - im(y)
+    assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
+    assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -77,6 +77,8 @@ def test_re():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
+
+    assert re(S.ComplexInfinity) == S.NaN
 
 
 def test_im():
@@ -137,8 +139,8 @@ def test_im():
     assert im((1 + sqrt(a + b*I))/2) == \
         (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
 
-    assert im(x).rewrite(re) == x - re(x)
-    assert (x + im(y)).rewrite(im, re) == x + y - re(y)
+    assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
+    assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
 
     a = Symbol('a', algebraic=True)
     t = Symbol('t', transcendental=True)
@@ -146,6 +148,8 @@ def test_im():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
+
+    assert im(S.ComplexInfinity) == S.NaN
 
 
 def test_sign():
@@ -722,6 +726,20 @@ def test_derivatives_issue_4757():
     assert Abs(f(y)).diff(y).subs(f(y), 1 + y).doit() == -y/sqrt(1 - y**2)
     assert arg(f(y)).diff(y).subs(f(y), I + y**2).doit() == 2*y/(1 + y**4)
 
+
+def test_issue_11413():
+    from sympy import symbols, Matrix, simplify
+    v0 = Symbol('v0')
+    v1 = Symbol('v1')
+    v2 = Symbol('v2')
+    V = Matrix([[v0],[v1],[v2]])
+    U = V.normalized()
+    assert U == Matrix([
+    [v0/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)],
+    [v1/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)],
+    [v2/sqrt(Abs(v0)**2 + Abs(v1)**2 + Abs(v2)**2)]])
+    U.norm = sqrt(v0**2/(v0**2 + v1**2 + v2**2) + v1**2/(v0**2 + v1**2 + v2**2) + v2**2/(v0**2 + v1**2 + v2**2))
+    assert simplify(U.norm) == 1
 
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,

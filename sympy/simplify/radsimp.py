@@ -957,6 +957,11 @@ def fraction(expr, exact=False):
             if ex.is_negative:
                 if ex is S.NegativeOne:
                     denom.append(b)
+                elif exact:
+                    if ex.is_constant():
+                        denom.append(Pow(b, -ex))
+                    else:
+                        numer.append(term)
                 else:
                     denom.append(Pow(b, -ex))
             elif ex.is_positive:
@@ -973,8 +978,10 @@ def fraction(expr, exact=False):
             denom.append(d)
         else:
             numer.append(term)
-
-    return Mul(*numer), Mul(*denom)
+    if exact:
+        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
+    else:
+        return Mul(*numer), Mul(*denom)
 
 
 def numer(expr):

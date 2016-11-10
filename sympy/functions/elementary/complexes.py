@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy
-from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
@@ -53,6 +52,8 @@ class re(Function):
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
+        elif arg is S.ComplexInfinity:
+            return S.NaN
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -100,7 +101,7 @@ class re(Function):
                 * im(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_rewrite_as_im(self, arg):
-        return self.args[0] - im(self.args[0])
+        return self.args[0] - S.ImaginaryUnit*im(self.args[0])
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
@@ -144,6 +145,8 @@ class im(Function):
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
+            return S.NaN
+        elif arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_real:
             return S.Zero
@@ -203,7 +206,7 @@ class im(Function):
         return sage.imag_part(self.args[0]._sage_())
 
     def _eval_rewrite_as_re(self, arg):
-        return self.args[0] - re(self.args[0])
+        return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
@@ -465,9 +468,11 @@ class Abs(Function):
                     if base.func is cls and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_positive == True:
+                if base.is_nonnegative:
                     return base**re(exponent)
-                return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                if base.is_negative:
+                    return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
+                return
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):

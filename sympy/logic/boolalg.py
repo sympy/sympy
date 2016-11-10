@@ -929,6 +929,11 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+        else:
+            if b == True and c == False:
+                return a
+            if b == False and c == True:
+                return Not(a)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
