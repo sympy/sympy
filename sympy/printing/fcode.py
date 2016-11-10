@@ -171,7 +171,8 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
+        from sympy.printing.precedence import PRECEDENCE
+        return "{0}({1}, {2})".format(self.parenthesize(expr.parent,PRECEDENCE["Add"]), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.

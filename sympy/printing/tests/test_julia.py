@@ -362,3 +362,14 @@ def test_specfun():
     assert julia_code(hankel2(n, x)) == 'hankelh2(n, x)'
     assert julia_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert julia_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+
+
+def test_MatrixElement_printing():
+    # test case from issue #11821
+    A = MatrixSymbol("A",1,3)
+    B = MatrixSymbol("B",1,3)
+    C = MatrixSymbol("C",1,3)
+    E = A-B
+    F = C[0,0]
+    F = F.subs(C,E)
+    assert(julia_code(F) == "((-1)*B + A)[1,1]")

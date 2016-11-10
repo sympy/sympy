@@ -363,7 +363,8 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s,%s]'%(expr.i+1, expr.j+1)
+        from sympy.printing.precedence import PRECEDENCE
+        return self.parenthesize(expr.parent,PRECEDENCE["Add"]) + '[%s,%s]'%(expr.i+1, expr.j+1)
 
 
     def _print_MatrixSlice(self, expr):

@@ -516,3 +516,13 @@ def test_ccode_For():
     assert sol == ("for (x = 0; x < 10; x += 2) {\n"
                    "   y *= x;\n"
                    "}")
+
+def test_MatrixElement_printing():
+    # test case from issue #11821
+    A = MatrixSymbol("A",1,3)
+    B = MatrixSymbol("B",1,3)
+    C = MatrixSymbol("C",1,3)
+    E = A-B
+    F = C[0,0]
+    F = F.subs(C,E)
+    assert(ccode(F) == "((-1)*B + A)[0]")

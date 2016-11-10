@@ -219,8 +219,9 @@ class CCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
+        from sympy.printing.precedence import PRECEDENCE        
+        return "{0}[{1}]".format(self.parenthesize(expr.parent,PRECEDENCE["Add"]),
+                                 expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
 

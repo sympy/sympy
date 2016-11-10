@@ -738,3 +738,14 @@ def test_Complement():
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
            'SymmetricDifference([2, 3], [3, 4])'
+
+def test_MatrixElement_printing():
+    from sympy import MatrixSymbol
+    # test case from issue #11821
+    A = MatrixSymbol("A",1,3)
+    B = MatrixSymbol("B",1,3)
+    C = MatrixSymbol("C",1,3)
+    E = A-B
+    F = C[0,0]
+    F = F.subs(C,E)
+    assert str(F) == "((-1)*B + A)[0, 0]"
