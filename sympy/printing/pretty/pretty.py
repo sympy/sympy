@@ -679,7 +679,6 @@ class PrettyPrinter(Printer):
         from sympy import Symbol
         if (isinstance(expr.parent, MatrixSymbol)
                 and expr.i.is_number and expr.j.is_number):
-            print("222222222222")
             return self._print(
                     Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
         else:
@@ -689,9 +688,6 @@ class PrettyPrinter(Printer):
                     ).parens(left='[', right=']')[0]
             pform = prettyForm(binding=prettyForm.FUNC,
                     *stringPict.next(prettyFunc, prettyIndices))
-
-            #pform = prettyForm(*pform.parens())
-            
             # store pform parts so it can be reassembled e.g. when powered
             pform.prettyFunc = prettyFunc
             pform.prettyArgs = prettyIndices
