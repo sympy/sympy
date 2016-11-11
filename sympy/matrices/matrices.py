@@ -186,63 +186,99 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def __pow__(self, num):
-        from sympy.matrices import eye, diag, MutableMatrix
+    def _matrix_pow_by_recursion(self, num):
+        from sympy.matrices import eye
+        n = int(num)
+        if n < 0:
+            return self.inv()**-n   # A**-2 = (A**-1)**2
+        a = eye(self.cols)
+        s = self
+        while n:
+            if n % 2:
+                a *= s
+                n -= 1
+            if not n:
+                break
+            s *= s
+            n //= 2
+        return self._new(a)
+
+    def _matrix_pow_by_jordan_blocks(self, num):
+        from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
+        def jordan_cell_power(jc, n):
+            N = jc.shape[0]
+            l = jc[0, 0]
+            for i in range(N):
+                    for j in range(N-i):
+                            bn = binomial(n, i)
+                            if isinstance(bn, binomial):
+                                    bn = bn._eval_expand_func()
+                            jc[j, i+j] = l**(n-i)*bn
+
+        P, jordan_cells = self.jordan_cells()
+        # Make sure jordan_cells matrices are mutable:
+        jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+        for j in jordan_cells:
+            jordan_cell_power(j, num)
+        return self._new(P*diag(*jordan_cells)*P.inv())
+
+    def _matrix_pow_by_recursion(self, num):
+        from sympy.matrices import eye
+        n = int(num)
+        if n < 0:
+            return self.inv()**-n   # A**-2 = (A**-1)**2
+        a = eye(self.cols)
+        s = self
+        while n:
+            if n % 2:
+                a *= s
+                n -= 1
+            if not n:
+                break
+            s *= s
+            n //= 2
+        return self._new(a)
+
+    def _matrix_pow_by_jordan_blocks(self, num):
+        from sympy.matrices import diag, MutableMatrix
+        from sympy import binomial
+
+        def jordan_cell_power(jc, n):
+            N = jc.shape[0]
+            l = jc[0, 0]
+            for i in range(N):
+                for j in range(N-i):
+                    bn = binomial(n, i)
+                    if isinstance(bn, binomial):
+                        bn = bn._eval_expand_func()
+                    jc[j, i+j] = l**(n-i)*bn
+
+        P, jordan_cells = self.jordan_cells()
+        # Make sure jordan_cells matrices are mutable:
+        jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+        for j in jordan_cells:
+            jordan_cell_power(j, num)
+        return self._new(P*diag(*jordan_cells)*P.inv())
+
+    def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
-
-        def _matrix_pow_by_recursion(self):
-            n = int(num)
-            if n < 0:
-                return self.inv()**-n   # A**-2 = (A**-1)**2
-            a = eye(self.cols)
-            s = self
-            while n:
-                if n % 2:
-                    a *= s
-                    n -= 1
-                if not n:
-                    break
-                s *= s
-                n //= 2
-            return self._new(a)
-
-        def _matrix_pow_by_jordan_blocks(self):
+        if isinstance(num, (int, Integer)):
+            # if some conditions are met, we expect the Jordan block algorithm
+            # to be faster to computer the matrix power:
+            if (((num < 150000) and (self.rows < 3))
+                or ((num < 30000) and (self.rows > 2))):
+                return self._matrix_pow_by_recursion(num)
             try:
-                def jordan_cell_power(jc, n):
-                    N = jc.shape[0]
-                    l = jc[0, 0]
-                    for i in range(N):
-                            for j in range(N-i):
-                                    bn = binomial(n, i)
-                                    if isinstance(bn, binomial):
-                                            bn = bn._eval_expand_func()
-                                    jc[j, i+j] = l**(n-i)*bn
-
-                P, jordan_cells = self.jordan_cells()
-                # Make sure jordan_cells matrices are mutable:
-                jordan_cells = [MutableMatrix(j) for j in jordan_cells]
-                for j in jordan_cells:
-                    jordan_cell_power(j, num)
-                return self._new(P*diag(*jordan_cells)*P.inv())
+                return self._matrix_pow_by_jordan_blocks(num)
             except AttributeError:
-                return _matrix_pow_by_recursion(self)
-
-        if isinstance(num, int) or isinstance(num, Integer):
-            if (((num < 150000) and ((self.rows < 3) and (self.cols < 3)))
-                or ((num < 30000) and ((self.rows > 2) and (self.cols > 2)))):
-                return _matrix_pow_by_recursion(self)
-            elif(((num > 149999) and ((self.rows < 3) and (self.cols < 3)))
-                or ((num > 29999) and ((self.rows > 2) and (self.cols > 2)))):
-                return _matrix_pow_by_jordan_blocks(self)
+                return self._matrix_pow_by_recursion(num)
         elif isinstance(num, (Expr, float)):
-            return _matrix_pow_by_jordan_blocks(self)
-
+            return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
-                "Only SymPy expressions or int objects are supported as exponent for matrices")
-
+                "Only SymPy expressions or integers are supported as exponent for matrices")
 
     def __radd__(self, other):
         return self + other
