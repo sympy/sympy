@@ -5797,4 +5797,3 @@ x⋅─\n\
   x\
 ''')
     assert upretty(x*he) == ucode_str
-
