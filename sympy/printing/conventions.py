@@ -8,6 +8,9 @@ import re
 import collections
 
 
+_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+
+
 def split_super_sub(text):
     """Split a symbol name into a name, superscripts and subscripts
 
@@ -54,12 +57,13 @@ def split_super_sub(text):
 
     # make a little exception when a name ends with digits, i.e. treat them
     # as a subscript too.
-    m = re.match('(^[a-zA-Z]+)([0-9]+)$', name)
-    if m is not None:
+    m = _name_with_digits_p.match(name)
+    if m:
         name, sub = m.groups()
         subs.insert(0, sub)
 
     return name, supers, subs
+
 
 def requires_partial(expr):
     """Return whether a partial derivative symbol is required for printing

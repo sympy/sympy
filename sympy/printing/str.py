@@ -502,6 +502,9 @@ class StrPrinter(Printer):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),

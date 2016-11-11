@@ -391,6 +391,9 @@ class Basic(with_metaclass(ManagedProperties)):
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
     def __repr__(self):
+        """Method to return the string representation.
+        Return the expression as a string.
+        """
         from sympy.printing import sstr
         return sstr(self, order=None)
 
@@ -542,6 +545,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
+        """Helper for rcall method.
+        """
         from sympy import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
@@ -1564,7 +1569,7 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             args = self.args
 
-        if pattern is None or isinstance(self.func, pattern):
+        if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
                 rewritten = getattr(self, rule)(*args)
                 if rewritten is not None:
@@ -1626,7 +1631,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if iterable(pattern[0]):
                     pattern = pattern[0]
 
-                pattern = [p.__class__ for p in pattern if self.has(p)]
+                pattern = [p for p in pattern if self.has(p)]
 
                 if pattern:
                     return self._eval_rewrite(tuple(pattern), rule, **hints)

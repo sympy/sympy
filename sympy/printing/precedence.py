@@ -128,8 +128,11 @@ def precedence_traditional(item):
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
     from sympy import Integral, Sum, Product, Limit, Derivative
+    from sympy.core.expr import UnevaluatedExpr
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative)):
         return PRECEDENCE["Mul"]
+    elif isinstance(item, UnevaluatedExpr):
+        return precedence_traditional(item.args[0])
     else:
         return precedence(item)

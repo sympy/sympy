@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+import itertools
+
 from sympy.core import S
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
@@ -868,6 +870,40 @@ class PrettyPrinter(Printer):
 
         return prettyForm(u'\n'.join([s[:-3] for s in strs]))
 
+    def _print_NDimArray(self, expr):
+        from sympy import ImmutableMatrix
+
+        if expr.rank() == 0:
+            return self._print_matrix_contents(expr.tomatrix())
+
+        level_str = [[]] + [[] for i in range(expr.rank())]
+        shape_ranges = [list(range(i)) for i in expr.shape]
+        for outer_i in itertools.product(*shape_ranges):
+            level_str[-1].append(expr[outer_i])
+            even = True
+            for back_outer_i in range(expr.rank()-1, -1, -1):
+                if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
+                    break
+                if even:
+                    level_str[back_outer_i].append(level_str[back_outer_i+1])
+                else:
+                    level_str[back_outer_i].append(ImmutableMatrix(level_str[back_outer_i+1]))
+                    if len(level_str[back_outer_i + 1]) == 1:
+                        level_str[back_outer_i][-1] = ImmutableMatrix([[level_str[back_outer_i][-1]]])
+                even = not even
+                level_str[back_outer_i+1] = []
+
+        out_expr = level_str[0][0]
+        if expr.rank() % 2 == 1:
+            out_expr = ImmutableMatrix([out_expr])
+
+        return self._print(out_expr)
+
+    _print_ImmutableDenseNDimArray = _print_NDimArray
+    _print_ImmutableSparseNDimArray = _print_NDimArray
+    _print_MutableDenseNDimArray = _print_NDimArray
+    _print_MutableSparseNDimArray = _print_NDimArray
+
     def _print_Piecewise(self, pexpr):
 
         P = {}
@@ -1151,7 +1187,10 @@ class PrettyPrinter(Printer):
             pform = base**n
             return pform
         else:
-            return self._print_Function(e)
+            n = self._print(e.args[2])
+            shift = self._print(e.args[0]-e.args[1])
+            base = self._print_seq(shift, "<", ">", ' ')
+            return base**n
 
     def _print_gamma(self, e):
         if self._use_unicode:
@@ -1465,6 +1504,9 @@ class PrettyPrinter(Printer):
             return prettyForm(*self._print(b).parens()).__pow__(self._print(e))
 
         return self._print(b)**self._print(e)
+
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
 
     def __print_numer_denom(self, p, q):
         if q == 1:
