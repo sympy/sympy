@@ -4,18 +4,19 @@ from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
 from sympy.matrices import MatrixBase
-from sympy.core import S
+from sympy.core import S, Symbol
 
 
 class MatPow(MatrixExpr):
 
-    def __new__(cls, base, exp):
+    def __new__(cls, base, exp, evaluate=False):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("Function parameter should be a matrix")
         exp = _sympify(exp)
-        return super(MatPow, cls).__new__(cls, base, exp)
-
+        if evaluate:
+            return super(MatPow, cls).__new__(cls, base, exp, evaluate).doit()
+        return super(MatPow, cls).__new__(cls, base, exp, evaluate)
     @property
     def base(self):
         return self.args[0]
@@ -23,6 +24,10 @@ class MatPow(MatrixExpr):
     @property
     def exp(self):
         return self.args[1]
+
+    @property
+    def evaluate(self):
+        return self.args[2]
 
     @property
     def shape(self):
@@ -56,6 +61,7 @@ class MatPow(MatrixExpr):
             args = self.args
         base = args[0]
         exp = args[1]
+
         if exp.is_zero and base.is_square:
             if isinstance(base, MatrixBase):
                 return base.func(Identity(base.shape[0]))
@@ -64,15 +70,17 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix det == 0; not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
-            if exp is S.One:
-                return base
-            return base**exp
+        elif isinstance(base, MatrixBase):
+            if exp.is_number:
+                if exp is S.One:
+                    return base
+                return base**exp
+            elif isinstance(exp, Symbol):
+                return base**exp
         # Note: just evaluate cases we know, return unevaluated on others.
         # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
         elif exp is S.One:
             return base
-        return MatPow(base, exp)
-
+        return MatPow(base, exp, False)
 
 from .matmul import MatMul
