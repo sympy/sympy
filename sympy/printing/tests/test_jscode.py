@@ -389,3 +389,9 @@ def test_MatrixElement_printing():
     F = C[0, 1]
     F = F.subs(C, E)
     assert(jscode(F) == "(A + M)[1]")
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(jscode(F) == "(x*A + (-y)*B + z*M)[0]")

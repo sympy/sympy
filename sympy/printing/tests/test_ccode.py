@@ -541,3 +541,9 @@ def test_MatrixElement_printing():
     F = C[0, 1]
     F = F.subs(C, E)
     assert(ccode(F) == "A[1] + M[1]")
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(ccode(F) == "x*A[0] + (-y)*B[0] + z*M[0]")

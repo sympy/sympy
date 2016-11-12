@@ -700,3 +700,9 @@ def test_MatrixElement_printing():
     F = C[0, 1]
     F = F.subs(C, E)
     assert(fcode(F) == "      (A + M)(1, 2)")
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(fcode(F) == "      (x*A + (-y)*B + z*M)(1, 1)")

@@ -5783,6 +5783,23 @@ def test_MatrixElement_printing():
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
 
+    ascii_str1 = "(x*A + -y*B + z*M)[0, 0]"
+    ucode_str1 = u("(x⋅A + -y⋅B + z⋅M)[0, 0]")
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert pretty(F)  == ascii_str1
+    assert upretty(F) == ucode_str1
+
+    ascii_str1 = "([3*x  3*y  3*z] + 2*x*A)[0, 0]"
+    ucode_str1 = u("([3⋅x  3⋅y  3⋅z] + 2⋅x⋅A)[0, 0]")
+    E = 2*x*A + 3*Matrix([[x, y, z]])
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert pretty(F)  == ascii_str1
+    assert upretty(F) == ucode_str1
+
 
 def test_pretty_UnevaluatedExpr():
     x = symbols('x')

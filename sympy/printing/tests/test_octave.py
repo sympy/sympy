@@ -402,3 +402,14 @@ def test_MatrixElement_printing():
     F = C[0, 1]
     F = F.subs(C, E)
     assert mcode(F) == "(A + M)(1, 2)"
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(mcode(F) == "(x*A + (-y)*B + z*M)(1, 1)" )
+
+    E = 2*x*A + 3*Matrix([[x, y, z]])
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(mcode(F) == "([3*x 3*y 3*z] + (2*x)*A)(1, 1)")

@@ -1612,6 +1612,17 @@ def test_MatrixElement_printing():
     F = F.subs(C, E)
     assert latex(F) == r"\left(A + M\right)_{0, 1}"
 
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(latex(F) == r"\left(x A + - y B + z M\right)_{0, 0}")
+
+    E = 2*x*A + 3*Matrix([[x, y, z]])
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(latex(F) == r'\left(\left[\begin{matrix}3 x & 3 y & 3 z\end{matrix}\right] + 2 x A\right)_{0, 0}')
+
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")
