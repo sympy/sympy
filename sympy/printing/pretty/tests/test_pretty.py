@@ -5743,20 +5743,46 @@ def test_pretty_Mod():
 
 
 def test_MatrixElement_printing():
-    # test case from issue #11821
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    ascii_str1 = "A_00"
+    ucode_str1 = u("A₀₀")
+    assert pretty(A[0, 0])  == ascii_str1
+    assert upretty(A[0, 0]) == ucode_str1
+
+    ascii_str1 = "3*A_00"
+    ucode_str1 = u("3⋅A₀₀")
+    assert pretty(3*A[0, 0])  == ascii_str1
+    assert upretty(3*A[0, 0]) == ucode_str1
 
     ascii_str1 = "(-B + A)[0, 0]"
     ucode_str1 = u("(-B + A)[0, 0]")
-
-    A = MatrixSymbol("A",1,3)
-    B = MatrixSymbol("B",1,3)
-    C = MatrixSymbol("C",1,3)
     E = A-B
-    F = C[0,0]
-    F = F.subs(C,E)
-
+    F = C[0, 0]
+    F = F.subs(C, E)
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
+
+    ascii_str1 = "(-B + A + M)[0, 0]"
+    ucode_str1 = u("(-B + A + M)[0, 0]")
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert pretty(F)  == ascii_str1
+    assert upretty(F) == ucode_str1
+
+    ascii_str1 = "(A + M)[0, 1]"
+    ucode_str1 = u("(A + M)[0, 1]")
+    E = A + M
+    F = C[0, 1]
+    F = F.subs(C, E)
+    assert pretty(F)  == ascii_str1
+    assert upretty(F) == ucode_str1
+
 
 def test_pretty_UnevaluatedExpr():
     x = symbols('x')

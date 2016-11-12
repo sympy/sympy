@@ -17,7 +17,6 @@ from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import range
 from sympy.core.add import Add
-
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 from sympy.printing.conventions import requires_partial

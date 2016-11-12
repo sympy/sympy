@@ -14,7 +14,7 @@ from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
-
+from sympy import MatrixSymbol
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 
@@ -740,12 +740,26 @@ def test_SymmetricDifference():
            'SymmetricDifference([2, 3], [3, 4])'
 
 def test_MatrixElement_printing():
-    from sympy import MatrixSymbol
-    # test case from issue #11821
-    A = MatrixSymbol("A",1,3)
-    B = MatrixSymbol("B",1,3)
-    C = MatrixSymbol("C",1,3)
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    assert(str(A[0,0]) == "A[0, 0]")
+    assert(str(3 * A[0,0]) == "3*A[0, 0]")
+
     E = A-B
-    F = C[0,0]
-    F = F.subs(C,E)
+    F = C[0, 0]
+    F = F.subs(C, E)
     assert str(F) == "((-1)*B + A)[0, 0]"
+
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert str(F) == "((-1)*B + A + M)[0, 0]"
+
+    E = A + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert str(F) == "(A + M)[0, 0]"

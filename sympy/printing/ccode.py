@@ -17,7 +17,7 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -219,9 +219,35 @@ class CCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        from sympy.printing.precedence import PRECEDENCE
-        return "{0}[{1}]".format(self.parenthesize(expr.parent,PRECEDENCE["Add"]),
-                                 expr.j + expr.i*expr.parent.shape[1])
+        from sympy.matrices import MatrixSymbol, MatrixExpr
+
+        if isinstance(expr.parent, MatrixSymbol):
+            return "{0}[{1}]".format(expr.parent, expr.j +
+                expr.i*expr.parent.shape[1])
+
+        terms = (expr.args[0].args)
+        PREC = precedence(expr.args[0])
+        l = []
+        for term in terms:
+            t = self._print(term)
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+
+            if (isinstance(term, MatrixExpr)and expr.i.is_number and expr.j.is_number):
+                t += "[{0}]".format(expr.j + expr.i*expr.parent.shape[1])
+
+            if precedence(term) < PREC:
+                l.extend([sign, "(%s)" % t])
+            else:
+                l.extend([sign, t])
+
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+        return sign + ' '.join(l)
 
     def _print_Symbol(self, expr):
 
