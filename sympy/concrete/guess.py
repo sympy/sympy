@@ -430,8 +430,8 @@ def guess(l, stop=False, evaluate=True, niter=None):
                   r.append(ri)
             if r:
                 for i in range(k):
-                    r = map(lambda v: g[k-i-1][0]
-                          * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r)
+                    r = list(map(lambda v: g[k-i-1][0]
+                          * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r))
                 if stop: return r
-                res += list(r)
+                res += r
     return res
