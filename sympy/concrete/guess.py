@@ -7,7 +7,8 @@ from sympy.core.compatibility import range
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
-                   exp, integrate)
+                   exp, integrate, symbols, Product, product)
+from sympy.polys.polyfuncs import rational_interpolate as rinterp
 
 @public
 def find_simple_recurrence_vector(l):
@@ -377,3 +378,60 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
                 break
 
     return result
+
+
+@public
+def guess(l, stop=False, evaluate=True, niter=None):
+    """
+    This function is adapted from the Rate.m package for Mathematica
+    written by Christian Krattenthaler.
+    It tries to guess a formula from a given sequence of rational numbers.
+
+    In order to speed up the process, the 'stop' variable allows to stop
+    the computation as soon as at least one answer is detected during an
+    iteration.
+
+    Another option is the 'evaluate' variable (default is True); setting it
+    to False will leave the involved products unevaluated.
+
+    By default, the number of iterations is set to len(l)-1 but a lower
+    value can be specified with the optional 'niter' variable.
+
+    The returned formulas contain symbols i0, i1, i2, ... where the main
+    variables is i0 (and auxiliary variables are i1, i2, ...).
+
+    >>> from sympy.concrete.guess import guess
+    >>> guess([1,2,6,24,120], evaluate=False)
+    [Product(i1 + 1, (i1, 1, i0 - 1))]
+
+    >>> from sympy import symbols
+    >>> r = guess([1,2,7,42,429,7436,218348,10850216])
+    >>> i0 = symbols("i0")
+    >>> [r[0].subs(i0,n).doit() for n in range(1,10)]
+    [1, 2, 7, 42, 429, 7436, 218348, 10850216, 911835460]
+    """
+    n = len(l)
+    if niter==None: niter = n-1
+    else: niter = min(n-1, niter)
+    myprod = product if evaluate else Product
+    g = []
+    res = []
+    symb = symbols('i:'+str(niter))
+    for k, s in enumerate(symb):
+        g.append(l)
+        l = [Rational(l[i+1], l[i]) for i in range(n-k-1)]
+        if k:
+            n, r = len(g[k]), []
+            for i in range(n-1):
+                ri = rinterp(enumerate(g[k][:-1], start=1), n-2-i, X=s)
+                if ((denom(ri).subs({s:n}) != 0)
+                        and (ri.subs({s:n})-g[k][-1] == 0)
+                        and ri not in r):
+                  r.append(ri)
+            if r:
+                for i in range(k):
+                    r = map(lambda v: g[k-i-1][0]
+                          * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r)
+                if stop: return r
+                res += list(r)
+    return res
