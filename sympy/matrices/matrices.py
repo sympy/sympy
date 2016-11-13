@@ -223,43 +223,7 @@ class MatrixBase(object):
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
 
-    def _matrix_pow_by_recursion(self, num):
-        from sympy.matrices import eye
-        n = int(num)
-        if n < 0:
-            return self.inv()**-n   # A**-2 = (A**-1)**2
-        a = eye(self.cols)
-        s = self
-        while n:
-            if n % 2:
-                a *= s
-                n -= 1
-            if not n:
-                break
-            s *= s
-            n //= 2
-        return self._new(a)
 
-    def _matrix_pow_by_jordan_blocks(self, num):
-        from sympy.matrices import diag, MutableMatrix
-        from sympy import binomial
-
-        def jordan_cell_power(jc, n):
-            N = jc.shape[0]
-            l = jc[0, 0]
-            for i in range(N):
-                for j in range(N-i):
-                    bn = binomial(n, i)
-                    if isinstance(bn, binomial):
-                        bn = bn._eval_expand_func()
-                    jc[j, i+j] = l**(n-i)*bn
-
-        P, jordan_cells = self.jordan_cells()
-        # Make sure jordan_cells matrices are mutable:
-        jordan_cells = [MutableMatrix(j) for j in jordan_cells]
-        for j in jordan_cells:
-            jordan_cell_power(j, num)
-        return self._new(P*diag(*jordan_cells)*P.inv())
 
     def __pow__(self, num):
         if not self.is_square:
