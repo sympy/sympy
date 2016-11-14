@@ -1037,14 +1037,17 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, evaluate=True):
         """
         Replace occurrences of objects within the expression.
 
         Parameters
         ==========
         rule : dict-like
-            Expresses a replacement rule
+            Expresses a replacement rule.
+        evaluate : boolean (default True)
+            Pass False to avoid evaluating any replaced expressions (see
+            examples below).
 
         Returns
         =======
@@ -1089,6 +1092,19 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) # doctest: +SKIP
         ValueError: Invalid limits given: ((2*y, 1, 4*y),)
 
+        Passing ``evaluate=False`` may preserve the structure of the input,
+        as it prevents xreplace from evaluating the replaced subexpressions.
+
+        >>> from sympy import Mul
+        >>> Mul(2, x + y)
+        2*x + 2*y
+        >>> Mul(2, x + y, evaluate=False)
+        2*(x + y)
+        >>> Mul(2, x + y, evaluate=False).xreplace({x: pi})
+        2*y + 2*pi
+        >>> Mul(2, x + y, evaluate=False).xreplace({x: pi}, evaluate=False)
+        2*(y + pi)
+
         See Also
         ========
         replace: replacement capable of doing wildcard-like matching,
@@ -1097,10 +1113,10 @@ class Basic(with_metaclass(ManagedProperties)):
               themselves.
 
         """
-        value, _ = self._xreplace(rule)
+        value, _ = self._xreplace(rule, evaluate)
         return value
 
-    def _xreplace(self, rule):
+    def _xreplace(self, rule, evaluate):
         """
         Helper for xreplace. Tracks whether a replacement actually occurred.
         """
@@ -1111,14 +1127,20 @@ class Basic(with_metaclass(ManagedProperties)):
             changed = False
             for a in self.args:
                 try:
-                    a_xr = a._xreplace(rule)
+                    a_xr = a._xreplace(rule, evaluate)
                     args.append(a_xr[0])
                     changed |= a_xr[1]
                 except AttributeError:
                     args.append(a)
             args = tuple(args)
             if changed:
-                return self.func(*args), True
+                if evaluate is False:
+                    try:
+                        return self.func(*args, evaluate=False), True
+                    except TypeError:
+                        return self.func(*args), True
+                else:
+                    return self.func(*args), True
         return self, False
 
     @cacheit
