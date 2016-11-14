@@ -167,7 +167,8 @@ class MatrixBase(object):
             A = self
             B = other
             if A.cols != B.rows:
-                raise ShapeError("Matrices size mismatch.")
+                raise ShapeError("Matrices size mismatch: %s * %s." % (
+                    (A.rows, A.cols), (B.rows, B.cols)))
             if A.cols == 0:
                 return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
             try:
