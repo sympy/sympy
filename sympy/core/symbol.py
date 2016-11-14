@@ -14,6 +14,7 @@ from sympy.utilities.iterables import cartes
 
 import string
 import re as _re
+import random
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -193,21 +194,31 @@ class Dummy(Symbol):
 
     """
 
-    _count = 0
+    _count = [None]
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, **assumptions):
+    def __new__(cls, name=None, shash=None, **assumptions):
         if name is None:
-            name = "Dummy_" + str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count[-1])[-24:]
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        Dummy._count += 1
-        obj.dummy_index = Dummy._count
+        if shash is None:
+            while shash in Dummy._count:
+                shash = str(name)
+                for i in range(24):
+                    shash += random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
+        else:
+            shash = str(shash)
+
+        if shash not in Dummy._count:
+            Dummy._count.append(shash)
+
+        obj.dummy_index = shash
         return obj
 
     def __getstate__(self):

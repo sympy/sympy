@@ -30,10 +30,6 @@ def test_Symbol():
 
 def test_Dummy():
     assert Dummy() != Dummy()
-    Dummy._count = 0
-    d1 = Dummy()
-    Dummy._count = 0
-    assert d1 == Dummy()
 
 
 def test_as_dummy():
