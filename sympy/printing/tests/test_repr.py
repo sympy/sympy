@@ -139,14 +139,14 @@ def test_Wild():
 def test_Dummy():
     # cannot use sT here
     d = Dummy('d', nonzero=True)
-    assert srepr(d) == "Dummy('d', shash='" + str(d.dummy_index) + "', nonzero=True)"
+    assert srepr(d) == "Dummy('d', shash=" + str(d.dummy_index) + ", nonzero=True)"
     assert d == eval(srepr(d))
 
 def test_Dummy_from_Symbol():
     # should not get the full dictionary of assumptions
     n = Symbol('n', integer=True)
     d = n.as_dummy()
-    assert srepr(d) == "Dummy('n', shash='" + str(d.dummy_index) + "', integer=True)"
+    assert srepr(d) == "Dummy('n', shash=" + str(d.dummy_index) + ", integer=True)"
 
 
 def test_tuple():

@@ -146,7 +146,7 @@ class ReprPrinter(Printer):
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
         if isinstance(expr, Dummy):
-            t = ", shash='%s'" % expr.dummy_index
+            t = ", shash=%i" % expr.dummy_index
         else:
             t = ""
 

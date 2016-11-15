@@ -194,26 +194,25 @@ class Dummy(Symbol):
 
     """
 
-    _count = [None]
+    _count = [0]
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, shash=None, **assumptions):
+    def __new__(cls, name=None, shash=0, **assumptions):
         if name is None:
-            name = "Dummy_" + str(Dummy._count[-1])[-24:]
+            name = "Dummy_" + str(len(Dummy._count))
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        if shash is None:
+        if shash == 0:
             while shash in Dummy._count:
-                shash = str(name)
-                for i in range(24):
-                    shash += random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
+                # Always positive
+                shash = int('%i%i' % (len(Dummy._count), random.randint(1, 10**24)))
         else:
-            shash = str(shash)
+            shash = int(shash)
 
         if shash not in Dummy._count:
             Dummy._count.append(shash)
@@ -226,8 +225,10 @@ class Dummy(Symbol):
 
     @cacheit
     def sort_key(self, order=None):
+        if self.dummy_index not in Dummy._count: Dummy._count.append(self.dummy_index)
+
         return self.class_key(), (
-            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+            2, (str(self), Dummy._count.index(self.dummy_index))), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
