@@ -238,7 +238,7 @@ class Set(Basic):
         References
         ==========
         .. [1] https://en.wikipedia.org/wiki/Symmetric_difference
-        
+
         """
         return SymmetricDifference(self, other)
 
