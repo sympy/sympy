@@ -223,21 +223,23 @@ class MatrixBase(object):
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
 
-
-
     def __pow__(self, num):
+        from sympy.matrices import Matrix
         if not self.is_square:
             raise NonSquareMatrixError()
-        if isinstance(num, (int, Integer)):
+        if isinstance(num, (int, Integer)) and (self.rows > 1):
             # if some conditions are met, we expect the Jordan block algorithm
             # to be faster to computer the matrix power:
-            if (((num < 150000) and (self.rows < 3))
-                or ((num < 30000) and (self.rows > 2))):
+            if (((num < 100000) and (self.rows == 2))
+                or (self.rows > 2)):
                 return self._matrix_pow_by_recursion(num)
             try:
                 return self._matrix_pow_by_jordan_blocks(num)
             except AttributeError:
                 return self._matrix_pow_by_recursion(num)
+        elif (self.rows == 1):
+            a = Matrix([[self[0,0]**num]])
+            return a
         elif isinstance(num, (Expr, float)):
             return self._matrix_pow_by_jordan_blocks(num)
         else:
