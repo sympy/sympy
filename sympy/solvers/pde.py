@@ -848,7 +848,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     elif strategy == 'mul':
         do_add = False
     else:
-        assert ValueError('Unknown strategy: %s' % strategy)
+        raise ValueError('Unknown strategy: %s' % strategy)
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
