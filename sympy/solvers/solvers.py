@@ -2737,7 +2737,6 @@ def nsolve(*args, **kwargs):
         # assume it's a sympy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
-        f = f.evalf()
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
