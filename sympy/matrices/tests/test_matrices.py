@@ -214,6 +214,7 @@ def test_power():
         [0, a**n, 0],
         [0, 0, b**n]])
 
+def test_matrix_power():
     A = Matrix([[1, 0], [1, 7]])
     assert A._matrix_pow_by_jordan_blocks(3) == A._matrix_pow_by_recursion(3)
 

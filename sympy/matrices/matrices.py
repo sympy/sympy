@@ -186,23 +186,6 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def _matrix_pow_by_recursion(self, num):
-        from sympy.matrices import eye
-        n = int(num)
-        if n < 0:
-            return self.inv()**-n   # A**-2 = (A**-1)**2
-        a = eye(self.cols)
-        s = self
-        while n:
-            if n % 2:
-                a *= s
-                n -= 1
-            if not n:
-                break
-            s *= s
-            n //= 2
-        return self._new(a)
-
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
@@ -223,13 +206,36 @@ class MatrixBase(object):
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
 
+
+    def _matrix_pow_by_recursion(self, num):
+        from sympy.matrices import eye
+        n = int(num)
+        if n < 0:
+            return self.inv()**-n   # A**-2 = (A**-1)**2
+        a = eye(self.cols)
+        s = self
+        while n:
+            if n % 2:
+                a *= s
+                n -= 1
+            if not n:
+                break
+            s *= s
+            n //= 2
+        return self._new(a)
+
     def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
         if isinstance(num, (int, Integer)):
-            # if some conditions are met, we expect the Jordan block algorithm
+            if (self.rows == 1):
+                self[0,0] = self[0,0]**num
+                return self
+            # When condition (exponent > 99999 and matrix dimention is 2)
+            # is met, Jordan block algorithm is fast.
+            # In other cases recursion seems
             # to be faster to computer the matrix power:
-            if (((num < 100000) and (self.rows < 3))
+            elif (((num < 100000) and (self.rows == 2))
                 or (self.rows > 2)):
                 return self._matrix_pow_by_recursion(num)
             try:
@@ -241,6 +247,7 @@ class MatrixBase(object):
         else:
             raise TypeError(
                 "Only SymPy expressions or integers are supported as exponent for matrices")
+
 
     def __radd__(self, other):
         return self + other
