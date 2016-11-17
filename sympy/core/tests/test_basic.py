@@ -9,7 +9,7 @@ from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q, cos, gamma
+from sympy import sin, Lambda, Q, cos, gamma, integrate, sinc, Piecewise, Eq
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
