@@ -1557,12 +1557,24 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
 
     def _eval_rewrite(self, pattern, rule, **hints):
+        from sympy.simplify.simplify import simplify
         if self.is_Atom:
             if hasattr(self, rule):
                 return getattr(self, rule)()
             return self
 
-        if hints.get('deep', True):
+        if rule == '_eval_rewrite_as_sinc':
+            # Converting each term into sinc makes many unevaluated sinc terms.
+            # So first convert in into sin then use
+            # sin(x) == x*sinc(x) (i.e rewrite to sinc).
+            args = [a._eval_rewrite(pattern, '_eval_rewrite_as_sin', **hints)
+                    if isinstance(a, Basic) else a
+                    for a in self.args]
+            args = simplify(args)
+            args = [a._eval_rewrite(pattern, '_eval_rewrite_as_sinc', **hints)
+                    if isinstance(a, Basic) else a
+                    for a in args]
+        elif hints.get('deep', True):
             args = [a._eval_rewrite(pattern, rule, **hints)
                         if isinstance(a, Basic) else a
                         for a in self.args]
