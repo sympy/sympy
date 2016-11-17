@@ -189,6 +189,13 @@ def test_rewrite():
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
 
+def test_issue_11864():
+    w = symbols('w', real=True)
+    k = symbols('k', real=True)
+    f = 1 / 2 / pi *exp(I * w * k)
+    F = integrate(f, (w, -pi, pi))
+    assert F.rewrite(sinc).simplify() == Piecewise((1, Eq(pi*k, 0)), (sinc(pi*k), True))
+
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
