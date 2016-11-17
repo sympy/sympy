@@ -665,6 +665,11 @@ class ProductSet(Set):
     def __len__(self):
         return Mul(*[len(s) for s in self.args])
 
+    def __bool__(self):
+        return all([bool(s) for s in self.args])
+
+    __nonzero__ = __bool__
+
 
 class Interval(Set, EvalfMixin):
     """

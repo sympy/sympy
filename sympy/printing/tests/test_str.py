@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds)
+    AccumBounds, UnevaluatedExpr)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -739,6 +739,7 @@ def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
            'SymmetricDifference([2, 3], [3, 4])'
 
+<<<<<<< HEAD
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
@@ -774,3 +775,8 @@ def test_MatrixElement_printing():
     F = C[0, 0]
     F = F.subs(C, E)
     assert(str(F) == "(Matrix([[3*x, 3*y, 3*z]]) + (2*x)*A)[0, 0]")
+
+def test_UnevaluatedExpr():
+    a, b = symbols("a b")
+    expr1 = 2*UnevaluatedExpr(a+b)
+    assert str(expr1) == "2*(a + b)"
