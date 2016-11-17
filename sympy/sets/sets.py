@@ -457,9 +457,8 @@ class Set(Basic):
     def is_open(self):
         """
         Property method to check whether a set is open.
-        If Intersection is not found, return True. Otherwise,
-        return None because we can't confidently claim that
-        intersection exists.
+        A set is open if and only if it has an empty intersection with its
+        boundary.
 
         Examples
         ========
