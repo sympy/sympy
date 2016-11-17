@@ -211,11 +211,6 @@ class Dummy(Symbol):
             while shash in Dummy._count:
                 # Always positive
                 shash = int('%i%i' % (len(Dummy._count), random.randint(1, 10**24)))
-        else:
-            shash = int(shash)
-
-        if shash not in Dummy._count:
-            Dummy._count.append(shash)
 
         obj.dummy_index = shash
         return obj
@@ -225,13 +220,17 @@ class Dummy(Symbol):
 
     @cacheit
     def sort_key(self, order=None):
-        if self.dummy_index not in Dummy._count: Dummy._count.append(self.dummy_index)
-
         return self.class_key(), (
             2, (str(self), Dummy._count.index(self.dummy_index))), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
+
+    def __setattr__(self, key, value):
+        if key=='dummy_index':
+            assert not isinstance(value, str) and str(value).isdigit() and value > 0, 'HASH must be an integer and > 0'
+            if value not in Dummy._count: Dummy._count.append(value)
+        super(Dummy, self).__setattr__(key, value)
 
 
 class Wild(Symbol):
