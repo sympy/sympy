@@ -466,7 +466,6 @@ class Set(Basic):
         >>> from sympy import S
         >>> S.Reals.is_open
         True
-        
         """
         if not Intersection(self, self.boundary):
             return True
