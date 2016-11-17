@@ -704,7 +704,7 @@ def test_sinc():
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
-    assert sinc(x).rewrite(sin) == sin(x) / x
+    assert sinc(x).rewrite(sin) == Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
 
 
 def test_asin():
