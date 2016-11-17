@@ -1089,7 +1089,7 @@ class SymPyTests(object):
                         func = gl[f]
                         # Handle multiple decorators
                         while hasattr(func, '__wrapped__'):
-                            func = gl[f].__wrapped__
+                            func = func.__wrapped__
 
                         if inspect.getsourcefile(func) == filename:
                             funcs.append(gl[f])
