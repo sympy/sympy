@@ -536,7 +536,7 @@ def test_loops():
 
 
 def test_dummy_loops():
-    i, m = symbols('i m', integer=True, cls=Dummy)
+    i, m = Dummy('i', integer=True, shash=500), Dummy('m', integer=True, shash=501)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)

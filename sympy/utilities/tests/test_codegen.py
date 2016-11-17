@@ -401,7 +401,7 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, cls=Dummy)
+    i, m = Dummy('i', integer=True, shash=500), Dummy('m', integer=True, shash=501)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -1049,7 +1049,7 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, cls=Dummy)
+    i, m = Dummy('i', integer=True, shash=500), Dummy('m', integer=True, shash=501)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
