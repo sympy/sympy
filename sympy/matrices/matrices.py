@@ -188,48 +188,64 @@ class MatrixBase(object):
     def __neg__(self):
         return -1*self
 
-    def __pow__(self, num):
-        from sympy.matrices import eye, diag, MutableMatrix
+    def _matrix_pow_by_jordan_blocks(self, num):
+        from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
+        def jordan_cell_power(jc, n):
+            N = jc.shape[0]
+            l = jc[0, 0]
+            for i in range(N):
+                for j in range(N-i):
+                    bn = binomial(n, i)
+                    if isinstance(bn, binomial):
+                        bn = bn._eval_expand_func()
+                    jc[j, i+j] = l**(n-i)*bn
+
+        P, jordan_cells = self.jordan_cells()
+        # Make sure jordan_cells matrices are mutable:
+        jordan_cells = [MutableMatrix(j) for j in jordan_cells]
+        for j in jordan_cells:
+            jordan_cell_power(j, num)
+        return self._new(P*diag(*jordan_cells)*P.inv())
+
+    def _matrix_pow_by_recursion(self, num):
+        from sympy.matrices import eye
+        n = int(num)
+        if n < 0:
+            return self.inv()**-n   # A**-2 = (A**-1)**2
+        a = eye(self.cols)
+        s = self
+        while n:
+            if n % 2:
+                a *= s
+                n -= 1
+            if not n:
+                break
+            s *= s
+            n //= 2
+        return self._new(a)
+
+    def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
-        if isinstance(num, int) or isinstance(num, Integer):
-            n = int(num)
-            if n < 0:
-                return self.inv()**-n   # A**-2 = (A**-1)**2
-            a = eye(self.cols)
-            s = self
-            while n:
-                if n % 2:
-                    a *= s
-                    n -= 1
-                if not n:
-                    break
-                s *= s
-                n //= 2
-            return self._new(a)
+        if isinstance(num, (int, Integer)):
+            if (self.rows == 1):
+                return self._new([[self[0]**num]])
+            # When certain conditions are met,
+            # Jordan block algorithm is faster than
+            # computation by recursion.
+            elif self.rows == 2 and num > 100000:
+                try:
+                    return self._matrix_pow_by_jordan_blocks(num)
+                except AttributeError:
+                    return self._matrix_pow_by_recursion(num)
+            return self._matrix_pow_by_recursion(num)
         elif isinstance(num, (Expr, float)):
-
-            def jordan_cell_power(jc, n):
-                N = jc.shape[0]
-                l = jc[0, 0]
-                for i in range(N):
-                        for j in range(N-i):
-                                bn = binomial(n, i)
-                                if isinstance(bn, binomial):
-                                        bn = bn._eval_expand_func()
-                                jc[j, i+j] = l**(n-i)*bn
-
-            P, jordan_cells = self.jordan_cells()
-            # Make sure jordan_cells matrices are mutable:
-            jordan_cells = [MutableMatrix(j) for j in jordan_cells]
-            for j in jordan_cells:
-                jordan_cell_power(j, num)
-            return self._new(P*diag(*jordan_cells)*P.inv())
+            return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
-                "Only SymPy expressions or int objects are supported as exponent for matrices")
+                "Only SymPy expressions or integers are supported as exponent for matrices")
 
     def __radd__(self, other):
         return self + other
