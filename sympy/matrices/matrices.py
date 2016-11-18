@@ -189,15 +189,16 @@ class MatrixBase(object):
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
+
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
             for i in range(N):
-                    for j in range(N-i):
-                            bn = binomial(n, i)
-                            if isinstance(bn, binomial):
-                                    bn = bn._eval_expand_func()
-                            jc[j, i+j] = l**(n-i)*bn
+                for j in range(N-i):
+                    bn = binomial(n, i)
+                    if isinstance(bn, binomial):
+                        bn = bn._eval_expand_func()
+                    jc[j, i+j] = l**(n-i)*bn
 
         P, jordan_cells = self.jordan_cells()
         # Make sure jordan_cells matrices are mutable:
@@ -205,7 +206,6 @@ class MatrixBase(object):
         for j in jordan_cells:
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
-
 
     def _matrix_pow_by_recursion(self, num):
         from sympy.matrices import eye
@@ -229,25 +229,21 @@ class MatrixBase(object):
             raise NonSquareMatrixError()
         if isinstance(num, (int, Integer)):
             if (self.rows == 1):
-                self[0,0] = self[0,0]**num
-                return self
-            # When condition (exponent > 99999 and matrix dimention is 2)
-            # is met, Jordan block algorithm is fast.
-            # In other cases recursion seems
-            # to be faster to computer the matrix power:
-            elif (((num < 100000) and (self.rows == 2))
-                or (self.rows > 2)):
-                return self._matrix_pow_by_recursion(num)
-            try:
-                return self._matrix_pow_by_jordan_blocks(num)
-            except AttributeError:
-                return self._matrix_pow_by_recursion(num)
+                return self._new(self[0]**num)
+            # When certain conditions are met,
+            # Jordan block algorithm is faster than
+            # computation by recursion.
+            elif self.rows == 2 and num > 100000:
+                try:
+                    return self._matrix_pow_by_jordan_blocks(num)
+                except AttributeError:
+                    return self._matrix_pow_by_recursion(num)
+            return self._matrix_pow_by_recursion(num)
         elif isinstance(num, (Expr, float)):
             return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
                 "Only SymPy expressions or integers are supported as exponent for matrices")
-
 
     def __radd__(self, other):
         return self + other
