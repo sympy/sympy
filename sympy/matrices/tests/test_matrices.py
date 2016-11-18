@@ -214,15 +214,16 @@ def test_power():
         [0, a**n, 0],
         [0, 0, b**n]])
 
-def test_matrix_power():
     A = Matrix([[1, 0], [1, 7]])
     assert A._matrix_pow_by_jordan_blocks(3) == A._matrix_pow_by_recursion(3)
+    A = Matrix([[2]])
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+        A._matrix_pow_by_recursion(10)
 
-
-def test_jordan_block():
     # testing a matrix that cannot be jordan blocked issue 11766
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
