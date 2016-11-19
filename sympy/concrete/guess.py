@@ -63,13 +63,13 @@ def find_simple_recurrence_vector(l):
         m = [a]
         for k in range(b+1, len(l)):
             m.append(-sum(l[j+1]*m[b-j-1] for j in range(b, k))*a)
-        l, q = m, [0] * max(len(q2), b+len(q1))
+        l, m = m, [0] * max(len(q2), b+len(q1))
         for k in range(len(q2)):
-            q[k] = a*q2[k]
+            m[k] = a*q2[k]
         for k in range(b, b+len(q1)):
-            q[k] += q1[k-b]
-        while q[-1]==0: q.pop() # because trailing zeros can occur
-        q1, q2, b = q2, q, 1
+            m[k] += q1[k-b]
+        while m[-1]==0: m.pop() # because trailing zeros can occur
+        q1, q2, b = q2, m, 1
     return [0]
 
 @public
@@ -420,18 +420,17 @@ def guess(l, stop=False, evaluate=True, niter=None):
     for k, s in enumerate(symb):
         g.append(l)
         l = [Rational(l[i+1], l[i]) for i in range(n-k-1)]
-        if k:
-            n, r = len(g[k]), []
-            for i in range(n-1):
-                ri = rinterp(enumerate(g[k][:-1], start=1), n-2-i, X=s)
-                if ((denom(ri).subs({s:n}) != 0)
-                        and (ri.subs({s:n})-g[k][-1] == 0)
-                        and ri not in r):
-                  r.append(ri)
-            if r:
-                for i in range(k):
-                    r = list(map(lambda v: g[k-i-1][0]
-                          * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r))
-                if stop: return r
-                res += r
+        n, r = len(g[k]), []
+        for i in range(n-1):
+            ri = rinterp(enumerate(g[k][:-1], start=1), n-2-i, X=s)
+            if ((denom(ri).subs({s:n}) != 0)
+                    and (ri.subs({s:n})-g[k][-1] == 0)
+                    and ri not in r):
+              r.append(ri)
+        if r:
+            for i in range(k):
+                r = list(map(lambda v: g[k-i-1][0]
+                      * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r))
+            if stop: return r
+            res += r
     return res
