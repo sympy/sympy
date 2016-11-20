@@ -381,15 +381,17 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
 
 @public
-def guess(l, stop=False, evaluate=True, niter=None):
+def guess(l, all=False, evaluate=True, niter=None):
     """
     This function is adapted from the Rate.m package for Mathematica
     written by Christian Krattenthaler.
     It tries to guess a formula from a given sequence of rational numbers.
 
-    In order to speed up the process, the 'stop' variable allows to stop
-    the computation as soon as at least one answer is detected during an
-    iteration.
+    In order to speed up the process, the 'all' variable is set to False by
+    default, stopping the computation as some results are returned during an
+    iteration; the variable can be set to True if more iterations are needed
+    (other formulas may be found; however they may be equivalent to the first
+    ones).
 
     Another option is the 'evaluate' variable (default is True); setting it
     to False will leave the involved products unevaluated.
@@ -431,6 +433,6 @@ def guess(l, stop=False, evaluate=True, niter=None):
             for i in range(k):
                 r = list(map(lambda v: g[k-i-1][0]
                       * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r))
-            if stop: return r
+            if not all: return r
             res += r
     return res
