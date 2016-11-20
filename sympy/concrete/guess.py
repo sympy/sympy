@@ -436,9 +436,9 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
         symb = variables
     for k, s in enumerate(symb):
         g.append(l)
-        n, r = len(g[k]), []
-        for i in range(n-1):
-            ri = rinterp(enumerate(g[k][:-1], start=1), n-2-i, X=s)
+        n, r = len(l), []
+        for i in range(n-2-1, -1, -1):
+            ri = rinterp(enumerate(g[k][:-1], start=1), i, X=s)
             if ((denom(ri).subs({s:n}) != 0)
                     and (ri.subs({s:n}) - g[k][-1] == 0)
                     and ri not in r):
