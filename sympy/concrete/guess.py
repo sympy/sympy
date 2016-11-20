@@ -381,7 +381,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
 
 @public
-def guess(l, all=False, evaluate=True, niter=None):
+def guess(l, all=False, evaluate=True, niter=2, variables=None):
     """
     This function is adapted from the Rate.m package for Mathematica
     written by Christian Krattenthaler.
@@ -396,11 +396,24 @@ def guess(l, all=False, evaluate=True, niter=None):
     Another option is the 'evaluate' variable (default is True); setting it
     to False will leave the involved products unevaluated.
 
-    By default, the number of iterations is set to len(l)-1 but a lower
-    value can be specified with the optional 'niter' variable.
+    By default, the number of iterations is set to 2 but a greater value (up
+    to len(l)-1) can be specified with the optional 'niter' variable.
+    More and more convoluted results are found when the order of the
+    iteration gets higher:
+
+      * first iteration returns polynomial or rational functions;
+      * second iteration returns products of rising factorials and their
+        inverses;
+      * third iteration returns products of products of rising factorials
+        and their inverses;
+      * etc.
 
     The returned formulas contain symbols i0, i1, i2, ... where the main
-    variables is i0 (and auxiliary variables are i1, i2, ...).
+    variables is i0 (and auxiliary variables are i1, i2, ...). A list of
+    other symbols can be provided in the 'variables' option; the length of
+    the least should be the value of 'niter' (more is acceptable but only
+    the first symbols will be used); in this case, the main variable will be
+    the first symbol in the list.
 
     >>> from sympy.concrete.guess import guess
     >>> guess([1,2,6,24,120], evaluate=False)
@@ -413,12 +426,14 @@ def guess(l, all=False, evaluate=True, niter=None):
     [1, 2, 7, 42, 429, 7436, 218348, 10850216, 911835460]
     """
     n = len(l)
-    if niter==None: niter = n-1
-    else: niter = min(n-1, niter)
+    niter = min(n-1, niter)
     myprod = product if evaluate else Product
     g = []
     res = []
-    symb = symbols('i:'+str(niter))
+    if variables == None:
+        symb = symbols('i:'+str(niter))
+    else:
+        symb = variables
     for k, s in enumerate(symb):
         g.append(l)
         l = [Rational(l[i+1], l[i]) for i in range(n-k-1)]
