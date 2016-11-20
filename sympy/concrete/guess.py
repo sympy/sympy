@@ -420,7 +420,7 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     [Product(i1 + 1, (i1, 1, i0 - 1))]
 
     >>> from sympy import symbols
-    >>> r = guess([1,2,7,42,429,7436,218348,10850216])
+    >>> r = guess([1,2,7,42,429,7436,218348,10850216], niter=4)
     >>> i0 = symbols("i0")
     >>> [r[0].subs(i0,n).doit() for n in range(1,10)]
     [1, 2, 7, 42, 429, 7436, 218348, 10850216, 911835460]
