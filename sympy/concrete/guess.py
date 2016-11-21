@@ -425,6 +425,8 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     >>> [r[0].subs(i0,n).doit() for n in range(1,10)]
     [1, 2, 7, 42, 429, 7436, 218348, 10850216, 911835460]
     """
+    if any(a==0 for a in l[:-1]):
+        return []
     N = len(l)
     niter = min(N-1, niter)
     myprod = product if evaluate else Product
@@ -444,9 +446,9 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
                     and ri not in r):
               r.append(ri)
         if r:
-            for i in range(k):
-                r = list(map(lambda v: g[k-i-1][0]
-                      * myprod(v, (symb[k-i], 1, symb[k-i-1]-1)), r))
+            for i in range(k-1, -1, -1):
+                r = list(map(lambda v: g[i][0]
+                      * myprod(v, (symb[i+1], 1, symb[i]-1)), r))
             if not all: return r
             res += r
         l = [Rational(l[i+1], l[i]) for i in range(N-k-1)]
