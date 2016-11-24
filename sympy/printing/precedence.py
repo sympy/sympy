@@ -91,6 +91,10 @@ def precedence_FracElement(item):
         return PRECEDENCE["Mul"]
 
 
+def precedence_UnevaluatedExpr(item):
+    return precedence(item.args[0])
+
+
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
     "Mul": precedence_Mul,
@@ -98,6 +102,7 @@ PRECEDENCE_FUNCTIONS = {
     "Float": precedence_Float,
     "PolyElement": precedence_PolyElement,
     "FracElement": precedence_FracElement,
+    "UnevaluatedExpr": precedence_UnevaluatedExpr,
 }
 
 
@@ -128,8 +133,11 @@ def precedence_traditional(item):
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
     from sympy import Integral, Sum, Product, Limit, Derivative
+    from sympy.core.expr import UnevaluatedExpr
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative)):
         return PRECEDENCE["Mul"]
+    elif isinstance(item, UnevaluatedExpr):
+        return precedence_traditional(item.args[0])
     else:
         return precedence(item)

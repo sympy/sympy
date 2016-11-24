@@ -1106,6 +1106,8 @@ class MatrixBase(object):
         # our first sanity check.
         if hasattr(other, 'shape'):
             if self.shape != other.shape:
+                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                    self.shape, other.shape))
                 raise ShapeError("Matrix size mismatch.")
 
         # honest sympy matrices defer to their class's routine
@@ -1188,7 +1190,8 @@ class MatrixBase(object):
         # our first sanity check.
         if hasattr(other, 'shape') and len(other.shape) == 2:
             if self.shape[1] != other.shape[0]:
-                raise ShapeError("Matrix size mismatch.")
+                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                    self.shape, other.shape))
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
@@ -2192,7 +2195,8 @@ class MatrixBase(object):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows * self.cols == b.rows * b.cols == 3):
-            raise ShapeError("Dimensions incorrect for cross product.")
+            raise ShapeError("Dimensions incorrect for cross product: %s x %s" %
+                             ((self.rows, self.cols), (b.rows, b.cols)))
         return self._eval_cross(list(b))
 
     @property
@@ -2427,26 +2431,30 @@ class MatrixBase(object):
         multiply
         multiply_elementwise
         """
+        def dim_error():
+            raise ShapeError(
+                "Dimensions incorrect for dot product: %s, %s" % (
+                self.shape, len(b)))
 
         if getattr(b, 'is_Matrix', False):
             if 1 in self.shape and 1 in b.shape and len(self) != len(b):
                 # if we're both vectors, our sizes must match (no
                 # falling back to matrix multiplication in this case)!
-                raise ShapeError("Dimensions incorrect for dot product.")
+                dim_error()
             if 1 in b.shape and len(b) in self.shape:
                 # a 1 x n or n x 1 should always be treated as a
                 # vector dot product
                 return self.dot(list(b))
             elif b.rows in (self.rows, self.cols) or b.cols == self.cols:
                 return self._eval_dot_with_matrix(b)
-            raise ShapeError("Dimensions incorrect for dot product.")
+            dim_error()
         elif is_sequence(b):
             b = list(b)
             if len(b) == self.cols:
                 return self._eval_dot_with_list(b, dot_with="rows")
             if len(b) == self.rows:
                 return self._eval_dot_with_list(b, dot_with="cols")
-            raise ShapeError("Dimensions incorrect for dot product.")
+            dim_error()
         raise TypeError("`b` must be an ordered iterable or Matrix, not %s." % type(b))
 
     def dual(self):
