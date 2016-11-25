@@ -739,7 +739,6 @@ def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
            'SymmetricDifference([2, 3], [3, 4])'
 
-<<<<<<< HEAD
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
