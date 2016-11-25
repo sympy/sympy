@@ -5,7 +5,7 @@ import itertools
 
 from sympy.core.sympify import _sympify
 
-from sympy import S, Dict, flatten, SparseMatrix, Basic, Tuple
+from sympy import S, Dict, Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
@@ -22,7 +22,7 @@ class SparseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableSparseNDimArray
+        >>> from sympy import MutableSparseNDimArray
         >>> a = MutableSparseNDimArray(range(4), (2, 2))
         >>> a
         [[0, 1], [2, 3]]
@@ -90,7 +90,7 @@ class SparseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableSparseNDimArray
+        >>> from sympy import MutableSparseNDimArray
         >>> a = MutableSparseNDimArray([1 for i in range(9)], (3, 3))
         >>> b = a.tomatrix()
         >>> b
@@ -99,6 +99,7 @@ class SparseNDimArray(NDimArray):
         [1, 1, 1],
         [1, 1, 1]])
         """
+        from sympy.matrices import SparseMatrix
         if self.rank() != 2:
             raise ValueError('Dimensions must be of size of 2')
 
@@ -125,6 +126,7 @@ class SparseNDimArray(NDimArray):
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
+        from sympy.utilities.iterables import flatten
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
@@ -156,6 +158,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
+        from sympy.utilities.iterables import flatten
 
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         self = object.__new__(cls)
@@ -182,7 +185,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableSparseNDimArray
+        >>> from sympy import MutableSparseNDimArray
         >>> a = MutableSparseNDimArray.zeros(2, 2)
         >>> a[0, 0] = 1
         >>> a[1, 1] = 1
