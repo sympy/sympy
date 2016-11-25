@@ -5538,3 +5538,7 @@ def test_pretty_Mod():
     assert upretty(Mod(x, 7) + 1) == ucode_str4
     assert pretty(2 * Mod(x, 7)) == ascii_str5
     assert upretty(2 * Mod(x, 7)) == ucode_str5
+
+def test_issue_11801():
+    assert pretty(Symbol("")) == ""
+    assert upretty(Symbol("")) == ""
