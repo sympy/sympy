@@ -121,7 +121,7 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -463,6 +463,9 @@ def calculate_series(e, x, logx=None):
 
     for t in e.lseries(x, logx=logx):
         t = cancel(t)
+
+        if t.has(exp) and t.has(log):
+            t = powdenest(t)
 
         if t.simplify():
             break
