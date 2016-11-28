@@ -398,6 +398,11 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == hyper(
         (a,), (a + 1, a + 1), z*exp_polar(I*pi))*z**a*gamma(a)/gamma(a + 1)**2
 
+    # Test place option
+    f = meijerg(((0, 1), ()), ((S(1)/2,), (0,)), z**2)
+    assert hyperexpand(f) == sqrt(pi)/sqrt(1 + z**(-2))
+    assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
+
 
 def test_meijerg_lookup():
     from sympy import uppergamma, Si, Ci

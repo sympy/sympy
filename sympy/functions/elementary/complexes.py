@@ -457,6 +457,8 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg is S.ComplexInfinity:
+            return S.Infinity
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
             if base.is_real:
