@@ -477,6 +477,8 @@ def test_limit_seq():
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
 
+def test_issue_11879():
+    assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
 
 def test_limit_with_Float():
     k = symbols("k")
