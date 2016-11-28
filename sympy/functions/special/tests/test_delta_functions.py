@@ -12,9 +12,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
-i = symbols('t',nonzero=True)
-j = symbols('j',positive=True)
-k = symbols('k',negative=True)
+i = symbols('t', nonzero=True)
+j = symbols('j', positive=True)
+k = symbols('k', negative=True)
 
 def test_DiracDelta():
     assert DiracDelta(1) == 0
