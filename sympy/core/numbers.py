@@ -839,8 +839,7 @@ class Float(Number):
                     # handle normalization hack
                     return Float._new(num, prec)
                 else:
-                    _mpf_ = mpmath.mpf(
-                        S.NegativeOne**num[0]*num[1]*2**num[2])._mpf_
+                    _mpf_ = num
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:
