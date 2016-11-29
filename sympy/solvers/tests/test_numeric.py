@@ -44,8 +44,9 @@ def test_nsolve():
     assert nsolve([Eq(
         f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
-    assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
-        mpf('0.31883011387318591'))
+    assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
+        mpf('0.31883011387318591')) < 1e-15
+
 
 
 def test_issue_6408():
@@ -69,3 +70,8 @@ def test_increased_dps():
     q = nsolve(e1, x, 3.0)
 
     assert abs(sqrt(pi).evalf(128) - q) < 1e-128
+
+def test_nsolve_precision():
+    x = Symbol('x')
+    sol = nsolve(x**2 - pi, x, 3, prec=128)
+    assert abs(sqrt(pi).evalf(128) - sol) < 1e-128
