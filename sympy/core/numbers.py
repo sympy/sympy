@@ -95,7 +95,10 @@ def mpf_norm(mpf, prec):
             # don't change anything; this should already
             # be a well formed mpf tuple
             return mpf
-    rv = mpf_normalize(sign, man, expt, bc, prec, rnd)
+
+    # Necessary if mpmath is using the gmpy backend
+    from mpmath.libmp.backend import MPZ
+    rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 
 # TODO: we should use the warnings module
@@ -770,6 +773,8 @@ class Float(Number):
         elif num is S.NegativeInfinity:
             num = '-inf'
         elif isinstance(num, mpmath.mpf):
+            if prec == None:
+                prec = num.context.dps
             num = num._mpf_
 
         if prec is None:
@@ -839,12 +844,15 @@ class Float(Number):
                     # handle normalization hack
                     return Float._new(num, prec)
                 else:
-                    _mpf_ = num
+                    _mpf_ = mpf_norm(num, prec)
+                    # Normalization can lose precision if the mantissa is even
+                    prec = _mpf_[3]
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:
                 _mpf_ = mpf_norm(_mpf_, prec)
         else:
+            # XXX: We lose precision here.
             _mpf_ = mpmath.mpf(num)._mpf_
 
         # special cases

@@ -381,6 +381,11 @@ def test_Float():
     x_hex = Float((0, long(0x13333333333333), -52, 53))
     x_dec = Float((0, 5404319552844595, -52, 53))
     assert x_str == x_hex == x_dec == Float(1.2)
+    # This looses a binary digit of precision, so it isn't equal to the above,
+    # but check that it normalizes correctly
+    x2_hex = Float((0, long(0x13333333333333)*2, -53, 53))
+    assert x2_hex._mpf_ == (0, 5404319552844595, -52, 52)
+    assert x2_hex._prec == 52
     # x2_str and 1.2 are superficially the same
     assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
