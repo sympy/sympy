@@ -362,6 +362,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
+    if _module_present('mpmath',namespaces) and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import MpmathPrinter as printer
+
     if _module_present('numpy',namespaces) and printer is None:
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumPyPrinter as printer

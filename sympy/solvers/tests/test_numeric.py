@@ -3,7 +3,7 @@ from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
-
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 def test_nsolve():
     # onedimensional
@@ -57,3 +57,15 @@ def test_issue_6408():
 def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+
+
+@conserve_mpmath_dps
+def test_increased_dps():
+    # Issue 8564
+    import mpmath
+    mpmath.mp.dps = 128
+    x = Symbol('x')
+    e1 = x**2 - pi
+    q = nsolve(e1, x, 3.0)
+
+    assert abs(sqrt(pi).evalf(128) - q) < 1e-128
