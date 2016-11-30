@@ -91,7 +91,8 @@ class MatrixBase(object):
             A = self
             B = other
             if A.shape != B.shape:
-                raise ShapeError("Matrix size mismatch.")
+                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                    A.shape, B.shape))
             alst = A.tolist()
             blst = B.tolist()
             ret = [S.Zero]*A.rows
@@ -167,7 +168,8 @@ class MatrixBase(object):
             A = self
             B = other
             if A.cols != B.rows:
-                raise ShapeError("Matrices size mismatch.")
+                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                    A.shape, B.shape))
             if A.cols == 0:
                 return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
             try:
@@ -1173,7 +1175,8 @@ class MatrixBase(object):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows * self.cols == b.rows * b.cols == 3):
-            raise ShapeError("Dimensions incorrect for cross product.")
+            raise ShapeError("Dimensions incorrect for cross product: %s x %s" %
+                             ((self.rows, self.cols), (b.rows, b.cols)))
         else:
             return self._new(self.rows, self.cols, (
                 (self[1]*b[2] - self[2]*b[1]),
@@ -1510,7 +1513,9 @@ class MatrixBase(object):
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
-                    raise ShapeError("Dimensions incorrect for dot product.")
+                    raise ShapeError(
+                        "Dimensions incorrect for dot product: %s, %s" % (
+                        self.shape, len(b)))
                 return self.dot(Matrix(b))
             else:
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
@@ -1530,7 +1535,8 @@ class MatrixBase(object):
         elif mat.rows == b.rows:
             return mat.T.dot(b)
         else:
-            raise ShapeError("Dimensions incorrect for dot product.")
+            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
+                self.shape, b.shape))
 
     def dual(self):
         """Returns the dual of a matrix, which is:
