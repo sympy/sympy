@@ -781,7 +781,11 @@ class Expr(Basic, EvalfMixin):
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                A = limit(self, x, a)
+                if a.__lt__(b):
+                    A = limit(self, x, a,"+")
+                else:
+                    A = limit(self, x, a,"-")
+
                 if A is S.NaN:
                     return A
                 if isinstance(A, Limit):
@@ -792,7 +796,11 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                B = limit(self, x, b)
+                if b.__lt__(a):
+                    B = limit(self, x, b,"+")
+                else:
+                    B = limit(self, x, b,"-")
+
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
