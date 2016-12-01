@@ -1,4 +1,5 @@
-from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
+from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
+    symbols, Float)
 from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
@@ -72,6 +73,14 @@ def test_increased_dps():
     assert abs(sqrt(pi).evalf(128) - q) < 1e-128
 
 def test_nsolve_precision():
-    x = Symbol('x')
+    x, y = symbols('x y')
     sol = nsolve(x**2 - pi, x, 3, prec=128)
     assert abs(sqrt(pi).evalf(128) - sol) < 1e-128
+    assert isinstance(sol, Float)
+
+    sols = nsolve((y**2 - x, x**2 - pi), (x, y), (3, 3), prec=128)
+    assert isinstance(sols, Matrix)
+    assert sols.shape == (2, 1)
+    assert abs(sqrt(pi).evalf(128) - sols[0]) < 1e-128
+    assert abs(sqrt(sqrt(pi)).evalf(128) - sols[1]) < 1e-128
+    assert all(isinstance(i, Float) for i in sols)
