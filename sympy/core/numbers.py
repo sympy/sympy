@@ -840,13 +840,11 @@ class Float(Number):
                 num[1] = long(num[1], 16)
                 _mpf_ = tuple(num)
             else:
-                if not num[1] and len(num) == 4:
+                if len(num) == 4:
                     # handle normalization hack
                     return Float._new(num, prec)
                 else:
-                    _mpf_ = mpf_norm(num, prec)
-                    # Normalization can lose precision if the mantissa is even
-                    prec = _mpf_[3]
+                    return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(prec)
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:
@@ -876,6 +874,7 @@ class Float(Number):
 
         obj = Expr.__new__(cls)
         obj._mpf_ = mpf_norm(_mpf_, _prec)
+        # XXX: Should this be obj._prec = obj._mpf_[3]?
         obj._prec = _prec
         return obj
 
