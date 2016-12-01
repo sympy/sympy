@@ -799,7 +799,8 @@ class Point(GeometryEntity):
         =======
 
         canberra_distance : The weighted sum of horizontal and vertical
-        distances to point p.
+        distances to point p. The weight used is the sum of absolute values
+        of the coordinates.
 
         See Also
         ========
