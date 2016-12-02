@@ -781,7 +781,7 @@ class Expr(Basic, EvalfMixin):
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                if a < b:
+                if (a < b) == True:
                     A = limit(self, x, a,"+")
                 else:
                     A = limit(self, x, a,"-")
@@ -796,7 +796,7 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                if b < a:
+                if (b < a) == True:
                     B = limit(self, x, b,"+")
                 else:
                     B = limit(self, x, b,"-")
