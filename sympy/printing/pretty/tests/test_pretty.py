@@ -5742,6 +5742,11 @@ def test_pretty_Mod():
     assert upretty(2 * Mod(x, 7)) == ucode_str5
 
 
+def test_issue_11801():
+    assert pretty(Symbol("")) == ""
+    assert upretty(Symbol("")) == ""
+
+
 def test_pretty_UnevaluatedExpr():
     x = symbols('x')
     he = UnevaluatedExpr(1/x)
