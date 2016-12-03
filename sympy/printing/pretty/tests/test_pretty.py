@@ -5742,7 +5742,6 @@ def test_pretty_Mod():
     assert upretty(2 * Mod(x, 7)) == ucode_str5
 
 
-<<<<<<< HEAD
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
