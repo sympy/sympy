@@ -5742,6 +5742,7 @@ def test_pretty_Mod():
     assert upretty(2 * Mod(x, 7)) == ucode_str5
 
 
+<<<<<<< HEAD
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
@@ -5799,6 +5800,11 @@ def test_MatrixElement_printing():
     F = F.subs(C, E)
     assert pretty(F)  == ascii_str1
     assert upretty(F) == ucode_str1
+
+def test_issue_11801():
+    assert pretty(Symbol("")) == ""
+    assert upretty(Symbol("")) == ""
+
 
 
 def test_pretty_UnevaluatedExpr():
