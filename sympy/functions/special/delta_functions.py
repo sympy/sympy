@@ -195,7 +195,7 @@ class DiracDelta(Function):
             return S.Zero
         if fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
-        if arg.is_nonzero is True and arg.is_real is True:
+        if arg.is_nonzero:
             return S.Zero
 
     @deprecated(useinstead="expand(diracdelta=True, wrt=x)", deprecated_since_version="1.0.1")
