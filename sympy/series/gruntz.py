@@ -230,6 +230,7 @@ class SubsSet(dict):
         return res, exps
 
     def copy(self):
+        """Create a shallow copy of SubsSet"""
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
         for expr, var in self.items():
