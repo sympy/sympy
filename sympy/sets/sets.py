@@ -478,7 +478,7 @@ class Set(Basic):
     @property
     def closure(self):
         """
-        Property method which returns a closure of a set.
+        Property method which returns the closure of a set.
         The closure is defined as the union of the set itself and its
         boundary.
 
