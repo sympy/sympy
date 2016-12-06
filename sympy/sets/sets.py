@@ -477,6 +477,19 @@ class Set(Basic):
 
     @property
     def closure(self):
+        """
+        Property method which returns a closure of a set.
+        The closure is defined as the union of the set itself and its
+        boundary.
+
+        Examples
+        ========
+        >>> from sympy import S, Interval
+        >>> S.Reals.closure
+        (-oo, oo)
+        >>> Interval(0, 1).closure
+        [0, 1]
+        """
         return self + self.boundary
 
     @property
