@@ -737,6 +737,20 @@ class Integral(AddWithLimits):
         from sympy.integrals.heurisch import heurisch, heurisch_wrapper
         from sympy.integrals.rationaltools import ratint
         from sympy.integrals.risch import risch_integrate
+        from sympy import sinc
+
+        # if instance of sinc function, first try using the G-function methods
+        # skip only if meijerg = False (user may prefer some other method)
+        # if integral still fails, just move on with regular algorithm flow
+        if isinstance(f, sinc) and meijerg is not False:
+            try:
+                meij_f = meijerint_indefinite(f, x)
+            except NotImplementedError:
+                from sympy.integrals.meijerint import _debug
+                _debug('NotImplementedError from meijerint_definite')
+            if meij_f is not None:
+                return meij_f
+
 
         if risch:
             try:
