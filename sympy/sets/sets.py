@@ -481,6 +481,19 @@ class Set(Basic):
 
     @property
     def interior(self):
+        """
+        Property method which returns the interior of a set.
+        The interior of a set S consists all points of S that do not
+        belong to the boundary of S.
+
+        Examples
+        ========
+        >>> from sympy import Interval
+        >>> Interval(0, 1).interior
+        (0, 1)
+        >>> Interval(0, 1).boundary.interior
+        EmptySet()
+        """
         return self - self.boundary
 
     @property
