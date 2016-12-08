@@ -1358,7 +1358,9 @@ class LatexPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
+        elementAccess = '_{%s, %s}'%(expr.i, expr.j)
+        printer = self
+        return expr._MatrixElement_expansion(printer, elementAccess)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):

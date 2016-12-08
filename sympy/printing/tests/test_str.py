@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr)
+    AccumBounds, UnevaluatedExpr, MatrixSymbol)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -744,3 +744,40 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    assert(str(A[0,0]) == "A[0, 0]")
+    assert(str(3 * A[0,0]) == "3*A[0, 0]")
+
+    E = A-B
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert str(F) == "(-1)*B[0, 0] + A[0, 0]"
+
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert str(F) == "(-1)*B[0, 0] + A[0, 0] + M[0, 0]"
+
+    E = A + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert str(F) == "A[0, 0] + M[0, 0]"
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(str(F) == "x*A[0, 0] + (-y)*B[0, 0] + z*M[0, 0]" )
+
+    E = 2*x*A + 3*Matrix([[x, y, z]])
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(str(F) == "Matrix([[3*x, 3*y, 3*z]])[0, 0] + (2*x)*A[0, 0]")

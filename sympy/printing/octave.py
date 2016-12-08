@@ -345,7 +345,9 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        elementAccess = '(%s, %s)'%(expr.i+1, expr.j+1)
+        printer = self
+        return expr._MatrixElement_expansion(printer, elementAccess)
 
 
     def _print_MatrixSlice(self, expr):

@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr, MatrixSymbol)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -1594,3 +1594,40 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    assert latex(A[0,0]) == r"A_{0, 0}"
+    assert latex(3 * A[0,0]) == r"3 A_{0, 0}"
+
+    E = A-B
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert latex(F) == r"-1 B_{0, 0} + A_{0, 0}"
+
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert latex(F) == r"-1 B_{0, 0} + A_{0, 0} + M_{0, 0}"
+
+    E = A + M
+    F = C[0, 1]
+    F = F.subs(C, E)
+    assert latex(F) == r"A_{0, 1} + M_{0, 1}"
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(latex(F) == r"x A_{0, 0} -  y B_{0, 0} + z M_{0, 0}")
+
+    E = 2*x*A + 3*Matrix([[x, y, z]])
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(latex(F) == r'\left[\begin{matrix}3 x & 3 y & 3 z\end{matrix}\right]_{0, 0} + 2 x A_{0, 0}')

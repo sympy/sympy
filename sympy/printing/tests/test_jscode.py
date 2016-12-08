@@ -364,3 +364,34 @@ def test_Matrix_printing():
         "M[6] = 2*q[4]/q[1];\n"
         "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    assert(jscode(A[0,0]) == "A[0]")
+    assert(jscode(3 * A[0,0]) == "3*A[0]")
+
+    E = A-B
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(jscode(F) == "(-1)*B[0] + A[0]")
+
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(jscode(F) == "(-1)*B[0] + A[0] + M[0]")
+
+    E = A + M
+    F = C[0, 1]
+    F = F.subs(C, E)
+    assert(jscode(F) == "A[1] + M[1]")
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(jscode(F) == "x*A[0] + (-y)*B[0] + z*M[0]")

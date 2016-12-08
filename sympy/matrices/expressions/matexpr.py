@@ -9,6 +9,7 @@ from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 
 def _sympifyit(arg, retval=None):
@@ -372,6 +373,41 @@ class MatrixElement(Expr):
         from sympy import KroneckerDelta
         return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
+    def _MatrixElement_expansion(self, printer, elementAccess):
+        '''
+        _MatrixElement_expansion distributes the element access over the terms in the MatrixElement object.
+        printer is the requesting printer to generate the expanded form of the MatrixElement object.
+        elementAccess is the precomputed indices to access the matrix element from the matrix.
+        '''
+        from sympy.matrices import MatrixSymbol, MutableDenseMatrix
+
+        # if the MatrixElement object is an instance of MatrixSymbol,
+        # simply, return the concatenation of the matrix element and elementAccess
+        if isinstance(self.parent, MatrixSymbol):
+             return printer._print(self.parent) + elementAccess
+
+        # get the terms from the MatrixElement object
+        terms = list(self.parent.args)
+        # creat an empty list in which the intermediate result is stored
+        l = []
+        # loop over the terms and concatenate the term and elementAccess
+        for term in terms:
+            t = printer._print(term)
+            # get the the sign of the term
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            # concatenate the term and elementAccess and add them to l
+            l.extend([sign, t + elementAccess])
+
+        # if the first term is positive, remove its sign from l
+        sign = l.pop(0)
+        if sign == '+':
+            sign = ""
+
+        return sign + ' '.join(l)
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object

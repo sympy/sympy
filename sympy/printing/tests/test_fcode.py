@@ -675,3 +675,35 @@ def test_fcode_For():
     assert sol == ("      do x = 0, 10, 2\n"
                    "         y = x*y\n"
                    "      end do")
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+    M = MatrixSymbol("M", 1, 3)
+
+    assert(fcode(A[0,0]) == "      A(1, 1)")
+    assert(fcode(3 * A[0,0]) == "      3*A(1, 1)")
+
+    E = A-B
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(fcode(F) == "      (-1)*B(1, 1) + A(1, 1)")
+
+    E = A - B + M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(fcode(F) == "      (-1)*B(1, 1) + A(1, 1) + M(1, 1)")
+
+    E = A + M
+    F = C[0, 1]
+    F = F.subs(C, E)
+    assert(fcode(F) == "      A(1, 2) + M(1, 2)")
+
+    x, y, z = symbols("x y z")
+    E = x*A - y*B + z*M
+    F = C[0, 0]
+    F = F.subs(C, E)
+    assert(fcode(F) == "      x*A(1, 1) + (-y)*B(1, 1) + z*M(1, 1)")

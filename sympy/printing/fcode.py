@@ -171,7 +171,9 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
+        elementAccess = "({0}, {1})".format(expr.i + 1, expr.j + 1)
+        printer = self
+        return expr._MatrixElement_expansion(printer, elementAccess)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
