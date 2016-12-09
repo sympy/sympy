@@ -209,6 +209,11 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
+    @property
+    def is_positive(self):
+        if self._eval_is_real():
+            return True
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])
