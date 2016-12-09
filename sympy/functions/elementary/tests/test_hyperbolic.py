@@ -920,3 +920,13 @@ def test_cosh_expansion():
     assert cosh(2*x).expand(trig=True) == cosh(x)**2 + sinh(x)**2
     assert cosh(3*x).expand(trig=True).expand() == \
         3*sinh(x)**2*cosh(x) + cosh(x)**3
+
+# See issue 11721
+# cosh(x) is positive for real values of x
+def test_cosh_positive():
+    x = symbols('x')
+    k = symbols('k',real=True)
+
+    assert cosh(x).is_positive is None
+    assert cosh(k).is_positive == True
+    assert abs(cosh(k)) == cosh(k)
