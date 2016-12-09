@@ -211,7 +211,7 @@ class cosh(HyperbolicFunction):
 
     @property
     def is_positive(self):
-        if self._eval_is_real():
+        if self.args[0].is_real:
             return True
 
     def fdiff(self, argindex=1):
