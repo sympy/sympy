@@ -740,7 +740,7 @@ class AssumptionKeys(object):
         Examples
         ========
 
-        >>> from sympy import Q, ask, MatrixSymbol
+        >>> from sympy import Q, ask, MatrixSymbol, Identity, Matrix
         >>> X = MatrixSymbol('X', 2, 2)
         >>> Y = MatrixSymbol('Y', 2, 3)
         >>> Z = MatrixSymbol('Z', 2, 2)
@@ -750,7 +750,11 @@ class AssumptionKeys(object):
         True
         >>> ask(Q.symmetric(Y))
         False
-
+        >>> A = Matrix([[1, 2, 0], [2, 1, 3], [0, 3, 1]])
+        >>> ask(Q.symmetric(A))
+        True
+        >>> ask(Q.symmetric(Identity(2)))
+        True
 
         References
         ==========
@@ -758,8 +762,6 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Symmetric_matrix
 
         """
-        # TODO: Add handlers to make these keys work with
-        # actual matrices and add more examples in the docstring.
         return Predicate('symmetric')
 
     @predicate_memo

@@ -1,6 +1,7 @@
 from sympy import Q, ask, Symbol
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
+from sympy.matrices import Matrix
 from sympy.matrices.expressions.factorizations import LofLU
 from sympy.utilities.pytest import XFAIL
 
@@ -46,6 +47,12 @@ def test_symmetric():
     assert ask(Q.symmetric(Y.T*X*Y)) is None
     assert ask(Q.symmetric(Y.T*X*Y), Q.symmetric(X)) is True
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
+    A = Matrix([[1, 2, 0], [2, 1, 3], [0, 3, 1]])
+    assert ask(Q.symmetric(A))
+    B = Matrix([[1, 2, 3], [4, 5, 6]])
+    assert ask(Q.symmetric(B)) is False
+    C = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    assert ask(Q.symmetric(C)) is False
 
 
 def _test_orthogonal_unitary(predicate):

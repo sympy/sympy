@@ -7,6 +7,7 @@ from __future__ import print_function, division
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
+from sympy.matrices import MatrixBase
 from sympy.matrices.expressions import MatMul, MatrixExpr
 from sympy.core.logic import fuzzy_and
 from sympy.utilities.iterables import sift
@@ -72,6 +73,10 @@ class AskSymmetricHandler(CommonHandler):
             return ask(Q.symmetric(expr.parent), assumptions)
 
     Identity = staticmethod(CommonHandler.AlwaysTrue)
+
+    @staticmethod
+    def MatrixBase(expr, assumptions):
+        return expr.is_symmetric()
 
 
 class AskInvertibleHandler(CommonHandler):
