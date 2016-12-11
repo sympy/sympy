@@ -336,11 +336,26 @@ class cosh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        from sympy import sin,sinh
+        arg = self.args[0]
+
+        # `cosh(x)` is real for real and purely imaginary `x`
+        if arg.is_real or arg.is_imaginary:
+            return True
+
+        # cosh(a+ib) = cos(b)*cosh(a) + i*sin(b)*sinh(a)
+        if arg.is_number:
+            re,im = arg.as_real_imag()
+            if sin(im).evalf()*sinh(re).evalf() == 0:
+                return True
+            return False
 
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_imaginary:
+            return True
+
+        if arg.is_real and arg.is_finite:
             return True
 
 
