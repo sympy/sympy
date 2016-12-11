@@ -739,19 +739,6 @@ class Integral(AddWithLimits):
         from sympy.integrals.risch import risch_integrate
         from sympy import sinc
 
-        # if instance of sinc function, first try using the G-function methods
-        # skip only if meijerg = False (user may prefer some other method)
-        # if integral still fails, just move on with regular algorithm flow
-        if isinstance(f, sinc) and meijerg is not False:
-            try:
-                meij_f = meijerint_indefinite(f, x)
-            except NotImplementedError:
-                from sympy.integrals.meijerint import _debug
-                _debug('NotImplementedError from meijerint_definite')
-            if meij_f is not None:
-                return meij_f
-
-
         if risch:
             try:
                 return risch_integrate(f, x, conds=conds)
@@ -902,17 +889,6 @@ class Integral(AddWithLimits):
                         parts.append(coeff*h)
                         continue
 
-                # fall back to heurisch
-                try:
-                    if conds == 'piecewise':
-                        h = heurisch_wrapper(g, x, hints=[])
-                    else:
-                        h = heurisch(g, x, hints=[])
-                except PolynomialError:
-                    # XXX: this exception means there is a bug in the
-                    # implementation of heuristic Risch integration
-                    # algorithm.
-                    h = None
             else:
                 h = None
 
@@ -948,6 +924,20 @@ class Integral(AddWithLimits):
                 except (ValueError, PolynomialError):
                     # can't handle some SymPy expressions
                     pass
+
+            if h is None:
+                # fall back to heurisch
+                try:
+                    if conds == 'piecewise':
+                        h = heurisch_wrapper(g, x, hints=[])
+                    else:
+                        h = heurisch(g, x, hints=[])
+                except PolynomialError:
+                    # XXX: this exception means there is a bug in the
+                    # implementation of heuristic Risch integration
+                    # algorithm.
+                    h = None
+
 
             # if we failed maybe it was because we had
             # a product that could have been expanded,
