@@ -214,6 +214,11 @@ class cosh(HyperbolicFunction):
         if self.args[0].is_real:
             return True
 
+    @property
+    def is_nonnegative(self):
+        if self.args[0].is_real:
+            return True
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])

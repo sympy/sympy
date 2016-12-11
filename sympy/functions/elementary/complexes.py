@@ -482,9 +482,9 @@ class Abs(Function):
                 return S.Infinity
         if arg.is_zero:
             return S.Zero
-        if arg.is_nonnegative:
+        if arg.is_nonnegative or arg.is_positive:
             return arg
-        if arg.is_nonpositive:
+        if arg.is_nonpositive or arg.is_negative:
             return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
@@ -502,16 +502,6 @@ class Abs(Function):
             unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
-
-        # if the expression is a function, then try to see if its positive or negative
-        # functions which have `is_positive` and `is_negative` values of form - bool or None
-        if isinstance(arg, Function) and not isinstance(arg.is_positive,property) \
-        and not isinstance(arg.is_negative,property):
-            if arg.is_positive:
-                return arg
-            elif arg.is_negative:
-                return S(-1)*arg
-
 
     def _eval_is_integer(self):
         if self.args[0].is_real:
