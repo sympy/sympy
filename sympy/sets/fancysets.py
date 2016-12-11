@@ -1434,7 +1434,7 @@ class ComplexRegion(Set):
         if other.is_subset(S.Reals):
 
             # treat a subset of reals as a complex region
-            other = ComplexRegion(other * FiniteSet(0), polar=self.polar)
+            other = ComplexRegion(other * FiniteSet(0))
 
         if other.is_ComplexRegion:
 
