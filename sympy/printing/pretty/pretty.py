@@ -1155,12 +1155,12 @@ class PrettyPrinter(Printer):
 
     def _print_gamma(self, e):
         from sympy import Function
-        from sympy.functions.special import gamma_functions
+        from sympy.functions.special.gamma_functions import gamma
         from sympy import factorial
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            if e.rewrite(factorial) == factorial(e.args[0] - 1):
+            if e.func is gamma:
                 pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             else:
                 pform = prettyForm(*pform.left(greek_unicode['gamma']))
