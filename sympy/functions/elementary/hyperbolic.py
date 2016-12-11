@@ -189,7 +189,7 @@ class sinh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import cosh, sin
+        from sympy import sin
         arg = self.args[0]
         if arg.is_real:
             return True
@@ -198,7 +198,7 @@ class sinh(HyperbolicFunction):
 
         if arg.is_number:
             re, im = arg.as_real_imag()
-            if (cosh(re)*sin(im)).equals(0):
+            if (sin(im)).equals(0):
                 return True
             return False
 
@@ -349,7 +349,7 @@ class cosh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import sin,sinh
+        from sympy import sin, sinh
         arg = self.args[0]
 
         # `cosh(x)` is real for real and purely imaginary `x`
@@ -358,7 +358,7 @@ class cosh(HyperbolicFunction):
 
         # cosh(a+ib) = cos(b)*cosh(a) + i*sin(b)*sinh(a)
         if arg.is_number:
-            re,im = arg.as_real_imag()
+            re, im = arg.as_real_imag()
             if (sin(im)*sinh(re)).equals(0):
                 return True
             return False
@@ -501,11 +501,30 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
-
-    def _eval_is_finite(self):
+        from sympy import sin, cos
         arg = self.args[0]
         if arg.is_real:
+            return True
+        elif arg.is_imaginary:
+            return False
+
+        if arg.is_number:
+            re, im = arg.as_real_imag()
+            if (sin(im)*cos(im)).equals(0):
+                return True
+            return False
+
+    def _eval_is_finite(self):
+        from sympy import sinh, cos
+        arg = self.args[0]
+        if arg.is_real and arg.is_finite:
+            return True
+
+        if arg.is_number:
+            re, im = arg.as_real_imag()
+            denom = cos(im)**2 + sinh(re)**2
+            if denom.equals(0):
+                return False
             return True
 
 
