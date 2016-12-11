@@ -1431,6 +1431,11 @@ class ComplexRegion(Set):
 
     def _union(self, other):
 
+        if other.is_subset(S.Reals):
+
+            # treat a subset of reals as a complex region
+            other = ComplexRegion(other * FiniteSet(0), polar=self.polar)
+
         if other.is_ComplexRegion:
 
             # self in rectangular form
@@ -1440,14 +1445,6 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
-
-        # treat a subset of Reals as complex numbers
-        if other.is_subset(S.Reals):
-            as_complex = other * FiniteSet(0)
-            if as_complex.is_subset(self.sets):
-                return self
-            else:
-                return ComplexRegion(Union(self.sets, as_complex), polar=self.polar)
 
         return None
 
