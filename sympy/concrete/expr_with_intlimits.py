@@ -12,6 +12,14 @@ class ReorderError(NotImplementedError):
             "%s could not be reordered: %s." % (expr, msg))
 
 class ExprWithIntLimits(ExprWithLimits):
+    """
+    The class for expressions with integer limits.
+
+    See Also
+    ========
+
+    ExprWithLimits, Product, Sum
+    """
     def change_index(self, var, trafo, newvar=None):
         """
         Change index of a Sum or Product.
