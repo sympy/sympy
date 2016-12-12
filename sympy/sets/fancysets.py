@@ -1432,7 +1432,6 @@ class ComplexRegion(Set):
     def _union(self, other):
 
         if other.is_subset(S.Reals):
-
             # treat a subset of reals as a complex region
             other = ComplexRegion(other * FiniteSet(0))
 
