@@ -1353,6 +1353,25 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    @classmethod
+    def from_real(cls, sets):
+        """
+        Converts given subset of real numbers to a complex region.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexRegion
+        >>> unit = Interval(0,1)
+        >>> ComplexRegion.from_real(unit)
+        ComplexRegion([0, 1] x {0}, False)
+
+        """
+        if not sets.is_subset(S.Reals):
+            raise ValueError("sets must be a subset of the real line")
+
+        return cls(sets * FiniteSet(0))
+
     def _contains(self, other):
         from sympy.functions import arg, Abs
         from sympy.core.containers import Tuple
@@ -1433,7 +1452,7 @@ class ComplexRegion(Set):
 
         if other.is_subset(S.Reals):
             # treat a subset of reals as a complex region
-            other = ComplexRegion(other * FiniteSet(0))
+            other = ComplexRegion.from_real(other)
 
         if other.is_ComplexRegion:
 

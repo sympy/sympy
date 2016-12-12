@@ -593,8 +593,8 @@ def test_ComplexRegion_union():
     assert c5.union(c6) == ComplexRegion(p3)
     assert c7.union(c8) == ComplexRegion(p4)
 
-    assert c1.union(Interval(2, 4)) == Union.reduce(Union(c1, Interval(2, 4), evaluate=False).args)
-    assert c5.union(Interval(2, 4)) == Union.reduce(Union(c5, Interval(2, 4), evaluate=False).args)
+    assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, ComplexRegion.from_real(Interval(2, 4)))
 
 
 def test_ComplexRegion_measure():
