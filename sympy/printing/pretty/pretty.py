@@ -1154,9 +1154,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_gamma(self, e):
-        from sympy import Function
-        from sympy.functions.special.gamma_functions import gamma
-        from sympy import factorial
+        from sympy.functions import gamma
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
