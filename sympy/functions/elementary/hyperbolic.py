@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
-
+from sympy import pi
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
@@ -189,25 +189,21 @@ class sinh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import sin
         arg = self.args[0]
         if arg.is_real:
             return True
-        if arg.is_imaginary:
-            return False
 
-        if arg.is_number:
-            re, im = arg.as_real_imag()
-            if (sin(im)).equals(0):
-                return True
+        # if `im` is of the form n*pi
+        # else, check if it is a number
+        re, im = arg.as_real_imag()
+        if (im % pi) == 0:
+            return True
+        elif im.is_number:
             return False
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_imaginary:
-            return True
-        elif arg.is_real and arg.is_finite:
-            return True
+        return arg.is_finite
 
 
 class cosh(HyperbolicFunction):
@@ -349,27 +345,24 @@ class cosh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import sin, sinh
         arg = self.args[0]
 
-        # `cosh(x)` is real for real and purely imaginary `x`
+        # `cosh(x)` is real for real OR purely imaginary `x`
         if arg.is_real or arg.is_imaginary:
             return True
 
         # cosh(a+ib) = cos(b)*cosh(a) + i*sin(b)*sinh(a)
-        if arg.is_number:
-            re, im = arg.as_real_imag()
-            if (sin(im)*sinh(re)).equals(0):
-                return True
+        # the imaginary part can be an expression like n*pi
+        # if not, check if the imaginary part is a number
+        re, im = arg.as_real_imag()
+        if (im % pi) == 0:
+            return True
+        elif im.is_number:
             return False
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_imaginary:
-            return True
-
-        if arg.is_real and arg.is_finite:
-            return True
+        return arg.is_finite
 
 
 class tanh(HyperbolicFunction):
@@ -501,31 +494,35 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        from sympy import sin, cos
+        from sympy import cos, sinh
         arg = self.args[0]
         if arg.is_real:
             return True
-        elif arg.is_imaginary:
-            return False
 
-        if arg.is_number:
-            re, im = arg.as_real_imag()
-            if (sin(im)*cos(im)).equals(0):
-                return True
+        re, im = arg.as_real_imag()
+
+        # if denom = 0, tanh(arg) = zoo
+        if re == 0 and im % pi == pi/2:
+            return None
+
+        # check if im is of the form n*pi/2 to make sin(2*im) = 0
+        # if not, im could be a number, return False in that case
+        if (im % (pi/2)) == 0:
+            return True
+        elif im.is_number:
             return False
 
     def _eval_is_finite(self):
         from sympy import sinh, cos
         arg = self.args[0]
-        if arg.is_real and arg.is_finite:
+
+        re, im = arg.as_real_imag()
+        denom = cos(im)**2 + sinh(re)**2
+        if denom == 0:
+            return False
+        elif denom.is_number:
             return True
 
-        if arg.is_number:
-            re, im = arg.as_real_imag()
-            denom = cos(im)**2 + sinh(re)**2
-            if denom.equals(0):
-                return False
-            return True
 
 
 class coth(HyperbolicFunction):
