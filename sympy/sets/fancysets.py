@@ -1431,11 +1431,12 @@ class ComplexRegion(Set):
 
         if other.is_subset(S.Reals):
             new_interval = []
+            x = symbols("x", cls=Dummy, real=True)
 
             # self in rectangular form
             if not self.polar:
                 for element in self.psets:
-                    if S.Zero in element.args[0]:
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
@@ -1443,8 +1444,10 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar:
                 for element in self.psets:
-                    if (0 in element.args[1]) or (S.Pi in element.args[1]):
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
+                    if S.Pi in element.args[1]:
+                        new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
 
