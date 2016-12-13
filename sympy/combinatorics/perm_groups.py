@@ -1069,7 +1069,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
         >>> p.elements
-        set([(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)])
+        {(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)}
 
         """
         return set(list(islice(self.generate(), None)))
