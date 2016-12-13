@@ -1193,10 +1193,14 @@ class PrettyPrinter(Printer):
             return base**n
 
     def _print_gamma(self, e):
+        from sympy.functions import gamma
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
+            if e.func == gamma:
+                pform = prettyForm(*pform.left(greek_unicode['Gamma']))
+            else:
+                pform = prettyForm(*pform.left(greek_unicode['gamma']))
             return pform
         else:
             return self._print_Function(e)
