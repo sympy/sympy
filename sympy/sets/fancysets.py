@@ -466,9 +466,13 @@ class ImageSet(Set):
                 if any(i is None for i in (new_sup, new_inf)):
                     return
 
+
                 range_set = S.EmptySet
 
                 if all(i.is_real for i in (new_sup, new_inf)):
+                    # this assumes continuity of underlying function
+                    # however fixes the case when it is decreasing
+                    new_inf, new_sup = min(new_inf, new_sup), max(new_inf, new_sup)
                     new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
                     range_set = base_set._intersect(new_interval)
                 else:
