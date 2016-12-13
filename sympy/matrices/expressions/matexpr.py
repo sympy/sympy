@@ -341,6 +341,16 @@ class MatrixElement(Expr):
     is_symbol = True
     is_commutative = True
 
+    def __new__(cls, name, n, m):
+        n, m = map(sympify, (n, m))
+        from sympy import MatrixBase
+        if isinstance(name, (MatrixBase,)):
+            if n.is_Integer and m.is_Integer:
+                return name[n, m]
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, n, m)
+        return obj
+
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
         if deep:
@@ -351,6 +361,9 @@ class MatrixElement(Expr):
 
     def _eval_derivative(self, v):
         if not isinstance(v, MatrixElement):
+            from sympy import MatrixBase
+            if isinstance(self.parent, MatrixBase):
+                return self.parent.diff(v)[self.i, self.j]
             return S.Zero
 
         if self.args[0] != v.args[0]:

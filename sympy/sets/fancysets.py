@@ -54,7 +54,9 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
             return S.false
@@ -82,7 +84,9 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
@@ -130,7 +134,9 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer:
             return S.true
         elif other.is_integer is False:
             return S.false
@@ -1347,6 +1353,25 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    @classmethod
+    def from_real(cls, sets):
+        """
+        Converts given subset of real numbers to a complex region.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexRegion
+        >>> unit = Interval(0,1)
+        >>> ComplexRegion.from_real(unit)
+        ComplexRegion([0, 1] x {0}, False)
+
+        """
+        if not sets.is_subset(S.Reals):
+            raise ValueError("sets must be a subset of the real line")
+
+        return cls(sets * FiniteSet(0))
+
     def _contains(self, other):
         from sympy.functions import arg, Abs
         from sympy.core.containers import Tuple
@@ -1354,6 +1379,10 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+
+        # If the other is not an Expression, and neither a Tuple
+        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+            return S.false
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
@@ -1399,8 +1428,6 @@ class ComplexRegion(Set):
                 return ComplexRegion(new_r_interval*new_theta_interval,
                                     polar=True)
 
-        if other is S.Reals:
-            return other
 
         if other.is_subset(S.Reals):
             new_interval = []
@@ -1423,6 +1450,10 @@ class ComplexRegion(Set):
 
     def _union(self, other):
 
+        if other.is_subset(S.Reals):
+            # treat a subset of reals as a complex region
+            other = ComplexRegion.from_real(other)
+
         if other.is_ComplexRegion:
 
             # self in rectangular form
@@ -1432,9 +1463,6 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
-
-        if self == S.Complexes:
-            return self
 
         return None
 

@@ -5,7 +5,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, z, t
@@ -594,7 +594,7 @@ def test_ComplexRegion_union():
     assert c7.union(c8) == ComplexRegion(p4)
 
     assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
-    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, ComplexRegion.from_real(Interval(2, 4)))
 
 
 def test_ComplexRegion_measure():
@@ -678,3 +678,33 @@ def test_issue_9980():
                                     Interval(1, 5)*Interval(1, 3)), False)
     assert c1.func(*c1.args) == c1
     assert R.func(*R.args) == R
+
+def test_issue_11732():
+    interval12 = Interval(1, 2)
+    finiteset1234 = FiniteSet(1, 2, 3, 4)
+    pointComplex = Tuple(1, 5)
+
+    assert (interval12 in S.Naturals) == False
+    assert (interval12 in S.Naturals0) == False
+    assert (interval12 in S.Integers) == False
+    assert (interval12 in S.Complexes) == False
+
+    assert (finiteset1234 in S.Naturals) == False
+    assert (finiteset1234 in S.Naturals0) == False
+    assert (finiteset1234 in S.Integers) == False
+    assert (finiteset1234 in S.Complexes) == False
+
+    assert (pointComplex in S.Naturals) == False
+    assert (pointComplex in S.Naturals0) == False
+    assert (pointComplex in S.Integers) == False
+    assert (pointComplex in S.Complexes) == True
+
+
+def test_issue_11730():
+    unit = Interval(0, 1)
+    square = ComplexRegion(unit ** 2)
+
+    assert Union(S.Complexes, FiniteSet(oo)) != S.Complexes
+    assert Union(S.Complexes, FiniteSet(eye(4))) != S.Complexes
+    assert Union(unit, square) == square
+    assert Intersection(S.Reals, square) == unit

@@ -63,6 +63,49 @@ class GeometryEntity(Basic):
 
     """
 
+    def __cmp__(self, other):
+        """Comparison of two GeometryEntities."""
+        n1 = self.__class__.__name__
+        n2 = other.__class__.__name__
+        c = (n1 > n2) - (n1 < n2)
+        if not c:
+            return 0
+
+        i1 = -1
+        for cls in self.__class__.__mro__:
+            try:
+                i1 = ordering_of_classes.index(cls.__name__)
+                break
+            except ValueError:
+                i1 = -1
+        if i1 == -1:
+            return c
+
+        i2 = -1
+        for cls in other.__class__.__mro__:
+            try:
+                i2 = ordering_of_classes.index(cls.__name__)
+                break
+            except ValueError:
+                i2 = -1
+        if i2 == -1:
+            return c
+
+        return (i1 > i2) - (i1 < i2)
+
+    def __contains__(self, other):
+        """Subclasses should implement this method for anything more complex than equality."""
+        if type(self) == type(other):
+            return self == other
+        raise NotImplementedError()
+
+    def __getnewargs__(self):
+        return tuple(self.args)
+
+    def __ne__(self, o):
+        """Test inequality of two geometrical entities."""
+        return not self.__eq__(o)
+
     def __new__(cls, *args, **kwargs):
         # Points are sequences, but they should not
         # be converted to Tuples, so use this detection function instead.
@@ -75,11 +118,182 @@ class GeometryEntity(Basic):
         args = [Tuple(*a) if is_seq_and_not_point(a) else sympify(a) for a in args]
         return Basic.__new__(cls, *args)
 
+    def __radd__(self, a):
+        return a.__add__(self)
+
+    def __rdiv__(self, a):
+        return a.__div__(self)
+
+    def __repr__(self):
+        """String representation of a GeometryEntity that can be evaluated
+        by sympy."""
+        return type(self).__name__ + repr(self.args)
+
+    def __rmul__(self, a):
+        return a.__mul__(self)
+
+    def __rsub__(self, a):
+        return a.__sub__(self)
+
+    def __str__(self):
+        """String representation of a GeometryEntity."""
+        from sympy.printing import sstr
+        return type(self).__name__ + sstr(self.args)
+
+    def _eval_subs(self, old, new):
+        from sympy.geometry.point import Point, Point3D
+        if is_sequence(old) or is_sequence(new):
+            if isinstance(self, Point3D):
+                old = Point3D(old)
+                new = Point3D(new)
+            else:
+                old = Point(old)
+                new = Point(new)
+            return  self._subs(old, new)
+
+    def _repr_svg_(self):
+        """SVG representation of a GeometryEntity suitable for IPython"""
+
+        from sympy.core.evalf import N
+
+        try:
+            bounds = self.bounds
+        except (NotImplementedError, TypeError):
+            # if we have no SVG representation, return None so IPython
+            # will fall back to the next representation
+            return None
+
+        svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            width="{1}" height="{2}" viewBox="{0}"
+            preserveAspectRatio="xMinYMin meet">
+            <defs>
+                <marker id="markerCircle" markerWidth="8" markerHeight="8"
+                    refx="5" refy="5" markerUnits="strokeWidth">
+                    <circle cx="5" cy="5" r="1.5" style="stroke: none; fill:#000000;"/>
+                </marker>
+                <marker id="markerArrow" markerWidth="13" markerHeight="13" refx="2" refy="4"
+                       orient="auto" markerUnits="strokeWidth">
+                    <path d="M2,2 L2,6 L6,4" style="fill: #000000;" />
+                </marker>
+                <marker id="markerReverseArrow" markerWidth="13" markerHeight="13" refx="6" refy="4"
+                       orient="auto" markerUnits="strokeWidth">
+                    <path d="M6,2 L6,6 L2,4" style="fill: #000000;" />
+                </marker>
+            </defs>'''
+
+        # Establish SVG canvas that will fit all the data + small space
+        xmin, ymin, xmax, ymax = map(N, bounds)
+        if xmin == xmax and ymin == ymax:
+            # This is a point; buffer using an arbitrary size
+            xmin, ymin, xmax, ymax = xmin - .5, ymin -.5, xmax + .5, ymax + .5
+        else:
+            # Expand bounds by a fraction of the data ranges
+            expand = 0.1  # or 10%; this keeps arrowheads in view (R plots use 4%)
+            widest_part = max([xmax - xmin, ymax - ymin])
+            expand_amount = widest_part * expand
+            xmin -= expand_amount
+            ymin -= expand_amount
+            xmax += expand_amount
+            ymax += expand_amount
+        dx = xmax - xmin
+        dy = ymax - ymin
+        width = min([max([100., dx]), 300])
+        height = min([max([100., dy]), 300])
+
+        scale_factor = 1. if max(width, height) == 0 else max(dx, dy) / max(width, height)
+        try:
+            svg = self._svg(scale_factor)
+        except (NotImplementedError, TypeError):
+            # if we have no SVG representation, return None so IPython
+            # will fall back to the next representation
+            return None
+
+        view_box = "{0} {1} {2} {3}".format(xmin, ymin, dx, dy)
+        transform = "matrix(1,0,0,-1,0,{0})".format(ymax + ymin)
+        svg_top = svg_top.format(view_box, width, height)
+
+        return svg_top + (
+            '<g transform="{0}">{1}</g></svg>'
+            ).format(transform, svg)
+
+    def _svg(self, scale_factor=1., fill_color="#66cc99"):
+        """Returns SVG path element for the GeometryEntity.
+
+        Parameters
+        ==========
+
+        scale_factor : float
+            Multiplication factor for the SVG stroke-width.  Default is 1.
+        fill_color : str, optional
+            Hex string for fill color. Default is "#66cc99".
+        """
+        raise NotImplementedError()
+
     def _sympy_(self):
         return self
 
-    def __getnewargs__(self):
-        return tuple(self.args)
+    @property
+    def ambient_dimension(self):
+        """What is the dimension of the space that the object is contained in?"""
+        raise NotImplementedError()
+
+    @property
+    def bounds(self):
+        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
+        rectangle for the geometric figure.
+
+        """
+
+        raise NotImplementedError()
+
+    def encloses(self, o):
+        """
+        Return True if o is inside (not on or outside) the boundaries of self.
+
+        The object will be decomposed into Points and individual Entities need
+        only define an encloses_point method for their class.
+
+        See Also
+        ========
+
+        sympy.geometry.ellipse.Ellipse.encloses_point
+        sympy.geometry.polygon.Polygon.encloses_point
+
+        Examples
+        ========
+
+        >>> from sympy import RegularPolygon, Point, Polygon
+        >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
+        >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
+        >>> t2.encloses(t)
+        True
+        >>> t.encloses(t2)
+        False
+
+        """
+
+        from sympy.geometry.point import Point
+        from sympy.geometry.line import Segment, Ray, Line
+        from sympy.geometry.ellipse import Ellipse
+        from sympy.geometry.polygon import Polygon, RegularPolygon
+
+        if isinstance(o, Point):
+            return self.encloses_point(o)
+        elif isinstance(o, Segment):
+            return all(self.encloses_point(x) for x in o.points)
+        elif isinstance(o, Ray) or isinstance(o, Line):
+            return False
+        elif isinstance(o, Ellipse):
+            return self.encloses_point(o.center) and not self.intersection(o) and self.encloses_point(Point(o.center.x+o.hradius,o.center.y))
+        elif isinstance(o, Polygon):
+            if isinstance(o, RegularPolygon):
+                if not self.encloses_point(o.center):
+                    return False
+            return all(self.encloses_point(v) for v in o.vertices)
+        raise NotImplementedError()
+    def equals(self, o):
+        return self == o
 
     def intersection(self, o):
         """
@@ -101,6 +315,62 @@ class GeometryEntity(Basic):
 
         """
         raise NotImplementedError()
+
+    def is_similar(self, other):
+        """Is this geometrical entity similar to another geometrical entity?
+
+        Two entities are similar if a uniform scaling (enlarging or
+        shrinking) of one of the entities will allow one to obtain the other.
+
+        Notes
+        =====
+
+        This method is not intended to be used directly but rather
+        through the `are_similar` function found in util.py.
+        An entity is not required to implement this method.
+        If two different types of entities can be similar, it is only
+        required that one of them be able to determine this.
+
+        See Also
+        ========
+
+        scale
+
+        """
+        raise NotImplementedError()
+
+    def reflect(self, line):
+        from sympy import atan, Point, Dummy, oo
+
+        g = self
+        l = line
+        o = Point(0, 0)
+        if l.slope == 0:
+            y = l.args[0].y
+            if not y:  # x-axis
+                return g.scale(y=-1)
+            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
+        elif l.slope == oo:
+            x = l.args[0].x
+            if not x:  # y-axis
+                return g.scale(x=-1)
+            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+        else:
+            if not hasattr(g, 'reflect') and not all(
+                    isinstance(arg, Point) for arg in g.args):
+                raise NotImplementedError(
+                    'reflect undefined or non-Point args in %s' % g)
+            a = atan(l.slope)
+            c = l.coefficients
+            d = -c[-1]/c[1]  # y-intercept
+            # apply the transform to a single point
+            x, y = Dummy(), Dummy()
+            xf = Point(x, y)
+            xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
+                ).rotate(a, o).translate(y=d)
+            # replace every point using that transform
+            reps = [(p, xf.xreplace({x: p.x, y: p.y})) for p in g.atoms(Point)]
+        return g.xreplace(dict(reps))
 
     def rotate(self, angle, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
@@ -190,276 +460,6 @@ class GeometryEntity(Basic):
             else:
                 newargs.append(a)
         return self.func(*newargs)
-
-    def reflect(self, line):
-        from sympy import atan, Point, Dummy, oo
-
-        g = self
-        l = line
-        o = Point(0, 0)
-        if l.slope == 0:
-            y = l.args[0].y
-            if not y:  # x-axis
-                return g.scale(y=-1)
-            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
-        elif l.slope == oo:
-            x = l.args[0].x
-            if not x:  # y-axis
-                return g.scale(x=-1)
-            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
-        else:
-            if not hasattr(g, 'reflect') and not all(
-                    isinstance(arg, Point) for arg in g.args):
-                raise NotImplementedError(
-                    'reflect undefined or non-Point args in %s' % g)
-            a = atan(l.slope)
-            c = l.coefficients
-            d = -c[-1]/c[1]  # y-intercept
-            # apply the transform to a single point
-            x, y = Dummy(), Dummy()
-            xf = Point(x, y)
-            xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
-                ).rotate(a, o).translate(y=d)
-            # replace every point using that transform
-            reps = [(p, xf.xreplace({x: p.x, y: p.y})) for p in g.atoms(Point)]
-        return g.xreplace(dict(reps))
-
-    def encloses(self, o):
-        """
-        Return True if o is inside (not on or outside) the boundaries of self.
-
-        The object will be decomposed into Points and individual Entities need
-        only define an encloses_point method for their class.
-
-        See Also
-        ========
-
-        sympy.geometry.ellipse.Ellipse.encloses_point
-        sympy.geometry.polygon.Polygon.encloses_point
-
-        Examples
-        ========
-
-        >>> from sympy import RegularPolygon, Point, Polygon
-        >>> t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
-        >>> t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)
-        >>> t2.encloses(t)
-        True
-        >>> t.encloses(t2)
-        False
-
-        """
-
-        from sympy.geometry.point import Point
-        from sympy.geometry.line import Segment, Ray, Line
-        from sympy.geometry.ellipse import Ellipse
-        from sympy.geometry.polygon import Polygon, RegularPolygon
-
-        if isinstance(o, Point):
-            return self.encloses_point(o)
-        elif isinstance(o, Segment):
-            return all(self.encloses_point(x) for x in o.points)
-        elif isinstance(o, Ray) or isinstance(o, Line):
-            return False
-        elif isinstance(o, Ellipse):
-            return self.encloses_point(o.center) and not self.intersection(o) and self.encloses_point(Point(o.center.x+o.hradius,o.center.y))
-        elif isinstance(o, Polygon):
-            if isinstance(o, RegularPolygon):
-                if not self.encloses_point(o.center):
-                    return False
-            return all(self.encloses_point(v) for v in o.vertices)
-        raise NotImplementedError()
-    @property
-    def ambient_dimension(self):
-        """What is the dimension of the space that the object is contained in?"""
-        raise NotImplementedError()
-
-    @property
-    def bounds(self):
-        """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
-        rectangle for the geometric figure.
-
-        """
-
-        raise NotImplementedError()
-
-    def is_similar(self, other):
-        """Is this geometrical entity similar to another geometrical entity?
-
-        Two entities are similar if a uniform scaling (enlarging or
-        shrinking) of one of the entities will allow one to obtain the other.
-
-        Notes
-        =====
-
-        This method is not intended to be used directly but rather
-        through the `are_similar` function found in util.py.
-        An entity is not required to implement this method.
-        If two different types of entities can be similar, it is only
-        required that one of them be able to determine this.
-
-        See Also
-        ========
-
-        scale
-
-        """
-        raise NotImplementedError()
-
-    def equals(self, o):
-        return self == o
-
-    def _svg(self, scale_factor=1., fill_color="#66cc99"):
-        """Returns SVG path element for the GeometryEntity.
-
-        Parameters
-        ==========
-
-        scale_factor : float
-            Multiplication factor for the SVG stroke-width.  Default is 1.
-        fill_color : str, optional
-            Hex string for fill color. Default is "#66cc99".
-        """
-        raise NotImplementedError()
-
-    def _repr_svg_(self):
-        """SVG representation of a GeometryEntity suitable for IPython"""
-
-        from sympy.core.evalf import N
-
-        try:
-            bounds = self.bounds
-        except (NotImplementedError, TypeError):
-            # if we have no SVG representation, return None so IPython
-            # will fall back to the next representation
-            return None
-
-        svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
-            width="{1}" height="{2}" viewBox="{0}"
-            preserveAspectRatio="xMinYMin meet">
-            <defs>
-                <marker id="markerCircle" markerWidth="8" markerHeight="8"
-                    refx="5" refy="5" markerUnits="strokeWidth">
-                    <circle cx="5" cy="5" r="1.5" style="stroke: none; fill:#000000;"/>
-                </marker>
-                <marker id="markerArrow" markerWidth="13" markerHeight="13" refx="2" refy="4"
-                       orient="auto" markerUnits="strokeWidth">
-                    <path d="M2,2 L2,6 L6,4" style="fill: #000000;" />
-                </marker>
-                <marker id="markerReverseArrow" markerWidth="13" markerHeight="13" refx="6" refy="4"
-                       orient="auto" markerUnits="strokeWidth">
-                    <path d="M6,2 L6,6 L2,4" style="fill: #000000;" />
-                </marker>
-            </defs>'''
-
-        # Establish SVG canvas that will fit all the data + small space
-        xmin, ymin, xmax, ymax = map(N, bounds)
-        if xmin == xmax and ymin == ymax:
-            # This is a point; buffer using an arbitrary size
-            xmin, ymin, xmax, ymax = xmin - .5, ymin -.5, xmax + .5, ymax + .5
-        else:
-            # Expand bounds by a fraction of the data ranges
-            expand = 0.1  # or 10%; this keeps arrowheads in view (R plots use 4%)
-            widest_part = max([xmax - xmin, ymax - ymin])
-            expand_amount = widest_part * expand
-            xmin -= expand_amount
-            ymin -= expand_amount
-            xmax += expand_amount
-            ymax += expand_amount
-        dx = xmax - xmin
-        dy = ymax - ymin
-        width = min([max([100., dx]), 300])
-        height = min([max([100., dy]), 300])
-
-        scale_factor = 1. if max(width, height) == 0 else max(dx, dy) / max(width, height)
-        try:
-            svg = self._svg(scale_factor)
-        except (NotImplementedError, TypeError):
-            # if we have no SVG representation, return None so IPython
-            # will fall back to the next representation
-            return None
-
-        view_box = "{0} {1} {2} {3}".format(xmin, ymin, dx, dy)
-        transform = "matrix(1,0,0,-1,0,{0})".format(ymax + ymin)
-        svg_top = svg_top.format(view_box, width, height)
-
-        return svg_top + (
-            '<g transform="{0}">{1}</g></svg>'
-            ).format(transform, svg)
-
-    def __ne__(self, o):
-        """Test inequality of two geometrical entities."""
-        return not self.__eq__(o)
-
-    def __radd__(self, a):
-        return a.__add__(self)
-
-    def __rsub__(self, a):
-        return a.__sub__(self)
-
-    def __rmul__(self, a):
-        return a.__mul__(self)
-
-    def __rdiv__(self, a):
-        return a.__div__(self)
-
-    def __str__(self):
-        """String representation of a GeometryEntity."""
-        from sympy.printing import sstr
-        return type(self).__name__ + sstr(self.args)
-
-    def __repr__(self):
-        """String representation of a GeometryEntity that can be evaluated
-        by sympy."""
-        return type(self).__name__ + repr(self.args)
-
-    def __cmp__(self, other):
-        """Comparison of two GeometryEntities."""
-        n1 = self.__class__.__name__
-        n2 = other.__class__.__name__
-        c = (n1 > n2) - (n1 < n2)
-        if not c:
-            return 0
-
-        i1 = -1
-        for cls in self.__class__.__mro__:
-            try:
-                i1 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i1 = -1
-        if i1 == -1:
-            return c
-
-        i2 = -1
-        for cls in other.__class__.__mro__:
-            try:
-                i2 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i2 = -1
-        if i2 == -1:
-            return c
-
-        return (i1 > i2) - (i1 < i2)
-
-    def __contains__(self, other):
-        """Subclasses should implement this method for anything more complex than equality."""
-        if type(self) == type(other):
-            return self == other
-        raise NotImplementedError()
-
-    def _eval_subs(self, old, new):
-        from sympy.geometry.point import Point, Point3D
-        if is_sequence(old) or is_sequence(new):
-            if isinstance(self, Point3D):
-                old = Point3D(old)
-                new = Point3D(new)
-            else:
-                old = Point(old)
-                new = Point(new)
-            return  self._subs(old, new)
 
 class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
