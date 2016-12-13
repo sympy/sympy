@@ -146,7 +146,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(self, sym) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(sym, self) for sym in self.domain.symbols)
 
     @property
     def symbols(self):
@@ -182,7 +182,7 @@ class SinglePSpace(PSpace):
 
     @property
     def value(self):
-        return RandomSymbol(self, self.symbol)
+        return RandomSymbol(self.symbol, self)
 
     @property
     def symbol(self):
@@ -223,24 +223,25 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, pspace, symbol=None):
-        if symbol is None:
+    def __new__(cls, symbol, pspace=None):
+        if pspace is None:
             # Allow single arg, representing pspace == PSpace()
-            pspace, symbol = PSpace(), pspace
+            pspace = PSpace()
         if not isinstance(symbol, Symbol):
             raise TypeError("symbol should be of type Symbol")
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
-        return Basic.__new__(cls, pspace, symbol)
+        return Basic.__new__(cls, symbol, pspace)
 
     is_finite = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     _diff_wrt = True
 
-    pspace = property(lambda self: self.args[0])
-    symbol = property(lambda self: self.args[1])
+    pspace = property(lambda self: self.args[1])
+    symbol = property(lambda self: self.args[0])
     name   = property(lambda self: self.symbol.name)
 
     def _eval_is_positive(self):

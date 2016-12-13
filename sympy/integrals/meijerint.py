@@ -108,7 +108,7 @@ def _create_lookup_table(table):
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
         hint=Not(IsNonPositiveInteger(a)))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
-        pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
+        2*sin(pi*a/2)*gamma(1 - a)*abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
         b**(a - 1)*sin(a*pi)/pi)
 
@@ -1461,7 +1461,10 @@ def _rewrite_single(f, x, recursive=True):
                 for fac, g in terms:
                     r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
                                                    exponents_only=True), x)
-                    g = g.subs(subs).subs(z, x)
+                    try:
+                        g = g.subs(subs).subs(z, x)
+                    except ValueError:
+                        continue
                     # NOTE these substitutions can in principle introduce oo,
                     #      zoo and other absurdities. It shouldn't matter,
                     #      but better be safe.
@@ -1739,11 +1742,15 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import arg, exp, I, And, DiracDelta
+    from sympy import arg, exp, I, And, DiracDelta, SingularityFunction
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
+        return None
+
+    if f.has(SingularityFunction):
+        _debug('Integrand has Singularity Function terms - giving up.')
         return None
 
     f_, x_, a_, b_ = f, x, a, b

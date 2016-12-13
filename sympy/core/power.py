@@ -675,6 +675,8 @@ class Pow(Expr):
             expanded = expand_complex(self)
             if expanded != self:
                 return c(expanded)
+        if self.is_real:
+            return self
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose

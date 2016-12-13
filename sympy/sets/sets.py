@@ -455,6 +455,17 @@ class Set(Basic):
 
     @property
     def is_open(self):
+        """
+        Property method to check whether a set is open.
+        A set is open if and only if it has an empty intersection with its
+        boundary.
+
+        Examples
+        ========
+        >>> from sympy import S
+        >>> S.Reals.is_open
+        True
+        """
         if not Intersection(self, self.boundary):
             return True
         # We can't confidently claim that an intersection exists
@@ -665,6 +676,11 @@ class ProductSet(Set):
     def __len__(self):
         return Mul(*[len(s) for s in self.args])
 
+    def __bool__(self):
+        return all([bool(s) for s in self.args])
+
+    __nonzero__ = __bool__
+
 
 class Interval(Set, EvalfMixin):
     """
@@ -737,6 +753,8 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
+            if start == S.Infinity or start == S.NegativeInfinity:
+                return S.EmptySet
             return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
@@ -932,9 +950,16 @@ class Interval(Set, EvalfMixin):
 
                 return Interval(start, end, left_open, right_open)
 
-        # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and sympify(other.contains(self.start)) is S.true) or
-                (self.right_open and sympify(other.contains(self.end)) is S.true)):
+        # If I have open end points and these endpoints are contained in other.
+        # But only in case, when endpoints are finite. Because
+        # interval does not contain oo or -oo.
+        open_left_in_other_and_finite = (self.left_open and
+                                         sympify(other.contains(self.start)) is S.true and
+                                         self.start.is_finite)
+        open_right_in_other_and_finite = (self.right_open and
+                                          sympify(other.contains(self.end)) is S.true and
+                                          self.end.is_finite)
+        if open_left_in_other_and_finite or open_right_in_other_and_finite:
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -1517,22 +1542,6 @@ class Intersection(Set):
         # Handle Finite sets
         rv = Intersection._handle_finite_sets(args)
         if rv is not None:
-            # simplify symbolic intersection between a FiniteSet
-            # and an interval
-            if isinstance(rv, Intersection) and len(rv.args) == 2:
-                ivl, s = rv.args
-                if isinstance(s, FiniteSet) and len(s) == 1 and isinstance(ivl, Interval):
-                    e = list(s)[0]
-                    if e.free_symbols:
-                        rhs = Dummy()
-                        e, r = clear_coefficients(e, rhs)
-                        if r != rhs:
-                            iargs = list(ivl.args)
-                            iargs[0] = r.subs(rhs, ivl.start)
-                            iargs[1] = r.subs(rhs, ivl.end)
-                            if iargs[0] > iargs[1]:
-                                iargs = iargs[:2][::-1] + iargs[-2:][::-1]
-                            rv = Intersection(FiniteSet(e), Interval(*iargs), evaluate=False)
             return rv
 
         # If any of the sets are unions, return a Union of Intersections

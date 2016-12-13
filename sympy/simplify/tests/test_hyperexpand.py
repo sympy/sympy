@@ -9,7 +9,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise
+from sympy import hyper, I, S, meijerg, Piecewise, Tuple
 from sympy.abc import z, a, b, c
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically as tn
@@ -48,8 +48,13 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if not numerical:
         return True
     repl = {}
-    for n, a in enumerate(r.free_symbols - {z}):
-        repl[a] = randcplx(n)/div
+    randsyms = r.free_symbols - {z}
+    while randsyms:
+        # Only randomly generated parameters are checked.
+        for n, a in enumerate(randsyms):
+            repl[a] = randcplx(n)/div
+        if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
+            break
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
         [a, b, c, d] = [2, -2, 3, -1]

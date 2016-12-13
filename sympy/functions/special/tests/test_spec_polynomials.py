@@ -242,6 +242,9 @@ def test_laguerre():
     assert laguerre(2, x) == x**2/2 - 2*x + 1
     assert laguerre(3, x) == -x**3/6 + 3*x**2/2 - 3*x + 1
 
+    X = laguerre(Rational(5,2), x)
+    assert isinstance(X, laguerre)
+
     X = laguerre(n, x)
     assert isinstance(X, laguerre)
 

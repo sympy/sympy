@@ -5,7 +5,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, Abs, I, Tuple)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, z, t
@@ -441,6 +441,34 @@ def test_imageset_intersect_real():
     assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
 
 
+def test_imageset_intersect_interval():
+    from sympy.abc import n
+    f1 = ImageSet(Lambda(n, n*pi), S.Integers)
+    f2 = ImageSet(Lambda(n, 2*n), Interval(0, pi))
+    f3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    # complex expressions
+    f4 = ImageSet(Lambda(n, n*I*pi), S.Integers)
+    f5 = ImageSet(Lambda(n, 2*I*n*pi + pi/2), S.Integers)
+    # non-linear expressions
+    f6 = ImageSet(Lambda(n, log(n)), S.Integers)
+    f7 = ImageSet(Lambda(n, n**2), S.Integers)
+    f8 = ImageSet(Lambda(n, Abs(n)), S.Integers)
+    f9 = ImageSet(Lambda(n, exp(n)), S.Naturals0)
+
+    assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f1.intersect(Interval(0, 2*pi, False, True)) == FiniteSet(0, pi)
+    assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
+    assert f3.intersect(Interval(-1, 1)) == S.EmptySet
+    assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
+    assert f4.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f4.intersect(Interval(1, 2)) == S.EmptySet
+    assert f5.intersect(Interval(0, 1)) == S.EmptySet
+    assert f6.intersect(Interval(0, 1)) == FiniteSet(S.Zero, log(2))
+    assert f7.intersect(Interval(0, 10)) == Intersection(f7, Interval(0, 10))
+    assert f8.intersect(Interval(0, 2)) == Intersection(f8, Interval(0, 2))
+    assert f9.intersect(Interval(1, 2)) == Intersection(f9, Interval(1, 2))
+
+
 def test_infinitely_indexed_set_3():
     from sympy.abc import n, m, t
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
@@ -650,3 +678,23 @@ def test_issue_9980():
                                     Interval(1, 5)*Interval(1, 3)), False)
     assert c1.func(*c1.args) == c1
     assert R.func(*R.args) == R
+
+def test_issue_11732():
+    interval12 = Interval(1, 2)
+    finiteset1234 = FiniteSet(1, 2, 3, 4)
+    pointComplex = Tuple(1, 5)
+
+    assert (interval12 in S.Naturals) == False
+    assert (interval12 in S.Naturals0) == False
+    assert (interval12 in S.Integers) == False
+    assert (interval12 in S.Complexes) == False
+
+    assert (finiteset1234 in S.Naturals) == False
+    assert (finiteset1234 in S.Naturals0) == False
+    assert (finiteset1234 in S.Integers) == False
+    assert (finiteset1234 in S.Complexes) == False
+
+    assert (pointComplex in S.Naturals) == False
+    assert (pointComplex in S.Naturals0) == False
+    assert (pointComplex in S.Integers) == False
+    assert (pointComplex in S.Complexes) == True

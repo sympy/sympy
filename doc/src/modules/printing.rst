@@ -286,9 +286,9 @@ Gtk
 
 .. module:: sympy.printing.gtk
 
-You can print to a grkmathview widget using the function ``print_gtk``
+You can print to a gtkmathview widget using the function ``print_gtk``
 located in ``sympy.printing.gtk`` (it requires to have installed
-gtkmatmatview and libgtkmathview-bin in some systems).
+gtkmathview and libgtkmathview-bin in some systems).
 
 GtkMathView accepts MathML, so this rendering depends on the MathML
 representation of the expression.

@@ -5,7 +5,7 @@
 examples."""
 
 # Internal imports
-import sympy as sm
+from sympy.core import backend as sm
 import sympy.physics.mechanics as me
 
 

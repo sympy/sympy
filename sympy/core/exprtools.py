@@ -1144,6 +1144,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
 
     """
     def do(expr):
+        from sympy.concrete.summations import Sum
+        from sympy.simplify.simplify import factor_sum
         is_iterable = iterable(expr)
 
         if not isinstance(expr, Basic) or expr.is_Atom:
@@ -1158,6 +1160,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
             if newargs == args:
                 return expr
             return expr.func(*newargs)
+
+        if isinstance(expr, Sum):
+            return factor_sum(expr, radical=radical, clear=clear, fraction=fraction, sign=sign)
 
         cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:

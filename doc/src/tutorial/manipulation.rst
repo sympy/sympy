@@ -17,20 +17,20 @@ Understanding Expression Trees
 
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
-the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this
+the expression `2^x + xy`, i.e., ``2**x + x*y``.  We can see what this
 expression looks like internally by using ``srepr``
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
 
-    >>> expr = x**2 + x*y
+    >>> expr = 2**x + x*y
     >>> srepr(expr)
-    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))"
+    "Add(Pow(Integer(2), Symbol('x')), Mul(Symbol('x'), Symbol('y')))"
 
 The easiest way to tear this apart is to look at a diagram of the expression
 tree:
 
-.. This comes from dotprint(x**2 + x*y, labelfunc=srepr)
+.. This comes from dotprint(2**x + x*y, labelfunc=srepr)
 
 .. graphviz::
 
@@ -82,16 +82,16 @@ expression, 2, we got ``Integer(2)``.  ``Integer`` is the SymPy class for
 integers.  It is similar to the Python built-in type ``int``, except that
 ``Integer`` plays nicely with other SymPy types.
 
-When we write ``x**2``, this creates a ``Pow`` object.  ``Pow`` is short for
+When we write ``2**x``, this creates a ``Pow`` object.  ``Pow`` is short for
 "power".
 
-    >>> srepr(x**2)
-    "Pow(Symbol('x'), Integer(2))"
+    >>> srepr(2**x)
+    "Pow(Integer(2), Symbol('x'))"
 
-We could have created the same object by calling ``Pow(x, 2)``
+We could have created the same object by calling ``Pow(2, x)``
 
-    >>> Pow(x, 2)
-    x**2
+    >>> Pow(2, x)
+    2**x
 
 Note that in the ``srepr`` output, we see ``Integer(2)``, the SymPy version of
 integers, even though technically, we input ``2``, a Python int.  In general,
@@ -104,7 +104,7 @@ function that does this is ``sympify`` [#sympify-fn]_.
     >>> type(sympify(2))
     <class 'sympy.core.numbers.Integer'>
 
-We have seen that ``x**2`` is represented as ``Pow(x, 2)``.  What about
+We have seen that ``2**x`` is represented as ``Pow(2, x)``.  What about
 ``x*y``?  As we might expect, this is the multiplication of ``x`` and ``y``.
 The SymPy class for multiplication is ``Mul``.
 
@@ -116,13 +116,13 @@ Thus, we could have created the same object by writing ``Mul(x, y)``.
     >>> Mul(x, y)
     x*y
 
-Now we get to our final expression, ``x**2 + x*y``.  This is the addition of
-our last two objects, ``Pow(x, 2)``, and ``Mul(x, y)``.  The SymPy class for
+Now we get to our final expression, ``2**x + x*y``.  This is the addition of
+our last two objects, ``Pow(2, x)``, and ``Mul(x, y)``.  The SymPy class for
 addition is ``Add``, so, as you might expect, to create this object, we use
-``Add(Pow(x, 2), Mul(x, y))``.
+``Add(Pow(2, x), Mul(x, y))``.
 
-    >>> Add(Pow(x, 2), Mul(x, y))
-    x**2 + x*y
+    >>> Add(Pow(2, x), Mul(x, y))
+    2**x + x*y
 
 SymPy expression trees can have many branches, and can be quite deep or quite
 broad.  Here is a more complicated example
