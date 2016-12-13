@@ -1158,7 +1158,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            if e.func is gamma:
+            if e.func == gamma:
                 pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             else:
                 pform = prettyForm(*pform.left(greek_unicode['gamma']))
