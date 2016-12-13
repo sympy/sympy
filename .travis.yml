@@ -348,9 +348,11 @@ install:
     elif [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
-script: |
-    bin/test_travis.sh
-    if [[ "${TEST_SPHINX}" == "true" ]]; then
+script:
+  # Don't run doctr of the build fails
+  - set -e
+  - bin/test_travis.sh
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
     fi
 notifications:
