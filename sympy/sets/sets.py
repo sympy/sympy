@@ -455,6 +455,17 @@ class Set(Basic):
 
     @property
     def is_open(self):
+        """
+        Property method to check whether a set is open.
+        A set is open if and only if it has an empty intersection with its
+        boundary.
+
+        Examples
+        ========
+        >>> from sympy import S
+        >>> S.Reals.is_open
+        True
+        """
         if not Intersection(self, self.boundary):
             return True
         # We can't confidently claim that an intersection exists
@@ -666,6 +677,11 @@ class ProductSet(Set):
 
     def __len__(self):
         return Mul(*[len(s) for s in self.args])
+
+    def __bool__(self):
+        return all([bool(s) for s in self.args])
+
+    __nonzero__ = __bool__
 
 
 class Interval(Set, EvalfMixin):
