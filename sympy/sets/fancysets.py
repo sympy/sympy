@@ -472,7 +472,8 @@ class ImageSet(Set):
                 if all(i.is_real for i in (new_sup, new_inf)):
                     # this assumes continuity of underlying function
                     # however fixes the case when it is decreasing
-                    new_inf, new_sup = min(new_inf, new_sup), max(new_inf, new_sup)
+                    if new_inf > new_sup:
+                        new_inf, new_sup = new_sup, new_inf
                     new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
                     range_set = base_set._intersect(new_interval)
                 else:
@@ -1452,6 +1453,8 @@ class ComplexRegion(Set):
                         new_interval.append(element.args[0])
                     if S.Pi in element.args[1]:
                         new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
+                    if S.Zero in element.args[0]:
+                        new_interval.append(FiniteSet(0))
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
 

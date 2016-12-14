@@ -727,4 +727,4 @@ def test_issue_11938():
 
     assert Intersection(cp1, S.Reals) == Interval(-1, 1)
     assert Intersection(cp2, S.Reals) == Interval(-1, 0)
-    assert Intersection(cp3, S.Reals) == S.EmptySet
+    assert Intersection(cp3, S.Reals) == FiniteSet(0)
