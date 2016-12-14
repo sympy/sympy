@@ -10,6 +10,8 @@ If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
 This is the central page for all of SymPy's documentation.
 
+The documentation in pdf form can be found at
+`https://github.com/sympy/sympy/releases/ <https://github.com/sympy/sympy/releases/>`_.
 
 Contents:
 
