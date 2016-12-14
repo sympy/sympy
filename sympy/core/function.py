@@ -308,7 +308,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and old == self.func and
+        if (isinstance(old, Function) and isinstance(new, Function) and old == self.func and
             len(self.args) in new.nargs):
             return new(*self.args)
 
