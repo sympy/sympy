@@ -633,6 +633,8 @@ class ProductSet(Set):
                 for a, b in zip(self.sets, other.sets))
 
     def _union(self, other):
+        if other.is_subset(self):
+            return self
         if not other.is_ProductSet:
             return None
         if len(other.args) != len(self.args):
@@ -858,6 +860,8 @@ class Interval(Set, EvalfMixin):
 
         See Set._intersect for docstring
         """
+        if other.is_EmptySet:
+            return other
         # We only know how to intersect with other intervals
         if not other.is_Interval:
             return None

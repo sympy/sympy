@@ -286,7 +286,7 @@ before_install:
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install "sphinx==1.3.1" doctr;
+      pip install "sphinx==1.3.1" "docutils==0.12" doctr;
     fi
   - |
     if [[ "${TEST_MATPLOTLIB}" == "true" || "${TEST_SYMENGINE}" == "true" ]]; then
@@ -349,9 +349,11 @@ install:
       python setup.py install;
     fi
 script:
+  # Don't run doctr of the build fails
+  - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
+        doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
     fi
 notifications:
   email: false
