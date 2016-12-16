@@ -9,7 +9,8 @@ def test_literal_probability():
     Y = Normal('Y', 3, 4)
     Z = Poisson('Z', 4)
     W = Poisson('W', 3)
-    x, y, w, z = symbols('x, y, w, z')
+    x = symbols('x', real=True)
+    y, w, z = symbols('y, w, z')
 
     assert Probability(X > 0).evaluate_integral() == probability(X > 0)
     assert Probability(X > x).evaluate_integral() == probability(X > x)

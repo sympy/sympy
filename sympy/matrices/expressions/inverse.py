@@ -76,7 +76,7 @@ def refine_Inverse(expr, assumptions):
     X^-1
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(X.I))
-    X'
+    X.T
     """
     if ask(Q.orthogonal(expr), assumptions):
         return expr.arg.T

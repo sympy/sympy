@@ -235,6 +235,7 @@ class RandomSymbol(Expr):
 
     is_finite = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     _diff_wrt = True
