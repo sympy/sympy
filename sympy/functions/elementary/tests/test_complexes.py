@@ -91,9 +91,18 @@ def test_re():
     A = ImmutableMatrix([[1 + 3*I, 3-2*I],[0, 2*I]])
     assert re(A) == ImmutableMatrix([[1, 3],[0, 0]])
 
-    X = ImmutableSparseMatrix([[i*I + i for i in range(5)] for i in range(5)])
-    Y = SparseMatrix([[i for i in range(5)] for i in range(5)])
-    assert re(X).as_immutable() == Y
+    X = SparseMatrix([[2*j + i*I for i in range(5)] for j in range(5)])
+    assert re(X) - Matrix([[0, 0, 0, 0, 0],
+                           [2, 2, 2, 2, 2],
+                           [4, 4, 4, 4, 4],
+                           [6, 6, 6, 6, 6],
+                           [8, 8, 8, 8, 8]]) == Matrix.zeros(5)
+
+    assert im(X) - Matrix([[0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4],
+                           [0, 1, 2, 3, 4]]) == Matrix.zeros(5)
 
     X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))
     assert re(X) == Matrix([[0, 0, 0], [1, 1, 1], [2, 2, 2]])

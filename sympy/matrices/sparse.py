@@ -337,7 +337,8 @@ class SparseMatrix(MatrixBase):
     def as_real_imag(self):
         """Returns tuple containing (real , imaginary) part of sparse matrix"""
         from sympy.functions.elementary.complexes import re, im
-        real_smat = im_smat = self.copy()
+        real_smat = self.copy()
+        im_smat = self.copy()
 
         for key, value in self._smat.items():
             real_smat._smat[key] = re(value)
