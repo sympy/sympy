@@ -50,8 +50,8 @@ class AskPrimeHandler(CommonHandler):
             else:
                 break
         else:
-            # a product of integers can't be a prime
-            return False
+            # a product of integers can be a prime
+            return None
 
     @staticmethod
     def Pow(expr, assumptions):
