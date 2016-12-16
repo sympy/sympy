@@ -5,7 +5,7 @@ import itertools
 
 from sympy.core.sympify import _sympify
 
-from sympy import Matrix, flatten, Basic, Tuple
+from sympy import Basic, Tuple
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 
@@ -22,7 +22,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([0, 1, 2, 3], (2, 2))
         >>> a
         [[0, 1], [2, 3]]
@@ -31,7 +31,22 @@ class DenseNDimArray(NDimArray):
         >>> a[1, 1]
         3
 
+        Symbolic index:
+
+        >>> from sympy.abc import i, j
+        >>> a[i, j]
+        [[0, 1], [2, 3]][i, j]
+
+        Replace `i` and `j` to get element `(1, 1)`:
+
+        >>> a[i, j].subs({i: 1, j: 1})
+        3
+
         """
+        syindex = self._check_symbolic_index(index)
+        if syindex is not None:
+            return syindex
+
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
 
             def slice_expand(s, dim):
@@ -64,7 +79,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1 for i in range(9)], (3, 3))
         >>> b = a.tomatrix()
         >>> b
@@ -74,6 +89,8 @@ class DenseNDimArray(NDimArray):
         [1, 1, 1]])
 
         """
+        from sympy.matrices import Matrix
+
         if self.rank() != 2:
             raise ValueError('Dimensions must be of size of 2')
 
@@ -91,7 +108,7 @@ class DenseNDimArray(NDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray([1, 2, 3, 4, 5, 6], (2, 3))
         >>> a.shape
         (2, 3)
@@ -117,12 +134,14 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    def __new__(cls, iterable=None, shape=None, **kwargs):
+        return cls._new(iterable, shape, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+    def _new(cls, iterable, shape, **kwargs):
+        from sympy.utilities.iterables import flatten
+
+        shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         flat_list = flatten(flat_list)
         flat_list = Tuple(*flat_list)
@@ -139,12 +158,14 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    def __new__(cls, iterable=None, shape=None, **kwargs):
+        return cls._new(iterable, shape, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        shape, flat_list = cls._handle_ndarray_creation_inputs(*args, **kwargs)
+    def _new(cls, iterable, shape, **kwargs):
+        from sympy.utilities.iterables import flatten
+
+        shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         flat_list = flatten(flat_list)
         self = object.__new__(cls)
         self._shape = shape
@@ -159,7 +180,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         Examples
         ========
 
-        >>> from sympy.tensor.array import MutableDenseNDimArray
+        >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(2,  2)
         >>> a[0,0] = 1
         >>> a[1,1] = 1

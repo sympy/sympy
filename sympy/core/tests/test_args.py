@@ -296,6 +296,12 @@ def test_sympy__core__expr__Expr():
     assert _test_args(Expr())
 
 
+def test_sympy__core__expr__UnevaluatedExpr():
+    from sympy.core.expr import UnevaluatedExpr
+    from sympy.abc import x
+    assert _test_args(UnevaluatedExpr(x))
+
+
 def test_sympy__core__function__Application():
     from sympy.core.function import Application
     assert _test_args(Application(1, 2, 3))
@@ -3462,24 +3468,43 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
-
 @SKIP("abstract class")
-def test_sympy__geometry__line3d__LinearEntity3D():
+def test_sympy__geometry__line__LinearEntity2D():
     pass
 
 
-def test_sympy__geometry__line3d__Line3D():
-    from sympy.geometry.line3d import Line3D
+def test_sympy__geometry__line__Line2D():
+    from sympy.geometry.line import Line2D
+    assert _test_args(Line2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Ray2D():
+    from sympy.geometry.line import Ray2D
+    assert _test_args(Ray2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Segment2D():
+    from sympy.geometry.line import Segment2D
+    assert _test_args(Segment2D((0, 1), (2, 3)))
+
+
+@SKIP("abstract class")
+def test_sympy__geometry__line__LinearEntity3D():
+    pass
+
+
+def test_sympy__geometry__line__Line3D():
+    from sympy.geometry.line import Line3D
     assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
 
 
-def test_sympy__geometry__line3d__Segment3D():
-    from sympy.geometry.line3d import Segment3D
+def test_sympy__geometry__line__Segment3D():
+    from sympy.geometry.line import Segment3D
     assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
 
 
-def test_sympy__geometry__line3d__Ray3D():
-    from sympy.geometry.line3d import Ray3D
+def test_sympy__geometry__line__Ray3D():
+    from sympy.geometry.line import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
 

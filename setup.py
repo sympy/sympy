@@ -2,9 +2,9 @@
 """Distutils based setup script for SymPy.
 
 This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
-python mechanism for installing packages.  Optionally, you can use
-Setuptools (http://pythonhosted.org/setuptools/setuptools.html) to automatically
-handle dependencies.  For the easiest installation
+python mechanism for installing packages. Optionally, you can use
+Setuptools (http://pythonhosted.org/setuptools/setuptools.html)
+to automatically handle dependencies. For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
     python setup.py install
@@ -52,14 +52,16 @@ except ImportError:
         if mpmath.__version__ < LooseVersion(mpmath_version):
             raise ImportError
     except ImportError:
-        print("Please install the mpmath package with a version >= %s" % mpmath_version)
+        print("Please install the mpmath package with a version >= %s"
+              % mpmath_version)
         sys.exit(-1)
 
 PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 7):
-    print("SymPy requires Python 2.7 or newer. Python %d.%d detected" % sys.version_info[:2])
+    print("SymPy requires Python 2.7 or newer. Python %d.%d detected"
+          % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -100,6 +102,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.optics',
@@ -133,6 +136,7 @@ modules = [
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
+
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -188,7 +192,8 @@ class clean(Command):
                     os.remove(os.path.join(root, file))
 
         os.chdir(dir_setup)
-        names = ["python-build-stamp-2.4", "MANIFEST", "build", "dist", "doc/_build", "sample.tex"]
+        names = ["python-build-stamp-2.4", "MANIFEST", "build",
+                 "dist", "doc/_build", "sample.tex"]
 
         for f in names:
             if os.path.isfile(f):
@@ -196,7 +201,7 @@ class clean(Command):
             elif os.path.isdir(f):
                 shutil.rmtree(f)
 
-        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules", \
+        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules",
                                            "physics", "vector", "*.pdf")):
             if os.path.isfile(name):
                 os.remove(name)
@@ -280,6 +285,7 @@ tests = [
     'sympy.matrices.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.optics.tests',

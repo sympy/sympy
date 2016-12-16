@@ -120,9 +120,11 @@ class MatMul(MatrixExpr):
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
         coeff, matrices = self.as_coeff_matrices()
-        # I don't know how coeff could have noncommutative factors, but this
-        # handles it.
         coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+        if coeff_c == [1]:
+            coeff_c = []
+        elif coeff_c == set([1]):
+            coeff_c = set()
 
         return coeff_c, coeff_nc + matrices
 
@@ -257,7 +259,7 @@ def refine_MatMul(expr, assumptions):
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
     >>> print(expr)
-    X*X'
+    X*X.T
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I

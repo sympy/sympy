@@ -1,12 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together, collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
+                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
+                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -634,6 +634,7 @@ def test_as_independent():
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
     eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
+    assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
 @XFAIL
 def test_call_2():
@@ -1146,6 +1147,7 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+    assert (x*y).coeff(z, 0) == x*y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1681,6 +1683,25 @@ def test_round():
     assert S.Infinity.round() == S.Infinity
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+
+def test_held_expression_UnevaluatedExpr():
+    x = symbols("x")
+    he = UnevaluatedExpr(1/x)
+    e1 = x*he
+
+    assert isinstance(e1, Mul)
+    assert e1.args == (x, he)
+    assert e1.doit() == 1
+
+    xx = Mul(x, x, evaluate=False)
+    assert xx != x**2
+
+    ue2 = UnevaluatedExpr(xx)
+    assert isinstance(ue2, UnevaluatedExpr)
+    assert ue2.args == (xx,)
+    assert ue2.doit() == x**2
+    assert ue2.doit(deep=False) == xx
 
 
 def test_round_exception_nostr():

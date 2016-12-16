@@ -1,4 +1,4 @@
-from sympy import sin, cos, pi, zeros, ImmutableMatrix as Matrix
+from sympy import sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express)
 
@@ -171,6 +171,14 @@ def test_issue_10348():
     I = ReferenceFrame('I')
     A = I.orientnew('A', 'space', u, 'XYZ')
 
+
+def test_issue_11503():
+    A = ReferenceFrame("A")
+    B = A.orientnew("B", "Axis", [35, A.y])
+    C = ReferenceFrame("C")
+    A.orient(C, "Axis", [70, C.z])
+
+
 def test_partial_velocity():
 
     N = ReferenceFrame('N')
@@ -188,3 +196,21 @@ def test_partial_velocity():
 
     assert N.partial_velocity(N, u1) == 0
     assert A.partial_velocity(A, u1) == 0
+
+
+def test_issue_11498():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+
+    # Identity transformation
+    A.orient(B, 'DCM', eye(3))
+    assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert B.dcm(A) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    # x -> y
+    # y -> -z
+    # z -> -x
+    A.orient(B, 'DCM', Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))
+    assert B.dcm(A) == Matrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]])
+    assert A.dcm(B) == Matrix([[0, 0, -1], [1, 0, 0], [0, -1, 0]])
+    assert B.dcm(A).T == A.dcm(B)
