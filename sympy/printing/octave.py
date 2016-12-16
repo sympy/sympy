@@ -438,6 +438,12 @@ class OctaveCodePrinter(CodePrinter):
         return "airy(3, %s)" % self._print(expr.args[0])
 
 
+    def _print_LambertW(self, expr):
+        # argument order is reversed
+        args = ", ".join([self._print(x) for x in reversed(expr.args)])
+        return "lambertw(" + args + ")"
+
+
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting

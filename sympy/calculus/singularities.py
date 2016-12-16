@@ -1,3 +1,20 @@
+"""
+Singularities
+=============
+
+This module implements algorithms for finding singularities for a function
+and identifying types of functions.
+
+The differential calculus methods in this module include methods to identify
+the following function types in the given ``Interval``:
+- Increasing
+- Strictly Increasing
+- Decreasing
+- Strictly Decreasing
+- Monotonic
+
+"""
+
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
@@ -172,8 +189,6 @@ def is_strictly_decreasing(f, interval=S.Reals, symbol=None):
     >>> from sympy import is_strictly_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
-    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
-    True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))

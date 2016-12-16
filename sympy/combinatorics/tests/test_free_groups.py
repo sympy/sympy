@@ -1,4 +1,4 @@
-from sympy.combinatorics.free_group import free_group, FreeGroup
+from sympy.combinatorics.free_groups import free_group, FreeGroup
 from sympy.core import Symbol
 from sympy.utilities.pytest import raises
 from sympy import oo

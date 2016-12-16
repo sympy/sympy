@@ -6,7 +6,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
+    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin, Mod,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -16,13 +16,17 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction)
+    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction, UnevaluatedExpr)
 
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
-from sympy.printing.latex import latex, translate
+from sympy.printing.latex import (latex, translate, greek_letters_set,
+                                  tex_greek_dictionary)
+from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
+                                MutableSparseNDimArray, MutableDenseNDimArray)
+from sympy.tensor.array import tensorproduct
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
@@ -59,6 +63,8 @@ def test_latex_basic():
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == "1 / x"
+    assert latex(-S(3)/2) == r"- \frac{3}{2}"
+    assert latex(-S(3)/2, fold_short_frac=True) == r"- 3 / 2"
     assert latex(1/x**2) == r"\frac{1}{x^{2}}"
     assert latex(1/(x + y)/2) == r"\frac{1}{2 \left(x + y\right)}"
     assert latex(x/2) == r"\frac{x}{2}"
@@ -136,11 +142,12 @@ def test_latex_builtins():
 
 
 def test_latex_SingularityFunction():
-    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^ 5"
-    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^ 4"
-    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^ 4"
-    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^ n"
-
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^{5}"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^{4}"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^{4}"
+    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^{n}"
+    assert latex(SingularityFunction(x, 4, -2)) == r"{\langle x - 4 \rangle}^{-2}"
+    assert latex(SingularityFunction(x, 4, -1)) == r"{\langle x - 4 \rangle}^{-1}"
 
 def test_latex_cycle():
     assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
@@ -166,7 +173,14 @@ def test_latex_Float():
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
-    mass, volume = symbols('mass, volume')
+    tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
+    assert latex(tau) == r"\tau"
+    assert latex(Tau) == "T"
+    assert latex(TAU) == r"\tau"
+    assert latex(taU) == r"\tau"
+    # Check that all capitalized greek letters are handled explicitly
+    capitalized_letters = set(l.capitalize() for l in greek_letters_set)
+    assert len(capitalized_letters - set(tex_greek_dictionary.keys())) == 0
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q1')) == r"q_{1}"
@@ -385,6 +399,12 @@ def test_latex_functions():
 
     assert latex(primeomega(n)) == r'\Omega\left(n\right)'
     assert latex(primeomega(n) ** 2) == r'\left(\Omega\left(n\right)\right)^{2}'
+
+    assert latex(Mod(x, 7)) == r'x\bmod{7}'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
+    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
+    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -847,7 +867,7 @@ def test_latex_Piecewise():
     p = Piecewise((A**2, Eq(A, B)), (A*B, True))
     s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
     assert latex(p) == s
-    assert latex(A*p) == r"A %s" % s
+    assert latex(A*p) == r"A \left(%s\right)" % s
     assert latex(p*A) == r"\left(%s\right) A" % s
 
 
@@ -886,6 +906,40 @@ def test_latex_matrix_with_functions():
                 r')}\end{matrix}\right]')
 
     assert latex(M) == expected
+
+
+def test_latex_NDimArray():
+    x, y, z, w = symbols("x y z w")
+
+    for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray):
+        M = ArrayType([[1 / x, y], [z, w]])
+        M1 = ArrayType([1 / x, y, z])
+
+        M2 = tensorproduct(M1, M)
+        M3 = tensorproduct(M, M)
+
+        assert latex(M) == '\\left[\\begin{matrix}\\frac{1}{x} & y\\\\z & w\\end{matrix}\\right]'
+        assert latex(M1) == "\\left[\\begin{matrix}\\frac{1}{x} & y & z\\end{matrix}\\right]"
+        assert latex(M2) == r"\left[\begin{matrix}" \
+                            r"\left[\begin{matrix}\frac{1}{x^{2}} & \frac{y}{x}\\\frac{z}{x} & \frac{w}{x}\end{matrix}\right] & " \
+                            r"\left[\begin{matrix}\frac{y}{x} & y^{2}\\y z & w y\end{matrix}\right] & " \
+                            r"\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right]" \
+                            r"\end{matrix}\right]"
+        assert latex(M3) == r"""\left[\begin{matrix}"""\
+                r"""\left[\begin{matrix}\frac{1}{x^{2}} & \frac{y}{x}\\\frac{z}{x} & \frac{w}{x}\end{matrix}\right] & """\
+                r"""\left[\begin{matrix}\frac{y}{x} & y^{2}\\y z & w y\end{matrix}\right]\\"""\
+                r"""\left[\begin{matrix}\frac{z}{x} & y z\\z^{2} & w z\end{matrix}\right] & """\
+                r"""\left[\begin{matrix}\frac{w}{x} & w y\\w z & w^{2}\end{matrix}\right]"""\
+                r"""\end{matrix}\right]"""
+        assert latex(ArrayType()) == r"\left[\begin{matrix}\end{matrix}\right]"
+
+        Mrow = ArrayType([[x, y, 1/z]])
+        Mcolumn = ArrayType([[x], [y], [1/z]])
+        Mcol2 = ArrayType([Mcolumn.tolist()])
+
+        assert latex(Mrow) == r"\left[\left[\begin{matrix}x & y & \frac{1}{z}\end{matrix}\right]\right]"
+        assert latex(Mcolumn) == r"\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]"
+        assert latex(Mcol2) == r'\left[\begin{matrix}\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]\end{matrix}\right]'
 
 
 def test_latex_mul_symbol():
@@ -1531,3 +1585,12 @@ def test_issue_10489():
     s = Symbol(latexSymbolWithBrace)
     assert latex(s) == latexSymbolWithBrace
     assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
+
+
+def test_latex_UnevaluatedExpr():
+    x = symbols("x")
+    he = UnevaluatedExpr(1/x)
+    assert latex(he) == latex(1/x) == r"\frac{1}{x}"
+    assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
+    assert latex(he + 1) == r"1 + \frac{1}{x}"
+    assert latex(x*he) == r"x \frac{1}{x}"

@@ -1044,7 +1044,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=0)
+        >>> A, B = symbols('A B', commutative=False)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1601,8 +1601,6 @@ class Expr(Basic, EvalfMixin):
             want = Add
         else:
             want = Mul
-        if func is not want and (func is Add or func is Mul):
-            return (want.identity, self)
 
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
@@ -2512,7 +2510,7 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = Dummy('x', positive=True, finite=True)
-            rv = self.xreplace({x: xpos}).series(xpos, x0, n, dir, logx=logx)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
@@ -3062,15 +3060,15 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import trigsimp
         return trigsimp(self, **args)
 
-    def radsimp(self):
+    def radsimp(self, **kwargs):
         """See the radsimp function in sympy.simplify"""
         from sympy.simplify import radsimp
-        return radsimp(self)
+        return radsimp(self, **kwargs)
 
-    def powsimp(self, deep=False, combine='all'):
+    def powsimp(self, *args, **kwargs):
         """See the powsimp function in sympy.simplify"""
         from sympy.simplify import powsimp
-        return powsimp(self, deep, combine)
+        return powsimp(self, *args, **kwargs)
 
     def combsimp(self):
         """See the combsimp function in sympy.simplify"""
@@ -3261,6 +3259,34 @@ def _mag(x):
         assert 1 <= (xpos/10**mag_first_dig) < 10
         mag_first_dig += 1
     return mag_first_dig
+
+
+class UnevaluatedExpr(Expr):
+    """
+    Expression that is not evaluated unless released.
+
+    Examples
+    ========
+
+    >>> from sympy import UnevaluatedExpr
+    >>> from sympy.abc import a, b, x, y
+    >>> x*(1/x)
+    1
+    >>> x*UnevaluatedExpr(1/x)
+    x*1/x
+
+    """
+
+    def __new__(cls, arg, **kwargs):
+        obj = Expr.__new__(cls, arg, **kwargs)
+        return obj
+
+    def doit(self, *args, **kwargs):
+        if kwargs.get("deep", True):
+            return self.args[0].doit(*args, **kwargs)
+        else:
+            return self.args[0]
+
 
 from .mul import Mul
 from .add import Add

@@ -1,6 +1,5 @@
 """Tests that the IPython printing module is properly loaded. """
 
-from sympy.core.compatibility import u
 from sympy.interactive.session import init_ipython_session
 from sympy.external import import_module
 from sympy.utilities.pytest import raises

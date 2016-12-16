@@ -35,6 +35,8 @@ def test_interval_arguments():
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
     assert Interval(-oo, 0).left_open is true
     assert Interval(oo, -oo) == S.EmptySet
+    assert Interval(oo, oo) == S.EmptySet
+    assert Interval(-oo, -oo) == S.EmptySet
 
     assert isinstance(Interval(1, 1), FiniteSet)
     e = Sum(x, (x, 1, 3))
@@ -132,6 +134,8 @@ def test_union():
     # issue 7843
     assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == \
         FiniteSet(-sqrt(-I), sqrt(-I))
+
+    assert Union(S.Reals, S.Integers) == S.Reals
 
 
 def test_union_iter():
@@ -304,6 +308,8 @@ def test_intersection():
     assert Intersection(Intersection(S.Integers, S.Naturals, evaluate=False),
                         S.Reals, evaluate=False) == \
             Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
+
+    assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
 
 def test_issue_9623():
@@ -485,6 +491,8 @@ def test_contains():
         Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
         And(y <= 3, y <= x, y >= 1, y >= 2)
+
+    assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
 
 def test_interval_symbolic():
@@ -955,6 +963,8 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+def test_issue_11827():
+    assert S.Naturals0**4
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)

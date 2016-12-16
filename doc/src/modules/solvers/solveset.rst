@@ -585,6 +585,12 @@ linsolve
 .. autofunction:: sympy.solvers.solveset.linsolve
 
 
+nonlinsolve
+-----------
+
+.. autofunction:: sympy.solvers.solveset.nonlinsolve
+
+
 Diophantine Equations (DEs)
 ---------------------------
 

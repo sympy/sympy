@@ -8,9 +8,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
+from sympy import simplify
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -461,6 +461,8 @@ def msubs(expr, *sub_dicts, **kwargs):
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):

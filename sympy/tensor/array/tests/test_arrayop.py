@@ -126,7 +126,7 @@ def test_array_permutedims():
     # Test that permuted shape corresponds to action by `Permutation`:
     assert permutedims(ra, perm).shape == tuple(Permutation(perm)(shape))
 
-    z = NDimArray.zeros(4,5,6,7)
+    z = Array.zeros(4,5,6,7)
 
     assert permutedims(z, (2, 3, 1, 0)).shape == (6, 7, 5, 4)
     assert permutedims(z, [2, 3, 1, 0]).shape == (6, 7, 5, 4)

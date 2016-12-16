@@ -1077,6 +1077,8 @@ class laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
+    _ortho_poly = staticmethod(laguerre_poly)
+
     @classmethod
     def eval(cls, n, x):
         if not n.is_Number:
@@ -1098,7 +1100,7 @@ class laguerre(OrthogonalPolynomial):
                 raise ValueError(
                     "The index n must be nonnegative integer (got %r)" % n)
             else:
-                return laguerre_poly(n, x, 0)
+                return cls._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:

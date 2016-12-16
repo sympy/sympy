@@ -1,7 +1,7 @@
-from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, tan,
-                   sin, pi)
+from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
+                   cot, sec, csc)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 AccumBounds)
+                                 periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -61,6 +61,58 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(1).intersect(Interval(3, 4)), x) == S.EmptySet
     assert not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x) == \
         Union(Interval(-2, -1, True, False), Interval(2, oo))
+
+
+def test_periodicity():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert periodicity(sin(2*x), x) == pi
+    assert periodicity((-2)*tan(4*x), x) == pi/4
+    assert periodicity(sin(x)**2, x) == 2*pi
+    assert periodicity(3**tan(3*x), x) == pi/3
+    assert periodicity(tan(x)*cos(x), x) == 2*pi
+    assert periodicity(sin(x)**(tan(x)), x) == 2*pi
+    assert periodicity(tan(x)*sec(x), x) == 2*pi
+    assert periodicity(sin(2*x)*cos(2*x) - y, x) == pi/2
+    assert periodicity(tan(x) + cot(x), x) == pi
+    assert periodicity(sin(x) - cos(2*x), x) == 2*pi
+    assert periodicity(sin(x) - 1, x) == 2*pi
+    assert periodicity(sin(4*x) + sin(x)*cos(x), x) == pi
+    assert periodicity(exp(sin(x)), x) == 2*pi
+    assert periodicity(log(cot(2*x)) - sin(cos(2*x)), x) == pi
+    assert periodicity(sin(2*x)*exp(tan(x) - csc(2*x)), x) == pi
+    assert periodicity(cos(sec(x) - csc(2*x)), x) == 2*pi
+    assert periodicity(tan(sin(2*x)), x) == pi
+    assert periodicity(2*tan(x)**2, x) == pi
+
+    assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
+    assert periodicity(tan(x), y) == S.Zero
+
+    assert periodicity(exp(x), x) is None
+    assert periodicity(log(x), x) is None
+    assert periodicity(exp(x)**sin(x), x) is None
+    assert periodicity(sin(x)**y, y) is None
+
+
+def test_periodicity_check():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert periodicity(tan(x), x, check=True) == pi
+    assert periodicity(sin(x) + cos(x), x, check=True) == 2*pi
+    raises(NotImplementedError, lambda: periodicity(sec(x), x, check=True))
+    raises(NotImplementedError, lambda: periodicity(sin(x*y), x, check=True))
+
+
+def test_lcim():
+    from sympy import pi
+
+    assert lcim([S(1)/2, S(2), S(3)]) == 6
+    assert lcim([pi/2, pi/4, pi]) == pi
+    assert lcim([2*pi, pi/2]) == 2*pi
+    assert lcim([S(1), 2*pi]) is None
+    assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
 
 
 def test_AccumBounds():

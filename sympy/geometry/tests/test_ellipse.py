@@ -121,6 +121,15 @@ def test_ellipse_geom():
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
 
+    # for numerical calculations, we shouldn't demand exact equality,
+    # so only test up to the desired precision
+    def lines_close(l1, l2, prec):
+        """ tests whether l1 and 12 are within 10**(-prec)
+        of each other """
+        return abs(l1.p1 - l2.p1) < 10**(-prec) and abs(l1.p2 - l2.p2) < 10**(-prec)
+    def line_list_close(ll1, ll2, prec):
+        return all(lines_close(l1, l2, prec) for l1, l2 in zip(ll1, ll2))
+
     e = Ellipse(Point(0, 0), 2, 1)
     assert e.normal_lines(Point(0, 0)) == \
         [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
@@ -128,20 +137,20 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(1, 0))]
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
-    assert e.normal_lines(Point(1, 1), 2) == [
+    assert line_list_close(e.normal_lines(Point(1, 1), 2), [
         Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
-        Line(Point(28/29, -7/8), Point(57/29, -9/2))]
+        Line(Point(28/29, -7/8), Point(57/29, -9/2))], 2)
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
-    assert e.normal_lines(p, 2) == [
+    assert line_list_close(e.normal_lines(p, 2), [
         Line(Point(-341/171, -1/13), Point(-170/171, 5/64)),
-        Line(Point(26/15, -1/2), Point(41/15, -43/26))]
+        Line(Point(26/15, -1/2), Point(41/15, -43/26))], 2)
     # be sure to use the slope that isn't undefined on boundary
     e = Ellipse((0, 0), 2, 2*sqrt(3)/3)
-    assert e.normal_lines((1, 1), 2) == [
+    assert line_list_close(e.normal_lines((1, 1), 2), [
         Line(Point(-64/33, -20/71), Point(-31/33, 2/13)),
-        Line(Point(1, -1), Point(2, -4))]
+        Line(Point(1, -1), Point(2, -4))], 2)
     # general ellipse fails except under certain conditions
     e = Ellipse((0, 0), x, 1)
     assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
@@ -260,6 +269,13 @@ def test_ellipse_geom():
     assert e.rotate(pi, (1, 2)) == Ellipse(Point(2, 4), 2, 1)
     raises(NotImplementedError, lambda: e.rotate(pi/3))
 
+    # Circle rotation tests (Issue #11743)
+    # Link - https://github.com/sympy/sympy/issues/11743
+    cir = Circle(Point(1, 0), 1)
+    assert cir.rotate(pi/2) == Circle(Point(0, 1), 1)
+    assert cir.rotate(pi/3) == Circle(Point(1/2, sqrt(3)/2), 1)
+    assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
+    assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
