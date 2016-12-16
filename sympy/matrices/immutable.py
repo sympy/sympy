@@ -114,7 +114,7 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     >>> _.shape
     (3, 3)
     """
-
+    is_Matrix = True
     _class_priority = 9
 
     def __new__(cls, *args, **kwargs):

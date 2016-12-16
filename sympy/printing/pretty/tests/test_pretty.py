@@ -12,7 +12,7 @@ from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
-    euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
+    euler, exp, expint, factorial, factorial2, floor, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
@@ -4623,9 +4623,11 @@ u("""\
 
 
 def test_gammas():
+    from sympy import gamma
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+    assert xpretty(symbols('gamma', cls=Function)(x), use_unicode=True) == u'γ(x)'
 
 
 def test_SingularityFunction():
@@ -5740,6 +5742,11 @@ def test_pretty_Mod():
     assert upretty(Mod(x, 7) + 1) == ucode_str4
     assert pretty(2 * Mod(x, 7)) == ascii_str5
     assert upretty(2 * Mod(x, 7)) == ucode_str5
+
+
+def test_issue_11801():
+    assert pretty(Symbol("")) == ""
+    assert upretty(Symbol("")) == ""
 
 
 def test_pretty_UnevaluatedExpr():

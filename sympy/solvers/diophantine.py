@@ -93,7 +93,8 @@ def _even(i):
     return i % 2 == 0
 
 
-def diophantine(eq, param=symbols("t", integer=True), syms=None):
+def diophantine(eq, param=symbols("t", integer=True), syms=None,
+                permute=False):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
@@ -118,6 +119,18 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     ``syms`` is an optional list of symbols which determines the
     order of the elements in the returned tuple.
 
+    By default, only the base solution is returned. If ``permute`` is set to
+    True then permutations of the base solution and/or permutations of the
+    signs of the values will be returned when applicable.
+
+    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy.abc import a, b
+    >>> eq = a**4 + b**4 - (2**4 + 3**4)
+    >>> diophantine(eq)
+    set([(2, 3)])
+    >>> diophantine(eq, permute=True)
+    set([(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)])
+
     Details
     =======
 
@@ -127,7 +140,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diophantine
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
     set([(t_0, -t_0), (t_0, t_0)])
@@ -141,7 +153,13 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     ========
 
     diop_solve()
+    sympy.utilities.iterables.permute_signs
+    sympy.utilities.iterables.signed_permutations
     """
+
+    from sympy.utilities.iterables import (
+        subsets, permute_signs, signed_permutations)
+
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
 
@@ -154,9 +172,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
                     'syms should be given as a sequence, e.g. a list')
             syms = [i for i in syms if i in var]
             if syms != var:
-                map = dict(zip(syms, range(len(syms))))
-                return set([tuple([t[map[i]] for i in var])
-                    for t in diophantine(eq, param)])
+                dict_sym_index = dict(zip(syms, range(len(syms))))
+                return set([tuple([t[dict_sym_index[i]] for i in var])
+                            for t in diophantine(eq, param)])
         n, d = eq.as_numer_denom()
         if not n.free_symbols:
             return set()
@@ -177,11 +195,92 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
         raise TypeError(filldedent('''
     Equation should be a polynomial with Rational coefficients.'''))
 
+    # permute only sign
+    do_permute_signs = False
+    # permute sign and values
+    do_permute_signs_var = False
+    # permute few signs
+    permute_few_signs = False
     try:
         # if we know that factoring should not be attempted, skip
         # the factoring step
         v, c, t = classify_diop(eq)
-        if t  == 'general_sum_of_squares':
+
+        # check for permute sign
+        if permute:
+            len_var = len(v)
+            permute_signs_for = [
+                'general_sum_of_squares',
+                'general_sum_of_even_powers']
+            permute_signs_check = [
+                'homogeneous_ternary_quadratic',
+                'homogeneous_ternary_quadratic_normal',
+                'binary_quadratic']
+            if t in permute_signs_for:
+                do_permute_signs_var = True
+            elif t in permute_signs_check:
+                # if all the variables in eq have even powers
+                # then do_permute_sign = True
+                if len_var == 3:
+                    var_mul = list(subsets(v, 2))
+                    # here var_mul is like [(x, y), (x, z), (y, z)]
+                    xy_coeff = True
+                    x_coeff = True
+                    var1_mul_var2 = map(lambda a: a[0]*a[1], var_mul)
+                    # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
+                    # `xy_coeff` => True and do_permute_sign => False.
+                    # Means no permuted solution.
+                    for v1_mul_v2 in var1_mul_var2:
+                        try:
+                            coeff = c[v1_mul_v2]
+                        except KeyError:
+                            coeff = 0
+                        xy_coeff = bool(xy_coeff) and bool(coeff)
+                    var_mul = list(subsets(v, 1))
+                    # here var_mul is like [(x,), (y, )]
+                    for v1 in var_mul:
+                        try:
+                            coeff = c[var[0]]
+                        except KeyError:
+                            coeff = 0
+                        x_coeff = bool(x_coeff) and bool(coeff)
+                    if not any([xy_coeff, x_coeff]):
+                        # means only x**2, y**2, z**2, const is present
+                        do_permute_signs = True
+                    elif not x_coeff:
+                        permute_few_signs = True
+                elif len_var == 2:
+                    var_mul = list(subsets(v, 2))
+                    # here var_mul is like [(x, y)]
+                    xy_coeff = True
+                    x_coeff = True
+                    var1_mul_var2 = map(lambda x: x[0]*x[1], var_mul)
+                    for v1_mul_v2 in var1_mul_var2:
+                        try:
+                            coeff = c[v1_mul_v2]
+                        except KeyError:
+                            coeff = 0
+                        xy_coeff = bool(xy_coeff) and bool(coeff)
+                    var_mul = list(subsets(v, 1))
+                    # here var_mul is like [(x,), (y, )]
+                    for v1 in var_mul:
+                        try:
+                            coeff = c[var[0]]
+                        except KeyError:
+                            coeff = 0
+                        x_coeff = bool(x_coeff) and bool(coeff)
+                    if not any([xy_coeff, x_coeff]):
+                        # means only x**2, y**2 and const is present
+                        # so we can get more soln by permuting this soln.
+                        do_permute_signs = True
+                    elif not x_coeff:
+                        # when coeff(x), coeff(y) is not present then signs of
+                        #  x, y can be permuted such that their sign are same
+                        # as sign of x*y.
+                        # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
+                        # 2. (-x_vall, y_val)=> (-x_val,y_val), (x_val,-y_val)
+                        permute_few_signs = True
+        if t == 'general_sum_of_squares':
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
         else:
@@ -223,7 +322,25 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)) is S.Zero:
         sols.add(null)
-    return set([S(i) for i in sols])
+    final_soln = set([])
+    for sol in sols:
+        if all(_is_int(s) for s in sol):
+            if do_permute_signs:
+                permuted_sign = set(permute_signs(sol))
+                final_soln.update(permuted_sign)
+            elif permute_few_signs:
+                lst = list(permute_signs(sol))
+                lst = list(filter(lambda x: x[0]*x[1] == sol[1]*sol[0], lst))
+                permuted_sign = set(lst)
+                final_soln.update(permuted_sign)
+            elif do_permute_signs_var:
+                permuted_sign_var = set(signed_permutations(sol))
+                final_soln.update(permuted_sign_var)
+            else:
+                final_soln.add(sol)
+        else:
+                final_soln.add(sol)
+    return final_soln
 
 
 def merge_solution(var, var_t, solution):
@@ -290,7 +407,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-1, -2), (-1, 2), (1, -2), (1, 2)])
+    set([(-1, 2), (1, 2)])
 
     See Also
     ========
@@ -923,14 +1040,13 @@ def _diop_quadratic(var, coeff, t):
 
         if D < 0:
             for solution in solns_pell:
-                for X_i in [-solution[0], solution[0]]:
-                    for Y_i in [-solution[1], solution[1]]:
-                        s = P*Matrix([X_i, Y_i]) + Q
-                        try:
-                            sol.add(tuple([as_int(_) for _ in s]))
-                        except ValueError:
-                            pass
-
+                s1 = P*Matrix([solution[0], solution[1]]) + Q
+                s2 = P*Matrix([-solution[0], solution[1]]) + Q
+                try:
+                    sol.add(tuple([as_int(_) for _ in s1]))
+                    sol.add(tuple([as_int(_) for _ in s2]))
+                except ValueError:
+                    pass
         else:
             # In this case equation can be transformed into a Pell equation
 
@@ -975,7 +1091,6 @@ def _diop_quadratic(var, coeff, t):
                             sol.add(tuple(s))
 
                         X, Y = X*T + D*U*Y, X*U + Y*T
-
 
     return sol
 

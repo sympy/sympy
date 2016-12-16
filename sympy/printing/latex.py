@@ -235,10 +235,12 @@ class LatexPrinter(Printer):
         elif expr.is_Mul:
             if not first and _coeff_isneg(expr):
                 return True
+        if expr.is_Piecewise:
+            return True
         if any([expr.has(x) for x in (Mod,)]):
             return True
         if (not last and
-            any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
+            any([expr.has(x) for x in (Integral, Product, Sum)])):
             return True
 
         return False

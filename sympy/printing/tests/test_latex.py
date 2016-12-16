@@ -867,7 +867,7 @@ def test_latex_Piecewise():
     p = Piecewise((A**2, Eq(A, B)), (A*B, True))
     s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
     assert latex(p) == s
-    assert latex(A*p) == r"A %s" % s
+    assert latex(A*p) == r"A \left(%s\right)" % s
     assert latex(p*A) == r"\left(%s\right) A" % s
 
 
