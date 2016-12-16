@@ -152,11 +152,24 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None):
             if not is_sequence(syms):
                 raise TypeError(
                     'syms should be given as a sequence, e.g. a list')
-            syms = [i for i in syms if i in var]
+            syms = list(syms)
             if syms != var:
-                map = dict(zip(syms, range(len(syms))))
-                return set([tuple([t[map[i]] for i in var])
-                    for t in diophantine(eq, param)])
+                extra_syms = list(filter(lambda x: x not in var, syms))
+                syms_var = list(filter(lambda x: x in syms, var))
+                map = dict(zip(syms_var, range(len(syms_var))))
+                soln = diophantine(eq, param)
+
+                if len(syms) > len(var):
+                    num_sym = numbered_symbols("m", integer=True, start=1)
+                    for e in extra_syms:
+                        map[e] = next(num_sym)
+                        # reduce by one for all other keys after `e`
+
+                return set([tuple([t[map[i]]
+                           if i not in extra_syms
+                            else map[i]
+                                  for i in syms])
+                            for t in soln])
         n, d = eq.as_numer_denom()
         if not n.free_symbols:
             return set()

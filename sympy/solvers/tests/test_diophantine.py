@@ -871,3 +871,19 @@ def test_issue_9538():
     eq = x - 3*y + 2
     assert diophantine(eq, syms=[y,x]) == set([(t_0, 3*t_0 - 2)])
     raises(TypeError, lambda: diophantine(eq, syms=set([y,x])))
+
+def test_issue_11236():
+    eq = x**2 + 3*x*y + 4*x
+    soln_xyz = set([(0, n1, m1), (3*t_0 - 4, -t_0, m1)])
+    soln_xzy = set([(0, m1, n1), (3*t_0 - 4, m1, - t_0)])
+    soln_yxz = set([(-t_0, 3*t_0 - 4, m1), (n1, 0, m1)])
+    soln_yzx =set([(-t_0, m1, 3*t_0 - 4), (n1, m1, 0)])
+    soln_zxy = set([(m1, 0, n1), (m1, 3*t_0 - 4, -t_0)])
+    soln_zyx = set([(m1, n1, 0), (m1, -t_0, 3*t_0 - 4)])
+
+    assert diophantine(eq, syms=[x, y, z]) == soln_xyz
+    assert diophantine(eq, syms=[x, z, y]) == soln_xzy
+    assert diophantine(eq, syms=[y, x, z]) == soln_yxz
+    assert diophantine(eq, syms=[y, z, x]) == soln_yzx
+    assert diophantine(eq, syms=[z, x, y]) == soln_zxy
+    assert diophantine(eq, syms=[z, y, x]) == soln_zyx
