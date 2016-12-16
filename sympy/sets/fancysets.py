@@ -1409,7 +1409,7 @@ class ComplexRegion(Set):
                 if And(element.args[0]._contains(r),
                         element.args[1]._contains(theta)):
                     return True
-                return False
+            return False
 
     def _intersect(self, other):
 
