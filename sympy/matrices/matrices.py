@@ -1140,6 +1140,10 @@ class MatrixBase(object):
         """ Returns the conjugate of the matrix."""
         return self._eval_conjugate()
 
+    def as_real_imag(self):
+        """Returns a tuple containing the (real, imaginary) part of matrix."""
+        return self.as_real_imag()
+
     def copy(self):
         """
         Returns the copy of a matrix.
