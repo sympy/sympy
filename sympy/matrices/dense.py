@@ -4,6 +4,7 @@ import random
 from sympy import Derivative
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -42,6 +43,7 @@ class DenseMatrix(MatrixBase):
 
     def __eq__(self, other):
         try:
+            other = sympify(other)
             if self.shape != other.shape:
                 return False
             if isinstance(other, Matrix):
@@ -93,6 +95,13 @@ class DenseMatrix(MatrixBase):
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
+                if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
+                    if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
+                       ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                        raise ValueError("index out of boundary")
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
+
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
                     i = list(range(self.rows))[i]

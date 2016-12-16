@@ -1,5 +1,6 @@
-from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
-                   eye, symbols, Dummy, ImmutableMatrix as Matrix, MatrixBase)
+from sympy.core.backend import (diff, expand, sin, cos, sympify,
+                   eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
+from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -425,12 +426,12 @@ class ReferenceFrame(object):
             defined in relation to.
         rot_type : str
             The type of orientation matrix that is being created. Supported
-            types are 'Body', 'Space', 'Quaternion', 'Axis', and 'DCM'. See examples
-            for correct usage.
+            types are 'Body', 'Space', 'Quaternion', 'Axis', and 'DCM'.
+            See examples for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
-            In case of rot_type='DCM', value must be a sympy.matrices.MatrixBase object
-            (or subclasses of it).
+            In case of rot_type='DCM', value must be a
+            sympy.matrices.MatrixBase object (or subclasses of it).
         rot_order : str
             If applicable, the order of a series of rotations.
 
@@ -476,7 +477,8 @@ class ReferenceFrame(object):
 
         >>> B.orient(N, 'Axis', [q1, N.x + 2 * N.y])
 
-        Last is DCM (Direction Cosine Matrix). This is a rotation matrix given manually.
+        Last is DCM (Direction Cosine Matrix). This is a rotation matrix
+        given manually.
 
         >>> B.orient(N, 'DCM', eye(3))
         >>> B.orient(N, 'DCM', ImmutableMatrix([[0, 1, 0], [0, 0, -1], [-1, 0, 0]]))

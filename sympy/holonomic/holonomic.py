@@ -8,7 +8,7 @@ from __future__ import print_function, division
 from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.printing import sstr
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
 from sympy.simplify.hyperexpand import hyperexpand
@@ -1413,7 +1413,7 @@ class HolonomicFunction(object):
 
         reals = []
         compl = []
-        for i in indicialroots:
+        for i in ordered(indicialroots.keys()):
             if i.is_real:
                 reals.extend([i] * indicialroots[i])
             else:
@@ -1454,8 +1454,8 @@ class HolonomicFunction(object):
         # then use them.
         if self.is_singularics() == True:
             rootstoconsider = []
-            for i in self.y0:
-                for j in indicialroots:
+            for i in ordered(self.y0.keys()):
+                for j in ordered(indicialroots.keys()):
                     if j == i:
                         rootstoconsider.append(i)
 
@@ -2013,10 +2013,10 @@ class HolonomicFunction(object):
             bq = []
 
             # substitute m * n + i for n
-            for k in arg1:
+            for k in ordered(arg1.keys()):
                 ap.extend([nsimplify((i - k) / m)] * arg1[k])
 
-            for k in arg2:
+            for k in ordered(arg2.keys()):
                 bq.extend([nsimplify((i - k) / m)] * arg2[k])
 
             # convention of (k + 1) in the denominator

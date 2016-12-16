@@ -184,7 +184,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
@@ -201,7 +201,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):  #     Use _sympy_!
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
@@ -231,7 +231,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
     try:
         if a in sympy_classes:
             return a
