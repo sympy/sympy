@@ -2035,7 +2035,8 @@ class MatrixBase(object):
         [1, 0, 2, 0],
         [0, 1, 0, 2]])
         """
-        return reduce(cls.row_join, args)
+        kls = type(args[0])
+        return reduce(kls.row_join, args)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -4531,7 +4532,8 @@ class MatrixBase(object):
         [2, 0],
         [0, 2]])
         """
-        return reduce(cls.col_join, args)
+        kls = type(args[0])
+        return reduce(kls.col_join, args)
 
     def xreplace(self, rule):  # should mirror core.basic.xreplace
         """Return a new matrix with xreplace applied to each entry.
