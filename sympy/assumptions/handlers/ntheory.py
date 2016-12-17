@@ -49,9 +49,18 @@ class AskPrimeHandler(CommonHandler):
                 pass
             else:
                 break
-        else:
+        # t counts the no. of args but not numbers
+        t = 0
+        for arg in expr.args:
+            if arg.is_number:
+                t = t
+            else:
+                t = t + 1
+        if t > 1:
             # a product of integers can be a prime
             return None
+        else:
+            return False
 
     @staticmethod
     def Pow(expr, assumptions):
