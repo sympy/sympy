@@ -29,15 +29,6 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         return False
 
     if not can_be_true and not can_be_false:
-        from pprint import pprint
-        pprint(can_be_true)
-        pprint(can_be_false)
-        pprint('proposition')
-        pprint(proposition)
-        pprint('assumptions')
-        pprint(assumptions)
-        pprint('relevant_facts')
-        pprint(relevant_facts)
         # TODO: Run additional checks to see which combination of the
         # assumptions, global_assumptions, and relevant_facts are
         # inconsistent.

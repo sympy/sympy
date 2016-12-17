@@ -128,6 +128,9 @@ def test_diagonal():
     assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
     assert ask(Q.symmetric(X), Q.diagonal(X))
     assert ask(Q.triangular(X), Q.diagonal(X))
+    
+    assert ask(Q.empty_matrix(C0x0) & Q.square(C0x0))
+    assert ask(Q.diagonal(A1x1))
     assert ask(Q.diagonal(C0x0))
     assert ask(Q.diagonal(A1x1))
     assert ask(Q.diagonal(A1x1 + B1x1))

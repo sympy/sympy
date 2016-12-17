@@ -751,14 +751,6 @@ class AssumptionKeys(object):
         """
         return Predicate('empty_matrix')
 
-    # XXX: is scalar_matrix predicat needed?
-    @predicate_memo
-    def scalar_matrix(self):
-        """
-        A 1-by-1 matrix.
-        """
-        return Predicate('scalar_matrix')
-
     # XXX: is zero_matrix predicat needed?
     @predicate_memo
     def zero_matrix(self):
@@ -1552,7 +1544,6 @@ def get_known_facts():
         Implies(Q.upper_triangular, Q.triangular),
         Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
         Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
-        Implies(Q.diagonal, Q.symmetric),
         Implies(Q.unit_triangular, Q.triangular),
         Implies(Q.invertible, Q.fullrank),
         Implies(Q.invertible, Q.square),
@@ -1562,9 +1553,9 @@ def get_known_facts():
         Implies(Q.integer_elements, Q.real_elements),
         Implies(Q.real_elements, Q.complex_elements),
 
-        Implies(Q.scalar_matrix, Q.diagonal),
         Implies(Q.zero_matrix & Q.square, Q.diagonal),
         Implies(Q.empty_matrix & Q.square, Q.diagonal),
+        Implies(Q.diagonal, Q.symmetric),
     )
 
 from sympy.assumptions.ask_generated import (

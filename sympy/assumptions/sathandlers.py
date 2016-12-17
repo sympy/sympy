@@ -303,7 +303,7 @@ class CheckEmptyMatrix(UnevaluatedOnFree):
 class CheckOneByOneMatrix(UnevaluatedOnFree):
 
     def apply(self):
-        return Equivalent(self.args[0], self.expr.shape == (1, 1))
+        return Implies(self.expr.shape == (1, 1), self.args[0])
 
 fact_registry = ClassFactRegistry()
 
@@ -318,15 +318,13 @@ for klass, fact in [
     (MatAdd, Implies(AllArgs(Q.symmetric), Q.symmetric)),
     (MatAdd, Implies(AllArgs(Q.diagonal), Q.diagonal)),
     (MatMul, Implies(AllArgs(Q.diagonal), Q.diagonal)),
-    # TODO: or may be CustomLambda?
     (MatrixExpr, CheckSquareMatrix(Q.square)),
-    (MatrixExpr, CheckOneByOneMatrix(Q.scalar_matrix)),
+    (MatrixExpr, CheckOneByOneMatrix(Q.diagonal)),
     (MatrixExpr, CheckEmptyMatrix(Q.empty_matrix)),
     (ZeroMatrix, Q.zero_matrix),
     (Identity, Q.diagonal),
     # TODO: why are tests failing if these rules are moved to ask.py?
-    (MatrixExpr, Implies(Q.scalar_matrix, Q.diagonal)),
-    (MatrixExpr, Implies(Q.empty_matrix & Q.square, Q.diagonal)),
+    # (MatrixExpr, Implies(Q.empty_matrix & Q.square, Q.diagonal)),
 
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Add, Implies(AllArgs(Q.negative), Q.negative)),
