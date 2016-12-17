@@ -231,7 +231,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
     try:
         if a in sympy_classes:
             return a

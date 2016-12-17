@@ -45,6 +45,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq, generate_bell, flatten
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
 
@@ -2633,7 +2634,7 @@ def _tsolve(eq, sym, **flags):
 
 # TODO: option for calculating J numerically
 
-
+@conserve_mpmath_dps
 def nsolve(*args, **kwargs):
     r"""
     Solve a nonlinear equation system numerically::
@@ -2661,8 +2662,7 @@ def nsolve(*args, **kwargs):
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
     >>> print(nsolve((f1, f2), (x1, x2), (-1, 1)))
-    [-1.19287309935246]
-    [ 1.27844411169911]
+    Matrix([[-1.19287309935246], [1.27844411169911]])
 
     For one-dimensional functions the syntax is simplified:
 
@@ -2672,6 +2672,16 @@ def nsolve(*args, **kwargs):
     3.14159265358979
     >>> nsolve(sin(x), 2)
     3.14159265358979
+
+    To solve with higher precision than the default, use the prec argument.
+
+    >>> from sympy import cos
+    >>> nsolve(cos(x) - x, 1)
+    0.739085133215161
+    >>> nsolve(cos(x) - x, 1, prec=50)
+    0.73908513321516064165531208767387340401341175890076
+    >>> cos(_)
+    0.73908513321516064165531208767387340401341175890076
 
     mpmath.findroot is used, you can find there more extensive documentation,
     especially concerning keyword parameters and available solvers. Note,
@@ -2711,6 +2721,13 @@ def nsolve(*args, **kwargs):
             used, but when using nsolve (and findroot) the keyword to use is
             "solver".'''))
 
+    if 'prec' in kwargs:
+        prec = kwargs.pop('prec')
+        import mpmath
+        mpmath.mp.dps = prec
+    else:
+        prec = None
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
@@ -2737,7 +2754,6 @@ def nsolve(*args, **kwargs):
         # assume it's a sympy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
-        f = f.evalf()
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
@@ -2749,7 +2765,7 @@ def nsolve(*args, **kwargs):
         f = f.as_numer_denom()[0]
 
         f = lambdify(fargs, f, modules)
-        return findroot(f, x0, **kwargs)
+        return Float(findroot(f, x0, **kwargs))
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
@@ -2768,7 +2784,7 @@ def nsolve(*args, **kwargs):
     J = lambdify(fargs, J, modules)
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
-    return x
+    return Matrix(x)
 
 
 def _invert(eq, *symbols, **kwargs):

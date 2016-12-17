@@ -16,7 +16,7 @@ from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices import Matrix, ShapeError
-
+from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
@@ -124,6 +124,15 @@ class BlockMatrix(MatrixExpr):
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
         return Determinant(self)
+
+    def as_real_imag(self):
+        real_matrices = [re(matrix) for matrix in self.blocks]
+        real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
+
+        im_matrices = [im(matrix) for matrix in self.blocks]
+        im_matrices = Matrix(self.blockshape[0], self.blockshape[1], im_matrices)
+
+        return (real_matrices, im_matrices)
 
     def transpose(self):
         """Return transpose of matrix.
