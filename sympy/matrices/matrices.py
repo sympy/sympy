@@ -2161,8 +2161,31 @@ class MatrixBase(object):
         return self._eval_conjugate()
 
     def as_real_imag(self):
-        """Returns a tuple containing the (real, imaginary) part of matrix."""
-        return self.as_real_imag()
+        """Returns a tuple of the real part of the input Matrix
+           and it's imaginary part.
+
+           >>> from sympy import Matrix, I
+           >>> A = Matrix([[1+2*I,3],[4+7*I,5]])
+           >>> A.as_real_imag()
+           (Matrix([
+           [1, 3],
+           [4, 5]]), Matrix([
+           [2, 0],
+           [7, 0]]))
+           >>> from sympy.abc import x, y, z, w
+           >>> B = Matrix([[x, y + x * I],[z + w * I, z]])
+           >>> B.as_real_imag()
+           (Matrix([
+           [        re(x), re(y) - im(x)],
+           [re(z) - im(w),         re(z)]]), Matrix([
+           [        im(x), re(x) + im(y)],
+           [re(w) + im(z),         im(z)]]))
+
+        """
+        from sympy.functions.elementary.complexes import re, im
+        mat1 = self.copy()
+        mat2 = self.copy()
+        return (mat1.applyfunc(re), mat2.applyfunc(im))
 
     def copy(self):
         """
