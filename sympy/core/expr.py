@@ -774,11 +774,11 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.series import limit, Limit
         
-        if a == b:
-            return 0;
-
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+
+        if a == b:
+            return 0;
 
         if a is None:
             A = 0
