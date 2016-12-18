@@ -9,10 +9,10 @@ from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
-from sympy import sin, Lambda, Q
-
+from sympy import sin, Lambda, Q, cos, gamma
+from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
-
+from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -179,6 +179,16 @@ def test_call():
     #assert (2*f)(x) == 2*f(x)
 
     assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)
+
+
+def test_rewrite():
+    x, y, z = symbols('x y z')
+    f1 = sin(x) + cos(x)
+    assert f1.rewrite(cos,exp) == exp(I*x)/2 + sin(x) + exp(-I*x)/2
+    assert f1.rewrite([cos],sin) == sin(x) + sin(x + pi/2, evaluate=False)
+    f2 = sin(x) + cos(y)/gamma(z)
+    assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
+
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral

@@ -58,6 +58,8 @@ class re(Function):
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return S.Zero
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[0]
         elif arg.is_Function and arg.func is conjugate:
             return re(arg.args[0])
         else:
@@ -152,6 +154,8 @@ class im(Function):
             return S.Zero
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return -S.ImaginaryUnit * arg
+        elif arg.is_Matrix:
+            return arg.as_real_imag()[1]
         elif arg.is_Function and arg.func is conjugate:
             return -im(arg.args[0])
         else:

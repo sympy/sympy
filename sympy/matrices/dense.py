@@ -4,6 +4,7 @@ import random
 from sympy import Derivative
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -94,6 +95,13 @@ class DenseMatrix(MatrixBase):
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
+                if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
+                    if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
+                       ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                        raise ValueError("index out of boundary")
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
+
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
                     i = list(range(self.rows))[i]
@@ -313,6 +321,34 @@ class DenseMatrix(MatrixBase):
         for i in range(self.cols):
             a.extend(self._mat[i::self.cols])
         return self._new(self.cols, self.rows, a)
+
+    def as_real_imag(self):
+        """Returns a tuple of the real part of the input Matrix
+           and it's imaginary part.
+
+           >>> from sympy import Matrix, I
+           >>> A = Matrix([[1+2*I,3],[4+7*I,5]])
+           >>> A.as_real_imag()
+           (Matrix([
+           [1, 3],
+           [4, 5]]), Matrix([
+           [2, 0],
+           [7, 0]]))
+           >>> from sympy.abc import x, y, z, w
+           >>> B = Matrix([[x, y + x * I],[z + w * I, z]])
+           >>> B.as_real_imag()
+           (Matrix([
+           [        re(x), re(y) - im(x)],
+           [re(z) - im(w),         re(z)]]), Matrix([
+           [        im(x), re(x) + im(y)],
+           [re(w) + im(z),         im(z)]]))
+
+        """
+        from sympy.functions.elementary.complexes import re, im
+        real_mat = self._new(self.rows, self.cols, lambda i, j: re(self[i, j]))
+        im_mat = self._new(self.rows, self.cols, lambda i, j: im(self[i, j]))
+
+        return (real_mat, im_mat)
 
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
