@@ -56,12 +56,13 @@ class AskPrimeHandler(CommonHandler):
         for arg in expr.args:
             if arg.is_number:
                 if arg.is_prime:
-                    p += 1
+                    p = 1
                 else:
-                    t = t
+                    p = 2
             else:
                 t = t + 1
-        if t > 1 or p == 1:
+        # p is 1 if prime, 2 if not prime, 0 if no number
+        if (t > 0 and p != 2) or (t > 0 and p == 1):
             # a product of integers can be a prime
             return None
         else:
