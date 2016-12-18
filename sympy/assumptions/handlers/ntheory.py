@@ -50,13 +50,18 @@ class AskPrimeHandler(CommonHandler):
             else:
                 break
         # t counts the no. of args but not numbers
+        # p counts prime no. in expr.args
         t = 0
+        p = 0
         for arg in expr.args:
             if arg.is_number:
-                t = t
+                if arg.is_prime:
+                    p += 1
+                else:
+                    t = t
             else:
                 t = t + 1
-        if t > 1:
+        if t > 1 or p == 1:
             # a product of integers can be a prime
             return None
         else:
