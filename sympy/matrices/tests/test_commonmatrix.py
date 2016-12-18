@@ -191,6 +191,7 @@ def test_has():
 
 
 def test_is_anti_symmetric():
+    x = symbols('x')
     assert PropertiesOnlyMatrix(2, 1, [1, 2]).is_anti_symmetric() is False
     m = PropertiesOnlyMatrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
