@@ -455,6 +455,8 @@ def test_issue_4503():
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
 
+def test_issue_10801():
+    assert limit(16**x/(x*binomial(2*x, x)**2), x, oo) == pi
 
 def test_issue_10801():
     # make sure limits work with binomial
