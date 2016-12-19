@@ -992,9 +992,8 @@ def _diop_quadratic(var, coeff, t):
                     + (sqa*g*u**2 + D*u + sqa*F) // _c
 
                 for z0 in range(0, abs(_c)):
-                    if divisible(
-                            sqa*g*z0**2 + D*z0 + sqa*F,
-                            _c):
+                    if (divisible(sqa*g*z0**2 + D*z0 + sqa*F, _c) and
+                            divisible(((sqa*g*z0**2 + D*z0 + sqa*F)*(e*sqc) - (z0*_c)), a*E - sqa*e*sqc*D)):
                         sol.add((solve_x(z0), solve_y(z0)))
 
     # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
