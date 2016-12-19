@@ -1,7 +1,7 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, loggamma, sign, Max)
+                             gamma, loggamma, sign, Max, Min)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -534,3 +534,5 @@ def test_C99CodePrinter():
     assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
     assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
     assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'
+    assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, pow(x, 2)))'
+    assert C99CodePrinter().doprint(Min(x, 3)) == 'fmin(3, x)'

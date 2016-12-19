@@ -82,7 +82,7 @@ def test_exp2():
 def test_log2():
     # Eval
     assert log2(8) == 3
-    assert log2(pi) != log(pi)/log(2)  # log2 should *save* (CPU) operations
+    assert log2(pi) != log(pi)/log(2)  # log2 should *save* (CPU) instructions
 
     x = Symbol('x', real=True, finite=True)
     assert log2(x) != log(x)/log(2)

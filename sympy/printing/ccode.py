@@ -122,7 +122,7 @@ def get_math_macros():
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
-    language = "C"
+    standard = "C89"
 
     _default_settings = {
         'order': None,
@@ -135,6 +135,8 @@ class CCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
     }
+
+    _ns = ''  # namespace, C++ uses 'std::'
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -183,12 +185,12 @@ class CCodePrinter(CodePrinter):
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == 1/3 and self.language == 'C99':
-            return 'cbrt(%s)' % self._print(expr.base)
+            return '%ssqrt(%s)' % (self._ns, self._print(expr.base))
+        elif expr.exp == S.One/3 and self.standard != 'C89':
+            return '%scbrt(%s)' % (self._ns, self._print(expr.base))
         else:
-            return 'pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
+            return '%spow(%s, %s)' % (self._ns, self._print(expr.base),
+                                   self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -333,7 +335,19 @@ class CCodePrinter(CodePrinter):
 
 
 class C99CodePrinter(CCodePrinter):
-    language = 'C99'
+    standard = 'C99'
+
+    def _print_Max(self, expr):
+        from sympy import Max
+        if len(expr.args) == 1:
+            return self._print(expr.args[0])
+        return "%sfmax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
+
+    def _print_Min(self, expr):
+        from sympy import Min
+        if len(expr.args) == 1:
+            return self._print(expr.args[0])
+        return "%sfmin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
 
     def _print_Infinity(self, expr):
         return 'INFINITY'
@@ -345,34 +359,34 @@ class C99CodePrinter(CCodePrinter):
         return 'NAN'
 
     def _print_fma(self, expr):  # fused mutiply-add
-        return 'fma({0}, {1}, {2})'.format(*map(self._print, expr.args))
+        return '{0}fma({1}, {2}, {3})'.format(self._ns, *map(self._print, expr.args))
 
     def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
-        return 'log10({0})'.format(self._print(expr.args[0]))
+        return '{0}log10({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_Sqrt(self, expr):
-        return 'sqrt({0})'.format(self._print(expr.args[0]))
+        return '{0}sqrt({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_Cbrt(self, expr):
-        return 'cbrt({0})'.format(self._print(expr.args[0]))
+        return '{0}cbrt({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_hypot(self, expr):
-        return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
+        return '{0}hypot({1}, {2})'.format(self._ns, *map(self._print, expr.args))
 
     def _print_expm1(self, expr):
-        return 'expm1({0})'.format(self._print(expr.args[0]))
+        return '{0}expm1({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_log1p(self, expr):
-        return 'log1p({0})'.format(self._print(expr.args[0]))
+        return '{0}log1p({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_exp2(self, expr):
-        return 'exp2({0})'.format(self._print(expr.args[0]))
+        return '{0}exp2({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_log2(self, expr):
-        return 'log2({0})'.format(self._print(expr.args[0]))
+        return '{0}log2({1})'.format(self._ns, self._print(expr.args[0]))
 
     def _print_loggamma(self, expr):
-        return 'lgamma({0})'.format(self._print(expr.args[0]))
+        return '{0}lgamma({1})'.format(self._ns, self._print(expr.args[0]))
 
     # tgamma was already covered by 'known_functions' dict
 
