@@ -1318,15 +1318,17 @@ def cornacchia(a, b, m):
     sols = set()
 
     a1 = igcdex(a, m)[0]
-    v = sqrt_mod(-b*a1, m, all_roots=True)
+    v = sqrt_mod(-b, m, all_roots=True)
     if not v:
         return None
 
     for t in v:
-        if t < m // 2:
+        if t >= m // 2:
+            u, r = t, m
+        elif t<m//2:
+            u,r = m-t,m
+        else:
             continue
-
-        u, r = t, m
 
         while True:
             u, r = r, u % r
@@ -1340,7 +1342,9 @@ def cornacchia(a, b, m):
             s, _exact = integer_nthroot(m1, 2)
             if _exact:
                 if a == b and r > s:
-                    r, s = s, r
+                    pass
+                elif a==b and r<s:
+                    r,s = s,r
                 sols.add((int(r), int(s)))
 
     return sols
