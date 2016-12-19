@@ -1056,6 +1056,8 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                 if sols:
                     for x, y in sols:
                         sol.append((d*x, d*y))
+                        if D == -1:
+                            sol.append((d*y,d*x))
 
             return sol
 
