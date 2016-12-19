@@ -52,10 +52,6 @@ class AskPrimeHandler(CommonHandler):
         for arg in expr.args:
             if arg.is_number and arg.is_composite:
                 return False
-            else:
-                return None
-        else:
-            return False
 
     @staticmethod
     def Pow(expr, assumptions):
