@@ -1318,7 +1318,7 @@ def cornacchia(a, b, m):
     sols = set()
 
     a1 = igcdex(a, m)[0]
-    v = sqrt_mod(-b, m, all_roots=True)
+    v = sqrt_mod(-b*a1, m, all_roots=True)
     if not v:
         return None
 
