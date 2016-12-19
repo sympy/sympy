@@ -49,17 +49,11 @@ class AskPrimeHandler(CommonHandler):
                 pass
             else:
                 break
-        p = 0
         for arg in expr.args:
-            if arg.is_number and arg > 0:
-                if arg.is_prime:
-                    p = 1
-                else:
-                    p = 2
-        # p is 1 if prime, 2 if not prime, 0 if negative or no number
-        if p != 2:
-            # a product of integers can be a prime
-            return None
+            if arg.is_number and arg.is_composite:
+                return False
+            else:
+                return None
         else:
             return False
 
