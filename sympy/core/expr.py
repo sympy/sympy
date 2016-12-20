@@ -773,7 +773,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
-        
+
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
 
@@ -800,10 +800,10 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                if (b < a) != False:
-                    B = limit(self, x, b,"+")
-                else:
+                if (a < b) != False:
                     B = limit(self, x, b,"-")
+                else:
+                    B = limit(self, x, b,"+")
 
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
