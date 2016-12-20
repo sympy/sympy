@@ -199,8 +199,8 @@ def test_DN():
 
     # When equation is x**2 + y**2 = N
     # Solutions are interchangeable
-    assert diop_DN(-1, 5) == [(1, 2)]
-    assert diop_DN(-1, 169) == [(5, 12), (0, 13)]
+    assert diop_DN(-1, 5) == [(2, 1),(1, 2)]
+    assert diop_DN(-1, 169) == [(12, 5), (5, 12),(13,0),(0,13)]
 
     # D > 0 and D is not a square
 
@@ -722,7 +722,7 @@ def test_diopcoverage():
     assert base_solution_linear(4, 8, 12, t=None) == tuple(_.subs(t, 0) for _ in ans)
 
     assert cornacchia(1, 1, 20) is None
-    assert cornacchia(1, 1, 5) == set([(1, 2)])
+    assert cornacchia(1, 1, 5) == set([(2, 1)])
     assert cornacchia(1, 2, 17) == set([(3, 2)])
 
     raises(ValueError, lambda: reconstruct(4, 20, 1))
