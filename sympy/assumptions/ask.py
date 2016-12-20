@@ -1232,7 +1232,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
     True
-    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    >>> ask(Q.positive(x - y), Q.positive(x) &  Q.positive(y))
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
