@@ -524,6 +524,11 @@ def test_ccode_For():
                    "   y *= x;\n"
                    "}")
 
+
+def test_ccode_standard():
+    assert ccode(expm1(x), standard='c99') == 'expm1(x)'
+
+
 def test_C99CodePrinter():
     assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
     assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'

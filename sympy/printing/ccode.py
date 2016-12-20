@@ -391,7 +391,13 @@ class C99CodePrinter(CCodePrinter):
     # tgamma was already covered by 'known_functions' dict
 
 
-def ccode(expr, assign_to=None, **settings):
+c_code_printers = {
+    'c89': CCodePrinter,
+    'c99': C99CodePrinter,
+}
+
+
+def ccode(expr, assign_to=None, standard='c89', **settings):
     """Converts an expr to a string of c code
 
     Parameters
@@ -404,6 +410,10 @@ def ccode(expr, assign_to=None, **settings):
         the expression is assigned. Can be a string, ``Symbol``,
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
+    standard : str, optional
+        String specifying the standard. If your compiler supports a more modern
+        standard you may set this to 'c99' to allow the printer to use more math
+        functions. [default='c89'].
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
@@ -512,7 +522,7 @@ def ccode(expr, assign_to=None, **settings):
     A[2] = sin(x);
     """
 
-    return CCodePrinter(settings).doprint(expr, assign_to)
+    return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
 
 
 def print_ccode(expr, **settings):
