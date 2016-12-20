@@ -1,13 +1,10 @@
-from sympy.core.compatibility import xrange, zip_longest
+from sympy.core.compatibility import range, zip_longest
 from sympy.utilities.enumerative import (
-    factoring_visitor,
     list_visitor,
     MultisetPartitionTraverser,
-    multiset_partitions_taocp,
-    PartComponent,
-    part_key
+    multiset_partitions_taocp
     )
-from sympy.utilities.iterables import  multiset_partitions, _set_partitions
+from sympy.utilities.iterables import _set_partitions
 from sympy.utilities.pytest import slow
 
 # first some functions only useful as test scaffolding - these provide
@@ -73,8 +70,8 @@ def multiset_partitions_baseline(multiplicities, components):
     cache = set()
     n = len(canon)
     for nc, q in _set_partitions(n):
-        rv = [[] for i in xrange(nc)]
-        for i in xrange(n):
+        rv = [[] for i in range(nc)]
+        for i in range(n):
             rv[q[i]].append(canon[i])
         canonical = tuple(
             sorted([tuple(p) for p in rv]))

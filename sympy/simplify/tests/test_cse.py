@@ -1,15 +1,22 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
-                   IndexedBase, Idx, MatrixSymbol, Piecewise, O)
+                   Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
+                   IndexedBase, Idx, Piecewise, O, Mul)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
+from sympy.utilities.iterables import subsets
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
+    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import MatrixSymbol
+
+from sympy.core.compatibility import range
+
 
 w, x, y, z = symbols('w,x,y,z')
-x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18 = symbols('x:19')
 
 
 def test_numbered_symbols():
@@ -67,7 +74,8 @@ def test_cse_single2():
     substs, reduced = cse(e)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
-    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
+    substs, reduced = cse(Matrix([[1]]))
+    assert isinstance(reduced[0], Matrix)
 
 
 def test_cse_not_possible():
@@ -138,6 +146,7 @@ def test_multiple_expressions():
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
+
 @XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
@@ -145,6 +154,7 @@ def test_non_commutative_cse():
     assert cse(l) == ([], l)
     l = [A*B*C, A*B]
     assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+
 
 # Test if CSE of non-commutative Mul terms is disabled
 def test_bypass_non_commutatives():
@@ -156,6 +166,7 @@ def test_bypass_non_commutatives():
     l = [B*C, A*B*C]
     assert cse(l) == ([], l)
 
+
 @XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
@@ -163,9 +174,18 @@ def test_non_commutative_order():
     l = [B+C, A*(B+C)]
     assert cse(l) == ([(x0, B+C)], [x0, A*x0])
 
-@XFAIL
-def test_powers():
-    assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
+
+def test_issue_10228():
+    assert cse([x*y**2 + x*y]) == ([(x0, x*y)], [x0*y + x0])
+    assert cse([x + y, 2*x + y]) == ([(x0, x + y)], [x0, x + x0])
+    assert cse((w + 2*x + y + z, w + x + 1)) == (
+        [(x0, w + x)], [x0 + x + y + z, x0 + 1])
+    assert cse(((w + x + y + z)*(w - x))/(w + x)) == (
+        [(x0, w + x)], [(x0 + y + z)*(w - x)/x0])
+    a, b, c, d, f, g, j, m = symbols('a, b, c, d, f, g, j, m')
+    exprs = (d*g**2*j*m, 4*a*f*g*m, a*b*c*f**2)
+    assert cse(exprs) == (
+        [(x0, g*m), (x1, a*f)], [d*g*j*x0, 4*x0*x1, b*c*f*x1])
 
 
 def test_issue_4498():
@@ -253,21 +273,31 @@ def test_issue_4499():
         sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
         -2*a))
     c = cse(t)
+    # check rebuild
+    r = c[0]
+    tt = list(c[1][0])
+    for i in range(len(tt)):
+        for re in reversed(r):
+            tt[i] = tt[i].subs(*re)
+        assert tt[i] == t[i]
+    # check answer
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x1 + 1), (x3, x0 + x2), (x4, sqrt(z)), (x5,
-        B(x0 + x1, x4)), (x6, G(b)), (x7, G(x3)), (x8, -x0), (x9,
-        (x4/2)**(x8 + 1)), (x10, x6*x7*x9*B(b - 1, x4)), (x11, x6*x7*x9*B(b,
-        x4)), (x12, B(x3, x4))], [(a, a + S(1)/2, x0, b, x3, x10*x5,
-        x11*x4*x5, x10*x12*x4, x11*x12, 1, 0, S(1)/2, z/2, x2, b + x8, x8)])
+        [(x0, 2*a), (x1, -b), (x2, x0 + x1 + 1), (x3, sqrt(z)), (x4,
+        B(x0 + x1, x3)), (x5, G(b)), (x6, G(x2)), (x7, -x0), (x8,
+        (x3/2)**(x7 + 1)), (x9, x5*x6*x8*B(b - 1, x3)), (x10,
+        x5*x6*x8*B(b, x3)), (x11, B(x2, x3))], [(a, a + 1/2, x0, b,
+        x2, x4*x9, x10*x3*x4, x11*x3*x9, x10*x11, 1, 0, 1/2, z/2, x1 +
+        1, b + x7, x7)])
     assert ans == c
 
 
 def test_issue_6169():
-    r = RootOf(x**6 - 4*x**5 - 2, 1)
+    r = CRootOf(x**6 - 4*x**5 - 2, 1)
     assert cse(r) == ([], [r])
     # and a check that the right thing is done with the new
     # mechanism
     assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
+
 
 def test_cse_Indexed():
     len_y = 5
@@ -281,16 +311,33 @@ def test_cse_Indexed():
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
 
-@XFAIL
+
 def test_cse_MatrixSymbol():
+    # MatrixSymbols have non-Basic args, so make sure that works
+    A = MatrixSymbol("A", 3, 3)
+    assert cse(A) == ([], [A])
+
+    n = symbols('n', integer=True)
+    B = MatrixSymbol("B", n, n)
+    assert cse(B) == ([], [B])
+
+
+def test_cse_MatrixExpr():
     from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 
-    expr1 = (A.T*A).I * A * y
+    expr1 = 2*(A.T*A).I * A * y
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
+
+    replacements, reduced_exprs = cse([expr1 + expr2, expr1])
+    assert replacements
+
+    replacements, reduced_exprs = cse([A**2, A + A**2])
+    assert replacements
+
 
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
@@ -298,9 +345,11 @@ def test_Piecewise():
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
+
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
     assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
 
 def test_name_conflict():
     z1 = x0 + y
@@ -309,6 +358,7 @@ def test_name_conflict():
     substs, reduced = cse(l)
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_name_conflict_cust_symbols():
     z1 = x0 + y
     z2 = x2 + x3
@@ -316,8 +366,114 @@ def test_name_conflict_cust_symbols():
     substs, reduced = cse(l, symbols("x:10"))
     assert [e.subs(reversed(substs)) for e in reduced] == l
 
+
 def test_symbols_exhausted_error():
     l = cos(x+y)+x+y+cos(w+y)+sin(w+y)
     sym = [x, y, z]
     with raises(ValueError) as excinfo:
         cse(l, symbols=sym)
+
+
+def test_issue_7840():
+    # daveknippers' example
+    C393 = sympify( \
+        'Piecewise((C391 - 1.65, C390 < 0.5), (Piecewise((C391 - 1.65, \
+        C391 > 2.35), (C392, True)), True))'
+    )
+    C391 = sympify( \
+        'Piecewise((2.05*C390**(-1.03), C390 < 0.5), (2.5*C390**(-0.625), True))'
+    )
+    C393 = C393.subs('C391',C391)
+    # simple substitution
+    sub = {}
+    sub['C390'] = 0.703451854
+    sub['C392'] = 1.01417794
+    ss_answer = C393.subs(sub)
+    # cse
+    substitutions,new_eqn = cse(C393)
+    for pair in substitutions:
+        sub[pair[0].name] = pair[1].subs(sub)
+    cse_answer = new_eqn[0].subs(sub)
+    # both methods should be the same
+    assert ss_answer == cse_answer
+
+    # GitRay's example
+    expr = sympify(
+        "Piecewise((Symbol('ON'), Equality(Symbol('mode'), Symbol('ON'))), \
+        (Piecewise((Piecewise((Symbol('OFF'), StrictLessThan(Symbol('x'), \
+        Symbol('threshold'))), (Symbol('ON'), S.true)), Equality(Symbol('mode'), \
+        Symbol('AUTO'))), (Symbol('OFF'), S.true)), S.true))"
+    )
+    substitutions, new_eqn = cse(expr)
+    # this Piecewise should be exactly the same
+    assert new_eqn[0] == expr
+    # there should not be any replacements
+    assert len(substitutions) < 1
+
+
+def test_issue_8891():
+    for cls in (MutableDenseMatrix, MutableSparseMatrix,
+            ImmutableDenseMatrix, ImmutableSparseMatrix):
+        m = cls(2, 2, [x + y, 0, 0, 0])
+        res = cse([x + y, m])
+        ans = ([(x0, x + y)], [x0, cls([[x0, 0], [0, 0]])])
+        assert res == ans
+        assert isinstance(res[1][-1], cls)
+
+
+def test_issue_11230():
+    from random import choice
+    from sympy.core.function import expand_mul
+    s = symbols('a:m')
+    # 35 Mul tests, none of which should ever fail
+    ex = [Mul(*[choice(s) for i in range(5)]) for i in range(7)]
+    for p in subsets(ex, 3):
+        p = list(p)
+        R, C = cse(p)
+        assert not any(i.is_Mul for a in C for i in a.args)
+        for ri in reversed(R):
+            for i in range(len(C)):
+                C[i] = C[i].subs(*ri)
+        assert p == C
+    # 35 Add tests, none of which should ever fail
+    ex = [Add(*[choice(s[:7]) for i in range(5)]) for i in range(7)]
+    for p in subsets(ex, 3):
+        p = list(p)
+        was = R, C = cse(p)
+        assert not any(i.is_Add for a in C for i in a.args)
+        for ri in reversed(R):
+            for i in range(len(C)):
+                C[i] = C[i].subs(*ri)
+        # use expand_mul to handle cases like this:
+        # p = [a + 2*b + 2*e, 2*b + c + 2*e, b + 2*c + 2*g]
+        # x0 = 2*(b + e) is identified giving a rebuilt p that
+        # is now `[a + 2*(b + e), c + 2*(b + e), b + 2*c + 2*g]`
+        assert p == [expand_mul(i) for i in C]
+
+
+@XFAIL
+def test_issue_11577():
+    def check(eq):
+        from sympy.core.function import count_ops
+        r, c = cse(eq)
+        assert eq.count_ops() >= \
+            len(r) + sum([i[1].count_ops() for i in r]) + \
+            count_ops(c)
+
+    eq = x**5*y**2 + x**5*y + x**5
+    assert cse(eq) == (
+        [(x0, x**4), (x1, x*y)], [x**5 + x0*x1*y + x0*x1])
+        # ([(x0, x**5*y)], [x0*y + x0 + x**5]) or
+        # ([(x0, x**5)], [x0*y**2 + x0*y + x0])
+    check(eq)
+
+    eq = x**2/(y + 1)**2 + x/(y + 1)
+    assert cse(eq) == (
+        [(x0, y + 1)], [x**2/x0**2 + x/x0])
+        # ([(x0, x/(y + 1))], [x0**2 + x0])
+    check(eq)
+
+
+def test_hollow_rejection():
+    eq = [x + 3, x + 4]
+    assert cse(eq) == ([], eq)

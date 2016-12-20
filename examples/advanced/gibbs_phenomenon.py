@@ -16,8 +16,6 @@ See:
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
     sin, cos, sign, lambdify, Integral, S
 
-# seterr(True)
-
 x = var("x", real=True)
 
 
@@ -28,7 +26,8 @@ def l2_norm(f, lim):
     x ...... the independent variable in f over which to integrate
     a, b ... the limits of the interval
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from gibbs_phenomenon import l2_norm
@@ -63,7 +62,8 @@ def l2_gram_schmidt(list, lim):
     """
     Orthonormalizes the "list" of functions using the Gram-Schmidt process.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from gibbs_phenomenon import l2_gram_schmidt
@@ -127,13 +127,12 @@ def msolve(f, x):
 
 
 def main():
-    # L = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))
-    # L = l2_gram_schmidt([1, cos(x), sin(x)], (x, -pi, pi))
-    # the code below is equivalen to l2_gram_schmidt(), but faster:
-    L = [1/sqrt(2)]
+    L = [1]
     for i in range(1, 100):
         L.append(cos(i*x))
         L.append(sin(i*x))
+    # next 2 lines equivalent to L = l2_gram_schmidt(L, (x, -pi, pi)), but faster:
+    L[0] /= sqrt(2)
     L = [f/sqrt(pi) for f in L]
 
     f = series(L)

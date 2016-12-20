@@ -70,7 +70,7 @@ def test_special_denom():
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
-    # assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
+#    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
 
     # issue 3940
     # Note, this isn't a very good test, because the denominator is just 1,
@@ -132,6 +132,10 @@ def test_spde():
         (Poly(0, x), Poly(x/2 - S(1)/4, x), -2 + n, Poly(x**2 + x + 1, x), Poly(5*x/4, x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
     raises(NonElementaryIntegralException, lambda: spde(Poly((t - 1)*(t**2 + 1)**2, t), Poly((t - 1)*(t**2 + 1), t), Poly(1, t), 0, DE))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert spde(Poly(x**2 - x, x), Poly(1, x), Poly(9*x**4 - 10*x**3 + 2*x**2, x), 4, DE) == (Poly(0, x), Poly(0, x), 0, Poly(0, x), Poly(3*x**3 - 2*x**2, x))
+    assert spde(Poly(x**2 - x, x), Poly(x**2 - 5*x + 3, x), Poly(x**7 - x**6 - 2*x**4 + 3*x**3 - x**2, x), 5, DE) == \
+        (Poly(1, x), Poly(x + 1, x), 1, Poly(x**4 - x**3, x), Poly(x**3 - x**2, x))
 
 def test_solve_poly_rde_no_cancel():
     # deg(b) large

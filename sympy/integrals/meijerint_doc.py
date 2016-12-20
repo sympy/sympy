@@ -4,7 +4,7 @@
 from __future__ import print_function, division
 
 from sympy.integrals.meijerint import _create_lookup_table
-from sympy import latex, Eq, meijerg, Add, Symbol
+from sympy import latex, Eq, Add, Symbol
 
 t = {}
 _create_lookup_table(t)

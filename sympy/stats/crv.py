@@ -14,9 +14,10 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
         NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
-        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
-        Basic)
+from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
+        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
+        Basic, S)
+from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
@@ -181,7 +182,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(self.cdf(x) - z, x)
+            inverse_cdf = solveset(self.cdf(x) - z, x, S.Reals)
+            if isinstance(inverse_cdf, Intersection) and S.Reals in inverse_cdf.args:
+                inverse_cdf = list(inverse_cdf.args[1])
         except NotImplementedError:
             inverse_cdf = None
         if not inverse_cdf or len(inverse_cdf) != 1:
@@ -195,7 +198,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', real=True, finite=True, cls=Dummy)
         left_bound = self.set.start
 
         # CDF is integral of PDF from left bound to z
@@ -270,7 +273,7 @@ class ContinuousPSpace(PSpace):
             pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
-        z = Dummy('z', real=True, bounded=True)
+        z = Dummy('z', real=True, finite=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
     @cacheit
@@ -280,7 +283,7 @@ class ContinuousPSpace(PSpace):
                 "CDF not well defined on multivariate expressions")
 
         d = self.compute_density(expr, **kwargs)
-        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        x, z = symbols('x, z', real=True, finite=True, cls=Dummy)
         left_bound = self.domain.set.start
 
         # CDF is integral of PDF from left bound to z
@@ -290,13 +293,16 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, cdf)
 
     def probability(self, condition, **kwargs):
-        z = Dummy('z', real=True, bounded=True)
+        z = Dummy('z', real=True, finite=True)
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
             rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
+            # return S.Zero if `domain` is empty set
+            if domain.set is S.EmptySet:
+                return S.Zero
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 
@@ -370,7 +376,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x = self.value.symbol
         try:
             return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
-        except:
+        except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
@@ -384,7 +390,12 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         if expr == self.value:
             return self.density
         y = Dummy('y')
-        gs = solve(expr - y, self.value)
+
+        gs = solveset(expr - y, self.value, S.Reals)
+
+        if isinstance(gs, Intersection) and S.Reals in gs.args:
+            gs = list(gs.args[1])
+
         if not gs:
             raise ValueError("Can not solve %s for %s"%(expr, self.value))
         fx = self.compute_density(self.value)

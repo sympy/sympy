@@ -3,7 +3,7 @@
 from sympy.polys.distributedmodules import (
     sdm_monomial_mul, sdm_monomial_deg, sdm_monomial_divides,
     sdm_add, sdm_LM, sdm_LT, sdm_mul_term, sdm_zero, sdm_deg,
-    sdm_LC, sdm_from_dict, sdm_to_dict,
+    sdm_LC, sdm_from_dict,
     sdm_spoly, sdm_ecart, sdm_nf_mora, sdm_groebner,
     sdm_from_vector, sdm_to_vector, sdm_monomial_lcm
 )
@@ -12,6 +12,7 @@ from sympy.polys.orderings import lex, grlex, InverseOrder
 from sympy.polys.domains import QQ
 
 from sympy.abc import x, y, z
+from sympy.core.compatibility import range
 
 
 def test_sdm_monomial_mul():

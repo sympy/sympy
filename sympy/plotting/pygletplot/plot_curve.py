@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 
 class PlotCurve(PlotModeBase):
@@ -67,7 +67,7 @@ class PlotCurve(PlotModeBase):
     def draw_verts(self, use_cverts):
         def f():
             glBegin(GL_LINE_STRIP)
-            for t in xrange(len(self.t_set)):
+            for t in range(len(self.t_set)):
                 p = self.verts[t]
                 if p is None:
                     glEnd()

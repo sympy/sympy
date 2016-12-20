@@ -88,7 +88,7 @@ def main():
     comm4 = evaluate_deltas(comm4)
     comm4 = substitute_dummies(comm4)
 
-    print("construct Hausdoff expansion...")
+    print("construct Hausdorff expansion...")
     eq = H + comm1 + comm2/2 + comm3/6 + comm4/24
     eq = eq.expand()
     eq = evaluate_deltas(eq)

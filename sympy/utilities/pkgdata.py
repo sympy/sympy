@@ -31,7 +31,7 @@ def get_resource(identifier, pkgname=__name__):
 
     For example::
 
-        mydata = get_esource('mypkgdata.jpg').read()
+        mydata = get_resource('mypkgdata.jpg').read()
 
     Note that the package name must be fully qualified, if given, such
     that it would be found in sys.modules.
@@ -54,5 +54,5 @@ def get_resource(identifier, pkgname=__name__):
         except (IOError,AttributeError):
             pass
         else:
-            return StringIO(data)
+            return StringIO(data.decode('utf-8'))
     return open(os.path.normpath(path), 'rb')

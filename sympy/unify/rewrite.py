@@ -6,7 +6,7 @@ from sympy.unify.usympy import unify
 from sympy.unify.usympy import rebuild
 from sympy.strategies.tools import subs
 from sympy import Expr
-from sympy.assumptions import Q, ask
+from sympy.assumptions import ask
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
     """ Rewrite rule

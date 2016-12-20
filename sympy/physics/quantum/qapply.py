@@ -7,6 +7,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import Add, Mul, Pow, sympify, S
+from sympy.core.compatibility import range
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -50,6 +51,22 @@ def qapply(e, **options):
 
     e : Expr
         The original expression, but with the operators applied to states.
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum import qapply, Ket, Bra
+        >>> b = Bra('b')
+        >>> k = Ket('k')
+        >>> A = k * b
+        >>> A
+        |k><b|
+        >>> qapply(A * b.dual / (b * b.dual))
+        |k>
+        >>> qapply(k.dual * A / (k.dual * k), dagger=True)
+        <b|
+        >>> qapply(k.dual * A / (k.dual * k))
+        <k|*|k><b|/<k|k>
     """
     from sympy.physics.quantum.density import Density
 

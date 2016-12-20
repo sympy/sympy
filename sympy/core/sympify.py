@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from inspect import getmro
 
 from .core import all_classes as sympy_classes
-from .compatibility import iterable, string_types
+from .compatibility import iterable, string_types, range
 from .evaluate import global_evaluate
 
 
@@ -28,8 +28,8 @@ class CantSympify(object):
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.core.sympify import sympify, CantSympify
 
@@ -140,8 +140,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> from sympy.abc import _clash1
     >>> _clash1
     {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
-    >>> sympify('C & Q', _clash1)
-    And(C, Q)
+    >>> sympify('I & Q', _clash1)
+    And(I, Q)
 
     Strict
     ------
@@ -184,7 +184,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
@@ -201,7 +201,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...     def __iter__(self):  #     Use _sympy_!
     ...         yield 1
     ...         yield 2
-    ...         raise StopIteration
+    ...         return
     ...     def __getitem__(self, i): return list(self)[i]
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
@@ -231,7 +231,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
+    try:
+        if a in sympy_classes:
+            return a
+    except TypeError: # Type of a is unhashable
+        pass
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object

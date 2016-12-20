@@ -118,10 +118,10 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild, Mul
 from sympy.functions import log, exp
 from sympy.series.order import Order
-from sympy.simplify import powsimp
+from sympy.simplify.powsimp import powsimp, powdenest
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
@@ -144,7 +144,7 @@ def compare(a, b, x):
     c = limitinf(la/lb, x)
     if c == 0:
         return "<"
-    elif c.is_unbounded:
+    elif c.is_infinite:
         return ">"
     else:
         return "="
@@ -260,6 +260,8 @@ def mrv(e, x):
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
         b, e = e.as_base_exp()
+        if b == 1:
+            return SubsSet(), b
         if e.has(x):
             return mrv(exp(e * log(b)), x)
         else:
@@ -273,7 +275,11 @@ def mrv(e, x):
         # be simplified here, and doing so is vital for termination.
         if e.args[0].func is log:
             return mrv(e.args[0].args[0], x)
-        if limitinf(e.args[0], x).is_unbounded:
+        # if a product has an infinite factor the result will be
+        # infinite if there is no zero, otherwise NaN; here, we
+        # consider the result infinite if any factor is infinite
+        li = limitinf(e.args[0], x)
+        if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.args[0], x)
@@ -403,7 +409,7 @@ def sign(e, x):
 @cacheit
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
-    #rewrite e in terms of tractable functions only
+    # rewrite e in terms of tractable functions only
     e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
@@ -412,9 +418,9 @@ def limitinf(e, x):
         e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
-        # get all the correct mathematical bechavior from the expression.
+        # get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, bounded=True)
+        p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
@@ -425,7 +431,7 @@ def limitinf(e, x):
         if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
-        #the leading term shouldn't be 0:
+        # the leading term shouldn't be 0:
         if s == 0:
             raise ValueError("Leading term should not be 0")
         return s*oo
@@ -458,6 +464,9 @@ def calculate_series(e, x, logx=None):
     for t in e.lseries(x, logx=logx):
         t = cancel(t)
 
+        if t.has(exp) and t.has(log):
+            t = powdenest(t)
+
         if t.simplify():
             break
 
@@ -482,7 +491,7 @@ def mrv_leadterm(e, x):
             raise ValueError("e0 should be 0")
         return c0, e0
     if x in Omega:
-        #move the whole omega up (exponentiate each term):
+        # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
         e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
@@ -497,7 +506,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, bounded=True)
+    w = Dummy("w", real=True, positive=True, finite=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     return series.leadterm(w)
@@ -555,7 +564,7 @@ def rewrite(e, Omega, x, wsym):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
         raise ValueError("Length can not be 0")
-    #all items in Omega must be exponentials
+    # all items in Omega must be exponentials
     for t in Omega.keys():
         if not t.func is exp:
             raise ValueError("Value should be exp")
@@ -573,7 +582,7 @@ def rewrite(e, Omega, x, wsym):
             raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
-    #O2 is a list, which results by rewriting each item in Omega using "w"
+    # O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     denominators = []
     for f, var in Omega:
@@ -587,8 +596,8 @@ def rewrite(e, Omega, x, wsym):
             arg = rewrites[var].args[0]
         O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
 
-    #Remember that Omega contains subexpressions of "e". So now we find
-    #them in "e" and substitute them for our rewriting, stored in O2
+    # Remember that Omega contains subexpressions of "e". So now we find
+    # them in "e" and substitute them for our rewriting, stored in O2
 
     # the following powsimp is necessary to automatically combine exponentials,
     # so that the .subs() below succeeds:
@@ -600,7 +609,7 @@ def rewrite(e, Omega, x, wsym):
     for _, var in Omega:
         assert not f.has(var)
 
-    #finally compute the logarithm of w (logw).
+    # finally compute the logarithm of w (logw).
     logw = g.args[0]
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
@@ -628,19 +637,19 @@ def gruntz(e, z, z0, dir="+"):
     file. It relies heavily on the series expansion. Most frequently, gruntz()
     is only used if the faster limit() function (which uses heuristics) fails.
     """
-    if not isinstance(z, Symbol):
+    if not z.is_Symbol:
         raise NotImplementedError("Second argument must be a Symbol")
 
-    #convert all limits to the limit z->oo; sign of z is handled in limitinf
+    # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
     if z0 == oo:
         r = limitinf(e, z)
     elif z0 == -oo:
         r = limitinf(e.subs(z, -z), z)
     else:
-        if dir == "-":
+        if str(dir) == "-":
             e0 = e.subs(z, z0 - 1/z)
-        elif dir == "+":
+        elif str(dir) == "+":
             e0 = e.subs(z, z0 + 1/z)
         else:
             raise NotImplementedError("dir must be '+' or '-'")

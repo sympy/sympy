@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from itertools import permutations
 
 from sympy.matrices import Matrix
-from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add
+from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
@@ -15,6 +16,7 @@ from sympy.combinatorics import Permutation
 # TODO dummy point, literal field
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
+from sympy.tensor.array import ImmutableDenseNDimArray
 
 
 class Manifold(Basic):
@@ -25,13 +27,16 @@ class Manifold(Basic):
     topological characteristics of the manifold that it represents.
 
     """
-    def __init__(self, name, dim):
-        super(Manifold, self).__init__()
-        self.name = name
-        self.dim = dim
-        self.patches = []
+    def __new__(cls, name, dim):
+        name = sympify(name)
+        dim = sympify(dim)
+        obj = Basic.__new__(cls, name, dim)
+        obj.name = name
+        obj.dim = dim
+        obj.patches = []
         # The patches list is necessary if a Patch instance needs to enumerate
         # other Patch instance on the same manifold.
+        return obj
 
     def _latex(self, printer, *args):
         return r'\mathrm{%s}' % self.name
@@ -48,8 +53,8 @@ class Patch(Basic):
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define a Manifold and a Patch on that Manifold:
 
@@ -62,14 +67,16 @@ class Patch(Basic):
     """
     # Contains a reference to the parent manifold in order to be able to access
     # other patches.
-    def __init__(self, name, manifold):
-        super(Patch, self).__init__()
-        self.name = name
-        self.manifold = manifold
-        self.manifold.patches.append(self)
-        self.coord_systems = []
+    def __new__(cls, name, manifold):
+        name = sympify(name)
+        obj = Basic.__new__(cls, name, manifold)
+        obj.name = name
+        obj.manifold = manifold
+        obj.manifold.patches.append(obj)
+        obj.coord_systems = []
         # The list of coordinate systems is necessary for an instance of
         # CoordSystem to enumerate other coord systems on the patch.
+        return obj
 
     @property
     def dim(self):
@@ -90,6 +97,7 @@ class CoordSystem(Basic):
 
     >>> from sympy import symbols, sin, cos, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
+    >>> from sympy.simplify import simplify
     >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
     >>> patch = Patch('P', m)
@@ -110,7 +118,7 @@ class CoordSystem(Basic):
     Matrix([
     [0],
     [2]])
-    >>> rect.coord_tuple_transform_to(polar, [1, 1])
+    >>> rect.coord_tuple_transform_to(polar, [1, 1]).applyfunc(simplify)
     Matrix([
     [sqrt(2)],
     [   pi/4]])
@@ -170,18 +178,22 @@ class CoordSystem(Basic):
     """
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
-    def __init__(self, name, patch, names=None):
-        super(CoordSystem, self).__init__()
-        self.name = name
-        if not names:
-            names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        self._names = names
-        self.patch = patch
-        self._args = self.name, self.patch
+    def __new__(cls, name, patch, names=None):
+        name = sympify(name)
         # names is not in args because it is related only to printing, not to
         # identifying the CoordSystem instance.
-        self.patch.coord_systems.append(self)
-        self.transforms = {}
+        if not names:
+            names = ['%s_%d' % (name, i) for i in range(patch.dim)]
+        if isinstance(names, Tuple):
+            obj = Basic.__new__(cls, name, patch, names)
+        else:
+            names = Tuple(*symbols(names))
+            obj = Basic.__new__(cls, name, patch, names)
+        obj.name = name
+        obj._names = [str(i) for i in names.args]
+        obj.patch = patch
+        obj.patch.coord_systems.append(obj)
+        obj.transforms = {}
         # All the coordinate transformation logic is in this dictionary in the
         # form of:
         #  key = other coordinate system
@@ -189,8 +201,9 @@ class CoordSystem(Basic):
         #          - list of `Dummy` coordinates in this coordinate system
         #          - list of expressions as a function of the Dummies giving
         #          the coordinates in another coordinate system
-        self._dummies = [Dummy(str(n)) for n in names]
-        self._dummy = Dummy()
+        obj._dummies = [Dummy(str(n)) for n in names]
+        obj._dummy = Dummy()
+        return obj
 
     @property
     def dim(self):
@@ -449,11 +462,14 @@ class BaseScalarField(Expr):
     g(-pi)
 
     """
-    def __init__(self, coord_sys, index):
-        super(BaseScalarField, self).__init__()
-        self._coord_sys = coord_sys
-        self._index = index
-        self._args = self._coord_sys, self._index
+
+    is_commutative = True
+
+    def __new__(cls, coord_sys, index):
+        obj = Expr.__new__(cls, coord_sys, sympify(index))
+        obj._coord_sys = coord_sys
+        obj._index = index
+        return obj
 
     def __call__(self, *args):
         """Evaluating the field at a point or doing nothing.
@@ -537,11 +553,15 @@ class BaseVectorField(Expr):
     \dxi_2                         /|xi_2=r0*sin(theta0)
 
     """
-    def __init__(self, coord_sys, index):
-        super(BaseVectorField, self).__init__()
-        self._coord_sys = coord_sys
-        self._index = index
-        self._args = self._coord_sys, self._index
+
+    is_commutative = False
+
+    def __new__(cls, coord_sys, index):
+        index = sympify(index)
+        obj = Expr.__new__(cls, coord_sys, index)
+        obj._coord_sys = coord_sys
+        obj._index = index
+        return obj
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
@@ -609,14 +629,10 @@ class Commutator(Expr):
     >>> c_xr
     Commutator(e_x, e_r)
 
-    """
-    # TODO simplify fails with an error
-    #>>> pprint(simplify(c_xr(R2.y**2).doit()))
-    #              -1
-    #     / 2    2\
-    #-2*y*\x  + y /  *cos(theta)*y
+    >>> simplify(c_xr(R2.y**2).doit())
+    -2*cos(theta)*y**2/(x**2 + y**2)
 
-    #"""
+    """
     def __new__(cls, v1, v2):
         if (covariant_order(v1) or contravariant_order(v1) != 1
                 or covariant_order(v2) or contravariant_order(v2) != 1):
@@ -624,7 +640,7 @@ class Commutator(Expr):
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
             return Zero()
-        coord_sys = set.union(*[v.atoms(CoordSystem) for v in (v1, v2)])
+        coord_sys = set().union(*[v.atoms(CoordSystem) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
@@ -704,6 +720,9 @@ class Differential(Expr):
     0
 
     """
+
+    is_commutative = False
+
     def __new__(cls, form_field):
         if contravariant_order(form_field):
             raise ValueError(
@@ -930,7 +949,7 @@ class LieDerivative(Expr):
     >>> LieDerivative(R2.e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
     >>> LieDerivative(R2.e_x, tp).doit()
-    LieDerivative(e_rectangular_0, TensorProduct(dx, dy))
+    LieDerivative(e_x, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
@@ -972,7 +991,7 @@ class BaseCovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
     >>> cvd(R2.x)
     1
@@ -1017,7 +1036,7 @@ class BaseCovarDerivativeOp(Expr):
         # Third step: evaluate the derivatives of the vectors
         derivs = []
         for v in vectors:
-            d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
+            d = Add(*[(self._christoffel[k, wrt_vector._index, v._index]
                        *v._coord_sys.base_vector(k))
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
@@ -1039,7 +1058,7 @@ class CovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
     >>> cvd(R2.x)
     x
@@ -1281,13 +1300,6 @@ def dummyfy(args, exprs):
     return d_args, d_exprs
 
 
-def list_to_tuple_rec(the_list):
-    # TODO remove in favor of tensor classes
-    if isinstance(the_list, list):
-        return tuple(list_to_tuple_rec(e) for e in the_list)
-    return the_list
-
-
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -1394,7 +1406,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    (x**2 + y**2)**(-1/2)*x*e_r - y*(x**2 + y**2)**(-1)*e_theta
+    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
     """
@@ -1466,9 +1478,9 @@ def metric_to_Christoffel_1st(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((1/2, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/2, 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     matrix = twoform_to_matrix(expr)
@@ -1483,7 +1495,7 @@ def metric_to_Christoffel_1st(expr):
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Christoffel_2nd(expr):
@@ -1499,9 +1511,9 @@ def metric_to_Christoffel_2nd(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((x**(-1)/2, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/(2*x), 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
@@ -1518,11 +1530,11 @@ def metric_to_Christoffel_2nd(expr):
     dums = coord_sys._dummies
     matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
-    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
+    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l, j, k] for l in indices])
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Riemann_components(expr):
@@ -1540,25 +1552,23 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0),
-     (0, 0))))
+    [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
-    >>> riemann[0]
-    (((0, 0), (0, 0)), ((0, -exp(-2*r)*r + 2*r*exp(-2*r)),
-        (exp(-2*r)*r - 2*r*exp(-2*r), 0)))
-    >>> riemann[1]
-    (((0, -r**(-1)), (r**(-1), 0)), ((0, 0), (0, 0)))
+    >>> riemann[0, :, :, :]
+    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    >>> riemann[1, :, :, :]
+    [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    deriv_ch = [[[[d(ch_2nd[i][j][k])
+    deriv_ch = [[[[d(ch_2nd[i, j, k])
                    for d in coord_sys.base_vectors()]
                   for k in indices]
                  for j in indices]
@@ -1568,7 +1578,7 @@ def metric_to_Riemann_components(expr):
                    for mu in indices]
                   for sig in indices]
                      for rho in indices]
-    riemann_b = [[[[Add(*[ch_2nd[rho][l][mu]*ch_2nd[l][sig][nu] - ch_2nd[rho][l][nu]*ch_2nd[l][sig][mu] for l in indices])
+    riemann_b = [[[[Add(*[ch_2nd[rho, l, mu]*ch_2nd[l, sig, nu] - ch_2nd[rho, l, nu]*ch_2nd[l, sig, mu] for l in indices])
                     for nu in indices]
                    for mu in indices]
                   for sig in indices]
@@ -1578,7 +1588,7 @@ def metric_to_Riemann_components(expr):
                      for mu in indices]
                 for sig in indices]
                for rho in indices]
-    return list_to_tuple_rec(riemann)
+    return ImmutableDenseNDimArray(riemann)
 
 
 def metric_to_Ricci_components(expr):
@@ -1596,20 +1606,20 @@ def metric_to_Ricci_components(expr):
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((0, 0), (0, 0))
+    [[0, 0], [0, 0]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
-    >>> metric_to_Ricci_components(non_trivial_metric) #TODO why is this not simpler
-    ((r**(-1), 0), (0, -exp(-2*r)*r + 2*r*exp(-2*r)))
+    >>> metric_to_Ricci_components(non_trivial_metric)
+    [[1/r, 0], [0, exp(-2*r)*r]]
 
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
+    ricci = [[Add(*[riemann[k, i, k, j] for k in indices])
               for j in indices]
              for i in indices]
-    return list_to_tuple_rec(ricci)
+    return ImmutableDenseNDimArray(ricci)

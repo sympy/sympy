@@ -1,6 +1,7 @@
 from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
-    Function, simplify, C, I)
-from sympy.abc import x, epsilon, mu
+    Function, simplify, I, atan2)
+from sympy.abc import epsilon, mu
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.units import c, m, s
 from sympy.physics.optics import TWave
 
@@ -12,7 +13,6 @@ def test_twave():
     x = Symbol('x')  # Spatial varaible
     k = Symbol('k')  # Wave number
     E = Function('E')
-    exp = C.exp
     w1 = TWave(A1, f, phi1)
     w2 = TWave(A2, f, phi2)
     assert w1.amplitude == A1
@@ -28,9 +28,12 @@ def test_twave():
     assert w3.angular_velocity == 2*pi*f
     assert w3.wavenumber == 2*pi*f*n/c
     assert simplify(w3.rewrite('sin') - sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
-        + A2**2)*sin(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + phi1 + phi2 + pi/2)) == 0
+    + A2**2)*sin(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + atan2(A1*cos(phi1)
+    + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)) + pi/2)) == 0
     assert w3.rewrite('pde') == epsilon*mu*Derivative(E(x, t), t, t) + Derivative(E(x, t), x, x)
     assert w3.rewrite(cos) == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
-        + A2**2)*cos(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + phi1 + phi2)
+    + A2**2)*cos(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + atan2(A1*cos(phi1)
+    + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)))
     assert w3.rewrite('exp') == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
-        + A2**2)*exp(I*(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + phi1 + phi2))
+    + A2**2)*exp(I*(pi*f*n*x*s/(149896229*m) - 2*pi*f*t
+    + atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))))

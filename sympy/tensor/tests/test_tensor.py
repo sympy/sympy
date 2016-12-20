@@ -11,6 +11,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
+from sympy.core.compatibility import range
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -638,6 +639,25 @@ def test_add2():
     t = A(m, -m, n) + A(n, p, -p)
     assert t == 0
 
+def test_add3():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    i0, i1 = tensor_indices('i0:2', Lorentz)
+    E, px, py, pz = symbols('E px py pz')
+    A = tensorhead('A', [Lorentz], [[1]])
+    B = tensorhead('B', [Lorentz], [[1]])
+
+    expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
+    assert expr1.args == (-E**2 + px**2 + py**2 + pz**2, A(i0)*A(-i0))
+
+    expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
+    assert expr2.args == (E**2 - px**2 - py**2 - pz**2, -A(i0)*A(-i0))
+
+    expr3 = A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+    assert expr3.args == (-E**2 + px**2 + py**2 + pz**2, A(i0)*A(-i0))
+
+    expr4 = B(i1)*B(-i1) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+    assert expr4.args == (2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2, -A(i0)*A(-i0), B(i1)*B(-i1))
+
 def test_mul():
     from sympy.abc import x
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -654,6 +674,15 @@ def test_mul():
     assert t.coeff == 1 + x
     assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
     assert t.components == [A]
+
+    ts = A(a, b)
+    assert str(ts) == 'A(a, b)'
+    assert ts.types == [Lorentz]
+    assert ts.rank == 2
+    assert ts.dum == []
+    assert ts.coeff == 1
+    assert sorted(ts.free) == [(a, 0, 0), (b, 1, 0)]
+    assert ts.components == [A]
 
     t = A(-b, a)*B(-a, c)*A(-c, d)
     t1 = tensor_mul(*t.split())
@@ -1187,7 +1216,7 @@ def test_hidden_indices_for_matrix_multiplication():
     B1 = B(m1)
 
     assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, S.auto_left))
     assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])
@@ -1468,6 +1497,31 @@ def test_valued_tensor_expressions():
     assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
+def test_valued_tensor_add_scalar():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+
+    # one scalar summand after the contracted tensor
+    expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
+    assert expr1.data == 0
+
+    # multiple scalar summands in front of the contracted tensor
+    expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
+    assert expr2.data == 0
+
+    # multiple scalar summands after the contracted tensor
+    expr3 =  A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+    assert expr3.data == 0
+
+    # multiple scalar summands and multiple tensors
+    expr4 = C(mu0)*C(-mu0) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+    assert expr4.data == 0
+
+
 def test_noncommuting_components():
     numpy = import_module("numpy")
     if numpy is None:
@@ -1620,7 +1674,7 @@ def test_contract_automatrix_and_data():
 
     L = TensorIndexType('L')
     S = TensorIndexType('S')
-    G = tensorhead('G', [L, S, S], [[1] * 3], matrix_behavior=True)
+    G = tensorhead('G', [L, S, S], [[1]]*3, matrix_behavior=True)
 
     def G_data():
         G.data = [[[1]]]
@@ -1658,3 +1712,169 @@ def test_contract_automatrix_and_data():
     assert L.data is None
     assert S.data is None
     assert G.data is None
+
+
+def test_valued_components_with_wrong_symmetry():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    IT = TensorIndexType('IT', dim=3)
+    i0, i1, i2, i3 = tensor_indices('i0:4', IT)
+    IT.data = [1, 1, 1]
+    A_nosym = tensorhead('A', [IT]*2, [[1]]*2)
+    A_sym = tensorhead('A', [IT]*2, [[1]*2])
+    A_antisym = tensorhead('A', [IT]*2, [[2]])
+
+    mat_nosym = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    mat_sym = mat_nosym + mat_nosym.T
+    mat_antisym = mat_nosym - mat_nosym.T
+
+    A_nosym.data = mat_nosym
+    A_nosym.data = mat_sym
+    A_nosym.data = mat_antisym
+
+    def assign(A, dat):
+        A.data = dat
+
+    A_sym.data = mat_sym
+    raises(ValueError, lambda: assign(A_sym, mat_nosym))
+    raises(ValueError, lambda: assign(A_sym, mat_antisym))
+
+    A_antisym.data = mat_antisym
+    raises(ValueError, lambda: assign(A_antisym, mat_sym))
+    raises(ValueError, lambda: assign(A_antisym, mat_nosym))
+
+    A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+
+def test_issue_10972_TensMul_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
+    Lorentz.data = [-1, 1]
+
+    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                         Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    A2 = TensorType([Lorentz] * 2, tensorsymmetry([2]))
+
+    u = Vec('u')
+    u.data = [1, 0]
+
+    F = A2('F')
+    F.data = [[0, 1],
+              [-1, 0]]
+
+    mul_1 = F(mu, alpha) * u(-alpha) * F(nu, beta) * u(-beta)
+    assert (mul_1.data == numpy.array([[0, 0], [0, 1]])).all()
+
+    mul_2 = F(mu, alpha) * F(nu, beta) * u(-alpha) * u(-beta)
+    assert (mul_2.data == mul_1.data).all()
+
+    assert ((mul_1 + mul_1).data == 2 * mul_1.data).all()
+
+
+def test_TensMul_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
+    Lorentz.data = [-1, 1, 1, 1]
+
+    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                         Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    A2 = TensorType([Lorentz] * 2, tensorsymmetry([2]))
+
+    u = Vec('u')
+    u.data = [1, 0, 0, 0]
+
+    F = A2('F')
+    Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
+    F.data = [
+        [0, Ex, Ey, Ez],
+        [-Ex, 0, Bz, -By],
+        [-Ey, -Bz, 0, Bx],
+        [-Ez, By, -Bx, 0]]
+
+    E = F(mu, nu) * u(-nu)
+
+    assert ((E(mu) * E(nu)).data ==
+            numpy.array([[0, 0, 0, 0],
+                         [0, Ex ** 2, Ex * Ey, Ex * Ez],
+                         [0, Ex * Ey, Ey ** 2, Ey * Ez],
+                         [0, Ex * Ez, Ey * Ez, Ez ** 2]])
+            ).all()
+
+    assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data).all()
+
+    assert ((F(mu, alpha) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+            - (E(mu) * E(nu)).data
+            ).all()
+    assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+            (E(mu) * E(nu)).data
+            ).all()
+
+    S2 = TensorType([Lorentz] * 2, tensorsymmetry([1] * 2))
+    g = S2('g')
+    g.data = Lorentz.data
+
+    # tensor 'perp' is orthogonal to vector 'u'
+    perp = u(mu) * u(nu) + g(mu, nu)
+
+    mul_1 = u(-mu) * perp(mu, nu)
+    assert (mul_1.data == numpy.array([0, 0, 0, 0])).all()
+
+    mul_2 = u(-mu) * perp(mu, alpha) * perp(nu, beta)
+    assert (mul_2.data == numpy.zeros(shape=(4, 4, 4))).all()
+
+    Fperp = perp(mu, alpha) * perp(nu, beta) * F(-alpha, -beta)
+    assert (Fperp.data[0, :] == numpy.array([0, 0, 0, 0])).all()
+    assert (Fperp.data[:, 0] == numpy.array([0, 0, 0, 0])).all()
+
+    mul_3 = u(-mu) * Fperp(mu, nu)
+    assert (mul_3.data == numpy.array([0, 0, 0, 0])).all()
+
+
+def test_issue_11020_TensAdd_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
+    Lorentz.data = [-1, 1]
+
+    a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
+    i0, i1 = tensor_indices('i_0:2', Lorentz)
+
+    Vec = TensorType([Lorentz], tensorsymmetry([1]))
+    S2 = TensorType([Lorentz] * 2, tensorsymmetry([1] * 2))
+
+    # metric tensor
+    g = S2('g')
+    g.data = Lorentz.data
+
+    u = Vec('u')
+    u.data = [1, 0]
+
+    add_1 = g(b, c) * g(d, i0) * u(-i0) - g(b, c) * u(d)
+    assert (add_1.data == numpy.zeros(shape=(2, 2, 2))).all()
+    # Now let us replace index `d` with `a`:
+    add_2 = g(b, c) * g(a, i0) * u(-i0) - g(b, c) * u(a)
+    assert (add_2.data == numpy.zeros(shape=(2, 2, 2))).all()
+
+    # some more tests
+    # perp is tensor orthogonal to u^\mu
+    perp = u(a) * u(b) + g(a, b)
+    mul_1 = u(-a) * perp(a, b)
+    assert (mul_1.data == numpy.array([0, 0])).all()
+
+    mul_2 = u(-c) * perp(c, a) * perp(d, b)
+    assert (mul_2.data == numpy.zeros(shape=(2, 2, 2))).all()

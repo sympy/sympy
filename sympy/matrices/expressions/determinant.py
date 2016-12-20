@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr, S, Q, sympify
+from sympy import Basic, Expr, S, sympify
 from .matexpr import ShapeError
 
 

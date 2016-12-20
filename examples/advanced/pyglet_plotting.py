@@ -10,6 +10,7 @@ Suggested Usage:    python -i plotting.py
 from sympy import symbols
 from sympy.plotting.pygletplot import PygletPlot
 from sympy import sin, cos, pi, sqrt, exp
+from sympy.core.compatibility import range
 
 from time import sleep, clock
 
@@ -197,7 +198,7 @@ def main():
         s = ("\nPlot p has been created. Useful commands: \n"
              "    help(p), p[1] = x**2, print p, p.clear() \n\n"
              "Available examples (see source in plotting.py):\n\n")
-        for i in xrange(len(examples)):
+        for i in range(len(examples)):
             s += "(%i) %s\n" % (i, examples[i].__name__)
         s += "\n"
         s += "e.g. >>> example(2)\n"

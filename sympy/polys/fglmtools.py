@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.polys.monomials import monomial_mul, monomial_div
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 def matrix_fglm(F, ring, O_to):
     """
@@ -31,7 +31,7 @@ def matrix_fglm(F, ring, O_to):
     V = [[domain.one] + [domain.zero] * (len(old_basis) - 1)]
     G = []
 
-    L = [(i, 0) for i in xrange(ngens)]  # (i, j) corresponds to x_i * S[j]
+    L = [(i, 0) for i in range(ngens)]  # (i, j) corresponds to x_i * S[j]
     L.sort(key=lambda k_l: O_to(_incr_k(S[k_l[1]], k_l[0])), reverse=True)
     t = L.pop()
 
@@ -42,10 +42,10 @@ def matrix_fglm(F, ring, O_to):
         v = _matrix_mul(M[t[0]], V[t[1]])
         _lambda = _matrix_mul(P, v)
 
-        if all(_lambda[i] == domain.zero for i in xrange(s, len(old_basis))):
+        if all(_lambda[i] == domain.zero for i in range(s, len(old_basis))):
             # there is a linear combination of v by V
             lt = ring.term_new(_incr_k(S[t[1]], t[0]), domain.one)
-            rest = ring.from_dict(dict([ (S[i], _lambda[i]) for i in xrange(s) ]))
+            rest = ring.from_dict({S[i]: _lambda[i] for i in range(s)})
 
             g = (lt - rest).set_ring(ring_to)
             if g:
@@ -56,7 +56,7 @@ def matrix_fglm(F, ring, O_to):
             S.append(_incr_k(S[t[1]], t[0]))
             V.append(v)
 
-            L.extend([(i, s) for i in xrange(ngens)])
+            L.extend([(i, s) for i in range(ngens)])
             L = list(set(L))
             L.sort(key=lambda k_l: O_to(_incr_k(S[k_l[1]], k_l[0])), reverse=True)
 
@@ -74,29 +74,29 @@ def _incr_k(m, k):
 
 
 def _identity_matrix(n, domain):
-    M = [[domain.zero]*n for _ in xrange(n)]
+    M = [[domain.zero]*n for _ in range(n)]
 
-    for i in xrange(n):
+    for i in range(n):
         M[i][i] = domain.one
 
     return M
 
 
 def _matrix_mul(M, v):
-    return [sum([row[i] * v[i] for i in xrange(len(v))]) for row in M]
+    return [sum([row[i] * v[i] for i in range(len(v))]) for row in M]
 
 
 def _update(s, _lambda, P):
     """
     Update ``P`` such that for the updated `P'` `P' v = e_{s}`.
     """
-    k = min([j for j in xrange(s, len(_lambda)) if _lambda[j] != 0])
+    k = min([j for j in range(s, len(_lambda)) if _lambda[j] != 0])
 
-    for r in xrange(len(_lambda)):
+    for r in range(len(_lambda)):
         if r != k:
-            P[r] = [P[r][j] - (P[k][j] * _lambda[r]) / _lambda[k] for j in xrange(len(P[r]))]
+            P[r] = [P[r][j] - (P[k][j] * _lambda[r]) / _lambda[k] for j in range(len(P[r]))]
 
-    P[k] = [P[k][j] / _lambda[k] for j in xrange(len(P[k]))]
+    P[k] = [P[k][j] / _lambda[k] for j in range(len(P[k]))]
     P[k], P[s] = P[s], P[k]
 
     return P
@@ -114,7 +114,7 @@ def _representing_matrices(basis, G, ring):
         return tuple([0] * i + [1] + [0] * (u - i))
 
     def representing_matrix(m):
-        M = [[domain.zero] * len(basis) for _ in xrange(len(basis))]
+        M = [[domain.zero] * len(basis) for _ in range(len(basis))]
 
         for i, v in enumerate(basis):
             r = ring.term_new(monomial_mul(m, v), domain.one).rem(G)
@@ -125,7 +125,7 @@ def _representing_matrices(basis, G, ring):
 
         return M
 
-    return [representing_matrix(var(i)) for i in xrange(u + 1)]
+    return [representing_matrix(var(i)) for i in range(u + 1)]
 
 
 def _basis(G, ring):
@@ -144,7 +144,7 @@ def _basis(G, ring):
         t = candidates.pop()
         basis.append(t)
 
-        new_candidates = [_incr_k(t, k) for k in xrange(ring.ngens)
+        new_candidates = [_incr_k(t, k) for k in range(ring.ngens)
             if all(monomial_div(_incr_k(t, k), lmg) is None
             for lmg in leading_monomials)]
         candidates.extend(new_candidates)

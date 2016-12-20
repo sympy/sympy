@@ -70,7 +70,7 @@ class GMPYRationalField(RationalField):
 
     def quo(self, a, b):
         """Quotient of `a` and `b`, implies `__div__`. """
-        return GMPYRational(gmpy_qdiv(a, b))
+        return GMPYRational(gmpy_qdiv(GMPYRational(a), GMPYRational(b)))
 
     def rem(self, a, b):
         """Remainder of `a` and `b`, implies nothing.  """

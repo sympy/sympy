@@ -2,7 +2,12 @@ from __future__ import print_function, division
 
 import sympy.polys
 from sympy import Integer
-from fractions import gcd
+from sympy.core.compatibility import range
+import sys
+if sys.version_info < (3,5):
+    from fractions import gcd
+else:
+    from math import gcd
 
 
 def egyptian_fraction(r, algorithm="Greedy"):

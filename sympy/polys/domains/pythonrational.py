@@ -4,11 +4,12 @@ from __future__ import print_function, division
 
 import operator
 
-from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core.compatibility import integer_types
+from sympy.core.sympify import converter
+from sympy.core.numbers import Rational
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
@@ -245,3 +246,8 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
     numerator = numer
     denominator = denom
+
+
+def sympify_pythonrational(arg):
+    return Rational(arg.p, arg.q)
+converter[PythonRational] = sympify_pythonrational

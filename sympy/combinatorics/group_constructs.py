@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import uniq
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import range
 
 _af_new = Permutation._af_new
 
@@ -24,7 +24,7 @@ def DirectProduct(*groups):
     >>> from sympy.combinatorics.group_constructs import DirectProduct
     >>> from sympy.combinatorics.named_groups import CyclicGroup
     >>> C = CyclicGroup(4)
-    >>> G = DirectProduct(C,C,C)
+    >>> G = DirectProduct(C, C, C)
     >>> G.order()
     64
 
@@ -49,11 +49,11 @@ def DirectProduct(*groups):
         array_gens.append(list(range(total_degree)))
     current_gen = 0
     current_deg = 0
-    for i in xrange(len(gens_count)):
-        for j in xrange(current_gen, current_gen + gens_count[i]):
+    for i in range(len(gens_count)):
+        for j in range(current_gen, current_gen + gens_count[i]):
             gen = ((groups[i].generators)[j - current_gen]).array_form
             array_gens[j][current_deg:current_deg + degrees[i]] = \
-                [ x + current_deg for x in gen]
+                [x + current_deg for x in gen]
         current_gen += gens_count[i]
         current_deg += degrees[i]
     perm_gens = list(uniq([_af_new(list(a)) for a in array_gens]))

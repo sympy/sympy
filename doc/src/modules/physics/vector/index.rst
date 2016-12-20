@@ -2,8 +2,6 @@
 The Physics Vector Module
 =========================
 
-:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud, Sachin Joglekar
-
 .. topic:: Abstract
 
    In this documentation the components of the sympy.physics.vector module

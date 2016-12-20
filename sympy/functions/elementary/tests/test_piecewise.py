@@ -1,9 +1,10 @@
 from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
+    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp, Abs, Not
+    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    cos, exp, Abs, Not, Symbol, S
 )
+from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
@@ -59,7 +60,6 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
-    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
     assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
@@ -127,10 +127,12 @@ def test_piecewise():
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x, a < 0), (y, True))
-    assert f.free_symbols == set([x, y, a])
+    assert f.free_symbols == {x, y, a}
 
 
 def test_piecewise_integrate():
+    x, y = symbols('x y', real=True, finite=True)
+
     # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
     assert integrate(f, (x, -2, 2)) == Rational(14, 3)
@@ -221,7 +223,10 @@ def test_piecewise_integrate_inequality_conditions():
 
 
 def test_piecewise_integrate_symbolic_conditions():
-    from sympy.abc import a, b, x, y
+    a = Symbol('a', real=True, finite=True)
+    b = Symbol('b', real=True, finite=True)
+    x = Symbol('x', real=True, finite=True)
+    y = Symbol('y', real=True, finite=True)
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
     p1 = Piecewise((0, x < a), (0, x > b), (1, True))
     p2 = Piecewise((0, x > b), (0, x < a), (1, True))
@@ -484,3 +489,9 @@ def test_as_expr_set_pairs():
 
     assert Piecewise(((x - 2)**2, x >= 0), (0, True)).as_expr_set_pairs() == \
         [((x - 2)**2, Interval(0, oo)), (0, Interval(-oo, 0, True, True))]
+
+
+def test_S_srepr_is_identity():
+    p = Piecewise((10, Eq(x, 0)), (12, True))
+    q = S(srepr(p))
+    assert p == q

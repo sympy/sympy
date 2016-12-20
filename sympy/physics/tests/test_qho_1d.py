@@ -1,6 +1,7 @@
-from sympy import exp, integrate, oo, Rational, pi, S, simplify, sqrt
+from sympy import exp, integrate, oo, Rational, pi, S, simplify, sqrt, Symbol
+from sympy.core.compatibility import range
 from sympy.abc import omega, m, x
-from sympy.physics.qho_1d import psi_n, E_n
+from sympy.physics.qho_1d import psi_n, E_n, coherent_state
 from sympy.physics.quantum.constants import hbar
 
 nu = m * omega / hbar
@@ -35,3 +36,10 @@ def test_energies(n=1):
     # Maximum "n" which is tested:
     for i in range(n + 1):
         assert E_n(i, omega) == hbar * omega * (i + Rational(1, 2))
+
+def test_coherent_state(n=10):
+    # Maximum "n" which is tested:
+    # test whether coherent state is the eigenstate of annihilation operator
+    alpha = Symbol("alpha")
+    for i in range(n + 1):
+        assert simplify(sqrt(n + 1) * coherent_state(n + 1, alpha)) == simplify(alpha * coherent_state(n, alpha))

@@ -69,7 +69,7 @@ else:
     gmpy_qdiv = None
 
 
-import sympy.mpmath.libmp as mlib
+import mpmath.libmp as mlib
 
 
 def python_sqrt(n):

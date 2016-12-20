@@ -1,22 +1,22 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Tuple, Basic, Add, sympify
-from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
+from sympy.core import Basic, Add, sympify
+from sympy.core.compatibility import range
+from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, eye, ShapeError
-
+from sympy.matrices import Matrix, ShapeError
+from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix composed of other smaller, submatrices
@@ -125,6 +125,15 @@ class BlockMatrix(MatrixExpr):
                 return det(D)*det(A - B*D.I*C)
         return Determinant(self)
 
+    def as_real_imag(self):
+        real_matrices = [re(matrix) for matrix in self.blocks]
+        real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
+
+        im_matrices = [im(matrix) for matrix in self.blocks]
+        im_matrices = Matrix(self.blockshape[0], self.blockshape[1], im_matrices)
+
+        return (real_matrices, im_matrices)
+
     def transpose(self):
         """Return transpose of matrix.
 
@@ -139,8 +148,8 @@ class BlockMatrix(MatrixExpr):
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
         Matrix([
-        [X',  0],
-        [Z', Y']])
+        [X.T,  0],
+        [Z.T, Y.T]])
         >>> _.transpose()
         Matrix([
         [X, Z],

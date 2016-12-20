@@ -7,10 +7,13 @@ from .iterables import (flatten, group, take, subsets,
     prefixes, postfixes, sift, topological_sort, unflatten,
     has_dups, has_variety, reshape, default_sort_key, ordered)
 
+from .misc import filldedent
+
 from .lambdify import lambdify
+
 from .source import source
 
-from .decorator import threaded, xthreaded, public
+from .decorator import threaded, xthreaded, public, memoize_property
 
 from .runtests import test, doctest
 

@@ -1,8 +1,9 @@
 from sympy import S
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensorHead, tensorsymmetry, TensorType,\
-    TensAdd, tensor_mul, get_lines
+    TensAdd, tensor_mul, get_lines, Tensor
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import range
 
 
 DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
@@ -86,13 +87,18 @@ class GammaMatrixHead(TensorHead):
 
 
         """
-        sp = expression.split()
+        if isinstance(expression, Tensor):
+            sp = [expression]
+        elif isinstance(expression, TensMul):
+            sp = expression.args
+        else:
+            raise ValueError('wrong type')
 
         # Collect all gamma matrices of the same dimension
         new_expr = S.One
         residual_expr = S.One
         for i in sp:
-            if isinstance(i.args[1][0], GammaMatrixHead):
+            if isinstance(i, Tensor) and isinstance(i.args[0], GammaMatrixHead):
                 new_expr *= i
             else:
                 residual_expr *= i
@@ -162,8 +168,8 @@ class GammaMatrixHead(TensorHead):
                     if not ta:
                         ta = ex.split()
                         mu = TensorIndex('mu', GammaMatrix.LorentzIndex)
-                    ind1 = ta[ai[0]].args[-1][1]
-                    ind2 = ta[ai[0] + 1].args[-1][2]
+                    ind1 = ta[ai[0]].get_indices()[1]
+                    ind2 = ta[ai[0] + 1].get_indices()[2]
                     hit = True
                     if i == 0:
                         coeff = ex.coeff
@@ -372,7 +378,7 @@ class GammaMatrixHead(TensorHead):
         if isinstance(t, TensAdd):
             a = [x.coeff*_trace_single_line1(x) for x in t.args]
             return TensAdd(*a)
-        elif isinstance(t, TensMul):
+        elif isinstance(t, (Tensor, TensMul)):
             r = t.coeff*_trace_single_line1(t)
             return r
         else:
@@ -388,14 +394,14 @@ class GammaMatrixHead(TensorHead):
             #return TensMul.from_data(S.Zero, [], [], [])
             return S.Zero
         if n == 2:
-            ind0 = a[0].args[-1][0]
-            ind1 = a[1].args[-1][0]
+            ind0 = a[0].get_indices()[0]
+            ind1 = a[1].get_indices()[0]
             return gctr*g(ind0, ind1)
         if n == 4:
-            ind0 = a[0].args[-1][0]
-            ind1 = a[1].args[-1][0]
-            ind2 = a[2].args[-1][0]
-            ind3 = a[3].args[-1][0]
+            ind0 = a[0].get_indices()[0]
+            ind1 = a[1].get_indices()[0]
+            ind2 = a[2].get_indices()[0]
+            ind3 = a[3].get_indices()[0]
 
             return gctr*(g(ind0, ind1)*g(ind2, ind3) - \
                g(ind0, ind2)*g(ind1, ind3) + g(ind0, ind3)*g(ind1, ind2))
@@ -462,7 +468,7 @@ class GammaMatrixHead(TensorHead):
 
         >>> tc = 3*G(i0)*G(i1)
         >>> G._kahane_simplify(tc.coeff, tc._tids)
-        3*gamma(i0, auto_left, -S_0)*gamma(i1, S_0, -auto_right)
+        3*gamma(i0, auto_left, S_0)*gamma(i1, -S_0, -auto_right)
 
         References
         ==========

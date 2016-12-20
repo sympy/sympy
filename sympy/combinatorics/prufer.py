@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int, xrange
+from sympy.core.compatibility import iterable, as_int, range
 from sympy.utilities.iterables import flatten
 
 from collections import defaultdict
@@ -33,8 +33,8 @@ class Prufer(Basic):
         """Returns Prufer sequence for the Prufer object.
 
         This sequence is found by removing the highest numbered vertex,
-        recording the node it was attached to, and continuuing until only
-        two verices remain. The Prufer sequence is the list of recorded nodes.
+        recording the node it was attached to, and continuing until only
+        two vertices remain. The Prufer sequence is the list of recorded nodes.
 
         Examples
         ========
@@ -167,9 +167,9 @@ class Prufer(Basic):
             # edge involving it.
             d[edge[0]] += 1
             d[edge[1]] += 1
-        for i in xrange(n - 2):
+        for i in range(n - 2):
             # find the smallest leaf
-            for x in xrange(n):
+            for x in range(n):
                 if d[x] == 1:
                     break
             # find the node it was connected to
@@ -207,7 +207,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - http://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
+        - https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========
@@ -221,7 +221,7 @@ class Prufer(Basic):
         for p in prufer:
             d[p] += 1
         for i in prufer:
-            for j in xrange(n):
+            for j in range(n):
             # find the smallest leaf (degree = 1)
                 if d[j] == 1:
                     break
@@ -230,7 +230,7 @@ class Prufer(Basic):
             d[i] -= 1
             d[j] -= 1
             tree.append(sorted([i, j]))
-        last = [i for i in xrange(n) if d[i] == 1] or [0, 1]
+        last = [i for i in range(n) if d[i] == 1] or [0, 1]
         tree.append(last)
 
         return tree
@@ -309,7 +309,7 @@ class Prufer(Basic):
         """
         r = 0
         p = 1
-        for i in xrange(self.nodes - 3, -1, -1):
+        for i in range(self.nodes - 3, -1, -1):
             r += p*self.prufer_repr[i]
             p *= self.nodes
         return r
@@ -328,10 +328,10 @@ class Prufer(Basic):
         """
         n, rank = as_int(n), as_int(rank)
         L = defaultdict(int)
-        for i in xrange(n - 3, -1, -1):
+        for i in range(n - 3, -1, -1):
             L[i] = rank % n
             rank = (rank - L[i])//n
-        return Prufer([L[i] for i in xrange(len(L))])
+        return Prufer([L[i] for i in range(len(L))])
 
     def __new__(cls, *args, **kw_args):
         """The constructor for the Prufer object.

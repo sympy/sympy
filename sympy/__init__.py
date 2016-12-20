@@ -1,17 +1,37 @@
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
-full-featured computer algebra system (CAS) while keeping the code as
-simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external
-libraries, except optionally for plotting support.
+full-featured computer algebra system (CAS) while keeping the code as simple
+as possible in order to be comprehensible and easily extensible.  SymPy is
+written entirely in Python. It depends on mpmath, and other external libraries
+may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
-    http://sympy.org"""
+    http://sympy.org
+
+"""
 
 from __future__ import absolute_import, print_function
+del absolute_import, print_function
 
-__version__ = "0.7.5-git"
+try:
+    import mpmath
+except ImportError:
+    raise ImportError("SymPy now depends on mpmath as an external library. "
+    "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
+
+del mpmath
+
+from sympy.release import __version__
+
+if 'dev' in __version__:
+    def enable_warnings():
+        import warnings
+        warnings.filterwarnings('default',   '.*',   DeprecationWarning, module='sympy.*')
+        del warnings
+    enable_warnings()
+    del enable_warnings
+
 
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
@@ -26,7 +46,12 @@ del sys
 def __sympy_debug():
     # helper function so we don't import os globally
     import os
-    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+    debug_str = os.getenv('SYMPY_DEBUG', 'False')
+    if debug_str in ('True', 'False'):
+        return eval(debug_str)
+    else:
+        raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
+                           debug_str)
 SYMPY_DEBUG = __sympy_debug()
 
 from .core import *
@@ -54,7 +79,8 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import rcode, ccode, fcode, jscode, mathematica_code, latex, preview
+from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code, \
+    octave_code, latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 
@@ -62,3 +88,5 @@ evalf._create_evalf_table()
 
 # This is slow to import:
 #import abc
+
+from .deprecated import *

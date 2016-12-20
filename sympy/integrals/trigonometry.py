@@ -2,8 +2,9 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
+from sympy.functions import binomial, sin, cos, Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -13,11 +14,15 @@ from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
 #
 # so we cache the pattern
 
+# need to use a function instead of lamda since hash of lambda changes on
+# each call to _pat_sincos
+def _integer_instance(n):
+    return isinstance(n , Integer)
 
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
-    n, m = [Wild(s, exclude=[x], properties=[lambda n: isinstance(n, Integer)])
+    n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
                 for s in 'nm']
     pat = sin(a*x)**n * cos(a*x)**m
     return pat, a, n, m

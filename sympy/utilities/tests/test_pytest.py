@@ -1,4 +1,9 @@
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, USE_PYTEST
+
+if USE_PYTEST:
+    import py.test
+    pytestmark = py.test.mark.skipif(USE_PYTEST,
+                                     reason=("using py.test"))
 
 # Test callables
 

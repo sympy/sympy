@@ -5,7 +5,7 @@ with residues.
 
 from __future__ import print_function, division
 
-from sympy import Wild, sympify, Integer, Add
+from sympy import sympify
 from sympy.utilities.timeutils import timethis
 
 

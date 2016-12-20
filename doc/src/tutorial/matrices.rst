@@ -291,6 +291,26 @@ To find the nullspace of a matrix, use ``nullspace``. ``nullspace`` returns a
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
     ⎣⎣ 0 ⎦  ⎣0⎦  ⎣ 1  ⎦⎦
 
+Columnspace
+-----------
+
+To find the columnspace of a matrix, use ``columnspace``. ``columnspace`` returns a
+``list`` of column vectors that span the columnspace of the matrix.
+
+    >>> M = Matrix([[1, 1, 2], [2 ,1 , 3], [3 , 1, 4]])
+    >>> M
+    ⎡1  1  2⎤
+    ⎢       ⎥
+    ⎢2  1  3⎥
+    ⎢       ⎥
+    ⎣3  1  4⎦
+    >>> M.columnspace()
+    ⎡⎡1⎤, ⎡1⎤⎤
+    ⎢⎢ ⎥  ⎢ ⎥⎥
+    ⎢⎢2⎥  ⎢1⎥⎥
+    ⎢⎢ ⎥  ⎢ ⎥⎥
+    ⎣⎣3⎦  ⎣1⎦⎦
+
 Eigenvalues, Eigenvectors, and Diagonalization
 ----------------------------------------------
 

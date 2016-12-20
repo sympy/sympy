@@ -69,7 +69,7 @@ _greek = 'alpha beta gamma delta epsilon zeta eta '  \
          'sigma tau upsilon phi chi psi omega'
 
 for _symbol in _greek.split(' '):
-    exec "%s = Symbol('%s')" % (_symbol, _symbol)
+    exec("%s = Symbol('%s')" % (_symbol, _symbol))
 
 del _symbol
 """

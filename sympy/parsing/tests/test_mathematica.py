@@ -3,7 +3,9 @@ from sympy import sympify
 
 
 def test_mathematica():
-    d = {'Sin[x]^2': 'sin(x)**2',
+    d = {
+        '- 6x': '-6*x',
+        'Sin[x]^2': 'sin(x)**2',
         '2(x-1)': '2*(x-1)',
         '3y+8': '3*y+8',
         'Arcsin[2x+9(4-x)^2]/x': 'asin(2*x+9*(4-x)**2)/x',

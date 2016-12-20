@@ -1,3 +1,4 @@
+from sympy.core.logic import _fuzzy_group
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
@@ -30,6 +31,8 @@ class AskCommutativeHandler(CommonHandler):
     def Symbol(expr, assumptions):
         """Objects are expected to be commutative unless otherwise stated"""
         assumps = conjuncts(assumptions)
+        if expr.is_commutative is not None:
+            return expr.is_commutative and not ~Q.commutative(expr) in assumps
         if Q.commutative(expr) in assumps:
             return True
         elif ~Q.commutative(expr) in assumps:
@@ -113,15 +116,5 @@ def test_closed_group(expr, assumptions, key):
     Test for membership in a group with respect
     to the current operation
     """
-    result = True
-    for arg in expr.args:
-        _out = ask(key(arg), assumptions)
-        if _out is None:
-            break
-        elif _out is False:
-            if result:
-                result = False
-            else:
-                break
-    else:
-        return result
+    return _fuzzy_group(
+        (ask(key(a), assumptions) for a in expr.args), quick_exit=True)

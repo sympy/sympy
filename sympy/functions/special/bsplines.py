@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, expand
+from sympy.core import S, sympify
+from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
-from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.sets.sets import Interval
 
 

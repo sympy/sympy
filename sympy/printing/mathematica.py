@@ -3,8 +3,8 @@ Mathematica code printer
 """
 
 from __future__ import print_function, division
-from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 # Used in MCodePrinter._print_Function(self)
@@ -18,6 +18,19 @@ known_functions = {
     "asin": [(lambda x: True, "ArcSin")],
     "acos": [(lambda x: True, "ArcCos")],
     "atan": [(lambda x: True, "ArcTan")],
+    "sinh": [(lambda x: True, "Sinh")],
+    "cosh": [(lambda x: True, "Cosh")],
+    "tanh": [(lambda x: True, "Tanh")],
+    "coth": [(lambda x: True, "Coth")],
+    "sech": [(lambda x: True, "Sech")],
+    "csch": [(lambda x: True, "Csch")],
+    "asinh": [(lambda x: True, "ArcSinh")],
+    "acosh": [(lambda x: True, "ArcCosh")],
+    "atanh": [(lambda x: True, "ArcTanh")],
+    "acoth": [(lambda x: True, "ArcCoth")],
+    "asech": [(lambda x: True, "ArcSech")],
+    "acsch": [(lambda x: True, "ArcCsch")],
+
 }
 
 
@@ -47,6 +60,8 @@ class MCodePrinter(CodePrinter):
             if not isinstance(v, list):
                 userfuncs[k] = [(lambda *x: True, v)]
                 self.known_functions.update(userfuncs)
+
+    doprint = StrPrinter.doprint
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)

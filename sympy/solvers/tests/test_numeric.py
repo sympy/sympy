@@ -1,9 +1,10 @@
-from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
-from sympy.mpmath import mnorm, mpf
+from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
+    symbols, Float)
+from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
-
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 def test_nsolve():
     # onedimensional
@@ -44,8 +45,9 @@ def test_nsolve():
     assert nsolve([Eq(
         f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
-    assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
-        mpf('0.31883011387318591'))
+    assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
+        mpf('0.31883011387318591')) < 1e-15
+
 
 
 def test_issue_6408():
@@ -57,3 +59,28 @@ def test_issue_6408():
 def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+
+
+@conserve_mpmath_dps
+def test_increased_dps():
+    # Issue 8564
+    import mpmath
+    mpmath.mp.dps = 128
+    x = Symbol('x')
+    e1 = x**2 - pi
+    q = nsolve(e1, x, 3.0)
+
+    assert abs(sqrt(pi).evalf(128) - q) < 1e-128
+
+def test_nsolve_precision():
+    x, y = symbols('x y')
+    sol = nsolve(x**2 - pi, x, 3, prec=128)
+    assert abs(sqrt(pi).evalf(128) - sol) < 1e-128
+    assert isinstance(sol, Float)
+
+    sols = nsolve((y**2 - x, x**2 - pi), (x, y), (3, 3), prec=128)
+    assert isinstance(sols, Matrix)
+    assert sols.shape == (2, 1)
+    assert abs(sqrt(pi).evalf(128) - sols[0]) < 1e-128
+    assert abs(sqrt(sqrt(pi)).evalf(128) - sols[1]) < 1e-128
+    assert all(isinstance(i, Float) for i in sols)

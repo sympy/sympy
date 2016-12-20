@@ -5,9 +5,9 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi
-from sympy import I, S, C, denom
+from sympy.functions.elementary.exponential import exp, log
+from sympy import I
 
 
 class AskIntegerHandler(CommonHandler):
@@ -15,6 +15,10 @@ class AskIntegerHandler(CommonHandler):
     Handler for Q.integer
     Test that an expression belongs to the field of integer numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_integer
 
     @staticmethod
     def _number(expr, assumptions):
@@ -80,10 +84,6 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
-
-    @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
@@ -99,6 +99,11 @@ class AskRationalHandler(CommonHandler):
     Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
     """
+
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_rational
 
     @staticmethod
     def Add(expr, assumptions):
@@ -157,6 +162,11 @@ class AskRationalHandler(CommonHandler):
 
 class AskIrrationalHandler(CommonHandler):
 
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_irrational
+
     @staticmethod
     def Basic(expr, assumptions):
         _real = ask(Q.real(expr), assumptions)
@@ -174,6 +184,10 @@ class AskRealHandler(CommonHandler):
     Handler for Q.real
     Test that an expression belongs to the field of real numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_real
 
     @staticmethod
     def _number(expr, assumptions):
@@ -231,7 +245,7 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return True
@@ -252,7 +266,7 @@ class AskRealHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 # I**i -> real, log(I) is imag;
                 # (2*I)**i -> complex, log(2*I) is not imag
@@ -380,6 +394,10 @@ class AskComplexHandler(CommonHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_complex
+
+    @staticmethod
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
@@ -403,6 +421,10 @@ class AskImaginaryHandler(CommonHandler):
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_imaginary
 
     @staticmethod
     def _number(expr, assumptions):
@@ -462,20 +484,19 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Imaginary**integer/odd  -> Imaginary
-        Imaginary**integer/even -> Real if integer % 2 == 0
-        b**Imaginary            -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
-        Imaginary**Real         -> ?
-        Negative**even root     -> Imaginary
-        Negative**odd root      -> Real
-        Negative**Real          -> Imaginary
-        Real**Integer           -> Real
-        Real**Positive          -> Real
+        Imaginary**Odd        -> Imaginary
+        Imaginary**Even       -> Real
+        b**Imaginary          -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
+        Imaginary**Real       -> ?
+        Positive**Real        -> Real
+        Negative**Integer     -> Real
+        Negative**(Integer/2) -> Imaginary
+        Negative**Real        -> not Imaginary if exponent is not Rational
         """
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
 
-        if expr.base.func == C.exp:
+        if expr.base.func == exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return False
@@ -491,32 +512,37 @@ class AskImaginaryHandler(CommonHandler):
                 return
 
         if ask(Q.imaginary(expr.exp), assumptions):
-            imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
+            imlog = ask(Q.imaginary(log(expr.base)), assumptions)
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
-        if ask(Q.real(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
-                if ask(Q.rational(expr.exp) & Q.even(denom(expr.exp)), assumptions):
-                    return ask(Q.negative(expr.base), assumptions)
-                elif ask(Q.integer(expr.exp), assumptions):
+        if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
+            if ask(Q.positive(expr.base), assumptions):
+                return False
+            else:
+                rat = ask(Q.rational(expr.exp), assumptions)
+                if not rat:
+                    return rat
+                if ask(Q.integer(expr.exp), assumptions):
                     return False
-                elif ask(Q.positive(expr.base), assumptions):
-                    return False
-                elif ask(Q.negative(expr.base), assumptions):
-                    return True
+                else:
+                    half = ask(Q.integer(2*expr.exp), assumptions)
+                    if half:
+                        return ask(Q.negative(expr.base), assumptions)
+                    return half
+
 
     @staticmethod
     def log(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             if ask(Q.positive(expr.args[0]), assumptions):
-               return False
+                return False
             return
         # XXX it should be enough to do
         # return ask(Q.nonpositive(expr.args[0]), assumptions)
         # but ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
         # it should return True since exp(x) will be either 0 or complex
-        if expr.args[0].func == C.exp:
+        if expr.args[0].func == exp:
             if expr.args[0].args[0] in [I, -I]:
                 return True
         im = ask(Q.imaginary(expr.args[0]), assumptions)

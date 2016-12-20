@@ -11,7 +11,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
+from sympy import (Basic, Symbol, cacheit, sympify, Mul,
         And, Or, Tuple, Piecewise, Eq, Lambda)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
@@ -50,7 +50,7 @@ class FiniteDomain(RandomDomain):
 
     @property
     def dict(self):
-        return FiniteSet(Dict(dict(el)) for el in self.elements)
+        return FiniteSet(*[Dict(dict(el)) for el in self.elements])
 
     def __contains__(self, other):
         return other in self.elements
@@ -89,7 +89,7 @@ class SingleFiniteDomain(FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+        return FiniteSet(*[frozenset(((self.symbol, elem), )) for elem in self.set])
 
     def __iter__(self):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
@@ -112,7 +112,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(iter(self))
+        return FiniteSet(*self)
 
 
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
@@ -124,6 +124,9 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
 
     def __new__(cls, domain, condition):
+        """
+        Create a new instance of ConditionalFiniteDomain class
+        """
         if condition is True:
             return domain
         cond = rv_subs(condition)
@@ -156,12 +159,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     @property
     def set(self):
         if self.fulldomain.__class__ is SingleFiniteDomain:
-            return FiniteSet(elem for elem in self.fulldomain.set
-                    if frozenset(((self.fulldomain.symbol, elem),)) in self)
+            return FiniteSet(*[elem for elem in self.fulldomain.set
+                               if frozenset(((self.fulldomain.symbol, elem),)) in self])
         else:
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")
-        #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
@@ -216,7 +218,7 @@ class FinitePSpace(PSpace):
 
     @property
     def density(self):
-        return self.args[0]
+        return self.args[1]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -228,6 +230,7 @@ class FinitePSpace(PSpace):
         return obj
 
     def prob_of(self, elem):
+        elem = sympify(elem)
         return self._density.get(elem, 0)
 
     def where(self, condition):
@@ -280,7 +283,7 @@ class FinitePSpace(PSpace):
         domain = self.where(condition)
         prob = self.probability(condition)
         density = dict((key, val / prob)
-                for key, val in self._density.items() if key in domain)
+                for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
     def sample(self):
@@ -320,7 +323,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property
     @cacheit
     def _density(self):
-        return dict((frozenset(((self.symbol, val),)), prob)
+        return dict((FiniteSet((self.symbol, val)), prob)
                     for val, prob in self.distribution.dict.items())
 
 

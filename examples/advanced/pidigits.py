@@ -6,8 +6,8 @@ Example shows arbitrary precision using mpmath with the
 computation of the digits of pi.
 """
 
-from sympy.mpmath import libmp, pi
-from sympy.mpmath import functions as mpf_funs
+from mpmath import libmp, pi
+from mpmath import functions as mpf_funs
 
 import math
 from time import clock

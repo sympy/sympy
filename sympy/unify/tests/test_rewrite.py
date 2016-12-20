@@ -1,6 +1,6 @@
 from sympy.unify.rewrite import rewriterule
-from sympy import sin, cos, Basic, Symbol, S
-from sympy.abc import x, y, z
+from sympy import sin, Basic, Symbol, S
+from sympy.abc import x, y
 from sympy.strategies.rl import rebuild
 from sympy.assumptions import Q
 
@@ -61,7 +61,7 @@ def test_condition_multiple():
 
     c = Symbol('c', integer=True)
     d = Symbol('d', integer=True)
-    assert set(rl(c + d)) == set([c**d, d**c])
+    assert set(rl(c + d)) == {c**d, d**c}
 
 def test_assumptions():
     rl = rewriterule(x + y, x**y, [x, y], assume=Q.integer(x))

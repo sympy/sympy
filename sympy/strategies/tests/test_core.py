@@ -1,7 +1,6 @@
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
 from sympy.core.compatibility import get_function_name
-from functools import partial
 
 def test_null_safe():
     def rl(expr):
