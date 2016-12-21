@@ -70,6 +70,7 @@ def _attach_methods(cls, cont):
 
 
 class _CXXCodePrinterBase(object):
+    language = 'C++'
     _ns = 'std::'
 
     def _print_Max(self, expr):

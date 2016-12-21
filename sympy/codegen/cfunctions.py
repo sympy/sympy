@@ -286,9 +286,9 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
 
-
 def _hypot(x, y):
     return sqrt(Pow(x, 2) + Pow(y, 2))
+
 
 class hypot(Function):
     nargs = 2

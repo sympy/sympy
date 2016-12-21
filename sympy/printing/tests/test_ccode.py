@@ -6,8 +6,8 @@ from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter, C99CodePrinter
-from sympy.printing.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot
+from sympy.printing.ccode import CCodePrinter, C99CodePrinter, get_math_macros
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
@@ -534,6 +534,14 @@ def test_ccode_standard():
     assert ccode(float('nan'), standard='c99') == 'NAN'
 
 
+def test_CCodePrinter():
+    c89printer = CCodePrinter()
+    assert c89printer.language == 'C'
+    assert c89printer.standard == 'C89'
+    assert 'void' in c89printer.reserved_words
+    assert 'template' not in c89printer.reserved_words
+
+
 def test_C99CodePrinter():
     assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
     assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
@@ -546,3 +554,14 @@ def test_C99CodePrinter():
     assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'
     assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, pow(x, 2)))'
     assert C99CodePrinter().doprint(Min(x, 3)) == 'fmin(3, x)'
+    c99printer = C99CodePrinter()
+    assert c99printer.language == 'C'
+    assert c99printer.standard == 'C99'
+    assert 'restrict' in c99printer.reserved_words
+    assert 'using' not in c99printer.reserved_words
+
+
+def test_get_math_macros():
+    macros = get_math_macros()
+    assert macros[exp(1)] == 'M_E'
+    assert macros[1/Sqrt(2)] == 'M_SQRT1_2'

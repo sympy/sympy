@@ -46,42 +46,17 @@ known_functions = {
 }
 
 # These are the core reserved words in the C language. Taken from:
-# http://crasseux.com/books/ctutorial/Reserved-words-in-C.html
+# http://en.cppreference.com/w/c/keyword
 
-reserved_words = ['auto',
-                  'if',
-                  'break',
-                  'int',
-                  'case',
-                  'long',
-                  'char',
-                  'register',
-                  'continue',
-                  'return',
-                  'default',
-                  'short',
-                  'do',
-                  'sizeof',
-                  'double',
-                  'static',
-                  'else',
-                  'struct',
-                  'entry',
-                  'switch',
-                  'extern',
-                  'typedef',
-                  'float',
-                  'union',
-                  'for',
-                  'unsigned',
-                  'goto',
-                  'while',
-                  'enum',
-                  'void',
-                  'const',
-                  'signed',
-                  'volatile']
+reserved_words = [
+    'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
+    'double', 'else', 'enum', 'extern', 'float', 'for', 'goto', 'if', 'int',
+    'long', 'register', 'return', 'short', 'signed', 'sizeof', 'static',
+    'struct', 'entry',  # never standardized, we'll leave it here anyway
+    'switch', 'typedef', 'union', 'unsigned', 'void', 'volatile', 'while'
+]
 
+reserved_words_c99 = ['inline', 'restrict']
 
 def get_math_macros():
     """ Returns a dictionary with math-related macros from math.h/cmath
@@ -102,7 +77,7 @@ def get_math_macros():
     return {
         S.Exp1: 'M_E',
         log2(S.Exp1): 'M_LOG2E',
-        log(S.Exp1)/log(2): 'M_LOG2E',
+        1/log(2): 'M_LOG2E',
         log(2): 'M_LN2',
         log(10): 'M_LN10',
         S.Pi: 'M_PI',
@@ -122,7 +97,8 @@ def get_math_macros():
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
-    standard = "C89"
+    language = "C"
+    standard = "C89"  # plus: tgamma, a*h,
     reserved_words = set(reserved_words)
 
     _default_settings = {
@@ -168,7 +144,7 @@ class CCodePrinter(CodePrinter):
     def _get_loop_opening_ending(self, indices):
         open_lines = []
         close_lines = []
-        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
+        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"  # C99
         for i in indices:
             # C arrays start at 0 and end at dimension-1
             open_lines.append(loopstart % {
@@ -336,6 +312,7 @@ class CCodePrinter(CodePrinter):
 
 class C99CodePrinter(CCodePrinter):
     standard = 'C99'
+    reserved_words = set(reserved_words + reserved_words_c99)
 
     def _print_Max(self, expr):
         from sympy import Max
