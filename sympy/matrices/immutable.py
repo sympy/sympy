@@ -13,7 +13,7 @@ def sympify_matrix(arg):
     return arg.as_immutable()
 sympify_converter[MatrixBase] = sympify_matrix
 
-class ImmutableMatrix(MatrixExpr, DenseMatrix):
+class ImmutableMatrix(DenseMatrix, MatrixExpr):
     """Create an immutable version of a matrix.
 
     Examples
@@ -35,11 +35,11 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     # MatrixExpr is set as NotIterable, but we want explicit matrices to be
     # iterable
     _iterable = True
-    is_Matrix = True
+
+    _op_priority = 10.001
     _class_priority = 8
 
-    @classmethod
-    def _new(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
         rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
@@ -48,24 +48,17 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         mat = Tuple(*flat_list)
         return Basic.__new__(cls, rows, cols, mat)
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    __hash__ = MatrixExpr.__hash__
 
-    @property
-    def shape(self):
-        return tuple([int(i) for i in self.args[:2]])
-
-    @property
-    def _mat(self):
-        return list(self.args[2])
-
-    def _entry(self, i, j):
-        return DenseMatrix.__getitem__(self, (i, j))
-
-    __getitem__ = DenseMatrix.__getitem__
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
+
+    def _entry(self, i, j):
+        return DenseMatrix.__getitem__(self, (i, j))
 
     def _eval_Eq(self, other):
         """Helper method for Equality with matrices.
@@ -85,43 +78,21 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
         diff = self - other
         return sympify(diff.is_zero)
 
-    adjoint = MatrixBase.adjoint
-    conjugate = MatrixBase.conjugate
-    # C and T are defined in MatrixExpr...I don't know why C alone
-    # needs to be defined here
-    C = MatrixBase.C
+    @property
+    def _mat(self):
+        return list(self.args[2])
 
-    as_mutable = DenseMatrix.as_mutable
-    as_real_imag = DenseMatrix.as_real_imag
-    _eval_trace = DenseMatrix._eval_trace
-    _eval_transpose = DenseMatrix._eval_transpose
-    _eval_conjugate = DenseMatrix._eval_conjugate
-    _eval_adjoint = DenseMatrix._eval_adjoint
-    _eval_inverse = DenseMatrix._eval_inverse
-    _eval_simplify = DenseMatrix._eval_simplify
-    _eval_diff = DenseMatrix._eval_diff
-
-    equals = DenseMatrix.equals
-    is_Identity = DenseMatrix.is_Identity
-
-    __add__ = MatrixBase.__add__
-    __radd__ = MatrixBase.__radd__
-    __mul__ = MatrixBase.__mul__
-    __matmul__ = MatrixBase.__matmul__
-    __rmul__ = MatrixBase.__rmul__
-    __rmatmul__ = MatrixBase.__rmatmul__
-    __pow__ = MatrixBase.__pow__
-    __sub__ = MatrixBase.__sub__
-    __rsub__ = MatrixBase.__rsub__
-    __neg__ = MatrixBase.__neg__
-    __div__ = MatrixBase.__div__
-    __truediv__ = MatrixBase.__truediv__
+    @property
+    def shape(self):
+        return tuple(int(i) for i in self.args[:2])
 # This is included after the class definition as a workaround for issue 7213.
+# if is_commutative == False, the assumptions system will declare
+# the object is non-zero
 # See https://github.com/sympy/sympy/issues/7213
 ImmutableMatrix.is_zero = DenseMatrix.is_zero
 
 
-class ImmutableSparseMatrix(Basic, SparseMatrix):
+class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     """Create an immutable version of a sparse matrix.
 
     Examples
@@ -146,29 +117,31 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     is_Matrix = True
     _class_priority = 9
 
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        s = MutableSparseMatrix(*args)
+    def __new__(cls, *args, **kwargs):
+        s = MutableSparseMatrix(*args, **kwargs)
         rows = Integer(s.rows)
         cols = Integer(s.cols)
         mat = Dict(s._smat)
-        obj = Basic.__new__(cls, rows, cols, mat)
-        obj.rows = s.rows
-        obj.cols = s.cols
-        obj._smat = s._smat
-        return obj
+        return Basic.__new__(cls, rows, cols, mat)
 
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+    __hash__ = MatrixExpr.__hash__
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
+
+    @property
+    def _smat(self):
+        return {tuple(key): val for key,val in self.args[2].items()}
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
-    subs = MatrixBase.subs
-
-    xreplace = MatrixBase.xreplace
-
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
-
-    _eval_Eq = ImmutableMatrix._eval_Eq
+    @property
+    def shape(self):
+        return tuple(int(i) for i in self.args[:2])
+# This is included after the class definition as a workaround for issue 7213.
+# if is_commutative == False, the assumptions system will declare
+# the object is non-zero
+# See https://github.com/sympy/sympy/issues/7213
+ImmutableSparseMatrix.is_zero = SparseMatrix.is_zero
