@@ -123,6 +123,7 @@ class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
     standard = "C89"
+    reserved_words = set(reserved_words)
 
     _default_settings = {
         'order': None,
@@ -144,7 +145,6 @@ class CCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
-        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
         return p*5

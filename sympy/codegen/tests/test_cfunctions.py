@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, exp, log, pi, Rational, S
-from sympy.printing.cfunctions import (
+from sympy.codegen.cfunctions import (
     expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot
 )
 

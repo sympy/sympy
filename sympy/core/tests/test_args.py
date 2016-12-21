@@ -3751,40 +3751,40 @@ def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
 
-def test_sympy__printing__cfunctions__expm1():
-    from sympy.printing.cfunctions import expm1
+def test_sympy__codegen__cfunctions__expm1():
+    from sympy.codegen.cfunctions import expm1
     assert _test_args(expm1(x))
 
-def test_sympy__printing__cfunctions__log1p():
-    from sympy.printing.cfunctions import log1p
+def test_sympy__codegen__cfunctions__log1p():
+    from sympy.codegen.cfunctions import log1p
     assert _test_args(log1p(x))
 
-def test_sympy__printing__cfunctions__exp2():
-    from sympy.printing.cfunctions import exp2
+def test_sympy__codegen__cfunctions__exp2():
+    from sympy.codegen.cfunctions import exp2
     assert _test_args(exp2(x))
 
-def test_sympy__printing__cfunctions__log2():
-    from sympy.printing.cfunctions import log2
+def test_sympy__codegen__cfunctions__log2():
+    from sympy.codegen.cfunctions import log2
     assert _test_args(log2(x))
 
-def test_sympy__printing__cfunctions__fma():
-    from sympy.printing.cfunctions import fma
+def test_sympy__codegen__cfunctions__fma():
+    from sympy.codegen.cfunctions import fma
     assert _test_args(fma(x, y, z))
 
-def test_sympy__printing__cfunctions__log10():
-    from sympy.printing.cfunctions import log10
+def test_sympy__codegen__cfunctions__log10():
+    from sympy.codegen.cfunctions import log10
     assert _test_args(log10(x))
 
-def test_sympy__printing__cfunctions__Sqrt():
-    from sympy.printing.cfunctions import Sqrt
+def test_sympy__codegen__cfunctions__Sqrt():
+    from sympy.codegen.cfunctions import Sqrt
     assert _test_args(Sqrt(x))
 
-def test_sympy__printing__cfunctions__Cbrt():
-    from sympy.printing.cfunctions import Cbrt
+def test_sympy__codegen__cfunctions__Cbrt():
+    from sympy.codegen.cfunctions import Cbrt
     assert _test_args(Cbrt(x))
 
-def test_sympy__printing__cfunctions__hypot():
-    from sympy.printing.cfunctions import hypot
+def test_sympy__codegen__cfunctions__hypot():
+    from sympy.codegen.cfunctions import hypot
     assert _test_args(hypot(x, y))
 
 

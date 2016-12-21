@@ -21,7 +21,7 @@ reserved = {
         'private', 'protected', 'public', 'register', 'reinterpret_cast',
         'return', 'short', 'signed', 'sizeof', 'static', 'static_cast',
         'struct', 'switch', 'template', 'this', 'throw', 'true', 'try',
-        'typedef', 'typeid', 'typename', 'union', 'unsigned', 'using(1)',
+        'typedef', 'typeid', 'typename', 'union', 'unsigned', 'using',
         'virtual', 'void', 'volatile', 'wchar_t', 'while', 'xor', 'xor_eq'
     ]
 }
@@ -87,10 +87,7 @@ class _CXXCodePrinterBase(object):
 
 class CXX98CodePrinter(_CXXCodePrinterBase, CCodePrinter):
     standard = 'C++98'
-
-    def __init__(self, settings=None):
-        super(CXX98CodePrinter, self).__init__(settings or {})
-        self.reserved_words = set(reserved[self.standard])
+    reserved_words = set(reserved['C++98'])
 
 
 _attach_methods(CXX98CodePrinter, _math_functions)
@@ -98,10 +95,7 @@ _attach_methods(CXX98CodePrinter, _math_functions)
 
 class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     standard = 'C++11'
-
-    def __init__(self, settings=None):
-        super(CXX11CodePrinter, self).__init__(settings or {})
-        self.reserved_words = set(reserved[self.standard])
+    reserved_words = set(reserved['C++11'])
 
 
 _attach_methods(CXX11CodePrinter, _math_functions)

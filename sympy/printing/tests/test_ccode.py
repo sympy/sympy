@@ -1,5 +1,5 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, loggamma, sign, Max, Min)
 from sympy.sets import Range
@@ -59,6 +59,9 @@ def test_ccode_constants_mathh():
     assert ccode(pi) == "M_PI"
     assert ccode(oo) == "HUGE_VAL"
     assert ccode(-oo) == "-HUGE_VAL"
+    assert ccode(oo, standard='c99') == "INFINITY"
+    assert ccode(-oo, standard='c99') == "-INFINITY"
+
 
 
 def test_ccode_constants_other():
@@ -527,6 +530,8 @@ def test_ccode_For():
 
 def test_ccode_standard():
     assert ccode(expm1(x), standard='c99') == 'expm1(x)'
+    assert ccode(nan, standard='c99') == 'NAN'
+    assert ccode(float('nan'), standard='c99') == 'NAN'
 
 
 def test_C99CodePrinter():
