@@ -70,7 +70,7 @@ def get_math_macros():
     Dictionary mapping sympy expressions to strings (macro names)
 
     """
-    from sympy.printing.cfunctions import log2, Sqrt
+    from sympy.codegen.cfunctions import log2, Sqrt
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.miscellaneous import sqrt
 

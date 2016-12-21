@@ -1,7 +1,7 @@
 from sympy import symbols
 from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
-from sympy.printing.cfunctions import log1p
 from sympy.printing.cxxcode import CXX98CodePrinter, CXX11CodePrinter, _CXX17CodePrinter, cxxcode
+from sympy.codegen.cfunctions import log1p
 
 x, y = symbols('x y')
 
