@@ -189,7 +189,7 @@ class MatrixBase(object):
         return -1*self
 
     def _matrix_pow_by_jordan_blocks(self, num):
-        if self.det() == 0 and num < 0:
+        if num < 0 and self.det() == 0:
             raise ValueError("Matrix det == 0; not invertible.")
 
         from sympy.matrices import diag, MutableMatrix
