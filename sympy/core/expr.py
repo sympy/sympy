@@ -815,7 +815,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import conjugate
-        if self.is_complex:
+        if self.is_Symbol:
             return self
         elif self.is_hermitian:
             return conjugate(self)

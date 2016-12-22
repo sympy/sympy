@@ -1764,3 +1764,15 @@ def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
+
+def test_symbol_transpose():
+    x = Symbol('x')
+    y = Symbol('y', complex=True)
+    z = Symbol('z', real=True)
+
+    assert x.transpose() == x
+    assert y.transpose() == y
+    assert z.transpose() == z
+
+    x = MatrixSymbol('x', 4, 4)
+    assert x.transpose() == x.T
