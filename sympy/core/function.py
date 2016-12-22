@@ -2615,8 +2615,9 @@ def nfloat(expr, n=15, exponent=False):
     if rv.is_Number:
         return Float(rv, n)
     elif rv.is_number:
+        from sympy.core.evalf import N
         # evalf doesn't always set the precision
-        rv = rv.n(n)
+        rv = N(rv, n, chop=True)
         if rv.is_Number:
             rv = Float(rv.n(n), n)
         else:
