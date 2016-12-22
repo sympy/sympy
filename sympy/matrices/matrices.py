@@ -192,10 +192,8 @@ class MatrixBase(object):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
-        l = list(sorted(self.eigenvals(rational=False).keys()))
-        for i in range(len(l)):
-            if l[i] == 0 and num < 0:
-                raise ValueError("Matrix det == 0; not invertible.")
+        if self.det() == 0 and num < 0:
+            raise ValueError("Matrix det == 0; not invertible.")
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]

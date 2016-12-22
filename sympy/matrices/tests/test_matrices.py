@@ -225,7 +225,7 @@ def test_power():
     raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
     # test issue 11964
-    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])**10.0)
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
 
 
 def test_creation():
