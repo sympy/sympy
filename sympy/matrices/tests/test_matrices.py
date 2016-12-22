@@ -224,6 +224,9 @@ def test_power():
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
+    # test issue 11964
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])**10.0)
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
