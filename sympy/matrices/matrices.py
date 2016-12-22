@@ -189,11 +189,11 @@ class MatrixBase(object):
         return -1*self
 
     def _matrix_pow_by_jordan_blocks(self, num):
-        from sympy.matrices import diag, MutableMatrix
-        from sympy import binomial
-
         if self.det() == 0 and num < 0:
             raise ValueError("Matrix det == 0; not invertible.")
+
+        from sympy.matrices import diag, MutableMatrix
+        from sympy import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
