@@ -527,6 +527,11 @@ def test_ccode_For():
                    "   y *= x;\n"
                    "}")
 
+def test_ccode_Max_Min():
+    assert ccode(Max(x, 0)) == '((0 > x) ? 0 : x)'
+    assert ccode(Min(x, 0, sqrt(x))) == (
+        '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
+    )
 
 def test_ccode_standard():
     assert ccode(expm1(x), standard='c99') == 'expm1(x)'

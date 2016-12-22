@@ -1,6 +1,6 @@
 from sympy import Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt
 from sympy.abc import x, i, j, a, b, c, d
-from sympy.printing.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
+from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.utilities.pytest import skip

@@ -281,6 +281,26 @@ class CCodePrinter(CodePrinter):
     def _print_sign(self, func):
         return '((({0}) > 0) - (({0}) < 0))'.format(self._print(func.args[0]))
 
+    def _print_Max(self, expr):
+        if "Max" in self.known_functions:
+            return self._print_Function(expr)
+
+        from sympy import Max
+        if len(expr.args) == 1:
+            return self._print(expr.args[0])
+        return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {  # fmax in C99
+            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]))}
+
+    def _print_Min(self, expr):
+        if "Min" in self.known_functions:
+            return self._print_Function(expr)
+
+        from sympy import Min
+        if len(expr.args) == 1:
+            return self._print(expr.args[0])
+        return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {  # fmin in C99
+            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]))}
+
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
@@ -315,12 +335,16 @@ class C99CodePrinter(CCodePrinter):
     reserved_words = set(reserved_words + reserved_words_c99)
 
     def _print_Max(self, expr):
+        if "Max" in self.known_functions:
+            return self._print_Function(expr)
         from sympy import Max
         if len(expr.args) == 1:
             return self._print(expr.args[0])
         return "%sfmax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
 
     def _print_Min(self, expr):
+        if "Min" in self.known_functions:
+            return self._print_Function(expr)
         from sympy import Min
         if len(expr.args) == 1:
             return self._print(expr.args[0])
