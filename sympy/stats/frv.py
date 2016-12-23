@@ -21,7 +21,17 @@ from sympy.core.containers import Dict
 import random
 
 class FiniteDensity(dict):
+    """
+    A domain with Finite Density.
+    """
     def __call__(self, item):
+        """
+        Make instance of a class callable.
+
+        If item belongs to current instance of a class, return it.
+
+        Otherwise, return 0.
+        """
         item = sympify(item)
         if item in self:
             return self[item]
@@ -30,6 +40,9 @@ class FiniteDensity(dict):
 
     @property
     def dict(self):
+        """
+        Return item as dictionary.
+        """
         return dict(self)
 
 class FiniteDomain(RandomDomain):
