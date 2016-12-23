@@ -81,6 +81,38 @@ Usage::
 
 .. autofunction:: sympy.printing.ccode.print_ccode
 
+RCodePrinter
+------------
+
+.. module:: sympy.printing.rcode
+
+This class implements R code printing (i.e. it converts Python expressions
+to strings of R code).
+
+Usage::
+
+    >>> from sympy.printing import print_rcode
+    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.abc import x
+    >>> print_rcode(sin(x)**2 + cos(x)**2)
+    sin(x)^2 + cos(x)^2
+    >>> print_rcode(2*x + cos(x), assign_to="result")
+    result = 2*x + cos(x);
+    >>> print_rcode(Abs(x**2))
+    abs(x^2)
+
+.. autodata:: sympy.printing.rcode.known_functions
+
+.. autoclass:: sympy.printing.rcode.RCodePrinter
+   :members:
+
+   .. autoattribute:: RCodePrinter.printmethod
+
+
+.. autofunction:: sympy.printing.rcode.rcode
+
+.. autofunction:: sympy.printing.rcode.print_rcode
+
 Fortran Printing
 ----------------
 
