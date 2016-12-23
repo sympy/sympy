@@ -494,6 +494,16 @@ class Set(Basic):
 
     @property
     def is_closed(self):
+        """
+        A property method to check whether a set is closed. A set is closed
+        if it's complement is an open set.
+
+        Examples
+        ========
+        >>> from sympy import Interval
+        >>> Interval(0, 1).is_closed
+        True
+        """
         return self.boundary.is_subset(self)
 
     @property
