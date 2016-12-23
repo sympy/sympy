@@ -230,8 +230,7 @@ class Printer(object):
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
-        res=self._str(self._print(expr))
-        return res
+        return self._str(self._print(expr))
 
     def _print(self, expr, *args, **kwargs):
         """Internal dispatcher
@@ -259,8 +258,7 @@ class Printer(object):
 
                     return getattr(self, printmethod)(expr, *args, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
-            res=self.emptyPrinter(expr)
-            return res
+            return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
 
