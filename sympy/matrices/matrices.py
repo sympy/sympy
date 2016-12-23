@@ -189,9 +189,8 @@ class MatrixBase(object):
         return -1*self
 
     def _matrix_pow_by_jordan_blocks(self, num):
-        if num < 0 and self.det() == 0:
+        if isinstance(num, (int, Integer, float)) and num < 0 and self.det() == 0:
             raise ValueError("Matrix det == 0; not invertible.")
-
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
