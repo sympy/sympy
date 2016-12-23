@@ -178,6 +178,18 @@ class Expr(Basic, EvalfMixin):
     def __rmod__(self, other):
         return Mod(other, self)
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rfloordiv__')
+    def __floordiv__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__floordiv__')
+    def __rfloordiv__(self, other):
+        from sympy.functions.elementary.integers import floor
+        return floor(self / other)
+
     def __int__(self):
         # Although we only need to round to the units position, we'll
         # get one more digit so the extra testing below can be avoided
@@ -244,7 +256,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
                     dif.is_nonnegative is not dif.is_negative:
@@ -263,7 +275,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
                     dif.is_nonpositive is not dif.is_positive:
@@ -282,7 +294,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
                     dif.is_positive is not dif.is_nonpositive:
@@ -301,7 +313,7 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
-        if self.is_real and other.is_real:
+        if self.is_real or other.is_real:
             dif = self - other
             if dif.is_negative is not None and \
                     dif.is_negative is not dif.is_nonnegative:
@@ -608,7 +620,7 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = factor_terms((self - other).simplify(), radical=True)
+        diff = factor_terms(simplify(self - other), radical=True)
 
         if not diff:
             return True
@@ -1032,7 +1044,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=0)
+        >>> A, B = symbols('A B', commutative=False)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1589,8 +1601,6 @@ class Expr(Basic, EvalfMixin):
             want = Add
         else:
             want = Mul
-        if func is not want and (func is Add or func is Mul):
-            return (want.identity, self)
 
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
@@ -2542,7 +2552,8 @@ class Expr(Basic, EvalfMixin):
                 s1 = s1.removeO()
             else:
                 o = Order(x**n, x)
-                if (s1 + o).removeO() == s1:
+                s1done = s1.doit()
+                if (s1done + o).removeO() == s1done:
                     o = S.Zero
 
             try:
@@ -2832,7 +2843,7 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
-    def as_coeff_Add(self):
+    def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 
@@ -3049,15 +3060,15 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import trigsimp
         return trigsimp(self, **args)
 
-    def radsimp(self):
+    def radsimp(self, **kwargs):
         """See the radsimp function in sympy.simplify"""
         from sympy.simplify import radsimp
-        return radsimp(self)
+        return radsimp(self, **kwargs)
 
-    def powsimp(self, deep=False, combine='all'):
+    def powsimp(self, *args, **kwargs):
         """See the powsimp function in sympy.simplify"""
         from sympy.simplify import powsimp
-        return powsimp(self, deep, combine)
+        return powsimp(self, *args, **kwargs)
 
     def combsimp(self):
         """See the combsimp function in sympy.simplify"""
@@ -3248,6 +3259,34 @@ def _mag(x):
         assert 1 <= (xpos/10**mag_first_dig) < 10
         mag_first_dig += 1
     return mag_first_dig
+
+
+class UnevaluatedExpr(Expr):
+    """
+    Expression that is not evaluated unless released.
+
+    Examples
+    ========
+
+    >>> from sympy import UnevaluatedExpr
+    >>> from sympy.abc import a, b, x, y
+    >>> x*(1/x)
+    1
+    >>> x*UnevaluatedExpr(1/x)
+    x*1/x
+
+    """
+
+    def __new__(cls, arg, **kwargs):
+        obj = Expr.__new__(cls, arg, **kwargs)
+        return obj
+
+    def doit(self, *args, **kwargs):
+        if kwargs.get("deep", True):
+            return self.args[0].doit(*args, **kwargs)
+        else:
+            return self.args[0]
+
 
 from .mul import Mul
 from .add import Add

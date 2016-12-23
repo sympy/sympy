@@ -10,7 +10,7 @@ from sympy.core.compatibility import get_function_name
 
 try:
     import py
-    from py.test import skip
+    from py.test import skip, raises
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False

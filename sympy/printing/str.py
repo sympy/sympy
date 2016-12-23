@@ -390,6 +390,9 @@ class StrPrinter(Printer):
         return "Rational function field in %s over %s with %s order" % \
             (", ".join(map(self._print, field.symbols)), field.domain, field.order)
 
+    def _print_FreeGroupElement(self, elm):
+        return elm.__str__()
+
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
 
@@ -499,6 +502,9 @@ class StrPrinter(Printer):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
@@ -568,6 +574,11 @@ class StrPrinter(Printer):
             "==": "Eq",
             "!=": "Ne",
             ":=": "Assignment",
+            '+=': "AddAugmentedAssignment",
+            "-=": "SubAugmentedAssignment",
+            "*=": "MulAugmentedAssignment",
+            "/=": "DivAugmentedAssignment",
+            "%=": "ModAugmentedAssignment",
         }
 
         if expr.rel_op in charmap:
@@ -657,7 +668,7 @@ class StrPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_Transpose(self, T):
-        return "%s'" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
+        return "%s.T" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)" % (expr.a, expr.b)

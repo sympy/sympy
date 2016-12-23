@@ -266,10 +266,17 @@ def test_new_relational():
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
-                                     '<=', 'le', '>', 'gt', '<', 'lt'):
+                                     '<=', 'le', '>', 'gt', '<', 'lt', ':=',
+                                     '+=', '-=', '*=', '/=', '%='):
                 break
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
+    assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
+    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
+    assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
+    assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
+    assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
 
 
 def test_relational_bool_output():

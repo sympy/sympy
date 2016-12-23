@@ -122,6 +122,7 @@ class Limit(Expr):
     def doit(self, **hints):
         """Evaluates limit"""
         from sympy.series.limitseq import limit_seq
+        from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
 
@@ -141,7 +142,7 @@ class Limit(Expr):
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_positive:
-            e = e.rewrite(factorial, gamma)
+            e = e.rewrite([factorial, RisingFactorial], gamma)
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:

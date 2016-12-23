@@ -1,6 +1,7 @@
-from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
-                   ImmutableMatrix as Matrix)
-from sympy.core.compatibility import u, unicode
+from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
+    ImmutableMatrix as Matrix)
+from sympy import trigsimp
+from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
@@ -255,10 +256,10 @@ class Vector(object):
     def _pretty(self, printer=None):
         """Pretty Printing method. """
         from sympy.physics.vector.printing import VectorPrettyPrinter
+        from sympy.printing.pretty.stringpict import prettyForm
         e = self
 
         class Fake(object):
-            baseline = 0
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
@@ -266,38 +267,40 @@ class Vector(object):
                     return unicode(0)
                 settings = printer._settings if printer else {}
                 vp = printer if printer else VectorPrettyPrinter(settings)
-                ol = []  # output list, to be concatenated to a string
+                pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            ol.append(u" + " + ar[i][1].pretty_vecs[j])
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            ol.append(u" - " + ar[i][1].pretty_vecs[j])
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
+                            pform= prettyForm(*pform.left(" - "))
+                            bin = prettyForm.NEG
+                            pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = vp._print(
-                                    ar[i][0][j]).parens()[0]
+                                pform = vp._print(
+                                    ar[i][0][j]).parens()
                             else:
-                                arg_str = (vp.doprint(
-                                    ar[i][0][j]))
+                                pform = vp._print(
+                                    ar[i][0][j])
+                            pform = prettyForm(*pform.right(" ",
+                                                ar[i][1].pretty_vecs[j]))
+                        else:
+                            continue
+                        pforms.append(pform)
 
-                            if arg_str[0] == u"-":
-                                arg_str = arg_str[1:]
-                                str_start = u" - "
-                            else:
-                                str_start = u" + "
-                            ol.append(str_start + arg_str + ' ' +
-                                      ar[i][1].pretty_vecs[j])
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
+                pform = prettyForm.__add__(*pforms)
+                kwargs["wrap_line"] = kwargs.get("wrap_line")
+                kwargs["num_columns"] = kwargs.get("num_columns")
+                out_str = pform.render(*args, **kwargs)
+                mlines = [line.rstrip() for line in out_str.split("\n")]
+                return "\n".join(mlines)
+
         return Fake()
 
     def __ror__(self, other):

@@ -472,8 +472,6 @@ class log(Function):
         """
         if argindex == 1:
             return 1/self.args[0]
-            s = Dummy('x')
-            return Lambda(s**(-1), s)
         else:
             raise ArgumentIndexError(self, argindex)
 

@@ -311,19 +311,33 @@ The ``O`` notation supports arbitrary limit points (other than 0):
 Finite differences
 ==================
 
-So far we have looked at expressions with analytical derivatives
+So far we have looked at expressions with analytic derivatives
 and primitive functions respectively. But what if we want to have an
 expression to estimate a derivative of a curve for which we lack a
 closed form representation, or for which we don't know the functional
 values for yet. One approach would be to use a finite difference
 approach.
 
-You can use the ``as_finite_diff`` method of on any ``Derivative``
-instance to generate approximations to derivatives of arbitrary order:
+The simplest way the differentiate using finite differences is to use
+the ``differentiate_finite`` function:
+
+    >>> f, g = symbols('f g', cls=Function)
+    >>> differentiate_finite(f(x)*g(x))
+    (-f(x - 1/2) + f(x + 1/2))⋅g(x) + (-g(x - 1/2) + g(x + 1/2))⋅f(x)
+
+If we don't want to expand the intermediate derivative we may pass the
+flag ``evaluate=False``:
+
+    >>> differentiate_finite(f(x)*g(x), evaluate=False)
+    -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
+
+If you already have a ``Derivative`` instance, you can use the
+``as_finite_difference`` method to generate approximations of the
+derivative to arbitrary order:
 
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
-    >>> as_finite_diff(dfdx)
+    >>> dfdx.as_finite_difference()
     -f(x - 1/2) + f(x + 1/2)
 
 here the first order derivative was approximated around x using a
@@ -334,7 +348,7 @@ equidistantly using a step-size of 1. We can use arbitrary steps
     >>> f = Function('f')
     >>> d2fdx2 = f(x).diff(x, 2)
     >>> h = Symbol('h')
-    >>> as_finite_diff(d2fdx2, [-3*h,-h,2*h])
+    >>> d2fdx2.as_finite_difference([-3*h,-h,2*h])
     f(-3⋅h)   f(-h)   2⋅f(2⋅h)
     ─────── - ───── + ────────
          2        2        2
@@ -347,15 +361,15 @@ manually:
     [1/5, -1/3, 2/15]
 
 note that we only need the last element in the last sublist
-returned from finite_diff_weights. The reason for this is that
-finite_diff_weights also generates weights for lower derivatives and
+returned from ``finite_diff_weights``. The reason for this is that
+the function also generates weights for lower derivatives and
 using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
-if using ``finite_diff_weights`` directly looks complicated and the
-``as_finite_diff`` function operating on ``Derivative`` instances
+If using ``finite_diff_weights`` directly looks complicated, and the
+``as_finite_difference`` method of ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
-takes order, x_list, y_list and x0 as parameters:
+takes ``order``, ``x_list``, ``y_list`` and ``x0`` as parameters:
 
     >>> x_list = [-3, 1, 2]
     >>> y_list = symbols('a b c')

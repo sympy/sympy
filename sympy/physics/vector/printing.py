@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Derivative
-from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
@@ -151,6 +150,13 @@ class VectorLatexPrinter(LatexPrinter):
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
+
+    def parenthesize(self, item, level, strict=False):
+        item_latex = self._print(item)
+        if item_latex.startswith(r"\dot") or item_latex.startswith(r"\ddot") or item_latex.startswith(r"\dddot"):
+            return self._print(item)
+        else:
+            return LatexPrinter.parenthesize(self, item, level, strict)
 
 
 class VectorPrettyPrinter(PrettyPrinter):

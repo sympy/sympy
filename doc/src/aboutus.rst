@@ -4,8 +4,8 @@ About
 SymPy Development Team
 ----------------------
 
-.. include:: ../../AUTHORS
-   :literal:
+.. literalinclude:: ../../AUTHORS
+  
 
 You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.rst>`_.
 

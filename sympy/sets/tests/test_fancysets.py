@@ -5,7 +5,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, Abs, I, Tuple)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, z, t
@@ -314,6 +314,10 @@ def test_range_interval_intersection():
     assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
     assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
 
+    # Null Range intersections
+    assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
+    assert Range(0).intersect(Interval(-oo, oo)) is S.EmptySet
+
 
 def test_Integers_eval_imageset():
     ans = ImageSet(Lambda(x, 2*x + S(3)/7), S.Integers)
@@ -435,6 +439,34 @@ def test_imageset_intersect_real():
 
     s = ImageSet(Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))), S.Integers)
     assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
+
+
+def test_imageset_intersect_interval():
+    from sympy.abc import n
+    f1 = ImageSet(Lambda(n, n*pi), S.Integers)
+    f2 = ImageSet(Lambda(n, 2*n), Interval(0, pi))
+    f3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    # complex expressions
+    f4 = ImageSet(Lambda(n, n*I*pi), S.Integers)
+    f5 = ImageSet(Lambda(n, 2*I*n*pi + pi/2), S.Integers)
+    # non-linear expressions
+    f6 = ImageSet(Lambda(n, log(n)), S.Integers)
+    f7 = ImageSet(Lambda(n, n**2), S.Integers)
+    f8 = ImageSet(Lambda(n, Abs(n)), S.Integers)
+    f9 = ImageSet(Lambda(n, exp(n)), S.Naturals0)
+
+    assert f1.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f1.intersect(Interval(0, 2*pi, False, True)) == FiniteSet(0, pi)
+    assert f2.intersect(Interval(1, 2)) == Interval(1, 2)
+    assert f3.intersect(Interval(-1, 1)) == S.EmptySet
+    assert f3.intersect(Interval(-5, 5)) == FiniteSet(-3*pi/2, pi/2)
+    assert f4.intersect(Interval(-1, 1)) == FiniteSet(0)
+    assert f4.intersect(Interval(1, 2)) == S.EmptySet
+    assert f5.intersect(Interval(0, 1)) == S.EmptySet
+    assert f6.intersect(Interval(0, 1)) == FiniteSet(S.Zero, log(2))
+    assert f7.intersect(Interval(0, 10)) == Intersection(f7, Interval(0, 10))
+    assert f8.intersect(Interval(0, 2)) == Intersection(f8, Interval(0, 2))
+    assert f9.intersect(Interval(1, 2)) == Intersection(f9, Interval(1, 2))
 
 
 def test_infinitely_indexed_set_3():
@@ -562,7 +594,7 @@ def test_ComplexRegion_union():
     assert c7.union(c8) == ComplexRegion(p4)
 
     assert c1.union(Interval(2, 4)) == Union(c1, Interval(2, 4), evaluate=False)
-    assert c5.union(Interval(2, 4)) == Union(c5, Interval(2, 4), evaluate=False)
+    assert c5.union(Interval(2, 4)) == Union(c5, ComplexRegion.from_real(Interval(2, 4)))
 
 
 def test_ComplexRegion_measure():
@@ -646,3 +678,63 @@ def test_issue_9980():
                                     Interval(1, 5)*Interval(1, 3)), False)
     assert c1.func(*c1.args) == c1
     assert R.func(*R.args) == R
+
+def test_issue_11732():
+    interval12 = Interval(1, 2)
+    finiteset1234 = FiniteSet(1, 2, 3, 4)
+    pointComplex = Tuple(1, 5)
+
+    assert (interval12 in S.Naturals) == False
+    assert (interval12 in S.Naturals0) == False
+    assert (interval12 in S.Integers) == False
+    assert (interval12 in S.Complexes) == False
+
+    assert (finiteset1234 in S.Naturals) == False
+    assert (finiteset1234 in S.Naturals0) == False
+    assert (finiteset1234 in S.Integers) == False
+    assert (finiteset1234 in S.Complexes) == False
+
+    assert (pointComplex in S.Naturals) == False
+    assert (pointComplex in S.Naturals0) == False
+    assert (pointComplex in S.Integers) == False
+    assert (pointComplex in S.Complexes) == True
+
+
+def test_issue_11730():
+    unit = Interval(0, 1)
+    square = ComplexRegion(unit ** 2)
+
+    assert Union(S.Complexes, FiniteSet(oo)) != S.Complexes
+    assert Union(S.Complexes, FiniteSet(eye(4))) != S.Complexes
+    assert Union(unit, square) == square
+    assert Intersection(S.Reals, square) == unit
+
+
+def test_issue_11938():
+    unit = Interval(0, 1)
+    ival = Interval(1, 2)
+    cr1 = ComplexRegion(ival * unit)
+
+    assert Intersection(cr1, S.Reals) == ival
+    assert Intersection(cr1, unit) == FiniteSet(1)
+
+    arg1 = Interval(0, S.Pi)
+    arg2 = FiniteSet(S.Pi)
+    arg3 = Interval(S.Pi / 4, 3 * S.Pi / 4)
+    cp1 = ComplexRegion(unit * arg1, polar=True)
+    cp2 = ComplexRegion(unit * arg2, polar=True)
+    cp3 = ComplexRegion(unit * arg3, polar=True)
+
+    assert Intersection(cp1, S.Reals) == Interval(-1, 1)
+    assert Intersection(cp2, S.Reals) == Interval(-1, 0)
+    assert Intersection(cp3, S.Reals) == FiniteSet(0)
+
+def test_issue_11914():
+    a, b = Interval(0, 1), Interval(0, pi)
+    c, d = Interval(2, 3), Interval(pi, 3 * pi / 2)
+    cp1 = ComplexRegion(a * b, polar=True)
+    cp2 = ComplexRegion(c * d, polar=True)
+
+    assert -3 in cp1.union(cp2)
+    assert -3 in cp2.union(cp1)
+    assert -5 not in cp1.union(cp2)

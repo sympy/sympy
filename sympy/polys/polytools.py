@@ -1980,6 +1980,10 @@ class Poly(Expr):
         """
         Returns the leading monomial of ``f``.
 
+        The Leading monomial signifies the monomial having
+        the highest power of the principal generator in the
+        expression f.
+
         Examples
         ========
 
@@ -2011,6 +2015,10 @@ class Poly(Expr):
     def LT(f, order=None):
         """
         Returns the leading term of ``f``.
+
+        The Leading term signifies the term having
+        the highest power of the principal generator in the
+        expression f along with its coefficient.
 
         Examples
         ========
@@ -2436,7 +2444,32 @@ class Poly(Expr):
         return per(result)
 
     def revert(f, n):
-        """Compute ``f**(-1)`` mod ``x**n``. """
+        """
+        Compute ``f**(-1)`` mod ``x**n``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(1, x).revert(2)
+        Poly(1, x, domain='ZZ')
+
+        >>> Poly(1 + x, x).revert(1)
+        Poly(1, x, domain='ZZ')
+
+        >>> Poly(x**2 - 1, x).revert(1)
+        Traceback (most recent call last):
+        ...
+        NotReversible: only unity is reversible in a ring
+
+        >>> Poly(1/x, x).revert(1)
+        Traceback (most recent call last):
+        ...
+        PolynomialError: 1/x contains an element of the generators set
+
+        """
         if hasattr(f.rep, 'revert'):
             result = f.rep.revert(int(n))
         else:  # pragma: no cover
@@ -4139,9 +4172,8 @@ def _poly_from_expr(expr, opt):
     elif opt.expand:
         expr = expr.expand()
 
-    try:
-        rep, opt = _dict_from_expr(expr, opt)
-    except GeneratorsNeeded:
+    rep, opt = _dict_from_expr(expr, opt)
+    if not opt.gens:
         raise PolificationFailed(opt, orig, expr)
 
     monoms, coeffs = list(zip(*list(rep.items())))
@@ -4218,9 +4250,8 @@ def _parallel_poly_from_expr(exprs, opt):
         for i in _polys:
             exprs[i] = exprs[i].as_expr()
 
-    try:
-        reps, opt = _parallel_dict_from_expr(exprs, opt)
-    except GeneratorsNeeded:
+    reps, opt = _parallel_dict_from_expr(exprs, opt)
+    if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
     for k in opt.gens:
@@ -5652,6 +5683,9 @@ def _symbolic_factor_list(expr, opt, method):
             continue
         if arg.is_Pow:
             base, exp = arg.args
+            if base.is_Number and exp.is_Number:
+                coeff *= arg
+                continue
             if base.is_Number:
                 factors.append((base, exp))
                 continue

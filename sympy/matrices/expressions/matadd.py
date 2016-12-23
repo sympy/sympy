@@ -89,12 +89,12 @@ def merge_explicit(matadd):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatAdd(A, B, C)
     >>> pprint(X)
-    A + [1  0] + [1  2]
-        [    ]   [    ]
+        [1  0]   [1  2]
+    A + [    ] + [    ]
         [0  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    A + [2  2]
-        [    ]
+        [2  2]
+    A + [    ]
         [3  5]
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))

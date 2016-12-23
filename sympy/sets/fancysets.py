@@ -11,6 +11,7 @@ from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
                              FiniteSet, imageset)
+from sympy.sets.conditionset import ConditionSet
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -53,7 +54,9 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
             return S.false
@@ -81,7 +84,9 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
@@ -129,10 +134,19 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer:
             return S.true
         elif other.is_integer is False:
             return S.false
+
+    def _union(self, other):
+        intersect = Intersection(self, other)
+        if intersect == self:
+            return other
+        elif intersect == other:
+            return self
 
     def __iter__(self):
         yield S.Zero
@@ -211,7 +225,9 @@ class ImageSet(Set):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, pi, Dummy, Lambda
+    >>> from sympy.sets.sets import FiniteSet, Interval
+    >>> from sympy.sets.fancysets import ImageSet
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -231,6 +247,20 @@ class ImageSet(Set):
     4
     9
     16
+
+    If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
+    `x` value is in `base_set` or not before passing it as args)
+
+    >>> squares.lamda(2)
+    4
+    >>> squares.lamda(S(1)/2)
+    1/4
+
+    >>> n = Dummy('n')
+    >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
+    >>> dom = Interval(-1, 1)
+    >>> dom.intersect(solutions)
+    {0}
 
     See Also
     ========
@@ -404,6 +434,67 @@ class ImageSet(Set):
                             self.base_set.intersect(
                                 solveset_real(im, n_)))
 
+        elif isinstance(other, Interval):
+            from sympy.solvers.solveset import (invert_real, invert_complex,
+                                                solveset)
+
+            f = self.lamda.expr
+            n = self.lamda.variables[0]
+            base_set = self.base_set
+            new_inf, new_sup = None, None
+            new_lopen, new_ropen = other.left_open, other.right_open
+
+            if f.is_real:
+                inverter = invert_real
+            else:
+                inverter = invert_complex
+
+            g1, h1 = inverter(f, other.inf, n)
+            g2, h2 = inverter(f, other.sup, n)
+
+            if all(isinstance(i, FiniteSet) for i in (h1, h2)):
+                if g1 == n:
+                    if len(h1) == 1:
+                        new_inf = h1.args[0]
+                if g2 == n:
+                    if len(h2) == 1:
+                        new_sup = h2.args[0]
+                # TODO: Design a technique to handle multiple-inverse
+                # functions
+
+                # Any of the new boundary values cannot be determined
+                if any(i is None for i in (new_sup, new_inf)):
+                    return
+
+
+                range_set = S.EmptySet
+
+                if all(i.is_real for i in (new_sup, new_inf)):
+                    # this assumes continuity of underlying function
+                    # however fixes the case when it is decreasing
+                    if new_inf > new_sup:
+                        new_inf, new_sup = new_sup, new_inf
+                    new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
+                    range_set = base_set._intersect(new_interval)
+                else:
+                    if other.is_subset(S.Reals):
+                        solutions = solveset(f, n, S.Reals)
+                        if not isinstance(range_set, (ImageSet, ConditionSet)):
+                            range_set = solutions._intersect(other)
+                        else:
+                            return
+
+                if range_set is S.EmptySet:
+                    return S.EmptySet
+                elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
+                    range_set = FiniteSet(*list(range_set))
+
+                if range_set is not None:
+                    return imageset(Lambda(n, f), range_set)
+                return
+            else:
+                return
+
 
 class Range(Set):
     """
@@ -552,8 +643,12 @@ class Range(Set):
             if not all(i.is_number for i in other.args[:2]):
                 return
 
+            # In case of null Range, return an EmptySet.
+            if self.size == 0:
+                return S.EmptySet
+
             # trim down to self's size, and represent
-            # as a Range with step 1
+            # as a Range with step 1.
             start = ceiling(max(other.inf, self.inf))
             if start not in other:
                 start += 1
@@ -1263,6 +1358,25 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    @classmethod
+    def from_real(cls, sets):
+        """
+        Converts given subset of real numbers to a complex region.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexRegion
+        >>> unit = Interval(0,1)
+        >>> ComplexRegion.from_real(unit)
+        ComplexRegion([0, 1] x {0}, False)
+
+        """
+        if not sets.is_subset(S.Reals):
+            raise ValueError("sets must be a subset of the real line")
+
+        return cls(sets * FiniteSet(0))
+
     def _contains(self, other):
         from sympy.functions import arg, Abs
         from sympy.core.containers import Tuple
@@ -1270,6 +1384,10 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+
+        # If the other is not an Expression, and neither a Tuple
+        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+            return S.false
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
@@ -1291,7 +1409,7 @@ class ComplexRegion(Set):
                 if And(element.args[0]._contains(r),
                         element.args[1]._contains(theta)):
                     return True
-                return False
+            return False
 
     def _intersect(self, other):
 
@@ -1315,16 +1433,15 @@ class ComplexRegion(Set):
                 return ComplexRegion(new_r_interval*new_theta_interval,
                                     polar=True)
 
-        if other is S.Reals:
-            return other
 
         if other.is_subset(S.Reals):
             new_interval = []
+            x = symbols("x", cls=Dummy, real=True)
 
             # self in rectangular form
             if not self.polar:
                 for element in self.psets:
-                    if S.Zero in element.args[0]:
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
@@ -1332,12 +1449,20 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar:
                 for element in self.psets:
-                    if (0 in element.args[1]) or (S.Pi in element.args[1]):
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
+                    if S.Pi in element.args[1]:
+                        new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
+                    if S.Zero in element.args[0]:
+                        new_interval.append(FiniteSet(0))
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
 
     def _union(self, other):
+
+        if other.is_subset(S.Reals):
+            # treat a subset of reals as a complex region
+            other = ComplexRegion.from_real(other)
 
         if other.is_ComplexRegion:
 
@@ -1348,9 +1473,6 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
-
-        if self == S.Complexes:
-            return self
 
         return None
 

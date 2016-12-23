@@ -47,9 +47,9 @@ It is easy to show the following examples:
 
 From the above definition, it is possible to prove the following property:
 
-    Suppose `\omega`, `g_1, g_2, \dots` are functions of `x`,
+    Suppose `\omega`, `g_1, g_2, \ldots` are functions of `x`,
     `\lim_{x \to \infty} \omega = 0` and `\omega \succ g_i` for
-    all `i`. Let `c_1, c_2, \dots \in \mathbb{R}` with `c_1 < c_2 < \dots`.
+    all `i`. Let `c_1, c_2, \ldots \in \mathbb{R}` with `c_1 < c_2 < \cdots`.
 
     Then `\lim_{x \to \infty} \sum_i g_i \omega^{c_i} = \lim_{x \to \infty} g_1 \omega^{c_1}`.
 

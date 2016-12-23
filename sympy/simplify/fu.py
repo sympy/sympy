@@ -41,7 +41,7 @@ Finally, there are the 2 rule lists (RL1 and RL2), which apply a
 sequence of transformations and combined transformations, and the ``fu``
 algorithm itself, which applies rules and rule lists and selects the
 best expressions. There is also a function ``L`` which counts the number
-of trigonometric funcions that appear in the expression.
+of trigonometric functions that appear in the expression.
 
 Other than TR0, re-writing of expressions is not done by the transformations.
 e.g. TR10i finds pairs of terms in a sum that are in the form like
@@ -176,8 +176,11 @@ This work was started by Dimitar Vlahovski at the Technological School
 
 References
 ==========
-http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
-DESTIME2006/DES_contribs/Fu/simplification.pdf
+
+Fu, Hongguang, Xiuqin Zhong, and Zhenbing Zeng. "Automated and readable
+simplification of trigonometric expressions." Mathematical and computer
+modelling 44.11 (2006): 1169-1177.
+http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/DESTIME2006/DES_contribs/Fu/simplification.pdf
 
 http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
