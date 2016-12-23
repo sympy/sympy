@@ -349,8 +349,6 @@ class Function(Application, Expr):
         Don't allow derivatives wrt defined functions.
         """
         return False
-        
-
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
@@ -862,10 +860,42 @@ class Derivative(Expr):
 
     Derivative wrt non-Symbols:
 
-    This class also allows derivatives wrt non-Symbols that have _diff_wrt
+    This class don't allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
     Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
     while the differentiation is performed.
+
+        >>> from sympy import cos, sin, sqrt
+        >>> from sympy.abc import x
+        >>> (2*cos(x)).diff(cos(x))
+        Traceback (most recent call last):
+        ...
+        ValueError: Can't calculate 1st derivative wrt cos(x).
+
+    However this is the wrong way to think of this.  Think
+    of it instead as if we have something like this::
+
+        >>> from sympy.abc import c
+        >>> def F(u):
+        ...     return 2*u
+        ...
+        >>> F(cos(x))
+        2*cos(x)
+        >>> F(c).diff(c)
+        2
+
+    Here, the Symbol c acts just like the function cos(x). Think of 2*cos(x) as
+    f(c).subs(c, cos(x)) (or f(c) *at* c = cos(x)), where f(u) == 2*u. Here, we
+    define the function first and evaluate it at the function, but we can
+    actually unambiguously do this in reverse in SymPy, because
+    expr.subs(Function, Symbol) is well-defined:  just structurally replace the
+    function everywhere it appears in the expression.
+
+    This is the same notational convenience used in the Euler-Lagrange method
+    when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant is
+    that the expression in question is represented by some F(t, u, v) at u =
+    f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means F(t, u,
+    v).diff(u) at u = f(t).
 
     We do not allow derivatives to be taken with respect to expressions where this
     is not so well defined.  For example, we do not allow expr.diff(x*y)
