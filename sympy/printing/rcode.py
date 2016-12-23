@@ -2,31 +2,77 @@
 R code printer
 
 The RCodePrinter converts single sympy expressions into single R expressions,
+using the functions defined in math.h where possible.
 
-A complete code generator, which uses rcode extensively, can be found in
-sympy.utilities.codegen. The codegen module can be used to generate complete
-source code files that are compilable without further modifications.
 
 
 """
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
-from sympy.core.compatibility import string_types
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
+from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in RCodePrinter._print_Function(self)
 known_functions = {
-    "Abs": [(lambda x: True, "abs")]
+    #"Abs": [(lambda x: not x.is_integer, "fabs")],
+    "Abs": "abs",
+    "gamma": "gamma",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "asin": "asin",
+    "acos": "acos",
+    "atan": "atan",
+    "atan2": "atan2",
+    "exp": "exp",
+    "log": "log",
+    "erf": "erf",
+    "sinh": "sinh",
+    "cosh": "cosh",
+    "tanh": "tanh",
+    "asinh": "asinh",
+    "acosh": "acosh",
+    "atanh": "atanh",
+    "floor": "floor",
+    "ceiling": "ceiling",
+    "sign": "sign",
 }
+
+# These are the core reserved words in the R language. Taken from:
+# 
+
+reserved_words = ['if',
+                  'else',
+                  'repeat',
+                  'while',
+                  'function',
+                  'for',
+                  'in',
+                  'next',
+                  'break',
+                  'TRUE',
+                  'FALSE',
+                  'NULL',
+                  'Inf',
+                  'NaN',
+                  'NA',
+                  'NA_integer_',
+                  'NA_real_',
+                  'NA_complex_',
+                  'NA_character_',
+                  'volatile']
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of R code"""
+    """A printer to convert python expressions to strings of c code"""
     printmethod = "_rcode"
+    language = "C"
 
     _default_settings = {
         'order': None,
@@ -35,80 +81,44 @@ class RCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
+        'dereference': set(),
+        'error_on_reserved': False,
+        'reserved_word_suffix': '_',
+    }
+    _operators = {
+       'and':'&',
+        'or': '|',
+    }
+
+    _relationals = {
     }
 
     def __init__(self, settings={}):
-        """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
-        for k, v in userfuncs.items():
-            if not isinstance(v, list):
-                userfuncs[k] = [(lambda *x: True, v)]
         self.known_functions.update(userfuncs)
+        self._dereference = set(settings.get('dereference', []))
+        self.reserved_words = set(reserved_words)
 
     def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
         return p*5
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
-    def doprint(self, expr, assign_to=None):
-        """
-        Actually format the expression as R code.
-        """
+    def _get_comment(self, text):
+        return "// {0}".format(text)
 
-        if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("RCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
+    def _declare_number_const(self, name, value):
+        return "{0} = {1};".format(name, value)
 
-        # keep a set of expressions that are not strictly translatable to R
-        # and number constants that must be declared and initialized
-        not_r = self._not_supported = set()
-        self._number_symbols = set()
+    def _format_code(self, lines):
+        return self.indent_code(lines)
 
-        # We treat top level Piecewise here to get if tests outside loops
-        lines = []
-        if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else {")
-                else:
-                    lines.append("else if (%s) {" % self._print(c))
-                code0 = self._doprint_a_piece(e, assign_to)
-                lines.extend(code0)
-                lines.append("}")
-        else:
-            code0 = self._doprint_a_piece(expr, assign_to)
-            lines.extend(code0)
-
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(not_r) > 0:
-                frontlines.append("// Not C:")
-                for expr in sorted(not_r, key=str):
-                    frontlines.append("// %s" % repr(expr))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("%s = %s;" % (name, value))
-            lines = frontlines + lines
-            lines = "\n".join(lines)
-            result = self.indent_code(lines)
-        else:
-            lines = self.indent_code("\n".join(lines))
-            result = self._number_symbols, not_r, lines
-        del self._not_supported
-        del self._number_symbols
-        return result
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _get_loop_opening_ending(self, indices):
         """Returns a tuple (open_lines, close_lines) containing lists of codelines
@@ -137,6 +147,7 @@ class RCodePrinter(CodePrinter):
             return '%s^%s' % (self.parenthesize(expr.base, PREC),
                                  self.parenthesize(expr.exp, PREC))
 
+
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
@@ -144,23 +155,58 @@ class RCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
-        #return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
     def _print_Exp1(self, expr):
-        # although nowthing happens here we have to overload the method 
-        # of the parent which would yield "E"
-        # maybe _print_Exp1 shouldn't be implemented by StrPrinter
-        # but rather in the subclasses
         return "exp(1)"
+
+    def _print_Pi(self, expr):
+        return 'pi'
 
     def _print_Infinity(self, expr):
         return 'Inf'
 
     def _print_NegativeInfinity(self, expr):
         return '-Inf'
+
+    def _print_Assignment(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.tensor.indexed import IndexedBase
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        #if isinstance(expr.rhs, Piecewise):
+        #    # Here we modify Piecewise so each expression is now
+        #    # an Assignment, and then continue on the print.
+        #    expressions = []
+        #    conditions = []
+        #    for (e, c) in rhs.args:
+        #        expressions.append(Assignment(lhs, e))
+        #        conditions.append(c)
+        #    temp = Piecewise(*zip(expressions, conditions))
+        #    return self._print(temp)
+        #elif isinstance(lhs, MatrixSymbol):
+        if isinstance(lhs, MatrixSymbol):
+            # Here we form an Assignment for each element in the array,
+            # printing each one.
+            lines = []
+            for (i, j) in self._traverse_matrix_indices(lhs):
+                temp = Assignment(lhs[i, j], rhs[i, j])
+                code0 = self._print(temp)
+                lines.append(code0)
+            return "\n".join(lines)
+        elif self._settings["contract"] and (lhs.has(IndexedBase) or
+                rhs.has(IndexedBase)):
+            # Here we check if there is looping to be done, and if so
+            # print the required loops.
+            return self._doprint_loops(rhs, lhs)
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
@@ -175,17 +221,55 @@ class RCodePrinter(CodePrinter):
 
         return(code) 
 
+    def _print_ITE(self, expr):
+        from sympy.functions import Piecewise
+        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
+        return self._print(_piecewise)
 
-    def _print_Function(self, expr):
-        if expr.func.__name__ in self.known_functions:
-            cond_cfunc = self.known_functions[expr.func.__name__]
-            for cond, cfunc in cond_cfunc:
-                if cond(*expr.args):
-                    return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
-        if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
-            # inlined function
-            return self._print(expr._imp_(*expr.args))
-        return CodePrinter._print_Function(self, expr)
+    def _print_MatrixElement(self, expr):
+        return "{0}[{1}]".format(expr.parent, expr.j +
+                expr.i*expr.parent.shape[1])
+
+    def _print_Symbol(self, expr):
+
+        name = super(RCodePrinter, self)._print_Symbol(expr)
+
+        if expr in self._dereference:
+            return '(*{0})'.format(name)
+        else:
+            return name
+
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
+
+    def _print_sinc(self, expr):
+        from sympy.functions.elementary.trigonometric import sin
+        from sympy.core.relational import Ne
+        from sympy.functions import Piecewise
+        _piecewise = Piecewise(
+            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
+        return self._print(_piecewise)
+
+    def _print_AugmentedAssignment(self, expr):
+        lhs_code = self._print(expr.lhs)
+        op = expr.rel_op
+        rhs_code = self._print(expr.rhs)
+        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+
+    def _print_For(self, expr):
+        target = self._print(expr.target)
+        if isinstance(expr.iterable, Range):
+            start, stop, step = expr.iterable.args
+        else:
+            raise NotImplementedError("Only iterable currently supported is Range")
+        body = self._print(expr.body)
+        return ('for ({target} = {start}; {target} < {stop}; {target} += '
+                '{step}) {{\n{body}\n}}').format(target=target, start=start,
+                stop=stop, step=step, body=body)
+
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -217,60 +301,112 @@ class RCodePrinter(CodePrinter):
 
 
 def rcode(expr, assign_to=None, **settings):
-    r"""Converts an expr to a string of c code
+    """Converts an expr to a string of r code
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
-        expr : sympy.core.Expr
-            a sympy expression to be converted
-        precision : optional
-            the precision for numbers such as pi [default=15]
-        user_functions : optional
-            A dictionary where keys are FunctionClass instances and values
-            are their string representations.  Alternatively, the
-            dictionary value can be a list of tuples i.e. [(argument_test,
-            cfunction_string)].  See below for examples.
-        human : optional
-            If True, the result is a single string that may contain some
-            constant declarations for the number symbols. If False, the
-            same information is returned in a more programmer-friendly
-            data structure.
-        contract: optional
-            If True, `Indexed` instances are assumed to obey
-            tensor contraction rules and the corresponding nested
-            loops over indices are generated. Setting contract = False
-            will not generate loops, instead the user is responsible
-            to provide values for the indices in the code. [default=True]
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where the keys are string representations of either
+        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
+        are their desired R string representations. Alternatively, the
+        dictionary value can be a list of tuples i.e. [(argument_test,
+        rfunction_string)] or [(argument_test, rfunction_formater)]. See below
+        for examples.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
 
+    Examples
+    ========
 
-        Examples
-        ========
+    >>> from sympy import rcode, symbols, Rational, sin, ceiling, Abs, Function
+    >>> x, tau = symbols("x, tau")
+    >>> rcode((2*tau)**Rational(7, 2))
+    '8*sqrt(2)*tau^(7.0/2.0)'
+    >>> rcode(sin(x), assign_to="s")
+    's = sin(x);'
 
-        >>> from sympy import rcode, symbols, Rational, sin, ceiling, Abs
-        >>> x, tau = symbols(["x", "tau"])
-        >>> rcode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-        >>> rcode(sin(x), assign_to="s")
-        's = sin(x);'
-        >>> custom_functions = {
-        ...   "ceiling": "CEIL",
-        ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
-        ...           (lambda x: x.is_integer, "ABS")]
-        ... }
-        >>> rcode(Abs(x) + ceiling(x), user_functions=custom_functions)
-        'fabs(x) + CEIL(x)'
-        >>> from sympy import Eq, IndexedBase, Idx
-        >>> len_y = 5
-        >>> y = IndexedBase('y', shape=(len_y,))
-        >>> t = IndexedBase('t', shape=(len_y,))
-        >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
-        >>> i = Idx('i', len_y-1)
-        >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-        >>> rcode(e.rhs, assign_to=e.lhs, contract=False)
-        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+    Simple custom printing can be defined for certain types by passing a
+    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
+    Alternatively, the dictionary value can be a list of tuples i.e.
+    [(argument_test, cfunction_string)].
+
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
+    ...           (lambda x: x.is_integer, "ABS")],
+    ...   "func": "f"
+    ... }
+    >>> func = Function('func')
+    >>> rcode(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
+    'f(fabs(x) + CEIL(x))'
+
+    or if the R-function takes a subset of the original arguments:
+
+    >>> rcode(2**x + 3**x, user_functions={'Pow': [
+    ...   (lambda b, e: b == 2, lambda b, e: 'exp2(%s)' % e),
+    ...   (lambda b, e: b != 2, 'pow')]})
+    'exp2(x) + pow(3, x)'
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(rcode(expr, assign_to=tau))
+    tau = ifelse(x > 0,x + 1,x);
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> rcode(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(rcode(mat, A))
+    A[0] = x^2;
+    A[1] = ifelse(x > 0,x + 1,x);
+    A[2] = sin(x);
 
     """
+
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 

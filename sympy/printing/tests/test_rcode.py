@@ -1,22 +1,29 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
+from sympy.core import (pi, oo, Symbol, symbols, Rational, Integer,
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                             gamma, sign, Max)
+from sympy.sets import Range
+from sympy.logic import ITE
+from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.rcode import RCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
-import difflib #import Differ 
+from sympy.matrices import Matrix, MatrixSymbol
+
+from sympy import rcode
+from difflib import Differ 
 from pprint import pprint
 
-# import test
-from sympy import rcode
-
 x, y, z = symbols('x,y,z')
-g = Function('g')
 
 
 def test_printmethod():
-    p=rcode(Abs(x))
-    assert p  == "abs(x)"
+    class fabs(Abs):
+        def _rcode(self, printer):
+            return "abs(%s)" % printer._print(self.args[0])
+
+    assert rcode(fabs(x)) == "abs(x)"
 
 
 def test_rcode_sqrt():
@@ -24,11 +31,13 @@ def test_rcode_sqrt():
     assert rcode(x**0.5) == "sqrt(x)"
     assert rcode(sqrt(x)) == "sqrt(x)"
 
+
 def test_rcode_Pow():
     assert rcode(x**3) == "x^3"
     assert rcode(x**(y**3)) == "x^(y^3)"
+    g = implemented_function('g', Lambda(x, 2*x))
     assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*g(x))^(-x + y^x)/(x^2 + y)"
+        "(3.5*2*x)^(-x + y^x)/(x^2 + y)"
     assert rcode(x**-1.0) == '1.0/x'
     assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
@@ -36,12 +45,19 @@ def test_rcode_Pow():
     assert rcode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
     assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
+
+
+def test_rcode_Max():
+    # Test for gh-11926
+    assert rcode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
 def test_rcode_constants_mathh():
-    p=rcode(exp(1)) 
-    assert p == "exp(1)" #nothing changes
-    assert rcode(pi) == "pi" #nothing changes
+    p=rcode(exp(1))
+    assert rcode(exp(1)) == "exp(1)"
+    assert rcode(pi) == "pi"
     assert rcode(oo) == "Inf"
     assert rcode(-oo) == "-Inf"
+
 
 def test_rcode_constants_other():
     assert rcode(2*GoldenRatio) == "GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
@@ -73,7 +89,8 @@ def test_rcode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert rcode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert rcode( g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
+    assert rcode(
+        g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -83,78 +100,94 @@ def test_rcode_inline_function():
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     ) 
-    #d=difflib.Differ()
-    #pprint(list(d.compare(res.splitlines(keepends=True),ref.splitlines(keepends=True))))
     assert res == ref
 
 
 def test_rcode_exceptions():
+    assert rcode(ceiling(x)) == "ceiling(x)"
     assert rcode(Abs(x)) == "abs(x)"
+    assert rcode(gamma(x)) == "gamma(x)"
 
 
 def test_rcode_user_functions():
     x = symbols('x', integer=False)
     n = symbols('n', integer=True)
     custom_functions = {
-        "ceiling": "my_ceil",
-        "Abs": [(lambda x: not x.is_integer, "my_abs"), (lambda x: x.is_integer, "abs")],
+        "ceiling": "myceil",
+        "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
     }
-    assert rcode(ceiling(x), user_functions=custom_functions) == "my_ceil(x)"
-    assert rcode(Abs(x), user_functions=custom_functions) == "my_abs(x)"
+    assert rcode(ceiling(x), user_functions=custom_functions) == "myceil(x)"
+    assert rcode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert rcode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
 
 def test_rcode_boolean():
-    assert rcode(x & y) == "x && y"
-    assert rcode(x | y) == "x || y"
-    assert rcode(~x) == "!x"
-    assert rcode(x & y & z) == "x && y && z"
-    assert rcode(x | y | z) == "x || y || z"
-    assert rcode((x & y) | z) == "z || x && y"
-    assert rcode((x | y) & z) == "z && (x || y)"
+    assert rcode(x & y) == "x & y"
+    assert rcode(x | y) == "x | y"
+    assert rcode(x & y & z) == "x & y & z"
+    assert rcode(x | y | z) == "x | y | z"
+    assert rcode((x & y) | z) == "z | x & y"
+    assert rcode((x | y) & z) == "z & (x | y)"
+
+def test_rcode_Relational():
+    from sympy import Eq, Ne, Le, Lt, Gt, Ge
+    assert rcode(Eq(x, y)) == "x == y"
+    assert rcode(Ne(x, y)) == "x != y"
+    assert rcode(Le(x, y)) == "x <= y"
+    assert rcode(Lt(x, y)) == "x < y"
+    assert rcode(Gt(x, y)) == "x > y"
+    assert rcode(Ge(x, y)) == "x >= y"
 
 
 def test_rcode_Piecewise():
-    p = rcode(Piecewise((x, x < 1), (x**2, True)))
-    s = \
-"""\
-if (x < 1) {
-   x
-}
-else {
-   x^2
-}\
-"""
-    assert p == s
+    expr = Piecewise((x, x < 1), (x**2, True))
+    res=rcode(expr) 
+    ref="ifelse(x < 1,x,x^2)"
+    assert res == ref
+    tau=Symbol("tau")
+    res=rcode(expr,tau) 
+    ref="tau = ifelse(x < 1,x,x^2);"
+    assert res == ref
+
+    expr = 2*Piecewise((x, x < 1), (x**2, x<2), (x**3,True))
+    assert rcode(expr) == "2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3))"
+    res = rcode(expr, assign_to='c')
+    assert res == "c = 2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3));"
+    
+    # Check that Piecewise without a True (default) condition error
+    #expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    #raises(ValueError, lambda: rcode(expr))
+    expr = 2*Piecewise((x, x < 1), (x**2, x<2))
+    assert(rcode(expr))== "2*ifelse(x < 1,x,ifelse(x < 2,x^2,NA))"
+
+
+def test_rcode_sinc():
+    from sympy import sinc
+    expr = sinc(x)
+    res = rcode(expr)
+    ref = "ifelse(x != 0,sin(x)/x,1)"
+    assert res == ref
+
 
 def test_rcode_Piecewise_deep():
-    p = rcode(2*Piecewise((x, x < 1), (x**2, True)))
-    s = \
-"""\
-2*ifelse(x < 1,x,x^2)\
-"""
-    assert p == s
+    p = rcode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
+    assert p == "2*ifelse(x < 1,x,ifelse(x < 2,x + 1,x^2))"
+    expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    p = rcode(expr)
+    ref="x^2 + x*y*z + y^2 + ifelse(x < 0.5,0,1) + cos(z) - 1"
+    assert p == ref
     
-    p = rcode(2*Piecewise((x, x < 1), (x**2, x<2), (x**3,True)))
-    s = \
-"""\
-2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3))\
-"""
-    assert p == s
-    # last condition missing
-    p = rcode(2*Piecewise((x, x < 1)))
-    s = \
-"""\
-2*ifelse(x < 1,x,NA)\
-"""
-    assert p == s
-    
-    p = rcode(2*Piecewise((x, x < 1), (x**2, x<2)))
-    s = \
-"""\
-2*ifelse(x < 1,x,ifelse(x < 2,x^2,NA))\
-"""
-    assert p == s
+    ref="c = x^2 + x*y*z + y^2 + ifelse(x < 0.5,0,1) + cos(z) - 1;"
+    p = rcode(expr, assign_to='c')
+    assert p == ref
+
+
+def test_rcode_ITE():
+    expr = ITE(x < 1, x, x**2)
+    p = rcode(expr)
+    ref="ifelse(x < 1,x,x^2)"
+    assert p == ref
+
 
 def test_rcode_settings():
     raises(TypeError, lambda: rcode(sin(x), method="garbage"))
@@ -202,7 +235,7 @@ def test_rcode_loops_matrix_vector():
         '}\n'
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
-        '      y[i] = x[j]*A[i, j] + y[i];\n' 
+        '      y[i] = A[i, j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -245,16 +278,13 @@ def test_rcode_loops_add():
         '}\n'
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
-        '      y[i] = x[j]*A[i, j] + y[i];\n' 
+        '      y[i] = A[i, j]*x[j] + y[i];\n' 
         '   }\n'
         '}'
     )
     c = rcode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
 
-#
-#mm
-#
 
 def test_rcode_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
@@ -276,7 +306,7 @@ def test_rcode_loops_multiple_contractions():
         '   for (j in 1:n){\n'
         '      for (k in 1:o){\n'
         '         for (l in 1:p){\n'
-        '            y[i] = y[i] + b[j, k, l]*a[i, j, k, l];\n' 
+        '            y[i] = a[i, j, k, l]*b[j, k, l] + y[i];\n' 
         '         }\n'
         '      }\n'
         '   }\n'
@@ -346,22 +376,97 @@ def test_rcode_loops_multiple_terms():
     s2 = (
         'for (i in 1:m){\n'
         '   for (k in 1:o){\n'
-        '      y[i] = b[k]*a[i, k] + y[i];\n' 
+        '      y[i] = a[i, k]*b[k] + y[i];\n' 
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
-        '      y[i] = b[j]*a[i, j] + y[i];\n' 
+        '      y[i] = a[i, j]*b[j] + y[i];\n' 
         '   }\n'
         '}\n'
     )
     c = rcode(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
-    assert (c == s0 + s1 + s2 + s3[:-1] or
-            c == s0 + s1 + s3 + s2[:-1] or
-            c == s0 + s2 + s1 + s3[:-1] or
-            c == s0 + s2 + s3 + s1[:-1] or
-            c == s0 + s3 + s1 + s2[:-1] or
-            c == s0 + s3 + s2 + s1[:-1])
+
+    ref=dict()
+    ref[0] = s0 + s1 + s2 + s3[:-1]
+    ref[1] = s0 + s1 + s3 + s2[:-1]
+    ref[2] = s0 + s2 + s1 + s3[:-1]
+    ref[3] = s0 + s2 + s3 + s1[:-1]
+    ref[4] = s0 + s3 + s1 + s2[:-1]
+    ref[5] = s0 + s3 + s2 + s1[:-1]
+
+    assert (c == ref[0] or
+            c == ref[1] or
+            c == ref[2] or
+            c == ref[3] or
+            c == ref[4] or
+            c == ref[5])
+
+
+def test_dereference_printing():
+    expr = x + y + sin(z) + z
+    assert rcode(expr, dereference=[z]) == "x + y + (*z) + sin((*z))"
+
+
+def test_Matrix_printing():
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    p = rcode(mat, A)
+    assert p == (
+        "A[0] = x*y;\n"
+        "A[1] = ifelse(y > 0,x + 2,y);\n"
+        "A[2] = sin(z);")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    p = rcode(expr)
+    print(p)
+    assert p  == ("ifelse(x > 0,2*A[2],A[2]) + sin(A[1]) + A[0]")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert rcode(m, M) == (
+        "M[0] = sin(q[1]);\n"
+        "M[1] = 0;\n"
+        "M[2] = cos(q[2]);\n"
+        "M[3] = q[1] + q[2];\n"
+        "M[4] = q[3];\n"
+        "M[5] = 5;\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = sqrt(q[0]) + 4;\n"
+        "M[8] = 0;")
+
+
+
+
+def test_rcode_sgn():
+
+    expr = sign(x) * y
+    assert rcode(expr) == 'y*sign(x)'
+    p = rcode(expr, 'z')
+    assert p  == 'z = y*sign(x);'
+
+    p = rcode(sign(2 * x + x**2) * x + x**2)
+    assert p  == "x^2 + x*sign(x^2 + 2*x)"
+
+    expr = sign(cos(x))
+    p = rcode(expr)
+    assert p == 'sign(cos(x))'
+
+def test_rcode_Assignment():
+    assert rcode(Assignment(x, y + z)) == 'x = y + z;'
+    assert rcode(aug_assign(x, '+', y + z)) == 'x += y + z;'
+
+
+def test_rcode_For():
+    f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
+    sol = rcode(f)
+    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
+                   "   y *= x;\n"
+                   "}")
