@@ -423,7 +423,6 @@ def test_Matrix_printing():
     # Test using MatrixElements in expressions
     expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
     p = rcode(expr)
-    print(p)
     assert p  == ("ifelse(x > 0,2*A[2],A[2]) + sin(A[1]) + A[0]")
     # Test using MatrixElements in a Matrix
     q = MatrixSymbol('q', 5, 1)
