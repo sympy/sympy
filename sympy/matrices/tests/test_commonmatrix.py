@@ -324,6 +324,8 @@ def test_is_zero():
     assert PropertiesOnlyMatrix([[a, 0], [0, 0]]).is_zero == False
 
 
+def test_values():
+    assert set(PropertiesOnlyMatrix(2,2,[0,1,2,3]).values()) == set([1,2,3])
 
 
 # OperationsOnlyMatrix tests
