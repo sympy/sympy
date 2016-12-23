@@ -539,13 +539,13 @@ def test_numpy():
             np.float64(1.1234567891234)) == np.float64(1.1234567891234)
         assert sympify(np.complex64(1 + 2j)) == 1.0 + 2.0*I
         assert sympify(np.complex128(1 + 2j)) == 1.0 + 2.0*I
-        
+
         try:
             assert sympify(
                 np.float96(1.123456789)) == np.float96(1.123456789)
         except AttributeError:#float96 does not exist on all platforms
             pass
-        
+
         try:
             assert sympify(
                 np.float128(1.123456789123)) == np.float128(1.123456789123)
