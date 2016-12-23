@@ -45,7 +45,7 @@ known_functions = {
 }
 
 # These are the core reserved words in the R language. Taken from:
-# 
+# https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Reserved-words
 
 reserved_words = ['if',
                   'else',
@@ -215,11 +215,10 @@ class RCodePrinter(CodePrinter):
             last_line = "%s" % self._print(expr.args[-1].expr)
         else:
             last_line = "ifelse(%s,%s,NA)" % (self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
-        code=last_line                   
+        code=last_line
         for e, c in reversed(expr.args[:-1]):
             code= "ifelse(%s,%s," % (self._print(c), self._print(e))+code+")"
-
-        return(code) 
+        return(code)
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
@@ -231,9 +230,7 @@ class RCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-
         name = super(RCodePrinter, self)._print_Symbol(expr)
-
         if expr in self._dereference:
             return '(*{0})'.format(name)
         else:

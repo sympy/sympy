@@ -12,7 +12,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
 from sympy import rcode
-from difflib import Differ 
+from difflib import Differ
 from pprint import pprint
 
 x, y, z = symbols('x,y,z')
@@ -99,7 +99,7 @@ def test_rcode_inline_function():
         "for (i in 1:n){\n"
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
-    ) 
+    )
     assert res == ref
 
 
@@ -141,11 +141,11 @@ def test_rcode_Relational():
 
 def test_rcode_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
-    res=rcode(expr) 
+    res=rcode(expr)
     ref="ifelse(x < 1,x,x^2)"
     assert res == ref
     tau=Symbol("tau")
-    res=rcode(expr,tau) 
+    res=rcode(expr,tau)
     ref="tau = ifelse(x < 1,x,x^2);"
     assert res == ref
 
@@ -153,7 +153,7 @@ def test_rcode_Piecewise():
     assert rcode(expr) == "2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3))"
     res = rcode(expr, assign_to='c')
     assert res == "c = 2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3));"
-    
+
     # Check that Piecewise without a True (default) condition error
     #expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     #raises(ValueError, lambda: rcode(expr))
@@ -176,7 +176,7 @@ def test_rcode_Piecewise_deep():
     p = rcode(expr)
     ref="x^2 + x*y*z + y^2 + ifelse(x < 0.5,0,1) + cos(z) - 1"
     assert p == ref
-    
+
     ref="c = x^2 + x*y*z + y^2 + ifelse(x < 0.5,0,1) + cos(z) - 1;"
     p = rcode(expr, assign_to='c')
     assert p == ref
@@ -204,9 +204,9 @@ def test_rcode_Indexed():
     x = IndexedBase('x')[j]
     assert p._print_Indexed(x) == 'x[j]'
     A = IndexedBase('A')[i, j]
-    assert p._print_Indexed(A) == 'A[i, j]' 
+    assert p._print_Indexed(A) == 'A[i, j]'
     B = IndexedBase('B')[i, j, k]
-    assert p._print_Indexed(B) == 'B[i, j, k]' 
+    assert p._print_Indexed(B) == 'B[i, j, k]'
 
     assert p._not_r == set()
 
@@ -278,7 +278,7 @@ def test_rcode_loops_add():
         '}\n'
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
-        '      y[i] = A[i, j]*x[j] + y[i];\n' 
+        '      y[i] = A[i, j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -306,7 +306,7 @@ def test_rcode_loops_multiple_contractions():
         '   for (j in 1:n){\n'
         '      for (k in 1:o){\n'
         '         for (l in 1:p){\n'
-        '            y[i] = a[i, j, k, l]*b[j, k, l] + y[i];\n' 
+        '            y[i] = a[i, j, k, l]*b[j, k, l] + y[i];\n'
         '         }\n'
         '      }\n'
         '   }\n'
@@ -337,7 +337,7 @@ def test_rcode_loops_addfactor():
         '   for (j in 1:n){\n'
         '      for (k in 1:o){\n'
         '         for (l in 1:p){\n'
-        '            y[i] = (a[i, j, k, l] + b[i, j, k, l])*c[j, k, l] + y[i];\n' 
+        '            y[i] = (a[i, j, k, l] + b[i, j, k, l])*c[j, k, l] + y[i];\n'
         '         }\n'
         '      }\n'
         '   }\n'
@@ -368,7 +368,7 @@ def test_rcode_loops_multiple_terms():
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
         '      for (k in 1:o){\n'
-        '         y[i] = b[j]*b[k]*c[i, j, k] + y[i];\n' 
+        '         y[i] = b[j]*b[k]*c[i, j, k] + y[i];\n'
         '      }\n'
         '   }\n'
         '}\n'
@@ -376,14 +376,14 @@ def test_rcode_loops_multiple_terms():
     s2 = (
         'for (i in 1:m){\n'
         '   for (k in 1:o){\n'
-        '      y[i] = a[i, k]*b[k] + y[i];\n' 
+        '      y[i] = a[i, k]*b[k] + y[i];\n'
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (i in 1:m){\n'
         '   for (j in 1:n){\n'
-        '      y[i] = a[i, j]*b[j] + y[i];\n' 
+        '      y[i] = a[i, j]*b[j] + y[i];\n'
         '   }\n'
         '}\n'
     )
