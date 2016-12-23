@@ -11,6 +11,7 @@ from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
+from sympy.external import import_module
 
 import mpmath
 
@@ -510,6 +511,48 @@ def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
     assert sympify(set()) == EmptySet()
+
+
+def test_numpy():
+    from sympy.utilities.pytest import skip
+    np = import_module('numpy')
+    if np:
+        assert sympify(np.bool_(1)) == True
+        assert sympify(
+            np.int_(1234567891234567891)) == np.int_(1234567891234567891)
+        assert sympify(np.intc(1234567891)) == np.intc(1234567891)
+        assert sympify(
+            np.intp(1234567891234567891)) == np.intp(1234567891234567891)
+        assert sympify(np.int8(-123)) == np.int8(-123)
+        assert sympify(np.int16(-12345)) == np.int16(-12345)
+        assert sympify(np.int32(-1234567891)) == np.int32(-1234567891)
+        assert sympify(
+            np.int64(-1234567891234567891)) == np.int64(-1234567891234567891)
+        assert sympify(np.uint8(123)) == np.uint8(123)
+        assert sympify(np.uint16(12345)) == np.uint16(12345)
+        assert sympify(np.uint32(1234567891)) == np.uint32(1234567891)
+        assert sympify(
+            np.uint64(1234567891234567891)) == np.uint64(1234567891234567891)
+        assert sympify(np.float16(1.123)) == np.float16(1.123)
+        assert sympify(np.float32(1.1234567)) == np.float32(1.1234567)
+        assert sympify(
+            np.float64(1.1234567891234)) == np.float64(1.1234567891234)
+        assert sympify(np.complex64(1 + 2j)) == 1.0 + 2.0*I
+        assert sympify(np.complex128(1 + 2j)) == 1.0 + 2.0*I
+        
+        try:
+            assert sympify(
+                np.float96(1.123456789)) == np.float96(1.123456789)
+        except AttributeError:#float96 does not exist on all platforms
+            pass
+        
+        try:
+            assert sympify(
+                np.float128(1.123456789123)) == np.float128(1.123456789123)
+        except AttributeError:#float128 does not exist on all platforms
+            pass
+    else:
+        skip('numpy not installed.Abort numpy tests.')
 
 
 @XFAIL
