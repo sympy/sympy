@@ -1768,5 +1768,4 @@ def test_issue_10755():
 
 def test_issue_11877():
     x = symbols('x')
-    y = integrate(x**2/(-x*x), (x, 0, 1))
-    assert y == S(-1)
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
