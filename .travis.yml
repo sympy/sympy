@@ -24,7 +24,6 @@ matrix:
         - TEST_MATPLOTLIB="true"
         - TEST_THEANO="true"
         - TEST_ASCII="true"
-        - TEST_COVERAGE="true"
       addons:
         apt:
           packages:
@@ -277,6 +276,9 @@ matrix:
             - pypy
 
 before_install:
+  - if [[ "${TEST_SYMPY}" == "true" ]]; then
+      pip install coverage codecov;
+    fi
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
@@ -334,10 +336,6 @@ before_install:
       sudo apt-get update;
       sudo apt-get install -y sagemath-upstream-binary;
     fi
-  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-      conda install coverage;
-      pip install codecov;
-    fi
 install:
 #The install cycle below is to test installation on systems without setuptools.
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
@@ -357,15 +355,12 @@ script:
   # Don't run doctr of the build fails
   - set -e
   - bin/test_travis.sh
-  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-      bin/coverage_report.py;
-    fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy --deploy-repo sympy/sympy_doc --gh-pages-docs dev --command './generate_indexes.py';
     fi
 notifications:
   email: false
 after_success:
-  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+  - if [[ "${TEST_SYMPY}" == "true" ]]; then
       codecov;
     fi

@@ -119,9 +119,14 @@ fi
 if [[ "${TEST_SYMPY}" == "true" ]]; then
     cat << EOF | python
 print('Testing SYMPY, split ${SPLIT}')
-import sympy
+import sympy, coverage
+cov = coverage.Coverage()
+cov.start()
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
+cov.stop()
+cov.save()
+cov.xml_report(ignore_errors=True)
 EOF
 fi
 
