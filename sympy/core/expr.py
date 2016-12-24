@@ -792,7 +792,7 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                B = limit(self, x, b)
+                B = limit(self, x, b, dir="-")
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
