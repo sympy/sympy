@@ -963,6 +963,8 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+def test_issue_11827():
+    assert S.Naturals0**4
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)
