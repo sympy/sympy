@@ -122,11 +122,12 @@ print('Testing SYMPY, split ${SPLIT}')
 import sympy, coverage
 cov = coverage.Coverage()
 cov.start()
-if not sympy.test(split='${SPLIT}'):
+if not sympy.test(split='${SPLIT}', subprocess=False):
    raise Exception('Tests failed')
 cov.stop()
 cov.save()
 cov.xml_report(ignore_errors=True)
+cov.report()
 EOF
 fi
 
