@@ -103,7 +103,7 @@ class MathMLPrinter(Printer):
         coeff, terms = expr.as_coeff_mul()
         if coeff is S.One and len(terms) == 1:
             # XXX since the negative coefficient has been handled, I don't
-            # thing a coeff of 1 can remain
+            # think a coeff of 1 can remain
             return self._print(terms[0])
 
         if self.order != 'old':
