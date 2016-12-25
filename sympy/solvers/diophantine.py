@@ -993,6 +993,7 @@ def _diop_quadratic(var, coeff, t):
 
                 for z0 in range(0, abs(_c)):
                     _temp = sqa*g*z0**2 + D*z0 + sqa*F
+                    # Check if the values of y and x obtained are integers or not
                     if divisible(_temp, _c) and divisible(_temp*e*sqc - z0*_c, sqa*_c):
                         sol.add((solve_x(z0), solve_y(z0)))
 
