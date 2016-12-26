@@ -1077,22 +1077,22 @@ class SymPyTests(object):
             clear_cache()
             self._count += 1
             random.seed(self._seed)
-            pytestfile = ""
-            if "XFAIL" in gl:
-                pytestfile = inspect.getsourcefile(gl["XFAIL"])
-            pytestfile2 = ""
-            if "slow" in gl:
-                pytestfile2 = inspect.getsourcefile(gl["slow"])
             disabled = gl.get("disabled", False)
             if not disabled:
                 # we need to filter only those functions that begin with 'test_'
-                # that are defined in the testing file or in the file where
-                # is defined the XFAIL decorator
-                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                    (inspect.getsourcefile(gl[f]) == filename or
-                     inspect.getsourcefile(gl[f]) == pytestfile or
-                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                # We have to be careful about decorated functions. As long as
+                # the decorator uses functools.wraps, we can detect it.
+                funcs = []
+                for f in gl:
+                    if (f.startswith("test_") and (inspect.isfunction(gl[f])
+                        or inspect.ismethod(gl[f]))):
+                        func = gl[f]
+                        # Handle multiple decorators
+                        while hasattr(func, '__wrapped__'):
+                            func = func.__wrapped__
+
+                        if inspect.getsourcefile(func) == filename:
+                            funcs.append(gl[f])
                 if slow:
                     funcs = [f for f in funcs if getattr(f, '_slow', False)]
                 # Sorting of XFAILed functions isn't fixed yet :-(

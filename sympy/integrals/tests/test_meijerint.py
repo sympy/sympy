@@ -646,3 +646,12 @@ def test_issue_6860():
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
+
+
+def test_issue_10681():
+    from sympy import RR
+    from sympy.abc import R, r
+    f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
+    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
+                                  r**2*exp_polar(2*I*pi)/R**2)
+    assert RR.almosteq((f/g).n(), 1.0, 1e-12)

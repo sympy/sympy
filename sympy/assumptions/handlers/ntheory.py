@@ -45,13 +45,11 @@ class AskPrimeHandler(CommonHandler):
         if expr.is_number:
             return AskPrimeHandler._number(expr, assumptions)
         for arg in expr.args:
-            if ask(Q.integer(arg), assumptions):
-                pass
-            else:
-                break
-        else:
-            # a product of integers can't be a prime
-            return False
+            if not ask(Q.integer(arg), assumptions):
+                return None
+        for arg in expr.args:
+            if arg.is_number and arg.is_composite:
+                return False
 
     @staticmethod
     def Pow(expr, assumptions):

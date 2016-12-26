@@ -1705,10 +1705,12 @@ def test_prime():
     assert ask(Q.prime(x), Q.integer(x)) is None
     assert ask(Q.prime(x), ~Q.integer(x)) is False
 
-    assert ask(Q.prime(2*x), Q.integer(x)) is False
+    assert ask(Q.prime(2*x), Q.integer(x)) is None
     assert ask(Q.prime(x*y)) is None
     assert ask(Q.prime(x*y), Q.prime(x)) is None
-    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is False
+    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(4*x), Q.integer(x)) is False
+    assert ask(Q.prime(4*x)) is None
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False

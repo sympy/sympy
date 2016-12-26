@@ -462,7 +462,7 @@ def msubs(expr, *sub_dicts, **kwargs):
     if smart:
         func = _smart_subs
     elif hasattr(expr, 'msubs'):
-        func = lambda expr, sub_dict: expr.msubs(sub_dict)
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):

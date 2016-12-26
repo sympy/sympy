@@ -86,6 +86,62 @@ class Curve(GeometrySet):
         if old == self.parameter:
             return Point(*[f.subs(old, new) for f in self.functions])
 
+    def arbitrary_point(self, parameter='t'):
+        """
+        A parameterized point on the curve.
+
+        Parameters
+        ==========
+
+        parameter : str or Symbol, optional
+            Default value is 't';
+            the Curve's parameter is selected with None or self.parameter
+            otherwise the provided symbol is used.
+
+        Returns
+        =======
+
+        arbitrary_point : Point
+
+        Raises
+        ======
+
+        ValueError
+            When `parameter` already appears in the functions.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.abc import s
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([2*s, s**2], (s, 0, 2))
+        >>> C.arbitrary_point()
+        Point2D(2*t, t**2)
+        >>> C.arbitrary_point(C.parameter)
+        Point2D(2*s, s**2)
+        >>> C.arbitrary_point(None)
+        Point2D(2*s, s**2)
+        >>> C.arbitrary_point(Symbol('a'))
+        Point2D(2*a, a**2)
+
+        """
+        if parameter is None:
+            return Point(*self.functions)
+
+        tnew = _symbol(parameter, self.parameter)
+        t = self.parameter
+        if (tnew.name != t.name and
+                tnew.name in (f.name for f in self.free_symbols)):
+            raise ValueError('Symbol %s already appears in object '
+                'and cannot be used as a parameter.' % tnew.name)
+        return Point(*[w.subs(t, tnew) for w in self.functions])
+
     @property
     def free_symbols(self):
         """
@@ -135,32 +191,6 @@ class Curve(GeometrySet):
         return self.args[0]
 
     @property
-    def parameter(self):
-        """The curve function variable.
-
-        Returns
-        =======
-
-        parameter : SymPy symbol
-
-        See Also
-        ========
-
-        functions
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
-        >>> C = Curve([t, t**2], (t, 0, 2))
-        >>> C.parameter
-        t
-
-        """
-        return self.args[1][0]
-
-    @property
     def limits(self):
         """The limits for the curve.
 
@@ -186,6 +216,67 @@ class Curve(GeometrySet):
 
         """
         return self.args[1]
+
+    @property
+    def parameter(self):
+        """The curve function variable.
+
+        Returns
+        =======
+
+        parameter : SymPy symbol
+
+        See Also
+        ========
+
+        functions
+
+        Examples
+        ========
+
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
+        >>> C = Curve([t, t**2], (t, 0, 2))
+        >>> C.parameter
+        t
+
+        """
+        return self.args[1][0]
+
+    def plot_interval(self, parameter='t'):
+        """The plot interval for the default geometric plot of the curve.
+
+        Parameters
+        ==========
+
+        parameter : str or Symbol, optional
+            Default value is 't';
+            otherwise the provided symbol is used.
+
+        Returns
+        =======
+
+        plot_interval : list (plot interval)
+            [parameter, lower_bound, upper_bound]
+
+        See Also
+        ========
+
+        limits : Returns limits of the parameter interval
+
+        Examples
+        ========
+
+        >>> from sympy import Curve, sin
+        >>> from sympy.abc import x, t, s
+        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
+        [t, 1, 2]
+        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)
+        [s, 1, 2]
+
+        """
+        t = _symbol(parameter, self.parameter)
+        return [t] + list(self.limits[1:])
 
     def rotate(self, angle=0, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
@@ -249,94 +340,3 @@ class Curve(GeometrySet):
         """
         fx, fy = self.functions
         return self.func((fx + x, fy + y), self.limits)
-
-    def arbitrary_point(self, parameter='t'):
-        """
-        A parameterized point on the curve.
-
-        Parameters
-        ==========
-
-        parameter : str or Symbol, optional
-            Default value is 't';
-            the Curve's parameter is selected with None or self.parameter
-            otherwise the provided symbol is used.
-
-        Returns
-        =======
-
-        arbitrary_point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When `parameter` already appears in the functions.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import s
-        >>> from sympy.geometry import Curve
-        >>> C = Curve([2*s, s**2], (s, 0, 2))
-        >>> C.arbitrary_point()
-        Point2D(2*t, t**2)
-        >>> C.arbitrary_point(C.parameter)
-        Point2D(2*s, s**2)
-        >>> C.arbitrary_point(None)
-        Point2D(2*s, s**2)
-        >>> C.arbitrary_point(Symbol('a'))
-        Point2D(2*a, a**2)
-
-        """
-        if parameter is None:
-            return Point(*self.functions)
-
-        tnew = _symbol(parameter, self.parameter)
-        t = self.parameter
-        if (tnew.name != t.name and
-                tnew.name in (f.name for f in self.free_symbols)):
-            raise ValueError('Symbol %s already appears in object '
-                'and cannot be used as a parameter.' % tnew.name)
-        return Point(*[w.subs(t, tnew) for w in self.functions])
-
-    def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the curve.
-
-        Parameters
-        ==========
-
-        parameter : str or Symbol, optional
-            Default value is 't';
-            otherwise the provided symbol is used.
-
-        Returns
-        =======
-
-        plot_interval : list (plot interval)
-            [parameter, lower_bound, upper_bound]
-
-        See Also
-        ========
-
-        limits : Returns limits of the parameter interval
-
-        Examples
-        ========
-
-        >>> from sympy import Curve, sin
-        >>> from sympy.abc import x, t, s
-        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval()
-        [t, 1, 2]
-        >>> Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)
-        [s, 1, 2]
-
-        """
-        t = _symbol(parameter, self.parameter)
-        return [t] + list(self.limits[1:])
