@@ -1057,7 +1057,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                     for x, y in sols:
                         sol.append((d*x, d*y))
                         if D == -1:
-                            sol.append((d*y,d*x))
+                            sol.append((d*y, d*x))
 
             return sol
 
@@ -1303,7 +1303,7 @@ def cornacchia(a, b, m):
     >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
     set([(2, 3), (4, 1)])
     >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
-    set([(4, 5)])
+    set([(4, 3)])
 
     References
     ===========
@@ -1328,7 +1328,7 @@ def cornacchia(a, b, m):
         if t >= m // 2:
             u, r = t, m
         elif t < m // 2:
-            u,r = m-t,m
+            u, r = m-t, m
         else:
             continue
 

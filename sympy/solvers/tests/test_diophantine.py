@@ -199,8 +199,8 @@ def test_DN():
 
     # When equation is x**2 + y**2 = N
     # Solutions are interchangeable
-    assert diop_DN(-1, 5) == [(2, 1),(1, 2)]
-    assert diop_DN(-1, 169) == [(12, 5), (5, 12),(13,0),(0,13)]
+    assert diop_DN(-1, 5) == [(2, 1), (1, 2)]
+    assert diop_DN(-1, 169) == [(12, 5), (5, 12), (13, 0), (0, 13)]
 
     # D > 0 and D is not a square
 
