@@ -1,6 +1,6 @@
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsys import CartesianCoordinateSystem
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
@@ -11,7 +11,7 @@ from sympy.vector.functions import (curl, divergence, gradient,
                                     scalar_potential_difference)
 from sympy.utilities.pytest import raises
 
-C = CoordSysCartesian('C')
+C = CartesianCoordinateSystem('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
 delop = C.delop

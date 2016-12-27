@@ -3,7 +3,7 @@ from sympy.core import S, Pow, Symbol
 from sympy.core.expr import AtomicExpr
 from sympy.core.compatibility import range
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsys import CoordinateSystem, CartesianCoordinateSystem
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
@@ -29,8 +29,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
         {C.i: 3, C.j: 4, C.k: 5}
@@ -73,8 +73,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -109,9 +109,9 @@ class Vector(BasisDependent):
         if isinstance(other, Del):
             def directional_derivative(field):
                 field = express(field, other.system, variables=True)
-                out = self.dot(other._i) * df(field, other._x)
-                out += self.dot(other._j) * df(field, other._y)
-                out += self.dot(other._k) * df(field, other._z)
+                out = self.dot(other._e1cap) * df(field, other._e1)
+                out += self.dot(other._e2cap) * df(field, other._e2)
+                out += self.dot(other._e3cap) * df(field, other._e3)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.zero
                 return out
@@ -151,8 +151,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> C.i.cross(C.j)
         C.k
         >>> C.i ^ C.i
@@ -230,8 +230,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> N = CartesianCoordinateSystem('N')
         >>> N.i.outer(N.j)
         (N.i|N.j)
 
@@ -260,9 +260,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector.coordsysrect import CoordSysCartesian
+        >>> from sympy.vector.coordsys import CartesianCoordinateSystem
         >>> from sympy.vector.vector import Vector, BaseVector
-        >>> C = CoordSysCartesian('C')
+        >>> C = CartesianCoordinateSystem('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
         >>> v2 = 3*i + 4*j
@@ -293,14 +293,14 @@ class Vector(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CartesianCoordinateSystem
             The system wrt which the matrix form is to be computed
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> from sympy.abc import a, b, c
         >>> v = a*C.i + b*C.j + c*C.k
         >>> v.to_matrix(C)
@@ -319,15 +319,15 @@ class Vector(BasisDependent):
         The constituents of this vector in different coordinate systems,
         as per its definition.
 
-        Returns a dict mapping each CoordSysCartesian to the corresponding
+        Returns a dict mapping each CartesianCoordinateSystem to the corresponding
         constituent Vector.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> R1 = CoordSysCartesian('R1')
-        >>> R2 = CoordSysCartesian('R2')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> R1 = CartesianCoordinateSystem('R1')
+        >>> R2 = CartesianCoordinateSystem('R2')
         >>> v = R1.i + R2.i
         >>> v.separate() == {R1: R1.i, R2: R2.i}
         True
@@ -356,8 +356,8 @@ class BaseVector(Vector, AtomicExpr):
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
+        if not isinstance(system, CoordinateSystem):
+            raise TypeError("system should be a CoordinateSystem")
         # Initialize an object
         obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
                                              system, Symbol(pretty_str),

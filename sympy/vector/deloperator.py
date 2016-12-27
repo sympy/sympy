@@ -2,7 +2,7 @@ from sympy.core import Basic
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsys import CoordinateSystem, CartesianCoordinateSystem
 from sympy.vector.scalar import BaseScalar
 from sympy.core import S
 
@@ -14,11 +14,11 @@ class Del(Basic):
     """
 
     def __new__(cls, system):
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
+        if not isinstance(system, CoordinateSystem):
+            raise TypeError("system should be a CoordinateSystem")
         obj = super(Del, cls).__new__(cls, system)
-        obj._x, obj._y, obj._z = system.x, system.y, system.z
-        obj._i, obj._j, obj._k = system.i, system.j, system.k
+        obj._e1, obj._e2, obj._e3 = system._e1, system._e2, system._e3
+        obj._e1cap, obj._e2cap, obj._e3cap = system._e1cap, system._e2cap, system._e3cap
         obj._system = system
         obj._name = system.__str__() + ".delop"
         return obj
@@ -46,8 +46,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> C.delop.gradient(9)
         (Derivative(9, C.x))*C.i + (Derivative(9, C.y))*C.j +
             (Derivative(9, C.z))*C.k
@@ -58,13 +58,14 @@ class Del(Basic):
 
         scalar_field = express(scalar_field, self.system,
                                variables=True)
-        vx = Derivative(scalar_field, self._x)
-        vy = Derivative(scalar_field, self._y)
-        vz = Derivative(scalar_field, self._z)
+        lame_params = self.system.lame_parameters()
+        vx = 1/lame_params[0]*Derivative(scalar_field, self._e1)
+        vy = 1/lame_params[1]*Derivative(scalar_field, self._e2)
+        vz = 1/lame_params[2]*Derivative(scalar_field, self._e3)
 
         if doit:
-            return (vx * self._i + vy * self._j + vz * self._k).doit()
-        return vx * self._i + vy * self._j + vz * self._k
+            return (vx * self._e1cap + vy * self._e2cap + vz * self._e3cap).doit()
+        return vx * self._e1cap + vy * self._e2cap + vz * self._e3cap
 
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
@@ -88,8 +89,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> C.delop.dot(C.x*C.i)
         Derivative(C.x, C.x)
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
@@ -97,10 +98,14 @@ class Del(Basic):
         C.x*C.y + C.x*C.z + C.y*C.z
 
         """
-
-        vx = _diff_conditional(vect.dot(self._i), self._x)
-        vy = _diff_conditional(vect.dot(self._j), self._y)
-        vz = _diff_conditional(vect.dot(self._k), self._z)
+        lame_params = self.system.lame_parameters()
+        dprod = lame_params[0] * lame_params[1] * lame_params[2]
+        vx = 1/dprod*_diff_conditional(dprod/lame_params[0]*vect.dot(self._e1cap),
+                    self._e1)
+        vy = 1/dprod*_diff_conditional(dprod/lame_params[1]*vect.dot(self._e2cap),
+                    self._e2)
+        vz = 1/dprod*_diff_conditional(dprod/lame_params[2]*vect.dot(self._e3cap),
+                    self._e3)
 
         if doit:
             return (vx + vy + vz).doit()
@@ -128,8 +133,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CartesianCoordinateSystem
+        >>> C = CartesianCoordinateSystem('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> C.delop.cross(v, doit = True)
         (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j +
@@ -138,17 +143,21 @@ class Del(Basic):
         0
 
         """
-
-        vectx = express(vect.dot(self._i), self.system, variables=True)
-        vecty = express(vect.dot(self._j), self.system, variables=True)
-        vectz = express(vect.dot(self._k), self.system, variables=True)
+        lame_params = self.system.lame_parameters()
+        dprod = lame_params[0] * lame_params[1] * lame_params[2]
+        vectx = express(vect.dot(self._e1cap), self.system, variables=True) * \
+                lame_params[0]
+        vecty = express(vect.dot(self._e2cap), self.system, variables=True) * \
+                lame_params[1]
+        vectz = express(vect.dot(self._e3cap), self.system, variables=True) * \
+                 lame_params[2]
         outvec = Vector.zero
-        outvec += (Derivative(vectz, self._y) -
-                   Derivative(vecty, self._z)) * self._i
-        outvec += (Derivative(vectx, self._z) -
-                   Derivative(vectz, self._x)) * self._j
-        outvec += (Derivative(vecty, self._x) -
-                   Derivative(vectx, self._y)) * self._k
+        outvec += lame_params[0]/dprod*(Derivative(vectz, self._e2) -
+                   Derivative(vecty, self._e3)) * self._e1cap
+        outvec += lame_params[1]/dprod*(Derivative(vectx, self._e3) -
+                   Derivative(vectz, self._e1)) * self._e2cap
+        outvec += lame_params[2]/dprod*(Derivative(vecty, self._e1) -
+                   Derivative(vectx, self._e2)) * self._e3cap
 
         if doit:
             return outvec.doit()

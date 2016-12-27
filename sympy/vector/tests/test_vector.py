@@ -3,9 +3,9 @@ from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos, Function, Integral, Derivative, diff, integrate
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsys import CartesianCoordinateSystem
 
-C = CoordSysCartesian('C')
+C = CartesianCoordinateSystem('C')
 
 i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')

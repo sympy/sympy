@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.coordsys import CartesianCoordinateSystem
 from sympy.vector.scalar import BaseScalar
 from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, zeros, expand
@@ -13,7 +13,7 @@ q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
 def test_func_args():
-    A = CoordSysCartesian('A')
+    A = CartesianCoordinateSystem('A')
     assert A.x.func(*A.x.args) == A.x
     expr = 3*A.x + 4*A.y
     assert expr.func(*expr.args) == expr
@@ -23,16 +23,16 @@ def test_func_args():
     assert A.origin.func(*A.origin.args) == A.origin
 
 
-def test_coordsyscartesian_equivalence():
-    A = CoordSysCartesian('A')
-    A1 = CoordSysCartesian('A')
+def test_CartesianCoordinateSystem_equivalence():
+    A = CartesianCoordinateSystem('A')
+    A1 = CartesianCoordinateSystem('A')
     assert A1 == A
-    B = CoordSysCartesian('B')
+    B = CartesianCoordinateSystem('B')
     assert A != B
 
 
 def test_orienters():
-    A = CoordSysCartesian('A')
+    A = CartesianCoordinateSystem('A')
     axis_orienter = AxisOrienter(a, A.k)
     body_orienter = BodyOrienter(a, b, c, '123')
     space_orienter = SpaceOrienter(a, b, c, '123')
@@ -68,7 +68,7 @@ def test_coordinate_vars():
     Tests the coordinate variables functionality with respect to
     reorientation of coordinate systems.
     """
-    A = CoordSysCartesian('A')
+    A = CartesianCoordinateSystem('A')
     # Note that the name given on the lhs is different from A.x._name
     assert BaseScalar('A.x', 0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
     assert BaseScalar('A.y', 1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
@@ -131,7 +131,7 @@ def test_coordinate_vars():
 
 
 def test_rotation_matrix():
-    N = CoordSysCartesian('N')
+    N = CartesianCoordinateSystem('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
@@ -185,7 +185,7 @@ def test_vector():
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
     """
-    N = CoordSysCartesian('N')
+    N = CartesianCoordinateSystem('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
@@ -245,7 +245,7 @@ def test_vector():
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
 def test_orient_new_methods():
-    N = CoordSysCartesian('N')
+    N = CartesianCoordinateSystem('N')
     orienter1 = AxisOrienter(q4, N.j)
     orienter2 = SpaceOrienter(q1, q2, q3, '123')
     orienter3 = QuaternionOrienter(q1, q2, q3, q4)
@@ -262,9 +262,9 @@ def test_orient_new_methods():
 
 def test_locatenew_point():
     """
-    Tests Point class, and locate_new method in CoordSysCartesian.
+    Tests Point class, and locate_new method in CartesianCoordinateSystem.
     """
-    A = CoordSysCartesian('A')
+    A = CartesianCoordinateSystem('A')
     assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
     C = A.locate_new('C', v)
@@ -288,7 +288,7 @@ def test_locatenew_point():
 
 
 def test_evalf():
-    A = CoordSysCartesian('A')
+    A = CartesianCoordinateSystem('A')
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()

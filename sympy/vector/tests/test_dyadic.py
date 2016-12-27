@@ -1,11 +1,11 @@
 from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
      simplify
-from sympy.vector import (CoordSysCartesian, Vector, Dyadic,
+from sympy.vector import (CartesianCoordinateSystem, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
 
 
-A = CoordSysCartesian('A')
+A = CartesianCoordinateSystem('A')
 
 
 def test_dyadic():
@@ -88,7 +88,7 @@ def test_dyadic():
 
 def test_dyadic_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
-    N = CoordSysCartesian('N')
+    N = CartesianCoordinateSystem('N')
 
     dy = N.i | N.i
     test1 = (1 / x + 1 / y) * dy
