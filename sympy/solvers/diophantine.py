@@ -1039,14 +1039,14 @@ def _diop_quadratic(var, coeff, t):
         solns_pell = diop_DN(D, N)
 
         if D < 0:
-	    for solution in solns_pell:
-                    for X_i in [-solution[0], solution[0]]:
+            for solution in solns_pell:
+                for X_i in [-solution[0], solution[0]]:
                         for Y_i in [-solution[1], solution[1]]:
                             s = P*Matrix([X_i, Y_i]) + Q
                             try:
                                 sol.add(tuple([as_int(_) for _ in s]))
                             except ValueError:
-                                pass            
+                                pass
         else:
             # In this case equation can be transformed into a Pell equation
 
