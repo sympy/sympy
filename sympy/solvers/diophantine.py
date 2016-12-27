@@ -407,7 +407,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-1, 2), (1, 2)])
+    set([(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)])
 
     See Also
     ========
@@ -1039,14 +1039,14 @@ def _diop_quadratic(var, coeff, t):
         solns_pell = diop_DN(D, N)
 
         if D < 0:
-            for solution in solns_pell:
-                s1 = P*Matrix([solution[0], solution[1]]) + Q
-                s2 = P*Matrix([-solution[0], solution[1]]) + Q
-                try:
-                    sol.add(tuple([as_int(_) for _ in s1]))
-                    sol.add(tuple([as_int(_) for _ in s2]))
-                except ValueError:
-                    pass
+	    for solution in solns_pell:
+                    for X_i in [-solution[0], solution[0]]:
+                        for Y_i in [-solution[1], solution[1]]:
+                            s = P*Matrix([X_i, Y_i]) + Q
+                            try:
+                                sol.add(tuple([as_int(_) for _ in s]))
+                            except ValueError:
+                                pass            
         else:
             # In this case equation can be transformed into a Pell equation
 
