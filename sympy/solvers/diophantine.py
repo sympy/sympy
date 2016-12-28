@@ -763,7 +763,6 @@ def _diop_linear(var, coeff, param):
     This method is generalised for many variables, below.
 
     '''
-
     solutions = []
     for i in range(len(B)):
         tot_x, tot_y = [], []
