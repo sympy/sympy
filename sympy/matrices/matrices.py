@@ -655,7 +655,7 @@ class MatrixProperties(MatrixRequired):
         >>> Matrix([[x]])
         Matrix([[x]])
         >>> _.atoms()
-        set([x])
+        {x}
         """
 
         types = tuple(t if isinstance(t, type) else type(t) for t in types)
@@ -673,7 +673,7 @@ class MatrixProperties(MatrixRequired):
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x], [1]]).free_symbols
-        set([x])
+        {x}
         """
         return self._eval_free_symbols()
 
@@ -2557,8 +2557,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return det.expand()
 
+
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
+
 
         Note that this method fails if the LU decomposition itself
         fails. In particular, if the matrix has no inverse this method
@@ -2569,6 +2571,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         See Also
         ========
+
 
         det
         det_bareis

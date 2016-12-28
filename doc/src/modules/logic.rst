@@ -36,7 +36,7 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (y & x).subs({x: True, y: True})
     True
     >>> (x | y).atoms()
-    set([x, y])
+    {x, y}
 
 The logic module also includes the following functions to derive boolean expressions
 from their truth tables-
