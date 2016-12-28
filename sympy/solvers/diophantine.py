@@ -407,7 +407,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)])
+    {[(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]}
 
     See Also
     ========
@@ -1416,9 +1416,9 @@ def cornacchia(a, b, m):
 
     >>> from sympy.solvers.diophantine import cornacchia
     >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
-    set([(2, 3), (4, 1)])
+    {[(2, 3), (4, 1)]}
     >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
-    set([(4, 3)])
+    {[(4, 3)]}
 
     References
     ===========
@@ -1457,8 +1457,8 @@ def cornacchia(a, b, m):
             s, _exact = integer_nthroot(m1, 2)
             if _exact:
                 if a == b and r > s:
-		    pass
-		if a == b and r < s:
+                    pass
+                if a == b and r < s:
                     r, s = s, r
                 sols.add((int(r), int(s)))
 
