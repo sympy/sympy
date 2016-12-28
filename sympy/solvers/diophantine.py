@@ -1039,10 +1039,10 @@ def _diop_quadratic(var, coeff, t):
         solns_pell = diop_DN(D, N)
 
         if D < 0:
-            for solution in solns_pell:
-                for X_i in [-solution[0], solution[0]]:
-                        for Y_i in [-solution[1], solution[1]]:
-                            s = P*Matrix([X_i, Y_i]) + Q
+            for x0, y0 in solns_pell:
+                for x in [-x0, x0]:
+                        for y in [-y0, y0]:
+                            s = P*Matrix([x, y]) + Q
                             try:
                                 sol.add(tuple([as_int(_) for _ in s]))
                             except ValueError:
