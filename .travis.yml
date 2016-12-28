@@ -177,8 +177,6 @@ matrix:
         - TEST_TENSORFLOW="true"
       sudo: true
       dist: trusty
-
-
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
@@ -274,7 +272,8 @@ before_install:
         # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
         conda install theano;
     fi
-  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+  - |
+    if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
         # this assumes TEST_AUTOWRAP runs in the same build as TEST_MATPLOTLIB
         conda install libgfortran libgcc gcc cython;
     fi
