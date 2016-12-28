@@ -350,7 +350,7 @@ class Mul(Expr, AssocOp):
                         o12 = b1 ** new_exp
 
                         # now o12 could be a commutative object
-                        if o12.is_commutative:
+                        if isinstance(o12, int) or o12.is_commutative:
                             seq.append(o12)
                             continue
                         else:
