@@ -99,7 +99,7 @@ def dpll_int_repr(clauses, symbols, model):
     Arguments are expected to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import dpll_int_repr
-    >>> dpll_int_repr([set([1]), set([2]), set([3])], set([1, 2]), {3: False})
+    >>> dpll_int_repr([{1}, {2}, {3}], {1, 2}, {3: False})
     False
 
     """
@@ -148,8 +148,8 @@ def pl_true_int_repr(clause, model={}):
     inside dpll_int_repr, it is not meant to be used directly.
 
     >>> from sympy.logic.algorithms.dpll import pl_true_int_repr
-    >>> pl_true_int_repr(set([1, 2]), {1: False})
-    >>> pl_true_int_repr(set([1, 2]), {1: False, 2: False})
+    >>> pl_true_int_repr({1, 2}, {1: False})
+    >>> pl_true_int_repr({1, 2}, {1: False, 2: False})
     False
 
     """
@@ -208,8 +208,8 @@ def unit_propagate_int_repr(clauses, s):
     representation
 
     >>> from sympy.logic.algorithms.dpll import unit_propagate_int_repr
-    >>> unit_propagate_int_repr([set([1, 2]), set([3, -2]), set([2])], 2)
-    [set([3])]
+    >>> unit_propagate_int_repr([{1, 2}, {3, -2}, {2}], 2)
+    [{3}]
 
     """
     negated = {-s}
@@ -246,8 +246,8 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     to be in integer representation
 
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol_int_repr
-    >>> find_pure_symbol_int_repr(set([1,2,3]),
-    ...     [set([1, -2]), set([-2, -3]), set([3, 1])])
+    >>> find_pure_symbol_int_repr({1,2,3},
+    ...     [{1, -2}, {-2, -3}, {3, 1}])
     (1, True)
 
     """
@@ -292,8 +292,8 @@ def find_unit_clause_int_repr(clauses, model):
     integer representation.
 
     >>> from sympy.logic.algorithms.dpll import find_unit_clause_int_repr
-    >>> find_unit_clause_int_repr([set([1, 2, 3]),
-    ...     set([2, -3]), set([1, -2])], {1: True})
+    >>> find_unit_clause_int_repr([{1, 2, 3},
+    ...     {2, -3}, {1, -2}], {1: True})
     (2, False)
 
     """

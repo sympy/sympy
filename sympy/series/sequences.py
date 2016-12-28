@@ -93,7 +93,7 @@ class SeqBase(Basic):
         >>> from sympy import SeqFormula
         >>> from sympy.abc import n, m
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
-        set([m])
+        {m}
         """
         return (set(j for i in self.args for j in i.free_symbols
                    .difference(self.variables)))
