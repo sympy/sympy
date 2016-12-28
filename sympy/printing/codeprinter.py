@@ -327,6 +327,8 @@ class CodePrinter(StrPrinter):
         else:
             return self._print_not_supported(expr)
 
+    _print_Expr = _print_Function
+
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated

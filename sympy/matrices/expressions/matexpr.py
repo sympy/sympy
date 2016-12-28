@@ -171,6 +171,12 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
+    def as_real_imag(self):
+        from sympy import I
+        real = (S(1)/2) * (self + self._eval_conjugate())
+        im = (self - self._eval_conjugate())/(2*I)
+        return (real, im)
+
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)

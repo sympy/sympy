@@ -12,7 +12,7 @@ from sympy.core.expr import UnevaluatedExpr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, binomial, catalan, ceiling, cos,
-    euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
+    euler, exp, expint, factorial, factorial2, floor, hyper, log,
     lowergamma, meijerg, sin, sqrt, subfactorial, tan, uppergamma,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
@@ -2714,24 +2714,24 @@ u("""\
 
         ascii_str = \
 """\
-[[1   y]  [ y    2 ]  [z      ]]\n\
-[[--  -]  [ -   y  ]  [-   y*z]]\n\
-[[ 2  x]  [ x      ]  [x      ]]\n\
-[[x    ]  [        ]  [       ]]\n\
-[[     ]  [y*z  w*y]  [ 2     ]]\n\
-[[z   w]              [z   w*z]]\n\
-[[-   -]                       ]\n\
+[[1   y]                       ]\n\
+[[--  -]              [z      ]]\n\
+[[ 2  x]  [ y    2 ]  [-   y*z]]\n\
+[[x    ]  [ -   y  ]  [x      ]]\n\
+[[     ]  [ x      ]  [       ]]\n\
+[[z   w]  [        ]  [ 2     ]]\n\
+[[-   -]  [y*z  w*y]  [z   w*z]]\n\
 [[x   x]                       ]\
 """
         ucode_str = \
 u("""\
-⎡⎡1   y⎤  ⎡ y    2 ⎤  ⎡z      ⎤⎤\n\
-⎢⎢──  ─⎥  ⎢ ─   y  ⎥  ⎢─   y⋅z⎥⎥\n\
-⎢⎢ 2  x⎥  ⎢ x      ⎥  ⎢x      ⎥⎥\n\
-⎢⎢x    ⎥  ⎢        ⎥  ⎢       ⎥⎥\n\
-⎢⎢     ⎥  ⎣y⋅z  w⋅y⎦  ⎢ 2     ⎥⎥\n\
-⎢⎢z   w⎥              ⎣z   w⋅z⎦⎥\n\
-⎢⎢─   ─⎥                       ⎥\n\
+⎡⎡1   y⎤                       ⎤\n\
+⎢⎢──  ─⎥              ⎡z      ⎤⎥\n\
+⎢⎢ 2  x⎥  ⎡ y    2 ⎤  ⎢─   y⋅z⎥⎥\n\
+⎢⎢x    ⎥  ⎢ ─   y  ⎥  ⎢x      ⎥⎥\n\
+⎢⎢     ⎥  ⎢ x      ⎥  ⎢       ⎥⎥\n\
+⎢⎢z   w⎥  ⎢        ⎥  ⎢ 2     ⎥⎥\n\
+⎢⎢─   ─⎥  ⎣y⋅z  w⋅y⎦  ⎣z   w⋅z⎦⎥\n\
 ⎣⎣x   x⎦                       ⎦\
 """)
         assert pretty(M2) == ascii_str
@@ -2739,13 +2739,13 @@ u("""\
 
         ascii_str = \
 """\
-[ [1   y]   [ y    2 ]]\n\
-[ [--  -]   [ -   y  ]]\n\
-[ [ 2  x]   [ x      ]]\n\
-[ [x    ]   [        ]]\n\
-[ [     ]   [y*z  w*y]]\n\
-[ [z   w]             ]\n\
-[ [-   -]             ]\n\
+[ [1   y]             ]\n\
+[ [--  -]             ]\n\
+[ [ 2  x]   [ y    2 ]]\n\
+[ [x    ]   [ -   y  ]]\n\
+[ [     ]   [ x      ]]\n\
+[ [z   w]   [        ]]\n\
+[ [-   -]   [y*z  w*y]]\n\
 [ [x   x]             ]\n\
 [                     ]\n\
 [[z      ]  [ w      ]]\n\
@@ -2757,13 +2757,13 @@ u("""\
 """
         ucode_str = \
 u("""\
-⎡ ⎡1   y⎤   ⎡ y    2 ⎤⎤\n\
-⎢ ⎢──  ─⎥   ⎢ ─   y  ⎥⎥\n\
-⎢ ⎢ 2  x⎥   ⎢ x      ⎥⎥\n\
-⎢ ⎢x    ⎥   ⎢        ⎥⎥\n\
-⎢ ⎢     ⎥   ⎣y⋅z  w⋅y⎦⎥\n\
-⎢ ⎢z   w⎥             ⎥\n\
-⎢ ⎢─   ─⎥             ⎥\n\
+⎡ ⎡1   y⎤             ⎤\n\
+⎢ ⎢──  ─⎥             ⎥\n\
+⎢ ⎢ 2  x⎥   ⎡ y    2 ⎤⎥\n\
+⎢ ⎢x    ⎥   ⎢ ─   y  ⎥⎥\n\
+⎢ ⎢     ⎥   ⎢ x      ⎥⎥\n\
+⎢ ⎢z   w⎥   ⎢        ⎥⎥\n\
+⎢ ⎢─   ─⎥   ⎣y⋅z  w⋅y⎦⎥\n\
 ⎢ ⎣x   x⎦             ⎥\n\
 ⎢                     ⎥\n\
 ⎢⎡z      ⎤  ⎡ w      ⎤⎥\n\
@@ -4623,9 +4623,11 @@ u("""\
 
 
 def test_gammas():
+    from sympy import gamma
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
     assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+    assert xpretty(symbols('gamma', cls=Function)(x), use_unicode=True) == u'γ(x)'
 
 
 def test_SingularityFunction():
@@ -5742,6 +5744,11 @@ def test_pretty_Mod():
     assert upretty(2 * Mod(x, 7)) == ucode_str5
 
 
+def test_issue_11801():
+    assert pretty(Symbol("")) == ""
+    assert upretty(Symbol("")) == ""
+
+
 def test_pretty_UnevaluatedExpr():
     x = symbols('x')
     he = UnevaluatedExpr(1/x)
@@ -5781,3 +5788,15 @@ x⋅─\n\
   x\
 ''')
     assert upretty(x*he) == ucode_str
+
+
+def test_issue_10472():
+    M = (Matrix([[0, 0], [0, 0]]), Matrix([0, 0]))
+
+    ucode_str = \
+u("""\
+⎛⎡0  0⎤  ⎡0⎤⎞
+⎜⎢    ⎥, ⎢ ⎥⎟
+⎝⎣0  0⎦  ⎣0⎦⎠\
+""")
+    assert upretty(M) == ucode_str

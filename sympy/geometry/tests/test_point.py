@@ -57,6 +57,8 @@ def test_point():
 
     assert Point.taxicab_distance(p4, p3) == 2
 
+    assert Point.canberra_distance(p4, p5) == 1
+
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
     p1_3 = Point(x1 + 1, x1)
