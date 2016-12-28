@@ -407,7 +407,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> diop_solve(x + 3*y - 4*z + w - 6)
     (t_0, t_0 + t_1, 6*t_0 + 5*t_1 + 4*t_2 - 6, 5*t_0 + 4*t_1 + 3*t_2 - 6)
     >>> diop_solve(x**2 + y**2 - 5)
-    set([(-1, 2), (1, 2)])
+    set([(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)
 
     See Also
     ========
@@ -1171,6 +1171,8 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                 if sols:
                     for x, y in sols:
                         sol.append((d*x, d*y))
+                        if D == -1:
+                            sol.append((d*y, d*x))
 
             return sol
 
@@ -1416,7 +1418,7 @@ def cornacchia(a, b, m):
     >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
     set([(2, 3), (4, 1)])
     >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
-    set([(3, 4)])
+    set([(4, 3)])
 
     References
     ===========
@@ -1438,10 +1440,12 @@ def cornacchia(a, b, m):
         return None
 
     for t in v:
-        if t < m // 2:
+        if t >= m // 2:
+            u, r = t, m
+        elif t < m // 2:
+            u, r = m-t, m
+        else:
             continue
-
-        u, r = t, m
 
         while True:
             u, r = r, u % r
@@ -1455,6 +1459,8 @@ def cornacchia(a, b, m):
             s, _exact = integer_nthroot(m1, 2)
             if _exact:
                 if a == b and r > s:
+                    pass
+                elif a == b and r < s:
                     r, s = s, r
                 sols.add((int(r), int(s)))
 
