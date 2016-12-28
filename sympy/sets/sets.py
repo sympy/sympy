@@ -607,7 +607,7 @@ class ProductSet(Set):
 
     >>> coin = FiniteSet('H', 'T')
     >>> set(coin**2)
-    set([(H, H), (H, T), (T, H), (T, T)])
+    {(H, H), (H, T), (T, H), (T, T)}
 
 
     Notes
