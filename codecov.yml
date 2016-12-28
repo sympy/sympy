@@ -1,0 +1,3 @@
+# Don't post a comment on pull requests.
+# http://docs.codecov.io/docs/pull-request-comments-1#section-disable-comment
+comment: false
