@@ -35,7 +35,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     # MatrixExpr is set as NotIterable, but we want explicit matrices to be
     # iterable
     _iterable = True
-
+    is_Matrix = True
     _class_priority = 8
 
     @classmethod
@@ -92,6 +92,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     C = MatrixBase.C
 
     as_mutable = DenseMatrix.as_mutable
+    as_real_imag = DenseMatrix.as_real_imag
     _eval_trace = DenseMatrix._eval_trace
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate
@@ -142,7 +143,7 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     >>> _.shape
     (3, 3)
     """
-
+    is_Matrix = True
     _class_priority = 9
 
     @classmethod

@@ -47,7 +47,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
 
     If you don't know what a Dyadic is, just treat this like the inertia
-    tensor.  Then, do the easy thing and define it in a body-fixed frame.
+    tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
     ==========
@@ -455,7 +455,9 @@ def msubs(expr, *sub_dicts, **kwargs):
     the denominator. If this results in 0, simplification of the entire
     fraction is attempted. Using this selective simplification, only
     subexpressions that result in 1/0 are targeted, resulting in faster
-    performance."""
+    performance.
+
+    """
 
     sub_dict = dict_merge(*sub_dicts)
     smart = kwargs.pop('smart', False)
@@ -509,6 +511,7 @@ def _smart_subs(expr, sub_dict):
         If so, attempt to simplify it out. Then if node is in sub_dict,
         sub in the corresponding value."""
     expr = _crawl(expr, _tan_repl_func)
+
     def _recurser(expr, sub_dict):
         # Decompose the expression into num, den
         num, den = _fraction_decomp(expr)
