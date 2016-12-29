@@ -6446,8 +6446,8 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     3. When `A` has two complex conjugate eigenvalues the solution is given by
 
-    .. math:: \exp(\re \lambda t) (&C_1 (\re v \sin(\im \lambda t) + \im v \cos(\im \lambda t)) + \\
-                                   &C_2 (\re v \cos(\im \lambda t) - \im v \sin(\im \lambda t)))
+    .. math:: \exp(\Re \lambda t) (&C_1 (\Re v \sin(\Im \lambda t) + \Im v \cos(\Im \lambda t)) + \\
+                                   &C_2 (\Re v \cos(\Im \lambda t) - \Im v \sin(\Im \lambda t)))
 
     """
     l = Dummy('l')
