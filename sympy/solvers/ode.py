@@ -6418,7 +6418,7 @@ def sysode_linear_2eq_order1(match_):
     return sol
 
 def _linear_2eq_order1_type1(x, y, t, r, eq):
-    """
+    r"""
     The equations of this type are
 
     .. math:: x' = ax + by,
@@ -6434,11 +6434,11 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
     1. When `A` has two real eigenvalues, or one real eigenvalue and two linearly independent
     eigenvectors, the solution is given by
 
-    .. math:: C_1 * v_1 * \exp{\lambda_1 * t} + C_2 * v_2 * \exp{\lambda_2 * t}
+    .. math:: C_1 v_1 \exp{\lambda_1 t} + C_2 v_2 \exp{\lambda_2 t}
 
     2. When `A` has one real eigenvalue and a single eigenvector the solution is given by
 
-    .. math:: C_1 * v * \exp(\lambda * t) + C_2 * (v * t * \exp(\lambda * t) + \eta * \exp(\lambda * t))
+    .. math:: C_1 v \exp(\lambda t) + C_2 (v t \exp(\lambda t) + \eta \exp(\lambda t))
 
     where `\eta` is a vector satisfying the equation
 
@@ -6446,8 +6446,9 @@ def _linear_2eq_order1_type1(x, y, t, r, eq):
 
     3. When `A` has two complex conjugate eigenvalues the solution is given by
 
-    .. math:: \exp(\re \lambda * t) * (C_1 * (\re v * \sin(\im \lambda * t) + \im v * \cos(\im \lambda * t)) + \\
-                                       C_2 * (\re v * cos(\im \lambda * t) - \im v * sin(\im \lambda * t)))
+    .. math:: \exp(\re \lambda t) (&C_1 (\re v \sin(\im \lambda t) + \im v \cos(\im \lambda t)) + \\
+                                   &C_2 (\re v \cos(\im \lambda t) - \im v \sin(\im \lambda t)))
+
     """
     l = Dummy('l')
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
@@ -6610,6 +6611,7 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
     .. math:: x = -\frac{k_1}{a}
 
     .. math:: y = 0
+
     """
     a = r['a']
     b = r['b']
