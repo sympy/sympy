@@ -1041,12 +1041,12 @@ def _diop_quadratic(var, coeff, t):
         if D < 0:
             for x0, y0 in solns_pell:
                 for x in [-x0, x0]:
-                        for y in [-y0, y0]:
-                            s = P*Matrix([x, y]) + Q
-                            try:
-                                sol.add(tuple([as_int(_) for _ in s]))
-                            except ValueError:
-                                pass
+                    for y in [-y0, y0]:
+                        s = P*Matrix([x, y]) + Q
+                        try:
+                            sol.add(tuple([as_int(_) for _ in s]))
+                        except ValueError:
+                            pass
         else:
             # In this case equation can be transformed into a Pell equation
 
