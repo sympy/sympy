@@ -193,6 +193,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
 
+    Note that this function uses ``eval``, and thus shouldn't be used on
+    unsanitized input.
+
     The default behavior is to substitute all arguments in the provided
     expression with dummy symbols. This allows for applied functions (e.g.
     f(t)) to be supplied as arguments. Call the function with dummify=False if
