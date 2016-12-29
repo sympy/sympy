@@ -124,7 +124,7 @@ class StrPrinter(Printer):
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
-            except:
+            except IndexError:
                 return 'Domain on ' + self._print(d.symbols)
 
     def _print_Dummy(self, expr):
