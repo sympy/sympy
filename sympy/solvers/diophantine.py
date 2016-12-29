@@ -1455,8 +1455,6 @@ def cornacchia(a, b, m):
             m1 = m1 // b
             s, _exact = integer_nthroot(m1, 2)
             if _exact:
-                if a == b and r > s:
-                    pass
                 if a == b and r < s:
                     r, s = s, r
                 sols.add((int(r), int(s)))
