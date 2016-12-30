@@ -6,7 +6,8 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr)
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
+                   integrate)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1764,3 +1765,7 @@ def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
+
+def test_issue_11877():
+    x = symbols('x')
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2

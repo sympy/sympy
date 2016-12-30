@@ -12,13 +12,18 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
 
 x, y = symbols('x y')
-
+i = symbols('t', nonzero=True)
+j = symbols('j', positive=True)
+k = symbols('k', negative=True)
 
 def test_DiracDelta():
     assert DiracDelta(1) == 0
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
     assert DiracDelta(5, 7) == 0
+    assert DiracDelta(i) == 0
+    assert DiracDelta(j) == 0
+    assert DiracDelta(k) == 0
     assert DiracDelta(nan) == nan
     assert DiracDelta(0).func is DiracDelta
     assert DiracDelta(x).func is DiracDelta

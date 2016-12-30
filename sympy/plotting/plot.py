@@ -922,9 +922,9 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z, cmap=self.cm.jet,
-                                                  rstride=1, cstride=1,
-                                                  linewidth=0.1)
+                collection = self.ax.plot_surface(x, y, z,
+                    cmap=getattr(self.cm, 'viridis', self.cm.jet),
+                    rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
                 #Smart bounds have to be set to False for implicit plots.
                 self.ax.spines['left'].set_smart_bounds(False)
