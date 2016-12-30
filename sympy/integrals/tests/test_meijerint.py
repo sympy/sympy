@@ -643,10 +643,28 @@ def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
 
 
+def test_issue_7337():
+    f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
+    assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
+    assert f._eval_interval(x, -1, 1) == S(2)/5
+
+
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
 
+
+def test_issue_10211():
+    from sympy.abc import h, w
+    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+        2*sqrt(1 + w**2/h**2)/h - 2/h
+
+
+def test_issue_11806():
+    from sympy import symbols
+    y, L = symbols('y L', positive=True)
+    assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
+        2*L/(y**2*sqrt(L**2 + y**2))
 
 def test_issue_10681():
     from sympy import RR
