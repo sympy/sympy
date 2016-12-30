@@ -663,6 +663,7 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixBase(self, e):
         D = self._print_matrix_contents(e)
+        D.baseline = D.height()//2
         D = prettyForm(*D.parens('[', ']'))
         return D
     _print_ImmutableMatrix = _print_MatrixBase
@@ -699,7 +700,6 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
-
         prettyFunc = self._print(m.parent)
         def ppslice(x):
             x = list(x)

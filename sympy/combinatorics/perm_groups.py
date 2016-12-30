@@ -1069,7 +1069,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
         >>> p.elements
-        set([(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)])
+        {(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)}
 
         """
         return set(list(islice(self.generate(), None)))
@@ -2114,9 +2114,9 @@ class PermutationGroup(Basic):
         >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
         >>> G = PermutationGroup([a])
         >>> G.orbit(0)
-        set([0, 1, 2])
+        {0, 1, 2}
         >>> G.orbit([0, 4], 'union')
-        set([0, 1, 2, 3, 4, 5, 6])
+        {0, 1, 2, 3, 4, 5, 6}
 
         See Also
         ========
@@ -2208,8 +2208,7 @@ class PermutationGroup(Basic):
         >>> b = Permutation(1, 5)(3, 4)(2, 6, 0)
         >>> G = PermutationGroup([a, b])
         >>> G.orbits()
-        [set([0, 2, 3, 4, 6]), set([1, 5])]
-
+        [{0, 2, 3, 4, 6}, {1, 5}]
         """
         return _orbits(self._degree, self._generators)
 
@@ -3191,9 +3190,9 @@ def _orbit(degree, generators, alpha, action='tuples'):
     >>> a = Permutation([1, 2, 0, 4, 5, 6, 3])
     >>> G = PermutationGroup([a])
     >>> _orbit(G.degree, G.generators, 0)
-    set([0, 1, 2])
+    {0, 1, 2}
     >>> _orbit(G.degree, G.generators, [0, 4], 'union')
-    set([0, 1, 2, 3, 4, 5, 6])
+    {0, 1, 2, 3, 4, 5, 6}
 
     See Also
     ========
@@ -3254,7 +3253,7 @@ def _orbits(degree, generators):
     >>> a = Permutation([0, 2, 1])
     >>> b = Permutation([1, 0, 2])
     >>> _orbits(a.size, [a, b])
-    [set([0, 1, 2])]
+    [{0, 1, 2}]
     """
 
     seen = set()  # elements that have already appeared in orbits

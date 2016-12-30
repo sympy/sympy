@@ -218,11 +218,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(x**2 + 1).free_symbols
-        set([x])
+        {x}
         >>> Poly(x**2 + y).free_symbols
-        set([x, y])
+        {x, y}
         >>> Poly(x**2 + y, x).free_symbols
-        set([x, y])
+        {x, y}
 
         """
         symbols = set([])
@@ -248,7 +248,7 @@ class Poly(Expr):
         >>> Poly(x**2 + y).free_symbols_in_domain
         set()
         >>> Poly(x**2 + y, x).free_symbols_in_domain
-        set([y])
+        {y}
 
         """
         domain, symbols = self.rep.dom, set()
@@ -4079,7 +4079,7 @@ class PurePoly(Poly):
         >>> PurePoly(x**2 + y).free_symbols
         set()
         >>> PurePoly(x**2 + y, x).free_symbols
-        set([y])
+        {y}
 
         """
         return self.free_symbols_in_domain

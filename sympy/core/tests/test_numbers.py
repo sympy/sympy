@@ -301,6 +301,8 @@ def test_Rational_new():
     assert Rational('1e2/1e-2') == Rational(10000)
     assert Rational(-1, 0) == S.ComplexInfinity
     assert Rational(1, 0) == S.ComplexInfinity
+    # Make sure Rational doesn't lose precision on Floats
+    assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
 

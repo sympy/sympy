@@ -90,16 +90,16 @@ def denoms(eq, symbols=None):
     >>> from sympy import sqrt
 
     >>> denoms(x/y)
-    set([y])
+    {y}
 
     >>> denoms(x/(y*z))
-    set([y, z])
+    {y, z}
 
     >>> denoms(3/x + y/z)
-    set([x, z])
+    {x, z}
 
     >>> denoms(x/2 + y/z)
-    set([2, z])
+    {2, z}
     """
 
     pot = preorder_traversal(eq)
@@ -462,7 +462,7 @@ def solve(f, *symbols, **flags):
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
-        ([x, y], set([(-sqrt(3), 1), (sqrt(3), 1)]))
+        ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
 
     * single expression and single symbol that is in the expression
 
@@ -475,9 +475,9 @@ def solve(f, *symbols, **flags):
         >>> solve(Poly(x - 3), x)
         [3]
         >>> solve(x**2 - y**2, x, set=True)
-        ([x], set([(-y,), (y,)]))
+        ([x], {(-y,), (y,)})
         >>> solve(x**4 - 1, x, set=True)
-        ([x], set([(-1,), (1,), (-I,), (I,)]))
+        ([x], {(-1,), (1,), (-I,), (I,)})
 
     * single expression with no symbol that is in the expression
 
@@ -516,7 +516,7 @@ def solve(f, *symbols, **flags):
           >>> solve(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
           >>> solve(x + exp(x)**2, exp(x), set=True)
-          ([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))
+          ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
@@ -580,7 +580,7 @@ def solve(f, *symbols, **flags):
             * that are nonlinear
 
                 >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
-                ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
+                ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
@@ -622,14 +622,14 @@ def solve(f, *symbols, **flags):
         * when the system is not linear
 
             >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
-            ([x, y], set([(-2, -2), (0, 2), (2, -2)]))
+            ([x, y], {(-2, -2), (0, 2), (2, -2)})
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
 
             >>> solve([x - 2, x**2 + y])
             [{x: 2, y: -4}]
-            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+            >>> solve([x - 2, x**2 + f(x)], {f(x), x})
             [{x: 2, f(x): -4}]
 
         * if any equation doesn't depend on the symbol(s) given it will be
