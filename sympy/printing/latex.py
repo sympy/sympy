@@ -1599,6 +1599,7 @@ class LatexPrinter(Printer):
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
+<<<<<<< HEAD
         elif hasattr(d, 'set'):
             return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
@@ -1607,6 +1608,15 @@ class LatexPrinter(Printer):
         else:
             return self._print(None)
 			
+=======
+        except AttributeError:
+            try:
+                return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                        self._print(d.set))
+            except IndexError:
+                return 'Domain on ' + self._print(d.symbols)
+
+>>>>>>> 629fb159d... Replaced bare exceptions in printer module with explicit ones
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
         return self._print_set(items)

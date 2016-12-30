@@ -122,8 +122,14 @@ class StrPrinter(Printer):
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
             return 'Domain: ' + self._print(d.as_boolean())
+<<<<<<< HEAD
         elif hasattr(d, 'set'):
             return ('Domain: ' + self._print(d.symbols) + ' in ' +
+=======
+        except AttributeError:
+            try:
+                return ('Domain: ' + self._print(d.symbols) + ' in ' +
+>>>>>>> 629fb159d... Replaced bare exceptions in printer module with explicit ones
                         self._print(d.set))
         elif hasattr(d, 'symbols'):
             return 'Domain on ' + self._print(d.symbols)
