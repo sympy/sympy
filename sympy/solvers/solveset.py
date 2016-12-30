@@ -1047,7 +1047,7 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
     solveset_real(), solveset_complex
 
     """
-    from sympy.solvers.diophantine import diophantine
+    from sympy.solvers.diophantine import diophantine, _is_int
 
     try:
         # solution will be in set
@@ -1057,19 +1057,19 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
         return ConditionSet(free, f, S.Integers)
 
     # soln in Imageset
-    var_int = S.EmptySet
+    int_variable = S.EmptySet
     expr = S.EmptySet
     for s in solution:
         for s2 in s:
-            if not s2.is_Integer:
-                var_int += FiniteSet(*[s3 for s3 in s2.free_symbols])
+            if not _is_int(s2):
+                int_variable += FiniteSet(*[s3 for s3 in s2.free_symbols])
         expr += FiniteSet(s) if s is not None else S.EmptySet
 
     if expr is S.EmptySet:
         return S.EmptySet
-    if var_int is S.EmptySet:
+    if int_variable is S.EmptySet:
         return expr
-    return imageset(Lambda(var_int, expr), S.Integers)
+    return imageset(Lambda(int_variable, expr), S.Integers)
 
 
 ###############################################################################
