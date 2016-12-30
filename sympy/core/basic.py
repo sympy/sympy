@@ -391,6 +391,9 @@ class Basic(with_metaclass(ManagedProperties)):
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
     def __repr__(self):
+        """Method to return the string representation.
+        Return the expression as a string.
+        """
         from sympy.printing import sstr
         return sstr(self, order=None)
 
@@ -412,7 +415,7 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, I, pi, x, y])
+           {1, 2, I, pi, x, y}
 
            If one or more types are given, the results will contain only
            those types of atoms.
@@ -422,16 +425,16 @@ class Basic(with_metaclass(ManagedProperties)):
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
-           set([x, y])
+           {x, y}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
-           set([1, 2])
+           {1, 2}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
-           set([1, 2, pi])
+           {1, 2, pi}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, I, pi])
+           {1, 2, I, pi}
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
@@ -439,7 +442,7 @@ class Basic(with_metaclass(ManagedProperties)):
            The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
-           set([x, y])
+           {x, y}
 
            Be careful to check your assumptions when using the implicit option
            since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
@@ -448,10 +451,10 @@ class Basic(with_metaclass(ManagedProperties)):
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
-           set([1])
+           {1}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
-           set([1, 2])
+           {1, 2}
 
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
@@ -462,12 +465,12 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> from sympy.core.function import AppliedUndef
            >>> f = Function('f')
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
-           set([f(x), sin(y + I*pi)])
+           {f(x), sin(y + I*pi)}
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
-           set([f(x)])
+           {f(x)}
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([I*pi, 2*sin(y + I*pi)])
+           {I*pi, 2*sin(y + I*pi)}
 
         """
         if types:
@@ -542,6 +545,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
+        """Helper for rcall method.
+        """
         from sympy import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
@@ -1564,7 +1569,7 @@ class Basic(with_metaclass(ManagedProperties)):
         else:
             args = self.args
 
-        if pattern is None or isinstance(self.func, pattern):
+        if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
                 rewritten = getattr(self, rule)(*args)
                 if rewritten is not None:
@@ -1626,7 +1631,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if iterable(pattern[0]):
                     pattern = pattern[0]
 
-                pattern = [p.__class__ for p in pattern if self.has(p)]
+                pattern = [p for p in pattern if self.has(p)]
 
                 if pattern:
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
@@ -1727,11 +1732,11 @@ def _atomic(e):
     >>> from sympy.core.basic import _atomic
     >>> f = Function('f')
     >>> _atomic(x + y)
-    set([x, y])
+    {x, y}
     >>> _atomic(x + f(y))
-    set([x, f(y)])
+    {x, f(y)}
     >>> _atomic(Derivative(f(x), x) + cos(x) + y)
-    set([y, cos(x), Derivative(f(x), x)])
+    {y, cos(x), Derivative(f(x), x)}
 
     """
     from sympy import Derivative, Function, Symbol

@@ -8,6 +8,7 @@ from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
     mpf_norm, comp, mod_inverse)
+from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -300,6 +301,8 @@ def test_Rational_new():
     assert Rational('1e2/1e-2') == Rational(10000)
     assert Rational(-1, 0) == S.ComplexInfinity
     assert Rational(1, 0) == S.ComplexInfinity
+    # Make sure Rational doesn't lose precision on Floats
+    assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
 
@@ -379,8 +382,14 @@ def test_Float():
     x2_str = Float((0, '26666666666666', -53, 53))
     x_hex = Float((0, long(0x13333333333333), -52, 53))
     x_dec = Float((0, 5404319552844595, -52, 53))
+    assert x_str == x_hex == x_dec == Float(1.2)
+    # This looses a binary digit of precision, so it isn't equal to the above,
+    # but check that it normalizes correctly
     x2_hex = Float((0, long(0x13333333333333)*2, -53, 53))
-    assert x_str == x_hex == x_dec == x2_hex == Float(1.2)
+    assert x2_hex._mpf_ == (0, 5404319552844595, -52, 52)
+    # XXX: Should this test also hold?
+    # assert x2_hex._prec == 52
+
     # x2_str and 1.2 are superficially the same
     assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
@@ -487,6 +496,17 @@ def test_Float():
     assert Float(u'0.73908513321516064100000000') == Float('0.73908513321516064100000000')
     assert Float(u'0.73908513321516064100000000', 28) == Float('0.73908513321516064100000000', 28)
 
+@conserve_mpmath_dps
+def test_float_mpf():
+    import mpmath
+    mpmath.mp.dps = 100
+    mp_pi = mpmath.pi()
+
+    assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
+
+    mpmath.mp.dps = 15
+
+    assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))

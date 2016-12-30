@@ -4,6 +4,7 @@ import random
 from sympy import Derivative
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -17,7 +18,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.matrices.matrices import (MatrixBase,
-    ShapeError, a2idx, classof)
+                                     ShapeError, a2idx, classof)
 
 
 def _iszero(x):
@@ -94,6 +95,13 @@ class DenseMatrix(MatrixBase):
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
+                if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
+                    if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
+                       ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                        raise ValueError("index out of boundary")
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
+
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
                     i = list(range(self.rows))[i]
@@ -169,9 +177,9 @@ class DenseMatrix(MatrixBase):
         for i in range(self.rows):
             for j in range(i):
                 L[i, j] = (1 / L[j, j])*(self[i, j] -
-                    sum(L[i, k]*L[j, k] for k in range(j)))
+                                         sum(L[i, k]*L[j, k] for k in range(j)))
             L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
+                           sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
     def _diagonal_solve(self, rhs):
@@ -194,7 +202,7 @@ class DenseMatrix(MatrixBase):
         D: Dirac conjugation
         """
         out = self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].conjugate())
+                        lambda i, j: self[i, j].conjugate())
         return out
 
     def _eval_determinant(self):
@@ -314,6 +322,34 @@ class DenseMatrix(MatrixBase):
             a.extend(self._mat[i::self.cols])
         return self._new(self.cols, self.rows, a)
 
+    def as_real_imag(self):
+        """Returns a tuple of the real part of the input Matrix
+           and it's imaginary part.
+
+           >>> from sympy import Matrix, I
+           >>> A = Matrix([[1+2*I, 3], [4+7*I, 5]])
+           >>> A.as_real_imag()
+           (Matrix([
+           [1, 3],
+           [4, 5]]), Matrix([
+           [2, 0],
+           [7, 0]]))
+           >>> from sympy.abc import x, y, z, w
+           >>> B = Matrix([[x, y + x * I], [z + w * I, z]])
+           >>> B.as_real_imag()
+           (Matrix([
+           [        re(x), re(y) - im(x)],
+           [re(z) - im(w),         re(z)]]), Matrix([
+           [        im(x), re(x) + im(y)],
+           [re(w) + im(z),         im(z)]]))
+
+        """
+        from sympy.functions.elementary.complexes import re, im
+        real_mat = self._new(self.rows, self.cols, lambda i, j: re(self[i, j]))
+        im_mat = self._new(self.rows, self.cols, lambda i, j: im(self[i, j]))
+
+        return (real_mat, im_mat)
+
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
         Without the error checks.
@@ -326,7 +362,7 @@ class DenseMatrix(MatrixBase):
                 L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
                     L[i, k]*L[j, k]*D[k, k] for k in range(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
-                for k in range(i))
+                                       for k in range(i))
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
@@ -340,7 +376,7 @@ class DenseMatrix(MatrixBase):
                 if self[i, i] == 0:
                     raise TypeError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                    for k in range(i))) / self[i, i]
+                                           for k in range(i))) / self[i, i]
         return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
@@ -352,7 +388,7 @@ class DenseMatrix(MatrixBase):
                 if self[i, i] == 0:
                     raise ValueError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                    for k in range(i + 1, self.rows))) / self[i, i]
+                                           for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
 
     def applyfunc(self, f):
@@ -569,7 +605,7 @@ class DenseMatrix(MatrixBase):
         if not self.cols:
             return [[] for i in range(self.rows)]
         return [self._mat[i: i + self.cols]
-            for i in range(0, len(self), self.cols)]
+                for i in range(0, len(self), self.cols)]
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -814,8 +850,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         dr, dc = rhi - rlo, chi - clo
         if shape != (dr, dc):
             raise ShapeError(filldedent("The Matrix `value` doesn't have the "
-                "same dimensions "
-                "as the in sub-Matrix given by `key`."))
+                                        "same dimensions "
+                                        "as the in sub-Matrix given by `key`."))
 
         for i in range(value.rows):
             for j in range(value.cols):
@@ -884,7 +920,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         """
         i0 = i*self.cols
         ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, list(range(self.cols))) ]
+        self._mat[i0: i0 + self.cols] = [f(x, j) for x, j in zip(ri, list(range(self.cols)))]
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -955,7 +991,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ri = self._mat[i0: i0 + self.cols]
         rk = self._mat[k0: k0 + self.cols]
 
-        self._mat[i0: i0 + self.cols] = [ f(x, y) for x, y in zip(ri, rk) ]
+        self._mat[i0: i0 + self.cols] = [f(x, y) for x, y in zip(ri, rk)]
 
     # Utility functions
 

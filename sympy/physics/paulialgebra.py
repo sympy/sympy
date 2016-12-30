@@ -11,7 +11,7 @@ References
 
 from __future__ import print_function, division
 
-from sympy import Symbol, I
+from sympy import Symbol, I, Mul
 
 __all__ = ['evaluate_pauli_product']
 
@@ -154,12 +154,28 @@ def evaluate_pauli_product(arg):
     >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
     '''
-    tmp = arg.as_coeff_mul()
-    sigma_product = 1
-    com_product = 1
-    for el in tmp[1]:
-        if isinstance(el, Pauli):
-            sigma_product *= el
-        else:
-            com_product *= el
-    return (tmp[0]*sigma_product*com_product)
+    start = arg
+    end = arg
+
+    if not(isinstance(arg, Mul)):
+        return arg
+
+    while ((not(start == end)) | ((start == arg) & (end == arg))):
+        start = end
+
+        tmp = start.as_coeff_mul()
+        sigma_product = 1
+        com_product = 1
+        keeper = 1
+
+        for el in tmp[1]:
+            if isinstance(el, Pauli):
+                sigma_product *= el
+            elif not(el.is_commutative):
+                keeper = keeper*sigma_product*el
+                sigma_product = 1
+            else:
+                com_product *= el
+        end = (tmp[0]*keeper*sigma_product*com_product)
+        if end == arg: break
+    return end

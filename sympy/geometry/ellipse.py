@@ -1137,7 +1137,7 @@ class Ellipse(GeometrySet):
         Ellipse(Point2D(-1, 0), 2, 1)
         """
         if self.hradius == self.vradius:
-            return self.func(*self.args)
+            return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
             return super(Ellipse, self).rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:

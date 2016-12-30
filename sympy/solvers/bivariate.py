@@ -27,7 +27,7 @@ def _filtered_gens(poly, symbol):
     >>> from sympy import Poly, exp
     >>> from sympy.abc import x
     >>> _filtered_gens(Poly(x + 1/x + exp(x)), x)
-    set([x, exp(x)])
+    {x, exp(x)}
 
     """
     gens = {g for g in poly.gens if symbol in g.free_symbols}
