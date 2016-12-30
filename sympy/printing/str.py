@@ -120,7 +120,7 @@ class StrPrinter(Printer):
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
-        except Exception:
+        except AttributeError:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))

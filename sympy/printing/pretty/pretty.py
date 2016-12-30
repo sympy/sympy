@@ -1980,14 +1980,14 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
 
-        except Exception:
+        except AttributeError:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))
                 pform = prettyForm(*pform.right(self._print(' in ')))
                 pform = prettyForm(*pform.right(self._print(d.set)))
                 return pform
-            except:
+            except IndexError:
                 return self._print(None)
 
     def _print_DMP(self, p):
