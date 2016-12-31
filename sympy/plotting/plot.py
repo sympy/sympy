@@ -184,7 +184,7 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend). kwargs.pop('usebackend')
-        self.backend = plot_backends[kwargs.pop('usebackend')]
+        self.backend = plot_backends[kwargs.pop('backend')]
 
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
