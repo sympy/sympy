@@ -183,8 +183,11 @@ class Plot(object):
 
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
-        # (thanks to the parent attribute of the backend). kwargs.pop('usebackend')
-        self.backend = plot_backends[kwargs.pop('backend')]
+        # (thanks to the parent attribute of the backend).
+        if 'usebackend' in kwargs:
+            self.backend = plot_backends[kwargs.pop('backend')]
+        else:
+            self.backend = DefaultBackend
 
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
@@ -926,8 +929,8 @@ class MatplotlibBackend(BaseBackend):
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
                 collection = self.ax.plot_surface(x, y, z,
-                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
-                     rstride=1, cstride=1, linewidth=0.1)
+                    cmap=getattr(self.cm, 'viridis', self.cm.jet),
+                    rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
                 #Smart bounds have to be set to False for implicit plots.
                 self.ax.spines['left'].set_smart_bounds(False)
