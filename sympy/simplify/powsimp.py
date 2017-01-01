@@ -379,18 +379,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         nc_part = []
         for term in expr.args:
             if term.is_commutative:
-                c_powers.append(list(term.as_base_exp()))
-            else:
-                # This is the logic that combines bases that are
-                # different and non-commutative, but with equal and
-                # commutative exponents: A**x*B**x == (A*B)**x.
-                if nc_part:
-                    b1, e1 = nc_part[-1].as_base_exp()
-                    b2, e2 = term.as_base_exp()
-                    if (e1 == e2 and e2.is_commutative and (not isinstance(b1, Mul) or not isinstance(b2, Mul))):
-                        nc_part[-1] = Pow(b1*b2, e1)
-                        continue
-                nc_part.append(term)
+                c_powers.append(list(term.as_base_exp()))            
 
         # Pull out numerical coefficients from exponent if assumptions allow
         # e.g., 2**(2*x) => 4**x
