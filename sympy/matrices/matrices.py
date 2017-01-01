@@ -1549,7 +1549,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             l = jc[0, 0]
             if (num < 0) == True and l == 0:
                 raise ValueError("Matrix det == 0; not invertible")
-            if num < 2:
+            if (num < 2) == True:
                 b = self.jordan_cells()[1]
                 for i in range(len(b)):
                     if (b[i]).rows > 1 and b[i][0, 0] == 0:
@@ -3177,7 +3177,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [1, 0, 2, 0],
         [0, 1, 0, 2]])
         """
-        return reduce(cls.row_join, args)
+        kls = type(args[0])
+        return reduce(kls.row_join, args)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -5049,7 +5050,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [2, 0],
         [0, 2]])
         """
-        return reduce(cls.col_join, args)
+        kls = type(args[0])
+        return reduce(kls.col_join, args)
 
     _eval_simplify = simplify
 
