@@ -7,7 +7,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -706,7 +706,7 @@ def test_sinc():
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
     assert sinc(x).rewrite(jn) == jn(0, x)
-    assert sinc(x).rewrite(sin) == Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
+    assert sinc(x).rewrite(sin) == (sin(x)/x, Ne(x, 0))
 
 
 def test_asin():

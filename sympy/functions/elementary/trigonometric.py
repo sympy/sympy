@@ -17,7 +17,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
 from sympy.core.compatibility import range
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -1794,7 +1794,7 @@ class sinc(TrigonometricFunction):
         return jn(0, arg)
 
     def _eval_rewrite_as_sin(self, arg):
-        return Piecewise((1, Eq(arg, 0)), (sin(arg)/arg, True))
+        return (sin(arg)/arg, Ne(arg, 0))
 
 
 ###############################################################################
