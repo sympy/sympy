@@ -387,7 +387,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if nc_part:
                     b1, e1 = nc_part[-1].as_base_exp()
                     b2, e2 = term.as_base_exp()
-                    if (e1 == e2 and e2.is_commutative):
+                    if (e1 == e2 and e2.is_commutative and (not isinstance(b1, Mul) or not isinstance(b2, Mul))):
                         nc_part[-1] = Pow(b1*b2, e1)
                         continue
                 nc_part.append(term)
