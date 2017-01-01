@@ -379,7 +379,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         nc_part = []
         for term in expr.args:
             if term.is_commutative:
-                c_powers.append(list(term.as_base_exp()))            
+                c_powers.append(list(term.as_base_exp()))
+            else:                
+                nc_part.append(term)
 
         # Pull out numerical coefficients from exponent if assumptions allow
         # e.g., 2**(2*x) => 4**x
