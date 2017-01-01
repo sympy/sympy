@@ -1025,6 +1025,9 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
     >>> pprint(solveset_integers(eq, [x, y]), use_unicode = False)
     {{(0, n1), (3*t_0 - 4, -t_0)} | n1, t_0 in Integers()}
 
+    >>> pprint(solveset_integers(eq, [x, y], param=None), use_unicode = False)
+    {{(-4, 0), (0, n1)} | n1 in Integers()}
+
     >>> pprint(solveset_integers(eq, [y, x]), use_unicode = False)
     {{(n1, 0), (-t_0, 3*t_0 - 4)} | n1, t_0 in Integers()}
 
@@ -1041,10 +1044,14 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
     >>> pprint(solveset_integers(x + 1), use_unicode = False)
     {(-1,)}
 
+    >>> pprint(solveset_integers(x**3 + y**3 + z**4 - 90), use_unicode = False)
+                                                  3    3    4
+    {{x, y, z} | {x, y, z} in Integers() and x  + y  + z  - 90}
+
     See Also
     ========
 
-    solveset_real(), solveset_complex
+    solveset_real, solveset_complex
 
     """
     from sympy.solvers.diophantine import diophantine, _is_int
@@ -1055,6 +1062,10 @@ def solveset_integers(f, symbols=None, param=Symbol("t", integer=True)):
     except NotImplementedError:
         free = FiniteSet(*[free_sym for free_sym in f.free_symbols])
         return ConditionSet(free, f, S.Integers)
+    except TypeError:
+        msg = '''Equation should be a polynomial with Rational coefficients
+         for integer solution.'''
+        raise TypeError(filldedent(msg))
 
     # soln in Imageset
     int_variable = S.EmptySet
