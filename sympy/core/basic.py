@@ -1557,7 +1557,6 @@ class Basic(with_metaclass(ManagedProperties)):
             return self
 
     def _eval_rewrite(self, pattern, rule, **hints):
-        from sympy.simplify.simplify import simplify
         if self.is_Atom:
             if hasattr(self, rule):
                 return getattr(self, rule)()

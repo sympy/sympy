@@ -6,8 +6,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         AccumBounds)
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow, raises
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Ne
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)

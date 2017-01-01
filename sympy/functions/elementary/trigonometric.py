@@ -16,8 +16,7 @@ from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
 from sympy.core.compatibility import range
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Ne
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

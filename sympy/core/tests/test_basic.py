@@ -194,7 +194,8 @@ def test_issue_11864():
     k = symbols('k', real=True)
     f = 1 / 2 / pi *exp(I * w * k)
     F = integrate(f, (w, -pi, pi))
-    assert F.rewrite(sin).rewrite(sinc).simplify() == Piecewise((1, Eq(pi*k, 0)), (sinc(pi*k), True))
+    soln = Piecewise((1, Eq(pi*k, 0)), (sinc(pi*k), True))
+    assert F.rewrite(sin).rewrite(sinc).simplify() == soln
 
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
