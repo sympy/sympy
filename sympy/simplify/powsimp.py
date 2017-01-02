@@ -380,7 +380,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         for term in expr.args:
             if term.is_commutative:
                 c_powers.append(list(term.as_base_exp()))
-            else:                
+            else:
                 nc_part.append(term)
 
         # Pull out numerical coefficients from exponent if assumptions allow
