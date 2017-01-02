@@ -206,6 +206,7 @@ class SubsSet(dict):
         return dict.__getitem__(self, key)
 
     def do_subs(self, e):
+        """Substitute the variables with expressions"""
         for expr, var in self.items():
             e = e.subs(var, expr)
         return e
@@ -230,6 +231,7 @@ class SubsSet(dict):
         return res, exps
 
     def copy(self):
+        """Create a shallow copy of SubsSet"""
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
         for expr, var in self.items():

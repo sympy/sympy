@@ -221,3 +221,9 @@ def test_issue_11934():
     X = FiniteRV('X', density)
     assert E(X) == 0.5
     assert P( X>= 2) == 0
+
+def test_issue_8129():
+    X = Exponential('X', 4)
+    assert P(X >= X) == 1
+    assert P(X > X) == 0
+    assert P(X > X+1) == 0

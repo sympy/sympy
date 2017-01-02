@@ -773,15 +773,23 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
+
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+
+        if a == b:
+            return 0;
 
         if a is None:
             A = 0
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                A = limit(self, x, a)
+                if (a < b) != False:
+                    A = limit(self, x, a,"+")
+                else:
+                    A = limit(self, x, a,"-")
+
                 if A is S.NaN:
                     return A
                 if isinstance(A, Limit):
@@ -792,7 +800,11 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                B = limit(self, x, b)
+                if (a < b) != False:
+                    B = limit(self, x, b,"-")
+                else:
+                    B = limit(self, x, b,"+")
+
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
@@ -1055,7 +1067,7 @@ class Expr(Basic, EvalfMixin):
         >>> (-2*x*A*B*y).args_cnc(split_1=False)
         [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
-        [set([-1, 2, x, y]), []]
+        [{-1, 2, x, y}, []]
 
         The arg is always treated as a Mul:
 
