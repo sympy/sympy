@@ -2173,13 +2173,16 @@ def devise_plan_meijer(fro, to, z):
 _meijercollection = None
 
 
-def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
+def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
+                   place=None):
     """
     Try to find an expression for the Meijer G function specified
     by the G_Function ``func``. If ``allow_hyper`` is True, then returning
     an expression in terms of hypergeometric functions is allowed.
 
-    Currently this just does slater's theorem.
+    Currently this just does Slater's theorem.
+    If expansions exist both at zero and at infinity, ``place``
+    can be set to ``0`` or ``zoo`` for the preferred choice.
     """
     global _meijercollection
     if _meijercollection is None:
@@ -2293,6 +2296,8 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
+                    if not Mod(b, 1):
+                        b = int(round(b))
                     integrand *= gamma(b - s)
                 for a in an:
                     integrand *= gamma(1 - a + s)
@@ -2304,7 +2309,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
                 # Now sum the finitely many residues:
                 # XXX This speeds up some cases - is it a good idea?
                 integrand = expand_func(integrand)
-                for r in range(lu):
+                for r in range(int(round(lu))):
                     resid = residue(integrand, s, b_ + r)
                     resid = apply_operators(resid, ops, lambda f: z*f.diff(z))
                     res -= resid
@@ -2375,6 +2380,13 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     else:
         slater2 = slater2.rewrite(rewrite or 'nonrepsmall')
 
+    if cond1 is not False and cond2 is not False:
+        # If one condition is False, there is no choice.
+        if place == 0:
+            cond2 = False
+        if place == zoo:
+            cond1 = False
+
     if not isinstance(cond1, bool):
         cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool):
@@ -2417,11 +2429,15 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     return func0(z0)
 
 
-def hyperexpand(f, allow_hyper=False, rewrite='default'):
+def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial
     simplification (that is a result different from input,
     but still containing hypergeometric functions).
+
+    If a G-function has expansions both at zero and at infinity,
+    ``place`` can be set to ``0`` or ``zoo`` to indicate the
+    preferred choice.
 
     Examples
     ========
@@ -2449,7 +2465,7 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
 
     def do_meijer(ap, bq, z):
         r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), z,
-                           allow_hyper, rewrite=rewrite)
+                   allow_hyper, rewrite=rewrite, place=place)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)

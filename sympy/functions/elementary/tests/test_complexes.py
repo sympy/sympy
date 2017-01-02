@@ -366,6 +366,7 @@ def test_Abs():
     assert Abs(I) == 1
     assert Abs(-I) == 1
     assert Abs(nan) == nan
+    assert Abs(zoo) == oo
     assert Abs(I * pi) == pi
     assert Abs(-I * pi) == pi
     assert Abs(I * x) == Abs(x)
