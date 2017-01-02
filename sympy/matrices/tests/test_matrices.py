@@ -226,6 +226,8 @@ def test_power():
 
     # test issue 11964
     raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    x = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
+    raises(ValueError, lambda:x._matrix_pow_by_jordan_blocks(2.1))
 
 
 def test_creation():

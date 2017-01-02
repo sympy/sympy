@@ -1549,11 +1549,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             l = jc[0, 0]
             if (num < 0) == True and l == 0:
                 raise ValueError("Matrix det == 0; not invertible")
-            if (num < 2) == True:
-                b = self.jordan_cells()[1]
-                for i in range(len(b)):
-                    if (b[i]).rows > 1 and b[i][0, 0] == 0:
-                        raise ValueError("Cannot be evaluated")
+            if not isinstance(num, (int, Integer, Expr)):
+                if not num - int(num) == 0:
+                    b = self.jordan_cells()[1]
+                    for i in range(len(b)):
+                        if (b[i]).rows > 1 and b[i][0, 0] == 0:
+                            raise ValueError("Cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
