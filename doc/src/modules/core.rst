@@ -392,14 +392,14 @@ Function
 
    >>> e = (f(x) + cos(x) + 2)
    >>> e.atoms(Function)
-   set([f(x), cos(x)])
+   {f(x), cos(x)}
 
    If you just want the function you defined, not SymPy functions, the
    thing to search for is AppliedUndef:
 
    >>> from sympy.core.function import AppliedUndef
    >>> e.atoms(AppliedUndef)
-   set([f(x)])
+   {f(x)}
 
 Subs
 ^^^^

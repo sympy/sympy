@@ -148,11 +148,11 @@ def pairwise_most_common(sets):
 
     >>> from sympy.simplify.cse_main import pairwise_most_common
     >>> pairwise_most_common((
-    ...     set([1,2,3]),
-    ...     set([1,3,5]),
-    ...     set([1,2,3,4,5]),
-    ...     set([1,2,3,6])))
-    [(set([1, 3, 5]), [(1, 2)]), (set([1, 2, 3]), [(0, 2), (0, 3), (2, 3)])]
+    ...     {1,2,3},
+    ...     {1,3,5},
+    ...     {1,2,3,4,5},
+    ...     {1,2,3,6}))
+    [({1, 3, 5}, [(1, 2)]), ({1, 2, 3}, [(0, 2), (0, 3), (2, 3)])]
     >>>
     """
     from sympy.utilities.iterables import subsets

@@ -50,6 +50,7 @@ from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range
 from itertools import islice, takewhile
+from sympy.series.fourier import fourier_series
 
 
 R = Rational
@@ -2819,37 +2820,22 @@ def test_X20():
     raise NotImplementedError("Symbolic Pade approximant not supported")
 
 
-@XFAIL
 def test_X21():
-    # (c48) /* Fourier series of f(x) of period 2 p over the interval [-p, p]
-    #    => - (2 p / pi) sum( (-1)^n sin(n pi x / p) / n, n = 1..infinity ) */
-    # assume(p > 0)$
-    # Time= 0 msecs
-    #
-    # (c49) fourier_series(x, x, p);
-    # /aquarius/data2/opt/local/macsyma_422/share/fourier.so being loaded.
-    # (e49)                      a  = 0
-    #                       0
-    #
-    # (e50)                     a    = 0
-    #                      %nn
-    #
-    #                          %nn
-    #                       2 (- 1)    p
-    # (e51)                  b      = - ------------
-    #                   %nn       %pi %nn
-    #
-    # Time= 4540 msecs
-    #                inf            %nn     %pi %nn x
-    #                ====       (- 1)    sin(---------)
-    #                \                p
-    #                2 p  >       -----------------------
-    #                /             %nn
-    #                ====
-    #                %nn = 1
-    # (d51)              - -----------------------------------
-    #                        %pi
-    raise NotImplementedError("Fourier series not supported")
+    """
+    Test whether `fourier_series` of x periodical on the [-p, p] interval equals
+    `- (2 p / pi) sum( (-1)^n / n sin(n pi x / p), n = 1..infinity )`.
+    """
+    p = symbols('p', positive=True)
+    n = symbols('n', positive=True, integer=True)
+    s = fourier_series(x, (x, -p, p))
+
+    # All cosine coefficients are equal to 0
+    assert s.an.formula == 0
+
+    # Check for sine coefficients
+    assert s.bn.formula.subs(s.bn.variables[0], 0) == 0
+    assert s.bn.formula.subs(s.bn.variables[0], n) == \
+        -2*p/pi * (-1)**n / n * sin(n*pi*x/p)
 
 
 @XFAIL
