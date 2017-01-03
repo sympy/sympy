@@ -256,6 +256,15 @@ class ImageSet(Set):
     >>> dom.intersect(solutions)
     {0}
 
+    >>> from sympy import pprint, Union
+    >>> n = Dummy('n')
+    >>> img1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
+    >>> img2 = ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)
+    >>> pprint(img1.union(img2), use_unicode=False)
+            3*pi
+    {n*pi + ---- | n in Integers()}
+             4
+
     See Also
     ========
     sympy.sets.sets.imageset
@@ -482,6 +491,134 @@ class ImageSet(Set):
                 return
             else:
                 return
+
+    def _union(self, other):
+        """
+
+        This function should only be used internally.
+        See Set._union for docstring
+
+        Used within the :class:`Union` class
+
+        Returns
+        =======
+        self._union(other) returns a new, joined ImageSet if self knows how
+        to join itself with other, otherwise it returns ``None``.
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.sets.fancysets import ImageSet
+        >>> from sympy import pprint, Union
+        >>> from sympy.core import Dummy, pi, S, Symbol
+        >>> n = Dummy('n')
+        >>> img1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
+        >>> img2 = ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)
+        >>> pprint(img1.union(img2), use_unicode=False)
+                3*pi
+        {n*pi + ---- | n in Integers()}
+                 4
+
+        """
+
+        from sympy.polys import Poly
+        from sympy.simplify import simplify
+        from sympy.polys.polyerrors import PolynomialError
+
+        if other is S.EmptySet:
+            return self
+
+        def val_at(imgset, i):
+            base = imgset.base_set
+            if base == S.Reals:
+                return imgset.lamda(i)
+            else:
+                iterable = iter(base)
+                # If base is not iterbale then TypeError.
+                while (i > 0):
+                    next(iterable)
+                    i = i - 1
+                return imgset.lamda(next(iterable))
+
+        def club_imageset(self_expr, other_expr, var_self, var_other, base):
+            var_coeff = self_expr.coeff(var_self)
+            if var_coeff == 0:
+                # if not able to find coeff of var_self in
+                # self_expr(some complex expr)
+                return None
+            try:
+                if self_expr.coeff(var_self) != other_expr.coeff(var_other):
+                    # TypeError: If Expression is not a polynomial with Rational
+                    # coefficients.
+                    if self.is_superset(other):
+                        return self
+                    elif other.is_superset(self):
+                        return other
+                    else:
+                        return None
+                # use one dummy variable(var_self, dummy variable of
+                # self.lamda.variables)
+                other_expr = other_expr.subs(var_other, var_self)
+                if simplify(other_expr - self_expr) % var_coeff == var_coeff / 2:
+                    # E.g.
+                    # other_expr = var_coeff*n*pi + pi + expr1
+                    # self_expr = var_coeff*n*pi  + exp1
+                    # var_coeff = 2
+                    # other_expr - self_expr == (var_coeff/2)*pi*n
+                    # So we can combine them and can write
+                    # `(var_coeff/2)*pi*n + expr1`, this can generate other
+                    # values of `other_expr` and `self_expr`.
+                    other_expr = (var_coeff / 2) * var_self + val_at(self, 0)
+                    return ImageSet(Lambda(var_self, other_expr), base)
+                elif simplify(other_expr - self_expr) % var_coeff == 0:
+                    # E.g.
+                    # other_expr = (var_coeff*n*pi + expr1)
+                    # self_expr = (var_coeff*n*pi  + var_coeff*pi + exp1)
+                    # var_coeff = 2
+                    # other_expr - self_expr == 0
+                    # So we can combine them and can write
+                    # `var_coeff*pi*n + expr1`, this can generate other
+                    # values of `other_expr` and `self_expr`.
+                    other_expr = var_coeff * var_self + val_at(self, 0)
+                    return ImageSet(Lambda(var_self, other_expr), base)
+                # other ways can be added here.
+                else:
+                    return None
+            except TypeError:
+                return None
+        # end of def club_imageset()
+
+        if isinstance(other, ImageSet):
+            base = other.base_set
+            if base != self.base_set:
+                # Not implemented for different base
+                return None
+            # use one dummy variable var_self
+            var_self = self.lamda.variables
+            var_other = other.lamda.variables
+            if len(var_self) > 1 or len(var_other) > 1:
+                # Not Implemented for multiple lambda variables.
+                return None
+            var_self, var_other = var_self[0], var_other[0]
+
+            # Extracting expr
+            self_expr, other_expr = self.lamda.expr, other.lamda.expr
+            try:
+                linear = Poly(self_expr, var_self).is_linear and \
+                    Poly(other_expr, var_other).is_linear
+                if not linear:
+                    # Not Implemented for non linear ImageSet.
+                    return None
+            except PolynomialError:
+                return None
+            ans = club_imageset(self_expr, other_expr,
+                             var_self, var_other, base)
+            # One can try other ways to club `self` and `other` ImageSet.Add
+            # the code here.
+            return ans
+        else:
+            return None
 
 
 class Range(Set):

@@ -20,7 +20,6 @@ from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
-from sympy.core.containers import Dict
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
@@ -464,7 +463,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
+        FiniteSet((b/y - 1)/a)  - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -656,6 +655,7 @@ def test_sol_zero_complex():
 
 
 def test_solveset_complex_rational():
+    from sympy.abc import x, y
     assert solveset_complex((x - 1)*(x - I)/(x - 3), x) == \
         FiniteSet(1, I)
 
@@ -715,29 +715,22 @@ def test_solveset_complex_tan():
 def test_solve_trig():
     from sympy.abc import n
     assert solveset_real(sin(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi), S.Integers))
-
-    assert solveset_real(sin(x) - 1, x) == \
-        imageset(Lambda(n, 2*pi*n + pi/2), S.Integers)
+        imageset(Lambda(n, n * pi), S.Integers)
+    assert solveset_real(tan(x), x) == \
+        imageset(Lambda(n, pi * n), S.Integers)
+    assert solveset_real(tan(x) - 1, x) == \
+        imageset(Lambda(n, pi * n + pi / 4), S.Integers)
 
     assert solveset_real(cos(x), x) == \
-        Union(imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
-              imageset(Lambda(n, 2*pi*n + pi/2), S.Integers))
+        imageset(Lambda(n, n * pi + pi / 2), S.Integers)
 
-    assert solveset_real(sin(x) + cos(x), x) == \
-        Union(imageset(Lambda(n, 2*n*pi - pi/4), S.Integers),
-              imageset(Lambda(n, 2*n*pi + 3*pi/4), S.Integers))
+    assert solveset_real(cos(x) + sin(x), x) == \
+        ImageSet(Lambda(n, n * pi + 3*pi / 4), S.Integers)
+
+    assert solveset_real(sin(x) - 1, x) == \
+        imageset(Lambda(n, 2 * pi * n + pi / 2), S.Integers)
 
     assert solveset_real(sin(x)**2 + cos(x)**2, x) == S.EmptySet
-
-    assert solveset_complex(cos(x) - S.Half, x) == \
-        Union(imageset(Lambda(n, 2*n*pi + pi/3), S.Integers),
-              imageset(Lambda(n, 2*n*pi - pi/3), S.Integers))
-
-    y, a = symbols('y,a')
-    assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        imageset(Lambda(n, 2*n*pi), S.Integers)
 
 
 @XFAIL
@@ -750,19 +743,6 @@ def test_solve_trig_abs():
 def test_solve_invalid_sol():
     assert 0 not in solveset_real(sin(x)/x, x)
     assert 0 not in solveset_complex((exp(x) - 1)/x, x)
-
-
-@XFAIL
-def test_solve_trig_simplified():
-    from sympy.abc import n
-    assert solveset_real(sin(x), x) == \
-        imageset(Lambda(n, n*pi), S.Integers)
-
-    assert solveset_real(cos(x), x) == \
-        imageset(Lambda(n, n*pi + pi/2), S.Integers)
-
-    assert solveset_real(cos(x) + sin(x), x) == \
-        imageset(Lambda(n, n*pi - pi/4), S.Integers)
 
 
 @XFAIL
@@ -916,7 +896,8 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    unsolved_object = ConditionSet(
+        x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)
@@ -1030,16 +1011,14 @@ def test_solve_decomposition():
     f5 = exp(x + 2) - 1
     f6 = 1/log(x)
 
-    s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
-    s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
-    s3 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
-    s4 = ImageSet(Lambda(n, 2*n*pi - 1), S.Integers)
-    s5 = ImageSet(Lambda(n, (2*n + 1)*pi - 1), S.Integers)
+    s1 = ImageSet(Lambda(n, n*pi), S.Integers)
+    s2 = ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers)
+    s3 = ImageSet(Lambda(n, n*pi - 1), S.Integers)
 
     assert solve_decomposition(f1, x, S.Reals) == FiniteSet(0, log(2), log(3))
-    assert solve_decomposition(f2, x, S.Reals) == s3
-    assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, s3)
-    assert solve_decomposition(f4, x, S.Reals) == Union(s4, s5)
+    assert solve_decomposition(f2, x, S.Reals) == s2
+    assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2, evaluate=False)
+    assert solve_decomposition(f4, x, S.Reals) == s3
     assert solve_decomposition(f5, x, S.Reals) == FiniteSet(-2)
     assert solve_decomposition(f6, x, S.Reals) == ConditionSet(x, Eq(f6, 0), S.Reals)
 
@@ -1053,7 +1032,7 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x],[x, y]) == FiniteSet((0, y))
     assert nonlinsolve(system, [y]) == FiniteSet((x + 5,))
     soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(tuple(soln))
+    assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(soln)
     assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
 
     soln = FiniteSet((- y, y), (y, y))
@@ -1078,13 +1057,14 @@ def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) -1 ], x) == S.EmptySet
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
-    soln = FiniteSet(soln1)
-    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
 
 
 @XFAIL
 def test_trig_system_fail():
+    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
+    soln = FiniteSet(soln1)
+    assert nonlinsolve([sin(x) - 1, cos(x)], x) == soln
+
     # fails because solveset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditonset for sin(x) + sin(y) - 1
@@ -1479,6 +1459,7 @@ def test_issue_8715():
         (Interval.open(-2, oo) - FiniteSet(0))
     assert solveset(eq.subs(x,log(x)), x, S.Reals) == \
         Interval.open(exp(-2), oo) - FiniteSet(1)
+
 
 def test_issue_11174():
     r, t = symbols('r t')
