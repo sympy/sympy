@@ -860,10 +860,20 @@ class Derivative(Expr):
 
     Derivative wrt non-Symbols:
 
-    This class don't allows derivatives wrt non-Symbols that have _diff_wrt
+    This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
     Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
     while the differentiation is performed.
+
+    Note that this may seem strange, that Derivative allows things like
+    f(g(x)).diff(g(x)).  The motivation for allowing this syntax is to make
+    it easier to work with variational calculus
+    (i.e., the Euler-Lagrange method).The best way to understand this is that
+    the action of derivative with respect to a non-Symbol is defined by the
+    above description:  the object is substituted for a Symbol and the
+    derivative is taken with respect to that.  This action is only allowed for
+    objects for which this can be done unambiguously, for example undefined
+    Function and derivatives of undefined functions.
 
         >>> from sympy import cos, sin, sqrt
         >>> from sympy.abc import x
@@ -872,7 +882,7 @@ class Derivative(Expr):
         ...
         ValueError: Can't calculate 1st derivative wrt cos(x).
 
-    However this is the wrong way to think of this.  Think
+    This is the wrong way to think of this.  Think
     of it instead as if we have something like this::
 
         >>> from sympy.abc import c
