@@ -232,7 +232,9 @@ To cite SymPy in publications use
     symbolic computing in Python. *PeerJ Computer Science* 3:e103
     https://doi.org/10.7717/peerj-cs.103
 
-A BibTeX entry for LaTeX users is::
+A BibTeX entry for LaTeX users is
+
+.. code-block:: none
 
     @article{10.7717/peerj-cs.103,
      title = {SymPy: symbolic computing in Python},

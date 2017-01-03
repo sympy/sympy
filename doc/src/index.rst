@@ -27,4 +27,5 @@ Contents:
    wiki.rst
    outreach.rst
    aboutus.rst
+   citing.rst
    special_topics/index.rst
