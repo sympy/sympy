@@ -64,11 +64,16 @@ Interface
 ^^^^^^^^^
 
 .. autofunction:: P
+.. autoclass:: Probability
 .. autofunction:: E
+.. autoclass:: Expectation
 .. autofunction:: density
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
+.. autoclass:: Variance
+.. autofunction:: covariance
+.. autoclass:: Covariance
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter

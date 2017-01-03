@@ -1,8 +1,8 @@
-from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq
-from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
-from sympy import Function, Rational, Integer, Lambda
+from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
+    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda)
 
+from sympy.codegen import For, Assignment
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -658,10 +658,20 @@ def test_Matrix_printing():
     assert fcode(m, M) == (
         "      M(1, 1) = sin(q(2, 1))\n"
         "      M(2, 1) = q(2, 1) + q(3, 1)\n"
-        "      M(3, 1) = 2*q(5, 1)*1.0/q(2, 1)\n"
+        "      M(3, 1) = 2*q(5, 1)/q(2, 1)\n"
         "      M(1, 2) = 0\n"
         "      M(2, 2) = q(4, 1)\n"
-        "      M(3, 2) = 4 + sqrt(q(1, 1))\n"
+        "      M(3, 2) = sqrt(q(1, 1)) + 4\n"
         "      M(1, 3) = cos(q(3, 1))\n"
         "      M(2, 3) = 5\n"
         "      M(3, 3) = 0")
+
+
+def test_fcode_For():
+    x, y = symbols('x y')
+
+    f = For(x, Range(0, 10, 2), [Assignment(y, x * y)])
+    sol = fcode(f)
+    assert sol == ("      do x = 0, 10, 2\n"
+                   "         y = x*y\n"
+                   "      end do")

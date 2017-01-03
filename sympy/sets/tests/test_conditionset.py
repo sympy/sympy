@@ -1,5 +1,5 @@
-from sympy.sets import (ConditionSet, Intersection)
-from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval)
+from sympy.sets import (ConditionSet, Intersection, FiniteSet, EmptySet, Union)
+from sympy import (Symbol, Eq, S, Abs, sin, pi, Lambda, Interval, And, Mod)
 
 x = Symbol('x')
 
@@ -24,3 +24,13 @@ def test_CondSet_intersect():
 def test_issue_9849():
     assert ConditionSet(x, Eq(x, x), S.Naturals) == S.Naturals
     assert ConditionSet(x, Eq(Abs(sin(x)), -1), S.Naturals) == S.EmptySet
+
+def test_simplified_FiniteSet_in_CondSet():
+    assert ConditionSet(x, And(x < 1, x > -3), FiniteSet(0, 1, 2)) == FiniteSet(0)
+    assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet()
+    assert ConditionSet(x, And(x < -3), EmptySet()) == EmptySet()
+    y = Symbol('y')
+    assert (ConditionSet(x, And(x > 0), FiniteSet(-1, 0, 1, y)) ==
+        Union(FiniteSet(1), ConditionSet(x, And(x > 0), FiniteSet(y))))
+    assert (ConditionSet(x, Eq(Mod(x, 3), 1), FiniteSet(1, 4, 2, y)) ==
+        Union(FiniteSet(1, 4), ConditionSet(x, Eq(Mod(x, 3), 1), FiniteSet(y))))

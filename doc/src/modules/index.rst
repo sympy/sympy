@@ -26,6 +26,7 @@ access any SymPy module, or use this contens:
    numeric-computation.rst
    functions/index.rst
    geometry/index.rst
+   holonomic/index.rst
    integrals/integrals.rst
    liealgebras/index.rst
    logic.rst

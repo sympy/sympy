@@ -174,23 +174,23 @@ formulae from the ones we give here. It seemed best to keep the theorems as
 simple as possible, since they are very complicated anyway.):
 
 1. .. math:: \int_0^\infty
-    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
-                                               b_1, \dots, b_q \end{matrix}
+    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \cdots, a_p \\
+                                               b_1, \cdots, b_q \end{matrix}
             \right| \eta x \right) \mathrm{d}x =
      \frac{\prod_{j=1}^m \Gamma(b_j + 1) \prod_{j=1}^n \Gamma(-a_j)}{\eta
            \prod_{j=m+1}^q \Gamma(-b_j) \prod_{j=n+1}^p \Gamma(a_j + 1)}
 
 2. .. math:: \int_0^\infty
-    G_{u, v}^{s, t} \left.\left(\begin{matrix} c_1, \dots, c_u \\
-                                               d_1, \dots, d_v \end{matrix}
+    G_{u, v}^{s, t} \left.\left(\begin{matrix} c_1, \cdots, c_u \\
+                                               d_1, \cdots, d_v \end{matrix}
             \right| \sigma x \right)
-    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
-                                               b_1, \dots, b_q \end{matrix}
+    G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \cdots, a_p \\
+                                               b_1, \cdots, b_q \end{matrix}
             \right| \omega x \right)
     \mathrm{d}x =
     G_{v+p, u+q}^{m+t, n+s} \left.\left(
-          \begin{matrix} a_1, \dots, a_n, -d_1, \dots, -d_v, a_{n+1}, \dots, a_p \\
-                         b_1, \dots, b_m, -c_1, \dots, -c_u, b_{m+1}, \dots, b_q
+          \begin{matrix} a_1, \cdots, a_n, -d_1, \cdots, -d_v, a_{n+1}, \cdots, a_p \\
+                         b_1, \cdots, b_m, -c_1, \cdots, -c_u, b_{m+1}, \cdots, b_q
           \end{matrix}
             \right| \frac{\omega}{\sigma} \right)
 
@@ -210,11 +210,11 @@ of indices `m, n, p, q` and of indices `n, m, q, p` can be related easily
 .. math:: \xi = m + n - p \\
           \delta = m + n - \frac{p + q}{2}
 
-.. math:: C_3: -\Re(b_j) < 1 \text{ for } j=1, \dots, m \\
-               0 < -\Re(a_j) \text{ for } j=1, \dots, n
+.. math:: C_3: -\Re(b_j) < 1 \text{ for } j=1, \ldots, m \\
+               0 < -\Re(a_j) \text{ for } j=1, \ldots, n
 
-.. math:: C_3^*: -\Re(b_j) < 1 \text{ for } j=1, \dots, q \\
-               0 < -\Re(a_j) \text{ for } j=1, \dots, p
+.. math:: C_3^*: -\Re(b_j) < 1 \text{ for } j=1, \ldots, q \\
+               0 < -\Re(a_j) \text{ for } j=1, \ldots, p
 
 .. math:: C_4: -\Re(\delta) + \frac{q + 1 - p}{2} > q - p
 
@@ -247,7 +247,7 @@ These are the conditions "at infinity":
 
    .. math::
       C = 1 \le n \wedge q = p \wedge |\arg(\eta)| \ne (\delta - 2k)\pi
-             \text{ for } k = 0, 1, \dots
+             \text{ for } k = 0, 1, \ldots
                \left\lceil \frac{\delta}{2} \right\rceil.
 2. .. math:: n = 0 \wedge p + 1 \le m \wedge |\arg(\eta)| < \delta \pi
 3. .. math:: (p < q \wedge 1 \le m \wedge \delta > 0 \wedge |\arg(\eta)| = \delta \pi)
@@ -290,21 +290,21 @@ We introduce the following notation:
 
 The following conditions will be helpful:
 
-.. math:: C_1: (a_i - b_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \dots, n, j = 1, \dots, m) \\
+.. math:: C_1: (a_i - b_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \ldots, n, j = 1, \ldots, m) \\
                \wedge
-               (c_i - d_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \dots, t, j = 1, \dots, s)
+               (c_i - d_j \notin \mathbb{Z}_{>0} \text{ for } i = 1, \ldots, t, j = 1, \ldots, s)
 .. math:: C_2:
-    \Re(1 + b_i + d_j) > 0 \text{ for } i = 1, \dots, m, j = 1, \dots, s
+    \Re(1 + b_i + d_j) > 0 \text{ for } i = 1, \ldots, m, j = 1, \ldots, s
 .. math:: C_3:
-    \Re(a_i + c_j) < 1 \text{ for } i = 1, \dots, n, j = 1, \dots, t
+    \Re(a_i + c_j) < 1 \text{ for } i = 1, \ldots, n, j = 1, \ldots, t
 .. math:: C_4:
-    (p - q)\Re(c_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \dots, t
+    (p - q)\Re(c_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \ldots, t
 .. math:: C_5:
-    (p - q)\Re(1 + d_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \dots, s
+    (p - q)\Re(1 + d_i) - \Re(\mu) > -\frac{3}{2} \text{ for } i=1, \ldots, s
 .. math:: C_6:
-    (u - v)\Re(a_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, n
+    (u - v)\Re(a_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \ldots, n
 .. math:: C_7:
-    (u - v)\Re(1 + b_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \dots, m
+    (u - v)\Re(1 + b_i) - \Re(\rho) > -\frac{3}{2} \text{ for } i=1, \ldots, m
 .. math:: C_8:
     0 < \lvert{\phi}\rvert + 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)
 .. math:: C_9:

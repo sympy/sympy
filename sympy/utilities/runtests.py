@@ -262,13 +262,17 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or PY3):
+        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
+            # Only run Sage tests if 'bin/test' is present (it is missing from
+            # our release because everything in the 'bin' directory gets
+            # installed).
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -489,6 +493,7 @@ def _test(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     test_files = t.get_test_files('sympy')
 
@@ -615,6 +620,7 @@ def _doctest(*paths, **kwargs):
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
     ])
 
     if import_module('numpy') is None:
@@ -673,6 +679,7 @@ def _doctest(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -1070,22 +1077,22 @@ class SymPyTests(object):
             clear_cache()
             self._count += 1
             random.seed(self._seed)
-            pytestfile = ""
-            if "XFAIL" in gl:
-                pytestfile = inspect.getsourcefile(gl["XFAIL"])
-            pytestfile2 = ""
-            if "slow" in gl:
-                pytestfile2 = inspect.getsourcefile(gl["slow"])
             disabled = gl.get("disabled", False)
             if not disabled:
                 # we need to filter only those functions that begin with 'test_'
-                # that are defined in the testing file or in the file where
-                # is defined the XFAIL decorator
-                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                    (inspect.getsourcefile(gl[f]) == filename or
-                     inspect.getsourcefile(gl[f]) == pytestfile or
-                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                # We have to be careful about decorated functions. As long as
+                # the decorator uses functools.wraps, we can detect it.
+                funcs = []
+                for f in gl:
+                    if (f.startswith("test_") and (inspect.isfunction(gl[f])
+                        or inspect.ismethod(gl[f]))):
+                        func = gl[f]
+                        # Handle multiple decorators
+                        while hasattr(func, '__wrapped__'):
+                            func = func.__wrapped__
+
+                        if inspect.getsourcefile(func) == filename:
+                            funcs.append(gl[f])
                 if slow:
                     funcs = [f for f in funcs if getattr(f, '_slow', False)]
                 # Sorting of XFAILed functions isn't fixed yet :-(

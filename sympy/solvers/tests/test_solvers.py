@@ -11,7 +11,7 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1046,10 +1046,12 @@ def test_unrad1():
         sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
         - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
     assert check(unrad(eq),
-        (s**7 - sqrt(3)*s**7*I + 102*12**(S(1)/3)*s**5 +
-        102*2**(S(2)/3)*3**(S(5)/6)*s**5*I + 1620*s**4 - 1620*sqrt(3)*s**4*I -
-        13872*18**(S(1)/3)*s**3 + 471648*s - 471648*sqrt(3)*s*I, [s, s**3 - 306*x
-        - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) + 810]))
+        (-s*(-s**6 + sqrt(3)*s**6*I - 153*2**(S(2)/3)*3**(S(1)/3)*s**4 +
+        51*12**(S(1)/3)*s**4 - 102*2**(S(2)/3)*3**(S(5)/6)*s**4*I - 1620*s**3 +
+        1620*sqrt(3)*s**3*I + 13872*18**(S(1)/3)*s**2 - 471648 +
+        471648*sqrt(3)*I), [s, s**3 - 306*x - sqrt(3)*sqrt(31212*x**2 -
+        165240*x + 61484) + 810]))
+
     assert solve(eq) == [] # not other code errors
 
 
@@ -1068,6 +1070,14 @@ def test_unrad_fail():
     assert solve(root(x**3 - 3*x**2, 3) + 1 - x) == [S(1)/3]
     assert solve(root(x + 1, 3) + root(x**2 - 2, 5) + 1) == [
         -1, -1 + CRootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
+
+
+def test_checksol():
+    x, y, r, t = symbols('x, y, r, t')
+    eq = r - x**2 - y**2
+    dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
+                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
+    assert checksol(eq, dict_var_soln) == True
 
 
 def test__invert():
@@ -1267,6 +1277,7 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
+    assert check_assumptions(1, x) == True
 
 
 def test_issue_6056():
@@ -1778,7 +1789,6 @@ def test_issue_2840_8155():
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
-
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]

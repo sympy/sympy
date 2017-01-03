@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
-__all__ = ['KanesMethod']
-
-from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.core.backend import zeros, Matrix, diff, eye
+from sympy import solve_linear_system_LU
 from sympy.core.compatibility import range
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
@@ -14,6 +13,8 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
+
+__all__ = ['KanesMethod']
 
 
 class KanesMethod(object):
@@ -78,10 +79,10 @@ class KanesMethod(object):
     assigned to it.
     Finally, a list of all bodies and particles needs to be created.
 
-    >>> kd = [qd - u]
-    >>> FL = [(P, (-k * q - c * u) * N.x)]
-    >>> pa = Particle('pa', P, m)
-    >>> BL = [pa]
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle('pa', P, m)
+        >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the KanesMethod object and supply an inertial frame,
@@ -91,13 +92,13 @@ class KanesMethod(object):
     here (see the online documentation).
     Next we form FR* and FR to complete: Fr + Fr* = 0.
     We have the equations of motion at this point.
-    It makes sense to rearrnge them though, so we calculate the mass matrix and
+    It makes sense to rearrange them though, so we calculate the mass matrix and
     the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
     the mass matrix, udot is a vector of the time derivatives of the
     generalized speeds, and forcing is a vector representing "forcing" terms.
 
         >>> KM = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=kd)
-        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> (fr, frstar) = KM.kanes_equations(BL, FL)
         >>> MM = KM.mass_matrix
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
@@ -267,9 +268,9 @@ class KanesMethod(object):
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
-
-        if not iterable(fl):
-            raise TypeError('Force pairs must be supplied in an iterable.')
+        if fl != None and (len(fl) == 0 or not iterable(fl)):
+            raise ValueError('Force pairs must be supplied in an '
+                'non-empty iterable or None.')
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
@@ -486,7 +487,7 @@ class KanesMethod(object):
 
         The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
-        dictionaries. The values may be numberic or symbolic. The more values
+        dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         As part of the deprecation cycle, the new method will not be used unless
@@ -684,7 +685,7 @@ class KanesMethod(object):
             f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
-    def kanes_equations(self, FL, BL):
+    def kanes_equations(self, bodies, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
@@ -697,20 +698,31 @@ class KanesMethod(object):
         Parameters
         ==========
 
-        FL : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+        bodies : iterable
+            An iterable of all RigidBody's and Particle's in the system.
+            A system must have at least one body.
+        loads : iterable
+            Takes in an iterable of (Particle, Vector) or (ReferenceFrame, Vector)
             tuples which represent the force at a point or torque on a frame.
-        BL : list
-            A list of all RigidBody's and Particle's in the system.
-
+            Must be either a non-empty iterable of tuples or None which corresponds
+            to a system with no constraints.
         """
+        if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
+            # This switches the order if they use the old way.
+            bodies, loads = loads, bodies
+            SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '
+                    'that the loads (forces and torques) are now the second argument '
+                    'and is optional with None being the default.',
+                    feature='The kanes_equation() argument order',
+                    useinstead='switched argument order to update your code, For example: '
+                    'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
+                    issue=10945, deprecated_since_version="1.1").warn()
 
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-
-        fr = self._form_fr(FL)
-        frstar = self._form_frstar(BL)
+        fr = self._form_fr(loads)
+        frstar = self._form_frstar(bodies)
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
@@ -722,38 +734,44 @@ class KanesMethod(object):
                         self._f_nh))
             km._qdot_u_map = self._qdot_u_map
             self._km = km
-            fraux = km._form_fr(FL)
-            frstaraux = km._form_frstar(BL)
+            fraux = km._form_fr(loads)
+            frstaraux = km._form_frstar(bodies)
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
         return (self._fr, self._frstar)
 
     def rhs(self, inv_method=None):
-        """ Returns the system's equations of motion in first order form.
+        """Returns the system's equations of motion in first order form. The
+        output is the right hand side of::
 
-        The output of this will be the right hand side of:
+           x' = |q'| =: f(q, u, r, p, t)
+                |u'|
 
-        [qdot, udot].T = f(q, u, t)
-
-        Or, the equations of motion in first order form.  The right hand side
-        is what is needed by most numerical ODE integrators.
+        The right hand side is what is needed by most numerical ODE
+        integrators.
 
         Parameters
         ==========
-
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
+        rhs = zeros(len(self.q) + len(self.u), c=1)
+        kdes = self.kindiffdict()
+        for i, q_i in enumerate(self.q):
+            rhs[i] = kdes[q_i.diff()]
+
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
+            rhs[len(self.q):, 0] = self.mass_matrix.LUsolve(self.forcing)
         else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
+            rhs[len(self.q):, 0] = (self.mass_matrix.inv(inv_method,
+                                                         try_block_diag=True) *
+                                    self.forcing)
+
+        return rhs
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to u."""

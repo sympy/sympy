@@ -84,9 +84,30 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    _op_priority = 11  # higher than Expr
+
     @property
     def canonical(self):
         return self
+
+    def _noop(self, other=None):
+        raise TypeError('BooleanAtom not allowed in this context.')
+
+    __add__ = _noop
+    __radd__ = _noop
+    __sub__ = _noop
+    __rsub__ = _noop
+    __mul__ = _noop
+    __rmul__ = _noop
+    __pow__ = _noop
+    __rpow__ = _noop
+    __rdiv__ = _noop
+    __truediv__ = _noop
+    __div__ = _noop
+    __rtruediv__ = _noop
+    __mod__ = _noop
+    __rmod__ = _noop
+    _eval_power = _noop
 
 
 class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
@@ -908,6 +929,11 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+        else:
+            if b == True and c == False:
+                return a
+            if b == False and c == True:
+                return Not(a)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
@@ -935,9 +961,9 @@ def conjuncts(expr):
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> conjuncts(A | B)
-    frozenset([Or(A, B)])
+    frozenset({Or(A, B)})
 
     """
     return And.make_args(expr)
@@ -952,9 +978,9 @@ def disjuncts(expr):
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> disjuncts(A & B)
-    frozenset([And(A, B)])
+    frozenset({And(A, B)})
 
     """
     return Or.make_args(expr)
@@ -1296,7 +1322,7 @@ def to_int_repr(clauses, symbols):
 
     >>> from sympy.logic.boolalg import to_int_repr
     >>> from sympy.abc import x, y
-    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
     True
 
     """
@@ -1656,7 +1682,7 @@ def _find_predicates(expr):
 
     """
     if not isinstance(expr, BooleanFunction):
-        return set([expr])
+        return {expr}
     return set().union(*(_find_predicates(i) for i in expr.args))
 
 

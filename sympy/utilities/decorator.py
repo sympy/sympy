@@ -85,10 +85,10 @@ def conserve_mpmath_dps(func):
     import functools
     import mpmath
 
-    def func_wrapper():
+    def func_wrapper(*args, **kwargs):
         dps = mpmath.mp.dps
         try:
-            func()
+            return func(*args, **kwargs)
         finally:
             mpmath.mp.dps = dps
 
