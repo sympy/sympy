@@ -20,6 +20,7 @@ from sympy.sets import (FiniteSet, ConditionSet, Complement, ImageSet)
 from sympy.utilities.pytest import XFAIL, raises, skip, slow, SKIP
 from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
+from sympy.core.containers import Dict
 
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
@@ -463,7 +464,7 @@ def test_solve_polynomial_symbolic_param():
 
     # issue 4507
     assert solveset_complex(y - b/(1 + a*x), x) == \
-        FiniteSet((b/y - 1)/a)  - FiniteSet(-1/a)
+        FiniteSet((b/y - 1)/a) - FiniteSet(-1/a)
 
     # issue 4508
     assert solveset_complex(y - b*x/(a + x), x) == \
@@ -655,7 +656,6 @@ def test_sol_zero_complex():
 
 
 def test_solveset_complex_rational():
-    from sympy.abc import x, y
     assert solveset_complex((x - 1)*(x - I)/(x - 3), x) == \
         FiniteSet(1, I)
 
@@ -896,8 +896,7 @@ def test_improve_coverage():
     x = Symbol('x')
     y = exp(x+1/x**2)
     solution = solveset(y**2+y, x, S.Reals)
-    unsolved_object = ConditionSet(
-        x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
+    unsolved_object = ConditionSet(x, Eq((exp((x**3 + 1)/x**2) + 1)*exp((x**3 + 1)/x**2), 0), S.Reals)
     assert solution == unsolved_object
 
     assert _has_rational_power(sin(x)*exp(x) + 1, x) == (False, S.One)

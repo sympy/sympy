@@ -1156,8 +1156,8 @@ def test_union_imageset():
     img2 = ImageSet(Lambda(n, n * pi + pi / 6), S.Integers)
     img3 = ImageSet(Lambda(n, n * pi + pi / 3), S.Integers)
     img4 = ImageSet(Lambda(n, n * pi + 5 * pi / 6), S.Integers)
-    uni1 = ImageSet(Lambda(n, pi * n / 2 + pi / 6), S.Integers)
-    uni2 = ImageSet(Lambda(n, pi * n / 2 + pi / 3), S.Integers)
+    uni1 = ImageSet(Lambda(n, pi * n / 2 + 2 * pi / 3), S.Integers)
+    uni2 = ImageSet(Lambda(n, pi * n / 2 + 5 * pi / 6), S.Integers)
     # One can check the answer using following lines
     #  for i in range(0, 10):
     # ....:     print img1.lamda(i) in uni1
