@@ -803,11 +803,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     The solution is mostly unaffected by assumptions on the symbol,
     but there may be some slight difference:
 
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
+    >>> pprint(solveset_real(sin(x)/x,x), use_unicode=False)
     {n*pi | n in Integers()} \ {0}
 
     >>> p = Symbol('p', positive=True)
-    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
+    >>> pprint(solveset_real(sin(p)/p, p), use_unicode=False)
     {n*pi | n in Integers()}
 
     * Inequalities can be solved over the real domain only. Use of a complex
