@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds)
+    AccumBounds, UnevaluatedExpr)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -327,6 +327,15 @@ def test_Poly():
     assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+    assert str(Poly(2*x + x**5, x)) == "Poly(x**5 + 2*x, x, domain='ZZ')"
+
+    assert str(Poly(3**(2*x), 3**x)) == "Poly((3**x)**2, 3**x, domain='ZZ')"
+    assert str(Poly((x**2)**x)) == "Poly(((x**2)**x), (x**2)**x, domain='ZZ')"
+
+    assert str(Poly((x + y)**3, (x + y), expand=False)
+                ) == "Poly((x + y)**3, x + y, domain='ZZ')"
+    assert str(Poly((x - 1)**2, (x - 1), expand=False)
+                ) == "Poly((x - 1)**2, x - 1, domain='ZZ')"
 
     assert str(
         Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
@@ -527,9 +536,15 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1, 2, 3])) == 'set([1, 2, 3])'
+    assert sstr(set([1])) == '{1}'
+    assert sstr(frozenset([1])) == 'frozenset({1})'
+    assert sstr(set([1, 2, 3])) == '{1, 2, 3}'
+    assert sstr(frozenset([1, 2, 3])) == 'frozenset({1, 2, 3})'
+
     assert sstr(
-        set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
+        set([1, x, x**2, x**3, x**4])) == '{1, x, x**2, x**3, x**4}'
+    assert sstr(
+        frozenset([1, x, x**2, x**3, x**4])) == 'frozenset({1, x, x**2, x**3, x**4})'
 
 
 def test_SparseMatrix():
@@ -729,3 +744,9 @@ def test_Complement():
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
            'SymmetricDifference([2, 3], [3, 4])'
+
+
+def test_UnevaluatedExpr():
+    a, b = symbols("a b")
+    expr1 = 2*UnevaluatedExpr(a+b)
+    assert str(expr1) == "2*(a + b)"

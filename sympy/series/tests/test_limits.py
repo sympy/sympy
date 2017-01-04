@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac)
+    binomial, simplify, frac, Float)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -456,12 +456,17 @@ def test_issue_8730():
     assert limit(subfactorial(x), x, oo) == oo
 
 
+def test_issue_10801():
+    # make sure limits work with binomial
+    assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
+
+
 def test_issue_9205():
     x, y, a = symbols('x, y, a')
-    assert Limit(x, x, a).free_symbols == set([a])
-    assert Limit(x, x, a, '-').free_symbols == set([a])
-    assert Limit(x + y, x + y, a).free_symbols == set([a])
-    assert Limit(-x**2 + y, x**2, a).free_symbols == set([y, a])
+    assert Limit(x, x, a).free_symbols == {a}
+    assert Limit(x, x, a, '-').free_symbols == {a}
+    assert Limit(x + y, x + y, a).free_symbols == {a}
+    assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
 def test_limit_seq():
@@ -471,3 +476,11 @@ def test_limit_seq():
             S(3) / 4)
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
+
+def test_issue_11879():
+    assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
+
+def test_limit_with_Float():
+    k = symbols("k")
+    assert limit(1.0 ** k, k, oo) == 1
+    assert limit(0.3*1.0**k, k, oo) == Float(0.3)

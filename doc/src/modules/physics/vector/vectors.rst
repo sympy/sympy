@@ -629,7 +629,7 @@ relationship between the two frames has been defined. ::
 
   >>> A = ReferenceFrame('A')
   >>> A.x + N.x
-  A.x + N.x
+  N.x + A.x
 
 If we want to do vector multiplication, first we have to define and
 orientation. The ``orient`` method of ``ReferenceFrame`` provides that
@@ -740,7 +740,7 @@ provided in. This remains true for vectors with components made of basis
 vectors from multiple frames: ::
 
   >>> (B.y*q2 + B.z + q2*N.x).diff(q2, N)
-  B.y + N.x
+  N.x + B.y
 
 
 How Vectors are Coded

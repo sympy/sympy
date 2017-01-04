@@ -49,12 +49,6 @@ measure numbers, and have unsorted output from the ``mprint``, ``mpprint``, and
 those functions, as the sorting can increase printing time from seconds to
 minutes.
 
-Differentiating
----------------
-Differentiation of very large expressions can take some time in SymPy; it is
-possible for large expressions to take minutes for the derivative to be
-evaluated. This will most commonly come up in linearization.
-
 Substitution
 ------------
 There are two common issues with substitution in mechanics:

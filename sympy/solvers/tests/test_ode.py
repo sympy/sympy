@@ -879,6 +879,9 @@ def test_classify_sysode():
     -12*x(t) + 12*y(t) + 5*Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq16) == sol16
 
+    # issue 8193: funcs parameter for classify_sysode has to actually work
+    assert classify_sysode(eq1, funcs=[x(t), y(t)]) == sol1
+
 
 def test_ode_order():
     f = Function('f')
@@ -2391,7 +2394,7 @@ def test_heuristic1():
     i4 = infinitesimals(eq4, hint='abaco1_simple')
     assert i4 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
         {eta(x, f(x)): 0,
-        xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 + 2*a4*x**4)}]
+        xi(x, f(x)): sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4)}]
     i5 = infinitesimals(eq5, hint='abaco1_simple')
     assert i5 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
 
@@ -2666,3 +2669,20 @@ def test_C1_function_9239():
     sol = [Eq(C1(t), 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t)), \
     Eq(C2(t), -6*sqrt(3)*C1*exp(-6*sqrt(3)*t) + 6*sqrt(3)*C2*exp(6*sqrt(3)*t))]
     assert dsolve(eq) == sol
+
+def test_issue_10379():
+    t,y = symbols('t,y')
+    sol =  dsolve(f(t).diff(t)-(1-51.05*y*f(t)), rational=False)
+    ans =  Eq(f(t), (0.019588638589618*exp(y*(C1 - 51.05*t)) + 0.019588638589618)/y)
+    assert str(sol) == str(ans)
+def test_issue_10867():
+    x, g = symbols('x g')
+    v = Eq(g(x).diff(x).diff(x), (x-2)**2 + (x-3)**3)
+    ans = Eq(g(x), C1 + C2*x + x**5/20 - 2*x**4/3 + 23*x**3/6 - 23*x**2/2)
+    assert dsolve(v, g(x)) == ans
+
+def test_issue_11290():
+    sol_1 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact_Integral')
+    sol_0 = dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), simplify=False, hint='1st_exact')
+    assert str(sol_1)== "Eq(Subs(Integral(_y**2 - x*sin(_y) - Integral(-sin(_y), x), _y) + Integral(cos(_y), x), (_y,), (f(x),)), C1)"
+    assert sol_1.doit() == sol_0

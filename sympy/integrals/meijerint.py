@@ -108,7 +108,7 @@ def _create_lookup_table(table):
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
         hint=Not(IsNonPositiveInteger(a)))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
-        pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
+        2*sin(pi*a/2)*gamma(1 - a)*abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
         b**(a - 1)*sin(a*pi)/pi)
 
@@ -343,13 +343,13 @@ def _exponents(expr, x):
     >>> from sympy.abc import x, y
     >>> from sympy import sin
     >>> _exponents(x, x)
-    set([1])
+    {1}
     >>> _exponents(x**2, x)
-    set([2])
+    {2}
     >>> _exponents(x**2 + x, x)
-    set([1, 2])
+    {1, 2}
     >>> _exponents(x**3*sin(x + x**y) + 1/x, x)
-    set([-1, 1, 3, y])
+    {-1, 1, 3, y}
     """
     def _exponents_(expr, x, res):
         if expr == x:
@@ -380,11 +380,11 @@ def _find_splitting_points(expr, x):
     >>> from sympy import sin
     >>> from sympy.abc import a, x
     >>> fsp(x, x)
-    set([0])
+    {0}
     >>> fsp((x-1)**3, x)
-    set([1])
+    {1}
     >>> fsp(sin(x+3)*x, x)
-    set([-3, 0])
+    {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
@@ -1461,7 +1461,10 @@ def _rewrite_single(f, x, recursive=True):
                 for fac, g in terms:
                     r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
                                                    exponents_only=True), x)
-                    g = g.subs(subs).subs(z, x)
+                    try:
+                        g = g.subs(subs).subs(z, x)
+                    except ValueError:
+                        continue
                     # NOTE these substitutions can in principle introduce oo,
                     #      zoo and other absurdities. It shouldn't matter,
                     #      but better be safe.
@@ -1605,7 +1608,7 @@ def meijerint_indefinite(f, x):
     from sympy import hyper, meijerg
 
     results = []
-    for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
+    for a in sorted(_find_splitting_points(f, x) | {S(0)}, key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
@@ -1628,7 +1631,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold
+    from sympy import Integral, piecewise_fold, nan, zoo
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1666,7 +1669,12 @@ def _meijerint_indefinite_1(f, x):
         else:
             r = meijerg(
                 tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
-        r = hyperexpand(r.subs(t, a*x**b))
+        # The antiderivative is most often expected to be defined
+        # in the neighborhood of  x = 0.
+        place = 0
+        if b < 0 or f.subs(x, 0).has(nan, zoo):
+            place = None
+        r = hyperexpand(r.subs(t, a*x**b), place=place)
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
@@ -1739,11 +1747,15 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import arg, exp, I, And, DiracDelta, count_ops
+    from sympy import arg, exp, I, And, DiracDelta, SingularityFunction
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
+        return None
+
+    if f.has(SingularityFunction):
+        _debug('Integrand has Singularity Function terms - giving up.')
         return None
 
     f_, x_, a_, b_ = f, x, a, b
@@ -1850,7 +1862,7 @@ def _guess_expansion(f, x):
     res = [(f, 'original integrand')]
 
     orig = res[-1][0]
-    saw = set([orig])
+    saw = {orig}
     expanded = expand_mul(orig)
     if expanded not in saw:
         res += [(expanded, 'expand_mul')]

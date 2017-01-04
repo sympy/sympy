@@ -11,7 +11,7 @@ from __future__ import print_function
 from string import whitespace, ascii_uppercase as uppercase, printable
 
 from sympy import nextprime
-from sympy.core import Rational, S, Symbol
+from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
@@ -19,7 +19,7 @@ from sympy.ntheory import isprime, totient, primitive_root
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
-from sympy.utilities.iterables import flatten, uniq
+from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange
 
 def AZ(s=None):
@@ -556,7 +556,7 @@ def encipher_vigenere(msg, key, symbols=None):
 
     """
     msg, key, A = _prep(msg, key, symbols)
-    map = dict([(c, i) for i, c in enumerate(A)])
+    map = {c: i for i, c in enumerate(A)}
     key = [map[c] for c in key]
     N = len(map)
     k = len(key)
@@ -581,7 +581,7 @@ def decipher_vigenere(msg, key, symbols=None):
     'MEETMEONMONDAY'
     """
     msg, key, A = _prep(msg, key, symbols)
-    map = dict([(c, i) for i, c in enumerate(A)])
+    map = {c: i for i, c in enumerate(A)}
     N = len(A)   # normally, 26
     K = [map[c] for c in key]
     n = len(K)
@@ -663,7 +663,7 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     assert key.is_square
     assert len(pad) == 1
     msg, pad, A = _prep(msg, pad, symbols)
-    map = dict([(c, i) for i, c in enumerate(A)])
+    map = {c: i for i, c in enumerate(A)}
     P = [map[c] for c in msg]
     N = len(A)
     k = key.cols
@@ -726,7 +726,7 @@ def decipher_hill(msg, key, symbols=None):
     """
     assert key.is_square
     msg, _, A = _prep(msg, '', symbols)
-    map = dict([(c, i) for i, c in enumerate(A)])
+    map = {c: i for i, c in enumerate(A)}
     C = [map[c] for c in msg]
     N = len(A)
     k = key.cols
@@ -789,7 +789,7 @@ def encipher_bifid(msg, key, symbols=None):
         for i, ch in enumerate(long_key)])
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
-    ch = dict([(i, ch) for ch, i in row_col.items()])
+    ch = {i: ch for ch, i in row_col.items()}
     rv = ''.join((ch[i] for i in zip(rc[::2], rc[1::2])))
     return rv
 
@@ -881,7 +881,7 @@ def decipher_bifid(msg, key, symbols=None):
     rc = [i for c in msg for i in row_col[c]]
     n = len(msg)
     rc = zip(*(rc[:n], rc[n:]))
-    ch = dict([(i, ch) for ch, i in row_col.items()])
+    ch = {i: ch for ch, i in row_col.items()}
     rv = ''.join((ch[i] for i in rc))
     return rv
 
@@ -1412,7 +1412,7 @@ morse_char = {
     "-...-": "=", ".-.-.": "+",
     "-..-.": "/", ".--.-.": "@",
     "...-..-": "$", "-.-.--": "!"}
-char_morse = dict([(v, k) for k, v in morse_char.items()])
+char_morse = {v: k for k, v in morse_char.items()}
 
 
 def encode_morse(msg, sep='|', mapping=None):

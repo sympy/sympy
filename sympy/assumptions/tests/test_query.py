@@ -543,7 +543,7 @@ def test_I():
 
 
 @slow
-def test_bounded():
+def test_bounded1():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
     assert ask(Q.finite(x), Q.finite(x)) is True
@@ -628,6 +628,11 @@ def test_bounded():
     assert ask(Q.finite(a), Q.positive(x) & ~Q.positive(y)) is None
     assert ask(Q.finite(a), ~Q.positive(x) & Q.positive(y)) is None
     assert ask(Q.finite(a), ~Q.positive(x) & ~Q.positive(y)) is None
+
+
+@slow
+def test_bounded2a():
+    x, y, z = symbols('x,y,z')
     a = x + y + z
     x, y, z = a.args
     assert ask(Q.finite(a), Q.negative(x) & Q.finite(x) & Q.negative(y) &
@@ -771,6 +776,13 @@ def test_bounded():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
+
+
+@slow
+def test_bounded2b():
+    x, y, z = symbols('x,y,z')
+    a = x + y + z
+    x, y, z = a.args
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(
@@ -942,9 +954,13 @@ def test_bounded():
     assert ask(
         Q.finite(a), Q.positive(x) & Q.positive(y) & Q.positive(z)) is None
 
-    x, y, z = symbols('x,y,z')
     assert ask(Q.finite(2*x)) is None
     assert ask(Q.finite(2*x), Q.finite(x)) is True
+
+
+@slow
+def test_bounded3():
+    x, y, z = symbols('x,y,z')
     a = x*y
     x, y = a.args
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is True
@@ -1005,7 +1021,7 @@ def test_bounded():
     assert ask(Q.finite(Rational(1, 2) ** x)) is None
     assert ask(Q.finite(Rational(1, 2) ** x), Q.positive(x)) is True
     assert ask(Q.finite(Rational(1, 2) ** x), Q.negative(x)) is None
-    assert ask(Q.finite(S(2) ** x), Q.negative(x)) is True
+    assert ask(Q.finite(2**x), Q.negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
     assert ask(Q.finite(x**2), ~Q.finite(x)) is False
@@ -1689,10 +1705,12 @@ def test_prime():
     assert ask(Q.prime(x), Q.integer(x)) is None
     assert ask(Q.prime(x), ~Q.integer(x)) is False
 
-    assert ask(Q.prime(2*x), Q.integer(x)) is False
+    assert ask(Q.prime(2*x), Q.integer(x)) is None
     assert ask(Q.prime(x*y)) is None
     assert ask(Q.prime(x*y), Q.prime(x)) is None
-    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is False
+    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(4*x), Q.integer(x)) is False
+    assert ask(Q.prime(4*x)) is None
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
@@ -2011,19 +2029,19 @@ def test_single_fact_lookup():
     known_facts = And(Implies(Q.integer, Q.rational),
                       Implies(Q.rational, Q.real),
                       Implies(Q.real, Q.complex))
-    known_facts_keys = set([Q.integer, Q.rational, Q.real, Q.complex])
+    known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
     known_facts_cnf = to_cnf(known_facts)
     mapping = single_fact_lookup(known_facts_keys, known_facts_cnf)
 
-    assert mapping[Q.rational] == set([Q.real, Q.rational, Q.complex])
+    assert mapping[Q.rational] == {Q.real, Q.rational, Q.complex}
 
 
 def test_compute_known_facts():
     known_facts = And(Implies(Q.integer, Q.rational),
                       Implies(Q.rational, Q.real),
                       Implies(Q.real, Q.complex))
-    known_facts_keys = set([Q.integer, Q.rational, Q.real, Q.complex])
+    known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
     s = compute_known_facts(known_facts, known_facts_keys)
 

@@ -4,7 +4,9 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Symbol
+import itertools
+
+from sympy.core import S, Add, Symbol, Mod
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
@@ -13,6 +15,7 @@ from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
 
 ## sympy.printing imports
+from sympy.printing.precedence import precedence_traditional
 from .printer import Printer
 from .conventions import split_super_sub, requires_partial
 from .precedence import precedence, PRECEDENCE
@@ -36,18 +39,29 @@ accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
 tex_greek_dictionary = {
     'Alpha': 'A',
     'Beta': 'B',
+    'Gamma': r'\Gamma',
+    'Delta': r'\Delta',
     'Epsilon': 'E',
     'Zeta': 'Z',
     'Eta': 'H',
+    'Theta': r'\Theta',
     'Iota': 'I',
     'Kappa': 'K',
+    'Lambda': r'\Lambda',
     'Mu': 'M',
     'Nu': 'N',
+    'Xi': r'\Xi',
     'omicron': 'o',
     'Omicron': 'O',
+    'Pi': r'\Pi',
     'Rho': 'P',
+    'Sigma': r'\Sigma',
     'Tau': 'T',
+    'Upsilon': r'\Upsilon',
+    'Phi': r'\Phi',
     'Chi': 'X',
+    'Psi': r'\Psi',
+    'Omega': r'\Omega',
     'lamda': r'\lambda',
     'Lamda': r'\Lambda',
     'khi': r'\chi',
@@ -97,6 +111,12 @@ modifier_dict = {
 
 greek_letters_set = frozenset(greeks)
 
+_between_two_numbers_p = (
+    re.compile(r'[0-9][} ]*$'),  # search
+    re.compile(r'[{ ]*[-+0-9]'),  # match
+)
+
+
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
@@ -144,8 +164,9 @@ class LatexPrinter(Printer):
 
         self._delim_dict = {'(': ')', '[': ']'}
 
-    def parenthesize(self, item, level):
-        if precedence(item) <= level:
+    def parenthesize(self, item, level, strict=False):
+        prec_val = precedence_traditional(item)
+        if (prec_val < level) or ((not strict) and prec_val <= level):
             return r"\left(%s\right)" % self._print(item)
         else:
             return self._print(item)
@@ -214,9 +235,12 @@ class LatexPrinter(Printer):
         elif expr.is_Mul:
             if not first and _coeff_isneg(expr):
                 return True
-
+        if expr.is_Piecewise:
+            return True
+        if any([expr.has(x) for x in (Mod,)]):
+            return True
         if (not last and
-            any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)])):
+            any([expr.has(x) for x in (Integral, Product, Sum)])):
             return True
 
         return False
@@ -229,6 +253,8 @@ class LatexPrinter(Printer):
         things.
         """
         if expr.is_Relational:
+            return True
+        if any([expr.has(x) for x in (Mod,)]):
             return True
         return False
 
@@ -281,10 +307,14 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Cycle(self, expr):
-        from sympy.combinatorics.permutations import Permutation, Cycle
+        from sympy.combinatorics.permutations import Permutation
         if str(expr) == '()':
             return r"\left( \right)"
-        expr_perm = Permutation(expr).cyclic_form
+        expr = Permutation(expr)
+        expr_perm = expr.cyclic_form
+        siz = expr.size
+        if expr.array_form[-1] == siz - 1:
+            expr_perm = expr_perm + [[siz - 1]]
         term_tex = ''
         for i in expr_perm:
             term_tex += str(i).replace(',', r"\;")
@@ -318,9 +348,13 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
+        include_parens = False
         if _coeff_isneg(expr):
             expr = -expr
             tex = "- "
+            if expr.is_Add:
+                tex += "("
+                include_parens = True
         else:
             tex = ""
 
@@ -347,8 +381,8 @@ class LatexPrinter(Printer):
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
-                    if re.search("[0-9][} ]*$", last_term_tex) and \
-                            re.match("[{ ]*[-+0-9]", term_tex):
+                    if _between_two_numbers_p[0].search(last_term_tex) and \
+                            _between_two_numbers_p[1].match(term_tex):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -401,6 +435,8 @@ class LatexPrinter(Printer):
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
+        if include_parens:
+            tex += ")"
         return tex
 
     def _print_Pow(self, expr):
@@ -448,6 +484,9 @@ class LatexPrinter(Printer):
 
                 return tex % (self.parenthesize(expr.base, PRECEDENCE['Pow']),
                               self._print(expr.exp))
+
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
 
     def _print_Sum(self, expr):
         if len(expr.limits) == 1:
@@ -601,7 +640,7 @@ class LatexPrinter(Printer):
                 symbols.insert(0, r"\, d%s" % self._print(symbol))
 
         return r"%s %s%s" % (tex,
-            str(self._print(expr.function)), "".join(symbols))
+            self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True), "".join(symbols))
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
@@ -1208,6 +1247,8 @@ class LatexPrinter(Printer):
             if expr.p < 0:
                 sign = "- "
                 p = -p
+            if self._settings['fold_short_frac']:
+                return r"%s%d / %d" % (sign, p, expr.q)
             return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
@@ -1221,7 +1262,7 @@ class LatexPrinter(Printer):
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
-            s += r'\rightarrow'
+            s += r'\rightarrow '
             if len(expr.point) > 1:
                 s += self._print(expr.point)
             else:
@@ -1239,6 +1280,8 @@ class LatexPrinter(Printer):
     _print_MatrixSymbol = _print_Symbol
 
     def _deal_with_super_sub(self, string):
+        if '{' in string:
+            return string
 
         name, supers, subs = split_super_sub(string)
 
@@ -1366,6 +1409,13 @@ class LatexPrinter(Printer):
             return self._print(x)
         return ' '.join(map(parens, expr.args))
 
+    def _print_Mod(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(%s\bmod{%s}\right)^{%s}' % (self.parenthesize(expr.args[0],
+                    PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]), self._print(exp))
+        return r'%s\bmod{%s}' % (self.parenthesize(expr.args[0],
+                PRECEDENCE['Mul'], strict=True), self._print(expr.args[1]))
+
     def _print_HadamardProduct(self, expr):
         from sympy import Add, MatAdd, MatMul
 
@@ -1388,6 +1438,57 @@ class LatexPrinter(Printer):
 
     def _print_Identity(self, I):
         return r"\mathbb{I}"
+
+    def _print_NDimArray(self, expr):
+
+        mat_str = self._settings['mat_str']
+        if mat_str is None:
+            if self._settings['mode'] == 'inline':
+                mat_str = 'smallmatrix'
+            else:
+                if (expr.rank() == 0) or (expr.shape[-1] <= 10):
+                    mat_str = 'matrix'
+                else:
+                    mat_str = 'array'
+        block_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        block_str = block_str.replace('%MATSTR%', mat_str)
+        if self._settings['mat_delim']:
+            left_delim = self._settings['mat_delim']
+            right_delim = self._delim_dict[left_delim]
+            block_str = r'\left' + left_delim + block_str + \
+                      r'\right' + right_delim
+
+        if expr.rank() == 0:
+            return block_str % ""
+
+        level_str = [[]] + [[] for i in range(expr.rank())]
+        shape_ranges = [list(range(i)) for i in expr.shape]
+        for outer_i in itertools.product(*shape_ranges):
+            level_str[-1].append(self._print(expr[outer_i]))
+            even = True
+            for back_outer_i in range(expr.rank()-1, -1, -1):
+                if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
+                    break
+                if even:
+                    level_str[back_outer_i].append(r" & ".join(level_str[back_outer_i+1]))
+                else:
+                    level_str[back_outer_i].append(block_str % (r"\\".join(level_str[back_outer_i+1])))
+                    if len(level_str[back_outer_i+1]) == 1:
+                        level_str[back_outer_i][-1] = r"\left[" + level_str[back_outer_i][-1] + r"\right]"
+                even = not even
+                level_str[back_outer_i+1] = []
+
+        out_str = level_str[0][0]
+
+        if expr.rank() % 2 == 1:
+            out_str = block_str % out_str
+
+        return out_str
+
+    _print_ImmutableDenseNDimArray = _print_NDimArray
+    _print_ImmutableSparseNDimArray = _print_NDimArray
+    _print_MutableDenseNDimArray = _print_NDimArray
+    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
@@ -1421,6 +1522,12 @@ class LatexPrinter(Printer):
                 self._print(expr.args[1]), self._print(expr.args[0]))
         if exp:
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
+        return tex
+
+    def _print_SingularityFunction(self, expr):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        tex = r"{\langle %s \rangle}^{%s}" % (shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
@@ -1478,9 +1585,13 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        if len(s) > 4:
+        dots = r'\ldots'
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
             it = iter(s)
-            printset = next(it), next(it), '\ldots', s._last_element
+            printset = next(it), next(it), dots, s[-1]
         else:
             printset = tuple(s)
 
@@ -1548,7 +1659,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{N}"
 
     def _print_Naturals0(self, n):
-        return r"\mathbb{N_0}"
+        return r"\mathbb{N}_0"
 
     def _print_Integers(self, i):
         return r"\mathbb{Z}"
@@ -1587,10 +1698,7 @@ class LatexPrinter(Printer):
         return self._print_Add(s.truncate()) + self._print(' + \ldots')
 
     def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
-
-    def _print_FormalPowerSeries(self, s):
-        return self._print_Add(s.truncate())
+        return self._print_Add(s.infinite)
 
     def _print_FiniteField(self, expr):
         return r"\mathbb{F}_{%s}" % expr.mod
@@ -1843,8 +1951,17 @@ class LatexPrinter(Printer):
         contents = self._print(p.args[0])
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
-    def _print_totient(self, expr):
-        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+    def _print_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\phi\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\phi\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_reduced_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\lambda\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\lambda\left(%s\right)' % self._print(expr.args[0])
 
     def _print_divisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
@@ -1866,6 +1983,19 @@ class LatexPrinter(Printer):
             return r"\sigma^*^{%s}%s" % (self._print(exp), tex)
         return r"\sigma^*%s" % tex
 
+    def _print_primenu(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\nu\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\nu\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_primeomega(self, expr, exp=None):
+        if exp is not None:
+            return r'\left(\Omega\left(%s\right)\right)^{%s}' % (self._print(expr.args[0]),
+                    self._print(exp))
+        return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
+
 def translate(s):
     r'''
     Check for a modifier ending the string.  If present, convert the
@@ -1884,7 +2014,9 @@ def translate(s):
     tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
-    elif s.lower() in greek_letters_set or s in other_symbols:
+    elif s.lower() in greek_letters_set:
+        return "\\" + s.lower()
+    elif s in other_symbols:
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
@@ -1928,7 +2060,7 @@ def latex(expr, **settings):
     8 \sqrt{2} \mu^{\frac{7}{2}}
 
     >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{\frac{7}{2}}$
+    $8 \sqrt{2} \tau^{7 / 2}$
 
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}

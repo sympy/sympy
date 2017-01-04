@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S, refine
+    cos, exp, Abs, Not, Symbol, S
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
@@ -60,7 +60,6 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
-    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
     assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
@@ -128,7 +127,7 @@ def test_piecewise():
 def test_piecewise_free_symbols():
     a = symbols('a')
     f = Piecewise((x, a < 0), (y, True))
-    assert f.free_symbols == set([x, y, a])
+    assert f.free_symbols == {x, y, a}
 
 
 def test_piecewise_integrate():
@@ -337,7 +336,7 @@ def test_piecewise_fold_piecewise_in_cond():
     p3 = piecewise_fold(p2)
     assert(p2.subs(x, -pi/2) == 0.0)
     assert(p2.subs(x, 1) == 0.0)
-    assert(refine(p2.subs(x, -pi/4)) == 1.0)
+    assert(p2.subs(x, -pi/4) == 1.0)
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
     assert(piecewise_fold(p4) == Piecewise(
         (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))

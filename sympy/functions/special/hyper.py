@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, I, pi, oo, ilcm, Mod
+from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
@@ -75,12 +75,12 @@ class hyper(TupleParametersBase):
     :math:`b_q`. It also has an argument :math:`z`. The series definition is
 
     .. math ::
-        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+        {}_pF_q\left(\begin{matrix} a_1, \cdots, a_p \\ b_1, \cdots, b_q \end{matrix}
                      \middle| z \right)
-        = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
+        = \sum_{n=0}^\infty \frac{(a_1)_n \cdots (a_p)_n}{(b_1)_n \cdots (b_q)_n}
                             \frac{z^n}{n!},
 
-    where :math:`(a)_n = (a)(a+1)\dots(a+n-1)` denotes the rising factorial.
+    where :math:`(a)_n = (a)(a+1)\cdots(a+n-1)` denotes the rising factorial.
 
     If one of the :math:`b_q` is a non-positive integer then the series is
     undefined unless one of the `a_p` is a larger (i.e. smaller in
@@ -320,16 +320,16 @@ class meijerg(TupleParametersBase):
 
     The Meijer G-function depends on four sets of parameters. There are
     "*numerator parameters*"
-    :math:`a_1, \dots, a_n` and :math:`a_{n+1}, \dots, a_p`, and there are
+    :math:`a_1, \ldots, a_n` and :math:`a_{n+1}, \ldots, a_p`, and there are
     "*denominator parameters*"
-    :math:`b_1, \dots, b_m` and :math:`b_{m+1}, \dots, b_q`.
+    :math:`b_1, \ldots, b_m` and :math:`b_{m+1}, \ldots, b_q`.
     Confusingly, it is traditionally denoted as follows (note the position
     of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four
     parameter vectors):
 
     .. math ::
-        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
-                                        b_1, \dots, b_m & b_{m+1}, \dots, b_q
+        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \cdots, a_n & a_{n+1}, \cdots, a_p \\
+                                        b_1, \cdots, b_m & b_{m+1}, \cdots, b_q
                           \end{matrix} \middle| z \right).
 
     However, in sympy the four parameter vectors are always available
@@ -445,7 +445,7 @@ class meijerg(TupleParametersBase):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
-            raise TypeError("args must eiter be as, as', bs, bs', z or "
+            raise TypeError("args must be either as, as', bs, bs', z or "
                             "as, bs, z")
 
         def tr(p):
@@ -453,8 +453,16 @@ class meijerg(TupleParametersBase):
                 raise TypeError("wrong argument")
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
+        arg0, arg1 = tr(args[0]), tr(args[1])
+        if Tuple(arg0, arg1).has(oo, zoo, -oo):
+            raise ValueError("G-function parameters must be finite")
+        if any((a - b).is_Integer and a - b > 0
+               for a in arg0[0] for b in arg1[0]):
+            raise ValueError("no parameter a1, ..., an may differ from "
+                         "any b1, ..., bm by a positive integer")
+
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])
+        return Function.__new__(cls, arg0, arg1, args[2])
 
     def fdiff(self, argindex=3):
         if argindex != 3:
