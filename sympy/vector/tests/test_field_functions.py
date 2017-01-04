@@ -1,6 +1,6 @@
 from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
-from sympy.vector.coordsys import CartesianCoordinateSystem
+from sympy.vector.coordsys import CartesianCoordinateSystem, SphericalCoordinateSystem
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
@@ -14,90 +14,122 @@ from sympy.utilities.pytest import raises
 C = CartesianCoordinateSystem('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
-delop = C.delop
+c_delop = C.delop
 a, b, c, q = symbols('a b c q')
+
+Sph = SphericalCoordinateSystem('Sph')
+e_r, e_theta, e_phi = Sph.base_vectors()
+r, theta, phi = Sph.base_scalars()
+s_delop = Sph.delop
 
 def test_del_operator():
 
     #Tests for curl
-    assert (delop ^ Vector.zero ==
+    assert (c_delop ^ Vector.zero ==
             (Derivative(0, C.y) - Derivative(0, C.z))*C.i +
             (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
             (Derivative(0, C.x) - Derivative(0, C.y))*C.k)
-    assert ((delop ^ Vector.zero).doit() == Vector.zero ==
+    assert ((c_delop ^ Vector.zero).doit() == Vector.zero ==
             curl(Vector.zero, C))
-    assert delop.cross(Vector.zero) == delop ^ Vector.zero
-    assert (delop ^ i).doit() == Vector.zero
-    assert delop.cross(2*y**2*j, doit = True) == Vector.zero
-    assert delop.cross(2*y**2*j) == delop ^ 2*y**2*j
+    assert c_delop.cross(Vector.zero) == c_delop ^ Vector.zero
+    assert (c_delop ^ i).doit() == Vector.zero
+    assert c_delop.cross(2*y**2*j, doit = True) == Vector.zero
+    assert c_delop.cross(2*y**2*j) == c_delop ^ 2*y**2*j
     v = x*y*z * (i + j + k)
-    assert ((delop ^ v).doit() ==
+    assert ((c_delop ^ v).doit() ==
             (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k ==
             curl(v, C))
-    assert delop ^ v == delop.cross(v)
-    assert (delop.cross(2*x**2*j) ==
+    assert c_delop ^ v == c_delop.cross(v)
+    assert (c_delop.cross(2*x**2*j) ==
             (Derivative(0, C.y) - Derivative(2*C.x**2, C.z))*C.i +
             (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
             (-Derivative(0, C.y) + Derivative(2*C.x**2, C.x))*C.k)
-    assert (delop.cross(2*x**2*j, doit = True) == 4*x*k ==
+    assert (c_delop.cross(2*x**2*j, doit = True) == 4*x*k ==
             curl(2*x**2*j, C))
+    assert (s_delop ^ Vector.zero ==
+            ((-Derivative(0, Sph.phi) +
+            Derivative(0, Sph.theta))/(sin(Sph.theta)*Sph.r**2))*Sph.e_r +
+            ((Derivative(0, Sph.phi) - Derivative(0, Sph.r))/(sin(Sph.theta)*Sph.r))*Sph.e_theta +
+            ((Derivative(0, Sph.r) - Derivative(0, Sph.theta))/Sph.r)*Sph.e_phi)
+    assert ((s_delop ^ Vector.zero).doit() == Vector.zero ==
+            curl(Vector.zero, Sph))
+    assert s_delop.cross(Vector.zero) == s_delop ^ Vector.zero
+    assert (s_delop ^ e_r).doit() == Vector.zero
+    assert (s_delop ^ e_theta).doit() == 1/Sph.r*Sph.e_phi
+    assert (s_delop ^ e_phi).doit() == (cos(Sph.theta)/(sin(Sph.theta)*Sph.r))*Sph.e_r + (-1/Sph.r)*Sph.e_theta
+    w = r*theta*phi * (e_r + e_theta + e_phi)
+    assert ((s_delop ^ w).doit() == ((sin(Sph.theta)*Sph.phi*Sph.r**2 +
+            cos(Sph.theta)*Sph.phi*Sph.r**2*Sph.theta - Sph.r**2*Sph.theta)/(sin(Sph.theta)*Sph.r**2))*Sph.e_r +
+            ((-2*sin(Sph.theta)*Sph.phi*Sph.r*Sph.theta +
+            Sph.r*Sph.theta)/(sin(Sph.theta)*Sph.r))*Sph.e_theta +
+            ((2*Sph.phi*Sph.r*Sph.theta - Sph.phi*Sph.r)/Sph.r)*Sph.e_phi)
 
     #Tests for divergence
-    assert delop & Vector.zero == S(0) == divergence(Vector.zero, C)
-    assert (delop & Vector.zero).doit() == S(0)
-    assert delop.dot(Vector.zero) == delop & Vector.zero
-    assert (delop & i).doit() == S(0)
-    assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i, C)
-    assert (delop.dot(v, doit = True) == x*y + y*z + z*x ==
+    assert c_delop & Vector.zero == S(0) == divergence(Vector.zero, C)
+    assert (c_delop & Vector.zero).doit() == S(0)
+    assert c_delop.dot(Vector.zero) == c_delop & Vector.zero
+    assert (c_delop & i).doit() == S(0)
+    assert (c_delop & x**2*i).doit() == 2*x == divergence(x**2*i, C)
+    assert (c_delop.dot(v, doit = True) == x*y + y*z + z*x ==
             divergence(v, C))
-    assert delop & v == delop.dot(v)
-    assert delop.dot(1/(x*y*z) * (i + j + k), doit = True) == \
+    assert c_delop & v == c_delop.dot(v)
+    assert c_delop.dot(1/(x*y*z) * (i + j + k), doit = True) == \
            - 1 / (x*y*z**2) - 1 / (x*y**2*z) - 1 / (x**2*y*z)
     v = x*i + y*j + z*k
-    assert (delop & v == Derivative(C.x, C.x) +
+    assert (c_delop & v == Derivative(C.x, C.x) +
             Derivative(C.y, C.y) + Derivative(C.z, C.z))
-    assert delop.dot(v, doit = True) == 3 == divergence(v, C)
-    assert delop & v == delop.dot(v)
-    assert simplify((delop & v).doit()) == 3
+    assert c_delop.dot(v, doit = True) == 3 == divergence(v, C)
+    assert c_delop & v == c_delop.dot(v)
+    assert simplify((c_delop & v).doit()) == 3
+    assert s_delop & Vector.zero == S(0) == divergence(Vector.zero, Sph)
+    assert (s_delop & e_r).doit() == 2/Sph.r == divergence(e_r, Sph)
+    w = r*e_r + theta*e_theta + phi*e_phi
+    assert ((s_delop & w).doit() == (sin(Sph.theta)*Sph.r +
+            cos(Sph.theta)*Sph.r*Sph.theta)/(sin(Sph.theta)*Sph.r**2) + 3 +
+            1/(sin(Sph.theta)*Sph.r))
 
     #Tests for gradient
-    assert (delop.gradient(0, doit = True) == Vector.zero ==
+    assert (c_delop.gradient(0, doit = True) == Vector.zero ==
             gradient(0, C))
-    assert delop.gradient(0) == delop(0)
-    assert (delop(S(0))).doit() == Vector.zero
-    assert (delop(x) == (Derivative(C.x, C.x))*C.i +
+    assert c_delop.gradient(0) == c_delop(0)
+    assert (c_delop(S(0))).doit() == Vector.zero
+    assert (c_delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
-    assert (delop(x)).doit() == i == gradient(x, C)
-    assert (delop(x*y*z) ==
+    assert (c_delop(x)).doit() == i == gradient(x, C)
+    assert (c_delop(x*y*z) ==
             (Derivative(C.x*C.y*C.z, C.x))*C.i +
             (Derivative(C.x*C.y*C.z, C.y))*C.j +
             (Derivative(C.x*C.y*C.z, C.z))*C.k)
-    assert (delop.gradient(x*y*z, doit = True) ==
+    assert (c_delop.gradient(x*y*z, doit = True) ==
             y*z*i + z*x*j + x*y*k ==
             gradient(x*y*z, C))
-    assert delop(x*y*z) == delop.gradient(x*y*z)
-    assert (delop(2*x**2)).doit() == 4*x*i
-    assert ((delop(a*sin(y) / x)).doit() ==
+    assert c_delop(x*y*z) == c_delop.gradient(x*y*z)
+    assert (c_delop(2*x**2)).doit() == 4*x*i
+    assert ((c_delop(a*sin(y) / x)).doit() ==
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
+    assert (s_delop.gradient(0, doit = True) == Vector.zero ==
+            gradient(0, Sph))
+    assert (s_delop(r*theta*phi).doit() == Sph.phi*Sph.theta*Sph.e_r +
+            Sph.phi*Sph.e_theta + (Sph.theta/sin(Sph.theta))*Sph.e_phi)
 
     #Tests for directional derivative
-    assert (Vector.zero & delop)(a) == S(0)
-    assert ((Vector.zero & delop)(a)).doit() == S(0)
-    assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    assert ((v & delop)(S(0))).doit() == S(0)
-    assert ((i & delop)(x)).doit() == 1
-    assert ((j & delop)(y)).doit() == 1
-    assert ((k & delop)(z)).doit() == 1
-    assert ((i & delop)(x*y*z)).doit() == y*z
-    assert ((v & delop)(x)).doit() == x
-    assert ((v & delop)(x*y*z)).doit() == 3*x*y*z
-    assert (v & delop)(x + y + z) == C.x + C.y + C.z
-    assert ((v & delop)(x + y + z)).doit() == x + y + z
-    assert ((v & delop)(v)).doit() == v
-    assert ((i & delop)(v)).doit() == i
-    assert ((j & delop)(v)).doit() == j
-    assert ((k & delop)(v)).doit() == k
-    assert ((v & delop)(Vector.zero)).doit() == Vector.zero
+    assert (Vector.zero & c_delop)(a) == S(0)
+    assert ((Vector.zero & c_delop)(a)).doit() == S(0)
+    assert ((v & c_delop)(Vector.zero)).doit() == Vector.zero
+    assert ((v & c_delop)(S(0))).doit() == S(0)
+    assert ((i & c_delop)(x)).doit() == 1
+    assert ((j & c_delop)(y)).doit() == 1
+    assert ((k & c_delop)(z)).doit() == 1
+    assert ((i & c_delop)(x*y*z)).doit() == y*z
+    assert ((v & c_delop)(x)).doit() == x
+    assert ((v & c_delop)(x*y*z)).doit() == 3*x*y*z
+    assert (v & c_delop)(x + y + z) == C.x + C.y + C.z
+    assert ((v & c_delop)(x + y + z)).doit() == x + y + z
+    assert ((v & c_delop)(v)).doit() == v
+    assert ((i & c_delop)(v)).doit() == i
+    assert ((j & c_delop)(v)).doit() == j
+    assert ((k & c_delop)(v)).doit() == k
+    assert ((v & c_delop)(Vector.zero)).doit() == Vector.zero
 
 
 def test_product_rules():
@@ -119,35 +151,35 @@ def test_product_rules():
     v = 4*i + x*y*z*k
 
     #First product rule
-    lhs = delop(f * g, doit = True)
-    rhs = (f * delop(g) + g * delop(f)).doit()
+    lhs = c_delop(f * g, doit = True)
+    rhs = (f * c_delop(g) + g * c_delop(f)).doit()
     assert simplify(lhs) == simplify(rhs)
 
     #Second product rule
-    lhs = delop(u & v).doit()
-    rhs = ((u ^ (delop ^ v)) + (v ^ (delop ^ u)) + \
-          ((u & delop)(v)) + ((v & delop)(u))).doit()
+    lhs = c_delop(u & v).doit()
+    rhs = ((u ^ (c_delop ^ v)) + (v ^ (c_delop ^ u)) + \
+          ((u & c_delop)(v)) + ((v & c_delop)(u))).doit()
     assert simplify(lhs) == simplify(rhs)
 
     #Third product rule
-    lhs = (delop & (f*v)).doit()
-    rhs = ((f * (delop & v)) + (v & (delop(f)))).doit()
+    lhs = (c_delop & (f*v)).doit()
+    rhs = ((f * (c_delop & v)) + (v & (c_delop(f)))).doit()
     assert simplify(lhs) == simplify(rhs)
 
     #Fourth product rule
-    lhs = (delop & (u ^ v)).doit()
-    rhs = ((v & (delop ^ u)) - (u & (delop ^ v))).doit()
+    lhs = (c_delop & (u ^ v)).doit()
+    rhs = ((v & (c_delop ^ u)) - (u & (c_delop ^ v))).doit()
     assert simplify(lhs) == simplify(rhs)
 
     #Fifth product rule
-    lhs = (delop ^ (f * v)).doit()
-    rhs = (((delop(f)) ^ v) + (f * (delop ^ v))).doit()
+    lhs = (c_delop ^ (f * v)).doit()
+    rhs = (((c_delop(f)) ^ v) + (f * (c_delop ^ v))).doit()
     assert simplify(lhs) == simplify(rhs)
 
     #Sixth product rule
-    lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    lhs = (c_delop ^ (u ^ v)).doit()
+    rhs = ((u * (c_delop & v) - v * (c_delop & u) +
+           (v & c_delop)(u) - (u & c_delop)(v))).doit()
     assert simplify(lhs) == simplify(rhs)
 
 

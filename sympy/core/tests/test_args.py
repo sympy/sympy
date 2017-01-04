@@ -3755,11 +3755,17 @@ def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
 
+def test_sympy__vector__coordsys__CoordinateSystem():
+    from sympy.vector.coordsys import CoordinateSystem
+    assert _test_args(CoordinateSystem('S'))
 
-def test_sympy__vector__coordsysrect__CoordSysCartesian():
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    assert _test_args(CoordSysCartesian('C'))
+def test_sympy__vector__coordsys__CartesianCoordinateSystem():
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    assert _test_args(CartesianCoordinateSystem('C'))
 
+def test_sympy__vector__coordsys__SphericalCoordinateSystem():
+    from sympy.vector.coordsys import SphericalCoordinateSystem
+    assert _test_args(SphericalCoordinateSystem('C'))
 
 def test_sympy__vector__point__Point():
     from sympy.vector.point import Point
@@ -3792,15 +3798,15 @@ def test_sympy__vector__basisdependent__BasisDependentZero():
 
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
     from sympy.vector.vector import VectorAdd, VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     from sympy.abc import a, b, c, x, y, z
     v1 = a*C.i + b*C.j + c*C.k
     v2 = x*C.i + y*C.j + z*C.k
@@ -3810,8 +3816,8 @@ def test_sympy__vector__vector__VectorAdd():
 
 def test_sympy__vector__vector__VectorMul():
     from sympy.vector.vector import VectorMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     from sympy.abc import a
     assert _test_args(VectorMul(a, C.i))
 
@@ -3835,22 +3841,22 @@ def test_sympy__vector__dyadic__Dyadic():
 
 def test_sympy__vector__dyadic__BaseDyadic():
     from sympy.vector.dyadic import BaseDyadic
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(BaseDyadic(C.i, C.j))
 
 
 def test_sympy__vector__dyadic__DyadicMul():
     from sympy.vector.dyadic import BaseDyadic, DyadicMul
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(DyadicMul(3, BaseDyadic(C.i, C.j)))
 
 
 def test_sympy__vector__dyadic__DyadicAdd():
     from sympy.vector.dyadic import BaseDyadic, DyadicAdd
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(2 * DyadicAdd(BaseDyadic(C.i, C.i),
                                     BaseDyadic(C.i, C.j)))
 
@@ -3862,8 +3868,8 @@ def test_sympy__vector__dyadic__DyadicZero():
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(Del(C))
 
 
@@ -3879,8 +3885,8 @@ def test_sympy__vector__orienters__ThreeAngleOrienter():
 
 def test_sympy__vector__orienters__AxisOrienter():
     from sympy.vector.orienters import AxisOrienter
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(AxisOrienter(x, C.i))
 
 
@@ -3902,8 +3908,8 @@ def test_sympy__vector__orienters__QuaternionOrienter():
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
+    from sympy.vector.coordsys import CartesianCoordinateSystem
+    C = CartesianCoordinateSystem('C')
     assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))
 
 def test_sympy__physics__wigner__Wigner3j():

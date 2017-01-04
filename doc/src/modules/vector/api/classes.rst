@@ -5,10 +5,10 @@ Essential Classes in sympy.vector (doctrings)
 CoordSysCartesian
 =================
 
-.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
+.. autoclass:: sympy.vector.coordsys.CartesianCoordinateSystem
    :members:
 
-   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
+   .. automethod:: sympy.vector.coordsys.CartesianCoordinateSystem.__init__
 
 
 Vector

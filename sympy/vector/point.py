@@ -59,7 +59,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordinateSystem
+        >>> from sympy.vector import Point, CartesianCoordinateSystem
         >>> N = CartesianCoordinateSystem('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)

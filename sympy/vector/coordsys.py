@@ -29,23 +29,11 @@ class CoordinateSystem(Basic):
             The transformation set from cartesian coordinate system to another.
             It is ALWAYS assumed that the transformation set is from Cartesian.
             Process can be slow for less common coordinate systems, use
-            built-in systems when you can.
-
-            built-in : 'cartesian', 'spherical', 'cylindrical',
-                       'parabolic cylindrical', 'paraboloidal',
-                       'elliptic cylindrical', 'prolate spheroidal',
-                       'oblate spheroidal', 'bipolar' and 'toroidal'
-
-                       See https://en.wikipedia.org/wiki/Orthogonal_coordinates
-                       for conventions.
-
-            useage : system='spherical' or
-                     system=Lambda((r, theta, phi),
-                        (r*sin(theta)*cos(phi),
-                         r*sin(theta)*sin(phi),
-                         r*cos(theta)))
-                     Note: Using the keyword would be much faster, use for
-                           all built-in systems.
+            built-in systems when you can. Built in coordinate systems are: 'cartesian',
+            'spherical', 'cylindrical', 'parabolic cylindrical', 'paraboloidal',
+            'elliptic cylindrical', 'prolate spheroidal', 'oblate spheroidal',
+            'bipolar' and 'toroidal'. See https://en.wikipedia.org/wiki/Orthogonal_coordinates
+            for conventions.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -326,10 +314,10 @@ class CoordinateSystem(Basic):
 
         Examples
         ========
-        >>> from sympy.vector import CoordinateSystem
-        >>> S = CoordinateSystem('S', coord_relations='spherical')
+        >>> from sympy.vector import SphericalCoordinateSystem
+        >>> S = SphericalCoordinateSystem('S')
         >>> S.lame_parameters()
-        (1, x, x*sin(y))
+        (1, S.r, sin(S.theta)*S.r)
 
         """
         if scalar_vars is None:
@@ -364,8 +352,8 @@ class CoordinateSystem(Basic):
 
         Examples
         ========
-        >>> from sympy.vector import CoordinateSystem
-        >>> S = CoordinateSystem('S', coord_relations='spherical')
+        >>> from sympy.vector import SphericalCoordinateSystem
+        >>> S = SphericalCoordinateSystem('S')
         >>> S.coordinate_relations()
         (sin(S.theta)*cos(S.phi)*S.r, sin(S.phi)*sin(S.theta)*S.r, cos(S.theta)*S.r)
 
@@ -390,17 +378,17 @@ class CoordinateSystem(Basic):
     @cacheit
     def coordinate_metric(self):
         """
-        Returns the metric matrix for a given CoordSystem3D instance.
+        Returns the metric matrix for a given CartesianCoordinateSystem instance.
 
         Examples
         ========
-        >>> from sympy.vector import CoordSystem3D
-        >>> S = CoordSystem3D('S', coord_relations='spherical')
+        >>> from sympy.vector import SphericalCoordinateSystem
+        >>> S = SphericalCoordinateSystem('S')
         >>> S.coordinate_metric()
         Matrix([
-        [1,    0,              0],
-        [0, x**2,              0],
-        [0,    0, x**2*sin(y)**2]])
+        [1,      0,                      0],
+        [0, S.r**2,                      0],
+        [0,      0, sin(S.theta)**2*S.r**2]])
 
         """
         return _get_metric((self._coord_relations), self)
@@ -967,15 +955,15 @@ class SphericalCoordinateSystem(CoordinateSystem):
     _sympystr = __str__
 
     @property
-    def r_cap(self):
+    def e_r(self):
         return self._e1cap
 
     @property
-    def theta_cap(self):
+    def e_theta(self):
         return self._e2cap
 
     @property
-    def phi_cap(self):
+    def e_phi(self):
         return self._e3cap
 
     @property
