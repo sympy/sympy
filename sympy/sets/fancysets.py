@@ -261,7 +261,7 @@ class ImageSet(Set):
     >>> img1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
     >>> img2 = ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)
     >>> pprint(img1.union(img2), use_unicode=False)
-            7*pi
+            3*pi
     {n*pi + ---- | n in Integers()}
              4
 
@@ -516,7 +516,7 @@ class ImageSet(Set):
         >>> img1 = ImageSet(Lambda(n, 2*n*pi + 3*pi/4), S.Integers)
         >>> img2 = ImageSet(Lambda(n, 2*n*pi + 7*pi/4), S.Integers)
         >>> pprint(img1.union(img2), use_unicode=False)
-                7*pi
+                3*pi
         {n*pi + ---- | n in Integers()}
                  4
 

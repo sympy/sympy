@@ -10,7 +10,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
-    ordered, range, PY3)
+    ordered, range, PY3, is_sequence)
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import FunctionClass
 from sympy.core.mul import Mul
@@ -1191,6 +1191,10 @@ class Union(Set, EvalfMixin):
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
         """
+        def unique_elements(seq):
+            uniq = []
+            [uniq.append(item) for item in seq if item not in uniq]
+            return uniq
 
         # ===== Global Rules =====
         # Merge all finite sets
@@ -1202,28 +1206,39 @@ class Union(Set, EvalfMixin):
 
         # ===== Pair-wise Rules =====
         # Here we depend on rules built into the constituent sets
-        args = set(args)
+
+        # `set` can return elements in different order(each time
+        # whenever you run the code, which may cause the error in build/testing,
+        # because of different ans, although all answers are correct) So `args`
+        # must be a list (or any other ordered sequence)
+        args = unique_elements(args)
         new_args = True
         while(new_args):
             for s in args:
                 new_args = False
-                for t in args - set((s,)):
-                    new_set = s._union(t)
+                for t in [arg for arg in args if arg != s]:
+                    new_list = s._union(t)
                     # This returns None if s does not know how to intersect
                     # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        if not isinstance(new_set, set):
-                            new_set = set((new_set, ))
-                        new_args = (args - set((s, t))).union(new_set)
+                    if new_list is not None:
+                        is_seq = is_sequence(new_list) or \
+                                    isinstance(new_list, set)
+                        if not is_seq:
+                            new_list = [new_list]
+                        elif not isinstance(new_list, list):
+                            new_list = [x for x in new_list]
+                        tmp = [x for x in args if (x != s and x != t)]
+                        new_args = tmp + new_list
+                        new_args = unique_elements(new_args)
                         break
                 if new_args:
                     args = new_args
                     break
 
         if len(args) == 1:
-            return args.pop()
+            return (args)[0]
         else:
-            return Union(args, evaluate=False)
+            return Union(*args, evaluate=False)
 
     def _complement(self, universe):
         # DeMorgan's Law
