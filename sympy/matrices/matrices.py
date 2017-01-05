@@ -1549,12 +1549,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             l = jc[0, 0]
             if (num < 0) == True and l == 0:
                 raise ValueError("Matrix det == 0; not invertible")
-            if not isinstance(num, (int, Integer, Expr)):
-                if not num - int(num) == 0:
-                    b = self.jordan_cells()[1]
-                    for i in range(len(b)):
-                        if (b[i]).rows > 1 and b[i][0, 0] == 0:
-                            raise ValueError("Cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -1589,6 +1583,11 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
     def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
+        if not sympify(num).is_integer and (num > 0) == True and not num % 1 == 0:
+            b = self.jordan_cells()[1]
+            for i in range(len(b)):
+                if (b[i]).rows > 1 and b[i][0, 0] == 0:
+                    raise ValueError("Cannot be evaluated")
         if isinstance(num, (int, Integer)):
             if (self.rows == 1):
                 return self._new([[self[0]**num]])
