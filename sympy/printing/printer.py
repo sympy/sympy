@@ -254,8 +254,6 @@ class Printer(object):
             for cls in type(expr).__mro__:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    res=getattr(self, printmethod)(expr, *args, **kwargs)
-
                     return getattr(self, printmethod)(expr, *args, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
