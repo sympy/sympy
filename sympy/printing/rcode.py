@@ -70,9 +70,9 @@ reserved_words = ['if',
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """A printer to convert python expressions to strings of R code"""
     printmethod = "_rcode"
-    language = "C"
+    language = "R"
 
     _default_settings = {
         'order': None,
