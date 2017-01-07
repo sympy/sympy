@@ -183,7 +183,6 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     See Also
     ========
     sympy.logic.boolalg.BooleanFalse
-
     """
     def __nonzero__(self):
         return True
@@ -237,7 +236,6 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     See Also
     ========
     sympy.logic.boolalg.BooleanTrue
-
     """
     def __nonzero__(self):
         return False
@@ -273,7 +271,8 @@ S.false = false
 converter[bool] = lambda x: S.true if x else S.false
 
 class BooleanFunction(Application, Boolean):
-    """Boolean function is a function that lives in a boolean space
+    """
+    Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
     """
     is_Boolean = True
@@ -331,7 +330,6 @@ class And(LatticeOp, BooleanFunction):
 
     >>> And(x, y).subs(x, 1)
     y
-
     """
     zero = false
     identity = true
@@ -404,7 +402,6 @@ class Or(LatticeOp, BooleanFunction):
 
     >>> Or(x, y).subs(x, 0)
     y
-
     """
     zero = true
     identity = false
@@ -493,7 +490,6 @@ class Not(BooleanFunction):
     -2
     >>> ~true
     False
-
     """
 
     is_Not = True
@@ -614,7 +610,6 @@ class Xor(BooleanFunction):
 
     >>> Xor(x, y).subs(y, 0)
     x
-
     """
     def __new__(cls, *args, **kwargs):
         argset = set([])
@@ -699,7 +694,6 @@ class Nand(BooleanFunction):
     False
     >>> Nand(x, y)
     Not(And(x, y))
-
     """
     @classmethod
     def eval(cls, *args):
@@ -733,7 +727,6 @@ class Nor(BooleanFunction):
     True
     >>> Nor(x, y)
     Not(Or(x, y))
-
     """
     @classmethod
     def eval(cls, *args):
@@ -786,7 +779,6 @@ class Implies(BooleanFunction):
     1
     >>> true >> false
     False
-
     """
     @classmethod
     def eval(cls, *args):
@@ -953,7 +945,8 @@ class ITE(BooleanFunction):
 
 
 def conjuncts(expr):
-    """Return a list of the conjuncts in the expr s.
+    """
+    Return a list of the conjuncts in the expr s.
 
     Examples
     ========
@@ -964,7 +957,6 @@ def conjuncts(expr):
     frozenset({A, B})
     >>> conjuncts(A | B)
     frozenset({Or(A, B)})
-
     """
     return And.make_args(expr)
 
@@ -981,7 +973,6 @@ def disjuncts(expr):
     frozenset({A, B})
     >>> disjuncts(A & B)
     frozenset({And(A, B)})
-
     """
     return Or.make_args(expr)
 
@@ -1078,7 +1069,6 @@ def to_cnf(expr, simplify=False):
     And(Or(D, Not(A)), Or(D, Not(B)))
     >>> to_cnf((A | B) & (A | ~A), True)
     Or(A, B)
-
     """
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
@@ -1110,7 +1100,6 @@ def to_dnf(expr, simplify=False):
     Or(And(A, B), And(B, C))
     >>> to_dnf((A & B) | (A & ~B) | (B & C) | (~B & C), True)
     Or(A, C)
-
     """
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
@@ -1188,7 +1177,6 @@ def is_cnf(expr):
     True
     >>> is_cnf((A & B) | C)
     False
-
     """
     return _is_form(expr, And, Or)
 
@@ -1210,7 +1198,6 @@ def is_dnf(expr):
     True
     >>> is_dnf(A & (B | C))
     False
-
     """
     return _is_form(expr, Or, And)
 
@@ -1218,7 +1205,6 @@ def is_dnf(expr):
 def _is_form(expr, function1, function2):
     """
     Test whether or not an expression is of the required form.
-
     """
     expr = sympify(expr)
 
@@ -1324,9 +1310,7 @@ def to_int_repr(clauses, symbols):
     >>> from sympy.abc import x, y
     >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
     True
-
     """
-
     # Convert the symbol list into a dict
     symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
@@ -1357,7 +1341,6 @@ def term_to_integer(term):
     4
     >>> term_to_integer('100')
     4
-
     """
 
     return int(''.join(list(map(str, list(term)))), 2)
@@ -1438,7 +1421,6 @@ def truth_table(expr, variables, input=True):
     [(y, 0), (x, 1)] -> False
     [(y, 1), (x, 0)] -> True
     [(y, 1), (x, 1)] -> True
-
     """
     variables = [sympify(v) for v in variables]
 
@@ -1596,7 +1578,6 @@ def SOPform(variables, minterms, dontcares=None):
     ==========
 
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
-
     """
     variables = [sympify(v) for v in variables]
     if minterms == []:
@@ -1648,7 +1629,6 @@ def POSform(variables, minterms, dontcares=None):
     ==========
 
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
-
     """
     variables = [sympify(v) for v in variables]
     if minterms == []:
@@ -1675,11 +1655,11 @@ def POSform(variables, minterms, dontcares=None):
 
 
 def _find_predicates(expr):
-    """Helper to find logical predicates in BooleanFunctions.
+    """
+    Helper to find logical predicates in BooleanFunctions.
 
     A logical predicate is defined here as anything within a BooleanFunction
     that is not a BooleanFunction itself.
-
     """
     if not isinstance(expr, BooleanFunction):
         return {expr}
@@ -1717,7 +1697,6 @@ def simplify_logic(expr, form=None, deep=True):
     Or(And(Not(x), Not(y), Not(z)), And(Not(x), Not(y), z))
     >>> simplify_logic(_)
     And(Not(x), Not(y))
-
     """
 
     if form == 'cnf' or form == 'dnf' or form is None:
@@ -1817,11 +1796,11 @@ def bool_map(bool1, bool2):
     >>> eq = And(Xor(a, b), c, And(c,d))
     >>> bool_map(eq, eq.subs(c, x))
     (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})
-
     """
 
     def match(function1, function2):
-        """Return the mapping that equates variables between two
+        """
+        Return the mapping that equates variables between two
         simplified boolean expressions if possible.
 
         By "simplified" we mean that a function has been denested
