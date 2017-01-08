@@ -9,6 +9,7 @@ from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
 from sympy.core.trace import Tr
+from sympy.matrices.expressions.trace import Trace
 
 A, B, C = symbols('A,B,C', commutative=False)
 x = symbols('x')
@@ -119,5 +120,6 @@ def test_TP_of_MatrixSymbol():
     assert TP(M,N).is_square == True
     assert TP(C,D,E).is_square == True
     assert Tr(TP(M,N)).doit() == Tr(M)*Tr(N)
+    assert Trace(TP(M,N)).doit() == Tr(M)*Tr(N)
     assert TP(Id, MatMul((Id+M),N)) == TP(Id,Mul((Id+M),N))
     assert TP(M-M,Id) == TP(Zero, Id)

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Number
+from sympy import Number, S
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
@@ -10,10 +10,10 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
 from sympy.matrices.matrices import MatrixBase
-from sympy.core.operations import AssocOp
+from sympy.core.logic import fuzzy_and
 
 
-class MatMul(MatrixExpr, AssocOp):
+class MatMul(MatrixExpr):
     """
     A product of matrix expressions
 
@@ -128,6 +128,17 @@ class MatMul(MatrixExpr, AssocOp):
             coeff_c = set()
 
         return coeff_c, coeff_nc + matrices
+
+    # Taken from AssocOp in core.operations
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        """Create new instance with already-processed args"""
+
+        obj = cls.__new__(cls, *args)
+        if is_commutative is None:
+            is_commutative = fuzzy_and(a.is_commutative for a in args)
+        obj.is_commutative = is_commutative
+        return obj
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

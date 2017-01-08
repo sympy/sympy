@@ -167,7 +167,13 @@ class Tr(Expr):
 
         """
         if hasattr(self.args[0], '_eval_trace'):
-            return self.args[0]._eval_trace(indices=self.args[1])
+            if self.args[1] == ():
+                try:
+                    return self.args[0]._eval_trace()
+                except NotImplementedError:
+                    return Tr(self.args[0].doit())
+            else:
+                return self.args[0]._eval_trace(indices=self.args[1])
 
         return self
 
