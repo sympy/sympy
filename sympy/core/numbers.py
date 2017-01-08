@@ -95,7 +95,10 @@ def mpf_norm(mpf, prec):
             # don't change anything; this should already
             # be a well formed mpf tuple
             return mpf
-    rv = mpf_normalize(sign, man, expt, bc, prec, rnd)
+
+    # Necessary if mpmath is using the gmpy backend
+    from mpmath.libmp.backend import MPZ
+    rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 
 # TODO: we should use the warnings module
@@ -112,6 +115,17 @@ def seterr(divide=False):
     if _errdict["divide"] != divide:
         clear_cache()
         _errdict["divide"] = divide
+
+
+def _as_integer_ratio(p):
+    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    p = [1, -1][neg_pow % 2]*man
+    if expt < 0:
+        q = 2**-expt
+    else:
+        q = 1
+        p *= 2**expt
+    return int(p), int(q)
 
 
 def _decimal_to_Rational_prec(dec):
@@ -770,6 +784,8 @@ class Float(Number):
         elif num is S.NegativeInfinity:
             num = '-inf'
         elif isinstance(num, mpmath.mpf):
+            if prec == None:
+                prec = num.context.dps
             num = num._mpf_
 
         if prec is None:
@@ -835,17 +851,17 @@ class Float(Number):
                 num[1] = long(num[1], 16)
                 _mpf_ = tuple(num)
             else:
-                if not num[1] and len(num) == 4:
+                if len(num) == 4:
                     # handle normalization hack
                     return Float._new(num, prec)
                 else:
-                    _mpf_ = mpmath.mpf(
-                        S.NegativeOne**num[0]*num[1]*2**num[2])._mpf_
+                    return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(prec)
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
             if prec < num._prec:
                 _mpf_ = mpf_norm(_mpf_, prec)
         else:
+            # XXX: We lose precision here.
             _mpf_ = mpmath.mpf(num)._mpf_
 
         # special cases
@@ -869,6 +885,7 @@ class Float(Number):
 
         obj = Expr.__new__(cls)
         obj._mpf_ = mpf_norm(_mpf_, _prec)
+        # XXX: Should this be obj._prec = obj._mpf_[3]?
         obj._prec = _prec
         return obj
 
@@ -1263,8 +1280,6 @@ class Rational(Number):
                     p = fractions.Fraction(p)
                 except ValueError:
                     pass  # error will raise below
-            elif isinstance(p, float):
-                p = fractions.Fraction(p)
 
             if not isinstance(p, string_types):
                 try:
@@ -1273,8 +1288,8 @@ class Rational(Number):
                 except NameError:
                     pass  # error will raise below
 
-                if isinstance(p, Float):
-                    return Rational(*float(p).as_integer_ratio())
+                if isinstance(p, (float, Float)):
+                    return Rational(*_as_integer_ratio(p))
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)

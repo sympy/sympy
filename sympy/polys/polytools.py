@@ -218,11 +218,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(x**2 + 1).free_symbols
-        set([x])
+        {x}
         >>> Poly(x**2 + y).free_symbols
-        set([x, y])
+        {x, y}
         >>> Poly(x**2 + y, x).free_symbols
-        set([x, y])
+        {x, y}
 
         """
         symbols = set([])
@@ -248,7 +248,7 @@ class Poly(Expr):
         >>> Poly(x**2 + y).free_symbols_in_domain
         set()
         >>> Poly(x**2 + y, x).free_symbols_in_domain
-        set([y])
+        {y}
 
         """
         domain, symbols = self.rep.dom, set()
@@ -2944,6 +2944,32 @@ class Poly(Expr):
 
         return f.per(result)
 
+    def transform(f, p, q):
+        """
+        Efficiently evaluate the functional transformation ``q**n * f(p/q)``.
+
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+
+        >>> Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1, x), Poly(x - 1, x))
+        Poly(4, x, domain='ZZ')
+
+        """
+        P, Q = p.unify(q)
+        F, P = f.unify(P)
+        F, Q = F.unify(Q)
+
+        if hasattr(F.rep, 'transform'):
+            result = F.rep.transform(P.rep, Q.rep)
+        else:  # pragma: no cover
+            raise OperationNotSupported(F, 'transform')
+
+        return F.per(result)
+
     def sturm(self, auto=True):
         """
         Computes the Sturm sequence of ``f``.
@@ -4079,7 +4105,7 @@ class PurePoly(Poly):
         >>> PurePoly(x**2 + y).free_symbols
         set()
         >>> PurePoly(x**2 + y, x).free_symbols
-        set([y])
+        {y}
 
         """
         return self.free_symbols_in_domain

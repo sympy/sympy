@@ -201,7 +201,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         return (num/denom).cancel()
 
     c, d, allsol = _ratsimpmodprime(
-        Poly(num, opt.gens), Poly(denom, opt.gens), [])
+        Poly(num, opt.gens, domain=opt.domain), Poly(denom, opt.gens, domain=opt.domain), [])
     if not quick and allsol:
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
@@ -213,6 +213,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
     if not domain.has_Field:
         cn, c = c.clear_denoms(convert=True)
         dn, d = d.clear_denoms(convert=True)
-    r = Rational(cn, dn)
+        r = Rational(cn, dn)
+    else:
+        r = Rational(1)
 
     return (c*r.q)/(d*r.p)

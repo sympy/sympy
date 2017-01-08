@@ -334,6 +334,18 @@ class SparseMatrix(MatrixBase):
             conj._smat[key] = value.conjugate()
         return conj
 
+    def as_real_imag(self):
+        """Returns tuple containing (real , imaginary) part of sparse matrix"""
+        from sympy.functions.elementary.complexes import re, im
+        real_smat = self.copy()
+        im_smat = self.copy()
+
+        for key, value in self._smat.items():
+            real_smat._smat[key] = re(value)
+            im_smat._smat[key] = im(value)
+
+        return (real_smat, im_smat)
+
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)
         decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',

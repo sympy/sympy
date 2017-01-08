@@ -1,7 +1,7 @@
 from sympy import (Derivative as D, Eq, exp, sin,
     Function, Symbol, symbols, cos, log)
 from sympy.core import S
-from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
+from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
@@ -65,6 +65,18 @@ def test_pde_separate_mul():
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
+
+
+def test_issue_11726():
+    x, t = symbols("x t")
+    f  = symbols("f", cls=Function)
+    X, T = symbols("X T", cls=Function)
+
+    u = f(x, t)
+    eq = u.diff(x, 2) - u.diff(t, 2)
+    res = pde_separate(eq, u, [T(x), X(t)])
+    assert res == [D(T(x), x, x)/T(x),D(X(t), t, t)/X(t)]
+
 
 def test_pde_classify():
     # When more number of hints are added, add tests for classifying here.

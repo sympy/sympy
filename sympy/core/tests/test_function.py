@@ -804,3 +804,10 @@ def test_Derivative_as_finite_difference():
     xm, xp, ym, yp = x-half, x+half, y-half, y+half
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
+
+def test_issue_11159():
+    # Tests Application._eval_subs
+    expr1 = E
+    expr0 = expr1 * expr1
+    expr1 = expr0.subs(expr1,expr0)
+    assert expr0 == expr1

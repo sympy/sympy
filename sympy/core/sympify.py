@@ -66,6 +66,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
        - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
 
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
+
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
     function to ensure you are working with the correct type.

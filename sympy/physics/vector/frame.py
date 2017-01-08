@@ -89,6 +89,7 @@ class ReferenceFrame(object):
     vector, defined in another frame.
 
     """
+    _count = 0
 
     def __init__(self, name, indices=None, latexs=None, variables=None):
         """ReferenceFrame initialization method.
@@ -199,6 +200,8 @@ class ReferenceFrame(object):
         self.varlist = (CoordinateSym(variables[0], self, 0), \
                         CoordinateSym(variables[1], self, 1), \
                         CoordinateSym(variables[2], self, 2))
+        ReferenceFrame._count += 1
+        self.index = ReferenceFrame._count
 
     def __getitem__(self, ind):
         """
