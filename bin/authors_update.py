@@ -68,7 +68,6 @@ move(git_people, 93, 92) # James Pearson
 
 git_people.pop(226) # Sergey B Kirpichev
 
-
 header = """\
 All people who contributed to SymPy by sending at least a patch or more (in the
 order of the date of their first contribution), except those who explicitly
@@ -76,10 +75,12 @@ didn't want to be mentioned. People with a * next to their names are not found
 in the metadata of the git history. This file is generated automatically by
 running `./bin/authors_update.py`.
 """
+header_extra = """There are a total of {authors_count} authors.\n""".format(authors_count=len(git_people))
 
 fd = open(os.path.realpath(os.path.join(__file__, os.path.pardir,
     os.path.pardir, "AUTHORS")), "w")
 fd.write(header)
+fd.write(header_extra)
 fd.write("\n")
 fd.write("\n".join(git_people).encode("utf8"))
 fd.write("\n")

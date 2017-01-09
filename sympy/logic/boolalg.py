@@ -961,9 +961,9 @@ def conjuncts(expr):
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> conjuncts(A | B)
-    frozenset([Or(A, B)])
+    frozenset({Or(A, B)})
 
     """
     return And.make_args(expr)
@@ -978,9 +978,9 @@ def disjuncts(expr):
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
-    frozenset([A, B])
+    frozenset({A, B})
     >>> disjuncts(A & B)
-    frozenset([And(A, B)])
+    frozenset({And(A, B)})
 
     """
     return Or.make_args(expr)
@@ -1322,7 +1322,7 @@ def to_int_repr(clauses, symbols):
 
     >>> from sympy.logic.boolalg import to_int_repr
     >>> from sympy.abc import x, y
-    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+    >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
     True
 
     """

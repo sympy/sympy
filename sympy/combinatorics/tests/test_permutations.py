@@ -376,7 +376,7 @@ def test_Cycle():
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Cycle().size == 0
-    raises(TypeError, lambda: Cycle((1, 2)))
+    raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
     raises(ValueError, lambda: Cycle(4)[a])

@@ -4,7 +4,7 @@ import random
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp, sstr, diff)
+    sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (
@@ -213,6 +213,16 @@ def test_power():
         [a**n, a**(n-1)*n, 0],
         [0, a**n, 0],
         [0, 0, b**n]])
+
+    A = Matrix([[1, 0], [1, 7]])
+    assert A._matrix_pow_by_jordan_blocks(3) == A._matrix_pow_by_recursion(3)
+    A = Matrix([[2]])
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+        A._matrix_pow_by_recursion(10)
+
+    # testing a matrix that cannot be jordan blocked issue 11766
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
 
 def test_creation():
@@ -2258,17 +2268,15 @@ def test_invertible_check():
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
-    # ... but sometimes it won't, so that is an insufficient test of
-    # whether something is invertible.
     m = Matrix([
         [-1, -1,  0],
         [ x,  1,  1],
         [ 1,  x, -1],
     ])
-    assert len(m.rref()[1]) == m.rows
+    assert len(m.rref()[1]) != m.rows
     # in addition, unless simplify=True in the call to rref, the identity
     # matrix will be returned even though m is not invertible
-    assert m.rref()[0] == eye(3)
+    assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
     raises(ValueError, lambda: m.inv(method="ADJ"))
     raises(ValueError, lambda: m.inv(method="GE"))
@@ -2380,6 +2388,11 @@ def test_issue_5320():
         [0, 1, 0, 2]
     ])
 
+def test_issue_11944():
+    A = Matrix([[1]])
+    AIm = sympify(A)
+    assert Matrix.hstack(AIm, A) == Matrix([[1, 1]])
+    assert Matrix.vstack(AIm, A) == Matrix([[1], [1]])
 
 def test_cross():
     a = [1, 2, 3]
@@ -2437,6 +2450,36 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_rank_regression_from_so():
+    # see:
+    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = [0, 1, 2]
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
 
 def test_replace():
     from sympy import symbols, Function, Matrix
@@ -2747,3 +2790,64 @@ def test_issue_10658():
     assert A.extract([False, False, False], [0, 1, 2]) == Matrix(0, 3, [])
     assert A.extract([True, False, True], [False, True, False]) == \
         Matrix([[2], [8]])
+
+def test_opportunistic_simplification():
+    # this test relates to issue #10718, #9480, #11434
+
+    # issue #9480
+    m = Matrix([[-5 + 5*sqrt(2), -5], [-5*sqrt(2)/2 + 5, -5*sqrt(2)/2]])
+    assert m.rank() == 1
+
+    # issue #10781
+    m = Matrix([[3+3*sqrt(3)*I, -9],[4,-3+3*sqrt(3)*I]])
+    assert m.rref()[0] == Matrix([[1, -9/(3 + 3*sqrt(3)*I)], [0, 0]])
+
+    # issue #11434
+    ax,ay,bx,by,cx,cy,dx,dy,ex,ey,t0,t1 = symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    m = Matrix([[ax,ay,ax*t0,ay*t0,0],[bx,by,bx*t0,by*t0,0],[cx,cy,cx*t0,cy*t0,1],[dx,dy,dx*t0,dy*t0,1],[ex,ey,2*ex*t1-ex*t0,2*ey*t1-ey*t0,0]])
+    assert m.rank() == 4
+
+def test_partial_pivoting():
+    # example from https://en.wikipedia.org/wiki/Pivot_element
+    mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
+    assert mm.rref()[0] == Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])
+
+    # issue #11549
+    m_mixed = Matrix([[6e-17, 1.0, 4],[ -1.0,   0, 8],[    0,   0, 1]])
+    m_float = Matrix([[6e-17, 1.0, 4.],[ -1.0,   0., 8.],[    0.,   0., 1.]])
+    m_inv = Matrix([[  0,    -1.0,  8.0],[1.0, 6.0e-17, -4.0],[  0,       0,    1]])
+    # this example is numerically unstable and involves a matrix with a norm >= 8,
+    # this comparing the difference of the results with 1e-15 is numerically sound.
+    assert (m_mixed.inv() - m_inv).norm() < 1e-15
+    assert (m_float.inv() - m_inv).norm() < 1e-15
+
+def test_iszero_substitution():
+    """ When doing numerical computations, all elements that pass
+    the iszerofunc test should be set to numerically zero if they
+    aren't already. """
+
+    # Matrix from issue #9060
+    m = Matrix([[0.9, -0.1, -0.2, 0],[-0.8, 0.9, -0.4, 0],[-0.1, -0.8, 0.6, 0]])
+    m_rref = m.rref(iszerofunc=lambda x: abs(x)<6e-15)[0]
+    m_correct = Matrix([[1.0,   0, -0.301369863013699, 0],[  0, 1.0, -0.712328767123288, 0],[  0,   0,                  0, 0]])
+    m_diff = m_rref - m_correct
+    assert m_diff.norm() < 1e-15
+    # if a zero-substitution wasn't made, this entry will be -1.11022302462516e-16
+    assert m_rref[2,2] == 0
+
+
+@slow
+def test_issue_11238():
+    from sympy import Point
+    xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
+    yy = (-8*sqrt(3)*tan(13*pi/45)**2 + 24*tan(13*pi/45))/(-3 + tan(13*pi/45)**2)
+    p1 = Point(0, 0)
+    p2 = Point(1, -sqrt(3))
+    p0 = Point(xx,yy)
+    m1 = Matrix([p1 - simplify(p0), p2 - simplify(p0)])
+    m2 = Matrix([p1 - p0, p2 - p0])
+    m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
+
+    assert m1.rank(simplify=True) == 1
+    assert m2.rank(simplify=True) == 1
+    assert m3.rank(simplify=True) == 1

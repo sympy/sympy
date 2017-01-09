@@ -773,15 +773,23 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
+
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+
+        if a == b:
+            return 0;
 
         if a is None:
             A = 0
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                A = limit(self, x, a)
+                if (a < b) != False:
+                    A = limit(self, x, a,"+")
+                else:
+                    A = limit(self, x, a,"-")
+
                 if A is S.NaN:
                     return A
                 if isinstance(A, Limit):
@@ -792,7 +800,11 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                B = limit(self, x, b)
+                if (a < b) != False:
+                    B = limit(self, x, b,"-")
+                else:
+                    B = limit(self, x, b,"+")
+
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
@@ -1044,7 +1056,7 @@ class Expr(Basic, EvalfMixin):
         Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
-        >>> A, B = symbols('A B', commutative=0)
+        >>> A, B = symbols('A B', commutative=False)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [[-1, 2, x, y], []]
@@ -1055,7 +1067,7 @@ class Expr(Basic, EvalfMixin):
         >>> (-2*x*A*B*y).args_cnc(split_1=False)
         [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
-        [set([-1, 2, x, y]), []]
+        [{-1, 2, x, y}, []]
 
         The arg is always treated as a Mul:
 
@@ -1601,8 +1613,6 @@ class Expr(Basic, EvalfMixin):
             want = Add
         else:
             want = Mul
-        if func is not want and (func is Add or func is Mul):
-            return (want.identity, self)
 
         # sift out deps into symbolic and other and ignore
         # all symbols but those that are in the free symbols
@@ -3261,6 +3271,34 @@ def _mag(x):
         assert 1 <= (xpos/10**mag_first_dig) < 10
         mag_first_dig += 1
     return mag_first_dig
+
+
+class UnevaluatedExpr(Expr):
+    """
+    Expression that is not evaluated unless released.
+
+    Examples
+    ========
+
+    >>> from sympy import UnevaluatedExpr
+    >>> from sympy.abc import a, b, x, y
+    >>> x*(1/x)
+    1
+    >>> x*UnevaluatedExpr(1/x)
+    x*1/x
+
+    """
+
+    def __new__(cls, arg, **kwargs):
+        obj = Expr.__new__(cls, arg, **kwargs)
+        return obj
+
+    def doit(self, *args, **kwargs):
+        if kwargs.get("deep", True):
+            return self.args[0].doit(*args, **kwargs)
+        else:
+            return self.args[0]
+
 
 from .mul import Mul
 from .add import Add

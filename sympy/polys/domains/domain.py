@@ -385,7 +385,7 @@ class Domain(object):
         return FractionField(self, *symbols, **kwargs)
 
     def algebraic_field(self, *extension):
-        """Returns an algebraic field, i.e. `K(\\alpha, \dots)`. """
+        """Returns an algebraic field, i.e. `K(\\alpha, \ldots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
     def inject(self, *symbols):
