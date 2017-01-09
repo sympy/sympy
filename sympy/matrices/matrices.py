@@ -1583,11 +1583,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
     def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
-        if not sympify(num).is_integer and (num > 0) == True and not num % 1 == 0:
-            b = self.jordan_cells()[1]
-            for i in range(len(b)):
-                if (b[i]).rows > 1 and b[i][0, 0] == 0:
-                    raise ValueError("Cannot be evaluated")
         if isinstance(num, (int, Integer)):
             if (self.rows == 1):
                 return self._new([[self[0]**num]])
@@ -1601,6 +1596,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     return self._matrix_pow_by_recursion(num)
             return self._matrix_pow_by_recursion(num)
         elif isinstance(num, (Expr, float)):
+            num = sympify(num)
+            if (num >= 0) == True and not num % 1 == 0:
+                z = self.jordan_form()[1]
+                for i in range(self.rows - 1):
+                    if z[i, i] == 0 and z[i, i + 1] == 1 and z[i + 1, i + 1] == 0:
+                        raise ValueError("Cannot be evaluated")
             return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
