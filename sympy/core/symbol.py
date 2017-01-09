@@ -450,7 +450,7 @@ def symbols(names, **args):
 
     if isinstance(names, string_types):
         marker = 0
-        literals = ['\,', '\:', '\ ']
+        literals = [r'\,', r'\:', r'\ ']
         for i in range(len(literals)):
             lit = literals.pop(0)
             if lit in names:

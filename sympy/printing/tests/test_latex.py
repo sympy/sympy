@@ -856,9 +856,9 @@ def test_mode():
 
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
-    assert latex(p) == "\\begin{cases} x & \\text{for}\: x < 1 \\\\x^{2} &" \
+    assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}"
-    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\: x \\lt 1 \\\\x^{2} &" \
+    assert latex(p, itex=True) == "\\begin{cases} x & \\text{for}\\: x \\lt 1 \\\\x^{2} &" \
                                   " \\text{otherwise} \\end{cases}"
     p = Piecewise((x, x < 0), (0, x >= 0))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
@@ -945,11 +945,11 @@ def test_latex_NDimArray():
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
     assert latex(4*4**x, mul_symbol='dot') == "4 \\cdot 4^{x}"
-    assert latex(4*4**x, mul_symbol='ldot') == "4 \,.\, 4^{x}"
+    assert latex(4*4**x, mul_symbol='ldot') == r"4 \,.\, 4^{x}"
 
     assert latex(4*x, mul_symbol='times') == "4 \\times x"
     assert latex(4*x, mul_symbol='dot') == "4 \\cdot x"
-    assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
+    assert latex(4*x, mul_symbol='ldot') == r"4 \,.\, x"
 
 
 def test_latex_issue_4381():
@@ -1212,10 +1212,10 @@ def test_categories():
     assert latex(id_A1) == "id:A_{1}\\rightarrow A_{1}"
     assert latex(f2*f1) == "f_{2}\\circ f_{1}:A_{1}\\rightarrow A_{3}"
 
-    assert latex(K1) == "\mathbf{K_{1}}"
+    assert latex(K1) == r"\mathbf{K_{1}}"
 
     d = Diagram()
-    assert latex(d) == "\emptyset"
+    assert latex(d) == r"\emptyset"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert latex(d) == r"\left \{ f_{2}\circ f_{1}:A_{1}" \

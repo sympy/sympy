@@ -301,7 +301,7 @@ def test_symbols():
     assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
     assert sym('a:3b') == '(a0b, a1b, a2b)'
     assert sym('a-1:3b') == '(a-1b, a-2b)'
-    assert sym('a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
+    assert sym(r'a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
         (chr(0),)*4)
     assert sym('x(:a:3)') == '(x(a0), x(a1), x(a2))'
     assert sym('x(:c):1') == '(xa0, xb0, xc0)'
