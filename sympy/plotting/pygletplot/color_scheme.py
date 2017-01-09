@@ -42,39 +42,41 @@ class ColorGradient(object):
         c = self._interpolate_axis
         return c(0, r), c(1, g), c(2, b)
 
+
 default_color_schemes = {}  # defined at the bottom of this file
 
 
 class ColorScheme(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         self.args = args
-        self.f, self.gradient = None, ColorGradient()
+        self.color_function, self.gradient = None, ColorGradient()
 
-        if len(args) == 1 and not isinstance(args[0], Basic) and callable(args[0]):
-            self.f = args[0]
+        if len(args) == 1 and not isinstance(args[0], Basic) and \
+                callable(args[0]):
+            self.color_function = args[0]
         elif len(args) == 1 and isinstance(args[0], str):
             if args[0] in default_color_schemes:
                 cs = default_color_schemes[args[0]]
-                self.f, self.gradient = cs.f, cs.gradient.copy()
+                self.color_function, self.gradient = cs.f, cs.gradient.copy()
             else:
-                self.f = lambdify('x,y,z,u,v', args[0])
+                self.color_function = lambdify('x,y,z,u,v', args[0])
         else:
-            self.f, self.gradient = self._interpret_args(args, kwargs)
-        self._test_color_function()
+            self.color_function, self.gradient = self._interpret_args(args)
+        self._validate_color_function()
         if not isinstance(self.gradient, ColorGradient):
             raise ValueError("Color gradient not properly initialized. "
                              "(Not a ColorGradient instance.)")
 
-    def _interpret_args(self, args, kwargs):
-        f, gradient = None, self.gradient
+    def _interpret_args(self, args):
+        color_function, gradient = None, self.gradient
         atoms, lists = self._sort_args(args)
-        s = self._pop_symbol_list(lists)
-        s = self._fill_in_vars(s)
+        symbol_list = self._pop_symbol_list(lists)
+        symbol_list = self._fill_in_vars(symbol_list)
 
         # prepare the error message for lambdification failure
         f_str = ', '.join(str(fa) for fa in atoms)
-        s_str = (str(sa) for sa in s)
+        s_str = (str(sa) for sa in symbol_list)
         s_str = ', '.join(sa for sa in s_str if sa.find('unbound') < 0)
         f_error = ValueError("Could not interpret arguments "
                              "%s as functions of %s." % (f_str, s_str))
@@ -83,14 +85,14 @@ class ColorScheme(object):
         if len(atoms) == 1:
             fv = atoms[0]
             try:
-                f = lambdify(s, [fv, fv, fv])
+                color_function = lambdify(symbol_list, [fv, fv, fv])
             except TypeError:
                 raise f_error
 
         elif len(atoms) == 3:
             fr, fg, fb = atoms
             try:
-                f = lambdify(s, [fr, fg, fb])
+                color_function = lambdify(symbol_list, [fr, fg, fb])
             except TypeError:
                 raise f_error
 
@@ -109,36 +111,40 @@ class ColorScheme(object):
             try:
                 (r1, g1, b1), (r2, g2, b2) = lists
             except TypeError:
-                raise ValueError("If two color arguments are given, "
-                                 "they must be given in the format "
-                                 "(r1, g1, b1), (r2, g2, b2).")
+                raise ValueError(
+                    "If two color arguments are given, they must be "
+                    "given in the format (r1, g1, b1), (r2, g2, b2)."
+                )
             gargs = lists
 
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
             except Exception:
-                raise ValueError("If three color arguments are given, "
-                                 "they must be given in the format "
-                                 "(r1, r2), (g1, g2), (b1, b2). To create "
-                                 "a multi-step gradient, use the syntax "
-                                 "[0, colorStart, step1, color1, ..., 1, "
-                                 "colorEnd].")
+                raise ValueError(
+                    "If three color arguments are given, they must be given "
+                    "in the format (r1, r2), (g1, g2), (b1, b2). To create "
+                    "a multi-step gradient, use the syntax "
+                    "[0, colorStart, step1, color1, ..., 1, colorEnd]."
+                )
             gargs = [[r1, g1, b1], [r2, g2, b2]]
 
         else:
-            raise ValueError("Don't know what to do with collection "
-                             "arguments %s." % (', '.join(str(l) for l in lists)))
+            raise ValueError(
+                "Don't know what to do with collection arguments %s."
+                % ', '.join(str(l) for l in lists)
+            )
 
         if gargs:
             try:
                 gradient = ColorGradient(*gargs)
             except Exception as ex:
-                raise ValueError(("Could not initialize a gradient "
-                                  "with arguments %s. Inner "
-                                  "exception: %s") % (gargs, str(ex)))
+                raise ValueError(
+                    "Could not initialize a gradient with arguments %s. "
+                    "Inner exception: %s" % (gargs, str(ex))
+                )
 
-        return f, gradient
+        return color_function, gradient
 
     def _pop_symbol_list(self, lists):
         symbol_lists = []
@@ -156,86 +162,90 @@ class ColorScheme(object):
         elif len(symbol_lists) == 0:
             return []
         else:
-            raise ValueError("Only one list of Symbols "
-                             "can be given for a color scheme.")
+            raise ValueError(
+                "Only one list of Symbols can be given for a color scheme."
+            )
 
-    def _fill_in_vars(self, args):
+    def _fill_in_vars(self, symbol_list):
         defaults = symbols('x,y,z,u,v')
-        if len(args) == 0:
+        if len(symbol_list) == 0:
             return defaults
-        if not isinstance(args, (tuple, list)):
+        if not isinstance(symbol_list, (tuple, list)):
             raise v_error
-        if len(args) == 0:
+        if len(symbol_list) == 0:
             return defaults
-        for s in args:
-            if s is not None and not isinstance(s, Symbol):
+        for symbol in symbol_list:
+            if symbol is not None and not isinstance(symbol, Symbol):
                 raise v_error
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i' % (i)) for i in range(1, 6)]
+        vars = [Symbol('unbound%i' % i) for i in range(1, 6)]
         # interpret as t
-        if len(args) == 1:
-            vars[3] = args[0]
+        if len(symbol_list) == 1:
+            vars[3] = symbol_list[0]
         # interpret as u,v
-        elif len(args) == 2:
-            if args[0] is not None:
-                vars[3] = args[0]
-            if args[1] is not None:
-                vars[4] = args[1]
+        elif len(symbol_list) == 2:
+            if symbol_list[0] is not None:
+                vars[3] = symbol_list[0]
+            if symbol_list[1] is not None:
+                vars[4] = symbol_list[1]
         # interpret as x,y,z
-        elif len(args) >= 3:
+        elif len(symbol_list) >= 3:
             # allow some of x,y,z to be
             # left unbound if not given
-            if args[0] is not None:
-                vars[0] = args[0]
-            if args[1] is not None:
-                vars[1] = args[1]
-            if args[2] is not None:
-                vars[2] = args[2]
+            if symbol_list[0] is not None:
+                vars[0] = symbol_list[0]
+            if symbol_list[1] is not None:
+                vars[1] = symbol_list[1]
+            if symbol_list[2] is not None:
+                vars[2] = symbol_list[2]
             # interpret the rest as t
-            if len(args) >= 4:
-                vars[3] = args[3]
+            if len(symbol_list) >= 4:
+                vars[3] = symbol_list[3]
                 # ...or u,v
-                if len(args) >= 5:
-                    vars[4] = args[4]
+                if len(symbol_list) >= 5:
+                    vars[4] = symbol_list[4]
         return vars
 
     def _sort_args(self, args):
         atoms, lists = [], []
-        for a in args:
-            if isinstance(a, (tuple, list)):
-                lists.append(a)
+        for arg in args:
+            if isinstance(arg, (tuple, list)):
+                lists.append(arg)
             else:
-                atoms.append(a)
+                atoms.append(arg)
         return atoms, lists
 
-    def _test_color_function(self):
-        if not callable(self.f):
+    def _validate_color_function(self):
+        if not callable(self.color_function):
             raise ValueError("Color function is not callable.")
         try:
-            result = self.f(0, 0, 0, 0, 0)
+            result = self.color_function(0, 0, 0, 0, 0)
             if len(result) != 3:
-                raise ValueError("length should be equal to 3")
-        except TypeError as te:
-            raise ValueError("Color function needs to accept x,y,z,u,v, "
-                             "as arguments even if it doesn't use all of them.")
-        except AssertionError as ae:
+                raise ValueError(
+                    "Length of the returned value should be equal to 3."
+                )
+        except TypeError:
+            raise ValueError(
+                "Color function needs to accept x, y, z, u, v, "
+                "as arguments even if it doesn't use all of them."
+            )
+        except AssertionError:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception as ie:
-            pass  # color function probably not valid at 0,0,0,0,0
+        except Exception:
+            pass  # Color function probably not valid at (0, 0, 0, 0, 0).
 
     def __call__(self, x, y, z, u, v):
         try:
-            return self.f(x, y, z, u, v)
-        except Exception as e:
+            return self.color_function(x, y, z, u, v)
+        except Exception:
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):
         """
-        Apply this color scheme to a
-        set of vertices over a single
-        independent variable u.
+        Apply this color scheme to a set of vertices
+        over a single independent variable u.
         """
         bounds = create_bounds()
         cverts = list()
@@ -269,11 +279,11 @@ class ColorScheme(object):
                 inc_pos()
         return cverts
 
-    def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None):
+    def apply_to_surface(self, verts, u_set, v_set,
+                         set_len=None, inc_pos=None):
         """
-        Apply this color scheme to a
-        set of vertices over two
-        independent variables u and v.
+        Apply this color scheme to a set of vertices
+        over two independent variables u and v.
         """
         bounds = create_bounds()
         cverts = list()
@@ -303,8 +313,9 @@ class ColorScheme(object):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
                     for _c in range(3):
-                        cverts[_u][_v][_c] = rinterpolate(bounds[_c][0],
-                                             bounds[_c][1], cverts[_u][_v][_c])
+                        cverts[_u][_v][_c] = rinterpolate(
+                            bounds[_c][0], bounds[_c][1], cverts[_u][_v][_c]
+                        )
                     # apply gradient
                     cverts[_u][_v] = self.gradient(*cverts[_u][_v])
                 if callable(inc_pos):
