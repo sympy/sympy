@@ -1207,10 +1207,14 @@ class Union(Set, EvalfMixin):
         # ===== Pair-wise Rules =====
         # Here we depend on rules built into the constituent sets
 
-        # `set` can return elements in different order(each time
-        # whenever you run the code, which may cause the error in build/testing,
-        # because of different ans, although all answers are correct) So `args`
-        # must be a list (or any other ordered sequence)
+        '''
+
+        `set` can return elements in different order(each time
+        whenever you run the code, which may cause the error in build/testing,
+        because of different ans, although all answers are correct) So `args`
+        must be a list (or any other ordered sequence)
+
+        '''
         args = unique_elements(args)
         new_args = True
         while(new_args):

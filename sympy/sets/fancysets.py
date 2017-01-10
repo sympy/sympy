@@ -561,25 +561,29 @@ class ImageSet(Set):
                 # self.lamda.variables)
                 other_expr = other_expr.subs(var_other, var_self)
                 if simplify(other_expr - self_expr) % var_coeff == var_coeff / 2:
-                    # E.g.
-                    # other_expr = var_coeff*n*pi + pi + expr1
-                    # self_expr = var_coeff*n*pi  + exp1
-                    # var_coeff = 2
-                    # other_expr - self_expr == (var_coeff/2)*pi*n
-                    # So we can combine them and can write
-                    # `(var_coeff/2)*pi*n + expr1`, this can generate other
-                    # values of `other_expr` and `self_expr`.
+                    '''
+                    E.g.
+                    other_expr = var_coeff*n*pi + pi + expr1
+                    self_expr = var_coeff*n*pi  + exp1
+                    var_coeff = 2
+                    other_expr - self_expr == (var_coeff/2)*pi*n
+                    So we can combine them and can write
+                    `(var_coeff/2)*pi*n + expr1`, this can generate other
+                    values of `other_expr` and `self_expr`.
+                    '''
                     other_expr = (var_coeff / 2) * var_self + val_at(self, 0)
                     return ImageSet(Lambda(var_self, other_expr), base)
                 elif simplify(other_expr - self_expr) % var_coeff == 0:
-                    # E.g.
-                    # other_expr = (var_coeff*n*pi + expr1)
-                    # self_expr = (var_coeff*n*pi  + var_coeff*pi + exp1)
-                    # var_coeff = 2
-                    # other_expr - self_expr == 0
-                    # So we can combine them and can write
-                    # `var_coeff*pi*n + expr1`, this can generate other
-                    # values of `other_expr` and `self_expr`.
+                    '''
+                    E.g.
+                    other_expr = (var_coeff*n*pi + expr1)
+                    self_expr = (var_coeff*n*pi  + var_coeff*pi + exp1)
+                    var_coeff = 2
+                    other_expr - self_expr == 0
+                    So we can combine them and can write
+                    `var_coeff*pi*n + expr1`, this can generate other
+                    values of `other_expr` and `self_expr`.
+                    '''
                     other_expr = var_coeff * var_self + val_at(self, 0)
                     return ImageSet(Lambda(var_self, other_expr), base)
                 # other ways can be added here.
