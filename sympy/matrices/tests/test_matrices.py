@@ -2851,3 +2851,42 @@ def test_issue_11238():
     assert m1.rank(simplify=True) == 1
     assert m2.rank(simplify=True) == 1
     assert m3.rank(simplify=True) == 1
+
+
+def test_rref_aug():
+    A1 = Matrix([[1, 2, 3], [3, 4, 7], [6, 5, 9]])
+    B1a = MutableDenseMatrix([[0], [2], [11]])
+    R1a, pivots1a = A1.rref(aug=B1a)
+    assert R1a == eye(3) and pivots1a == [0, 1, 2] and B1a == Matrix([[4], [1], [-2]])
+
+    B1b = MutableDenseMatrix([[x], [y], [z]])
+    R1b, pivots1b = A1.rref(aug=B1b)
+    delta1b = B1b - Matrix([
+        [(x - 3*y + 2*z)/4],
+        [(15*x - 9*y + 2*z)/4],
+        [(7*y - 2*z - 9*x)/4]
+    ])
+    delta1b.simplify()
+    assert R1b == eye(3) and pivots1b == [0, 1, 2] and delta1b == Matrix([[0], [0], [0]])
+
+    A2 = Matrix([[0, 1, -1], [2, 1, 1], [1, 0, 1]])
+    B2 = MutableDenseMatrix([[x], [y], [z]])
+    R2, pivots2 = A2.rref(aug=B2)
+    assert R2 == Matrix([[1, 0, 1], [0, 1, -1], [0, 0, 0]]) and pivots2 == [0, 1]
+    delta2 = (B2[:2, :] - Matrix([
+        [(y - x)/2],
+        [x]
+    ]))
+    delta2.simplify()
+    assert delta2 == Matrix([[0], [0]])
+
+    A3 = Matrix([[-1, 0, 1], [1, 2, 1], [1, 1, 0]])
+    B3 = MutableDenseMatrix([[x], [y], [z]])
+    R3, pivots3 = A3.rref(aug=B3)
+    assert R3 == Matrix([[1, 0, -1], [0, 1, 1], [0, 0, 0]]) and pivots3 == [0, 1]
+    delta3 = (B3[:2, :] - Matrix([
+        [-x],
+        [(x + y)/2]
+    ]))
+    delta3.simplify()
+    assert delta3 == Matrix([[0], [0]])

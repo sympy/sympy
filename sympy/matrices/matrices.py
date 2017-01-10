@@ -4662,12 +4662,21 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return M.applyfunc(lambda x: x.replace(F, G, map))
 
-    def rref(self, iszerofunc=_iszero, simplify=False):
+    def rref(self, iszerofunc=_iszero, simplify=False, aug=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
         (to use the default SymPy simplify function) or pass a custom
         simplify function.
+
+        Parameters
+        ==========
+        iszerofunc : callable
+        simplify : bool or callable
+        aug : MutableMatrix (optional)
+            Optional extra columns to form an augmented matrix.
+            The row operations performed will also be performed
+            on ``aug`` if given.
 
         Examples
         ========
@@ -4716,13 +4725,20 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             # swap the pivot column into place
             pivot_pos = pivot + pivot_offset
             r.row_swap(pivot, pivot_pos)
+            if aug is not None:
+                aug.row_swap(pivot, pivot_pos)
 
             r.row_op(pivot, lambda x, _: x / pivot_val)
+            if aug is not None:
+                aug.row_op(pivot, lambda x, _: x / pivot_val)
+
             for j in range(r.rows):
                 if j == pivot:
                     continue
                 pivot_val = r[j, i]
                 r.zip_row_op(j, pivot, lambda x, y: x - pivot_val * y)
+                if aug is not None:
+                    aug.zip_row_op(j, pivot, lambda x, y: x - pivot_val * y)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
