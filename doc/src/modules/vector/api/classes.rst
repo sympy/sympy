@@ -2,8 +2,8 @@
 Essential Classes in sympy.vector (doctrings)
 =============================================
 
-CoordSysCartesian
-=================
+CartesianCoordinateSystem
+=========================
 
 .. autoclass:: sympy.vector.coordsys.CartesianCoordinateSystem
    :members:

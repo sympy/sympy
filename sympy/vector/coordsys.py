@@ -54,7 +54,7 @@ class CoordinateSystem(Basic):
             Used for simple str printing.
 
         """
-        from sympy.abc import a, x, y, z
+        from sympy.abc import a, x, y, z, u, v, w
 
         name = str(name)
         Vector = sympy.vector.Vector
@@ -109,65 +109,65 @@ class CoordinateSystem(Basic):
         # Handling for different coordinate systems
         coord_type_map = {
             'cartesian': [
-                Lambda((x, y, z), (1, 1, 1)),
-                Lambda((x, y, z), (1, 1, 1))
+                Lambda((u, v, w), (1, 1, 1)),
+                Lambda((u, v, w), (1, 1, 1))
             ],
             'spherical': [
-                Lambda((x, y, z), (x*sin(y)*cos(z),
-                                   x*sin(y)*sin(z),
-                                   x*cos(y))),
-                Lambda((x, y, z), (1, x, x*sin(y)))
+                Lambda((u, v, w), (u*sin(v)*cos(w),
+                                   u*sin(v)*sin(w),
+                                   u*cos(v))),
+                Lambda((u, v, w), (1, u, u*sin(v)))
             ],
             'cylindrical': [
-                Lambda((x, y, z), (x*cos(y), x*sin(y), z)),
-                Lambda((x, y, z), (1, x, 1))
+                Lambda((u, v, w), (u*cos(v), u*sin(v), w)),
+                Lambda((u, v, w), (1, u, 1))
             ],
             'paraboloidal': [
-                Lambda((x, y, z), (x*y*cos(z), x*y*sin(z),
-                                   S(1)/2 * sqrt(x**2 - y**2))),
-                Lambda((x, y, z), (sqrt(x**2 + y**2), sqrt(x**2 + y**2), x*y))
+                Lambda((u, v, w), (u*v*cos(w), u*v*sin(w),
+                                   S(1)/2 * sqrt(u**2 - v**2))),
+                Lambda((u, v, w), (sqrt(u**2 + v**2), sqrt(u**2 + v**2), u*v))
             ],
             'parabolic cylindrical': [
-                Lambda((x, y, z), (S(1)/2 * sqrt(x**2 - y**2), x*y, z)),
-                Lambda((x, y, z), (sqrt(x**2 + y**2), sqrt(x**2 + y**2), 1))
+                Lambda((u, v, w), (S(1)/2 * sqrt(u**2 - v**2), u*v, w)),
+                Lambda((u, v, w), (sqrt(u**2 + v**2), sqrt(u**2 + v**2), 1))
             ],
             'elliptic cylindrical': [
-                Lambda((a, x, y, z), (a*cosh(x)*cos(y), a*sinh(x)*sin(y), z)),
-                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
-                                      a*sqrt(sinh(x)**2 + sin(y)**2),
+                Lambda((a, u, v, w), (a*cosh(u)*cos(v), a*sinh(u)*sin(v), w)),
+                Lambda((a, u, v, w), (a*sqrt(sinh(u)**2 + sin(v)**2),
+                                      a*sqrt(sinh(u)**2 + sin(v)**2),
                                       1))
             ],
             'prolate spheroidal': [
-                Lambda((a, x, y, z), (a*sinh(x)*sin(y)*cos(z),
-                                      a*sinh(x)*sin(y)*sin(z),
-                                      a*cosh(x)*cos(y))),
-                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
-                                      a*sqrt(sinh(x)**2 + sin(y)**2),
-                                      a*sinh(x)*sin(y)))
+                Lambda((a, u, v, w), (a*sinh(u)*sin(v)*cos(w),
+                                      a*sinh(u)*sin(v)*sin(w),
+                                      a*cosh(u)*cos(v))),
+                Lambda((a, u, v, w), (a*sqrt(sinh(u)**2 + sin(v)**2),
+                                      a*sqrt(sinh(u)**2 + sin(v)**2),
+                                      a*sinh(u)*sin(v)))
             ],
             'oblate spheroidal': [
-                Lambda((a, x, y, z), (a*cosh(x)*cos(y)*cos(z),
-                                      a*cosh(x)*cos(y)*sin(z),
-                                      a*sinh(x)*sin(y))),
-                Lambda((a, x, y, z), (a*sqrt(sinh(x)**2 + sin(y)**2),
-                                      a*sqrt(sinh(x)**2 + sin(y)**2),
-                                      a*cosh(x)*cos(y)))
+                Lambda((a, u, v, w), (a*cosh(u)*cos(v)*cos(w),
+                                      a*cosh(u)*cos(v)*sin(w),
+                                      a*sinh(u)*sin(v))),
+                Lambda((a, u, v, w), (a*sqrt(sinh(u)**2 + sin(v)**2),
+                                      a*sqrt(sinh(u)**2 + sin(v)**2),
+                                      a*cosh(u)*cos(v)))
             ],
             'bipolar': [
-                Lambda((a, x, y, z), (a*sinh(y)/(cosh(y) - cos(x)),
-                                      a*sin(x)/(cosh(y) - cos(x)),
-                                      z)),
-                Lambda((a, x, y, z), (a/(cosh(y) - cos(x)),
-                                      a/(cosh(y) - cos(x)),
+                Lambda((a, u, v, w), (a*sinh(v)/(cosh(v) - cos(u)),
+                                      a*sin(u)/(cosh(v) - cos(u)),
+                                      w)),
+                Lambda((a, u, v, w), (a/(cosh(v) - cos(u)),
+                                      a/(cosh(v) - cos(u)),
                                       1))
             ],
             'toroidal': [
-                Lambda((a, x, y, z), (a*sinh(y)*cos(z)/(cosh(y) - cos(x)),
-                                      a*sinh(y)*sin(z)/(cosh(y) - cos(x)),
-                                      a*sin(x)/(cosh(y) - cos(x)))),
-                Lambda((a, x, y, z), (a/(cosh(y) - cos(x)),
-                                      a/(cosh(y) - cos(x)),
-                                      a*sinh(y)/(cosh(y) - cos(x))))
+                Lambda((a, u, v, w), (a*sinh(v)*cos(w)/(cosh(v) - cos(u)),
+                                      a*sinh(v)*sin(w)/(cosh(v) - cos(u)),
+                                      a*sin(u)/(cosh(v) - cos(u)))),
+                Lambda((a, u, v, w), (a/(cosh(v) - cos(u)),
+                                      a/(cosh(v) - cos(u)),
+                                      a*sinh(v)/(cosh(v) - cos(u))))
             ]
         }
 
@@ -195,7 +195,7 @@ class CoordinateSystem(Basic):
                 lame_lambda = _get_lame_lambda(system)
                 coord_sys_type = name
             else:
-                raise TypeError("see the docs for proper useage")
+                raise TypeError("see the docs for proper usage")
 
         # All systems that are defined as 'roots' are unequal, unless
         # they have the same name.
@@ -234,11 +234,11 @@ class CoordinateSystem(Basic):
                            x in vector_names]
             pretty_vects = [(name + '_' + x) for x in vector_names]
 
-        obj._e1cap = BaseVector(vector_names[0], 0, obj,
+        obj._e1 = BaseVector(vector_names[0], 0, obj,
                             pretty_vects[0], latex_vects[0])
-        obj._e2cap = BaseVector(vector_names[1], 1, obj,
+        obj._e2 = BaseVector(vector_names[1], 1, obj,
                             pretty_vects[1], latex_vects[1])
-        obj._e3cap = BaseVector(vector_names[2], 2, obj,
+        obj._e3 = BaseVector(vector_names[2], 2, obj,
                             pretty_vects[2], latex_vects[2])
 
         # Initialize the base scalars
@@ -257,11 +257,11 @@ class CoordinateSystem(Basic):
                              x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
 
-        obj._e1 = BaseScalar(variable_names[0], 0, obj,
+        obj._x1 = BaseScalar(variable_names[0], 0, obj,
                             pretty_scalars[0], latex_scalars[0])
-        obj._e2 = BaseScalar(variable_names[1], 1, obj,
+        obj._x2 = BaseScalar(variable_names[1], 1, obj,
                             pretty_scalars[1], latex_scalars[1])
-        obj._e3 = BaseScalar(variable_names[2], 2, obj,
+        obj._x3 = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
         x = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
@@ -289,7 +289,7 @@ class CoordinateSystem(Basic):
     _sympystr = __str__
 
     def __iter__(self):
-        return iter([self._e1cap, self._e2cap, self._e3cap])
+        return iter([self._e1, self._e2, self._e3])
 
     @property
     def origin(self):
@@ -321,11 +321,11 @@ class CoordinateSystem(Basic):
 
         """
         if scalar_vars is None:
-            from sympy.abc import a, x, y, z
+            from sympy.abc import a
             if len(self._lame_lambda.args[0]) == 3:
-                return self._lame_lambda(self._e1, self._e2, self._e3)
+                return self._lame_lambda(self._x1, self._x2, self._x3)
             elif len(self._lame_lambda.args[0]) == 4:
-                return self._lame_lambda(a, self._e1, self._e2, self._e3)
+                return self._lame_lambda(a, self._x1, self._x2, self._x3)
         elif isinstance(scalar_vars, tuple) and \
                 all([isinstance(elem, Symbol) for elem in scalar_vars]):
             if len(self._lame_lambda.args[0]) == 3:
@@ -359,11 +359,11 @@ class CoordinateSystem(Basic):
 
         """
         if scalar_vars is None:
-            from sympy.abc import a, x, y, z
+            from sympy.abc import a
             if len(self._coord_relations.args[0]) == 3:
-                return self._coord_relations(self._e1, self._e2, self._e3)
+                return self._coord_relations(self._x1, self._x2, self._x3)
             elif len(self._coord_relations.args[0]) == 4:
-                return self._coord_relations(a, self._e1, self._e2, self._e3)
+                return self._coord_relations(a, self._x1, self._x2, self._x3)
         elif isinstance(scalar_vars, tuple) and \
                 all([isinstance(elem, Symbol) for elem in scalar_vars]):
             if len(self._coord_relations.args[0]) == 3:
@@ -880,10 +880,10 @@ class CoordinateSystem(Basic):
                                variable_names=variable_names)
 
     def base_vectors(self):
-        return self._e1cap, self._e2cap, self._e3cap
+        return self._e1, self._e2, self._e3
 
     def base_scalars(self):
-        return self._e1, self._e2, self._e3
+        return self._x1, self._x2, self._x3
 
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
@@ -911,33 +911,33 @@ class CartesianCoordinateSystem(CoordinateSystem):
 
     @property
     def i(self):
-        return self._e1cap
-
-    @property
-    def j(self):
-        return self._e2cap
-
-    @property
-    def k(self):
-        return self._e3cap
-
-    @property
-    def x(self):
         return self._e1
 
     @property
-    def y(self):
+    def j(self):
         return self._e2
 
     @property
-    def z(self):
+    def k(self):
         return self._e3
 
+    @property
+    def x(self):
+        return self._x1
+
+    @property
+    def y(self):
+        return self._x2
+
+    @property
+    def z(self):
+        return self._x3
+
     def base_vectors(self):
-        return self._e1cap, self._e2cap, self._e3cap
+        return self._e1, self._e2, self._e3
 
     def base_scalars(self):
-        return self._e1, self._e2, self._e3
+        return self._x1, self._x2, self._x3
 
 class SphericalCoordinateSystem(CoordinateSystem):
     def __new__(self, name, location=None, rotation_matrix=None,
@@ -956,33 +956,33 @@ class SphericalCoordinateSystem(CoordinateSystem):
 
     @property
     def e_r(self):
-        return self._e1cap
-
-    @property
-    def e_theta(self):
-        return self._e2cap
-
-    @property
-    def e_phi(self):
-        return self._e3cap
-
-    @property
-    def r(self):
         return self._e1
 
     @property
-    def theta(self):
+    def e_theta(self):
         return self._e2
 
     @property
-    def phi(self):
+    def e_phi(self):
         return self._e3
 
+    @property
+    def r(self):
+        return self._x1
+
+    @property
+    def theta(self):
+        return self._x2
+
+    @property
+    def phi(self):
+        return self._x3
+
     def base_vectors(self):
-        return self._e1cap, self._e2cap, self._e3cap
+        return self._e1, self._e2, self._e3
 
     def base_scalars(self):
-        return self._e1, self._e2, self._e3
+        return self._x1, self._x2, self._x3
 
 def _check_strings(arg_name, arg):
     errorstr = arg_name + " must be an iterable of 3 string-types"
@@ -1004,15 +1004,15 @@ def _get_metric(relation_lambda, system=None):
         Cartesian.
 
     """
-    from sympy.abc import a, x, y, z
+    from sympy.abc import a, u, v, w
     if system is not None:
-        x, y, z = system._e1, system._e2, system._e3
+        u, v, w = system._x1, system._x2, system._x3
 
-    variables = x, y, z
+    variables = u, v, w
     if len(relation_lambda.args[0]) == 3:
-        relations = relation_lambda(x, y, z)
+        relations = relation_lambda(u, v, w)
     elif len(relation_lambda.args[0]) == 4:
-        relations = relation_lambda(a, x, y, z)
+        relations = relation_lambda(a, u, v, w)
 
     jacobian = Matrix([[relation.diff(var) for var in variables]
                        for relation in relations])
@@ -1029,12 +1029,12 @@ def _get_lame_lambda(relation_lambda):
         Cartesian.
 
     """
-    from sympy.abc import a, x, y, z
+    from sympy.abc import a, u, v, w
 
     metric = _get_metric(relation_lambda)
     lame_params = tuple([sqrt(metric[i, i]) for i in range(3)])
 
     if len(relation_lambda.args[0]) == 3:
-        return Lambda((x, y, z), lame_params)
+        return Lambda((u, v, w), lame_params)
     elif len(relation_lambda.args[0]) == 4:
-        return Lambda((a, x, y, z), lame_params)
+        return Lambda((a, u, v, w), lame_params)

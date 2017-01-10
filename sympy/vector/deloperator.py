@@ -17,8 +17,8 @@ class Del(Basic):
         if not isinstance(system, CoordinateSystem):
             raise TypeError("system should be a CoordinateSystem")
         obj = super(Del, cls).__new__(cls, system)
+        obj._x1, obj._x2, obj._x3 = system._x1, system._x2, system._x3
         obj._e1, obj._e2, obj._e3 = system._e1, system._e2, system._e3
-        obj._e1cap, obj._e2cap, obj._e3cap = system._e1cap, system._e2cap, system._e3cap
         obj._system = system
         obj._name = system.__str__() + ".delop"
         return obj
@@ -59,13 +59,13 @@ class Del(Basic):
         scalar_field = express(scalar_field, self.system,
                                variables=True)
         lame_params = self.system.lame_parameters()
-        vx = 1/lame_params[0]*Derivative(scalar_field, self._e1)
-        vy = 1/lame_params[1]*Derivative(scalar_field, self._e2)
-        vz = 1/lame_params[2]*Derivative(scalar_field, self._e3)
+        vx = 1/lame_params[0]*Derivative(scalar_field, self._x1)
+        vy = 1/lame_params[1]*Derivative(scalar_field, self._x2)
+        vz = 1/lame_params[2]*Derivative(scalar_field, self._x3)
 
         if doit:
-            return (vx * self._e1cap + vy * self._e2cap + vz * self._e3cap).doit()
-        return vx * self._e1cap + vy * self._e2cap + vz * self._e3cap
+            return (vx * self._e1 + vy * self._e2 + vz * self._e3).doit()
+        return vx * self._e1 + vy * self._e2 + vz * self._e3
 
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
@@ -100,12 +100,12 @@ class Del(Basic):
         """
         lame_params = self.system.lame_parameters()
         dprod = lame_params[0] * lame_params[1] * lame_params[2]
-        vx = 1/dprod*_diff_conditional(dprod/lame_params[0]*vect.dot(self._e1cap),
-                    self._e1)
-        vy = 1/dprod*_diff_conditional(dprod/lame_params[1]*vect.dot(self._e2cap),
-                    self._e2)
-        vz = 1/dprod*_diff_conditional(dprod/lame_params[2]*vect.dot(self._e3cap),
-                    self._e3)
+        vx = 1/dprod*_diff_conditional(dprod/lame_params[0]*vect.dot(self._e1),
+                    self._x1)
+        vy = 1/dprod*_diff_conditional(dprod/lame_params[1]*vect.dot(self._e2),
+                    self._x2)
+        vz = 1/dprod*_diff_conditional(dprod/lame_params[2]*vect.dot(self._e3),
+                    self._x3)
 
         if doit:
             return (vx + vy + vz).doit()
@@ -145,19 +145,19 @@ class Del(Basic):
         """
         lame_params = self.system.lame_parameters()
         dprod = lame_params[0] * lame_params[1] * lame_params[2]
-        vectx = express(vect.dot(self._e1cap), self.system, variables=True) * \
+        vectx = express(vect.dot(self._e1), self.system, variables=True) * \
                 lame_params[0]
-        vecty = express(vect.dot(self._e2cap), self.system, variables=True) * \
+        vecty = express(vect.dot(self._e2), self.system, variables=True) * \
                 lame_params[1]
-        vectz = express(vect.dot(self._e3cap), self.system, variables=True) * \
+        vectz = express(vect.dot(self._e3), self.system, variables=True) * \
                  lame_params[2]
         outvec = Vector.zero
-        outvec += lame_params[0]/dprod*(Derivative(vectz, self._e2) -
-                   Derivative(vecty, self._e3)) * self._e1cap
-        outvec += lame_params[1]/dprod*(Derivative(vectx, self._e3) -
-                   Derivative(vectz, self._e1)) * self._e2cap
-        outvec += lame_params[2]/dprod*(Derivative(vecty, self._e1) -
-                   Derivative(vectx, self._e2)) * self._e3cap
+        outvec += lame_params[0]/dprod*(Derivative(vectz, self._x2) -
+                   Derivative(vecty, self._x3)) * self._e1
+        outvec += lame_params[1]/dprod*(Derivative(vectx, self._x3) -
+                   Derivative(vectz, self._x1)) * self._e2
+        outvec += lame_params[2]/dprod*(Derivative(vecty, self._x1) -
+                   Derivative(vectx, self._x2)) * self._e3
 
         if doit:
             return outvec.doit()

@@ -109,9 +109,9 @@ class Vector(BasisDependent):
         if isinstance(other, Del):
             def directional_derivative(field):
                 field = express(field, other.system, variables=True)
-                out = self.dot(other._e1cap) * df(field, other._e1)
-                out += self.dot(other._e2cap) * df(field, other._e2)
-                out += self.dot(other._e3cap) * df(field, other._e3)
+                out = self.dot(other._e1) * df(field, other._x1)
+                out += self.dot(other._e2) * df(field, other._x2)
+                out += self.dot(other._e3) * df(field, other._x3)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.zero
                 return out
