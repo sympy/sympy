@@ -49,7 +49,11 @@ Financial and Infrastructure Support
 
   * `The Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
-  * `The Ruby Science Foundation <http://www.sciruby.com/>`_: SciRuby hosted 1 GSoC 2016 student (Rajith)
+  * `The Ruby Science Foundation <http://www.sciruby.com/>`_ has hosted following
+    GSoC students:
+
+    * 1 student (Abinash) in 2015
+    * 1 student (Rajith) in 2016
 
 * Several 13-17 year old pre-university students contributed as part of
   Google's `Code-In
