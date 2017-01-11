@@ -4662,7 +4662,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return M.applyfunc(lambda x: x.replace(F, G, map))
 
-    def rref(self, iszerofunc=_iszero, simplify=False, aug=None):
+    def rref(self, iszerofunc=_iszero, simplify=False, cols=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
@@ -4673,10 +4673,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         ==========
         iszerofunc : callable
         simplify : bool or callable
-        aug : MutableMatrix (optional)
-            Optional extra columns to form an augmented matrix.
-            The row operations performed will also be performed
-            on ``aug`` if given.
+        cols : int (optional)
+            How many columns to include in the rref treatment, this is useful
+            when dealing with augmented matrices. Default: ``self.cols``.
 
         Examples
         ========
@@ -4695,6 +4694,11 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [0, 1]])
         >>> rref_pivots
         [0, 1]
+        >>> Matrix([[1, 1, x**2], [0, 1, x**3]]).rref(cols=2)
+        (Matrix([
+        [1, 0, -x**3 + x**2],
+        [0, 1,         x**3]]), [0, 1])
+
         """
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
@@ -4702,7 +4706,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in range(r.cols):
+        for i in range(r.cols if cols is None else cols):
             if pivot == r.rows:
                 break
             if simplify:
@@ -4725,20 +4729,14 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             # swap the pivot column into place
             pivot_pos = pivot + pivot_offset
             r.row_swap(pivot, pivot_pos)
-            if aug is not None:
-                aug.row_swap(pivot, pivot_pos)
 
             r.row_op(pivot, lambda x, _: x / pivot_val)
-            if aug is not None:
-                aug.row_op(pivot, lambda x, _: x / pivot_val)
 
             for j in range(r.rows):
                 if j == pivot:
                     continue
                 pivot_val = r[j, i]
                 r.zip_row_op(j, pivot, lambda x, y: x - pivot_val * y)
-                if aug is not None:
-                    aug.zip_row_op(j, pivot, lambda x, y: x - pivot_val * y)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
