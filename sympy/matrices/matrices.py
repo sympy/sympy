@@ -4694,10 +4694,19 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [0, 1]])
         >>> rref_pivots
         [0, 1]
-        >>> Matrix([[1, 1, x**2], [0, 1, x**3]]).rref(cols=2)
-        (Matrix([
-        [1, 0, -x**3 + x**2],
-        [0, 1,         x**3]]), [0, 1])
+        >>> from sympy.abc import y, z
+        >>> R, pivots = Matrix([[1, 1, 1, x], [0, 1, 0, y], [1, 2, 1, z]]).rref(cols=3)
+        >>> R[:, :3]
+        Matrix([
+        [1, 0, 1],
+        [0, 1, 0],
+        [0, 0, 0]])
+        >>> pivots == [0, 1]
+        True
+        >>> R[:2, 3]
+        Matrix([
+        [x - y],
+        [    y]])
 
         """
         simpfunc = simplify if isinstance(
