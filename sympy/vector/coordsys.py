@@ -1,5 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
+from sympy.core.symbol import symbols, Dummy
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
@@ -54,8 +55,7 @@ class CoordinateSystem(Basic):
             Used for simple str printing.
 
         """
-        from sympy.abc import a, x, y, z, u, v, w
-
+        a, u, v, w = symbols('a, u, v, w', cls=Dummy)
         name = str(name)
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
@@ -321,7 +321,7 @@ class CoordinateSystem(Basic):
 
         """
         if scalar_vars is None:
-            from sympy.abc import a
+            a = Dummy('a')
             if len(self._lame_lambda.args[0]) == 3:
                 return self._lame_lambda(self._x1, self._x2, self._x3)
             elif len(self._lame_lambda.args[0]) == 4:
@@ -359,7 +359,7 @@ class CoordinateSystem(Basic):
 
         """
         if scalar_vars is None:
-            from sympy.abc import a
+            a = Dummy('a')
             if len(self._coord_relations.args[0]) == 3:
                 return self._coord_relations(self._x1, self._x2, self._x3)
             elif len(self._coord_relations.args[0]) == 4:
@@ -1004,7 +1004,7 @@ def _get_metric(relation_lambda, system=None):
         Cartesian.
 
     """
-    from sympy.abc import a, u, v, w
+    a, u, v, w = symbols('a, u, v, w', cls=Dummy)
     if system is not None:
         u, v, w = system._x1, system._x2, system._x3
 
@@ -1029,8 +1029,7 @@ def _get_lame_lambda(relation_lambda):
         Cartesian.
 
     """
-    from sympy.abc import a, u, v, w
-
+    a, u, v, w = symbols('a, u, v, w', cls=Dummy)
     metric = _get_metric(relation_lambda)
     lame_params = tuple([sqrt(metric[i, i]) for i in range(3)])
 
