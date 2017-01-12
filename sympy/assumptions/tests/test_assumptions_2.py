@@ -7,7 +7,6 @@ from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
 from sympy.logic.boolalg import Or
 from sympy.printing import pretty
-from sympy.assumptions.ask import Q
 from sympy.utilities.pytest import XFAIL
 
 
