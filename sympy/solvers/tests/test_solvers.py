@@ -1792,3 +1792,9 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+
+def test_inf():
+    assert solve(1 - oo*x) == []
+    assert solve(oo*x, x) == []
+    assert solve(oo*x - oo, x) == []
