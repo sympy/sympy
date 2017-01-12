@@ -37,7 +37,7 @@ Financial and Infrastructure Support
     * 1 GSoC 2008 student (Fredrik)
     * 2 GSoC 2009 students (Freddie and Priit)
     * 4 GSoC 2010 students (Aaron, Christian, Matthew and Øyvind)
-    * 7 GSoC 2015 students
+    * 6 GSoC 2015 students
     * 1 GSoC 2016 student (James)
 
   * `Portland State University (PSU) <http://www.pdx.edu/>`_ has hosted following
