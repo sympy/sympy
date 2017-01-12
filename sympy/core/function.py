@@ -1055,6 +1055,11 @@ class Derivative(Expr):
         else:
             return False
 
+    @property
+    def is_real(self):
+        if self.expr.is_real:
+            return True
+
     def __new__(cls, expr, *variables, **assumptions):
 
         expr = sympify(expr)
