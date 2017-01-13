@@ -1425,70 +1425,88 @@ class MatrixOperations(MatrixRequired):
     _eval_simplify = simplify
 
 
-class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
-    # Added just for numpy compatibility
-    __array_priority__ = 11
+class MatrixArithmetic(MatrixRequired):
+    """Provides basic matrix arithmetic operations.
+    Should not be instantiated directly."""
 
-    is_Matrix = True
-    is_Identity = None
-    _class_priority = 3
-    _sympify = staticmethod(sympify)
+    _op_priority = 10.01
 
-    __hash__ = None  # Mutable
+    def _eval_add(self, other):
+        return self._new(self.rows, self.cols,
+                         lambda i, j: self[i, j] + other[i, j])
 
+    def _eval_matrix_mul(self, other):
+        def entry(i, j):
+            try:
+                return sum(self[i,k]*other[k,j] for k in range(self.cols))
+            except TypeError:
+                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                # They don't work with `sum` because `sum` tries to add `0`
+                # initially, and for a matrix, that is a mix of a scalar and
+                # a matrix, which raises a TypeError. Fall back to a
+                # block-matrix-safe way to multiply if the `sum` fails.
+                ret = self[i, 0]*other[0, j]
+                for k in range(1, self.cols):
+                    ret += self[i, k]*other[k, j]
+                return ret
+        return self._new(self.rows, other.cols, entry)
+
+    def _eval_matrix_mul_elementwise(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
+
+    def _eval_matrix_rmul(self, other):
+        def entry(i, j):
+            return sum(other[i,k]*self[k,j] for k in range(other.cols))
+        return self._new(other.rows, self.cols, entry)
+
+    def _eval_pow_by_recursion(self, num):
+        if num == 1:
+            return self
+        if num % 2 == 1:
+            return self * self._eval_pow_by_recursion(num - 1)
+        ret = self._eval_pow_by_recursion(num // 2)
+        return ret * ret
+
+    def _eval_scalar_mul(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
+
+    def _eval_scalar_rmul(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
+
+    # python arithmetic functions
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
-        if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.shape != B.shape:
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape'):
+            if self.shape != other.shape:
                 raise ShapeError("Matrix size mismatch: %s + %s" % (
-                    A.shape, B.shape))
-            alst = A.tolist()
-            blst = B.tolist()
-            ret = [S.Zero] * A.rows
-            for i in range(A.shape[0]):
-                ret[i] = [j + k for j, k in zip(alst[i], blst[i])]
-            rv = classof(A, B)._new(ret)
-            if 0 in A.shape:
-                rv = rv.reshape(*A.shape)
-            return rv
-        raise TypeError('cannot add matrix and %s' % type(other))
+                    self.shape, other.shape))
 
-    def __array__(self):
-        from .dense import matrix2numpy
-        return matrix2numpy(self)
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            # call the highest-priority class's _eval_add
+            a, b = self, other
+            if a.__class__ != classof(a, b):
+                b, a = a, b
+            return a._eval_add(b)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_add(self, other)
 
+        raise TypeError('cannot add %s and %s' % type(self), type(other))
+
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return self * (S.One / other)
 
-    def __getattr__(self, attr):
-        if attr in ('diff', 'integrate', 'limit'):
-            def doit(*args):
-                item_doit = lambda item: getattr(item, attr)(*args)
-                return self.applyfunc(item_doit)
+    @call_highest_priority('__rmatmul__')
+    def __matmul__(self, other):
+        return self.__mul__(other)
 
-            return doit
-        else:
-            raise AttributeError(
-                "%s has no attribute %s." % (self.__class__.__name__, attr))
-
-    def __len__(self):
-        """Return the number of elements of self.
-
-        Implemented mainly so bool(Matrix()) == False.
-        """
-        return self.rows * self.cols
-
-    def __mathml__(self):
-        mml = ""
-        for i in range(self.rows):
-            mml += "<matrixrow>"
-            for j in range(self.cols):
-                mml += self[i, j].__mathml__()
-            mml += "</matrixrow>"
-        return "<matrix>" + mml + "</matrix>"
-
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
@@ -1516,29 +1534,173 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         matrix_multiply_elementwise
         """
-        if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.cols != B.rows:
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[1] != other.shape[0]:
                 raise ShapeError("Matrix size mismatch: %s * %s." % (
-                    A.shape, B.shape))
-            if A.cols == 0:
-                return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
-            try:
-                blst = B.T.tolist()
-            except AttributeError:
-                # If B is a MatrixSymbol, B.T.tolist does not exist
-                return NotImplemented
-            alst = A.tolist()
-            return classof(A, B)._new(A.rows, B.cols, lambda i, j:
-            reduce(lambda k, l: k + l,
-                   [a_ik * b_kj for a_ik, b_kj in zip(alst[i], blst[j])]))
-        else:
-            return self._new(self.rows, self.cols,
-                             [i * other for i in self._mat])
+                    self.shape, other.shape))
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            return self._eval_matrix_mul(other)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_mul(self, other)
+
+        try:
+            return self._eval_scalar_mul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
 
     def __neg__(self):
-        return -1 * self
+        return self._eval_scalar_mul(-1)
+
+    @call_highest_priority('__rpow__')
+    def __pow__(self, num):
+        if not self.rows == self.cols:
+            raise NonSquareMatrixError()
+        try:
+            a = self
+            if isinstance(num, (int, Integer)):
+                if a.rows == 1:
+                    return a._new([[a[0]**num]])
+                if num == 0:
+                    return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+                if num < 0:
+                    num = -num
+                    a = a.inv()
+                # When certain conditions are met,
+                # Jordan block algorithm is faster than
+                # computation by recursion.
+                elif a.rows == 2 and num > 100000:
+                    try:
+                        return a._matrix_pow_by_jordan_blocks(num)
+                    except AttributeError:
+                        pass
+                return a._eval_pow_by_recursion(num)
+            elif isinstance(num, (Expr, float)):
+                return a._matrix_pow_by_jordan_blocks(num)
+            else:
+                raise TypeError(
+                    "Only SymPy expressions or integers are supported as exponent for matrices")
+        except ValueError:
+            raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return self + other
+
+    @call_highest_priority('__matmul__')
+    def __rmatmul__(self, other):
+        return self.__rmul__(other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[0] != other.shape[1]:
+                raise ShapeError("Matrix size mismatch.")
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            return other._new(other.as_mutable() * self)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_rmul(self, other)
+
+        try:
+            return self._eval_scalar_rmul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, a):
+        return (-self) + a
+
+    @call_highest_priority('__rsub__')
+    def __sub__(self, a):
+        return self + (-a)
+
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        cross
+        dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
+
+
+class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixShaping):
+    # Added just for numpy compatibility
+    __array_priority__ = 11
+
+    is_Matrix = True
+    is_Identity = None
+    _class_priority = 3
+    _sympify = staticmethod(sympify)
+
+    __hash__ = None  # Mutable
+
+    def __array__(self):
+        from .dense import matrix2numpy
+        return matrix2numpy(self)
+
+    def __getattr__(self, attr):
+        if attr in ('diff', 'integrate', 'limit'):
+            def doit(*args):
+                item_doit = lambda item: getattr(item, attr)(*args)
+                return self.applyfunc(item_doit)
+
+            return doit
+        else:
+            raise AttributeError(
+                "%s has no attribute %s." % (self.__class__.__name__, attr))
+
+    def __len__(self):
+        """Return the number of elements of self.
+
+        Implemented mainly so bool(Matrix()) == False.
+        """
+        return self.rows * self.cols
+
+    def __mathml__(self):
+        mml = ""
+        for i in range(self.rows):
+            mml += "<matrixrow>"
+            for j in range(self.cols):
+                mml += self[i, j].__mathml__()
+            mml += "</matrixrow>"
+        return "<matrix>" + mml + "</matrix>"
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -1578,51 +1740,13 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             n //= 2
         return self._new(a)
 
-    def __pow__(self, num):
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if isinstance(num, (int, Integer)):
-            if (self.rows == 1):
-                return self._new([[self[0]**num]])
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif self.rows == 2 and num > 100000:
-                try:
-                    return self._matrix_pow_by_jordan_blocks(num)
-                except AttributeError:
-                    return self._matrix_pow_by_recursion(num)
-            return self._matrix_pow_by_recursion(num)
-        elif isinstance(num, (Expr, float)):
-            return self._matrix_pow_by_jordan_blocks(num)
-        else:
-            raise TypeError(
-                "Only SymPy expressions or integers are supported as exponent for matrices")
-
-    def __radd__(self, other):
-        return self + other
-
     def __repr__(self):
         return sstr(self)
-
-    def __rmul__(self, a):
-        if getattr(a, 'is_Matrix', False):
-            return self._new(a) * self
-        return self._new(self.rows, self.cols, [a * i for i in self._mat])
-
-    def __rsub__(self, a):
-        return (-self) + a
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
-
-    def __sub__(self, a):
-        return self + (-a)
-
-    def __truediv__(self, other):
-        return self.__div__(other)
 
     def _diagonalize_clear_subproducts(self):
         del self._is_symbolic
@@ -4944,10 +5068,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    __matmul__ = __mul__
-
-    __rmatmul__ = __rmul__
-
     def upper_triangular_solve(self, rhs):
         """Solves Ax = B, where A is an upper triangular matrix.
 
@@ -5301,3 +5421,37 @@ class _MinimalMatrix(object):
     @property
     def shape(self):
         return (self.rows, self.cols)
+
+
+class _MatrixWrapper(object):
+    """Wrapper class providing the minimum functionality
+    for a matrix-like object: .rows, .cols, .shape, indexability,
+    and iterability.  CommonMatrix math operations should work
+    on matrix-like objects.  For example, wrapping a numpy
+    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """
+    is_MatrixLike = True
+
+    def __init__(self, mat, shape=None):
+        self.mat = mat
+        self.rows, self.cols = mat.shape if shape is None else shape
+
+    def __getattr__(self, attr):
+        """Most attribute access is passed straight through
+        to the stored matrix"""
+        return getattr(self.mat, attr)
+
+    def __getitem__(self, key):
+        return self.mat.__getitem__(key)
+
+
+def _matrixify(mat):
+    """If `mat` is a Matrix or is matrix-like,
+    return a Matrix or MatrixWrapper object.  Otherwise
+    `mat` is passed through without modification."""
+    if getattr(mat, 'is_Matrix', False):
+        return mat
+    if hasattr(mat, 'shape'):
+        if len(mat.shape) == 2:
+            return _MatrixWrapper(mat)
+    return mat
