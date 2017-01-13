@@ -1057,7 +1057,7 @@ class Derivative(Expr):
 
     @property
     def is_real(self):
-        if self.expr.is_real:
+        if self.expr.is_real and self.expr.is_Function:
             return True
 
     def __new__(cls, expr, *variables, **assumptions):
