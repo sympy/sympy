@@ -1587,7 +1587,7 @@ class MatrixArithmetic(MatrixRequired):
             else:
                 raise TypeError(
                     "Only SymPy expressions or integers are supported as exponent for matrices")
-        except ValueError:
+        except AttributeError:
             raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
 
     @call_highest_priority('__add__')
