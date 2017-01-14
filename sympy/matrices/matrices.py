@@ -1547,8 +1547,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if (num < 0) == True and l == 0:
+            if l == 0 and (n < 0) == True:
                 raise ValueError("Matrix det == 0; not invertible")
+            elif l == 0 and jc.rows > 1 and n % 1 != 0:
+                raise ValueError("Non-integer power cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -1583,7 +1585,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
     def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
-        if isinstance(num, (int, Integer)):
+        num = sympify(num)
+        if num % 1 == 0:
             if (self.rows == 1):
                 return self._new([[self[0]**num]])
             # When certain conditions are met,
@@ -1595,13 +1598,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 except AttributeError:
                     return self._matrix_pow_by_recursion(num)
             return self._matrix_pow_by_recursion(num)
-        elif isinstance(num, (Expr, float)):
-            num = sympify(num)
-            if (num >= 0) == True and not num % 1 == 0:
-                z = self.jordan_form()[1]
-                for i in range(self.rows - 1):
-                    if z[i, i] == 0 and z[i, i + 1] == 1 and z[i + 1, i + 1] == 0:
-                        raise ValueError("Cannot be evaluated")
+        elif num.is_Float or isinstance(num, Expr):
             return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
