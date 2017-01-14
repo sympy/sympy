@@ -1449,6 +1449,7 @@ class MatrixArithmetic(MatrixRequired):
                 for k in range(1, self.cols):
                     ret += self[i, k]*other[k, j]
                 return ret
+
         return self._new(self.rows, other.cols, entry)
 
     def _eval_matrix_mul_elementwise(self, other):
