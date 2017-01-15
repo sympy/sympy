@@ -236,6 +236,11 @@ def test_power():
     assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    n = Symbol('n', integer=True)
+    raises(ValueError, lambda: A**n)
+    n = Symbol('n', integer=True, nonnegative=True)
+    raises(ValueError, lambda: A**n)
+    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
