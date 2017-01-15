@@ -77,7 +77,7 @@ class Plot(object):
 
     This class permits the plotting of sympy expressions using numerous
     backends (matplotlib, textplot, the old pyglet module for sympy, Google
-    charts api, etc).To choose between a backend use ``backend`` option while
+    charts api, etc).To choose a backend use ``backend`` option while
     initilizing the plot class. Example: ``p1 = plot(x*x,backend='text')``,
     options given are:
     - 'text'
