@@ -680,12 +680,13 @@ class PrettyPrinter(Printer):
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
         from sympy import Symbol
+        PREC = precedence(expr)
         if (isinstance(expr.parent, MatrixSymbol)
                 and expr.i.is_number and expr.j.is_number):
             return self._print(
                     Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
         else:
-            prettyFunc = self._print(expr.parent)
+            prettyFunc = self._print(self.parenthesize(expr.parent, PREC))
             prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
                     ).parens(left='[', right=']')[0]
             pform = prettyForm(binding=prettyForm.FUNC,
