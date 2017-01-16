@@ -172,7 +172,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         PREC = precedence(expr)
-        return "{0}({1}, {2})".format(self.parenthesize(expr.parent, PREC), expr.i + 1, expr.j + 1)
+        return "{0}({1}, {2})".format(self.parenthesize(expr.parent, PREC, strict=True), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.

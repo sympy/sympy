@@ -220,7 +220,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         PREC = precedence(expr)
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PREC), expr.j +
+        return "{0}[{1}]".format(self.parenthesize(expr.parent, PREC, strict=True), expr.j +
                 expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):

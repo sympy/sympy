@@ -686,7 +686,7 @@ class PrettyPrinter(Printer):
             return self._print(
                     Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
         else:
-            prettyFunc = self._print(self.parenthesize(expr.parent, PREC))
+            prettyFunc = self._print(self.parenthesize(expr.parent, PREC, strict=True))
             prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
                     ).parens(left='[', right=']')[0]
             pform = prettyForm(binding=prettyForm.FUNC,

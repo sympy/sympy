@@ -1361,7 +1361,7 @@ class LatexPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         PREC = precedence(expr)
-        return self._print(self.parenthesize(expr.parent, PREC)) + '_{%s, %s}'%(expr.i, expr.j)
+        return self._print(self.parenthesize(expr.parent, PREC, strict=True)) + '_{%s, %s}'%(expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):

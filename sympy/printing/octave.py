@@ -346,7 +346,7 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         PREC = precedence(expr)
-        return self._print(self.parenthesize(expr.parent, PREC)) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self._print(self.parenthesize(expr.parent, PREC, strict=True)) + '(%s, %s)'%(expr.i+1, expr.j+1)
 
 
     def _print_MatrixSlice(self, expr):
