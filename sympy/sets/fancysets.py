@@ -466,7 +466,6 @@ class ImageSet(Set):
                 if any(i is None for i in (new_sup, new_inf)):
                     return
 
-
                 range_set = S.EmptySet
 
                 if all(i.is_real for i in (new_sup, new_inf)):
@@ -588,7 +587,7 @@ class Range(Set):
             raise ValueError(filldedent('''
     Ranges must have a literal integer step.'''))
 
-        if all(i.is_infinite for i in  (start, stop)):
+        if all(i.is_infinite for i in (start, stop)):
             if start == stop:
                 # canonical null handled below
                 start = stop = S.One
@@ -600,7 +599,7 @@ class Range(Set):
             end = stop
         else:
             ref = start if start.is_finite else stop
-            n = ceiling((stop - ref)/step)
+            n = ceiling((stop - ref) / step)
             if n <= 0:
                 # null Range
                 start = end = 0
@@ -707,7 +706,7 @@ class Range(Set):
                     return c
                 # st is the signed step we need to take to
                 # get from c to r1.start
-                st = sign(r1.start - c)*step
+                st = sign(r1.start - c) * step
                 # use Range to calculate the first point:
                 # we want to get as close as possible to
                 # r1.start; the Range will not be null since
@@ -739,7 +738,7 @@ class Range(Set):
             # result must have at least one point since
             # we know that s1 and s2 are in the Ranges
             def _updated_range(r, first):
-                st = sign(r.step)*step
+                st = sign(r.step) * step
                 if r.start.is_finite:
                     rv = Range(first, r.stop, st)
                 else:
@@ -795,7 +794,7 @@ class Range(Set):
         if dif.is_infinite:
             raise ValueError(
                 "Use .size to get the length of an infinite Range")
-        return abs(dif//self.step)
+        return abs(dif // self.step)
 
     @property
     def size(self):
@@ -821,12 +820,12 @@ class Range(Set):
         if isinstance(i, slice):
             if self.size.is_finite:
                 start, stop, step = i.indices(self.size)
-                n = ceiling((stop - start)/step)
+                n = ceiling((stop - start) / step)
                 if n <= 0:
                     return Range(0)
                 canonical_stop = start + n*step
                 end = canonical_stop - step
-                ss = step*self.step
+                ss = step * self.step
                 return Range(self[start], self[end] + ss, ss)
             else:  # infinite Range
                 start = i.start
@@ -834,7 +833,7 @@ class Range(Set):
                 if i.step == 0:
                     raise ValueError(zerostep)
                 step = i.step or 1
-                ss = step*self.step
+                ss = step * self.step
                 #---------------------
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
@@ -979,6 +978,7 @@ if PY3:
 else:
     converter[xrange] = Range
 
+
 def normalize_theta_set(theta):
     """
     Normalize a Real Set `theta` in the Interval [0, 2*pi). It returns
@@ -1022,24 +1022,24 @@ def normalize_theta_set(theta):
     if theta.is_Interval:
         interval_len = theta.measure
         # one complete circle
-        if interval_len >= 2*S.Pi:
-            if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
+        if interval_len >= 2 * S.Pi:
+            if interval_len == 2 * S.Pi and theta.left_open and theta.right_open:
                 k = coeff(theta.start)
-                return Union(Interval(0, k*S.Pi, False, True),
-                        Interval(k*S.Pi, 2*S.Pi, True, True))
-            return Interval(0, 2*S.Pi, False, True)
+                return Union(Interval(0, k * S.Pi, False, True),
+                        Interval(k * S.Pi, 2 * S.Pi, True, True))
+            return Interval(0, 2 * S.Pi, False, True)
 
         k_start, k_end = coeff(theta.start), coeff(theta.end)
 
         if k_start is None or k_end is None:
             raise NotImplementedError("Normalizing theta without pi as coefficient is "
                                     "not yet implemented")
-        new_start = k_start*S.Pi
-        new_end = k_end*S.Pi
+        new_start = k_start * S.Pi
+        new_end = k_end * S.Pi
 
         if new_start > new_end:
             return Union(Interval(S.Zero, new_end, False, theta.right_open),
-                         Interval(new_start, 2*S.Pi, theta.left_open, True))
+                         Interval(new_start, 2 * S.Pi, theta.left_open, True))
         else:
             return Interval(new_start, new_end, theta.left_open, theta.right_open)
 
@@ -1051,7 +1051,7 @@ def normalize_theta_set(theta):
                 raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
             else:
-                new_theta.append(k*S.Pi)
+                new_theta.append(k * S.Pi)
         return FiniteSet(*new_theta)
 
     elif theta.is_Union:
@@ -1430,9 +1430,8 @@ class ComplexRegion(Set):
                    (2*S.Pi in theta2 and S.Zero in theta1)):
                     new_theta_interval = Union(new_theta_interval,
                                                FiniteSet(0))
-                return ComplexRegion(new_r_interval*new_theta_interval,
+                return ComplexRegion(new_r_interval * new_theta_interval,
                                     polar=True)
-
 
         if other.is_subset(S.Reals):
             new_interval = []
