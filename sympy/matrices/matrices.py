@@ -1586,11 +1586,11 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         if not self.is_square:
             raise NonSquareMatrixError()
         num = sympify(num)
-        if num.is_Number and num % 1 == 0:
         # Conditions to include Integers and Integer valued Floats (eg: 10.0, 26.0, etc.,).
         # n = int(num) in _matrix_pow_by_recursion() can only work correctly
-        # with those Floats which are Integers.
-        # Rest Floats are thus handled by _matrix_pow_by_jordan_blocks().
+        # with integer valued numbers.
+        # Other floats are thus handled by _matrix_pow_by_jordan_blocks().
+        if num.is_Number and num % 1 == 0:
             if (self.rows == 1):
                 return self._new([[self[0]**num]])
             # When certain conditions are met,
