@@ -168,18 +168,21 @@ class ColorScheme(object):
 
     def _fill_in_vars(self, symbol_list):
         defaults = symbols('x,y,z,u,v')
-        if len(symbol_list) == 0:
-            return defaults
+        validation_error = ValueError(
+            "Function parameter should be list "
+            "or tuple of Symbol type elements."
+        )
+
         if not isinstance(symbol_list, (tuple, list)):
-            raise v_error
+            raise validation_error
         if len(symbol_list) == 0:
             return defaults
         for symbol in symbol_list:
             if symbol is not None and not isinstance(symbol, Symbol):
-                raise v_error
-        # when vars are given explicitly, any vars
-        # not given are marked 'unbound' as to not
-        # be accidentally used in an expression
+                raise validation_error
+
+        # When vars are given explicitly, any vars not given are marked
+        # 'unbound' as to not be accidentally used in an expression.
         vars = [Symbol('unbound%i' % i) for i in range(1, 6)]
         # interpret as t
         if len(symbol_list) == 1:
