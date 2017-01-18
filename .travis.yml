@@ -303,7 +303,7 @@ install:
       pip uninstall -y setuptools;
       python setup.py install;
       pip uninstall -y sympy;
-      pip install setuptools;
+      pip install --upgrade setuptools;
       python setup.py install;
     fi
 script:
