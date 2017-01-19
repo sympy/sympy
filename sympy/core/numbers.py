@@ -418,7 +418,7 @@ class Number(AtomicExpr):
         return divmod(other, self)
 
     def __round__(self, *args):
-        return round(float(self), *args)
+        return round(Float(self), *args)
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
