@@ -2765,7 +2765,7 @@ def nsolve(*args, **kwargs):
         f = f.as_numer_denom()[0]
 
         f = lambdify(fargs, f, modules)
-        return Float(findroot(f, x0, **kwargs))
+        return sympify(findroot(f, x0, **kwargs))
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
