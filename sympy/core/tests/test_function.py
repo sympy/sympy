@@ -811,3 +811,13 @@ def test_issue_11159():
     expr0 = expr1 * expr1
     expr1 = expr0.subs(expr1,expr0)
     assert expr0 == expr1
+
+
+def test_issue_12005():
+    e1 = Subs(Derivative(f(x), x), (x,), (x,))
+    assert e1.diff(x) == Derivative(f(x), x, x)
+
+    e2 = Subs(Derivative(f(x), x), (x,), (x**2 + 1,))
+    assert e2.diff(x) == 2*x*Subs(Derivative(f(x), x, x), (x,), (x**2 + 1,))
+
+    assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
