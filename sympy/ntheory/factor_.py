@@ -536,7 +536,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         ...
         >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
         ...      igcd(pow(a, M, n) - 1, n) != n])
-        set([1009])
+        {1009}
 
     But does aM % d for every divisor of n give 1?
 

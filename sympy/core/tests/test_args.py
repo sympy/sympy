@@ -296,6 +296,12 @@ def test_sympy__core__expr__Expr():
     assert _test_args(Expr())
 
 
+def test_sympy__core__expr__UnevaluatedExpr():
+    from sympy.core.expr import UnevaluatedExpr
+    from sympy.abc import x
+    assert _test_args(UnevaluatedExpr(x))
+
+
 def test_sympy__core__function__Application():
     from sympy.core.function import Application
     assert _test_args(Application(1, 2, 3))
@@ -952,6 +958,10 @@ def test_sympy__stats__crv_types__GammaInverseDistribution():
 def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
+
+def test_sympy__stats__crv_types__GumbelDistribution():
+    from sympy.stats.crv_types import GumbelDistribution
+    assert _test_args(GumbelDistribution(1, 1))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution

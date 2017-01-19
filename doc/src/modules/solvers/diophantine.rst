@@ -94,7 +94,7 @@ write the equation in the above form, when we input the equation to any of the
 functions in Diophantine module, it needs to be in the form `eq = 0`.
 
 >>> diophantine(2*x + 3*y - 5)
-set([(3*t_0 - 5, -2*t_0 + 5)])
+{(3*t_0 - 5, -2*t_0 + 5)}
 
 Note that stepping one more level below the highest API, we can solve the very
 same equation by calling :py:meth:`~sympy.solvers.diophantine.diop_solve`.
@@ -154,7 +154,7 @@ of the solutions. Let us define `\Delta = b^2 - 4ac` w.r.t. the binary quadratic
 When `\Delta < 0`, there are either no solutions or only a finite number of solutions.
 
 >>> diophantine(x**2 - 4*x*y + 8*y**2 - 3*x + 7*y - 5)
-set([(2, 1), (5, 1)])
+{(2, 1), (5, 1)}
 
 In the above equation `\Delta = (-4)^2 - 4*1*8 = -16` and hence only a finite
 number of solutions exist.
@@ -164,9 +164,9 @@ When `\Delta = 0` we might have either no solutions or parameterized solutions.
 >>> diophantine(3*x**2 - 6*x*y + 3*y**2 - 3*x + 7*y - 5)
 set()
 >>> diophantine(x**2 - 4*x*y + 4*y**2 - 3*x + 7*y - 5)
-set([(-2*t**2 - 7*t + 10, -t**2 - 3*t + 5)])
+{(-2*t**2 - 7*t + 10, -t**2 - 3*t + 5)}
 >>> diophantine(x**2 + 2*x*y + y**2 - 3*x - 3*y)
-set([(t_0, -t_0), (t_0, -t_0 + 3)])
+{(t_0, -t_0), (t_0, -t_0 + 3)}
 
 The most interesting case is when `\Delta > 0` and it is not a perfect square.
 In this case, the equation has either no solutions or an infinte number of
@@ -238,9 +238,9 @@ either have infinitely many solutions or no solutions (except the obvious
 solution (0, 0, 0))
 
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y + 6*y*z + 7*z*x)
-set([(0, 0, 0)])
+{(0, 0, 0)}
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y - 7*y*z + 7*z*x)
-set([(-16*p**2 + 28*p*q + 20*q**2, 3*p**2 + 38*p*q - 25*q**2, 4*p**2 - 24*p*q + 68*q**2)])
+{(-16*p**2 + 28*p*q + 20*q**2, 3*p**2 + 38*p*q - 25*q**2, 4*p**2 - 24*p*q + 68*q**2)}
 
 If you are only interested in a base solution rather than the parameterized
 general solution (to be more precise, one of the general solutions), you can
@@ -271,7 +271,7 @@ also be solved using the Diophantine module.
 
 >>> from sympy.abc import a, b, c, d, e, f
 >>> diophantine(9*a**2 + 16*b**2 + c**2 + 49*d**2 + 4*e**2 - 25*f**2)
-set([(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)])
+{(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)}
 
 function :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
 also be called directly to solve the same equation. Either you can call
@@ -283,9 +283,9 @@ you can control how many solutions are returned.
 >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
 >>> eq = a**2 + b**2 + c**2 + d**2 - 18
 >>> diophantine(eq)
-set([(0, 0, 3, 3), (0, 1, 1, 4), (1, 2, 2, 3)])
+{(0, 0, 3, 3), (0, 1, 1, 4), (1, 2, 2, 3)}
 >>> diop_general_sum_of_squares(eq, 2)
-set([(0, 0, 3, 3), (1, 2, 2, 3)])
+{(0, 0, 3, 3), (1, 2, 2, 3)}
 
 The :py:meth:`~sympy.solvers.diophantine.sum_of_squares` routine will
 providean iterator that returns solutions and one may control whether
@@ -306,7 +306,7 @@ unit fractions:
 
 >>> from sympy import Eq, S
 >>> diophantine(Eq(1/x + 1/y, S(1)/2))
-set([(-2, 1), (1, -2), (3, 6), (4, 4), (6, 3)])
+{(-2, 1), (1, -2), (3, 6), (4, 4), (6, 3)}
 
 To get a more thorough understanding of the Diophantine module, please
 refer to the following blog.

@@ -214,6 +214,16 @@ def test_power():
         [0, a**n, 0],
         [0, 0, b**n]])
 
+    A = Matrix([[1, 0], [1, 7]])
+    assert A._matrix_pow_by_jordan_blocks(3) == A._matrix_pow_by_recursion(3)
+    A = Matrix([[2]])
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+        A._matrix_pow_by_recursion(10)
+
+    # testing a matrix that cannot be jordan blocked issue 11766
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
@@ -2378,6 +2388,11 @@ def test_issue_5320():
         [0, 1, 0, 2]
     ])
 
+def test_issue_11944():
+    A = Matrix([[1]])
+    AIm = sympify(A)
+    assert Matrix.hstack(AIm, A) == Matrix([[1, 1]])
+    assert Matrix.vstack(AIm, A) == Matrix([[1], [1]])
 
 def test_cross():
     a = [1, 2, 3]
@@ -2435,6 +2450,36 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_rank_regression_from_so():
+    # see:
+    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = [0, 1, 2]
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
 
 def test_replace():
     from sympy import symbols, Function, Matrix
