@@ -1000,7 +1000,10 @@ class Add(Expr, AssocOp):
         re_part, rest = self.as_coeff_Add()
         im_part, imag_unit = rest.as_coeff_Mul()
         if not imag_unit == I:
-            raise ValueError("Cannot convert to mpc. Must be of the form Number + Number*I")
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
 

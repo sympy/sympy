@@ -661,7 +661,10 @@ class Mul(Expr, AssocOp):
         from sympy.core.numbers import I, Float
         im_part, imag_unit = self.as_coeff_Mul()
         if not imag_unit == I:
-            raise ValueError("Cannot convert to mpc. Must be of the form Number*I")
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Mul to mpc. Must be of the form Number*I")
 
         return (Float(0)._mpf_, Float(im_part)._mpf_)
 
