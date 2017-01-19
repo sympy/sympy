@@ -1738,10 +1738,9 @@ class Subs(Expr):
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
             return S.Zero
-        return self.func(self.expr.diff(s), self.variables, self.point).doit() \
-            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
-                    self.variables, self.point).doit() for arg,
-                    point in zip(self.variables, self.point) ])
+        return Add(*[point.diff(s)*self.func(self.expr.diff(var), self.variables, self.point).doit() + \
+                self.func(self.expr.diff(s) if s != var else S.Zero, self.variables, self.point).doit() \
+                for var, point in zip(self.variables, self.point)])
 
     def _eval_nseries(self, x, n, logx):
         if x in self.point:
