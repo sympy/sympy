@@ -300,6 +300,7 @@ install:
            . ~/.venv/bin/activate;
     fi
   - if [[ "${TEST_SAGE}" != "true" ]]; then
+      pip install mpmath;
       pip uninstall -y setuptools;
       python setup.py install;
       pip uninstall -y sympy;
