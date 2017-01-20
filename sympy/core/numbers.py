@@ -417,16 +417,11 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self,args*):
-        self = str(self)
-        args = args[0]
+    def __round__(self,*args):
         self = str(self)
         index = self.index(".")
-        self = self[:index+1+args]
-        if float(self) == 0:
-            return 0
-        else:
-            return Decimal(self)
+        self = self[:index+1+*args]
+        return Decimal(self)
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
