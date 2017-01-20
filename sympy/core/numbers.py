@@ -417,21 +417,18 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self, *args):
-        if len(args)>1:
-            raise TypeError("__round__ takes at most 2 arguments (%s given)" % str(len(args)+1))
-        elif len(args)==0:
-            arg = 0
-        else:
-            arg = args[0]
-        if arg < 0:
-            pre = str(round(self,arg))
-        else:
-            decimal.getcontext().prec = len(str(self))
-            upto = decimal.Decimal(1)/(decimal.Decimal(10)**(arg))
-            pre = decimal.Decimal(str(self)).quantize(upto, decimal.ROUND_HALF_UP)
-            pre = '{:f}'.format(pre)
-        if arg == 0:
+    def __round__(self, ndigits=0):
+        # if ndigits < 0:
+        #     pre = str(round(self,arg))
+        # else:
+        #     decimal.getcontext().prec = len(str(self))
+        #     upto = decimal.Decimal(1)/(decimal.Decimal(10)**(arg))
+        #     pre = decimal.Decimal(str(self)).quantize(upto, decimal.ROUND_HALF_UP)
+        #     pre = '{:f}'.format(pre)
+        pre = self.evalf(ndigits+1)
+        pre = "{:f}".format(pre)
+        return pre
+        if ndigits== 0:
             pre = pre + "."
         pre = pre + "0"*(len(str(self))-len(pre))
         return Float(pre)
