@@ -418,17 +418,12 @@ class Number(AtomicExpr):
         return divmod(other, self)
 
     def __round__(self, ndigits=0):
-        if ndigits < 0:
-            pre = str(round(self,arg))
-        else:
-            decimal.getcontext().prec = len(str(self))
-            upto = decimal.Decimal(1)/(decimal.Decimal(10)**(arg))
-            pre = decimal.Decimal(str(self)).quantize(upto, decimal.ROUND_HALF_UP)
-            pre = '{:f}'.format(pre)
-        if ndigits== 0:
-            pre = pre + "."
-        pre = pre + "0"*(len(str(self))-len(pre))
-        return Float(pre)
+        mpmath.mp.prec = self._prec
+        temp = mpmath.mpf((self))
+        temp_dps = int(mpmath.log(temp,10.0)+ndigits+1)
+        temp = Float(str(self),temp_dps)
+        return Float(str(temp),prec_to_dps(self._prec))
+
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
