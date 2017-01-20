@@ -417,8 +417,15 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self, *args):
-        return round(float(self), *args)
+    def __round__(self, ndigits=None):
+        args = args[0]
+        self = str(self)
+        index = self.index(".")
+        self = self[:index+1+args]
+        if float(self) == 0:
+            return 0
+        else:
+            return (self)
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
