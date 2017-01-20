@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import decimal
+from decimal import *
 import fractions
 import math
 import re as regex
@@ -417,10 +418,10 @@ class Number(AtomicExpr):
             raise TypeError(msg % (type(other).__name__, type(self).__name__))
         return divmod(other, self)
 
-    def __round__(self,*args):
+    def __round__(self,ndigits = 0):
         self = str(self)
         index = self.index(".")
-        self = self[:index+1+*args]
+        self = self[:index+1+ndigits]
         return Decimal(self)
 
     def _as_mpf_val(self, prec):
