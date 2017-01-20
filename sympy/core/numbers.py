@@ -420,8 +420,14 @@ class Number(AtomicExpr):
     def __round__(self, ndigits=0):
         mpmath.mp.prec = self._prec
         temp = mpmath.mpf((self))
-        temp_dps = int(mpmath.log(temp,10.0)+ndigits+1)
-        temp = Float(str(self),temp_dps)
+        log = mpmath.log(temp,10.0)
+        temp_dps = int(log+ndigits+1)
+        if temp_dps==0:
+            temp = self+Float(str(10**(int(log)+1)))
+            temp = temp.__round__(ndigits)
+            temp = temp-Float(str(10**(int(log)+1)))
+        else:
+            temp = Float(str(self),temp_dps)
         return Float(str(temp),prec_to_dps(self._prec))
 
 
