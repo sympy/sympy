@@ -24,6 +24,7 @@ matrix:
         - TEST_MATPLOTLIB="true"
         - TEST_THEANO="true"
         - TEST_ASCII="true"
+        - TEST_AUTOWRAP="true"
       addons:
         apt:
           packages:
@@ -41,6 +42,7 @@ matrix:
         - TEST_MATPLOTLIB="true"
         - TEST_THEANO="true"
         - TEST_ASCII="true"
+        - TEST_AUTOWRAP="true"
       addons:
         apt:
           packages:
@@ -96,39 +98,12 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
-
-    - python: 2.7
-      env:
-        - TEST_AUTOWRAP="true"
-      addons:
-        apt:
-          packages:
-            - gfortran
-            - gcc
-            - python-numpy
-            - cython
-      virtualenv:
-        system_site_packages: true
-
     - python: 3.5
       env:
         - TEST_SYMENGINE="true"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
-    - python: 3.5
-      env:
-        - TEST_AUTOWRAP="true"
-      addons:
-        apt:
-          packages:
-            - gfortran
-            - gcc
-            - python-numpy
-            - cython
-      virtualenv:
-        system_site_packages: true
-
     - python: 3.5 # Dummy value
       env:
         - TEST_SAGE="true"
@@ -194,20 +169,6 @@ matrix:
             - pypy
 
   allow_failures:
-    # Fails because of some issues with Travis
-    - python: 3.5
-      env:
-        - TEST_AUTOWRAP="true"
-      addons:
-        apt:
-          packages:
-            - gfortran
-            - gcc
-            - python-numpy
-            - cython
-      virtualenv:
-        system_site_packages: true
-
     # The apt installation of sage fails sometimes
     - python: 3.5 # Dummy value
       env:
@@ -216,8 +177,6 @@ matrix:
         - TEST_TENSORFLOW="true"
       sudo: true
       dist: trusty
-
-
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
     - python: "pypy"
       env:
@@ -279,9 +238,6 @@ before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
-  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
-      pip uninstall -y numpy;
-    fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       pip install "gmpy==1.16";
     fi
@@ -306,16 +262,20 @@ before_install:
         conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION matplotlib numpy scipy pip llvmlite;
         source activate test-environment;
     fi
-
+  - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
+        conda config --add channels conda-forge;
+        conda config --add channels symengine;
+        conda install python-symengine=0.2.0;
+    fi
   - |
     if [[ "${TEST_THEANO}" == "true" ]]; then
         # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
         conda install theano;
     fi
-  - if [[ "${TEST_SYMENGINE}" == "true" ]]; then
-        conda config --add channels conda-forge;
-        conda config --add channels symengine;
-        conda install python-symengine=0.2.0;
+  - |
+    if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+        # this assumes TEST_AUTOWRAP runs in the same build as TEST_MATPLOTLIB
+        conda install libgfortran libgcc gcc cython;
     fi
   - |
     if [[ "${TEST_TENSORFLOW}" == "true" ]]; then
@@ -339,13 +299,12 @@ install:
       then virtualenv -p /usr/bin/pypy ~/.venv;
            . ~/.venv/bin/activate;
     fi
-  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+  - if [[ "${TEST_SAGE}" != "true" ]]; then
+      pip install mpmath;
       pip uninstall -y setuptools;
       python setup.py install;
       pip uninstall -y sympy;
-      pip install setuptools;
-      python setup.py install;
-    elif [[ "${TEST_SAGE}" != "true" ]]; then
+      pip install --upgrade setuptools;
       python setup.py install;
     fi
 script:
