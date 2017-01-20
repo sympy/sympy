@@ -13,6 +13,7 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.core.compatibility import range
 
+
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
         return arg1.equals(arg2)
@@ -331,6 +332,7 @@ def test_canonicalize1():
     tc = t.canon_bp()
     assert str(tc) == '-f(F_0, F_1, F_2)*f(-F_0, F_3, F_4)*A(L_0, -F_1)*A(-L_0, -F_3)*A(L_1, -F_2)*A(-L_1, -F_4)'
 
+
 def test_bug_correction_tensor_indices():
     # to make sure that tensor_indices does not return a list if creating
     # only one index:
@@ -339,6 +341,7 @@ def test_bug_correction_tensor_indices():
     i = tensor_indices('i', A)
     assert not isinstance(i, (tuple, list))
     assert isinstance(i, TensorIndex)
+
 
 def test_riemann_invariants():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -440,12 +443,14 @@ def test_canonicalize3():
     t1 = t.canon_bp()
     assert t1 == -chi(a0)*psi(a1)
 
+
 class Metric(Basic):
     def __new__(cls, name, antisym, **kwargs):
         obj = Basic.__new__(cls, name, antisym, **kwargs)
         obj.name = name
         obj.antisym = antisym
         return obj
+
 
 def test_TensorIndexType():
     D = Symbol('D')
@@ -1177,92 +1182,6 @@ def test_hash():
     assert check_all(tsymmetry)
 
 
-@XFAIL
-def test_hidden_indices_for_matrix_multiplication():
-    """
-    This test function is expected to fail, as there is an inconstistency in
-    the usage of matrix indices and canonicalization. In the future, all matrix
-    indices will be required to be at the end of `Tensor` objects. They shall
-    also be treated as a special index case in ``_IndexStructure``.
-    """
-    L = TensorIndexType('Lorentz')
-    S = TensorIndexType('Matind')
-
-    m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
-    s0, s1, s2 = tensor_indices('s0:3', S)
-
-    matl1 = TensorIndex('matl1', S)  #, is_matrix_index=True)
-    matl2 = TensorIndex('matl2', S)  #, is_matrix_index=True)
-
-    Ll1 = TensorIndex('Ll1', L)  #, is_matrix_index=True)
-    Ll2 = TensorIndex('Ll2', L)  #, is_matrix_index=True)
-
-    A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
-    B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
-    D = tensorhead('D', [L, L, S, S], [[1, 1], [1, 1]], matrix_behavior=True)
-    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
-    F = tensorhead('F', [L], [[1]], matrix_behavior=True)
-
-    assert (A(m0)) == A(m0, matl1, -matl2)
-    assert (B(-m1)) == B(-m1, matl2)
-
-    A0 = A(m0)
-    B0 = B(-m0)
-    B1 = B(m1)
-
-    assert str(B1*A0*B0) == 'B(m1, -Matind_0)*A(Lorentz_0, Matind_0, -Matind_1)*B(-Lorentz_0, Matind_1)'
-    assert str(B0*A0) == 'B(-Lorentz_0, -Matind_0)*A(Lorentz_0, Matind_0, mMatind_0)'
-    assert str(A0*B0) == 'A(Lorentz_0, mMatind_0, -Matind_0)*B(-Lorentz_0, Matind_0)'
-
-    C = tensorhead('C', [L, L], [[1]*2])
-
-    assert str(C(True, True)) == 'C(mLorentz_0, -mLorentz_1)'
-
-    assert str(A(m0)*C(m1, -m0)) == 'A(Lorentz_0, mMatind_0, -mMatind_1)*C(m1, -Lorentz_0)'
-
-    assert str(C(True, True)*C(True, True)) == 'C(mLorentz_0, -Lorentz_0)*C(Lorentz_0, -mLorentz_1)'
-
-    assert _is_equal(A(m0), A(m0))
-    assert _is_equal(B(-m1), B(-m1))
-
-    assert _is_equal(A(m0) - A(m0), 0)
-    ts1 = A(m0)*A(m1) + A(m1)*A(m0)
-    ts2 = A(m1)*A(m0) + A(m0)*A(m1)
-    assert _is_equal(ts1, ts2)
-    assert _is_equal(A(m0)*A(m1) + A(m1)*A(m0), A(m1)*A(m0) + A(m0)*A(m1))
-
-    assert _is_equal(A(m0), (2*A(m0))/2)
-    assert _is_equal(A(m0), -(-A(m0)))
-    assert _is_equal(2*A(m0) - 3*A(m0), -A(m0))
-    assert _is_equal(2*D(m0, m1) - 5*D(m1, m0), -3*D(m0, m1))
-
-    D0 = D(True, True, True, True)
-    Aa = A(True, True, True)
-
-    assert str(D0 * Aa) == 'D(mLorentz_0, -Lorentz_0, mMatind_0, -Matind_0)*A(Lorentz_0, Matind_0, -mMatind_1)'
-    assert D(m0, m1) == D(m0, m1, matl2, -matl1)
-
-    raises(ValueError, lambda: C(True))
-    raises(ValueError, lambda: C())
-
-    raises(ValueError, lambda: E(True, True, True, True))
-
-    # test that a delta is automatically added on missing auto-matrix indices in TensAdd
-    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
-        E(m1, m2, m3, m4)*S.delta(matl2, -matl1) +\
-        F(m2)*F(m3)*F(m4)*A(m1, matl2, -matl1)
-    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(Ll2, -Ll1)
-    assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
-        E(m1, m2, Ll2, -Ll1)*A(m3, matl2, -matl1) +\
-        F(m1)*F(m2)*F(m3)*L.delta(Ll2, -Ll1)*S.delta(matl2, -matl1)
-
-    assert L.delta() == L.delta(Ll2, -Ll1)
-    assert S.delta() == S.delta(matl2, -matl1)
-
-    assert L.metric() == L.metric(Ll2, -Ll1)
-    assert S.metric() == S.metric(matl2, -matl1)
-
-
 ### TEST VALUED TENSORS ###
 
 numpy = import_module('numpy')
@@ -1570,6 +1489,7 @@ def test_valued_assign_numpy_ndarray():
             assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
             assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
 
+
 def test_valued_metric_inverse():
     numpy = import_module("numpy")
     if numpy is None:
@@ -1605,6 +1525,7 @@ def test_valued_metric_inverse():
 
             assert KD(i0, -i1)[i, j] == meye[i, j]
 
+
 def test_valued_canon_bp_swapaxes():
     numpy = import_module("numpy")
     if numpy is None:
@@ -1635,53 +1556,6 @@ def test_pprint():
 
     assert pretty(A) == "A(Lorentz)"
     assert pretty(A(i0)) == "A(i0)"
-
-
-def test_contract_automatrix_and_data():
-    numpy = import_module('numpy')
-    if numpy is None:
-        return
-
-    L = TensorIndexType('L')
-    S = TensorIndexType('S')
-    G = tensorhead('G', [L, S, S], [[1]]*3, matrix_behavior=True)
-
-    def G_data():
-        G.data = [[[1]]]
-    raises(ValueError, G_data)
-    L.data = [1, -1]
-    raises(ValueError, G_data)
-    S.data = [[1, 0], [0, 2]]
-    G.data = [
-        [[1, 2],
-         [3, 4]],
-        [[5, 6],
-         [7, 8]]
-    ]
-    m0, m1, m2 = tensor_indices('m0:3', L)
-    s0, s1, s2 = tensor_indices('s0:3', S)
-
-    assert (G(-m0).data == numpy.array([
-       [[1, 4],
-        [3, 8]],
-       [[-5, -12],
-        [-7, -16]]
-    ])).all()
-
-    (G(m0) * G(-m0)).data
-    G(m0, s0, -s1).data
-
-    c1 = G(m0, s0, -s1)*G(-m0, s1, -s2)
-    c2 = G(m0) * G(-m0)
-
-    assert (c1.data == c2.data).all()
-
-    del L.data
-    del S.data
-    del G.data
-    assert L.data is None
-    assert S.data is None
-    assert G.data is None
 
 
 def test_valued_components_with_wrong_symmetry():

@@ -33,7 +33,6 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 import itertools
-from sqlalchemy.sql.functions import current_date
 from numpy.core.multiarray import ndarray
 from sympy import Matrix, Rational, product, prod
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
@@ -177,22 +176,6 @@ class TIDS(CantSympify):
         ``indices``     ``TensorIndex`` objects, the indices. Contractions are
                         detected upon construction.
 
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-        >>> TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-
-        In case of many components the same indices have slightly different
-        indexes:
-
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> TIDS.from_components_and_indices([A]*4, [m0, m1, -m1, m3])
-        TIDS([A(Lorentz), A(Lorentz), A(Lorentz), A(Lorentz)], [(m0, 0, 0), (m3, 0, 3)], [(0, 0, 1, 2)])
         """
         tids = None
         cur_pos = 0
@@ -336,38 +319,6 @@ class TIDS(CantSympify):
         In short, it forms a new ``TIDS`` object, joining components and indices,
         checking that abstract indices are compatible, and possibly contracting
         them.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> tids_1 = TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
-        >>> tids_2 = TIDS.from_components_and_indices([A], [m2])
-        >>> tids_1 * tids_2
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
-            [(m0, 0, 0), (m3, 3, 0), (m2, 0, 1)], [(1, 2, 0, 0)])
-
-        In this case no contraction has been performed.
-
-        >>> tids_3 = TIDS.from_components_and_indices([A], [-m3])
-        >>> tids_1 * tids_3
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
-            [(m0, 0, 0)], [(1, 2, 0, 0), (3, 0, 0, 1)])
-
-        Free indices ``m3`` and ``-m3`` are identified as a contracted couple, and are
-        therefore transformed into dummy indices.
-
-        A wrong index construction (for example, trying to contract two
-        contravariant indices or using indices multiple times) would result in
-        an exception:
-
-        >>> tids_4 = TIDS.from_components_and_indices([A], [m3])
-        >>> # This raises an exception:
-        >>> # tids_1 * tids_4
         """
         index_up = lambda u: u if u.is_up else -u
 
@@ -728,40 +679,6 @@ class TIDS(CantSympify):
         components = [c for i, c in enumerate(components) if i not in elim]
         tids = TIDS(components, free, dum)
         return tids, sign
-
-
-class VTIDS(TIDS):
-    """
-    DEPRECATED: DO NOT USE.
-    """
-
-    @deprecated(useinstead="TIDS", deprecated_since_version="0.7.5")
-    def __init__(self, components, free, dum, data):
-        super(VTIDS, self).__init__(components, free, dum)
-        self.data = data
-
-    @staticmethod
-    @deprecated(useinstead="TIDS", deprecated_since_version="0.7.5")
-    def parse_data(data):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator.parse_data(data)
-
-    @deprecated(useinstead="TIDS", deprecated_since_version="0.7.5")
-    def correct_signature_from_indices(self, data, indices, free, dum):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
-
-    @staticmethod
-    @deprecated(useinstead="TIDS", deprecated_since_version="0.7.5")
-    def flip_index_by_metric(data, metric, pos):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._flip_index_by_metric(data, metric, pos)
 
 
 class _IndexStructure(CantSympify):
@@ -1759,7 +1676,6 @@ class TensorIndexType(Basic):
             sym2 = TensorSymmetry(get_symmetric_group_sgs(2, obj.metric_antisym))
             S2 = TensorType([obj]*2, sym2)
             obj.metric = S2(metric_name)
-            obj.metric._matrix_behavior = True
 
         obj._dim = dim
         obj._delta = obj.get_kronecker_delta()
@@ -1772,21 +1688,21 @@ class TensorIndexType(Basic):
     @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_right(self):
         if not hasattr(self, '_auto_right'):
-            self._auto_right = TensorIndex("auto_right", self, is_matrix_index=True)
+            self._auto_right = TensorIndex("auto_right", self)
         return self._auto_right
 
     @property
     @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_left(self):
         if not hasattr(self, '_auto_left'):
-            self._auto_left = TensorIndex("auto_left", self, is_matrix_index=True)
+            self._auto_left = TensorIndex("auto_left", self)
         return self._auto_left
 
     @property
     @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
     def auto_index(self):
         if not hasattr(self, '_auto_index'):
-            self._auto_index = TensorIndex("auto_index", self, is_matrix_index=True)
+            self._auto_index = TensorIndex("auto_index", self)
         return self._auto_index
 
     @property
@@ -1864,7 +1780,6 @@ class TensorIndexType(Basic):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
         S2 = TensorType([self]*2, sym2)
         delta = S2('KD')
-        delta._matrix_behavior = True
         return delta
 
     def get_epsilon(self):
@@ -1910,10 +1825,6 @@ class TensorIndexType(Basic):
         delta = self.get_kronecker_delta()
         if delta in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[delta]
-
-
-class MatrixIndexType(TensorIndexType):
-    pass
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -2235,27 +2146,8 @@ class TensorType(Basic):
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
-        # Check that matrix index types are at the end:
-        mat_flag = False
-        mat_start_index = len(index_types)
-
-        for i, ind in enumerate(index_types):
-            if mat_flag:
-                assert isinstance(ind, MatrixIndexType)
-            else:
-                if isinstance(ind, MatrixIndexType):
-                    mat_flag = True
-                    mat_start_index = i
-
-        nonmatrix_types = index_types[:mat_start_index]
-        matrix_types = index_types[mat_start_index:]
-
-        # Get non-matrix index types
-        # non_matrix_index_types = [i for i in index_types if not isinstance(i, MatrixIndexType)]
         assert symmetry.rank == len(index_types)
         obj = Basic.__new__(cls, Tuple(*index_types), symmetry, **kw_args)
-        obj._matrix_index_types = matrix_types
-        obj._nonmatrix_index_types = nonmatrix_types
         return obj
 
     @property
@@ -2543,7 +2435,6 @@ class TensorHead(Basic):
         obj._rank = len(obj.index_types)
         obj._symmetry = typ.symmetry
         obj._comm = comm2i
-        obj._matrix_index_types = typ._matrix_index_types
         return obj
 
     @property
@@ -2589,73 +2480,6 @@ class TensorHead(Basic):
     def _print(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
-    # def _check_auto_matrix_indices_in_call(self, *indices):
-    #     matrix_behavior_kinds = dict()
-    #
-    #     if len(indices) != len(self.index_types):
-    #         if not self._matrix_behavior:
-    #             raise ValueError('wrong number of indices')
-    #
-    #         # Take the last one or two missing
-    #         # indices as auto-matrix indices:
-    #         ldiff = len(self.index_types) - len(indices)
-    #         if ldiff > 2:
-    #             raise ValueError('wrong number of indices')
-    #         if ldiff == 2:
-    #             mat_ind = [len(indices), len(indices) + 1]
-    #         elif ldiff == 1:
-    #             mat_ind = [len(indices)]
-    #         not_equal = True
-    #     else:
-    #         not_equal = False
-    #         mat_ind = [i for i, e in enumerate(indices) if e is True]
-    #         if mat_ind:
-    #             not_equal = True
-    #         indices = tuple([_ for _ in indices if _ is not True])
-    #
-    #         for i, el in enumerate(indices):
-    #             if not isinstance(el, TensorIndex):
-    #                 not_equal = True
-    #                 break
-    #             if el.tensor_index_type != self.index_types[i]:
-    #                 not_equal = True
-    #                 break
-    #
-    #     if not_equal:
-    #         for el in mat_ind:
-    #             eltyp = self.index_types[el]
-    #             if eltyp in matrix_behavior_kinds:
-    #                 fmt0 = self.index_types[el]._get_matrix_fmt(0)
-    #                 elind = TensorIndex(fmt0, self.index_types[el], False, is_matrix_index=True)
-    #                 matrix_behavior_kinds[eltyp].append(elind)
-    #             else:
-    #                 fmt1 = self.index_types[el]._get_matrix_fmt(1)
-    #                 elind = TensorIndex(fmt1, self.index_types[el], True, is_matrix_index=True)
-    #                 matrix_behavior_kinds[eltyp] = [elind]
-    #             indices = indices[:el] + (elind,) + indices[el:]
-    #
-    #     return indices, matrix_behavior_kinds
-
-    # @staticmethod
-    # def _rename_matrix_indices(indices):
-    #     type_counter = defaultdict(int)
-    #     for i, idx in enumerate(indices):
-    #         if not idx.is_matrix_index:
-    #             continue
-    #         tc = type_counter[idx.tensor_index_type]
-    #         indices[i] = TensorIndex(
-    #             idx.tensor_index_type._get_matrix_fmt(tc),
-    #             idx.tensor_index_type,
-    #             idx.is_up,
-    #             is_matrix_index=True
-    #         )
-    #         tc += 1
-    #         if tc > 2:
-    #             raise ValueError("one tensor index type cannot have more than two matrix indices in a Tensor instance")
-    #         type_counter[idx.tensor_index_type] = tc
-    #
-    #     return indices
-
     def __call__(self, *indices, **kw_args):
         """
         Returns a tensor with indices.
@@ -2679,59 +2503,7 @@ class TensorHead(Basic):
         >>> t
         A(a, -b)
 
-        To use the auto-matrix index behavior, just put a ``True`` on the
-        desired index position.
-
-        >>> r = A(True, True)
-        >>> r
-        A(auto_left, -auto_right)
-
-        Here ``auto_left`` and ``auto_right`` are automatically generated
-        tensor indices, they are only two for every ``TensorIndexType`` and
-        can be assigned to just one or two indices of a given type.
-
-        Auto-matrix indices can be assigned many times in a tensor, if indices
-        are of different ``TensorIndexType``
-
-        >>> Spinor = TensorIndexType('Spinor', dummy_fmt='S')
-        >>> B = tensorhead('B', [Lorentz, Lorentz, Spinor, Spinor], [[1]*4])
-        >>> s = B(True, True, True, True)
-        >>> s
-        B(auto_left, -auto_right, auto_left, -auto_right)
-
-        Here, ``auto_left`` and ``auto_right`` are repeated twice, but they are
-        not the same indices, as they refer to different ``TensorIndexType``s.
-
-        Auto-matrix indices are automatically contracted upon multiplication,
-
-        >>> r*s
-        A(auto_left, L_0)*B(-L_0, -auto_right, auto_left, -auto_right)
-
-        The multiplication algorithm has found an ``auto_right`` index in ``A``
-        and an ``auto_left`` index in ``B`` referring to the same
-        ``TensorIndexType`` (``Lorentz``), so they have been contracted.
-
-        Auto-matrix indices can be accessed from the ``TensorIndexType``:
-
-        >>> Lorentz.auto_right
-        auto_right
-        >>> Lorentz.auto_left
-        auto_left
-
-        There is a special case, in which the ``True`` parameter is not needed
-        to declare an auto-matrix index, i.e. when the matrix behavior has been
-        declared upon ``TensorHead`` construction, in that case the last one or
-        two tensor indices may be omitted, so that they automatically become
-        auto-matrix indices:
-
-        >>> C = tensorhead('C', [Lorentz, Lorentz], [[1]*2], matrix_behavior=True)
-        >>> C()
-        C(auto_left, -auto_right)
-
         """
-
-        #indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
-        #indices = self._rename_matrix_indices(list(indices))
         tensor = Tensor._new_with_dummy_replacement(self, indices, **kw_args)
         return tensor
 
@@ -2816,7 +2588,7 @@ class TensExpr(Basic):
     Contracted indices are therefore nameless in the internal representation.
     """
 
-    _op_priority = 11.0
+    _op_priority = 12.0
     is_commutative = False
 
     def __neg__(self):
@@ -3097,10 +2869,9 @@ class TensAdd(TensExpr):
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
 
-        # if TensAdd has only 1 TensMul element in its `args`:
-        if len(args) == 1 and isinstance(args[0], TensMul):
-            obj = Basic.__new__(cls, *args, **kw_args)
-            return obj
+        # if TensAdd has only 1 element in its `args`:
+        if len(args) == 1:  # and isinstance(args[0], TensMul):
+            return args[0]
 
         # TODO: do not or do canonicalize by default?
         # Technically, one may wish to have additions of non-canonicalized
@@ -3162,6 +2933,11 @@ class TensAdd(TensExpr):
                 a.extend(list(x.args))
             else:
                 a.append(x)
+
+        try:
+            [x for x in a if x.coeff]
+        except Exception as e:
+            print(3)
         args = [x for x in a if x.coeff]
         return args
 
@@ -3174,7 +2950,6 @@ class TensAdd(TensExpr):
         if not args:
             return args
 
-        # all_free_matrix_indices = set([])
         free_mat_indices_types_count = {}
         fmitcs = [defaultdict(lambda: 0) for i in args]
         for arg, fmitc in zip(args, fmitcs):
@@ -3187,9 +2962,6 @@ class TensAdd(TensExpr):
                     free_mat_indices_types_count[typ] = count
                 else:
                     free_mat_indices_types_count[typ] = max(free_mat_indices_types_count[typ], fmitc[typ])
-            #
-            # matrix_indices = [i for i in arg._get_free_indices_set() if i.is_matrix_index]
-            # all_free_matrix_indices.update(matrix_indices)
 
         for argi, arg in enumerate(args):
             for typ, count in free_mat_indices_types_count.items():
@@ -3198,16 +2970,6 @@ class TensAdd(TensExpr):
                 if count - fmitcs[argi][typ] != 2:
                     raise ValueError("cannot determine how to add auto-matrix indices on some args")
                 args[argi] *= typ.delta()
-            # matrix_indices = [i for i in arg._get_free_indices_set() if i.is_matrix_index]
-            # intersection = all_free_matrix_indices.intersection(matrix_indices)
-            # if intersection:
-            #     inttypes = set([i.tensor_index_type for i in intersection])
-            #     for typ in inttypes:
-            #         indices = [i for i in intersection if i.tensor_index_type == typ]
-            #         if len(indices) == 2:
-            #             args[argi] *= typ.delta(indices[0], indices[1])
-            #         else:
-            #             raise ValueError("cannot determine how to add auto-matrix indices on some args")
 
     @staticmethod
     def _tensAdd_check(args):
@@ -3220,7 +2982,7 @@ class TensAdd(TensExpr):
     @staticmethod
     def _tensAdd_collect_terms(args):
         # collect TensMul terms differing at most by their coefficient
-        terms_dict = defaultdict(lambda: S.Zero)
+        terms_dict = defaultdict(list)
         scalars = S.Zero
         if isinstance(args[0], TensExpr):
             free_indices = set(args[0].get_free_indices())
@@ -3237,9 +2999,9 @@ class TensAdd(TensExpr):
                 raise ValueError("wrong valence")
             # TODO: what is the part which is not a coeff?
             # needs an implementation similar to .as_coeff_Mul()
-            terms_dict[arg/arg.coeff] += arg.coeff
+            terms_dict[arg.nocoeff].append(arg.coeff)
 
-        new_args = list(coeff*t for t, coeff in terms_dict.items() if coeff != 0)
+        new_args = [TensMul(Add(*coeff), t) for t, coeff in terms_dict.items() if Add(*coeff) != 0]
         if isinstance(scalars, Add):
             new_args = scalars.args + new_args
         elif scalars != 0:
@@ -3492,7 +3254,7 @@ class Tensor(TensExpr):
         is_canon_bp = kw_args.pop('is_canon_bp', False)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
-        if tensor_head.rank - len(tensor_head._matrix_index_types) != len(indices):
+        if tensor_head.rank != len(indices):
             raise ValueError("wrong number of indices")
         obj._indices = indices
         obj._is_canon_bp = is_canon_bp
@@ -3607,6 +3369,10 @@ class Tensor(TensExpr):
     @property
     def coeff(self):
         return S.One
+
+    @property
+    def nocoeff(self):
+        return self
 
     @property
     def component(self):
@@ -3866,11 +3632,7 @@ class TensMul(TensExpr):
             return args[0]
 
         obj = Basic.__new__(cls, *args)
-
         obj._index_types = index_types
-        # TODO: remove
-        obj._nonmatrix_index_types = [i for i in index_types if not isinstance(i, MatrixIndexType)]
-        assert len(obj._nonmatrix_index_types) == index_structure._ext_rank
         obj._index_structure = index_structure
         obj._ext_rank = len(obj._index_structure.free) + 2*len(obj._index_structure.dum)
         obj._coeff = coeff
@@ -4099,6 +3861,10 @@ class TensMul(TensExpr):
     @property
     def coeff(self):
         return self._coeff
+
+    @property
+    def nocoeff(self):
+        return self.func(*[t for t in self.args if isinstance(t, TensExpr)])
 
     @property
     def dum(self):

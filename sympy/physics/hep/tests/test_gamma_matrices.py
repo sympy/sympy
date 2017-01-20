@@ -1,6 +1,8 @@
+from sympy import Matrix
+
 from sympy.tensor.tensor import tensor_indices, tensorhead, get_lines, TensExpr
 from sympy import simplify, eye
-from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, simplify_lines, \
+from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
     _kahane_simplify, GammaMatrix, _trace_single_line, gamma_trace, _simplify_single_line, simplify_gamma_expression
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -268,7 +270,11 @@ def test_gamma_matrix_class():
 
     t = A(k)*G(i)*G(-i)
     ts = simplify_gamma_expression(t)
-    assert _is_tensor_eq(ts, 4*A(k)*DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right))
+    assert _is_tensor_eq(ts, Matrix([
+        [4, 0, 0, 0],
+        [0, 4, 0, 0],
+        [0, 0, 4, 0],
+        [0, 0, 0, 4]])*A(k))
 
     t = G(i)*A(k)*G(j)
     ts = simplify_gamma_expression(t)
@@ -394,86 +400,3 @@ def test_gamma_matrix_trace():
     t = ps*ps*ps*ps*ps*ps*ps*ps
     r = gamma_trace(t)
     assert r.equals(4*p2*p2*p2*p2)
-
-
-@XFAIL
-def test_simple_trace_cases_symbolic_dim():
-    from sympy import symbols
-    D = symbols('D')
-    G = GammaMatrix(dim=D)
-
-    m0, m1, m2, m3 = tensor_indices('m0:4', LorentzIndex)
-    g = LorentzIndex.metric
-
-    t = G(m0)*G(m1)
-    t1 = _trace_single_line(t)
-    assert _is_tensor_eq(t1, 4 * LorentzIndex.metric(m0, m1))
-
-    t = G(m0)*G(m1)*G(m2)*G(m3)
-    t1 = _trace_single_line(t)
-    t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
-    assert _is_tensor_eq(t1, t2)
-
-
-@XFAIL
-def test_get_lines():
-    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13 = \
-       tensor_indices('i0:14', LorentzIndex)
-    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
-       tensor_indices('s0:17', DiracSpinorIndex)
-    t = G(i1)*G(i2)*G(i4)*G(i3)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 2]], [[1, 3]], [])
-    t = G(i1)*G(i2)*G(i3)*G(i4)*\
-        G(i5)*G(i6)*G(i7)*G(i8)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 1, 2, 3]], [[4, 5, 6, 7]], [])
-    t = G(i1)*G(i0)*G(i2)*G(i3)*\
-    G(i4)*G(i5)*G(i6)*G(i7)*\
-    G(i8)*G(i9)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[0, 2, 3, 4]], [[5, 6, 7, 8], [1, 9]], [])
-    t = G(i1)*G(i11)*G(i0)*G(i2)*G(i3)*\
-        G(i4)*G(i5)*G(i10)*G(i6)*G(i7)*\
-        G(i8)*G(i9)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[7, 1], [0, 3, 4, 5]], [[6, 8, 9, 10], [2, 11]], [])
-    t = G(i4)*G(i5)*G(i10)*G(i6)*G(i7)*\
-        G(i8)*G(i9)*\
-        G(i1)*G(i11)*G(i0)*G(i2)*G(i3)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[7, 10, 11, 0], [2, 8]], [[1, 3, 4, 5], [6, 9]], [])
-    t = G(i8)*G(i9)*G(i4)*G(i13)*\
-        G(i10)*G(i1)*G(i11)*\
-        G(i0)*G(i6)*G(i7)*\
-        G(i2)*G(i12)*G(i3)*G(i5)
-    r = get_lines(t, DiracSpinorIndex)
-    assert r == ([[5, 10, 12, 2], [4, 6, 11, 3]], [[1, 7], [0, 13, 8, 9]], [])
-
-
-@XFAIL
-def test_simplify_lines():
-    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12 = tensor_indices('i0:13', LorentzIndex)
-    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
-       tensor_indices('s0:17', DiracSpinorIndex)
-
-    g = LorentzIndex.metric
-    Sdelta = DiracSpinorIndex.delta
-    t = G(i1)*G(i2)*G(i3)*G(i4)*G(i5)
-    r = simplify_lines(t)
-    assert r.equals(4*G(i5)*G(i3)*G(i4)*g(i1, i2))
-
-    t = G(i1)*G(i2)*G(i3)*G(-i3)*G(i5)
-    r = simplify_lines(t)
-    assert r.equals(16*G(i5)*Sdelta(s4, -s6)*g(i1, i2))
-    t = G(i1)*G(i2)*G(i3)*G(i4)*G(i5)
-    r = simplify_lines(t)
-    assert r.equals(4*G(i5)*G(i3)*G(i4)*g(i1, i2))
-    t = G(i5)*G(i6)*G(i1)*G(i3)*G(i2)*G(i4)*G(-i6)
-    r = simplify_lines(t)
-    assert r.equals(64*G(i5)*G(i3)*G(i4)*g(i1, i2))
-    t = G(i5)*G(i6)*G(i1)*G(i7)*G(i3)*\
-        G(i2)*G(i4)*G(-i6)*G(-i7)
-    r = simplify_lines(t)
-    assert r.equals(256*G(i5)*G(i3)*G(i4)*\
-           g(i1, i2)*Sdelta(s12,-s13))
