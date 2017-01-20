@@ -265,8 +265,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                                             (1, np.size(a)))[0]))[1:-1]
                     return Float(a)
                 except NotImplementedError:
-                    print('Translation for numpy float : %s'
-                          'is not implemented' % a)
+                    raise SympifyError('Translation for numpy float : %s '
+                                       'is not implemented' % a)
 
     try:
         return converter[cls](a)
