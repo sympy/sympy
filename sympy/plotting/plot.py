@@ -1735,11 +1735,9 @@ def conplot(*args, **kwargs):
     Draws contour plot of a given function.
     """
     args = list(map(sympify, args))
-    symbols = set()
     show = kwargs.pop('show', True)
     plot_expr = check_arguments(args, 1, 2)
-    symbols |= plot_expr[0].free_symbols
-    if len(symbols) > 2:
+    if len(plot_expr[0].free_symbols) > 2:
         raise ValueError(
             'Contour Plot cannot plot for more than '
             'two variables.')
