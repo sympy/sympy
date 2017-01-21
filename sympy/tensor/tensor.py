@@ -33,7 +33,6 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 import itertools
-from numpy.core.multiarray import ndarray
 from sympy import Matrix, Rational, product, prod
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -1910,7 +1909,7 @@ class TensorIndex(Basic):
         return self._name
 
     @property
-    @deprecated(useinstead="tensor_index_type", deprecated_since_version="0.7.6")
+    @deprecated(useinstead="tensor_index_type", deprecated_since_version="1.1")
     def tensortype(self):
         return self.tensor_index_type
 
@@ -2863,9 +2862,6 @@ class TensAdd(TensExpr):
         if len(args) == 1 and not isinstance(args[0], TensExpr):
             return args[0]
 
-        # replace auto-matrix indices so that they are the same in all addends
-        TensAdd._tensAdd_check_automatrix(args)
-
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
 
@@ -2934,42 +2930,8 @@ class TensAdd(TensExpr):
             else:
                 a.append(x)
 
-        try:
-            [x for x in a if x.coeff]
-        except Exception as e:
-            print(3)
         args = [x for x in a if x.coeff]
         return args
-
-    @staticmethod
-    def _tensAdd_check_automatrix(args):
-        # Check that all automatrix indices are the same.
-        # Add dirac deltas if pairs of matrix indices are missing.
-
-        # if there are no addends, just return.
-        if not args:
-            return args
-
-        free_mat_indices_types_count = {}
-        fmitcs = [defaultdict(lambda: 0) for i in args]
-        for arg, fmitc in zip(args, fmitcs):
-            if not isinstance(arg, TensExpr):
-                continue
-            for idx in arg._get_free_indices_set():
-                fmitc[idx.tensor_index_type] += 1
-            for typ, count in fmitc.items():
-                if typ not in free_mat_indices_types_count:
-                    free_mat_indices_types_count[typ] = count
-                else:
-                    free_mat_indices_types_count[typ] = max(free_mat_indices_types_count[typ], fmitc[typ])
-
-        for argi, arg in enumerate(args):
-            for typ, count in free_mat_indices_types_count.items():
-                if fmitcs[argi][typ] == count:
-                    continue
-                if count - fmitcs[argi][typ] != 2:
-                    raise ValueError("cannot determine how to add auto-matrix indices on some args")
-                args[argi] *= typ.delta()
 
     @staticmethod
     def _tensAdd_check(args):
@@ -3606,10 +3568,6 @@ class TensMul(TensExpr):
         args = TensMul._flatten(args)
 
         is_canon_bp = kw_args.get('is_canon_bp', False)
-        # targs = [arg for arg in args if isinstance(arg, TensExpr)]
-        # if len(targs) == 1:
-        #     is_canon_bp = targs[0]._is_canon_bp
-
         args, indices, free, dum = TensMul._tensMul_contract_indices(args)
 
         index_types = []
@@ -4460,9 +4418,6 @@ def get_lines(ex, index_type):
     ``traces`` is the list of list of traced matrix lines,
     ``rest`` is the rest of the elements ot the tensor.
     """
-    #if not isinstance(ex, TensExpr):
-    #    return [], [], [ex]
-
     def _join_lines(a):
         i = 0
         while i < len(a):
@@ -4593,6 +4548,7 @@ def get_index_structure(t):
         return t._index_structure
     return _IndexStructure([], [], [], [])
 
+
 def get_coeff(t):
     if isinstance(t, Tensor):
         return S.One
@@ -4606,6 +4562,7 @@ def contract_metric(t, g):
     if isinstance(t, TensExpr):
         return t.contract_metric(g)
     return t
+
 
 def perm2tensor(t, g, is_canon_bp=False):
     """
@@ -4623,6 +4580,7 @@ def perm2tensor(t, g, is_canon_bp=False):
 
         return res
     raise NotImplementedError()
+
 
 def substitute_indices(t, *index_tuples):
     """
