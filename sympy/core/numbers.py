@@ -420,10 +420,10 @@ class Number(AtomicExpr):
     def __round__(self,ndigits = 0):
         self = str(self)
         index = self.index(".")
-        self = self[:index+1+ndigits]
-        
-        return Float(self)
-
+        self = self[:index+ndigits+1]
+        temp = len(self[:index])
+        self = Float(self,temp+ndigits)
+        return self
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
         raise NotImplementedError('%s needs ._as_mpf_val() method' %
