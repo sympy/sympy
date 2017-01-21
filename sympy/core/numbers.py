@@ -418,7 +418,15 @@ class Number(AtomicExpr):
         return divmod(other, self)
 
     def __round__(self, *args):
-        return round(float(self), *args)
+        if args[0] < 14: # We don't need the precision that Float offers, and we can just use the normal round() function/
+            return round(float(self), *args)
+        self = Float(self)*(10**int(args[0])) # Multiply up to desired decimal places
+        decimal_value = self - int(self)
+        if decimal_value >= 0.5:
+            self += 1
+        self = int(self) # We don't need any of the other digits, so we can truncate them
+        self = Float(self) / (10**int(args[0])) # Return it back to it's original form
+        return self
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
