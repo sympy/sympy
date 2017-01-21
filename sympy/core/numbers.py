@@ -418,14 +418,16 @@ class Number(AtomicExpr):
         return divmod(other, self)
 
     def __round__(self, *args):
-        if args[0] < 14: # We don't need the precision that Float offers, and we can just use the normal round() function/
-            return round(float(self), *args)
         self = Float(self)*(10**int(args[0])) # Multiply up to desired decimal places
-        decimal_value = self - int(self)
-        if decimal_value >= 0.5:
+        decimal_value = self - Integer(self)
+        self = Integer(self) # We don't need any of the other digits, so we can truncate them
+        if decimal_value >= 0.6:
             self += 1
-        self = int(self) # We don't need any of the other digits, so we can truncate them
+        elif decimal_value >= 0.5 and self%2==1: # Banker's rounding | In the case of 0.5 round to nearest even integer.
+            self+=1
         self = Float(self) / (10**int(args[0])) # Return it back to it's original form
+        if args[0]<14:
+            self=float(self) # Make sure we don't get extra precision when it's not required
         return self
 
     def _as_mpf_val(self, prec):
