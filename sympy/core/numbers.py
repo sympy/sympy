@@ -421,6 +421,7 @@ class Number(AtomicExpr):
         self = str(self)
         index = self.index(".")
         self = self[:index+1+ndigits]
+        
         return Float(self)
 
     def _as_mpf_val(self, prec):
