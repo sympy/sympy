@@ -421,7 +421,7 @@ class Number(AtomicExpr):
         self = str(self)
         index = self.index(".")
         self = self[:index+1+ndigits]
-        return Float.evalf(self)
+        return Float(self)
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
