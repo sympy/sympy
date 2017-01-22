@@ -308,7 +308,7 @@ class LatexPrinter(Printer):
 
     def _print_Cycle(self, expr):
         from sympy.combinatorics.permutations import Permutation
-        if str(expr) == '()':
+        if expr.size == 0:
             return r"\left( \right)"
         expr = Permutation(expr)
         expr_perm = expr.cyclic_form
