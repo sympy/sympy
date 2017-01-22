@@ -698,6 +698,7 @@ def test_mexpand():
     assert _mexpand(1) is S.One
     assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
 
+
 def test_issue_8469():
     # This should not take forever to run
     N = 40
@@ -707,6 +708,7 @@ def test_issue_8469():
     ws = symbols(['w%i'%i for i in range(N)])
     import functools
     expr = functools.reduce(g,ws)
+
 
 def test_should_evalf():
     # This should not take forever to run (see #8506)
@@ -805,6 +807,7 @@ def test_Derivative_as_finite_difference():
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
 
+
 def test_issue_11159():
     # Tests Application._eval_subs
     expr1 = E
@@ -822,4 +825,6 @@ def test_issue_12005():
     assert e3.diff(y) == 4*y
     e4 = Subs(Derivative(f(x + y), y), (y,), (x**2))
     assert e4.diff(y) == S.Zero
+    e5 = Subs(Derivative(f(x), x), (y, z), (y, z))
+    assert e5.diff(x) == Derivative(f(x), x, x)
     assert f(g(x)).diff(g(x), g(x)) == Subs(Derivative(f(y), y, y), (y,), (g(x),))
