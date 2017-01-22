@@ -2781,6 +2781,16 @@ def nsolve(*args, **kwargs):
 
         f = lambdify(fargs, f, modules)
         return Float(findroot(f, x0, **kwargs))
+    
+    if type(fargs)==Symbol:
+        fargs = fargs.free_symbols
+    if fargs == None:
+        fargs = set()
+    if len(fargs)<f.cols:
+        fargs = set(fargs)
+        for temp in range(len(f)):
+            fargs = fargs.union(f[temp].free_symbols)
+    fargs = tuple(fargs)
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
