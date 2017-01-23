@@ -1,25 +1,25 @@
 """
 This module implements a method to find
-Euler-Lagrange Equations for given Lagrangian.
+Euler-Lagrange equations for given Lagrangian.
 """
 from itertools import combinations_with_replacement
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import (iterable, range)
+from sympy.core.compatibility import iterable, range
 
 
-def euler_equations(L, funcs=(), vars=()):
+def euler_equations(lagrangian, functions=(), variables=()):
     r"""
     Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
     Parameters
     ==========
 
-    L : Expr
+    lagrangian : Expr
         The Lagrangian that should be a function of the functions listed
         in the second argument and their derivatives.
 
-        For example, in the case of two functions `f(x,y)`, `g(x,y)` and
-        two independent variables `x`, `y` the Lagrangian would have the form:
+        For example, in the case of two functions `f(x,y)`, `g(x,y)` and two
+        independent variables `x`, `y` the Lagrangian L would have the form:
 
             .. math:: L\left(f(x,y),g(x,y),\frac{\partial f(x,y)}{\partial x},
                       \frac{\partial f(x,y)}{\partial y},
@@ -30,17 +30,17 @@ def euler_equations(L, funcs=(), vars=()):
         Lagrangian, it will be auto-detected (and an error raised if this
         couldn't be done).
 
-    funcs : Function or an iterable of Functions
+    functions : Function or an iterable of Functions
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
 
-    vars : Symbol or an iterable of Symbols
+    variables : Symbol or an iterable of Symbols
         The Symbols that are the independent variables of the functions.
 
     Returns
     =======
 
-    eqns : list of Eq
+    equations : list of Eq
         The list of differential equations, one for each function.
 
     Examples
@@ -66,38 +66,41 @@ def euler_equations(L, funcs=(), vars=()):
 
     """
 
-    funcs = tuple(funcs) if iterable(funcs) else (funcs,)
+    functions = tuple(functions) if iterable(functions) else (functions,)
 
-    if not funcs:
-        funcs = tuple(L.atoms(Function))
+    if not functions:
+        functions = tuple(lagrangian.atoms(Function))
     else:
-        for f in funcs:
-            if not isinstance(f, Function):
-                raise TypeError('Function expected, got: %s' % f)
+        for function in functions:
+            if not isinstance(function, Function):
+                raise TypeError('Function expected, got: %s' % function)
 
-    vars = tuple(vars) if iterable(vars) else (vars,)
+    variables = tuple(variables) if iterable(variables) else (variables,)
 
-    if not vars:
-        vars = funcs[0].args
+    if not variables:
+        variables = functions[0].args
     else:
-        vars = tuple(sympify(var) for var in vars)
+        variables = tuple(sympify(var) for var in variables)
 
-    if not all(isinstance(v, Symbol) for v in vars):
-        raise TypeError('Variables are not symbols, got %s' % vars)
+    if not all(isinstance(v, Symbol) for v in variables):
+        raise TypeError('Variables are not symbols, got %s' % variables)
 
-    for f in funcs:
-        if not vars == f.args:
-            raise ValueError("Variables %s don't match args: %s" % (vars, f))
+    for function in functions:
+        if not variables == function.args:
+            raise ValueError(
+                "Variables %s don't match args: %s" % (variables, function)
+            )
 
-    order = max(len(d.variables) for d in L.atoms(Derivative)
-                if d.expr in funcs)
+    order = max(len(d.variables) for d in lagrangian.atoms(Derivative)
+                if d.expr in functions)
 
-    eqns = []
-    for f in funcs:
-        eq = diff(L, f)
+    equations = []
+    for function in functions:
+        equation = diff(lagrangian, function)
         for i in range(1, order + 1):
-            for p in combinations_with_replacement(vars, i):
-                eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
-        eqns.append(Eq(eq))
+            for symbols in combinations_with_replacement(variables, i):
+                equation += S.NegativeOne**i \
+                    * diff(lagrangian, diff(function, *symbols), *symbols)
+        equations.append(Eq(equation))
 
-    return eqns
+    return equations
