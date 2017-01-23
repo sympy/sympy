@@ -3387,8 +3387,8 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"[Basic(Basic()), Basic()]"
 
     expr = {b2, b1}
-    assert pretty(expr) == "set([Basic(), Basic(Basic())])"
-    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
+    assert pretty(expr) == "{Basic(), Basic(Basic())}"
+    assert upretty(expr) == u"{Basic(), Basic(Basic())}"
 
     expr = {b2: b1, b1: b2}
     expr2 = Dict({b2: b1, b1: b2})
@@ -3400,6 +3400,41 @@ def test_any_object_in_sequence():
     assert upretty(
         expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
+def test_print_builtin_set():
+    assert pretty(set()) == 'set()'
+    assert upretty(set()) == u'set()'
+
+    assert pretty(frozenset()) == 'frozenset()'
+    assert upretty(frozenset()) == u'frozenset()'
+
+    s1 = {1/x, x}
+    s2 = frozenset(s1)
+
+    assert pretty(s1) == \
+"""\
+ 1    \n\
+{-, x}
+ x    \
+"""
+    assert upretty(s1) == \
+u"""\
+⎧1   ⎫
+⎨─, x⎬
+⎩x   ⎭\
+"""
+
+    assert pretty(s2) == \
+"""\
+           1     \n\
+frozenset({-, x})
+           x     \
+"""
+    assert upretty(s2) == \
+u"""\
+         ⎛⎧1   ⎫⎞
+frozenset⎜⎨─, x⎬⎟
+         ⎝⎩x   ⎭⎠\
+"""
 
 def test_pretty_sets():
     s = FiniteSet
@@ -3410,15 +3445,24 @@ def test_pretty_sets():
 """
     assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
     assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
-    for s in (frozenset, set):
-        assert pretty(s([x*y, x**2])) == \
+
+    assert pretty(set([x*y, x**2])) == \
 """\
-%s   2       \n\
-%s([x , x*y])\
-""" % (" " * len(s.__name__), s.__name__)
-        assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
-        assert pretty(s(range(1, 13))) == \
-            "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
+  2      \n\
+{x , x*y}\
+"""
+    assert pretty(set(range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(set(range(1, 13))) == \
+        "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+
+    assert pretty(frozenset([x*y, x**2])) == \
+"""\
+            2       \n\
+frozenset({x , x*y})\
+"""
+    assert pretty(frozenset(range(1, 6))) == "frozenset({1, 2, 3, 4, 5})"
+    assert pretty(frozenset(range(1, 13))) == \
+        "frozenset({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})"
 
     assert pretty(Range(0, 3, 1)) == '{0, 1, 2}'
 
