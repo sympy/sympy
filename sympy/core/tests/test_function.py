@@ -530,6 +530,7 @@ def test_diff_wrt():
 def test_issue_11868():
     f = Function('f')
     f.is_real = True
+    x = Symbol('x', real=True)
     assert Derivative(f(x), x).is_real is True
 
 def test_diff_wrt_func_subs():
