@@ -2919,7 +2919,7 @@ class TensAdd(TensExpr):
                         args1.extend(list(x.args))
                     else:
                         args1.append(x)
-            args1 = [x for x in args1 if isinstance(x, TensExpr) and x.coeff]
+            args1 = [x for x in args1 if x.coeff != 0]
             args2 = [x for x in args if not isinstance(x, TensExpr)]
             t1 = TensMul.from_data(Add(*args2), [], [], [])
             args = [t1] + args1
@@ -2965,7 +2965,7 @@ class TensAdd(TensExpr):
 
         new_args = [TensMul(Add(*coeff), t) for t, coeff in terms_dict.items() if Add(*coeff) != 0]
         if isinstance(scalars, Add):
-            new_args = scalars.args + new_args
+            new_args = list(scalars.args) + new_args
         elif scalars != 0:
             new_args = [scalars] + new_args
         return new_args
