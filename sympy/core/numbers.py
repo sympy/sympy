@@ -861,8 +861,7 @@ class Float(Number):
             if prec < num._prec:
                 _mpf_ = mpf_norm(_mpf_, prec)
         else:
-            # XXX: We lose precision here.
-            _mpf_ = mpmath.mpf(num)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=prec)._mpf_
 
         # special cases
         if _mpf_ == _mpf_zero:

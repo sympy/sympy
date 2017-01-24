@@ -348,6 +348,8 @@ def test_nsimplify():
 
     assert nsimplify(0.33333333, rational=True, base10=False) == Rational(0.33333333)
 
+    # Make sure nsimplify on expressions uses full precision
+    assert nsimplify(pi.evalf(100)*x, base10=False).evalf(100) == pi.evalf(100)*x
 
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
