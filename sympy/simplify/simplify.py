@@ -1285,12 +1285,20 @@ def _real_to_rational(expr, tolerance=None):
     """
     Replace all reals in expr with rationals.
 
-    >>> from sympy import nsimplify
+    >>> from sympy import Rational
+    >>> from sympy.solvers.solvers import _real_to_rational
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=True)
+    >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
 
+    This doesn't use the exact binary representation but rather is based on the
+    base-10 string.
+
+    >>> Rational(0.333333333333333)
+    6004799503160655/18014398509481984
+    >>> _real_to_rational(0.333333333333333)
+    1/3
     """
     inf = Float('inf')
     p = expr
