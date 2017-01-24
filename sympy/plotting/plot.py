@@ -1730,6 +1730,24 @@ def plot3d_parametric_surface(*args, **kwargs):
     return plots
 
 
+def conplot(*args, **kwargs):
+    """
+    Draws contour plot of a given function.
+    """
+    args = list(map(sympify, args))
+    show = kwargs.pop('show', True)
+    plot_expr = check_arguments(args, 1, 2)
+    if len(plot_expr[0].free_symbols) > 2:
+        raise ValueError(
+            'Contour Plot cannot plot for more than '
+            'two variables.')
+    series = [ContourSeries(*arg) for arg in plot_expr]
+    conplots = Plot(*series, **kwargs)
+    if show:
+        conplots.show()
+    return conplots
+
+
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
     Checks the arguments and converts into tuples of the
