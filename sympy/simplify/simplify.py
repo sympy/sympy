@@ -1298,29 +1298,29 @@ def _real_to_rational(expr, tolerance=None):
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-    for float in p.atoms(Float):
-        key = float
+    for fl in p.atoms(Float):
+        key = fl
         if reduce_num is not None:
-            r = Rational(float).limit_denominator(reduce_num)
+            r = Rational(fl).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
-                float.is_Integer is False):
-            r = Rational(tolerance*round(float/tolerance)
+                fl.is_Integer is False):
+            r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
-            r = nsimplify(float, rational=False)
+            r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
-            if float and not r:
-                r = Rational(float)
+            if fl and not r:
+                r = Rational(fl)
             elif not r.is_Rational:
-                if float == inf or float == -inf:
+                if fl == inf or fl == -inf:
                     r = S.ComplexInfinity
-                elif float < 0:
-                    float = -float
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = -Rational(str(float/d))*d
-                elif float > 0:
-                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
-                    r = Rational(str(float/d))*d
+                elif fl < 0:
+                    fl = -fl
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = -Rational(str(fl/d))*d
+                elif fl > 0:
+                    d = Pow(10, int((mpmath.log(fl)/mpmath.log(10))))
+                    r = Rational(str(fl/d))*d
                 else:
                     r = Integer(0)
         reps[key] = r
