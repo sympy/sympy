@@ -14,6 +14,7 @@ from sympy.core.rules import Transform
 from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -1156,7 +1157,8 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
+def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
+    base10=True):
     """
     Find a simple representation for a number or, if there are free symbols or
     if rational=True, then replace Floats with their Rational equivalents. If
@@ -1178,6 +1180,10 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
+    When converting to rational, if base10=True (the default), then convert
+    floats to rationals using their base-10 (string) representation. When
+    base10=False it uses the exact, base-2 representation.
+
     Examples
     ========
 
@@ -1190,6 +1196,11 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
     22/7
+
+    >>> nsimplify(0.333333333333333, rational=True, base10=False)
+    6004799503160655/18014398509481984
+    >>> nsimplify(0.333333333333333, rational=True)
+    1/3
 
     See Also
     ========
@@ -1207,7 +1218,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
-        return _real_to_rational(expr, tolerance)
+        return _real_to_rational(expr, tolerance, base10)
 
     # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
@@ -1270,7 +1281,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             im = nsimplify_real(im)
     except ValueError:
         if rational is None:
-            return _real_to_rational(expr)
+            return _real_to_rational(expr, base10=base10)
         return expr
 
     rv = re + im*S.ImaginaryUnit
@@ -1278,28 +1289,29 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
         return rv
-    return _real_to_rational(expr)
+    return _real_to_rational(expr, base10=base10)
 
 
-def _real_to_rational(expr, tolerance=None):
+def _real_to_rational(expr, tolerance=None, base10=True):
     """
     Replace all reals in expr with rationals.
 
     >>> from sympy import Rational
-    >>> from sympy.solvers.solvers import _real_to_rational
+    >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 
     >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
 
-    This doesn't use the exact binary representation but rather is based on the
-    base-10 string.
+    If base10=True, this uses the base-10 string. Otherwise, the exact, base-2
+    representation is used.
 
-    >>> Rational(0.333333333333333)
+    >>> _real_to_rational(0.333333333333333, base10=False)
     6004799503160655/18014398509481984
     >>> _real_to_rational(0.333333333333333)
     1/3
     """
+    expr = _sympify(expr)
     inf = Float('inf')
     p = expr
     reps = {}
@@ -1315,6 +1327,10 @@ def _real_to_rational(expr, tolerance=None):
             r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
+            if not base10:
+                r = Rational(fl)
+                reps[key] = r
+                continue
             r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
             if fl and not r:

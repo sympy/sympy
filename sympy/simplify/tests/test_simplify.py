@@ -346,6 +346,8 @@ def test_nsimplify():
         assert nsimplify(i) == ans
         assert nsimplify(i + x) == x + ans
 
+    assert nsimplify(0.33333333, rational=True, base10=False) == Rational(0.33333333)
+
 
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
