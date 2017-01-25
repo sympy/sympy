@@ -708,7 +708,7 @@ def test_solveset_complex_exp():
 def test_solve_complex_log():
     assert solveset_complex(log(x), x) == FiniteSet(1)
     assert solveset_complex(1 - log(a + 4*x**2), x) == \
-        FiniteSet(-sqrt(-a/4 + E/4), sqrt(-a/4 + E/4))
+        FiniteSet(-sqrt(-a + E)/2, sqrt(-a + E)/2)
 
 
 def test_solve_complex_sqrt():
