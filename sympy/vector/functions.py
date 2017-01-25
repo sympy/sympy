@@ -3,6 +3,8 @@ from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
 from sympy import sympify, diff, integrate, S, simplify
+from sympy import sin, cos
+from sympy import symbols
 
 
 def express(expr, system, system2=None, variables=False):
@@ -530,3 +532,49 @@ def orthogonalize(*vlist, **kwargs):
         ortho_vlist = [vec.normalize() for vec in ortho_vlist]
 
     return ortho_vlist
+
+
+def surface_param_eq(stype, u, v, *args):
+    """
+    Returns the parametric representation of common
+    geometric surfaces.
+
+    Parameters
+    ==========
+
+    stype : String
+        The type of surface.
+
+    u, v : Parametric variable
+        The variables to be used in parametric representation
+
+    args : Constant
+        The constants to be used in parametric representation
+
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, diff
+    >>> x, y = symbols('x y')
+    >>> from sympy.vector import surface_param_eq
+    >>> surface = surface_param_eq("ellipsoid", x, y, 1, 2, 3)
+    >>> surface
+    (cos(x)*cos(y))*N.i + (2*sin(x)*cos(y))*N.j + (3*sin(y))*N.k
+    >>> diff(surface, x)
+    (-sin(x)*cos(y))*N.i + (2*cos(x)*cos(y))*N.j
+
+    """
+    N = CoordSysCartesian('N')
+    # Dictionary of surfaces valued with their parametric representation
+    param_equation = dict()
+
+    param_equation["cone"] = u*cos(v)*N.i + u*sin(v)*N.j + u*N.k
+    param_equation["cylinder"] = args[0]*cos(u)*N.i + args[0]*sin(u)*N.j \
+        + v*N.k
+    param_equation["ellipsoid"] = args[0]*cos(u)*cos(v)*N.i \
+        + args[1]*sin(u)*cos(v)*N.j + args[2]*sin(v)*N.k
+    param_equation["paraboloid"] = u*cos(v)*N.i + u*sin(v)*N.j + u**2*N.k
+    param_equation["sphere"] = args[0]*cos(u)*cos(v)*N.i \
+        + args[0]*sin(u)*cos(v)*N.j + args[0]*sin(v)*N.k
+    return param_equation[stype]
