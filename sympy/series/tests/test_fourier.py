@@ -1,4 +1,4 @@
-from sympy import (symbols, pi, Piecewise, sin, cos, Rational,
+from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational,
                    oo, fourier_series, Add)
 from sympy.series.fourier import FourierSeries
 from sympy.utilities.pytest import raises
@@ -63,6 +63,17 @@ def test_FourierSeries_2():
                          4*cos(3*pi*x / 2) / (9*pi**2))
     assert f.truncate() == (2*sin(pi*x / 2) / pi - sin(pi*x) / pi -
                             4*cos(pi*x / 2) / pi**2 + Rational(1, 2))
+
+
+def test_fourier_series_square_wave():
+    """Test if fourier_series approximates discontinuous function correctly."""
+    square_wave = Piecewise((1, x < pi), (-1, True))
+    s = fourier_series(square_wave, (x, 0, 2*pi))
+
+    assert s.truncate(3) == 4 / pi * sin(x) + 4 / (3 * pi) * sin(3 * x) + \
+        4 / (5 * pi) * sin(5 * x)
+    assert s.sigma_approximation(4) == 4 / pi * sin(x) * sinc(pi / 4) + \
+        4 / (3 * pi) * sin(3 * x) * sinc(3 * pi / 4)
 
 
 def test_FourierSeries__operations():

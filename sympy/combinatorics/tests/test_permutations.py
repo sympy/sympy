@@ -391,3 +391,31 @@ def test_from_sequence():
     assert Permutation.from_sequence('SymPy') == Permutation(4)(0, 1, 3)
     assert Permutation.from_sequence('SymPy', key=lambda x: x.lower()) == \
         Permutation(4)(0, 2)(1, 3)
+
+
+def test_printing_cyclic():
+    Permutation.print_cyclic = True
+    p1 = Permutation([0, 2, 1])
+    assert repr(p1) == 'Permutation(1, 2)'
+    assert str(p1) == '(1 2)'
+    p2 = Permutation()
+    assert repr(p2) == 'Permutation()'
+    assert str(p2) == '()'
+    p3 = Permutation([1, 2, 0, 3])
+    assert repr(p3) == 'Permutation(3)(0, 1, 2)'
+
+
+def test_printing_non_cyclic():
+    Permutation.print_cyclic = False
+    p1 = Permutation([0, 1, 2, 3, 4, 5])
+    assert repr(p1) == 'Permutation([], size=6)'
+    assert str(p1) == 'Permutation([], size=6)'
+    p2 = Permutation([0, 1, 2])
+    assert repr(p2) == 'Permutation([0, 1, 2])'
+    assert str(p2) == 'Permutation([0, 1, 2])'
+
+    p3 = Permutation([0, 2, 1])
+    assert repr(p3) == 'Permutation([0, 2, 1])'
+    assert str(p3) == 'Permutation([0, 2, 1])'
+    p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
+    assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'

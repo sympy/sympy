@@ -1001,7 +1001,7 @@ class Permutation(Basic):
             use = full = str(self.array_form)
             if len(trim) < len(full):
                 use = trim
-            return 'Permutation%s' % use
+            return 'Permutation(%s)' % use
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
