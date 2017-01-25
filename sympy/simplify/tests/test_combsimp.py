@@ -1,5 +1,5 @@
 from sympy import (
-    Rational, combsimp, factorial, gamma, binomial, Symbol, pi, S,
+    Rational, combsimp,factorial, gamma, binomial, Symbol, pi, S,
     sin, exp, powsimp, sqrt, sympify, FallingFactorial, RisingFactorial,
     simplify, symbols, cos, rf)
 
