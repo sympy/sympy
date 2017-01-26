@@ -2781,7 +2781,18 @@ def nsolve(*args, **kwargs):
 
         f = lambdify(fargs, f, modules)
         return Float(findroot(f, x0, **kwargs))
-
+    fargstemp = fargs
+    if type(fargstemp) == Symbol:
+        fargstemp = fargstemp.free_symbols
+    if fargstemp == None:
+        fargstemp = set()
+    if len(fargstemp) < f.cols:
+        fargstemp2 = set(fargstemp)
+        for temp in range(len(f)):
+            fargstemp3 = fargstemp2.union(f[temp].free_symbols)
+            fargstemp2 = fargstemp3
+        fargstemp = fargstemp2
+    fargs = tuple(fargstemp)
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
             need at least as many equations as variables'''))
