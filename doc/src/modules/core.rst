@@ -46,7 +46,7 @@ singleton
 
 S
 ^
-.. autoclass:: S
+.. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
 
 expr
