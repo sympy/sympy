@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-
+from sympy.simplify.ratsimp import ratsimp
 
 def limit(e, z, z0, dir="+"):
     """
@@ -158,6 +158,8 @@ class Limit(Expr):
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
+                    temp = ratsimp(e)
+                    e = temp
                     inve = e.subs(z, 1/u)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
