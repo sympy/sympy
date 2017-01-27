@@ -2746,14 +2746,12 @@ def nsolve(*args, **kwargs):
         f = args[0]
         fargs = args[1]
         x0 = args[2]
-        if iterable(fargs)==True and iterable(x0)==True:
-            if len(x0) != len(fargs):
-                raise TypeError('nsolve expected exactly %i guess vectors, got %i'
-                                % (len(fargs), len(x0)))
     elif len(args) == 2:
         f = args[0]
         fargs = None
         x0 = args[1]
+        if iterable(f)==True:
+            raise TypeError('nsolve expected 3 arguments, got 2')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
