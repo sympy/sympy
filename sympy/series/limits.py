@@ -90,8 +90,11 @@ class Limit(Expr):
     def __new__(cls, e, z, z0, dir="+"):
         temp = e
         e = sympify(e)
-        if e == temp:
-            e = ratsimp(e)
+        try:
+            if e == temp:
+                e = ratsimp(e)
+        except Exception :
+            pass
         z = sympify(z)
         z0 = sympify(z0)
         if z0 is S.Infinity:
