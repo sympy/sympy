@@ -7,7 +7,6 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-from sympy.simplify.ratsimp import ratsimp
 
 def limit(e, z, z0, dir="+"):
     """
@@ -88,13 +87,7 @@ class Limit(Expr):
     """
 
     def __new__(cls, e, z, z0, dir="+"):
-        temp = e
         e = sympify(e)
-        try:
-            if e == temp:
-                e = ratsimp(e)
-        except Exception :
-            pass
         z = sympify(z)
         z0 = sympify(z0)
         if z0 is S.Infinity:
@@ -151,14 +144,9 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
                 ok = lambda w: (z in w.free_symbols and
-                                any(a.is_polynomial(z) or
-                                    any(z in m.free_symbols and m.is_polynomial(z)
+                                all(S(a).is_polynomial(z) or
+                                    all(z in m.free_symbols and S(m).is_polynomial(z)
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
@@ -193,3 +181,4 @@ class Limit(Expr):
                 raise NotImplementedError()
 
         return r
+
