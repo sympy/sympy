@@ -88,10 +88,12 @@ class Limit(Expr):
     """
 
     def __new__(cls, e, z, z0, dir="+"):
+        temp = e
         e = sympify(e)
+        if e == temp:
+            e = ratsimp(e)
         z = sympify(z)
         z0 = sympify(z0)
-
         if z0 is S.Infinity:
             dir = "-"
         elif z0 is S.NegativeInfinity:
@@ -158,8 +160,6 @@ class Limit(Expr):
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
-                    temp = ratsimp(e)
-                    e = temp
                     inve = e.subs(z, 1/u)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
