@@ -173,18 +173,7 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
-        else:
-            left = '['
-
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+        return 'Interval(%s)' %(','.join([self._print(a) for a in i.args]))
 
     def _print_AccumulationBounds(self, i):
         left = '<'
@@ -519,6 +508,12 @@ class StrPrinter(Printer):
     def _print_Integer(self, expr):
         return str(expr.p)
 
+    def _print_Integers(self,expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self,expr):
+        return 'S.Naturals'
+
     def _print_int(self, expr):
         return str(expr)
 
@@ -677,7 +672,7 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(%s)' %(','.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
