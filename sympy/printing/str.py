@@ -74,15 +74,15 @@ class StrPrinter(Printer):
     def _print_BooleanFalse(self, expr):
         return "False"
 
-	def _print_Not(self, expr):
-		return '~(%s)' %(expr.args[0])
+    def _print_Not(self, expr):
+        return '~(%s)' %(expr.args[0])
 
     def _print_And(self, expr):
-        return '(%s)' %(' & '.join([self.parenthesize(arg, 38)
+        return '%s' %(' & '.join([self.parenthesize(arg, 38)
             for arg in expr.args]))
 
     def _print_Or(self, expr):
-        return '(%s)' %(' | '.join([self.parenthesize(arg, 36)
+        return '%s' %(' | '.join([self.parenthesize(arg, 36)
             for arg in expr.args]))
 
     def _print_AppliedPredicate(self, expr):
