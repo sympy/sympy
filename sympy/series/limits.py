@@ -169,7 +169,7 @@ class Limit(Expr):
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
         
-        if e.is_Pow:
+        if e.is_Pow and z0!=S(0):
             return (e.subs(z,z0))
 
         try:
