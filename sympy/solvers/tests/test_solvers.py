@@ -1,4 +1,4 @@
-Ffrom sympy import (
+from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
