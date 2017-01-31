@@ -1,5 +1,5 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
@@ -540,20 +540,20 @@ def test_numpy():
     assert equal(sympify(np.uint32(1234567891)), S(1234567891))
     assert equal(
         sympify(np.uint64(1234567891234567891)), S(1234567891234567891))
-    assert equal(sympify(np.float16(1.123)), S(1.123))
-    assert equal(sympify(np.float32(1.1234567)), S(1.1234567))
-    assert equal(sympify(np.float64(1.1234567891234)), S(1.1234567891234))
+    assert equal(sympify(np.float16(1.123)), N(1.123, 4))
+    assert equal(sympify(np.float32(1.1234567)), N(1.1234567, 8))
+    assert equal(sympify(np.float64(1.1234567891234)), N(1.1234567891234, 15))
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
 
     try:
-        assert equal(sympify(np.float96(1.123456789)), S(1.123456789))
+        assert equal(sympify(np.float96(1.123456789)), N(1.123456789, 10))
     except AttributeError:  #float96 does not exist on all platforms
         pass
 
     try:
         assert equal(
-            sympify(np.float128(1.123456789123)), S(1.123456789123))
+            sympify(np.float128(1.123456789123)), N(1.123456789123, 20))
     except AttributeError:  #float128 does not exist on all platforms
         pass
 
