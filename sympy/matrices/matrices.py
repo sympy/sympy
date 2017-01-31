@@ -1599,8 +1599,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             elif self.rows == 2 and num > 100000:
                 try:
                     return self._matrix_pow_by_jordan_blocks(num)
-                except AttributeError:
-                    return self._matrix_pow_by_recursion(num)
+                except ValueError:
+                    pass
             return self._matrix_pow_by_recursion(num)
         elif isinstance(num, Expr):
             return self._matrix_pow_by_jordan_blocks(num)
