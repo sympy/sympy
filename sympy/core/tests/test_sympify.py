@@ -481,7 +481,7 @@ def test_issue_6540_6552():
 
 
 def test_issue_6046():
-    assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
+    assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
