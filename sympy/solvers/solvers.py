@@ -2750,6 +2750,8 @@ def nsolve(*args, **kwargs):
         f = args[0]
         fargs = None
         x0 = args[1]
+        if iterable(f)==True:
+            raise TypeError('nsolve expected 3 arguments, got 2')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
