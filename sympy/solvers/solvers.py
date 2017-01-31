@@ -2750,6 +2750,9 @@ def nsolve(*args, **kwargs):
         f = args[0]
         fargs = None
         x0 = args[1]
+        for func0 in f:
+            if len(func0.free_symbols)>1:
+                raise ValueError('expected a one dimensional function')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
