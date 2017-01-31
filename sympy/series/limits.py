@@ -70,7 +70,24 @@ def heuristics(e, z, z0, dir):
 
     return rv
 
-
+def ok(w,z):
+        check = False
+        check2 = False
+        if z in w.free_symbols:
+            check = True
+            check2 = True
+            for a in Add.make_args(w):
+                if a.is_polynomial(z) == False:
+                    check = False
+                if check == False:
+                    for m in Mul.make_args(a):
+                        if z not in m.free_symbols and m.is_polynomial(z)==False:
+                            check2 == False
+                            break
+                    if check2 == False:
+                        break
+        return check
+ 
 class Limit(Expr):
     """Represents an unevaluated limit.
 
@@ -144,12 +161,7 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                ok = lambda w: (z in w.free_symbols and
-                                all(a.is_polynomial(z) or
-                                    all(z in m.free_symbols and m.is_polynomial(z)
-                                        for m in Mul.make_args(a))
-                                    for a in Add.make_args(w)))
-                if all(ok(w) for w in e.as_numer_denom()):
+                if all(ok(w,z) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
                     r = limit(inve.as_leading_term(u), u,
@@ -181,4 +193,4 @@ class Limit(Expr):
                 raise NotImplementedError()
 
         return r
-
+    
