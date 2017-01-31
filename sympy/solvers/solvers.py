@@ -2780,7 +2780,7 @@ def nsolve(*args, **kwargs):
         # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
-        return Float(findroot(f, x0, **kwargs))
+        return sympify(findroot(f, x0, **kwargs))
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
