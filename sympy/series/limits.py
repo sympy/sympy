@@ -145,8 +145,8 @@ class Limit(Expr):
         if e.is_Mul:
             if abs(z0) is S.Infinity:
                 ok = lambda w: (z in w.free_symbols and
-                                all(S(a).is_polynomial(z) or
-                                    all(z in m.free_symbols and S(m).is_polynomial(z)
+                                all(a.is_polynomial(z) or
+                                    all(z in m.free_symbols and m.is_polynomial(z)
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
