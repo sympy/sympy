@@ -668,9 +668,7 @@ class jn(SphericalBesselBase):
     .. [1] http://dlmf.nist.gov/10.47
 
     """
-    _a = S.One
-    _b = S.One
-
+    @classmethod
     #check for z=0
     def eval(cls, nu, z):
         if z.is_zero:
