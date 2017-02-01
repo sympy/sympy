@@ -19,7 +19,8 @@ __all__ = ['refraction_angle',
            'hyperfocal_distance'
            ]
 
-from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit
+from sympy.core.backend import Symbol, Matrix, acos, sqrt
+from sympy import oo, Limit, sympify
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
@@ -152,8 +153,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     mag_normal = sqrt(sum([i**2 for i in _normal]))
     # Converting vectors to unit vectors by dividing
     # them with their magnitudes
-    _incident /= mag_incident
-    _normal /= mag_normal
+    _incident *= 1/mag_incident
+    _normal *= 1/mag_normal
     c1 = -_incident.dot(_normal)  # cos(angle_of_incidence)
     cs2 = 1 - eta**2*(1 - c1**2)  # cos(angle_of_refraction)**2
     if cs2.is_negative:  # This is the case of total internal reflection(TIR).
@@ -237,12 +238,12 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         else:
             _normal = Matrix(plane.normal_vector)
 
-        mag_incident = sqrt(sum([i**2 for i in _incident]))
-        mag_normal = sqrt(sum([i**2 for i in _normal]))
-        mag_refracted = sqrt(sum([i**2 for i in refracted]))
-        _incident /= mag_incident
-        _normal /= mag_normal
-        refracted /= mag_refracted
+        mag_incident = 1/sqrt(sum([i**2 for i in _incident]))
+        mag_normal = 1/sqrt(sum([i**2 for i in _normal]))
+        mag_refracted = 1/sqrt(sum([i**2 for i in refracted]))
+        _incident *= mag_incident
+        _normal *= mag_normal
+        refracted *= mag_refracted
         i = acos(_incident.dot(_normal))
         r = acos(refracted.dot(_normal))
         return i - r

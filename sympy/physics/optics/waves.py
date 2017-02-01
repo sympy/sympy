@@ -10,8 +10,8 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
-    symbols, Derivative, atan2)
+from sympy import sympify, sin, pi, cos
+from sympy.core.backend import atan2, sqrt, Symbol, symbols, Derivative, S
 from sympy.core.expr import Expr
 from sympy.physics.units import speed_of_light, meter, second
 
@@ -288,10 +288,10 @@ class TWave(Expr):
             - self.angular_velocity*Symbol('t') + self._phase)
 
     def _eval_rewrite_as_pde(self, *args):
-        from sympy import Function
+        from sympy.core.backend import Function
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
         E = Function('E')
-        return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
+        return Derivative(E(x, t), x, x) + mu*epsilon*Derivative(E(x, t), t, t)
 
     def _eval_rewrite_as_exp(self, *args):
         from sympy import exp, I

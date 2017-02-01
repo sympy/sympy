@@ -9,7 +9,7 @@ if USE_SYMENGINE:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic)
+        ImmutableMatrix, MatrixBase, Rational, Basic, atan2, oo, Float)
     from symengine.lib.symengine_wrapper import gcd as igcd
     from symengine import AppliedUndef
 else:
@@ -19,5 +19,5 @@ else:
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
         lambdify, symarray, diff, zeros, eye, diag, ones, zeros,
         expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic, igcd)
+        ImmutableMatrix, MatrixBase, Rational, Basic, igcd, atan2, oo, Float)
     from sympy.core.function import AppliedUndef

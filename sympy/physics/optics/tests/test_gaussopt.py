@@ -1,4 +1,5 @@
-from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
+from sympy import factor, N, symbols, Float, Matrix
+from sympy.core.backend import atan2, oo, I, sqrt, pi, Matrix
 
 from sympy.physics.optics import (BeamParameter, CurvedMirror,
   CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
@@ -57,7 +58,7 @@ def test_gauss_opt():
     w, wavelen = symbols('w wavelen')
     assert waist2rayleigh(w, wavelen) == pi*w**2/wavelen
     z_r, wavelen = symbols('z_r wavelen')
-    assert rayleigh2waist(z_r, wavelen) == sqrt(wavelen*z_r)/sqrt(pi)
+    assert rayleigh2waist(z_r, wavelen) == sqrt(wavelen*z_r/pi)
 
     a, b, f = symbols('a b f')
     assert geometric_conj_ab(a, b) == a*b/(a + b)
@@ -84,8 +85,8 @@ def test_gauss_opt():
     z, l, w = symbols('z l r', positive=True)
     p = BeamParameter(l, z, w=w)
     assert p.radius == z*(pi**2*w**4/(l**2*z**2) + 1)
-    assert p.w == w*sqrt(l**2*z**2/(pi**2*w**4) + 1)
-    assert p.w_0 == w
-    assert p.divergence == l/(pi*w)
+    assert p.w == sqrt(w**2)*sqrt(l**2*z**2/(pi**2*w**4) + 1)
+    assert p.w_0 == sqrt(w**2)
+    assert p.divergence == l/(pi*sqrt(w**2))
     assert p.gouy == atan2(z, pi*w**2/l)
     assert p.waist_approximation_limit == 2*l/pi

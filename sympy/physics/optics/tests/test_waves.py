@@ -1,5 +1,4 @@
-from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
-    Function, simplify, I, atan2)
+from sympy import simplify, atan2, sqrt, sin, pi, Derivative, cos, I, Symbol, symbols, Function
 from sympy.abc import epsilon, mu
 from sympy.functions.elementary.exponential import exp
 from sympy.physics.units import speed_of_light, m, s

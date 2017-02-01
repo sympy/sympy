@@ -44,8 +44,8 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
-    together)
+from sympy import (Expr, im, re, together)
+from sympy.core.backend import atan2, oo, sympify, I, sqrt, pi, Matrix
 from sympy.utilities.misc import filldedent
 
 ###
@@ -124,17 +124,17 @@ class RayTransferMatrix(Matrix):
 
     def __mul__(self, other):
         if isinstance(other, RayTransferMatrix):
-            return RayTransferMatrix(Matrix.__mul__(self, other))
+            return RayTransferMatrix(Matrix(self)*Matrix(other))
         elif isinstance(other, GeometricRay):
-            return GeometricRay(Matrix.__mul__(self, other))
+            return GeometricRay(Matrix(self)*Matrix(other))
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
-            q = (temp[0]/temp[1]).expand(complex=True)
+            q = (temp[0]/temp[1]).expand()
             return BeamParameter(other.wavelen,
                                  together(re(q)),
                                  z_r=together(im(q)))
         else:
-            return Matrix.__mul__(self, other)
+            return Matrix(self)*Matrix(other)
 
     @property
     def A(self):

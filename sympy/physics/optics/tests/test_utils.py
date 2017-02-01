@@ -6,7 +6,9 @@ from sympy.physics.optics.utils import (refraction_angle, deviation,
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
-from sympy import symbols, sqrt, Matrix, oo
+from sympy.core.backend import symbols
+from sympy import re
+from sympy import oo, sqrt, Matrix
 from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
@@ -51,8 +53,10 @@ def test_refraction_angle():
                                             [-1]])
     assert refraction_angle(r1, 1, 1, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
-    assert refraction_angle(r1, m1, 1.33, plane=P) == \
-        Ray3D(Point3D(0, 0, 0), Point3D(100/133, 100/133, -789378201649271*sqrt(3)/1000000000000000))
+    assert (refraction_angle(r1, m1, 1.33, plane=P) == \
+        Ray3D(Point3D(0, 0, 0), Point3D(100/133, 100/133, -789378201649271*sqrt(3)/1000000000000000)) or \
+        refraction_angle(r1, m1, 1.33, plane=P) == \
+        Ray3D(Point3D(0, 0, 0), Point3D(100/133, 100/133, -98672275206159*sqrt(3)/125000000000000)))
     assert refraction_angle(r1, 1, m2, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, n1, n2, plane=P) == \
@@ -73,8 +77,8 @@ def test_deviation():
     P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
     assert deviation(r1, 1, 1, normal=n) == 0
     assert deviation(r1, 1, 1, plane=P) == 0
-    assert deviation(r1, 1, 1.1, plane=P).evalf(3) + 0.119 < 1e-3
-    assert deviation(i, 1, 1.1, normal=normal_ray).evalf(3) + 0.119 < 1e-3
+    assert re(deviation(r1, 1, 1.1, plane=P).evalf(3) + 0.119) < 1e-3
+    assert re(deviation(i, 1, 1.1, normal=normal_ray).evalf(3) + 0.119) < 1e-3
     assert deviation(r1, 1.33, 1, plane=P) is None  # TIR
     assert deviation(r1, 1, 1, normal=[0, 0, 1]) == 0
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
