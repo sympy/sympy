@@ -339,7 +339,12 @@ def test_issue_5955():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
     assert limit((x**1885)/(1 + x**1885), x, oo) == 1
-    assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
+
+    # TODO following test has been removed because the current gruntz algorithm is not fast enough to compute it.
+    # previuosly it was being computed by faulty optimization(yet correct answer; one can easily design test case when that optimization
+    # would fail; see issue #10610)
+
+    # assert limit((x**1000/((x + 1)**1000 + exp(-x))), x, oo) == 1
 
 
 def test_newissue():
@@ -468,6 +473,8 @@ def test_issue_9205():
     assert Limit(x + y, x + y, a).free_symbols == {a}
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
+def test_issue_10610():
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
 
 def test_limit_seq():
     assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
