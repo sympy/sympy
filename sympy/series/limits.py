@@ -143,7 +143,7 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                ok = lambda w: (z in w.free_symbols and w.is_polynomial(z))
+                ok = lambda w: (z in w.free_symbols & w.is_polynomial(z))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
