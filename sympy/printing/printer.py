@@ -72,6 +72,9 @@ from __future__ import print_function, division
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.ntheory import multiplicity
 
 from functools import cmp_to_key
 
@@ -268,3 +271,13 @@ class Printer(object):
             return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
         else:
             return expr.as_ordered_terms(order=order)
+
+
+def _print_Integer__scientific(printer, expr, limit=6, base=10, every=3):
+
+    m = 0 if expr == 0 else multiplicity(base, expr)
+    if abs(m) >= limit:
+        if expr // base**m not in (1, -1):
+            m = every * (m // every)  # 3e6 30e6 300e6 3e9
+        factor = expr // base**m
+        return printer._print(Mul(factor, Pow(base, m, evaluate=False), evaluate=False))

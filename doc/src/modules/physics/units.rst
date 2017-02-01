@@ -32,7 +32,7 @@ Provides variables for commonly written dimensionless (unit-less) quantities.
     >>> 300*kilo*20*percent
     60000
     >>> nano*deg
-    pi/180000000000
+    pi/(180*10**9)
 
 Base units
 ----------

@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
-from .printer import Printer
+from .printer import Printer, _print_Integer__scientific
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 import mpmath.libmp as mlib
@@ -292,7 +292,7 @@ class StrPrinter(Printer):
 
         if len(b) == 0:
             return sign + '*'.join(a_str)
-        elif len(b) == 1:
+        elif len(b) == 1 and '*10' not in b_str[0]:
             return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
@@ -517,19 +517,28 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Integer(self, expr):
-        return str(expr.p)
+        scientific = _print_Integer__scientific(self, expr)
+        if scientific is None:
+            try:
+                return str(expr.p)
+            except AttributeError:
+                return str(expr)
+        else:
+            return scientific
 
-    def _print_int(self, expr):
-        return str(expr)
+    _print_int = _print_long = _print_Integer
 
     def _print_mpz(self, expr):
         return str(expr)
 
     def _print_Rational(self, expr):
         if expr.q == 1:
-            return str(expr.p)
+            return self._print(expr.p)
         else:
-            return "%s/%s" % (expr.p, expr.q)
+            _p, _q = self._print(expr.p), self._print(expr.q)
+            if '*10' in _q:
+                _q = '(%s)' % _q
+            return "%s/%s" % (_p, _q)
 
     def _print_PythonRational(self, expr):
         if expr.q == 1:

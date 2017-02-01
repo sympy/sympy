@@ -1594,3 +1594,18 @@ def test_latex_UnevaluatedExpr():
     assert latex(he**2) == r"\left(\frac{1}{x}\right)^{2}"
     assert latex(he + 1) == r"1 + \frac{1}{x}"
     assert latex(x*he) == r"x \frac{1}{x}"
+
+
+def test_latex_Integer():
+    assert latex(S(10)**2) == r"100"
+    assert latex(S(10)**20) == r"10^{20}"
+    assert latex(-S(10)**20) == r"- 10^{20}"
+    assert latex(S(10)**-2) == r"\frac{1}{100}"
+    assert latex(S(10)**-20) == r"\frac{1}{10^{20}}"
+    assert latex(-S(10)**-20) == r"- \frac{1}{10^{20}}"
+
+    assert latex(S(10)**12345) == r"10^{12345}"
+    assert latex(S(10)**67890) == r"10^{67890}"
+    assert latex(S(10)**-12345) == r"\frac{1}{10^{12345}}"
+    assert latex(S(10)**-67890) == r"\frac{1}{10^{67890}}"
+    assert latex(123456789) == "123456789"

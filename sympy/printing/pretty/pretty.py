@@ -18,7 +18,7 @@ from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import range
 from sympy.core.add import Add
 
-from sympy.printing.printer import Printer
+from sympy.printing.printer import Printer, _print_Integer__scientific
 from sympy.printing.str import sstr
 from sympy.printing.conventions import requires_partial
 
@@ -85,6 +85,15 @@ class PrettyPrinter(Printer):
         if full_prec == "auto":
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
+
+    def _print_Integer(self, e):
+        scientific = _print_Integer__scientific(self, e)
+        if scientific is None:
+            return self._print_Atom(e)
+        else:
+            return scientific
+
+    _print_int = _print_long = _print_Integer
 
     def _print_Atom(self, e):
         try:

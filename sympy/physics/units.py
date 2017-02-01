@@ -51,7 +51,7 @@ will obtain Avogadro's number. To obtain the answer in moles you
 should divide by the unit ``avogadro``:
 
     >>> u.grams/u.amu
-    602214085700000000000000
+    602214085700*10**12
     >>> _/u.avogadro
     mol
 
@@ -68,9 +68,9 @@ If you need the number of atoms in a mol as a pure number you can use
 quantity.)
 
     >>> u.avogadro_number
-    602214085700000000000000
+    602214085700*10**12
     >>> u.avogadro_constant
-    602214085700000000000000/mol
+    602214085700*10**12/mol
 
 Values of constants are recommended by Committee on Data for Science and
 Technology (CODATA) as of 2014. See more at http://arxiv.org/pdf/1507.07956.pdf

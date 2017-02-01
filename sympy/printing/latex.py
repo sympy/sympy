@@ -6,17 +6,18 @@ from __future__ import print_function, division
 
 import itertools
 
-from sympy.core import S, Add, Symbol, Mod
+from sympy.core import S, Add, Symbol, Mod, Mul, Pow
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
 from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
 from sympy.logic.boolalg import true
+from sympy.ntheory import multiplicity
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
-from .printer import Printer
+from .printer import Printer, _print_Integer__scientific
 from .conventions import split_super_sub, requires_partial
 from .precedence import precedence, PRECEDENCE
 
@@ -346,6 +347,15 @@ class LatexPrinter(Printer):
             return r"- \infty"
         else:
             return str_real
+
+    def _print_Integer(self, expr):
+        scientific = _print_Integer__scientific(self, expr)
+        if scientific is None:
+            return str(expr)
+        else:
+            return scientific
+
+    _print_int = _print_long = _print_Integer
 
     def _print_Mul(self, expr):
         include_parens = False
@@ -1248,8 +1258,8 @@ class LatexPrinter(Printer):
                 sign = "- "
                 p = -p
             if self._settings['fold_short_frac']:
-                return r"%s%d / %d" % (sign, p, expr.q)
-            return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
+                return r"%s%s / %s" % (sign, self._print(p), self._print(expr.q))
+            return r"%s\frac{%s}{%s}" % (sign, self._print(p), self._print(expr.q))
         else:
             return self._print(expr.p)
 
