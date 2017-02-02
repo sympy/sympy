@@ -22,7 +22,7 @@ You can build Boolean expressions with the standard python operators ``&``
     >>> x | y
     x | y
     >>> ~x
-    ~(x)
+    ~x
 
 You can also form implications with ``>>`` and ``<<``::
 
