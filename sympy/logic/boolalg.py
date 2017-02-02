@@ -14,12 +14,14 @@ from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
+import os
 
 
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
-    __slots__ = []
+    if os.name != 'java':
+        __slots__ = []
 
     def __and__(self, other):
         """Overloading for & operator"""
