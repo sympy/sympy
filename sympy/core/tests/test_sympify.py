@@ -486,7 +486,7 @@ def test_issue_6046():
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
-    assert str(S('C&Q', locals)) == 'And(C, Q)'
+    assert str(S('C&Q', locals)) == 'C & Q'
 
 
 def test_issue_8821_highprec_from_str():

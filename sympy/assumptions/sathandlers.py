@@ -153,7 +153,7 @@ class ExactlyOneArg(UnevaluatedOnFree):
     >>> a
     ExactlyOneArg(Q.positive)
     >>> a.rcall(x*y)
-    (Q.positive(x) & ~(Q.positive(y))) | (Q.positive(y) & ~(Q.positive(x)))
+    (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
     """
     def apply(self):
         expr = self.expr
