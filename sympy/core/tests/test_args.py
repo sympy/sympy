@@ -2107,6 +2107,10 @@ def test_sympy__logic__boolalg__Xor():
     from sympy.logic.boolalg import Xor
     assert _test_args(Xor(x, y, 2))
 
+def test_sympy__logic__boolalg__Xnor():
+    from sympy.logic.boolalg import Xnor
+    assert _test_args(Xnor(x, y, 2))
+
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
