@@ -75,15 +75,19 @@ class StrPrinter(Printer):
         return "False"
 
     def _print_Not(self, expr):
-        return '~(%s)' %(expr.args[0])
+        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
-        return '%s' %(' & '.join([self.parenthesize(arg, 38)
-            for arg in expr.args]))
+        return self.stringify(expr.args, " & ", 38)
+    # The number 38 has been used (instead of PRECEDENCE["And"]) as
+    # Bitwise and operator (&) is used to represent And objects in SymPy
+    # and not Boolean and (and).
 
     def _print_Or(self, expr):
-        return '%s' %(' | '.join([self.parenthesize(arg, 36)
-            for arg in expr.args]))
+        return self.stringify(expr.args, " | ", 36)
+    # The number 36 has been used (instead of PRECEDENCE["Or"]) as
+    # Bitwise or operator (|) is used to represent Or objects in SymPy
+    # and not Boolean or (or).
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
