@@ -676,7 +676,7 @@ class jn(SphericalBesselBase):
                 return S.One
             elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:#jn(n,0)=0
                 return S.Zero
-            
+
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
 
