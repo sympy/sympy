@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-from sympy import log
+from sympy.functions.elementary.exponential import log
 
 def limit(e, z, z0, dir="+"):
     """
