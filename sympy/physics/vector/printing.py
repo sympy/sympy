@@ -8,6 +8,8 @@ from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.str import StrPrinter
+from sympy.core import S, Add, Symbol, Mod
+
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
            'init_vprinting']
@@ -158,6 +160,35 @@ class VectorLatexPrinter(LatexPrinter):
         else:
             return LatexPrinter.parenthesize(self, item, level, strict)
 
+    def _needs_mul_brackets(self, expr, first=False, last=False):
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed as part of a Mul, False otherwise. This is True for Add,
+        but also for some container objects that would not need brackets
+        when appearing last in a Mul, e.g. an Integral. ``last=True``
+        specifies that this expr is the last to appear in a Mul.
+        ``first=True`` specifies that this expr is the first to appear in a Mul.
+        """
+        from sympy import Integral, Piecewise, Product, Sum
+
+        if expr.doit().is_Add:
+            return True
+        elif expr.is_Relational:
+            return True
+        elif expr.is_Mul:
+            if not first and _coeff_isneg(expr):
+                return True
+        if expr.is_Piecewise:
+            return True
+        if any([expr.has(x) for x in (Mod,)]):
+            return True
+        if (not last and
+            any([expr.has(x) for x in (Integral, Product, Sum)])):
+            return True
+
+        return False
+
+        
 
 class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
@@ -221,7 +252,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
             return super(VectorPrettyPrinter, self)._print_Function(e)
         return pform
-
+   
 
 def vprint(expr, **settings):
     r"""Function for printing of expressions generated in the
