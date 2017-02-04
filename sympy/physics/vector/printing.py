@@ -188,8 +188,6 @@ class VectorLatexPrinter(LatexPrinter):
 
         return False
 
-        
-
 class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
 
@@ -252,7 +250,6 @@ class VectorPrettyPrinter(PrettyPrinter):
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
             return super(VectorPrettyPrinter, self)._print_Function(e)
         return pform
-   
 
 def vprint(expr, **settings):
     r"""Function for printing of expressions generated in the
