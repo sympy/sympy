@@ -131,7 +131,7 @@ def _import(module, reload="False"):
             module]
     except KeyError:
         raise NameError(
-            "'%s' module can't be used for lambdification" % module)
+            "The Sympy object does not have a equivalent numerical implementation in the supplied modules: '%s'. You can either supply your own function or add a module that has an implementation." % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
