@@ -350,7 +350,7 @@ def check_assumptions(expr, against=None, **assumptions):
         if test is expected:
             continue
         elif test is not None:
-            return False
+            return False, key
         result = None  # Can't conclude, unless an other test fails.
     return result
 
