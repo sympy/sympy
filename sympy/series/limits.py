@@ -146,14 +146,12 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                ok = lambda w: (z in w.free_symbols and
-                                all(a.is_polynomial(z) or
-                                    all(z in m.free_symbols and
-                                        (m.is_polynomial(z) or
-                                         (m.func is exp and m.args[0].is_polynomial(z)))
+                ok = lambda w: (all(a.is_polynomial(z) or
+                                    all((m.is_polynomial(z) or
+                                        (m.func is exp and m.args[0].is_polynomial(z)))
                                         for m in Mul.make_args(a))
                                     or (a.func is exp and a.args[0].is_polynomial(z))
-                                    for a in Add.make_args(w)))
+                                for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
