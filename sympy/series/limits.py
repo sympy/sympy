@@ -12,13 +12,17 @@ from sympy.functions.elementary.exponential import exp
 def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
+
     z0 can be any expression, including oo and -oo.
+
     For dir="+" (default) it calculates the limit from the right
     (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
     z0 (oo or -oo), the dir argument is determined from the direction
     of the infinity (i.e., dir="-" for oo).
+
     Examples
     ========
+
     >>> from sympy import limit, sin, Symbol, oo
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
@@ -29,8 +33,10 @@ def limit(e, z, z0, dir="+"):
     -oo
     >>> limit(1/x, x, oo)
     0
+
     Notes
     =====
+
     First we try some heuristics for easy and frequent cases like "x", "1/x",
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
@@ -68,14 +74,17 @@ def heuristics(e, z, z0, dir):
 
 class Limit(Expr):
     """Represents an unevaluated limit.
+
     Examples
     ========
+
     >>> from sympy import Limit, sin, Symbol
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
+
     """
 
     def __new__(cls, e, z, z0, dir="+"):
