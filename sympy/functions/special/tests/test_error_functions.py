@@ -1,7 +1,7 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
     re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, Integral, S,
+    Symbol, Dummy, I, integrate, Integral, S,
     sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
     gamma, uppergamma,
@@ -18,7 +18,7 @@ from sympy.utilities.pytest import raises
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
-t = Symbol("t", Dummy=True)
+t = Dummy("t")
 
 
 def test_erf():
@@ -76,9 +76,9 @@ def test_erf():
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
 
-def test_erf_write_as_integral():
-    assert erf(z).rewrite('Integral') == \
-        2/sqrt(pi)*Integral(exp(-t**2), (t, 0, z))
+def test_erf_as_integral():
+    assert str(erf(z).as_integral) == \
+        str(2/sqrt(pi)*Integral(exp(-t**2), (t, 0, z)))
 
 
 def test_erf_series():
@@ -153,9 +153,9 @@ def test_erfc_evalf():
     assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
 
 
-def test_erfc_write_as_integral():
-    assert erfc(z).rewrite('Integral') == \
-        2/sqrt(pi)*Integral(exp(-t**2), (t, z, oo))
+def test_erfc_as_integral():
+    assert str(erfc(z).as_integral) == \
+        str(2/sqrt(pi)*Integral(exp(-t**2), (t, z, oo)))
 
 
 def test_erfi():
@@ -202,9 +202,9 @@ def test_erfi():
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
 
 
-def test_erfi_write_as_integral():
-    assert erfi(z).rewrite('Integral') == \
-        2/sqrt(pi)*Integral(exp(t**2), (t, 0, z))
+def test_erfi_as_integral():
+    assert str(erfi(z).as_integral) == \
+        str(2/sqrt(pi)*Integral(exp(t**2), (t, 0, z)))
 
 
 def test_erfi_series():
@@ -250,9 +250,9 @@ def test_erf2():
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
 
 
-def test_erf2_write_as_integral():
-    assert erf2(x, y).rewrite('Integral') == \
-        2/sqrt(pi)*Integral(exp(-t**2), (t, x, y))
+def test_erf2_as_integral():
+    assert str(erf2(x, y).as_integral) == \
+        str(2/sqrt(pi)*Integral(exp(-t**2), (t, x, y)))
 
 
 def test_erfinv():
@@ -360,8 +360,8 @@ def test_ei():
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
 
 
-def test_ei_write_as_integral():
-    assert Ei(z).rewrite('Integral') == Integral(exp(t)/t, (t, -oo, z))
+def test_ei_as_integral():
+    assert str(Ei(z).as_integral) == str(Integral(exp(t)/t, (t, -oo, z)))
 
 
 def test_expint():
@@ -413,14 +413,14 @@ def test_expint():
         z**5/240 + O(z**6)
 
 
-def test_expint_write_as_integral():
-    assert E1(z).rewrite('Integral') == Integral(exp(-t*z)/t, (t, 1, oo))
-    assert expint(1, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/t, (t, 1, oo))
-    assert expint(2, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/(t**2), (t, 1, oo))
-    assert expint(n, z).rewrite('Integral') == \
-        Integral(exp(-t*z)/(t**n), (t, 1, oo))
+def test_expint_as_integral():
+    assert str(E1(z).as_integral) == str(Integral(exp(-t*z)/t, (t, 1, oo)))
+    assert str(expint(1, z).as_integral) == \
+        str(Integral(exp(-t*z)/t, (t, 1, oo)))
+    assert str(expint(2, z).as_integral) == \
+        str(Integral(exp(-t*z)/(t**2), (t, 1, oo)))
+    assert str(expint(n, z).as_integral) == \
+        str(Integral(exp(-t*z)/(t**n), (t, 1, oo)))
 
 
 def test__eis():
@@ -509,8 +509,8 @@ def test_Li():
 
 
 def test_li_Li_write_as_integral():
-    assert li(z).rewrite('Integral') == Integral(1/log(t), (t, 0, z))
-    assert Li(z).rewrite('Integral') == Integral(1/log(t), (t, 2, z))
+    assert str(li(z).as_integral) == str(Integral(1/log(t), (t, 0, z)))
+    assert str(Li(z).as_integral) == str(Integral(1/log(t), (t, 2, z)))
 
 
 def test_si():
@@ -555,6 +555,7 @@ def test_si():
     assert Si(x).nseries(x, 1, n=3) == \
         Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
+    t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
 
@@ -601,11 +602,11 @@ def test_ci():
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
 
 
-def test_trig_integral_write_as_integral():
-    assert Si(z).rewrite('Integral') == Integral(sin(t)/t, (t, 0, z))
-    assert Ci(z).rewrite('Integral') == Integral(cos(t)/t, (t, 0, z))
-    assert Shi(z).rewrite('Integral') == Integral(sinh(t)/t, (t, 0, z))
-    assert Chi(z).rewrite('Integral') == Integral(cosh(t)/t, (t, 0, z))
+def test_trig_integral_as_integral():
+    assert str(Si(z).as_integral) == str(Integral(sin(t)/t, (t, 0, z)))
+    assert str(Ci(z).as_integral) == str(Integral(cos(t)/t, (t, 0, z)))
+    assert str(Shi(z).as_integral) == str(Integral(sinh(t)/t, (t, 0, z)))
+    assert str(Chi(z).as_integral) == str(Integral(cosh(t)/t, (t, 0, z)))
 
 
 def test_fresnel():
@@ -723,7 +724,7 @@ def test_fresnel():
 
 
 def test_fresnel_write_as_integral():
-    assert fresnels(z).rewrite('Integral') == \
-        Integral(sin(S.Half*pi*t**2), (t, 0, z))
-    assert fresnelc(z).rewrite('Integral') == \
-        Integral(cos(S.Half*pi*t**2), (t, 0, z))
+    assert str(fresnels(z).as_integral) == \
+        str(Integral(sin(S.Half*pi*t**2), (t, 0, z)))
+    assert str(fresnelc(z).as_integral) == \
+        str(Integral(cos(S.Half*pi*t**2), (t, 0, z)))

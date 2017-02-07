@@ -5,7 +5,7 @@ from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, oo
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
@@ -198,7 +198,7 @@ class erf(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, 0, x))
 
     def _eval_as_leading_term(self, x):
@@ -399,7 +399,7 @@ class erfc(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, x, oo))
 
     def _eval_as_leading_term(self, x):
@@ -589,7 +589,7 @@ class erfi(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return S(2)/sqrt(pi)*Integral(exp(t**2), (t, 0, x))
 
     def as_real_imag(self, deep=True, **hints):
@@ -750,7 +750,7 @@ class erf2(Function):
 
     def _as_integral(self, x, y):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, x, y))
 
 
@@ -1155,7 +1155,7 @@ class Ei(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(exp(t)/t, (t, -oo, x))
 
     def _eval_nseries(self, x, n, logx):
@@ -1337,7 +1337,7 @@ class expint(Function):
 
     def _as_integral(self, nu, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(exp(-x*t)/(t**nu), (t, 1, oo))
 
     def _eval_nseries(self, x, n, logx):
@@ -1531,7 +1531,7 @@ class li(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(1/log(t), (t, 0, x))
 
 
@@ -1628,7 +1628,7 @@ class Li(Function):
 
     def _as_integral(self, x):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(1/log(t), (t, 2, x))
 
 
@@ -1691,7 +1691,7 @@ class TrigonometricIntegral(Function):
 
     def _as_integral(self, z):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(self._trigfunc(t)/t, (t, 0, z))
 
     def _eval_nseries(self, x, n, logx):
@@ -2204,7 +2204,7 @@ class FresnelIntegral(Function):
 
     def _as_integral(self, z):
         from sympy import Integral
-        t = Symbol('t', Dummy=True)
+        t = Dummy('t')
         return Integral(self._trigfunc(S.Half*pi*t**2), (t, 0, z))
 
 
