@@ -222,7 +222,7 @@ def test_AccumBounds():
     t1 = Mul(S(1)/2, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(Add(AccumBounds(-2, 2), sin(1)), 1/(-2*cos(1) + 2))
+    t2 = Mul(Add(AccumBounds(-2, 2), sin(1)), 1/(2*(-cos(1) + 1)))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
