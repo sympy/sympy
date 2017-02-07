@@ -80,6 +80,18 @@ class elliptic_k(Function):
     def _eval_rewrite_as_meijerg(self, z):
         return meijerg(((S.Half, S.Half), []), ((S.Zero,), (S.Zero,)), -z)/2
 
+    def _eval_rewrite_as_Integral(self, *args):
+        return self.as_integral
+
+    @property
+    def as_integral(self):
+        return self._as_integral(*self.args)
+
+    def _as_integral(self, m):
+        from sympy import Integral, Dummy
+        t = Dummy('t')
+        return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
+
     def _sage_(self):
         import sage.all as sage
         return sage.elliptic_kc(self.args[0]._sage_())
@@ -146,6 +158,18 @@ class elliptic_f(Function):
         z, m = self.args
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
+
+    def _eval_rewrite_as_Integral(self, *args):
+        return self.as_integral
+
+    @property
+    def as_integral(self):
+        return self._as_integral(*self.args)
+
+    def _as_integral(self, z, m):
+        from sympy import Integral, Dummy
+        t = Dummy('t')
+        return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
 
 class elliptic_e(Function):
@@ -252,6 +276,19 @@ class elliptic_e(Function):
             z = args[0]
             return -meijerg(((S.Half, S(3)/2), []), \
                             ((S.Zero,), (S.Zero,)), -z)/4
+
+    def _eval_rewrite_as_Integral(self, *args):
+        return self.as_integral
+
+    @property
+    def as_integral(self):
+        return self._as_integral(*self.args)
+
+    def _as_integral(self, *args):
+        from sympy import Integral, Dummy
+        z, m = (pi/2, args[0]) if len(args) == 1 else args
+        t = Dummy('t')
+        return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
 class elliptic_pi(Function):
@@ -362,3 +399,19 @@ class elliptic_pi(Function):
             elif argindex == 2:
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Integral(self, *args):
+        return self.as_integral
+
+    @property
+    def as_integral(self):
+        return self._as_integral(*self.args)
+
+    def _as_integral(self, n, m, z=None):
+        from sympy import Integral, Dummy
+        if z is None:
+            z = pi/2
+        else:
+            n, z, m = n, m, z
+        t = Dummy('t')
+        return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))
