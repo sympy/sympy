@@ -3579,6 +3579,10 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
         import sage.all as sage
         return sage.I
 
+    @property
+    def _mpc_(self):
+        return (Float(0)._mpf_, Float(1)._mpf_)
+
 I = S.ImaginaryUnit
 
 
