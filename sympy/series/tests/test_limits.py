@@ -484,3 +484,6 @@ def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
+
+def test_issue_10610():
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == S(1)/3
