@@ -2046,6 +2046,17 @@ def test_compute_known_facts():
     s = compute_known_facts(known_facts, known_facts_keys)
 
 
+@slow
+def test_known_facts_consistent():
+    """"Test that ask_generated.py is up-to-date"""
+    from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
+    from os.path import abspath, dirname, join
+    filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
+    with open(filename, 'r') as f:
+        assert f.read() == \
+            compute_known_facts(get_known_facts(), get_known_facts_keys())
+
+
 def test_Add_queries():
     assert ask(Q.prime(12345678901234567890 + (cos(1)**2 + sin(1)**2))) is True
     assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True

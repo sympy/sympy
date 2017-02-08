@@ -52,13 +52,13 @@ def bspline_basis(d, knots, n, x, close=True):
 
         >>> bspline_basis(3, range(5), 0, x)
         Piecewise((x**3/6, (x >= 0) & (x < 1)),
-            (-x**3/2 + 2*x**2 - 2*x + 2/3,
-            (x >= 1) & (x < 2)),
-            (x**3/2 - 4*x**2 + 10*x - 22/3,
-            (x >= 2) & (x < 3)),
-            (-x**3/6 + 2*x**2 - 8*x + 32/3,
-            (x >= 3) & (x <= 4)),
-            (0, True))
+                  (-x**3/2 + 2*x**2 - 2*x + 2/3,
+                  (x >= 1) & (x < 2)),
+                  (x**3/2 - 4*x**2 + 10*x - 22/3,
+                  (x >= 2) & (x < 3)),
+                  (-x**3/6 + 2*x**2 - 8*x + 32/3,
+                  (x >= 3) & (x <= 4)),
+                  (0, True))
 
     By repeating knot points, you can introduce discontinuities in the
     B-splines and their derivatives:
@@ -141,7 +141,14 @@ def bspline_basis_set(d, knots, x):
     >>> knots = range(5)
     >>> splines = bspline_basis_set(d, knots, x)
     >>> splines
-    [Piecewise((x**2/2, (x >= 0) & (x < 1)), (-x**2 + 3*x - 3/2, (x >= 1) & (x < 2)), (x**2/2 - 3*x + 9/2, (x >= 2) & (x <= 3)), (0, True)), Piecewise((x**2/2 - x + 1/2, (x >= 1) & (x < 2)), (-x**2 + 5*x - 11/2, (x >= 2) & (x < 3)), (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)), (0, True))]
+    [Piecewise((x**2/2, (x >= 0) & (x < 1)),
+               (-x**2 + 3*x - 3/2, (x >= 1) & (x < 2)),
+               (x**2/2 - 3*x + 9/2, (x >= 2) & (x <= 3)),
+               (0, True)),
+    Piecewise((x**2/2 - x + 1/2, (x >= 1) & (x < 2)),
+              (-x**2 + 5*x - 11/2, (x >= 2) & (x < 3)),
+              (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
+              (0, True))]
 
     See Also
     ========
