@@ -350,7 +350,7 @@ def check_assumptions(expr, against=None, **assumptions):
         if test is expected:
             continue
         elif test is not None:
-            return False, key
+            return False
         result = None  # Can't conclude, unless an other test fails.
     return result
 
@@ -451,6 +451,17 @@ def solve(f, *symbols, **flags):
 
         >>> solve(x < 3)
         And(-oo < x, x < 3)
+    
+    * to solve set of equations when **flag set to default values
+      >>>solve([x-3,y-1])
+      {x: 3, y: 1}
+
+      --> if in case only specified variable's value has to be displayed
+        >>> value= solve([x-3,y-1])
+        >>> value[x]
+        3                                             // accessing dictionaries
+        >>> value[y]
+        1
 
     * to always get a list of solution mappings, use flag dict=True
 
@@ -458,11 +469,20 @@ def solve(f, *symbols, **flags):
         [{x: 3}]
         >>> solve([x - 3, y - 1], dict=True)
         [{x: 3, y: 1}]
+     
+     --> if in case only specified variable's value has to be displayed
+
+        >>> value= solve([x - 3, y - 1], dict= True)
+        >>> value[0][x]                                // accessing list of dictionaries
+        3
+        >>> value[0][y]
+        1
 
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
+
 
     * single expression and single symbol that is in the expression
 
