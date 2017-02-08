@@ -19,6 +19,7 @@ FisherZ
 Frechet
 Gamma
 GammaInverse
+Gumbel
 Gompertz
 Kumaraswamy
 Laplace
@@ -73,6 +74,7 @@ __all__ = ['ContinuousRV',
 'Gamma',
 'GammaInverse',
 'Gompertz',
+'Gumbel',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
@@ -1229,6 +1231,60 @@ def GammaInverse(name, a, b):
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
+
+#-------------------------------------------------------------------------------
+# Gumbel distribution --------------------------------------------------------
+
+class GumbelDistribution(SingleContinuousDistribution):
+    _argnames = ('beta', 'mu')
+
+    set = Interval(-oo, oo)
+
+    def pdf(self, x):
+        beta, mu = self.beta, self.mu
+        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+
+def Gumbel(name, beta, mu):
+    r"""
+    Create a Continuous Random Variable with Gumbel distribution.
+
+    The density of the Gumbel distribution is given by
+
+    .. math::
+        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+
+    with ::math 'x \in [ - \inf, \inf ]'.
+
+    Parameters
+    ==========
+
+    mu: Real number, 'mu' is a location
+    beta: Real number, 'beta > 0' is a scale
+
+    Returns
+    ==========
+
+    A RandomSymbol
+
+    Examples
+    ==========
+    >>> from sympy.stats import Gumbel, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+    >>> x = Symbol("x")
+    >>> mu = Symbol("mu")
+    >>> beta = Symbol("beta", positive=True)
+    >>> X = Gumbel("x", beta, mu)
+    >>> density(X)(x)
+    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
+    .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+
+    """
+    return rv(name, GumbelDistribution, (beta, mu))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------

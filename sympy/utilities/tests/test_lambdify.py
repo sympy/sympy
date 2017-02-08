@@ -118,13 +118,17 @@ def test_mpmath_lambda():
 
 
 @conserve_mpmath_dps
-@XFAIL
 def test_number_precision():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
     f = lambdify(x, sin02, "mpmath")
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
+
+@conserve_mpmath_dps
+def test_mpmath_precision():
+    mpmath.mp.dps = 100
+    assert str(lambdify((), pi.evalf(100), 'mpmath')()) == str(pi.evalf(100))
 
 #================== Test Translations ==============================
 # We can only check if all translated functions are valid. It has to be checked
@@ -747,6 +751,9 @@ def test_issue_2790():
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
+def test_issue_12092():
+    f = implemented_function('f', lambda x: x**2)
+    assert f(f(2)).evalf() == Float(16)
 
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5

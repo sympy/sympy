@@ -36,7 +36,6 @@ from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
-from .core import BasicMeta
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -309,8 +308,9 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and old == self.func and
-            len(self.args) in new.nargs):
+        if (old.is_Function and new.is_Function and
+            callable(old) and callable(new) and
+            old == self.func and len(self.args) in new.nargs):
             return new(*self.args)
 
 
@@ -507,7 +507,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return Float(self._imp_(*self.args), prec)
+                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
             except (AttributeError, TypeError, ValueError):
                 return
 
@@ -776,9 +776,11 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, **kwargs):
-        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
-        ret.__module__ = None
+    def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
+        __dict__ = __dict__ or {}
+        __dict__.update(kwargs)
+        __dict__['__module__'] = None # For pickling
+        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
 
     def __instancecheck__(cls, instance):
@@ -1736,10 +1738,10 @@ class Subs(Expr):
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
             return S.Zero
-        return self.func(self.expr.diff(s), self.variables, self.point).doit() \
-            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
-                    self.variables, self.point).doit() for arg,
-                    point in zip(self.variables, self.point) ])
+        return Add((Subs(self.expr.diff(s), self.variables, self.point).doit()
+            if s not in self.variables else S.Zero),
+            *[p.diff(s) * Subs(self.expr.diff(v), self.variables,
+            self.point).doit() for v, p in zip(self.variables, self.point)])
 
     def _eval_nseries(self, x, n, logx):
         if x in self.point:

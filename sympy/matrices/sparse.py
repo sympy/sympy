@@ -4,6 +4,7 @@ import copy
 from collections import defaultdict
 
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
@@ -143,6 +144,9 @@ class SparseMatrix(MatrixBase):
                     i = list(range(self.rows))[i]
                 elif is_sequence(i):
                     pass
+                elif isinstance(i, Expr) and not i.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     if i >= self.rows:
                         raise IndexError('Row index out of bounds')
@@ -152,6 +156,9 @@ class SparseMatrix(MatrixBase):
                     j = list(range(self.cols))[j]
                 elif is_sequence(j):
                     pass
+                elif isinstance(j, Expr) and not j.is_number:
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
                 else:
                     if j >= self.cols:
                         raise IndexError('Col index out of bounds')
@@ -326,6 +333,18 @@ class SparseMatrix(MatrixBase):
         for key, value in self._smat.items():
             conj._smat[key] = value.conjugate()
         return conj
+
+    def as_real_imag(self):
+        """Returns tuple containing (real , imaginary) part of sparse matrix"""
+        from sympy.functions.elementary.complexes import re, im
+        real_smat = self.copy()
+        im_smat = self.copy()
+
+        for key, value in self._smat.items():
+            real_smat._smat[key] = re(value)
+            im_smat._smat[key] = im(value)
+
+        return (real_smat, im_smat)
 
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)

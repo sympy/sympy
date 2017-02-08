@@ -45,6 +45,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq, generate_bell, flatten
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
 
@@ -89,16 +90,16 @@ def denoms(eq, symbols=None):
     >>> from sympy import sqrt
 
     >>> denoms(x/y)
-    set([y])
+    {y}
 
     >>> denoms(x/(y*z))
-    set([y, z])
+    {y, z}
 
     >>> denoms(3/x + y/z)
-    set([x, z])
+    {x, z}
 
     >>> denoms(x/2 + y/z)
-    set([2, z])
+    {2, z}
     """
 
     pot = preorder_traversal(eq)
@@ -461,7 +462,7 @@ def solve(f, *symbols, **flags):
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
-        ([x, y], set([(-sqrt(3), 1), (sqrt(3), 1)]))
+        ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
 
     * single expression and single symbol that is in the expression
 
@@ -474,9 +475,9 @@ def solve(f, *symbols, **flags):
         >>> solve(Poly(x - 3), x)
         [3]
         >>> solve(x**2 - y**2, x, set=True)
-        ([x], set([(-y,), (y,)]))
+        ([x], {(-y,), (y,)})
         >>> solve(x**4 - 1, x, set=True)
-        ([x], set([(-1,), (1,), (-I,), (I,)]))
+        ([x], {(-1,), (1,), (-I,), (I,)})
 
     * single expression with no symbol that is in the expression
 
@@ -515,7 +516,7 @@ def solve(f, *symbols, **flags):
           >>> solve(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
           >>> solve(x + exp(x)**2, exp(x), set=True)
-          ([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))
+          ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
@@ -579,7 +580,7 @@ def solve(f, *symbols, **flags):
             * that are nonlinear
 
                 >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
-                ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
+                ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
@@ -621,14 +622,14 @@ def solve(f, *symbols, **flags):
         * when the system is not linear
 
             >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
-            ([x, y], set([(-2, -2), (0, 2), (2, -2)]))
+            ([x, y], {(-2, -2), (0, 2), (2, -2)})
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
 
             >>> solve([x - 2, x**2 + y])
             [{x: 2, y: -4}]
-            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+            >>> solve([x - 2, x**2 + f(x)], {f(x), x})
             [{x: 2, f(x): -4}]
 
         * if any equation doesn't depend on the symbol(s) given it will be
@@ -2633,7 +2634,7 @@ def _tsolve(eq, sym, **flags):
 
 # TODO: option for calculating J numerically
 
-
+@conserve_mpmath_dps
 def nsolve(*args, **kwargs):
     r"""
     Solve a nonlinear equation system numerically::
@@ -2661,8 +2662,7 @@ def nsolve(*args, **kwargs):
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
     >>> print(nsolve((f1, f2), (x1, x2), (-1, 1)))
-    [-1.19287309935246]
-    [ 1.27844411169911]
+    Matrix([[-1.19287309935246], [1.27844411169911]])
 
     For one-dimensional functions the syntax is simplified:
 
@@ -2673,13 +2673,22 @@ def nsolve(*args, **kwargs):
     >>> nsolve(sin(x), 2)
     3.14159265358979
 
-    mpmath.findroot is used, you can find there more extensive documentation,
-    especially concerning keyword parameters and available solvers. Note,
-    however, that this routine works only with the numerator of the function
-    in the one-dimensional case, and for very steep functions near the root
-    this may lead to a failure in the verification of the root. In this case
-    you should use the flag `verify=False` and independently verify the
-    solution.
+    To solve with higher precision than the default, use the prec argument.
+
+    >>> from sympy import cos
+    >>> nsolve(cos(x) - x, 1)
+    0.739085133215161
+    >>> nsolve(cos(x) - x, 1, prec=50)
+    0.73908513321516064165531208767387340401341175890076
+    >>> cos(_)
+    0.73908513321516064165531208767387340401341175890076
+
+    mpmath.findroot is used and you can find there more extensive
+    documentation, especially concerning keyword parameters and
+    available solvers. Note, however, that functions which are very
+    steep near the root the verification of the solution may fail. In
+    this case you should use the flag `verify=False` and
+    independently verify the solution.
 
     >>> from sympy import cos, cosh
     >>> from sympy.abc import i
@@ -2701,6 +2710,20 @@ def nsolve(*args, **kwargs):
     >>> bounds = lambda i: (3.14*i, 3.14*(i + 1))
     >>> nsolve(f, bounds(100), solver='bisect', verify=False)
     315.730061685774
+
+    Alternatively, a function may be better behaved when the
+    denominator is ignored. Since this is not always the case, however,
+    the decision of what function to use is left to the discretion of
+    the user.
+
+    >>> eq = x**2/(1 - x)/(1 - 2*x)**2 - 100
+    >>> nsolve(eq, 0.46)
+    Traceback (most recent call last):
+    ...
+    ValueError: Could not find root within given tolerance. (10000 > 2.1684e-19)
+    Try another starting point or tweak arguments.
+    >>> nsolve(eq.as_numer_denom()[0], 0.46)
+    0.46792545969349058
     """
     # there are several other SymPy functions that use method= so
     # guard against that here
@@ -2711,15 +2734,28 @@ def nsolve(*args, **kwargs):
             used, but when using nsolve (and findroot) the keyword to use is
             "solver".'''))
 
+    if 'prec' in kwargs:
+        prec = kwargs.pop('prec')
+        import mpmath
+        mpmath.mp.dps = prec
+    else:
+        prec = None
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
         fargs = args[1]
         x0 = args[2]
+        if iterable(fargs) and iterable(x0):
+            if len(x0) != len(fargs):
+                raise TypeError('nsolve expected exactly %i guess vectors, got %i'
+                                % (len(fargs), len(x0)))
     elif len(args) == 2:
         f = args[0]
         fargs = None
         x0 = args[1]
+        if iterable(f):
+            raise TypeError('nsolve expected 3 arguments, got 2')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
@@ -2737,7 +2773,6 @@ def nsolve(*args, **kwargs):
         # assume it's a sympy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
-        f = f.evalf()
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
@@ -2746,10 +2781,12 @@ def nsolve(*args, **kwargs):
                 expected a one-dimensional and numerical function'''))
 
         # the function is much better behaved if there is no denominator
-        f = f.as_numer_denom()[0]
+        # but sending the numerator is left to the user since sometimes
+        # the function is better behaved when the denominator is present
+        # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
-        return findroot(f, x0, **kwargs)
+        return sympify(findroot(f, x0, **kwargs))
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
@@ -2768,7 +2805,7 @@ def nsolve(*args, **kwargs):
     J = lambdify(fargs, J, modules)
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
-    return x
+    return Matrix(x)
 
 
 def _invert(eq, *symbols, **kwargs):

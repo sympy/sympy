@@ -193,6 +193,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
 
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
+
     The default behavior is to substitute all arguments in the provided
     expression with dummy symbols. This allows for applied functions (e.g.
     f(t)) to be supplied as arguments. Call the function with dummify=False if
@@ -317,6 +321,26 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``lambdify`` always prefers ``_imp_`` implementations to implementations
     in other namespaces, unless the ``use_imps`` input parameter is False.
 
+    Usage with Tensorflow module:
+
+    >>> import tensorflow as tf
+    >>> f = Max(x, sin(x))
+    >>> func = lambdify(x, f, 'tensorflow')
+    >>> result = func(tf.constant(1.0))
+    >>> result # a tf.Tensor representing the result of the calculation
+    <tf.Tensor 'Maximum:0' shape=() dtype=float32>
+    >>> sess = tf.Session()
+    >>> sess.run(result) # compute result
+    1.0
+    >>> var = tf.Variable(1.0)
+    >>> sess.run(tf.global_variables_initializer())
+    >>> sess.run(func(var)) # also works for tf.Variable and tf.Placeholder
+    1.0
+    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]]) # works with any shape tensor
+    >>> sess.run(func(tensor))
+    array([[ 1.,  2.],
+           [ 3.,  4.]], dtype=float32)
+
     """
     from sympy.core.symbol import Symbol
     from sympy.utilities.iterables import flatten
@@ -361,6 +385,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
+
+    if _module_present('mpmath',namespaces) and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import MpmathPrinter as printer
 
     if _module_present('numpy',namespaces) and printer is None:
         #XXX: This has to be done here because of circular imports
