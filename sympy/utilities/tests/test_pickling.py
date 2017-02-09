@@ -181,7 +181,7 @@ def test_functions():
     one_var = (acosh, ln, Heaviside, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
-            acoth, cosh, dirichlet_eta, loggamma, ceiling, im, fibonacci,
+            acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
             atan2, polygamma, hermite, legendre, uppergamma)
