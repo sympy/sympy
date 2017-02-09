@@ -11,6 +11,8 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.iterables import uniq
 
 
+if expr.has(gamma):
+    return gammasimp(expr)
 
 @timethis('combsimp')
 def combsimp(expr):
@@ -66,7 +68,6 @@ def combsimp(expr):
 
     # as a rule of thumb, if the expression contained gammas initially, it
     # probably makes sense to retain them
-    as_gamma = expr.has(gamma)
     as_factorial = expr.has(factorial)
     as_binomial = expr.has(binomial)
 
@@ -75,16 +76,10 @@ def combsimp(expr):
         lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
     expr = expr.replace(factorial,
         lambda n: _rf(1, n.expand()))
-    expr = expr.rewrite(gamma)
-    expr = expr.replace(gamma,
-        lambda n: _rf(1, (n - 1).expand()))
+   
 
-    if as_gamma:
-        expr = expr.replace(_rf,
-            lambda a, b: gamma(a + b)/gamma(a))
-    else:
-        expr = expr.replace(_rf,
-            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
+    expr = expr.replace(_rf,
+        lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
 
     def rule(n, k):
         coeff, rewrite = S.One, False
