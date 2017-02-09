@@ -451,45 +451,27 @@ def solve(f, *symbols, **flags):
 
         >>> solve(x < 3)
         And(-oo < x, x < 3)
-    
-    * to solve set of equations when **flag set to default values
-
-        >>> solve([x-3,y-1])
-        {x: 3, y: 1}
-
-
-    ** to get only the desired value when **flag takes default values
-
-        >>> value= solve([x-3,y-1])
-        >>> value[x]
-        3                                       
-        >>> value[y]
-        1
 
 
     * to always get a list of solution mappings, use flag dict=True
 
         >>> solve(x - 3, dict=True)
         [{x: 3}]
-        >>> solve([x - 3, y - 1], dict=True)
+        >>> sol = solve([x - 3, y - 1], dict=True)
+        >>> sol
         [{x: 3, y: 1}]
-
-     
-    ** to get only desired value value if dict=True
-
-        >>> value= solve([x - 3, y - 1], dict= True)
-        >>> value[0][x]                                
+        >>> sol[0][x]
         3
-        >>> value[0][y]
+        >>> sol[0][y]
         1
 
-         
+
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
-         
-        
+
+
     * single expression and single symbol that is in the expression
 
         >>> solve(x - y, x)

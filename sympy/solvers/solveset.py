@@ -1270,7 +1270,7 @@ def linsolve(system, *symbols):
     else:
         raise ValueError("Invalid arguments")
 
-    #Solve using Gauss-Jordan elimination
+    # Solve using Gauss-Jordan elimination
     try:
         sol, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
     except ValueError:
