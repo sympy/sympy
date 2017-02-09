@@ -270,7 +270,7 @@ class Lambdifier(object):
         # Constructing the translation dictionaries and making the translation
         self.dict_str = self.get_dict_str()
         self.dict_fun = self.get_dict_fun()
-        exprstr = str(expr)
+        exprstr = srepr(expr)
         newexpr = self.tree2str_translate(self.str2tree(exprstr))
 
         # Constructing the namespaces
