@@ -740,6 +740,37 @@ class Nor(BooleanFunction):
         return Not(Or(*args))
 
 
+class Xnor(BooleanFunction):
+    """
+    Logical XNOR function.
+
+    Returns False if an odd number of the arguments are True and the rest are
+    False.
+
+    Returns True if an even number of the arguments are True and the rest are
+    False.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import Xnor
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+    >>> Xnor(True, False)
+    False
+    >>> Xnor(True, True)
+    True
+    >>> Xnor(True, False, True, True, False)
+    False
+    >>> Xnor(True, False, True, False)
+    True
+
+    """
+    @classmethod
+    def eval(cls, *args):
+        return Not(Xor(*args))
+
+
 class Implies(BooleanFunction):
     """
     Logical implication.
