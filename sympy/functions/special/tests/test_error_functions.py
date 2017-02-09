@@ -77,8 +77,16 @@ def test_erf():
 
 
 def test_erf_as_integral():
-    assert str(erf(z).as_integral) == \
-        str(2/sqrt(pi)*Integral(exp(-t**2), (t, 0, z)))
+    assert erf(z).as_integral(t) == 2/sqrt(pi)*Integral(exp(-t**2), (t, 0, z))
+    assert erf(z).as_integral(x) == 2/sqrt(pi)*Integral(exp(-x**2), (x, 0, z))
+
+
+def test_erf_as_integral_dummy():
+    assert str(erf(z).as_integral()) == str(erf(z).as_integral(t))
+
+
+def test_erf_rewrite_as_integral():
+    assert str(erf(z).rewrite('Integral')) == str(erf(z).as_integral(t))
 
 
 def test_erf_series():
@@ -154,8 +162,7 @@ def test_erfc_evalf():
 
 
 def test_erfc_as_integral():
-    assert str(erfc(z).as_integral) == \
-        str(2/sqrt(pi)*Integral(exp(-t**2), (t, z, oo)))
+    assert erfc(z).as_integral(t) == 2/sqrt(pi)*Integral(exp(-t**2), (t, z, oo))
 
 
 def test_erfi():
@@ -203,8 +210,7 @@ def test_erfi():
 
 
 def test_erfi_as_integral():
-    assert str(erfi(z).as_integral) == \
-        str(2/sqrt(pi)*Integral(exp(t**2), (t, 0, z)))
+    assert erfi(z).as_integral(t) == 2/sqrt(pi)*Integral(exp(t**2), (t, 0, z))
 
 
 def test_erfi_series():
@@ -251,8 +257,7 @@ def test_erf2():
 
 
 def test_erf2_as_integral():
-    assert str(erf2(x, y).as_integral) == \
-        str(2/sqrt(pi)*Integral(exp(-t**2), (t, x, y)))
+    assert erf2(x, y).as_integral(t) == 2/sqrt(pi)*Integral(exp(-t**2), (t, x, y))
 
 
 def test_erfinv():
@@ -361,7 +366,7 @@ def test_ei():
 
 
 def test_ei_as_integral():
-    assert str(Ei(z).as_integral) == str(Integral(exp(t)/t, (t, -oo, z)))
+    assert Ei(z).as_integral(t) == Integral(exp(t)/t, (t, -oo, z))
 
 
 def test_expint():
@@ -414,13 +419,10 @@ def test_expint():
 
 
 def test_expint_as_integral():
-    assert str(E1(z).as_integral) == str(Integral(exp(-t*z)/t, (t, 1, oo)))
-    assert str(expint(1, z).as_integral) == \
-        str(Integral(exp(-t*z)/t, (t, 1, oo)))
-    assert str(expint(2, z).as_integral) == \
-        str(Integral(exp(-t*z)/(t**2), (t, 1, oo)))
-    assert str(expint(n, z).as_integral) == \
-        str(Integral(exp(-t*z)/(t**n), (t, 1, oo)))
+    assert E1(z).as_integral(t) == Integral(exp(-t*z)/t, (t, 1, oo))
+    assert expint(1, z).as_integral(t) == Integral(exp(-t*z)/t, (t, 1, oo))
+    assert expint(2, z).as_integral(t) == Integral(exp(-t*z)/(t**2), (t, 1, oo))
+    assert expint(n, z).as_integral(t) == Integral(exp(-t*z)/(t**n), (t, 1, oo))
 
 
 def test__eis():
@@ -508,9 +510,9 @@ def test_Li():
     assert Li(z).rewrite(li) == li(z) - li(2)
 
 
-def test_li_Li_write_as_integral():
-    assert str(li(z).as_integral) == str(Integral(1/log(t), (t, 0, z)))
-    assert str(Li(z).as_integral) == str(Integral(1/log(t), (t, 2, z)))
+def test_li_Li_as_integral():
+    assert li(z).as_integral(t) == Integral(1/log(t), (t, 0, z))
+    assert Li(z).as_integral(t) == Integral(1/log(t), (t, 2, z))
 
 
 def test_si():
@@ -603,10 +605,10 @@ def test_ci():
 
 
 def test_trig_integral_as_integral():
-    assert str(Si(z).as_integral) == str(Integral(sin(t)/t, (t, 0, z)))
-    assert str(Ci(z).as_integral) == str(Integral(cos(t)/t, (t, 0, z)))
-    assert str(Shi(z).as_integral) == str(Integral(sinh(t)/t, (t, 0, z)))
-    assert str(Chi(z).as_integral) == str(Integral(cosh(t)/t, (t, 0, z)))
+    assert Si(z).as_integral(t) == Integral(sin(t)/t, (t, 0, z))
+    assert Ci(z).as_integral(t) == Integral(cos(t)/t, (t, 0, z))
+    assert Shi(z).as_integral(t) == Integral(sinh(t)/t, (t, 0, z))
+    assert Chi(z).as_integral(t) == Integral(cosh(t)/t, (t, 0, z))
 
 
 def test_fresnel():
@@ -723,8 +725,6 @@ def test_fresnel():
     verify_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
 
 
-def test_fresnel_write_as_integral():
-    assert str(fresnels(z).as_integral) == \
-        str(Integral(sin(S.Half*pi*t**2), (t, 0, z)))
-    assert str(fresnelc(z).as_integral) == \
-        str(Integral(cos(S.Half*pi*t**2), (t, 0, z)))
+def test_fresnel_as_integral():
+    assert fresnels(z).as_integral(t) == Integral(sin(S.Half*pi*t**2), (t, 0, z))
+    assert fresnelc(z).as_integral(t) == Integral(cos(S.Half*pi*t**2), (t, 0, z))

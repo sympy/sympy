@@ -189,17 +189,22 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z):
         return -I*erfi(I*z)
 
+    def as_integral(self, t=None):
+        """
+        Return this function written as an integral, in terms of a variable
+        of integration `t`.  If `t` is omitted, a dummy variable is used.
+        """
+        if t is None:
+            t = Dummy('t')
+        return self._as_integral(*self.args, t)
+
     def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
-
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
-        from sympy import Integral
         t = Dummy('t')
-        return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, 0, x))
+        return self._as_integral(*args, t)
+
+    def _as_integral(self, z, t):
+        from sympy import Integral
+        return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, 0, z))
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -390,17 +395,13 @@ class erfc(Function):
     def _eval_rewrite_as_expint(self, z):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    # TODO: poor style, should inherit/mixin or similar?
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
-        return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, x, oo))
+        return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, z, oo))
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -580,17 +581,12 @@ class erfi(Function):
     def _eval_rewrite_as_expint(self, z):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
-        return S(2)/sqrt(pi)*Integral(exp(t**2), (t, 0, x))
+        return S(2)/sqrt(pi)*Integral(exp(t**2), (t, 0, z))
 
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
@@ -741,16 +737,11 @@ class erf2(Function):
     def _eval_rewrite_as_expint(self, x, y):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x, y):
+    def _as_integral(self, x, y, t):
         from sympy import Integral
-        t = Dummy('t')
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, x, y))
 
 
@@ -1146,17 +1137,12 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z):
         return exp(z) * _eis(z)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
-        return Integral(exp(t)/t, (t, -oo, x))
+        return Integral(exp(t)/t, (t, -oo, z))
 
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
@@ -1328,16 +1314,11 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, nu, x):
+    def _as_integral(self, nu, x, t):
         from sympy import Integral
-        t = Dummy('t')
         return Integral(exp(-x*t)/(t**nu), (t, 1, oo))
 
     def _eval_nseries(self, x, n, logx):
@@ -1522,17 +1503,12 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return z * _eis(log(z))
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
-        return Integral(1/log(t), (t, 0, x))
+        return Integral(1/log(t), (t, 0, z))
 
 
 class Li(Function):
@@ -1619,17 +1595,12 @@ class Li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, x):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
-        return Integral(1/log(t), (t, 2, x))
+        return Integral(1/log(t), (t, 2, z))
 
 
 ###############################################################################
@@ -1682,16 +1653,11 @@ class TrigonometricIntegral(Function):
         from sympy import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, z):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
         return Integral(self._trigfunc(t)/t, (t, 0, z))
 
     def _eval_nseries(self, x, n, logx):
@@ -2195,16 +2161,11 @@ class FresnelIntegral(Function):
                 self.func(x + x*sqrt(sq)))
         return (re, im)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        return self.as_integral
+    as_integral = erf.as_integral
+    _eval_rewrite_as_Integral = erf._eval_rewrite_as_Integral
 
-    @property
-    def as_integral(self):
-        return self._as_integral(*self.args)
-
-    def _as_integral(self, z):
+    def _as_integral(self, z, t):
         from sympy import Integral
-        t = Dummy('t')
         return Integral(self._trigfunc(S.Half*pi*t**2), (t, 0, z))
 
 
