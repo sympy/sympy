@@ -8,7 +8,6 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
 
-
 def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
@@ -71,7 +70,6 @@ def heuristics(e, z, z0, dir):
 
     return rv
 
-
 class Limit(Expr):
     """Represents an unevaluated limit.
 
@@ -91,7 +89,6 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-
         if z0 is S.Infinity:
             dir = "-"
         elif z0 is S.NegativeInfinity:
@@ -146,16 +143,7 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
-                ok = lambda w: (z in w.free_symbols and
-                                any(a.is_polynomial(z) or
-                                    any(z in m.free_symbols and m.is_polynomial(z)
-                                        for m in Mul.make_args(a))
-                                    for a in Add.make_args(w)))
+                ok = lambda w: (z in w.free_symbols & w.is_polynomial(z))
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
@@ -187,4 +175,4 @@ class Limit(Expr):
             else:
                 raise NotImplementedError()
 
-        return r
+        return r    
