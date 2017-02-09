@@ -281,6 +281,35 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
 
 
+def test_piecewise_solve():
+    abs2 = Piecewise((-x, x <= 0), (x, x > 0))
+    f = abs2.subs(x, x - 2)
+    assert solve(f, x) == [2]
+    assert solve(f - 1, x) == [1, 3]
+
+    f = Piecewise(((x - 2)**2, x >= 0), (1, True))
+    assert solve(f, x) == [2]
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, True))
+    assert solve(g, x) == [2, 5]
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
+    assert solve(g, x) == [2, 5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2),
+                  (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
+    assert solve(g, x) == [5]
+
+
 def test_issue_8666():
     x = symbols('x')
     assert solve(Eq(x**2 - 1/(x**2 - 4), 4 - 1/(x**2 - 4)), x) == []
@@ -1794,3 +1823,8 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+
+def test_issue_10122():
+    assert solve(Piecewise((x,x>=0),(-x,True))+Piecewise((x-1,x>=1),(1-x,True))-1>0,x) == \
+    Or(And(Lt(S.NegativeInfinity, x), Lt(x, S.Zero)), And(Lt(S.One, x), Lt(x, S.Infinity)))

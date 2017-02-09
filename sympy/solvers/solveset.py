@@ -360,6 +360,8 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
+
+
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
     f = together(f, deep=True)
@@ -672,13 +674,29 @@ def _solveset(f, symbol, domain, _check=False):
         dom = domain
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs()
-        for (expr, in_set) in expr_set_pairs:
-            if in_set.is_Relational:
-                in_set = in_set.as_set()
-            if in_set.is_Interval:
-                dom -= in_set
-            solns = solver(expr, symbol, in_set)
-            result += solns
+        expr_cond = dict(f.args)
+        sym_interval ={}
+        for (expr, in_set_symbol) in expr_set_pairs:
+            if in_set_symbol.is_Relational:
+                in_set_symbol = in_set.as_set()
+            if in_set_symbol.is_Interval:
+                dom -= in_set_symbol
+            solns_tmp = solveset_real(expr, symbol)
+            # by default symbol interval. many times cond symbols are expr symbols
+            for sym in expr.atoms(Symbol):
+                if expr_cond[expr] != True:
+                    cond_symbol_set = expr_cond[expr].atoms(Symbol)
+                for cond_symbol in cond_symbol_set:
+                    if sym == cond_symbol:
+                        sym_interval[sym] = in_set_symbol
+                    elif sym != cond_symbol:
+                        sym_interval[sym] = (S.Reals)
+            if not expr.has(Symbol):
+                solns = solns_tmp.intersect(in_set_symbol)
+                result = result + solns
+            else:
+                solns = solns_tmp.intersect(sym_interval[symbol])
+                result = result + solns
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
