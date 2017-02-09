@@ -462,7 +462,7 @@ def solve(f, *symbols, **flags):
 
         >>> value= solve([x-3,y-1])
         >>> value[x]
-        3                                             // accessing dictionaries
+        3                                       
         >>> value[y]
         1
 
@@ -478,7 +478,7 @@ def solve(f, *symbols, **flags):
     ** to get only desired value value if dict=True
 
         >>> value= solve([x - 3, y - 1], dict= True)
-        >>> value[0][x]                                // accessing list of dictionaries
+        >>> value[0][x]                                
         3
         >>> value[0][y]
         1
