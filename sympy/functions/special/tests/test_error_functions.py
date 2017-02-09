@@ -89,6 +89,17 @@ def test_erf_rewrite_as_integral():
     assert str(erf(z).rewrite('Integral')) == str(erf(z).as_integral(t))
 
 
+def test_error_fcn_composition_rewrite_as_integral():
+    fcns = [erf, erfc, erfi, Ei, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc]
+    for g in fcns:
+        for h in fcns:
+            f = g(h(z))
+            gin = g(z).as_integral()
+            hin = h(z).as_integral()
+            assert str(f.rewrite('Integral', deep=False)) == str(gin.subs(z, h(z)))
+            assert str(f.rewrite('Integral', deep=True)) == str(gin.subs(z, hin))
+
+
 def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
