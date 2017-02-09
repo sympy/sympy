@@ -45,20 +45,16 @@ class Basic(with_metaclass(ManagedProperties)):
 
     3)  By "SymPy object" we mean something that can be returned by
         ``sympify``.  But not all objects one encounters using SymPy are
-        subclasses of Basic:
+        subclasses of Basic.  For example, mutable objects are not:
 
         >>> from sympy import Basic, Matrix, sympify
-        >>> A = Matrix([[1, 2], [3, 4]])
+        >>> A = Matrix([[1, 2], [3, 4]]).as_mutable()
         >>> isinstance(A, Basic)
         False
 
         >>> B = sympify(A)
         >>> isinstance(B, Basic)
         True
-
-        (The distinction here is that ``A`` is mutable whereas ``B`` is
-        immutable.)
-
     """
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
