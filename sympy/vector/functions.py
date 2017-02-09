@@ -534,7 +534,7 @@ def orthogonalize(*vlist, **kwargs):
     return ortho_vlist
 
 
-def surface_param_eq(stype, u, v, *args):
+def surface_param_eq(stype, coord_sys, *args):
     """
     Returns the parametric representation of common
     geometric surfaces.
@@ -565,16 +565,16 @@ def surface_param_eq(stype, u, v, *args):
     (-sin(x)*cos(y))*N.i + (2*cos(x)*cos(y))*N.j
 
     """
-    N = CoordSysCartesian('N')
     # Dictionary of surfaces valued with their parametric representation
     param_equation = dict()
-
-    param_equation["cone"] = u*cos(v)*N.i + u*sin(v)*N.j + u*N.k
-    param_equation["cylinder"] = args[0]*cos(u)*N.i + args[0]*sin(u)*N.j \
-        + v*N.k
-    param_equation["ellipsoid"] = args[0]*cos(u)*cos(v)*N.i \
-        + args[1]*sin(u)*cos(v)*N.j + args[2]*sin(v)*N.k
-    param_equation["paraboloid"] = u*cos(v)*N.i + u*sin(v)*N.j + u**2*N.k
-    param_equation["sphere"] = args[0]*cos(u)*cos(v)*N.i \
-        + args[0]*sin(u)*cos(v)*N.j + args[0]*sin(v)*N.k
+    var = coord_sys.base_scalars()
+    vecs = coord_sys.base_vectors()
+    param_equation["cone"] = var[0]*cos(var[1])*vecs[0] + var[0]*sin(var[1])*vecs[1] + var[0]*vecs[2]
+    param_equation["cylinder"] = args[0]*cos(var[0])*vecs[0] + args[0]*sin(var[0])*vecs[1] \
+        + var[1]*vecs[2]
+    param_equation["ellipsoid"] = args[0]*cos(var[0])*cos(var[1])*vecs[0] \
+        + args[1]*sin(var[0])*cos(var[1])*vecs[1] + args[2]*sin(var[1])*vecs[2]
+    param_equation["paraboloid"] = var[0]*cos(var[1])*vecs[0] + var[0]*sin(var[1])*vecs[1] + var[0]**2*vecs[2]
+    param_equation["sphere"] = args[0]*cos(var[0])*cos(var[1])*vecs[0] \
+        + args[0]*sin(var[0])*cos(var[1])*vecs[1] + args[0]*sin(var[1])*vecs[2]
     return param_equation[stype]
