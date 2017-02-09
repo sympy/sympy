@@ -7,6 +7,7 @@ import re as regex
 from collections import defaultdict
 
 from .containers import Tuple
+from abc import ABCMeta
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
@@ -31,6 +32,14 @@ rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
 
+
+class MyABC:
+    __metaclass__ = ABCMeta
+
+MyABC.register(tuple)
+
+assert issubclass(tuple, MyABC)
+assert isinstance((), MyABC)
 
 def comp(z1, z2, tol=None):
     """Return a bool indicating whether the error between z1 and z2 is <= tol.
