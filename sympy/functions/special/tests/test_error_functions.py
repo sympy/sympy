@@ -15,10 +15,9 @@ from sympy.core.function import ArgumentIndexError
 
 from sympy.utilities.pytest import raises
 
-x, y, z = symbols('x,y,z')
+x, y, z, t = symbols('x,y,z,t')
 w = Symbol("w", real=True)
 n = Symbol("n", integer=True)
-t = Dummy("t")
 
 
 def test_erf():
@@ -82,10 +81,12 @@ def test_erf_as_integral():
 
 
 def test_erf_as_integral_dummy():
+    t = Dummy("t")
     assert str(erf(z).as_integral()) == str(erf(z).as_integral(t))
 
 
 def test_erf_rewrite_as_integral():
+    t = Dummy("t")
     assert str(erf(z).rewrite('Integral')) == str(erf(z).as_integral(t))
 
 
