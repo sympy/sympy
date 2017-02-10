@@ -1794,3 +1794,29 @@ def test_issue_2840_8155():
 
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
+
+def test_issue_12114():
+    a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
+    terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
+             g - a**2 - d**2, g - b**2 - e**2, g - c**2 - f**2]
+    s = solve(terms, [a, b, c, d, e, f, g])
+    assert s == [{a: -sqrt(-f**2 - 1), b: -sqrt(-f**2 - 1),
+                  c: -sqrt(-f**2 - 1), d: f, e: f, g: -1},
+                 {a: sqrt(-f**2 - 1), b: sqrt(-f**2 - 1),
+                  c: sqrt(-f**2 - 1), d: f, e: f, g: -1},
+                 {a: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
+                  b: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
+                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
+                  b: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
+                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
+                  b: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
+                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
+                  b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
+                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
