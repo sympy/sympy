@@ -68,8 +68,10 @@ def combsimp(expr):
     as_binomial = expr.has(binomial)
     as_gamma = expr.has(gamma)
 
-    if expr.has(gamma) and not expr.has(factorial) and not expr.has(binomial):
-        return gammasimp(expr)
+    if expr.has(gamma):
+        if not expr.has(factorial):
+            if not expr.has(binomial):
+                return gammasimp(expr)
 
 
     expr = expr.replace(binomial,
