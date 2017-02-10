@@ -8122,15 +8122,15 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
     try:
         sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
-    except:
+    except Exception:
         sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
     try:
         sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f]).rhs
-    except:
+    except Exception:
         sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f], hint='separable_Integral')
     try:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
-    except:
+    except Exception:
         sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
