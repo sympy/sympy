@@ -78,7 +78,16 @@ def combsimp(expr):
         lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
     expr = expr.replace(factorial,
         lambda n: _rf(1, n.expand()))
+    expr = expr.rewrite(gamma)
+    expr = expr.replace(gamma,
+            lambda n: _rf(1, (n - 1).expand()))
    
+    if as_gamma:
+        expr = expr.replace(_rf,
+                lambda a, b: gamma(a + b)/gamma(a))
+    else:
+        expr = expr.replace(_rf,
+                lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
 
     expr = expr.replace(_rf,
         lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
