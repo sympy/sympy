@@ -10,7 +10,9 @@ from sympy.utilities.timeutils import timethis
 from sympy.utilities.iterables import sift
 from sympy.utilities.iterables import uniq
 
-if not expr.has(gamma):
+as_gamma = expr.has(gamma)
+
+if not as_gamma:
 
     @timethis('combsimp')
     def combsimp(expr):
