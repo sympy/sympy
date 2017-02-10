@@ -32,6 +32,18 @@ def test_Dummy():
     assert Dummy() != Dummy()
 
 
+def test_Dummy_force_dummy_index():
+    raises(AssertionError, lambda: Dummy(dummy_index=1))
+    assert Dummy('d', dummy_index=2) == Dummy('d', dummy_index=2)
+    assert Dummy('d1', dummy_index=2) != Dummy('d2', dummy_index=2)
+    d1 = Dummy('d', dummy_index=3)
+    d2 = Dummy('d')
+    # not only unlikely, in fact impossible (b/c we keep a list of dummy_index)
+    assert d1 != d2
+    d3 = Dummy('d', dummy_index=3)
+    assert d1 == d3
+
+
 def test_as_dummy():
     x = Symbol('x')
     x1 = x.as_dummy()

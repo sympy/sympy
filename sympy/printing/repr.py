@@ -12,7 +12,7 @@ from .printer import Printer
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps, repr_dps
 from sympy.core.compatibility import range
-from sympy.core.symbol import Dummy
+
 
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
@@ -145,17 +145,16 @@ class ReprPrinter(Printer):
 
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
-        if isinstance(expr, Dummy):
-            t = ", shash=%i" % expr.dummy_index
-        else:
-            t = ""
+        # print the dummy_index like it was an assumption
+        if expr.is_Dummy:
+            d['dummy_index'] = expr.dummy_index
 
         if d == {}:
-            return "%s(%s%s)" % (expr.__class__.__name__, self._print(expr.name), t)
+            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
         else:
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
-            return "%s(%s%s, %s)" % (expr.__class__.__name__,
-                                   self._print(expr.name), t, ', '.join(attr))
+            return "%s(%s, %s)" % (expr.__class__.__name__,
+                                   self._print(expr.name), ', '.join(attr))
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))

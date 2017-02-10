@@ -179,13 +179,13 @@ class Symbol(AtomicExpr, Boolean):
 
 
 class Dummy(Symbol):
-    """Dummy symbols are each unique, identified by an internal count index:
+    """Dummy symbols are each unique, even if they have the same name:
 
     >>> from sympy import Dummy
     >>> bool(Dummy("x") == Dummy("x")) == True
     False
 
-    If a name is not supplied then a string value of the count index will be
+    If a name is not supplied then a string value of an internal count will be
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
@@ -194,25 +194,46 @@ class Dummy(Symbol):
 
     """
 
-    _count = [0]
+    # In the rare event that a Dummy object needs to be recreated, both the
+    # `name` and `dummy_index` should be passed.  This is used by `srepr` for
+    # example:
+    # >>> d1 = Dummy()
+    # >>> d2 = eval(srepr(d1))
+    # >>> d2 == d1
+    # True
+    #
+    # If a new session is started between `srepr` and `eval`, there is a very
+    # small chance that `d2` will be equal to a previously-created Dummy.
+
+    _count = 0
+    _hashlist = []
 
     __slots__ = ['dummy_index']
 
     is_Dummy = True
 
-    def __new__(cls, name=None, shash=0, **assumptions):
+    def __new__(cls, name=None, dummy_index=None, **assumptions):
+        if dummy_index is not None:
+            assert name is not None, "If you specify a dummy_index, you must also provide a name"
+
         if name is None:
-            name = "Dummy_" + str(len(Dummy._count))
+            name = "Dummy_" + str(Dummy._count)
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        if shash == 0:
-            while shash in Dummy._count:
+        Dummy._count += 1
+        if dummy_index is None:
+            while True:
                 # Always positive
-                shash = int('%i%i' % (len(Dummy._count), random.randint(1, 10**24)))
+                dummy_index = 10**6 + random.randint(1, 10**6-1)
+                if dummy_index not in Dummy._hashlist:
+                    break
+        else:
+            assert isinstance(dummy_index, int) and dummy_index > 0, "dummy_index must be a positive integer"
 
-        obj.dummy_index = shash
+        Dummy._hashlist.append(dummy_index)
+        obj.dummy_index = dummy_index
         return obj
 
     def __getstate__(self):
@@ -220,17 +241,12 @@ class Dummy(Symbol):
 
     @cacheit
     def sort_key(self, order=None):
+        # some tests depend on order of creation of Dummys
         return self.class_key(), (
-            2, (str(self), Dummy._count.index(self.dummy_index))), S.One.sort_key(), S.One
+            2, (str(self), self._hashlist.index(self.dummy_index))), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
-
-    def __setattr__(self, key, value):
-        if key=='dummy_index':
-            assert not isinstance(value, str) and str(value).isdigit() and value > 0, 'HASH must be an integer and > 0'
-            if value not in Dummy._count: Dummy._count.append(value)
-        super(Dummy, self).__setattr__(key, value)
 
 
 class Wild(Symbol):
