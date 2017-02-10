@@ -874,7 +874,8 @@ class Float(Number):
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = prec
-        return obj
+        ans = (decimal.Decimal(repr(obj)))
+        return ans
 
     @classmethod
     def _new(cls, _mpf_, _prec):
