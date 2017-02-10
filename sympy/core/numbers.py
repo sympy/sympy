@@ -779,7 +779,7 @@ class Float(Number):
         elif isinstance(num, float) and num == 0:
             num = '0'
         elif isinstance(num, (SYMPY_INTS, Integer)):
-            num = mpf(num)  # faster than mlib.from_int
+            num = str(num)  # faster than mlib.from_int
         elif num is S.Infinity:
             num = '+inf'
         elif num is S.NegativeInfinity:
