@@ -1,0 +1,56 @@
+from sympy import *
+from sympy import poly
+from sympy.abc import x, y
+from sympy.geometry import *
+
+def function_eq(eq):
+	pol_x=poly(eq,x)
+	pol_y=poly(eq,y)
+	deg_x=degree(pol_x)
+	deg_y=degree(pol_y)
+	lead_x_coeff=LC(pol_x)
+	lead_y_coeff=LC(pol_y)
+        
+        # check for x-c=0
+	if deg_x==1 and deg_y==0:
+		x_icept=solve(eq,x)[0]
+		p1=Point(x_icept, 0)
+		p2=Point(x_icept, 1)
+		return Line(p1, p2)
+	
+        # check for y-c=0
+	if deg_x==0 and deg_y==1:
+		y_icept=solve(eq,y)[0]
+		p1=Point(0,y_icept)
+		p2=Point(1,y_icept)
+		return Line(p1, p2)
+
+	#check for a*x+b*y+c=0
+	if deg_x==1 and deg_y==1:
+		y_icept=solve(eq-(lead_x_coeff*x))[0]
+		x_icept=solve(eq-(lead_y_coeff*y))[0]
+		p1=Point(x_icept,0)
+		p2=Point(0,y_icept)
+		return Line(p1,p2)
+
+	#check for a*x**2+b*y**2+g*x+h*y+c=0	
+	if deg_x==2 and deg_y==2:
+		center_x=solve(diff(eq,x))[0]
+		center_y=solve(diff(eq,y))[0]
+		center=Point(center_x,center_y)
+
+		#circle
+		if lead_x_coeff==lead_y_coeff:
+			r_sq=expand((lead_x_coeff)*(x-center_x)**2)+expand((lead_y_coeff)*(y-center_y)**2)-eq
+			radius=((r_sq)/lead_x_coeff)**0.5
+			return Circle(center,radius)
+
+		#ellipse
+		else:
+			const=expand((lead_x_coeff)*(x-center_x)**2)+expand((lead_y_coeff)*(y-center_y)**2)-eq
+			eq=eq/const
+			pol_x=Poly(eq,x)
+			pol_y=Poly(eq,y)
+			h_rad=(1/LC(pol_x))**0.5
+			v_rad=(1/LC(pol_y))**0.5
+			return Ellipse(center,h_rad,v_rad)
