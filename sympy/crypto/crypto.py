@@ -553,6 +553,7 @@ def encipher_vigenere(msg, key, symbols=None):
     .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
        http://filebox.vt.edu/users/batman/kryptos.html
+       (short URL: https://goo.gl/ijr22d)
 
     """
     msg, key, A = _prep(msg, key, symbols)
