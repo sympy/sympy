@@ -452,17 +452,25 @@ def solve(f, *symbols, **flags):
         >>> solve(x < 3)
         And(-oo < x, x < 3)
 
+
     * to always get a list of solution mappings, use flag dict=True
 
         >>> solve(x - 3, dict=True)
         [{x: 3}]
-        >>> solve([x - 3, y - 1], dict=True)
+        >>> sol = solve([x - 3, y - 1], dict=True)
+        >>> sol
         [{x: 3, y: 1}]
+        >>> sol[0][x]
+        3
+        >>> sol[0][y]
+        1
+
 
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
+
 
     * single expression and single symbol that is in the expression
 
