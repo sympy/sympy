@@ -481,12 +481,12 @@ def test_issue_6540_6552():
 
 
 def test_issue_6046():
-    assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
+    assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
-    assert str(S('C&Q', locals)) == 'And(C, Q)'
+    assert str(S('C&Q', locals)) == 'C & Q'
 
 
 def test_issue_8821_highprec_from_str():
