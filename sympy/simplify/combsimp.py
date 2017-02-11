@@ -114,10 +114,8 @@ def combsimp(expr):
     expr = expr.replace(binomial, rule)
 
     
-
     # (for some reason we cannot use Basic.replace in this case)
     was = factor(expr)
-    expr = rule_gamma(was)
     if expr != was:
         expr = factor(expr)
 
