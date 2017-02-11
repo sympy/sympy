@@ -81,14 +81,12 @@ def combsimp(expr):
     expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
             lambda n: _rf(1, (n - 1).expand()))
-   
     if as_gamma:
         expr = expr.replace(_rf,
-                lambda a, b: gamma(a + b)/gamma(a))
+            lambda a, b: gamma(a + b)/gamma(a))
     else:
         expr = expr.replace(_rf,
-                lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
-
+            lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
     expr = expr.replace(_rf,
         lambda a, b: binomial(a + b - 1, b)*gamma(b + 1))
 
