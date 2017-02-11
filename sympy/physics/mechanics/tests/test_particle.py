@@ -1,4 +1,4 @@
-from sympy import symbols, sqrt
+from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
 
