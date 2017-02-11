@@ -285,7 +285,6 @@ class Particle(object):
 
         """
         # circular import issue
-        from sympy.physics.mechanics.functions import inertia
-        a, b, c = self.point.pos_from(point).to_matrix(frame)
-        return self.mass * inertia(frame, b**2 + c**2, c**2 + a**2, a**2 +
-                                   b**2, -a * b, -b * c, -a * c)
+        from sympy.physics.mechanics import inertia_of_point_mass
+        return inertia_of_point_mass(self.mass, self.point.pos_from(point),
+                                     frame)
