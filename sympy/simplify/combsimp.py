@@ -869,9 +869,6 @@ def gammasimp(expr):
 
     return expr
 
-
- 
-
 class _rf(Function):
     @classmethod
     def eval(cls, a, b):
