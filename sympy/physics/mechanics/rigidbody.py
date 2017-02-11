@@ -1,11 +1,11 @@
 # -*- encoding: utf-8 -*-
 from __future__ import print_function, division
 
-__all__ = ['RigidBody']
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+__all__ = ['RigidBody']
 
 
 class RigidBody(object):
@@ -376,3 +376,26 @@ class RigidBody(object):
                     "RigidBody.potential_energy",
                 deprecated_since_version="1.0", issue=9800).warn()
         self.potential_energy = scalar
+
+    def parallel_axis(self, point):
+        """Returns the inertia dyadic of the body with respect to another
+        point.
+
+        Parameters
+        ==========
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+
+        Returns
+        =======
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the rigid body expressed about the provided
+            point.
+
+        """
+        # circular import issue
+        from sympy.physics.mechanics.functions import inertia
+        a, b, c = self.masscenter.pos_from(point).to_matrix(self.frame)
+        I = self.mass * inertia(self.frame, b**2 + c**2, c**2 + a**2, a**2 +
+                                b**2, -a * b, -b * c, -a * c)
+        return self.central_inertia + I
