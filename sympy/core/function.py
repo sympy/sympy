@@ -707,7 +707,7 @@ class Function(Application, Expr):
             else:
                 return Derivative(self, self.args[argindex - 1], evaluate=False)
         # See issue 4624 and issue 4719 and issue 5600
-        arg_dummy = Dummy('xi_%i' % argindex, dummy_index=abs(hash(self.args[argindex - 1])))
+        arg_dummy = Dummy('xi_%i' % argindex, dummy_index=hash(self.args[argindex - 1]))
         new_args = [arg for arg in self.args]
         new_args[argindex-1] = arg_dummy
         return Subs(Derivative(self.func(*new_args), arg_dummy),
@@ -1177,7 +1177,7 @@ class Derivative(Expr):
                 obj = None
             else:
                 if not is_symbol:
-                    new_v = Dummy('xi_%i' % i, dummy_index=abs(hash(v)))
+                    new_v = Dummy('xi_%i' % i, dummy_index=hash(v))
                     expr = expr.xreplace({v: new_v})
                     old_v = v
                     v = new_v

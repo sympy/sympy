@@ -229,8 +229,6 @@ class Dummy(Symbol):
                 dummy_index = 10**6 + random.randint(1, 10**6-1)
                 if dummy_index not in Dummy._hashlist:
                     break
-        else:
-            assert isinstance(dummy_index, int) and dummy_index > 0, "dummy_index must be a positive integer"
 
         Dummy._hashlist.append(dummy_index)
         obj.dummy_index = dummy_index
