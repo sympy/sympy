@@ -206,7 +206,7 @@ class Dummy(Symbol):
     # small chance that `d2` will be equal to a previously-created Dummy.
 
     _count = 0
-    _hashlist = []
+    _dummyorder = {}
 
     __slots__ = ['dummy_index']
 
@@ -222,18 +222,19 @@ class Dummy(Symbol):
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        Dummy._count += 1
-
         while dummy_index is None:
             # The dummy_index that *we* generate will be a smallish positive
             # integers (at least Codeprinter assumes this).  But we do not
             # impose this if dummy_index was passed in.
             dummy_index = random.randint(10**6, 10**7-1)
-            if dummy_index in Dummy._hashlist:
+            if dummy_index in Dummy._dummyorder:
                 dummy_index = None
 
-        Dummy._hashlist.append(dummy_index)
+        # Store count but don't update it if we already made this Dummy
+        Dummy._dummyorder.setdefault(dummy_index, Dummy._count)
         obj.dummy_index = dummy_index
+
+        Dummy._count += 1
         return obj
 
     def __getstate__(self):
@@ -243,7 +244,7 @@ class Dummy(Symbol):
     def sort_key(self, order=None):
         # some tests depend on order of creation of Dummys
         return self.class_key(), (
-            2, (str(self), self._hashlist.index(self.dummy_index))), S.One.sort_key(), S.One
+            2, (str(self), Dummy._dummyorder[self.dummy_index])), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
