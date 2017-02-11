@@ -223,12 +223,14 @@ class Dummy(Symbol):
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         Dummy._count += 1
-        if dummy_index is None:
-            while True:
-                # Always positive
-                dummy_index = 10**6 + random.randint(1, 10**6-1)
-                if dummy_index not in Dummy._hashlist:
-                    break
+
+        while dummy_index is None:
+            # The dummy_index that *we* generate will be a smallish positive
+            # integers (at least Codeprinter assumes this).  But we do not
+            # impose this if dummy_index was passed in.
+            dummy_index = random.randint(10**6, 10**7-1)
+            if dummy_index in Dummy._hashlist:
+                dummy_index = None
 
         Dummy._hashlist.append(dummy_index)
         obj.dummy_index = dummy_index
