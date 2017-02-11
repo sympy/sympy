@@ -265,3 +265,27 @@ class Particle(object):
                     "Particle.potential_energy",
                 deprecated_since_version="1.0", issue=9800).warn()
         self.potential_energy = scalar
+
+    def parallel_axis(self, point, frame):
+        """Returns an inertia dyadic of the particle with respect to another
+        point and frame.
+
+        Parameters
+        ==========
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+        frame : sympy.physics.vector.ReferenceFrame
+            The reference frame used to construct the dyadic.
+
+        Returns
+        =======
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the particle expressed about the provided
+            point and frame.
+
+        """
+        # circular import issue
+        from sympy.physics.mechanics.functions import inertia
+        a, b, c = self.point.pos_from(point).to_matrix(frame)
+        return self.mass * inertia(frame, b**2 + c**2, c**2 + a**2, a**2 +
+                                   b**2, -a * b, -b * c, -a * c)
