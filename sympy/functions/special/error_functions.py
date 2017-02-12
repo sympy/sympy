@@ -5,6 +5,7 @@ from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, oo
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import IntegralRepresentationMixin
 from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.integers import floor
@@ -24,22 +25,7 @@ from sympy.core.compatibility import range
 ###############################################################################
 
 
-# TODO: poor style, should inherit/mixin or similar?
-def as_integral(self, t=None):
-    """
-    Return this function written as an integral, in terms of a variable
-    of integration `t`.  If `t` is omitted, a dummy variable is used.
-    """
-    if t is None:
-        t = Dummy('t')
-    return self._as_integral(*(self.args + (t,)))
-
-def _eval_rewrite_as_Integral(self, *args):
-    t = Dummy('t')
-    return self._as_integral(*(args + (t,)))
-
-
-class erf(Function):
+class erf(Function, IntegralRepresentationMixin):
     r"""
     The Gauss error function. This function is defined as:
 
@@ -204,9 +190,6 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z):
         return -I*erfi(I*z)
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, 0, z))
@@ -239,7 +222,7 @@ class erf(Function):
         return (re, im)
 
 
-class erfc(Function):
+class erfc(Function, IntegralRepresentationMixin):
     r"""
     Complementary Error Function. The function is defined as:
 
@@ -400,9 +383,6 @@ class erfc(Function):
     def _eval_rewrite_as_expint(self, z):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return S(2)/sqrt(pi)*Integral(exp(-t**2), (t, z, oo))
@@ -435,7 +415,7 @@ class erfc(Function):
         return (re, im)
 
 
-class erfi(Function):
+class erfi(Function, IntegralRepresentationMixin):
     r"""
     Imaginary error function. The function erfi is defined as:
 
@@ -586,9 +566,6 @@ class erfi(Function):
     def _eval_rewrite_as_expint(self, z):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return S(2)/sqrt(pi)*Integral(exp(t**2), (t, 0, z))
@@ -611,7 +588,7 @@ class erfi(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
-class erf2(Function):
+class erf2(Function, IntegralRepresentationMixin):
     r"""
     Two-argument error function. This function is defined as:
 
@@ -741,9 +718,6 @@ class erf2(Function):
 
     def _eval_rewrite_as_expint(self, x, y):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
-
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
 
     def _as_integral(self, x, y, t):
         from sympy import Integral
@@ -988,7 +962,7 @@ class erf2inv(Function):
 #################### EXPONENTIAL INTEGRALS ####################################
 ###############################################################################
 
-class Ei(Function):
+class Ei(Function, IntegralRepresentationMixin):
     r"""
     The classical exponential integral.
 
@@ -1142,9 +1116,6 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z):
         return exp(z) * _eis(z)
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return Integral(exp(t)/t, (t, -oo, z))
@@ -1157,7 +1128,7 @@ class Ei(Function):
         return super(Ei, self)._eval_nseries(x, n, logx)
 
 
-class expint(Function):
+class expint(Function, IntegralRepresentationMixin):
     r"""
     Generalized exponential integral.
 
@@ -1319,9 +1290,6 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, nu, x, t):
         from sympy import Integral
         return Integral(exp(-x*t)/(t**nu), (t, 1, oo))
@@ -1363,7 +1331,7 @@ def E1(z):
     return expint(1, z)
 
 
-class li(Function):
+class li(Function, IntegralRepresentationMixin):
     r"""
     The classical logarithmic integral.
 
@@ -1508,15 +1476,12 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return z * _eis(log(z))
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return Integral(1/log(t), (t, 0, z))
 
 
-class Li(Function):
+class Li(Function, IntegralRepresentationMixin):
     r"""
     The offset logarithmic integral.
 
@@ -1600,9 +1565,6 @@ class Li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
-
     def _as_integral(self, z, t):
         from sympy import Integral
         return Integral(1/log(t), (t, 2, z))
@@ -1612,7 +1574,7 @@ class Li(Function):
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
 
-class TrigonometricIntegral(Function):
+class TrigonometricIntegral(Function, IntegralRepresentationMixin):
     """ Base class for trigonometric integrals. """
 
 
@@ -1657,9 +1619,6 @@ class TrigonometricIntegral(Function):
     def _eval_rewrite_as_uppergamma(self, z):
         from sympy import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
-
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
 
     def _as_integral(self, z, t):
         from sympy import Integral
@@ -2089,7 +2048,7 @@ class Chi(TrigonometricIntegral):
 #################### FRESNEL INTEGRALS ########################################
 ###############################################################################
 
-class FresnelIntegral(Function):
+class FresnelIntegral(Function, IntegralRepresentationMixin):
     """ Base class for the Fresnel integrals."""
 
     unbranched = True
@@ -2165,9 +2124,6 @@ class FresnelIntegral(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                 self.func(x + x*sqrt(sq)))
         return (re, im)
-
-    as_integral = as_integral
-    _eval_rewrite_as_Integral = _eval_rewrite_as_Integral
 
     def _as_integral(self, z, t):
         from sympy import Integral

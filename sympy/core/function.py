@@ -725,6 +725,32 @@ class Function(Application, Expr):
         return func(*args)
 
 
+class IntegralRepresentationMixin(Basic):
+    """
+    Mixin for objects that have integral representations.
+
+    Classes will need to define an ``_as_integral`` method.  The last input
+    is the variable of integration.  The previous inputs are the ``args``
+    of the object.
+    """
+    def as_integral(self, t=None):
+        """
+        Return this function written as an integral, in terms of a variable
+        of integration `t`.  If `t` is omitted, a dummy variable is used.
+        """
+        if t is None:
+            t = Dummy('t')
+        return self._as_integral(*(self.args + (t,)))
+
+    def _eval_rewrite_as_Integral(self, *args):
+        t = Dummy('t')
+        return self._as_integral(*(args + (t,)))
+
+    def _as_integral(self, *args):
+        raise NotImplementedError(
+            '%s has no _as_integral routine' % self.func)
+
+
 class AppliedUndef(Function):
     """
     Base class for expressions resulting from the application of an undefined
