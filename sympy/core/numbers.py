@@ -296,7 +296,7 @@ def mod_inverse(a, m):
     >>> mod_inverse(-3, 11)
     -4
 
-    When there is a commono factor between the numerators of
+    When there is a common factor between the numerators of
     ``a`` and ``m`` the inverse does not exist:
 
     >>> mod_inverse(2, 4)
@@ -3578,6 +3578,10 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     def _sage_(self):
         import sage.all as sage
         return sage.I
+
+    @property
+    def _mpc_(self):
+        return (Float(0)._mpf_, Float(1)._mpf_)
 
 I = S.ImaginaryUnit
 

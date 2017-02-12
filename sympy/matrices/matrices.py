@@ -1566,7 +1566,8 @@ class MatrixArithmetic(MatrixRequired):
             raise NonSquareMatrixError()
         try:
             a = self
-            if isinstance(num, (int, Integer)):
+            num = sympify(num)
+            if num.is_Number and num % 1 == 0:
                 if a.rows == 1:
                     return a._new([[a[0]**num]])
                 if num == 0:
@@ -1710,6 +1711,10 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
+            if l == 0 and (n < N - 1) != False:
+                raise ValueError("Matrix det == 0; not invertible")
+            elif l == 0 and N > 1 and n % 1 != 0:
+                raise ValueError("Non-integer power cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -3232,55 +3237,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         else:
             return sol, tau
 
-    def get_diag_blocks(self):
-        """Obtains the square sub-matrices on the main diagonal of a square matrix.
-
-        Useful for inverting symbolic matrices or solving systems of
-        linear equations which may be decoupled by having a block diagonal
-        structure.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x, y, z
-        >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
-        >>> a1, a2, a3 = A.get_diag_blocks()
-        >>> a1
-        Matrix([
-        [1,    3],
-        [y, z**2]])
-        >>> a2
-        Matrix([[x]])
-        >>> a3
-        Matrix([[0]])
-
-        """
-        sub_blocks = []
-
-        def recurse_sub_blocks(M):
-            i = 1
-            while i <= M.shape[0]:
-                if i == 1:
-                    to_the_right = M[0, i:]
-                    to_the_bottom = M[i:, 0]
-                else:
-                    to_the_right = M[:i, i:]
-                    to_the_bottom = M[i:, :i]
-                if any(to_the_right) or any(to_the_bottom):
-                    i += 1
-                    continue
-                else:
-                    sub_blocks.append(M[:i, :i])
-                    if M.shape == M[:i, :i].shape:
-                        return
-                    else:
-                        recurse_sub_blocks(M[i:, i:])
-                        return
-
-        recurse_sub_blocks(self)
-        return sub_blocks
-
     @classmethod
     def hstack(cls, *args):
         """Return a matrix formed by joining args horizontally (i.e.
@@ -4180,31 +4136,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         M.col_del(j)
         return self._new(M)
 
-    def multiply_elementwise(self, b):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        cross
-        dot
-        multiply
-        """
-        from sympy.matrices import matrix_multiply_elementwise
-
-        return matrix_multiply_elementwise(self, b)
-
     def multiply(self, b):
         """Returns self*b
 
@@ -4745,48 +4676,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         rank = len(row_reduced[-1])
         return rank
 
-    def refine(self, assumptions=True):
-        """Apply refine to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
-        >>> x = Symbol('x')
-        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
-        Matrix([
-        [ Abs(x)**2, sqrt(x**2)],
-        [sqrt(x**2),  Abs(x)**2]])
-        >>> _.refine(Q.real(x))
-        Matrix([
-        [  x**2, Abs(x)],
-        [Abs(x),   x**2]])
-
-        """
-        return self.applyfunc(lambda x: refine(x, assumptions))
-
-    def replace(self, F, G, map=False):
-        """Replaces Function F in Matrix entries with Function G.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols, Function, Matrix
-        >>> F, G = symbols('F, G', cls=Function)
-        >>> M = Matrix(2, 2, lambda i, j: F(i+j)) ; M
-        Matrix([
-        [F(0), F(1)],
-        [F(1), F(2)]])
-        >>> N = M.replace(F,G)
-        >>> N
-        Matrix([
-        [G(0), G(1)],
-        [G(1), G(2)]])
-        """
-        M = self[:, :]
-
-        return M.applyfunc(lambda x: x.replace(F, G, map))
-
     def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
@@ -4851,40 +4740,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
-
-    @property
-    def shape(self):
-        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import zeros
-        >>> M = zeros(2, 3)
-        >>> M.shape
-        (2, 3)
-        >>> M.rows
-        2
-        >>> M.cols
-        3
-        """
-        return (self.rows, self.cols)
-
-    def simplify(self, ratio=1.7, measure=count_ops):
-        """Apply simplify to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x, y
-        >>> from sympy import sin, cos
-        >>> from sympy.matrices import SparseMatrix
-        >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
-        Matrix([[x*sin(y)**2 + x*cos(y)**2]])
-        >>> _.simplify()
-        Matrix([[x]])
-        """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
 
     def singular_values(self):
         """Compute the singular values of a Matrix
@@ -5166,8 +5021,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         """
         kls = type(args[0])
         return reduce(kls.col_join, args)
-
-    _eval_simplify = simplify
 
     charpoly = berkowitz_charpoly
 
