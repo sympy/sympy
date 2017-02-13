@@ -8,7 +8,6 @@ from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
 def test_combsimp():
     from sympy.abc import n, k
-
     assert combsimp(factorial(n)) == factorial(n)
     assert combsimp(binomial(n, k)) == binomial(n, k)
 
@@ -128,7 +127,6 @@ def test_combsimp_gamma():
 def test_gammasimp_gamma():
     from sympy.abc import x, y
     R = Rational
-
     assert gammasimp(gamma(x)) == gamma(x)
     assert gammasimp(gamma(x + 1)/x) == gamma(x)
     assert gammasimp(gamma(x)/(x - 1)) == gamma(x - 1)
