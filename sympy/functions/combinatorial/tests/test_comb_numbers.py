@@ -68,6 +68,10 @@ def test_fibonacci():
     assert fibonacci(n).rewrite(sqrt) == \
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
     assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
+    assert fibonacci(n).rewrite(GoldenRatio) == \
+        (GoldenRatio**n - (-GoldenRatio)**(-n))/(-1 + 2*GoldenRatio)
+    assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        fibonacci(10).evalf()
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
