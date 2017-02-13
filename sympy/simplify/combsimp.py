@@ -68,7 +68,7 @@ def combsimp(expr):
     as_binomial = expr.has(binomial)
     as_gamma = expr.has(gamma)
 
-    if as_gamma:
+    if as_gamma and (not expr.is_Integer):
         return gammasimp(expr)
 
 
