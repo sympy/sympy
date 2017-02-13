@@ -300,7 +300,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr,get=False, against=None, **assumptions):
+def check_assumptions(expr, get=False, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -351,7 +351,7 @@ def check_assumptions(expr,get=False, against=None, **assumptions):
             continue
         elif test is not None:
             if get is True:
-                return False,key
+                return False, key
             else:
                 return False
 
