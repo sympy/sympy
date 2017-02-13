@@ -2691,6 +2691,13 @@ def nsolve(*args, **kwargs):
     >>> cos(_)
     0.73908513321516064165531208767387340401341175890076
 
+    To solve for complex roots of real functions, a nonreal initial point
+    must be specified:
+
+    >>> from sympy import I
+    >>> nsolve(x**2 + 2, I)
+    1.4142135623731*I
+
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and
     available solvers. Note, however, that functions which are very
