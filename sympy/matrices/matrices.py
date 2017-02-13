@@ -236,7 +236,7 @@ class MatrixShaping(MatrixRequired):
         return self._eval_col_insert(pos, other)
 
     def col_join(self, other):
-        """Concatenates two matrices along self's last and other's first row
+        """Concatenates two matrices along self's last and other's first row.
 
         Examples
         ========
