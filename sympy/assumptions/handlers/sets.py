@@ -133,7 +133,7 @@ class AskRationalHandler(CommonHandler):
                 return False
 
     Rational, Float = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
+        [staticmethod(CommonHandler.AlwaysFalse)]*2 # Float is finite-precision
 
     ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
         [staticmethod(CommonHandler.AlwaysFalse)]*6
