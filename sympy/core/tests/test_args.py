@@ -277,6 +277,11 @@ def test_sympy__core__function__Derivative():
 
 
 @SKIP("abstract class")
+def test_sympy__core__function__IntegralRepresentationMixin():
+    pass
+
+
+@SKIP("abstract class")
 def test_sympy__core__function__Function():
     pass
 
