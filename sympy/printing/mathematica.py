@@ -113,9 +113,6 @@ class MCodePrinter(CodePrinter):
         return "D[" + ', '.join(self.doprint(a) for a in expr.args) + "]"
 
 
-
-
-
 def mathematica_code(expr, **settings):
     r"""Converts an expr to a string of the Wolfram Mathematica code
 
