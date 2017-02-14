@@ -3067,6 +3067,7 @@ def test_GroebnerBasis():
     H = [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     P = [ Poly(h, x, y) for h in H ]
 
+    assert groebner(F + [0], x, y, order='grevlex') == G
     assert isinstance(G, GroebnerBasis) is True
 
     assert len(G) == 3
