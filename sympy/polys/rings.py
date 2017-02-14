@@ -280,10 +280,14 @@ class PolyRing(DefaultPrinting, IPolys):
         return self._hash
 
     def __eq__(self, other):
-        return self is other
+        return (isinstance(other, PolyRing)
+            and self.symbols == other.symbols
+            and self.domain == other.domain
+            and self.ngens == other.ngens
+            and self.order == other.order)
 
     def __ne__(self, other):
-        return self is not other
+        return not self.__eq__(other)
 
     def clone(self, symbols=None, domain=None, order=None):
         return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
