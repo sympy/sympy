@@ -4,7 +4,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.polys.domains.realfield import RealField
 
-from sympy import S, sqrt, sin, Float
+from sympy import S, sqrt, sin, Float, pi
 from sympy.abc import x, y
 
 def test_construct_domain():
@@ -86,6 +86,11 @@ def test_construct_domain():
 
     assert construct_domain([2/x, 3.5*y]) == \
         (dom, [dom.convert(2/x), dom.convert(3.5*y)])
+
+    dom = RR(prec=336)[x]
+
+    assert construct_domain([pi.evalf(100)*x]) == \
+        (dom, [dom.convert(pi.evalf(100)*x)])
 
     assert construct_domain(2) == (ZZ, ZZ(2))
     assert construct_domain(S(2)/3) == (QQ, QQ(2, 3))

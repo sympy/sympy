@@ -175,7 +175,8 @@ def _construct_composite(coeffs, opt):
             break
 
     if reals:
-        ground = RR
+        max_prec = max([c._prec for c in coeffs])
+        ground = RealField(prec=max_prec)
     elif rationals:
         ground = QQ
     else:
