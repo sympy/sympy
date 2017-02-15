@@ -370,5 +370,5 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.5',
             ],
           install_requires=['mpmath>=%s' % mpmath_version],
-          **extra_kwargs,
+          **extra_kwargs
           )
