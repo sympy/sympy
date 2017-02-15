@@ -1170,3 +1170,11 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_singularities():
+    assert integrate(1/x**2, (x, -oo, oo)) == oo
+    assert integrate(1/x**2, (x, -1, 1)) == oo
+    assert integrate(1/(x - 1)**2, (x, -2, 2)) == oo
+
+    assert integrate(1/x**2, (x, 1, -1)) == -oo
+    assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo
