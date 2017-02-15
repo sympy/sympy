@@ -146,15 +146,10 @@ class Limit(Expr):
         if z0.is_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
-        # limits of fibonacci series when the variable approaches infinity
-        # can be conviniently calculated if fibonacci is rewritten in closed
-        # form in terms of Golden Ratio
-        if z0.is_infinite:
-            e = e.rewrite(fibonacci,GoldenRatio)
-
         if e.is_Mul:
             if abs(z0) is S.Infinity:
                 e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)
