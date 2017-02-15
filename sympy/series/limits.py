@@ -163,7 +163,6 @@ class Limit(Expr):
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
-                    e = e.rewrite(fibonacci,GoldenRatio)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
                     if isinstance(r, Limit):

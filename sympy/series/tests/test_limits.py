@@ -109,7 +109,7 @@ def test_issue_3885():
 
 def test_issue_10382():
     n = Symbol('n', integer=True)
-    assert limit(fibonacci(n+1)/fibonacci(n),n,oo) == GoldenRatio
+    assert limit(fibonacci(n+1)/fibonacci(n),n,oo) == S.GoldenRatio
 
 
 def test_Limit():
