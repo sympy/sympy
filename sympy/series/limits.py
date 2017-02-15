@@ -4,6 +4,8 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
@@ -144,6 +146,12 @@ class Limit(Expr):
         if z0.is_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
+        # limits of fibonacci series when the variable approaches infinity
+        # can be conviniently calculated if fibonacci is rewritten in closed
+        # form in terms of Golden Ratio
+        if z0.is_infinite:
+            e = e.rewrite(fibonacci,GoldenRatio)
+
         if e.is_Mul:
             if abs(z0) is S.Infinity:
                 e = factor_terms(e)
@@ -155,6 +163,7 @@ class Limit(Expr):
                 if all(ok(w) for w in e.as_numer_denom()):
                     u = Dummy(positive=(z0 is S.Infinity))
                     inve = e.subs(z, 1/u)
+                    e = e.rewrite(fibonacci,GoldenRatio)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
                     if isinstance(r, Limit):
