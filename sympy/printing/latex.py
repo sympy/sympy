@@ -347,6 +347,11 @@ class LatexPrinter(Printer):
         else:
             return str_real
 
+    def _print_ComplexFloat(self, expr):
+        #from sympy import I
+        #return self._print(expr.real + expr.imag*I)
+        return "%s + %si" % (self._print(expr.real), self._print(expr.imag))
+
     def _print_Mul(self, expr):
         include_parens = False
         if _coeff_isneg(expr):

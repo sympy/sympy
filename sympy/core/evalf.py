@@ -1367,7 +1367,7 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
-        from sympy import Float, Number
+        from sympy import Float, ComplexFloat, Number
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1412,7 +1412,7 @@ class EvalfMixin(object):
         if im:
             p = max(min(prec, im_acc), 1)
             im = Float._new(im, p)
-            return re + im*S.ImaginaryUnit
+            return ComplexFloat(re, im)
         else:
             return re
 

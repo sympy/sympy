@@ -86,6 +86,14 @@ class PrettyPrinter(Printer):
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
 
+    def _print_ComplexFloat(self, e):
+        from sympy import I
+        #return self._print(e.real) + self._print(e.imag)*self._print(I)
+        # alternatively, no multiplication symbol:
+        pform = self._print(I)
+        pform = prettyForm(*pform.left(self._print(e.imag)))
+        return self._print(e.real) + pform
+
     def _print_Atom(self, e):
         try:
             # print atoms like Exp1 or Pi
