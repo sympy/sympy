@@ -390,7 +390,7 @@ class HolonomicFunction(object):
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intiial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intial
     terms of the associated power series. See Examples below.
 
     Examples
@@ -1231,7 +1231,7 @@ class HolonomicFunction(object):
         Each tuple in this vector represents a recurrence relation :math:`R`
         associated with a root of the indicial equation ``p``. Conditions of
         a different format can also be provided in this case, see the
-        docstring of HolonomicFunction class.
+        docstring of Holonomic Function class.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol :math:`C_j`, denoting the coefficient of
@@ -1629,7 +1629,7 @@ class HolonomicFunction(object):
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
         A list of series might be returned if :math:`x_0` is a regular point with
-        multiple roots of the indcial equation.
+        multiple roots of the indicial equation.
 
         Examples
         ========
