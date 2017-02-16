@@ -173,7 +173,7 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        return 'Interval(%s)' %(','.join([self._print(a) for a in i.args]))
+        return 'Interval(%s)' %(', '.join([self._print(a) for a in i.args]))
 
     def _print_AccumulationBounds(self, i):
         left = '<'
