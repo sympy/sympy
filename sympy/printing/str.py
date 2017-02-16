@@ -508,10 +508,10 @@ class StrPrinter(Printer):
     def _print_Integer(self, expr):
         return str(expr.p)
 
-    def _print_Integers(self,expr):
+    def _print_Integers(self, expr):
         return 'S.Integers'
 
-    def _print_Naturals(self,expr):
+    def _print_Naturals(self, expr):
         return 'S.Naturals'
 
     def _print_int(self, expr):
