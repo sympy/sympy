@@ -110,7 +110,7 @@ class MCodePrinter(CodePrinter):
         return "Hold[Sum[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
 
     def _print_Derivative(self, expr):
-        return "D[" + ', '.join(self.doprint(a) for a in expr.args) + "]"
+        return "Hold[D[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
 
 
 def mathematica_code(expr, **settings):
