@@ -156,11 +156,11 @@ def test_Integral():
 
 def test_Interval():
     a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "Interval(0,a,False,False)"
-    assert str(Interval(0, a, False, False)) == "Interval(0,a,False,False)"
-    assert str(Interval(0, a, True, False)) == "Interval(0,a,True,False)"
-    assert str(Interval(0, a, False, True)) == "Interval(0,a,False,True)"
-    assert str(Interval(0, a, True, True)) == "Interval(0,a,True,True)"
+    assert str(Interval(0, a)) == "Interval(0, a, False, False)"
+    assert str(Interval(0, a, False, False)) == "Interval(0, a, False, False)"
+    assert str(Interval(0, a, True, False)) == "Interval(0, a, True, False)"
+    assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
+    assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
 
 
 def test_AccumBounds():
@@ -739,11 +739,11 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'Interval(-oo,oo,True,True) \\ S.Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Interval(-oo, oo, True, True) \\ S.Naturals'
 
 def test_SymmetricDifference():
-    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
-           'SymmetricDifference(Interval(2,3,False,False), Interval(3,4,False,False))'
+    assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
+           'SymmetricDifference(Interval(2, 3, False, False), Interval(3, 4, False, False))'
 
 
 def test_UnevaluatedExpr():
