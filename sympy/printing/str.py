@@ -672,7 +672,7 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return 'Union(%s)' %(','.join([self._print(a) for a in expr.args]))
+        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
