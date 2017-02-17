@@ -254,7 +254,7 @@ def response(tf, u):
     """
     Transfer function response
     """
-    return sympy.inverse_laplace_transform(tf*u, s, t)
+    return sympy.inverse_laplace_transform(tf*u, s, t).simplify()
 
 def step(tf):
     """
