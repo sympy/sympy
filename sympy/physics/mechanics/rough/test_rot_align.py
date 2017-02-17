@@ -14,7 +14,7 @@ a2 = a1.orientnew('a2', 'Axis', [pi/2, a1.x]) #makes a2.y = a1.z
 Af = a2.orientnew('Af', 'Axis', [q,a2.y]) #simple rotation where A.z and N.z
                                           # aren't aligned.
 
-def alignyz(childframe,parentframe):
+def alignyz(childframe, parentframe, q=0):
     """Aligns the childframe's y-axis with parentframe's z-axis..
 
     Parameters
@@ -23,6 +23,9 @@ def alignyz(childframe,parentframe):
     childframe : Frame to be rotated
 
     parentframe : Frame that is fixed
+
+    q : Rotation amount for last rotation (0 by default)
+
     """
     if not isinstance(childframe,ReferenceFrame):
         raise TypeError('You suck, child')
@@ -36,8 +39,8 @@ def alignyz(childframe,parentframe):
         childframe.orient(b2, 'Axis', [q, b2.y]) #simple rotation where A.y = N.z
     return childframe.dcm(parentframe)
 
-def align(childframedirection,parentframedirection, q=0):
-    """ Supposed to be a general align function.
+def align(childframedirection, parentframedirection, q=0):
+    """ Supposed to be a more general align function.
 
     Parameters
     ==========
