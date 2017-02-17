@@ -3,9 +3,11 @@ A symbolic control toolbox.
 """
 
 import sympy
+import mpmath
 
 # pylint: disable=invalid-name
 
+s, t = sympy.symbols('s, t')
 
 def array_to_poly(a, s):
     """
@@ -28,7 +30,6 @@ def tf(num, den):
     :param num: an array of numerator coefficients with order [n, n-1, .., ]
     :param den: an array of denominator coefficients with order [n, n-1, .., ]
     """
-    s = sympy.Symbol('s')
     return array_to_poly(num, s) / array_to_poly(den, s)
 
 
@@ -75,7 +76,6 @@ def ss2tf(ss):
     :param ss: State-space
     :return : Transfer function matrix
     """
-    s = sympy.Symbol('s')
     n = ss.A.shape[0]
     I = sympy.eye(n)
     G = (ss.C*(s*I - ss.A).inv()*ss.B + ss.D)
@@ -154,7 +154,6 @@ def tf2ss(G):
     """
     if not hasattr(G, 'shape'):
         G = sympy.Matrix([G])
-    s = sympy.Symbol('s')
     # find unique roots
     roots = []
     for i in range(G.shape[0]):
@@ -234,3 +233,37 @@ def obsvb(ss):
     for i in range(n-1):
         O_ctrb = O_ctrb.row_join(ss.C*ss.A**n)
     return O_ctrb
+
+def pade(f, n):
+    """
+    Pade approximation
+
+    :param f: A function, cannot contain symbols.
+    :n : The order of the numerator and
+        denominator polynomial for the pade
+        approximation.
+    """
+    a = mpmath.taylor(f, 0, 2*n + 1)
+    num, den = mpmath.pade(a, n, n)
+    num.reverse()
+    den.reverse()
+    return sympy.nsimplify(
+        tf(num, den)).simplify()
+
+def response(tf, u):
+    """
+    Transfer function response
+    """
+    return sympy.inverse_laplace_transform(tf*u, s, t)
+
+def step(tf):
+    """
+    Step response
+    """
+    return response(tf, 1/s)
+
+def ramp(tf):
+    """
+    Ramp response
+    """
+    return response(tf, 1/s**2)
