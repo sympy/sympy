@@ -68,7 +68,7 @@ def combsimp(expr):
     as_binomial = expr.has(binomial)
     as_gamma = expr.has(gamma)
 
-    if as_gamma and (not expr.args[0].is_Integer):
+    if as_gamma:
         return gammasimp(expr)
 
 
@@ -220,71 +220,7 @@ def combsimp(expr):
             elif isg is False:
                 denom_others.extend(l)
 
-        # =========== level 2 work: pure gamma manipulation =========
-
-        # Try to reduce the number of gamma factors by applying the
-        # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
-        for gammas, numer, denom in [(
-            numer_gammas, numer_others, denom_others),
-                (denom_gammas, denom_others, numer_others)]:
-            new = []
-            while gammas:
-                g1 = gammas.pop()
-                if g1.is_integer:
-                    new.append(g1)
-                    continue
-                for i, g2 in enumerate(gammas):
-                    n = g1 + g2 - 1
-                    if not n.is_Integer:
-                        continue
-                    numer.append(S.Pi)
-                    denom.append(sin(S.Pi*g1))
-                    gammas.pop(i)
-                    if n > 0:
-                        for k in range(n):
-                            numer.append(1 - g1 + k)
-                    elif n < 0:
-                        for k in range(-n):
-                            denom.append(-g1 - k)
-                    break
-                else:
-                    new.append(g1)
-            # /!\ updating IN PLACE
-            gammas[:] = new
-
-        # Try to reduce the number of gammas by using the duplication
-        # theorem to cancel an upper and lower: gamma(2*s)/gamma(s) =
-        # 2**(2*s + 1)/(4*sqrt(pi))*gamma(s + 1/2). Although this could
-        # be done with higher argument ratios like gamma(3*x)/gamma(x),
-        # this would not reduce the number of gammas as in this case.
-        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
-                                denom_others),
-                               (denom_gammas, numer_gammas, denom_others,
-                                numer_others)]:
-
-            while True:
-                for x in ng:
-                    for y in dg:
-                        n = x - 2*y
-                        if n.is_Integer:
-                            break
-                    else:
-                        continue
-                    break
-                else:
-                    break
-                ng.remove(x)
-                dg.remove(y)
-                if n > 0:
-                    for k in range(n):
-                        no.append(2*y + k)
-                elif n < 0:
-                    for k in range(-n):
-                        do.append(2*y - 1 - k)
-                ng.append(y + S(1)/2)
-                no.append(2**(2*y - 1))
-                do.append(sqrt(S.Pi))
-
+        
         # Try to reduce the number of gamma factors by applying the
         # multiplication theorem (used when n gammas with args differing
         # by 1/n mod 1 are encountered).
@@ -469,7 +405,7 @@ def combsimp(expr):
         expr = factor(expr)
 
     if not as_gamma:
-        if as_factorial and expr.args[0].is_Integer:
+        if as_factorial:
             expr = expr.rewrite(factorial)
         elif as_binomial:
             expr = expr.rewrite(binomial)
