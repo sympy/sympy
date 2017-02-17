@@ -132,24 +132,10 @@ def test_ComplexFloat_printing():
     assert str(z) == "1.25 - 2.5j"
     assert pretty(z) == "1.25 - 2.5ⅈ"
     assert latex(z) == "1.25 - 2.5i"
-
-
-@XFAIL
-def test_ComplexFloat_printing_fails():
-    assert latex(Pow(z, 2, evaluate=False)) == "\left(1.25 + 2.5i\right)^{2}"
-
-
-@XFAIL
-def test_ComplexFloat_printing_coeff():
-    x = S('x')
-    a = S(1.0 + 3.0j)
-    assert str(a*x) == '(1.0 + 3.0j)*x'
-
-
-@XFAIL
-def test_ComplexFloat_printing_power():
-    a = S(1.0 + 3.0j)
-    assert str(Pow(a,2, evaluate=False)) == '(1.0 + 3.0j)**2'
+    assert str(Pow(z, 2, evaluate=False)) == '(1.25 - 2.5j)**2'
+    assert latex(Pow(z, 2, evaluate=False)) == r'\left(1.25 - 2.5i\right)^{2}'
+    x = Symbol('x')
+    assert str(z*x) == '(1.25 - 2.5j)*x'
 
 
 def test_Float_greedy_make_ComplexFloat():
