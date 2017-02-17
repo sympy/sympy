@@ -105,7 +105,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ``diop_solve()``.
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
-    tuple are the solutions for each variable in the the equation and
+    tuple are the solutions for each variable in the equation and
     are arranged according to the alphabetic ordering of the variables.
     e.g. For an equation with two variables, `a` and `b`, the first
     element of the tuple is the solution for `a` and the second for `b`.
@@ -1654,7 +1654,7 @@ def length(P, Q, D):
     continued fraction representation of `\\frac{P + \sqrt{D}}{Q}`.
 
     It is important to remember that this does NOT return the length of the
-    periodic part but the sum of the legths of the two parts as mentioned
+    periodic part but the sum of the lengths of the two parts as mentioned
     above.
 
     Usage
@@ -1966,7 +1966,7 @@ def _diop_ternary_quadratic(_var, coeff):
     # There are infinitely many solutions for the equation.
     # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
     # Equation can be re-written as y*(B*x + E*z) = -C*x*z and we can find rather
-    # unobviuos solutions. Set y = -C and B*x + E*z = x*z. The latter can be solved by
+    # unobvious solutions. Set y = -C and B*x + E*z = x*z. The latter can be solved by
     # using methods for binary quadratic diophantine equations. Let's select the
     # solution which minimizes |x| + |z|
 
@@ -2207,7 +2207,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
         return (None, None, None)
 
     if solution.count(0) >= 2:
-        # if there are 2 zeros the the equation reduces
+        # if there are 2 zeros the equation reduces
         # to k*X**2 == 0 where X is x, y, or z so X must
         # be zero, too. So there is only the trivial
         # solution.
@@ -2242,7 +2242,7 @@ def diop_ternary_quadratic_normal(eq):
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
     equation will be a quadratic binary or univariate equation. If solvable,
-    returns a tuple `(x, y, z)` that satisifes the given equation. If the
+    returns a tuple `(x, y, z)` that satisfies the given equation. If the
     equation does not have integer solutions, `(None, None, None)` is returned.
 
     Usage
@@ -3245,11 +3245,11 @@ def sum_of_squares(n, k, zeros=False):
     * if k > 4 then n can be partitioned and each partition can
       be written as a sum of 4 squares; if n is not evenly divisible
       by 4 then n can be written as a sum of squares only if the
-      an additional partition can be written as as sum of squares.
+      an additional partition can be written as sum of squares.
       For example, if k = 6 then n is partitioned into two parts,
       the first being written as a sum of 4 squares and the second
       being written as a sum of 2 squares -- which can only be
-      done if the contition above for k = 2 can be met, so this will
+      done if the condition above for k = 2 can be met, so this will
       automatically reject certain partitions of n.
 
     Examples
