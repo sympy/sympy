@@ -658,7 +658,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if not p2:
             return not p1
-        elif isinstance(p2, p1.ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == p1.ring:
             return dict.__eq__(p1, p2)
         elif len(p1) > 1:
             return False

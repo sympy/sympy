@@ -55,12 +55,13 @@ class PolynomialRing(Ring, CompositeDomain):
         return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.dtype.ring, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
         return isinstance(other, PolynomialRing) and \
-            self.dtype == other.dtype and self.ring == other.ring
+            self.dtype.ring == other.dtype.ring and self.domain == other.domain and \
+            self.symbols == other.symbols
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

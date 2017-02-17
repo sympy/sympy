@@ -145,10 +145,14 @@ class FracField(DefaultPrinting):
         return self._hash
 
     def __eq__(self, other):
-        return self is other
+        return isinstance(other, FracField) and \
+            self.symbols == other.symbols and \
+            self.ngens == other.ngens and \
+            self.domain == other.domain and \
+            self.order == other.order
 
     def __ne__(self, other):
-        return self is not other
+        return not self.__eq__(other)
 
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
@@ -293,7 +297,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
     def __eq__(f, g):
-        if isinstance(g, f.field.dtype):
+        if isinstance(g, FracElement) and f.field == g.field:
             return f.numer == g.numer and f.denom == g.denom
         else:
             return f.numer == g and f.denom == f.field.ring.one
