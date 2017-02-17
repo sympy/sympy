@@ -4,8 +4,16 @@ A symbolic control toolbox.
 
 import sympy
 
+# pylint: disable=invalid-name
+
 
 def array_to_poly(a, s):
+    """
+    Convert an array into a polynomial in s
+
+    :param a: array
+    :param x: variable
+    """
     n = len(a)
     p = 0
     for i, c in enumerate(a):
@@ -13,14 +21,30 @@ def array_to_poly(a, s):
     return p
 
 
-def TransferFunction(num, den):
+def tf(num, den):
+    """
+    Create a transfer function
+
+    :param num: an array of numerator coefficients with order [n, n-1, .., ]
+    :param den: an array of denominator coefficients with order [n, n-1, .., ]
+    """
     s = sympy.Symbol('s')
     return array_to_poly(num, s) / array_to_poly(den, s)
 
 
 class StateSpace(sympy.Tuple):
+    """
+    State space class, derives from Tuple.
+    """
 
     def __init__(self, A, B, C, D, dt):
+        """
+        :param A: A matrix
+        :param B: B matrix
+        :param C: C matrix
+        :param D: D matrix
+        :param dt: sampling time, 0 for continuous
+        """
         self.A = sympy.Matrix(A)
         self.B = sympy.Matrix(B)
         self.C = sympy.Matrix(C)
@@ -28,13 +52,29 @@ class StateSpace(sympy.Tuple):
         self.dt = dt
 
     def simplify(self):
+        """
+        Simplify the state-space
+        """
         self.A.simplify()
         self.B.simplify()
         self.C.simplify()
         self.D.simplify()
 
 
+def ss(A, B, C, D, dt):
+    """
+    Create a state space represenation.
+    """
+    return StateSpace(A, B, C, D, dt)
+
+
 def ss2tf(ss):
+    """
+    Transform a state-space to a transfer function matrix
+
+    :param ss: State-space
+    :return : Transfer function matrix
+    """
     s = sympy.Symbol('s')
     n = ss.A.shape[0]
     I = sympy.eye(n)
@@ -44,6 +84,12 @@ def ss2tf(ss):
 
 
 def controllable_canonical_form(G):
+    """
+    Convert a SISO transfer function to the controllable
+    canonical form.
+
+    :param G: SISO transfer function
+    """
     b = sympy.poly(sympy.numer(G)).coeffs()
     a = sympy.poly(sympy.denom(G)).coeffs()
     assert len(b) <= len(a)
@@ -65,6 +111,12 @@ def controllable_canonical_form(G):
 
 
 def similarity_transformation(ss, T):
+    """
+    Perform a similarity transformation on the state-space (does
+    not modify the tranfer function.)
+
+    :param T:  The similarity transform matrix
+    """
     ssJ = StateSpace(
         T.inv()*ss.A*T,
         T.inv()*ss.B,
@@ -75,6 +127,13 @@ def similarity_transformation(ss, T):
 
 
 def jordan_canonical_form(ss):
+    """
+    Convert a state-space to Jordan canonical form.
+
+    :param ss: original state-space
+    :return : (ss', T) where ss is tranformed state-space
+        and T is the tranformation matrix
+    """
     T = None
     for val, mult, basis in ss.A.eigenvects():
         if mult != 1:
@@ -89,6 +148,10 @@ def jordan_canonical_form(ss):
 
 
 def tf2ss(G):
+    """
+    Convert a transfer function or transfer function matrix to 
+    a state-space represenation using a Gilbert minimal realization.
+    """
     if not hasattr(G, 'shape'):
         G = sympy.Matrix([G])
     s = sympy.Symbol('s')
@@ -127,7 +190,7 @@ def tf2ss(G):
         sol = sympy.solve(
             list(u*v.T - G_r),
             u_syms + v_syms, dict=True)[0]
-        vals.update(sol)
+        vals.update(sol) 
         vals = {
             key: sympy.sympify(vals[key]).subs(vals)
             for key in vals.keys()}
@@ -143,16 +206,28 @@ def tf2ss(G):
     return StateSpace(A, B, C, D, 0)
 
 
-def ctrb(ss, n=None):
-    if n is None:
-        n = ss.A.shape[0]
+def ctrb(ss):
+    """
+    Compute the controllability matrix
+
+    :param ss: The state space
+    :return : O (controllability matrix)
+    """
+    n = ss.A.shape[0]
     O_ctrb = ss.B
     for i in range(n-1):
         O_ctrb = O_ctrb.row_join(ss.A**n*ss.B)
     return O_ctrb
 
 
-def obsvb(ss, n=None):
+def obsvb(ss):
+    """
+    Compute the observability matrix
+
+    :param ss: The state space
+    :return : O (observability matrix)
+    """
+
     if n is None:
         n = ss.A.shape[0]
     O_ctrb = ss.C
