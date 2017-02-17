@@ -4,6 +4,8 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
@@ -147,6 +149,7 @@ class Limit(Expr):
         if e.is_Mul:
             if abs(z0) is S.Infinity:
                 e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)
