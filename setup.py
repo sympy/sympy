@@ -75,6 +75,7 @@ modules = [
     'sympy.codegen',
     'sympy.combinatorics',
     'sympy.concrete',
+    'sympy.control',
     'sympy.core',
     'sympy.core.benchmarks',
     'sympy.crypto',
