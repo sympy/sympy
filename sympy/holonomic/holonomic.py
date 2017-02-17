@@ -1231,7 +1231,7 @@ class HolonomicFunction(object):
         Each tuple in this vector represents a recurrence relation :math:`R`
         associated with a root of the indicial equation ``p``. Conditions of
         a different format can also be provided in this case, see the
-        docstring of Holonomic Function class.
+        docstring of HolonomicFunction class.
 
         If it's not possible to numerically compute a initial condition,
         it is returned as a symbol :math:`C_j`, denoting the coefficient of
@@ -2406,7 +2406,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
             _y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, _y0)
 
-    # iterate though the expression recursively
+    # iterate through the expression recursively
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow
