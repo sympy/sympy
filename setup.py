@@ -268,6 +268,7 @@ tests = [
     'sympy.codegen.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
+    'sympy.control.tests',
     'sympy.core.tests',
     'sympy.crypto.tests',
     'sympy.deprecated.tests',
