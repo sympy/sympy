@@ -128,6 +128,10 @@ def test_ComplexFloat_printing():
     assert str(z) == "1.25 + 2.5j"
     assert pretty(z) == "1.25 + 2.5ⅈ"
     assert latex(z) == "1.25 + 2.5i"
+    z = ComplexFloat('1.25', '-2.5')
+    assert str(z) == "1.25 - 2.5j"
+    assert pretty(z) == "1.25 - 2.5ⅈ"
+    assert latex(z) == "1.25 - 2.5i"
 
 
 @XFAIL
