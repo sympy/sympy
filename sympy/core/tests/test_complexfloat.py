@@ -1,5 +1,4 @@
-from sympy import (ComplexFloat, Number, Rational, Symbol, Float, I,
-                   S, sqrt, Pow)
+from sympy import (ComplexFloat, Number, Rational, Symbol, Float, I, S, Pow)
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
@@ -113,11 +112,15 @@ def test_ComplexFloat_arithmetic_fail():
 
 
 def test_ComplexFloat_ops():
+    from sympy import sqrt, conjugate, Abs
     u = S(2+3j)
     v = sqrt(u)
     assert isinstance(v, ComplexFloat)
     # TODO: assert v**2 - u smaller than eps
-    # TODO: Abs
+    assert conjugate(u) == S(2 - 3j)
+    assert u.adjoint() == conjugate(u)
+    assert isinstance(Abs(u), Float)
+    assert Abs(S(3 + 4j)) == Float(5)
 
 
 def test_ComplexFloat_printing():

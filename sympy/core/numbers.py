@@ -1267,6 +1267,16 @@ class ComplexFloat(Number):
             return ComplexFloat(x, y)
         return None
 
+    def _eval_conjugate(self):
+        return ComplexFloat(self.real, -self.imag)
+
+    _eval_adjoint = _eval_conjugate
+
+    def _eval_Abs(self):
+        x = self.real._as_mpf_val(self.real._prec)
+        y = self.imag._as_mpf_val(self.imag._prec)
+        return Float(mlib.mpc_abs((x, y), self._prec))
+
     def __neg__(self):
         return ComplexFloat(-self.real, -self.imag)
 
