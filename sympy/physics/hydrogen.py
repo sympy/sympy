@@ -85,7 +85,7 @@ def R_nl(n, l, r, Z=1):
 
 def psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
-    Returns the Hydrogen wave function psi_{nlm}. It's the product of 
+    Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
     
     n, l, m
@@ -98,8 +98,8 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
         polar angle
     Z
         atomic number (1 for Hydrogen, 2 for Helium, ...)
-        
-    Everything is in Hartree atomic units. 
+    
+    Everything is in Hartree atomic units.
     
     Examples
     ========
@@ -111,9 +111,9 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
     >>> theta=Symbol("theta", real=True)
     >>> Z=Symbol("Z", positive=True, integer=True, nonzero=True)
     >>> psi_nlm(1,0,0,r,phi,theta,Z)
-    sqrt(Z**3)*exp(-Z*r)/sqrt(pi)
+    Z**(3/2)*exp(-Z*r)/sqrt(pi)
     >>> psi_nlm(2,1,1,r,phi,theta,Z)
-    -Z*r*sqrt(Z**3)*exp(I*phi)*exp(-Z*r/2)*sin(theta)/(8*sqrt(pi))
+    -Z**(5/2)*r*exp(I*phi)*exp(-Z*r/2)*sin(theta)/(8*sqrt(pi))
     
     Integrating the absolute square of a hydrogen wavefunction psi_{nlm}
     over the whole space leads 1.
