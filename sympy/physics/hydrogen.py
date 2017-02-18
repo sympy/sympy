@@ -87,7 +87,7 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
     Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
-    
+
     n, l, m
         quantum numbers 'n', 'l' and 'm'
     r
@@ -98,9 +98,9 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
         polar angle
     Z
         atomic number (1 for Hydrogen, 2 for Helium, ...)
-    
+
     Everything is in Hartree atomic units.
-    
+
     Examples
     ========
 
@@ -114,12 +114,12 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
     Z**(3/2)*exp(-Z*r)/sqrt(pi)
     >>> psi_nlm(2,1,1,r,phi,theta,Z)
     -Z**(5/2)*r*exp(I*phi)*exp(-Z*r/2)*sin(theta)/(8*sqrt(pi))
-    
+
     Integrating the absolute square of a hydrogen wavefunction psi_{nlm}
     over the whole space leads 1.
-    
+
     The normalization of the hydrogen wavefunctions psi_nlm is:
-    
+
     >>> from sympy import integrate, conjugate, pi, oo, sin
     >>> wf=psi_nlm(2,1,1,r,phi,theta,Z)
     >>> abs_sqrd=wf*conjugate(wf)
@@ -127,7 +127,7 @@ def psi_nlm(n, l, m, r, phi, theta, Z=1):
     >>> integrate(abs_sqrd*jacobi, (r,0,oo), (phi,0,2*pi), (theta,0,pi))
     1
     """
-    
+
     # sympify arguments
     n, l, m, r, phi, theta, Z = S(n), S(l), S(m), S(r), S(phi), S(theta), S(Z)
     # check if values for n,l,m make physically sense
