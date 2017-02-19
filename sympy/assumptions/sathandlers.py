@@ -228,6 +228,15 @@ def evaluate_old_assump(pred):
     """
     return pred.xreplace(Transform(_old_assump_replacer))
 
+class ListAssump():
+    def old():
+        from sympy.core.assumptions import _assume_defined as r
+        print(r)
+    """
+        A call for this function gives back all the old assumptions in the sympy.
+        Straight away prints all the old assumptions.
+
+    """
 
 class CheckOldAssump(UnevaluatedOnFree):
     def apply(self):
