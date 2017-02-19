@@ -1,7 +1,7 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign)
+                             gamma, sign, Max)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -46,6 +46,12 @@ def test_ccode_Pow():
     # Related to gh-11353
     assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
     assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
+
+
+def test_ccode_Max():
+    # Test for gh-11926
+    assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
 
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"

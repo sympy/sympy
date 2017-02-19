@@ -219,6 +219,27 @@ class Set(Basic):
             return FiniteSet(*[el for el in other if self.contains(el) != True])
 
     def symmetric_difference(self, other):
+        """
+        Returns symmetric difference of `self` and `other`.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, S
+        >>> Interval(1, 3).symmetric_difference(S.Reals)
+        (-oo, 1) U (3, oo)
+        >>> Interval(1, 10).symmetric_difference(S.Reals)
+        (-oo, 1) U (10, oo)
+
+        >>> from sympy import S, EmptySet
+        >>> S.Reals.symmetric_difference(EmptySet())
+        (-oo, oo)
+
+        References
+        ==========
+        .. [1] https://en.wikipedia.org/wiki/Symmetric_difference
+
+        """
         return SymmetricDifference(self, other)
 
     def _symmetric_difference(self, other):
@@ -455,6 +476,17 @@ class Set(Basic):
 
     @property
     def is_open(self):
+        """
+        Property method to check whether a set is open.
+        A set is open if and only if it has an empty intersection with its
+        boundary.
+
+        Examples
+        ========
+        >>> from sympy import S
+        >>> S.Reals.is_open
+        True
+        """
         if not Intersection(self, self.boundary):
             return True
         # We can't confidently claim that an intersection exists
@@ -462,14 +494,50 @@ class Set(Basic):
 
     @property
     def is_closed(self):
+        """
+        A property method to check whether a set is closed. A set is closed
+        if it's complement is an open set.
+
+        Examples
+        ========
+        >>> from sympy import Interval
+        >>> Interval(0, 1).is_closed
+        True
+        """
         return self.boundary.is_subset(self)
 
     @property
     def closure(self):
+        """
+        Property method which returns the closure of a set.
+        The closure is defined as the union of the set itself and its
+        boundary.
+
+        Examples
+        ========
+        >>> from sympy import S, Interval
+        >>> S.Reals.closure
+        (-oo, oo)
+        >>> Interval(0, 1).closure
+        [0, 1]
+        """
         return self + self.boundary
 
     @property
     def interior(self):
+        """
+        Property method which returns the interior of a set.
+        The interior of a set S consists all points of S that do not
+        belong to the boundary of S.
+
+        Examples
+        ========
+        >>> from sympy import Interval
+        >>> Interval(0, 1).interior
+        (0, 1)
+        >>> Interval(0, 1).boundary.interior
+        EmptySet()
+        """
         return self - self.boundary
 
     @property
@@ -539,7 +607,7 @@ class ProductSet(Set):
 
     >>> coin = FiniteSet('H', 'T')
     >>> set(coin**2)
-    set([(H, H), (H, T), (T, H), (T, T)])
+    {(H, H), (H, T), (T, H), (T, T)}
 
 
     Notes
@@ -622,6 +690,8 @@ class ProductSet(Set):
                 for a, b in zip(self.sets, other.sets))
 
     def _union(self, other):
+        if other.is_subset(self):
+            return self
         if not other.is_ProductSet:
             return None
         if len(other.args) != len(self.args):
@@ -664,6 +734,11 @@ class ProductSet(Set):
 
     def __len__(self):
         return Mul(*[len(s) for s in self.args])
+
+    def __bool__(self):
+        return all([bool(s) for s in self.args])
+
+    __nonzero__ = __bool__
 
 
 class Interval(Set, EvalfMixin):
@@ -737,6 +812,8 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
+            if start == S.Infinity or start == S.NegativeInfinity:
+                return S.EmptySet
             return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
@@ -840,6 +917,8 @@ class Interval(Set, EvalfMixin):
 
         See Set._intersect for docstring
         """
+        if other.is_EmptySet:
+            return other
         # We only know how to intersect with other intervals
         if not other.is_Interval:
             return None
@@ -1390,7 +1469,7 @@ class Intersection(Set):
         args = flatten(args)
 
         if len(args) == 0:
-            return S.EmptySet
+            return S.UniversalSet
 
         # args can't be ordered for Partition see issue #9608
         if 'Partition' not in [type(a).__name__ for a in args]:

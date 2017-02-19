@@ -38,6 +38,10 @@ class AskSymmetricHandler(CommonHandler):
         factor, mmul = expr.as_coeff_mmul()
         if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
             return True
+        # TODO: implement sathandlers system for the matrices.
+        # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
+        if ask(Q.diagonal(expr), assumptions):
+            return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
             if len(mmul.args) == 2:
                 return True
@@ -51,6 +55,10 @@ class AskSymmetricHandler(CommonHandler):
     def MatrixSymbol(expr, assumptions):
         if not expr.is_square:
             return False
+        # TODO: implement sathandlers system for the matrices.
+        # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
+        if ask(Q.diagonal(expr), assumptions):
+            return True
         if Q.symmetric(expr) in conjuncts(assumptions):
             return True
 
@@ -66,6 +74,10 @@ class AskSymmetricHandler(CommonHandler):
 
     @staticmethod
     def MatrixSlice(expr, assumptions):
+        # TODO: implement sathandlers system for the matrices.
+        # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
+        if ask(Q.diagonal(expr), assumptions):
+            return True
         if not expr.on_diag:
             return None
         else:
@@ -366,7 +378,13 @@ class AskDiagonalHandler(CommonHandler):
     """
 
     @staticmethod
+    def _is_empty_or_1x1(expr):
+        return expr.shape == (0, 0) or expr.shape == (1, 1)
+
+    @staticmethod
     def MatMul(expr, assumptions):
+        if AskDiagonalHandler._is_empty_or_1x1(expr):
+            return True
         factor, matrices = expr.as_coeff_matrices()
         if all(ask(Q.diagonal(m), assumptions) for m in matrices):
             return True
@@ -378,6 +396,8 @@ class AskDiagonalHandler(CommonHandler):
 
     @staticmethod
     def MatrixSymbol(expr, assumptions):
+        if AskDiagonalHandler._is_empty_or_1x1(expr):
+            return True
         if Q.diagonal(expr) in conjuncts(assumptions):
             return True
 
@@ -393,6 +413,8 @@ class AskDiagonalHandler(CommonHandler):
 
     @staticmethod
     def MatrixSlice(expr, assumptions):
+        if AskDiagonalHandler._is_empty_or_1x1(expr):
+            return True
         if not expr.on_diag:
             return None
         else:

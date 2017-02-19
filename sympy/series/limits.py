@@ -4,10 +4,12 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-
+from sympy.core.exprtools import factor_terms
 
 def limit(e, z, z0, dir="+"):
     """
@@ -122,6 +124,7 @@ class Limit(Expr):
     def doit(self, **hints):
         """Evaluates limit"""
         from sympy.series.limitseq import limit_seq
+        from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
 
@@ -141,15 +144,12 @@ class Limit(Expr):
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_positive:
-            e = e.rewrite(factorial, gamma)
+            e = e.rewrite([factorial, RisingFactorial], gamma)
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
+                e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)

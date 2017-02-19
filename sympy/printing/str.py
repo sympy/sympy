@@ -74,13 +74,14 @@ class StrPrinter(Printer):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+    def _print_Not(self, expr):
+        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
+
     def _print_And(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
@@ -502,6 +503,9 @@ class StrPrinter(Printer):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
@@ -619,11 +623,14 @@ class StrPrinter(Printer):
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
-        if args:
-            args = '[%s]' % args
-        return '%s(%s)' % (type(s).__name__, args)
+        if not args:
+            return "set()"
+        return '{%s}' % args
 
-    _print_frozenset = _print_set
+    def _print_frozenset(self, s):
+        if not s:
+            return "frozenset()"
+        return "frozenset(%s)" % self._print_set(s)
 
     def _print_SparseMatrix(self, expr):
         from sympy.matrices import Matrix

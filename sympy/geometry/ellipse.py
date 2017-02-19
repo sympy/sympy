@@ -581,7 +581,7 @@ class Ellipse(GeometrySet):
 
     @property
     def focus_distance(self):
-        """The focale distance of the ellipse.
+        """The focal distance of the ellipse.
 
         The distance between the center and one focus.
 
@@ -1137,7 +1137,7 @@ class Ellipse(GeometrySet):
         Ellipse(Point2D(-1, 0), 2, 1)
         """
         if self.hradius == self.vradius:
-            return self.func(*self.args)
+            return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
             return super(Ellipse, self).rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
@@ -1324,7 +1324,7 @@ class Circle(Ellipse):
     >>> c1.hradius, c1.vradius, c1.radius
     (5, 5, 5)
 
-    >>> # a circle costructed from three points
+    >>> # a circle constructed from three points
     >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point2D(1/2, 1/2))
