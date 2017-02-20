@@ -604,6 +604,12 @@ class Mul(Expr, AssocOp):
         # order commutative part canonically
         _mulsort(c_part)
 
+        # check if we have Float*I
+        if len(c_part) >= 1 and c_part[0] is S.ImaginaryUnit:
+            from sympy import ComplexFloat   # TODO: add .is_ComplexFloat?
+            if coeff.is_Float or isinstance(coeff, ComplexFloat):
+                coeff *= c_part.pop(0)
+
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
             c_part.insert(0, coeff)

@@ -147,24 +147,49 @@ def test_Float_greedy_make_ComplexFloat():
     assert isinstance(f/I, ComplexFloat)
     assert isinstance(f + I, ComplexFloat)
     assert isinstance(f - I, ComplexFloat)
+    assert isinstance(I*f, ComplexFloat)
+    assert isinstance(I/f, ComplexFloat)
+    assert isinstance(f*(I + 2), ComplexFloat)
+    assert isinstance((I + 2)*f, ComplexFloat)
 
 
 @XFAIL
 def test_Float_greedy_make_ComplexFloat_fails():
     f = Float(6)
-    assert isinstance(I*f, ComplexFloat)
-    assert isinstance(I/f, ComplexFloat)
     assert isinstance(I + f, ComplexFloat)
     assert isinstance(I - f, ComplexFloat)
+    assert isinstance(f + 2*I, ComplexFloat)
+    assert isinstance(f - 2*I, ComplexFloat)
 
 
-@XFAIL
 def test_I_ops_greedy_make_ComplexFloat():
+    assert isinstance(1.0*I, ComplexFloat)
+    assert isinstance(I*1.0, ComplexFloat)
+    assert isinstance(1.0/I, ComplexFloat)
+    assert isinstance(I/1.0, ComplexFloat)
     assert isinstance(4.2*I, ComplexFloat)
     assert isinstance(I*4.2, ComplexFloat)
     assert isinstance(4.2/I, ComplexFloat)
     assert isinstance(I/4.2, ComplexFloat)
+
+
+@XFAIL
+def test_I_ops_greedy_make_ComplexFloa_fail():
     assert isinstance(4.2 + I, ComplexFloat)
     assert isinstance(I + 4.2, ComplexFloat)
     assert isinstance(4.2 - I, ComplexFloat)
     assert isinstance(I - 4.2, ComplexFloat)
+    assert isinstance(4.2 + 2*I, ComplexFloat)
+    assert isinstance(2*I + 4.2, ComplexFloat)
+    assert isinstance(4.2 - 2*I, ComplexFloat)
+    assert isinstance(2*I - 4.2, ComplexFloat)
+
+
+def test_Mul_combines_I_with_Float_and_ComplexFloat():
+    from sympy import Mul
+    assert Mul(S(2.0), I, S(3)) == S(6.0j)
+    assert Mul(S(2), I, S(3.0)) == S(6.0j)
+    assert Mul(S(2.0), -I, S(3)) == S(-6.0j)
+    assert Mul(S(2), -I, S(3.0)) == S(-6.0j)
+    assert Mul(S(2), S(3), I, S(2.0)) == S(12.0j)
+    assert Mul(S(2), S(2.0 + 3.0j), I, S(5.0)) == S(-30.0 + 20.0j)
