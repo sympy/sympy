@@ -1212,6 +1212,8 @@ class ComplexFloat(Number):
 
     is_complex = True
 
+    is_ComplexFloat = True
+
     def __new__(cls, real, imag=None, prec=None):
         # TODO: do something with prec
         if imag is None:

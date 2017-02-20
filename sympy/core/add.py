@@ -189,8 +189,7 @@ class Add(Expr, AssocOp):
                 terms[s] = c
 
         # combine to ComplexFloat if we have 1.1 + 2*I + ...
-        from sympy import ComplexFloat  # TODO: add _is_ComplexFloat
-        if coeff.is_Float or isinstance(coeff, ComplexFloat):
+        if coeff.is_Float or coeff.is_ComplexFloat:
             c = terms.pop(S.ImaginaryUnit, None)
             if c:
                 coeff += c*S.ImaginaryUnit
