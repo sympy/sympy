@@ -1157,7 +1157,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     return expr
 
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None,
+def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     rational_alg='base10'):
     """
     Find a simple representation for a number or, if there are free symbols or
