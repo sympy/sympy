@@ -203,6 +203,8 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
+get_old_assump = _assume_defined
+
 
 class StdFactKB(FactKB):
     """A FactKB specialised for the built-in rules
