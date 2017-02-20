@@ -1227,6 +1227,10 @@ class ComplexFloat(Number):
         return obj
 
     @property
+    def _mpc_(self):
+        return (self.real._mpf_, self.imag._mpf_)
+
+    @property
     def _prec(self):
         return min(self.real._prec, self.imag._prec)
 
@@ -1264,16 +1268,14 @@ class ComplexFloat(Number):
         expt is symbolic object but not equal to NaN, 0, 1
         """
         if isinstance(expt, Number):
-            x = self.real._as_mpf_val(self._prec)
-            y = self.imag._as_mpf_val(self._prec)
             if isinstance(expt, Integer):
-                (x, y) = mlib.mpc_pow_int((x, y), expt.p, self._prec)
+                (x, y) = mlib.mpc_pow_int(self._mpc_, expt.p, self._prec)
             else:
                 # TODO: hardcoded 15
                 (u, v) = expt.n(15).as_real_imag()
                 u = u._as_mpf_val(u._prec)
                 v = v._as_mpf_val(v._prec)
-                (x, y) = mlib.mpc_pow((x, y), (u, v), self._prec)
+                (x, y) = mlib.mpc_pow(self._mpc_, (u, v), self._prec)
             return ComplexFloat(x, y)
         return None
 
@@ -1283,9 +1285,7 @@ class ComplexFloat(Number):
     _eval_adjoint = _eval_conjugate
 
     def _eval_Abs(self):
-        x = self.real._as_mpf_val(self.real._prec)
-        y = self.imag._as_mpf_val(self.imag._prec)
-        return Float(mlib.mpc_abs((x, y), self._prec))
+        return Float(mlib.mpc_abs(self._mpc_, self._prec))
 
     def __neg__(self):
         return ComplexFloat(-self.real, -self.imag)
@@ -1348,13 +1348,11 @@ class ComplexFloat(Number):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self.imag, -self.real)
         if isinstance(other, Number):
-            x = self.real._as_mpf_val(self._prec)
-            y = self.imag._as_mpf_val(self._prec)
             # TODO: hardcoded 15
             (u, v) = other.n(15).as_real_imag()
             u = u._as_mpf_val(u._prec)
             v = v._as_mpf_val(v._prec)
-            (x, y) = mlib.mpc_div((x, y), (u, v), self._prec)
+            (x, y) = mlib.mpc_div(self._mpc_, (u, v), self._prec)
             return ComplexFloat(x, y)
         return Number.__div__(self, other)
 
