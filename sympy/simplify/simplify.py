@@ -1158,7 +1158,7 @@ def nthroot(expr, n, max_len=4, prec=15):
 
 
 def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_alg='base10'):
+    rational_conversion='base10'):
     """
     Find a simple representation for a number or, if there are free symbols or
     if rational=True, then replace Floats with their Rational equivalents. If
@@ -1180,9 +1180,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
-    When converting to rational, if rational_alg='base10' (the default), then
+    When converting to rational, if rational_conversion='base10' (the default), then
     convert floats to rationals using their base-10 (string) representation.
-    When rational_alg='exact' it uses the exact, base-2 representation.
+    When rational_conversion='exact' it uses the exact, base-2 representation.
 
     Examples
     ========
@@ -1197,7 +1197,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     >>> nsimplify(pi, tolerance=0.01)
     22/7
 
-    >>> nsimplify(0.333333333333333, rational=True, rational_alg='exact')
+    >>> nsimplify(0.333333333333333, rational=True, rational_conversion='exact')
     6004799503160655/18014398509481984
     >>> nsimplify(0.333333333333333, rational=True)
     1/3
@@ -1218,7 +1218,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
-        return _real_to_rational(expr, tolerance, rational_alg)
+        return _real_to_rational(expr, tolerance, rational_conversion)
 
     # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
@@ -1281,7 +1281,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             im = nsimplify_real(im)
     except ValueError:
         if rational is None:
-            return _real_to_rational(expr, rational_alg=rational_alg)
+            return _real_to_rational(expr, rational_conversion=rational_conversion)
         return expr
 
     rv = re + im*S.ImaginaryUnit
@@ -1289,10 +1289,10 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # return the value, else return the Rational representation
     if rv != expr or rational is False:
         return rv
-    return _real_to_rational(expr, rational_alg=rational_alg)
+    return _real_to_rational(expr, rational_conversion=rational_conversion)
 
 
-def _real_to_rational(expr, tolerance=None, rational_alg='base10'):
+def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     """
     Replace all reals in expr with rationals.
 
@@ -1303,10 +1303,10 @@ def _real_to_rational(expr, tolerance=None, rational_alg='base10'):
     >>> _real_to_rational(.76 + .1*x**.5)
     sqrt(x)/10 + 19/25
 
-    If rational_alg='base10', this uses the base-10 string. If
-    rational_alg='exact', the exact, base-2 representation is used.
+    If rational_conversion='base10', this uses the base-10 string. If
+    rational_conversion='exact', the exact, base-2 representation is used.
 
-    >>> _real_to_rational(0.333333333333333, rational_alg='exact')
+    >>> _real_to_rational(0.333333333333333, rational_conversion='exact')
     6004799503160655/18014398509481984
     >>> _real_to_rational(0.333333333333333)
     1/3
@@ -1328,12 +1328,12 @@ def _real_to_rational(expr, tolerance=None, rational_alg='base10'):
             r = Rational(tolerance*round(fl/tolerance)
                 ).limit_denominator(int(tolerance))
         else:
-            if rational_alg == 'exact':
+            if rational_conversion == 'exact':
                 r = Rational(fl)
                 reps[key] = r
                 continue
-            elif rational_alg != 'base10':
-                raise ValueError("rational_alg must be 'base10' or 'exact'")
+            elif rational_conversion != 'base10':
+                raise ValueError("rational_conversion must be 'base10' or 'exact'")
 
             r = nsimplify(fl, rational=False)
             # e.g. log(3).n() -> log(3) instead of a Rational
