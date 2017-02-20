@@ -89,6 +89,8 @@ def test_ComplexFloat_arithmetic():
     assert u/3 == ComplexFloat(Rational(2, 3), 1)
     assert u + 3 == ComplexFloat(5, 3)
     assert u - 3 == ComplexFloat(-1, 3)
+    assert u + 2*I == ComplexFloat(2, 5)
+    assert u - 2*I == ComplexFloat(2, 1)
     assert same_and_same_prec(u*2, ComplexFloat(4 + 6j))
     assert same_and_same_prec(2*u, u*2)
     v = ComplexFloat(5 + 7j)
@@ -96,19 +98,11 @@ def test_ComplexFloat_arithmetic():
     assert same_and_same_prec(u + v, ComplexFloat(7, 10))
     assert same_and_same_prec(u - v, ComplexFloat(-3, -4))
     # TODO: u / v, u**v, same within eps
-
     r = Rational(2, 3)
     assert isinstance(r*u, ComplexFloat)
     assert isinstance(r + u, ComplexFloat)
     assert isinstance(r - u, ComplexFloat)
     assert isinstance(r/u, ComplexFloat)
-
-
-@XFAIL
-def test_ComplexFloat_arithmetic_fail():
-    u = ComplexFloat(2 + 3j)
-    assert u + 2*I == ComplexFloat(2, 5)
-    assert u - 2*I == ComplexFloat(2, 1)
 
 
 def test_ComplexFloat_ops():
@@ -151,15 +145,28 @@ def test_Float_greedy_make_ComplexFloat():
     assert isinstance(I/f, ComplexFloat)
     assert isinstance(f*(I + 2), ComplexFloat)
     assert isinstance((I + 2)*f, ComplexFloat)
-
-
-@XFAIL
-def test_Float_greedy_make_ComplexFloat_fails():
-    f = Float(6)
     assert isinstance(I + f, ComplexFloat)
     assert isinstance(I - f, ComplexFloat)
     assert isinstance(f + 2*I, ComplexFloat)
     assert isinstance(f - 2*I, ComplexFloat)
+
+
+def test_greedy_make_ComplexFloat_w_symbols():
+    x = Symbol('x')
+    a = 4.2 + x + 2*I
+    b = 4.2 + (2*I + x)
+    c = 4.2 + 2*I + x
+    assert a == b == c == (x + ComplexFloat(4.2, 2))
+    f = Float(4.2)
+    a = f + x + 2*I
+    b = f + (2*I + x)
+    c = f + 2*I + x
+    assert a == b == c == (x + ComplexFloat(4.2, 2))
+    f = ComplexFloat(1.1, 2.2)
+    a = f + x + 2*I
+    b = f + (2*I + x)
+    c = f + 2*I + x
+    assert a == b == c == (x + ComplexFloat(1.1, 4.2))
 
 
 def test_I_ops_greedy_make_ComplexFloat():
@@ -171,10 +178,6 @@ def test_I_ops_greedy_make_ComplexFloat():
     assert isinstance(I*4.2, ComplexFloat)
     assert isinstance(4.2/I, ComplexFloat)
     assert isinstance(I/4.2, ComplexFloat)
-
-
-@XFAIL
-def test_I_ops_greedy_make_ComplexFloa_fail():
     assert isinstance(4.2 + I, ComplexFloat)
     assert isinstance(I + 4.2, ComplexFloat)
     assert isinstance(4.2 - I, ComplexFloat)

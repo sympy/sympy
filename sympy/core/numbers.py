@@ -972,6 +972,10 @@ class Float(Number):
     def __add__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self, 1)
+        if other.is_Mul:
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self, c)
         if isinstance(other, ComplexFloat):
             return ComplexFloat(self) + other
         if isinstance(other, Number) and global_evaluate[0]:
@@ -983,6 +987,10 @@ class Float(Number):
     def __sub__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self, -1)
+        if other.is_Mul:
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self, -c)
         if isinstance(other, ComplexFloat):
             return ComplexFloat(self) - other
         if isinstance(other, Number) and global_evaluate[0]:
@@ -1298,6 +1306,10 @@ class ComplexFloat(Number):
     def __add__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self.real, self.imag + 1)
+        if other.is_Mul:
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self.real, self.imag + c)
         if isinstance(other, Number):
             # TODO: hardcoded 15
             (r,i) = other.n(15).as_real_imag()
@@ -1308,6 +1320,10 @@ class ComplexFloat(Number):
     def __sub__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self.real, self.imag - 1)
+        if other.is_Mul:
+            c, e = other.as_coeff_Mul()
+            if e is S.ImaginaryUnit:
+                return ComplexFloat(self.real, self.imag - c)
         if isinstance(other, Number):
             # TODO: hardcoded 15
             (r,i) = other.n(15).as_real_imag()
