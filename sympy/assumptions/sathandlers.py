@@ -230,7 +230,7 @@ def evaluate_old_assump(pred):
 
 class ListAssump():
     def old():
-        from sympy.core.assumptions import _assume_defined as r
+        from sympy.core.assumptions import get_old_assump as r
         print(r)
     """
         A call for this function gives back all the old assumptions in the sympy.
