@@ -622,14 +622,13 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
                 # faster inline check (than calling rsolve_poly) for a
                 # constant solution to a constant coefficient recurrence.
-                C = Symbol("C" + str(len(symbols)))
-                s = [C]
+                sol = [Symbol("C" + str(len(symbols)))]
             else:
-                C, s = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol, syms = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol = sol.collect(syms)
+                sol = [sol.coeff(s) for s in syms]
 
-            if C is not None and C is not S.Zero:
-                symbols |= set(s)
-
+            for C in sol:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
