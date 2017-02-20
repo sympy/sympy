@@ -146,10 +146,8 @@ class FracField(DefaultPrinting):
 
     def __eq__(self, other):
         return isinstance(other, FracField) and \
-            self.symbols == other.symbols and \
-            self.ngens == other.ngens and \
-            self.domain == other.domain and \
-            self.order == other.order
+            (self.symbols, self.ngens, self.domain, self.order) == \
+            (other.symbols, other.ngens, other.domain, other.order)
 
     def __ne__(self, other):
         return not self.__eq__(other)

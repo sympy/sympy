@@ -60,8 +60,8 @@ class PolynomialRing(Ring, CompositeDomain):
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
         return isinstance(other, PolynomialRing) and \
-            self.dtype.ring == other.dtype.ring and self.domain == other.domain and \
-            self.symbols == other.symbols
+            (self.dtype.ring, self.domain, self.symbols) == \
+            (other.dtype.ring, other.domain, other.symbols)
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

@@ -280,11 +280,9 @@ class PolyRing(DefaultPrinting, IPolys):
         return self._hash
 
     def __eq__(self, other):
-        return (isinstance(other, PolyRing)
-            and self.symbols == other.symbols
-            and self.domain == other.domain
-            and self.ngens == other.ngens
-            and self.order == other.order)
+        return isinstance(other, PolyRing) and \
+            (self.symbols, self.domain, self.ngens, self.order) == \
+            (other.symbols, other.domain, other.ngens, other.order)
 
     def __ne__(self, other):
         return not self.__eq__(other)

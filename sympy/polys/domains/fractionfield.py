@@ -60,9 +60,8 @@ class FractionField(Field, CompositeDomain):
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
         return isinstance(other, FractionField) and \
-            self.dtype.field == other.dtype.field and \
-            self.domain == other.domain and \
-            self.symbols == other.symbols
+            (self.dtype.field, self.domain, self.symbols) ==\
+            (other.dtype.field, other.domain, other.symbols)
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
