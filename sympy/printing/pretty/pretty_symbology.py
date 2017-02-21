@@ -580,3 +580,18 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+
+def is_combining(sym):
+    """Check whether symbol is a unicode modifier.
+
+    See stringPict.width on usage.
+    """
+    if not pretty_use_unicode():
+        return False
+
+    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
+                    u'\N{COMBINING LATIN SMALL LETTER X}' or
+
+                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
+                    u'\N{COMBINING ASTERISK ABOVE}') else False
