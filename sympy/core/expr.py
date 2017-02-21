@@ -3177,7 +3177,7 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        from sympy import Float
+        from sympy import Float, ComplexFloat
         x = self
         if not x.is_number:
             raise TypeError("can't round symbolic expression")
@@ -3190,7 +3190,7 @@ class Expr(Basic, EvalfMixin):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()
-            return i.round(p) + S.ImaginaryUnit*r.round(p)
+            return ComplexFloat(i.round(p), r.round(p))
         if not x:
             return x
         p = int(p)

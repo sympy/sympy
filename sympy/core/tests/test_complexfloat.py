@@ -199,4 +199,18 @@ def test_Mul_combines_I_with_Float_and_ComplexFloat():
 
 
 def test_ComplexFloat_conversions():
+    from sympy import floor, ceiling
     raises(TypeError, lambda: float(S(1.0 + 2.0j)))
+    raises(TypeError, lambda: round(S(1.1 + 2.2j)))
+    raises(TypeError, lambda: int(S(1.1 + 2.2j)))
+    x = Float(S(2)/9)
+    y = Float(S(15)/9)
+    z = x + y*I
+    assert same_and_same_prec(z.round(), ComplexFloat(x.round(), y.round()))
+    assert same_and_same_prec(z.round(1), ComplexFloat(x.round(1), y.round(1)))
+    assert same_and_same_prec(z.round(2), ComplexFloat(x.round(2), y.round(2)))
+    assert z.floor() == I
+    assert z.ceiling() == 1 + 2*I
+    assert floor(z) == I
+    assert floor(z + 1) == 1 + I
+    assert ceiling(z) == 1 + 2*I

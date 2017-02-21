@@ -1263,6 +1263,19 @@ class ComplexFloat(Number):
     def __float__(self):
         raise TypeError("can't convert ComplexFloat to float")
 
+    def __int__(self):
+        raise TypeError("can't convert ComplexFloat to int")
+
+    __long__ = __int__
+
+    def floor(self):
+        r, i = mlib.mpc_floor(self._mpc_, self._prec)
+        return Integer(int(mlib.to_int(r))) + Integer(int(mlib.to_int(i)))*I
+
+    def ceiling(self):
+        r, i = mlib.mpc_ceil(self._mpc_, self._prec)
+        return Integer(int(mlib.to_int(r))) + Integer(int(mlib.to_int(i)))*I
+
     def _eval_evalf(self, prec):
         return ComplexFloat(self.real._eval_evalf(prec), self.imag._eval_evalf(prec))
 
