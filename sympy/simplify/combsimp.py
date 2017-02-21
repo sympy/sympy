@@ -120,14 +120,14 @@ def combsimp(expr):
             return expr
 
 
-        def gamma_factor(x):
-            # return True if there is a gamma factor in shallow args
-            if x.func is gamma:
+        def factorial_factor(x):
+            # return True if there is a factorial factor in shallow args
+            if x.func is factorial:
                 return True
             if x.is_Add or x.is_Mul:
-                return any(gamma_factor(xi) for xi in x.args)
+                return any(factorial_factor(xi) for xi in x.args)
             if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
-                return gamma_factor(x.base)
+                return factorial_factor(x.base)
             return False
 
         # recursion step
