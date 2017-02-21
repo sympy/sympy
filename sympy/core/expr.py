@@ -322,14 +322,11 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from sympy import Float
+        from sympy import Float, ComplexFloat
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
-            re, im = x._mpc_
-            re = Float._new(re, prec)
-            im = Float._new(im, prec)*S.ImaginaryUnit
-            return re + im
+            return ComplexFloat._new(x._mpc_, prec)
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
 

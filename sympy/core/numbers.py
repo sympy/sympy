@@ -1226,6 +1226,23 @@ class ComplexFloat(Number):
         obj.imag = Float(imag, prec)
         return obj
 
+    @classmethod
+    def _new(cls, _mpc_, _prec):
+        re, im = _mpc_
+        if (re, im) == (_mpf_zero, _mpf_zero):
+            return S.Zero  # XXX this is different from ComplexFloat()
+        obj = Expr.__new__(cls)
+        # TODO: be careful, gives S.Zero
+        obj.real = Float._new(re, _prec)
+        obj.imag = Float._new(im, _prec)
+        if obj.real is S.Zero:
+            obj.real = Float(0);
+            obj.real._prec = _prec
+        if obj.imag is S.Zero:
+            obj.imag = Float(0);
+            obj.imag._prec = _prec
+        return obj
+
     @property
     def _mpc_(self):
         return (self.real._mpf_, self.imag._mpf_)
