@@ -183,9 +183,13 @@ class VectorPrettyPrinter(PrettyPrinter):
                 return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
-        # the following condition would happen with some sort of non-standard
-        # dynamic symbol I guess, so we'll just print the SymPy way
-        if len(pform.picture) > 1:
+
+        # 1 condition: would happen with some sort of non-standard
+        # dynamic symbol I guess
+        # 2 condition: w/o unicode support it is impossible to draw
+        # dots above symbols
+        # So we'll just print the SymPy way
+        if len(pform.picture) > 1 or not self._use_unicode:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         dots = {0 : u"",
