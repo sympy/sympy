@@ -119,14 +119,6 @@ def combsimp(expr):
         if expr.is_Atom:
             return expr
 
-        def gamma_rat(x):
-            # helper to simplify ratios of gammas
-            was = x.count(gamma)
-            xx = x.replace(gamma, lambda n: _rf(1, (n - 1).expand()
-                ).replace(_rf, lambda a, b: gamma(a + b)/gamma(a)))
-            if xx.count(gamma) < was:
-                x = xx
-            return x
 
         def gamma_factor(x):
             # return True if there is a gamma factor in shallow args
@@ -154,34 +146,6 @@ def combsimp(expr):
             if nc:
                 return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
             level += 1
-
-        # pure gamma handling, not factor absorbtion
-        if level == 2:
-            sifted = sift(expr.args, gamma_factor)
-            gamma_ind = Mul(*sifted.pop(False, []))
-            d = Mul(*sifted.pop(True, []))
-            assert not sifted
-
-            nd, dd = d.as_numer_denom()
-            for ipass in range(2):
-                args = list(ordered(Mul.make_args(nd)))
-                for i, ni in enumerate(args):
-                    if ni.is_Add:
-                        ni, dd = Add(*[
-                            rule_gamma(gamma_rat(a/dd), level + 1) for a in ni.args]
-                            ).as_numer_denom()
-                        args[i] = ni
-                        if not dd.has(gamma):
-                            break
-                nd = Mul(*args)
-                if ipass ==  0 and not gamma_factor(nd):
-                    break
-                nd, dd = dd, nd  # now process in reversed order
-            expr = gamma_ind*nd/dd
-            if not (expr.is_Mul and (gamma_factor(dd) or gamma_factor(nd))):
-                return expr
-            level += 1
-
         # iteration until constant
         if level == 3:
             while True:
