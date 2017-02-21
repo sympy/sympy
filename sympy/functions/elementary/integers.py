@@ -121,7 +121,7 @@ class floor(RoundFunction):
             if arg.is_Rational:
                 return Integer(arg.p // arg.q)
             elif arg.is_Float:
-                return Integer(int(arg.floor()))
+                return arg.floor()
             else:
                 return arg
         elif isinstance(arg, ceiling):
@@ -196,7 +196,7 @@ class ceiling(RoundFunction):
             if arg.is_Rational:
                 return -Integer(-arg.p // arg.q)
             elif arg.is_Float:
-                return Integer(int(arg.ceiling()))
+                return arg.ceiling()
             else:
                 return arg
         elif isinstance(arg, ceiling):
