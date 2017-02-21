@@ -1260,6 +1260,9 @@ class ComplexFloat(Number):
     def __complex__(self):
         return complex(float(self.real), float(self.imag))
 
+    def __float__(self):
+        raise TypeError("can't convert ComplexFloat to float")
+
     def _eval_evalf(self, prec):
         return ComplexFloat(self.real._eval_evalf(prec), self.imag._eval_evalf(prec))
 

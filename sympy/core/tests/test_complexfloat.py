@@ -196,3 +196,7 @@ def test_Mul_combines_I_with_Float_and_ComplexFloat():
     assert Mul(S(2), -I, S(3.0)) == S(-6.0j)
     assert Mul(S(2), S(3), I, S(2.0)) == S(12.0j)
     assert Mul(S(2), S(2.0 + 3.0j), I, S(5.0)) == S(-30.0 + 20.0j)
+
+
+def test_ComplexFloat_conversions():
+    raises(TypeError, lambda: float(S(1.0 + 2.0j)))
