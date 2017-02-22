@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.cache import cacheit
+from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
@@ -356,7 +357,7 @@ class AssumptionKeys(object):
         return Predicate('finite')
 
     @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
     def bounded(self):
         """
         See documentation of ``Q.finite``.
@@ -376,7 +377,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
     def infinity(self):
         """
         See documentation of ``Q.infinite``.
@@ -384,7 +385,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
@@ -527,7 +528,7 @@ class AssumptionKeys(object):
         False
         >>> ask(~Q.zero(I))
         True
-        >>> ask(Q.nonzero(oo))
+        >>> ask(Q.nonzero(oo))  #doctest: +SKIP
         False
 
         """
@@ -1177,14 +1178,18 @@ class AssumptionKeys(object):
 
 Q = AssumptionKeys()
 
-
-def _extract_facts(expr, symbol):
+def _extract_facts(expr, symbol, check_reversed_rel=True):
     """
     Helper for ask().
 
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
     """
+    if isinstance(symbol, Relational):
+        if check_reversed_rel:
+            rev = _extract_facts(expr, symbol.reversed, False)
+            if rev is not None:
+                return rev
     if isinstance(expr, bool):
         return
     if not expr.has(symbol):
@@ -1227,7 +1232,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
     True
-    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
     **Remarks**
@@ -1352,7 +1357,7 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
-        mapping[key] = set([key])
+        mapping[key] = {key}
         for other_key in known_facts_keys:
             if other_key != key:
                 if ask_full_inference(other_key, key, known_facts_cnf):

@@ -264,12 +264,8 @@ class Dimension(Expr):
                 d[key] = other[key]
         d = Dimension(d)
 
-        # if all dimensions are zero, then return 1 so that there is no more
-        # dimensions
-        if d.is_dimensionless:
-            return 1
-        else:
-            return d
+
+        return d
 
     def div(self, other):
         if not isinstance(other, Dimension):
@@ -284,10 +280,7 @@ class Dimension(Expr):
                 d[key] = -other[key]
         d = Dimension(d)
 
-        if d.is_dimensionless:
-            return 1
-        else:
-            return d
+        return d
 
     def rdiv(self, other):
         return other * pow(self, -1)

@@ -842,10 +842,10 @@ def dup_mirror(f, K):
     -x**3 + 2*x**2 + 4*x + 2
 
     """
-    f, n, a = list(f), len(f) - 1, -K.one
+    f = list(f)
 
-    for i in range(n - 1, -1, -1):
-        f[i], a = a*f[i], -a
+    for i in range(len(f) - 2, -1, -2):
+        f[i] = -f[i]
 
     return f
 

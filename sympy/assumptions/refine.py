@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
-from sympy.core.logic import fuzzy_not
 
 
 def refine(expr, assumptions=True):
@@ -31,7 +30,9 @@ def refine(expr, assumptions=True):
         # TODO: this will probably not work with Integral or Polynomial
         expr = expr.func(*args)
     if hasattr(expr, '_eval_refine'):
-        return expr._eval_refine()
+        ref_expr = expr._eval_refine(assumptions)
+        if ref_expr is not None:
+            return ref_expr
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None:
@@ -61,6 +62,7 @@ def refine_abs(expr, assumptions):
     -x
 
     """
+    from sympy.core.logic import fuzzy_not
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
@@ -168,33 +170,6 @@ def refine_Pow(expr, assumptions):
                     return expr
 
 
-def refine_exp(expr, assumptions):
-    """
-    Handler for exponential function.
-
-    >>> from sympy import Symbol, Q, exp, I, pi
-    >>> from sympy.assumptions.refine import refine_exp
-    >>> from sympy.abc import x
-    >>> refine_exp(exp(pi*I*2*x), Q.real(x))
-    >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
-    1
-
-    """
-    arg = expr.args[0]
-    if arg.is_Mul:
-        coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
-        if coeff:
-            if ask(Q.integer(2*coeff), assumptions):
-                if ask(Q.even(coeff), assumptions):
-                    return S.One
-                elif ask(Q.odd(coeff), assumptions):
-                    return S.NegativeOne
-                elif ask(Q.even(coeff + S.Half), assumptions):
-                    return -S.ImaginaryUnit
-                elif ask(Q.odd(coeff + S.Half), assumptions):
-                    return S.ImaginaryUnit
-
-
 def refine_atan2(expr, assumptions):
     """
     Handler for the atan2 function
@@ -257,7 +232,6 @@ def refine_Relational(expr, assumptions):
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
-    'exp': refine_exp,
     'atan2': refine_atan2,
     'Equality': refine_Relational,
     'Unequality': refine_Relational,

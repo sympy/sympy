@@ -12,9 +12,19 @@ from .function import (_coeff_isneg, expand_complex, expand_multinomial,
 from .logic import fuzzy_bool, fuzzy_not
 from .compatibility import as_int, range
 from .evaluate import global_evaluate
+from sympy.utilities.iterables import sift
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
-from sympy.utilities.iterables import sift
+
+from math import sqrt as _sqrt
+
+
+
+def isqrt(n):
+    """Return the largest integer less than or equal to sqrt(n)."""
+    if n < 17984395633462800708566937239552:
+        return int(_sqrt(n))
+    return integer_nthroot(int(n), 2)[0]
 
 
 def integer_nthroot(y, n):
@@ -23,14 +33,27 @@ def integer_nthroot(y, n):
     and a boolean indicating whether the result is exact (that is,
     whether x**n == y).
 
+    Examples
+    ========
+
     >>> from sympy import integer_nthroot
-    >>> integer_nthroot(16,2)
+    >>> integer_nthroot(16, 2)
     (4, True)
-    >>> integer_nthroot(26,2)
+    >>> integer_nthroot(26, 2)
     (5, False)
 
+    To simply determine if a number is a perfect square, the is_square
+    function should be used:
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(26)
+    False
+
+    See Also
+    ========
+    sympy.ntheory.primetest.is_square
     """
-    y, n = int(y), int(n)
+    y, n = as_int(y), as_int(n)
     if y < 0:
         raise ValueError("y must be nonnegative")
     if n < 1:
@@ -73,14 +96,14 @@ def integer_nthroot(y, n):
     while t > y:
         x -= 1
         t = x**n
-    return x, t == y
+    return int(x), t == y  # int converts long to int if possible
 
 
 class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
 
-    Singleton definitions involving (0, 1, -1, oo, -oo):
+    Singleton definitions involving (0, 1, -1, oo, -oo, I, -I):
 
     +--------------+---------+-----------------------------------------------+
     | expr         | value   | reason                                        |
@@ -124,6 +147,18 @@ class Pow(Expr):
     | (-oo)**oo    | nan     |                                               |
     | (-oo)**-oo   |         |                                               |
     +--------------+---------+-----------------------------------------------+
+    | oo**I        | nan     | oo**e could probably be best thought of as    |
+    | (-oo)**I     |         | the limit of x**e for real x as x tends to    |
+    |              |         | oo. If e is I, then the limit does not exist  |
+    |              |         | and nan is used to indicate that.             |
+    +--------------+---------+-----------------------------------------------+
+    | oo**(1+I)    | zoo     | If the real part of e is positive, then the   |
+    | (-oo)**(1+I) |         | limit of abs(x**e) is oo. So the limit value  |
+    |              |         | is zoo.                                       |
+    +--------------+---------+-----------------------------------------------+
+    | oo**(-1+I)   | 0       | If the real part of e is negative, then the   |
+    | -oo**(-1+I)  |         | limit is 0.                                   |
+    +--------------+---------+-----------------------------------------------+
 
     Because symbolic computations are more flexible that floating point
     calculations and we prefer to never return an incorrect answer,
@@ -162,7 +197,9 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif e.is_integer and _coeff_isneg(b):
+            # Only perform autosimplification if exponent or base is a Symbol or number
+            elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
+                e.is_integer and _coeff_isneg(b):
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
@@ -205,6 +242,15 @@ class Pow(Expr):
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
+
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask, Q
+        b, e = self.as_base_exp()
+        if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
+            if ask(Q.even(e), assumptions):
+                return Pow(-b, e)
+            elif ask(Q.odd(e), assumptions):
+                return -Pow(-b, e)
 
     def _eval_power(self, other):
         from sympy import Abs, arg, exp, floor, im, log, re, sign
@@ -463,7 +509,12 @@ class Pow(Expr):
 
         if self.base.is_real is False:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
-            return (2*i).is_odd
+            isodd = (2*i).is_odd
+            if isodd is not None:
+                return isodd
+
+        if self.exp.is_negative:
+            return (1/self).is_imaginary
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
@@ -536,6 +587,12 @@ class Pow(Expr):
 
         if old == self.base:
             return new**self.exp._subs(old, new)
+
+        # issue 10829: (4**x - 3*y + 2).subs(2**x, y) -> y**2 - 3*y + 2
+        if old.func is self.func and self.exp == old.exp:
+            l = log(self.base, old.base)
+            if l.is_Number:
+                return Pow(new, l)
 
         if old.func is self.func and self.base == old.base:
             if self.exp.is_Add is False:
@@ -618,6 +675,8 @@ class Pow(Expr):
             expanded = expand_complex(self)
             if expanded != self:
                 return c(expanded)
+        if self.is_real:
+            return self
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose
@@ -1000,6 +1059,8 @@ class Pow(Expr):
         if self.base.is_zero or (self.base - 1).is_zero:
             return True
         elif self.exp.is_rational:
+            if self.base.is_algebraic is False:
+                return self.exp.is_nonzero
             return self.base.is_algebraic
         elif self.base.is_algebraic and self.exp.is_algebraic:
             if ((fuzzy_not(self.base.is_zero)
@@ -1166,7 +1227,7 @@ class Pow(Expr):
                     dn = 0
 
                 terms = [1/prefactor]
-                for m in range(1, ceiling((n - dn)/l*cf)):
+                for m in range(1, ceiling((n - dn + 1)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -1330,7 +1391,7 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self, radical=False):
+    def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1374,8 +1435,8 @@ class Pow(Expr):
         """
 
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive(radical=radical))
-        ce, pe = e.as_content_primitive(radical=radical)
+        b = _keep_coeff(*b.as_content_primitive(radical=radical, clear=clear))
+        ce, pe = e.as_content_primitive(radical=radical, clear=clear)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -1399,7 +1460,7 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive(radical=radical)  # h is positive
+            h, t = b.as_content_primitive(radical=radical, clear=clear)  # h is positive
             c, m = self.func(h, e).as_coeff_Mul()  # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true
@@ -1433,6 +1494,13 @@ class Pow(Expr):
             return None
 
         return e.equals(0)
+
+    def _eval_difference_delta(self, n, step):
+        b, e = self.args
+        if e.has(n) and not b.has(n):
+            new_e = e.subs(n, n + step)
+            return (b**(new_e - e) - 1) * self
+
 
 from .add import Add
 from .numbers import Integer

@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce, range
+from sympy.core.compatibility import is_sequence, reduce, range, as_int
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
@@ -235,7 +235,7 @@ class Cycle(dict):
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
     A cycle shows the rule to use to move subsets of elements to obtain
-    a permutation. The Cycle class is more flexible that Permutation in
+    a permutation. The Cycle class is more flexible than Permutation in
     that 1) all elements need not be present in order to investigate how
     multiple cycles act in sequence and 2) it can contain singletons:
 
@@ -244,12 +244,12 @@ class Cycle(dict):
     A Cycle will automatically parse a cycle given as a tuple on the rhs:
 
     >>> Cycle(1, 2)(2, 3)
-    Cycle(1, 3, 2)
+    (1 3 2)
 
     The identity cycle, Cycle(), can be used to start a product:
 
     >>> Cycle()(1, 2)(2, 3)
-    Cycle(1, 3, 2)
+    (1 3 2)
 
     The array form of a Cycle can be obtained by calling the list
     method (or passing it to the list function) and all elements from
@@ -277,9 +277,9 @@ class Cycle(dict):
     element is always shown -- as a singleton if necessary:
 
     >>> Cycle(1, 4, 10)(4, 5)
-    Cycle(1, 5, 4, 10)
+    (1 5 4 10)
     >>> Cycle(1, 2)(4)(5)(10)
-    Cycle(1, 2)(10)
+    (1 2)(10)
 
     The array form can be used to instantiate a Permutation so other
     properties of the permutation can be investigated:
@@ -305,6 +305,7 @@ class Cycle(dict):
     """
     def __missing__(self, arg):
         """Enter arg into dictionary and return arg."""
+        arg = as_int(arg)
         self[arg] = arg
         return arg
 
@@ -321,7 +322,7 @@ class Cycle(dict):
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
 
         An instance of a Cycle will automatically parse list-like
         objects and Permutations that are on the right. It is more
@@ -330,9 +331,9 @@ class Cycle(dict):
 
         >>> a = C(1, 2)
         >>> a(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
         >>> a(2, 3)(4, 5)
-        Cycle(1, 3, 2)(4, 5)
+        (1 3 2)(4 5)
 
         """
         rv = Cycle(*other)
@@ -369,7 +370,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i])
+            big = max([i for i in self.keys() if self[i] != i] + [0])
             size = max(size, big + 1)
         else:
             size = self.size
@@ -383,9 +384,9 @@ class Cycle(dict):
 
         >>> from sympy.combinatorics import Cycle
         >>> Cycle(1, 2)
-        Cycle(1, 2)
+        (1 2)
         >>> print(_)
-        Cycle(1, 2)
+        (1 2)
         >>> list(Cycle(1, 2).items())
         [(1, 2), (2, 1)]
         """
@@ -398,6 +399,29 @@ class Cycle(dict):
             s += '(%s)' % big
         return 'Cycle%s' % s
 
+    def __str__(self):
+        """We want it to be printed in a Cycle notation with no
+        comma in-between.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Cycle
+        >>> Cycle(1, 2)
+        (1 2)
+        >>> Cycle(1, 2, 4)(5, 6)
+        (1 2 4)(5 6)
+        """
+        if not self:
+            return '()'
+        cycles = Permutation(self).cyclic_form
+        s = ''.join(str(tuple(c)) for c in cycles)
+        big = self.size - 1
+        if not any(i == big for c in cycles for i in c):
+            s += '(%s)' % big
+        s = s.replace(',', '')
+        return s
+
     def __init__(self, *args):
         """Load up a Cycle instance with the values for the cycle.
 
@@ -406,7 +430,7 @@ class Cycle(dict):
 
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2, 6)
-        Cycle(1, 2, 6)
+        (1 2 6)
         """
 
         if not args:
@@ -420,7 +444,9 @@ class Cycle(dict):
                 for k, v in args[0].items():
                     self[k] = v
                 return
-        args = [int(a) for a in args]
+        args = [as_int(a) for a in args]
+        if any(i < 0 for i in args):
+            raise ValueError('negative integers are not allowed in a cycle.')
         if has_dups(args):
             raise ValueError('All elements must be unique in a cycle.')
         for i in range(-len(args), 0):
@@ -428,6 +454,8 @@ class Cycle(dict):
 
     @property
     def size(self):
+        if not self:
+            return 0
         return max(self.keys()) + 1
 
     def copy(self):
@@ -615,7 +643,7 @@ class Permutation(Basic):
 
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(1, 2)(3, 4, 5)
+    (1 2)(3 4 5)
     >>> Permutation.print_cyclic = False
 
     2) Regardless of the setting, a list of elements in the array for cyclic
@@ -642,7 +670,7 @@ class Permutation(Basic):
     >>> p = Permutation([1, 0, 2, 3])
     >>> Permutation.print_cyclic = True
     >>> p
-    Permutation(3)(0, 1)
+    (3)(0 1)
     >>> Permutation.print_cyclic = False
 
     The 2 was not printed but it is still there as can be seen with the
@@ -664,7 +692,7 @@ class Permutation(Basic):
     2
     >>> q(1) # the easy way
     2
-    >>> dict([(i, q(i)) for i in range(q.size)]) # showing the bijection
+    >>> {i: q(i) for i in range(q.size)} # showing the bijection
     {0: 5, 1: 2, 2: 3, 3: 4, 4: 1, 5: 0}
 
     The full cyclic form (including singletons) can be obtained:
@@ -950,6 +978,30 @@ class Permutation(Basic):
         [0, 2, 1, 3, 5, 4]
         """
         return self._array_form[:]
+
+    def __repr__(self):
+        from sympy.combinatorics.permutations import Permutation, Cycle
+        if Permutation.print_cyclic:
+            if not self.size:
+                return 'Permutation()'
+            # before taking Cycle notation, see if the last element is
+            # a singleton and move it to the head of the string
+            s = Cycle(self)(self.size - 1).__repr__()[len('Cycle'):]
+            last = s.rfind('(')
+            if not last == 0 and ',' not in s[last:]:
+                s = s[last:] + s[:last]
+            return 'Permutation%s' %s
+        else:
+            s = self.support()
+            if not s:
+                if self.size < 5:
+                    return 'Permutation(%s)' % str(self.array_form)
+                return 'Permutation([], size=%s)' % self.size
+            trim = str(self.array_form[:s[-1] + 1]) + ', size=%s' % self.size
+            use = full = str(self.array_form)
+            if len(trim) < len(full):
+                use = trim
+            return 'Permutation(%s)' % use
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
@@ -1241,7 +1293,7 @@ class Permutation(Basic):
         >>> [[1, 2]]*[[2, 3]]*Permutation([]) # doctest: +SKIP
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2)(2, 3)
-        Cycle(1, 3, 2)
+        (1 3 2)
 
         """
         a = self.array_form
@@ -1359,9 +1411,9 @@ class Permutation(Basic):
         in general from p^(q^r)
 
         >>> q^p^r
-        Permutation(9)(1, 4, 8)
+        (9)(1 4 8)
         >>> q^(p^r)
-        Permutation(9)(1, 8, 6)
+        (9)(1 8 6)
 
         For a given r and p, both of the following are conjugates of p:
         ~r*p*r and r*p*~r. But these are not necessarily the same:
@@ -1440,11 +1492,11 @@ class Permutation(Basic):
         >>> Permutation.print_cyclic = True
 
         >>> Permutation.from_sequence('SymPy')
-        Permutation(4)(0, 1, 3)
+        (4)(0 1 3)
         >>> _(sorted("SymPy"))
         ['S', 'y', 'm', 'P', 'y']
         >>> Permutation.from_sequence('SymPy', key=lambda x: x.lower())
-        Permutation(4)(0, 2)(1, 3)
+        (4)(0 2)(1 3)
         """
         ic = list(zip(i, list(range(len(i)))))
         if key:
@@ -1534,9 +1586,9 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         >>> Permutation([[0, 1], [2, 3], [4, 5]]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         """
         return set(self.array_form)
 

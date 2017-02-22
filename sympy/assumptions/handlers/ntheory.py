@@ -18,7 +18,7 @@ class AskPrimeHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_prime
 
     @staticmethod
@@ -45,13 +45,11 @@ class AskPrimeHandler(CommonHandler):
         if expr.is_number:
             return AskPrimeHandler._number(expr, assumptions)
         for arg in expr.args:
-            if ask(Q.integer(arg), assumptions):
-                pass
-            else:
-                break
-        else:
-            # a product of integers can't be a prime
-            return False
+            if not ask(Q.integer(arg), assumptions):
+                return None
+        for arg in expr.args:
+            if arg.is_number and arg.is_composite:
+                return False
 
     @staticmethod
     def Pow(expr, assumptions):
@@ -82,7 +80,7 @@ class AskPrimeHandler(CommonHandler):
 class AskCompositeHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_composite
 
     @staticmethod
@@ -108,7 +106,7 @@ class AskCompositeHandler(CommonHandler):
 class AskEvenHandler(CommonHandler):
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_even
 
     @staticmethod
@@ -236,7 +234,7 @@ class AskOddHandler(CommonHandler):
     """
 
     @staticmethod
-    def Symbol(expr, assumptions):
+    def Expr(expr, assumptions):
         return expr.is_odd
 
     @staticmethod

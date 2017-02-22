@@ -242,6 +242,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 else:
                     c, m = e.as_coeff_Mul(rational=True)
                     if c is not S.One:
+                        if m.is_integer:
+                            return (b, Integer(c.q)), m*Integer(c.p)
                         return (b**m, Integer(c.q)), Integer(c.p)
                     else:
                         return (b**e, S.One), S.One
@@ -379,15 +381,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if term.is_commutative:
                 c_powers.append(list(term.as_base_exp()))
             else:
-                # This is the logic that combines bases that are
-                # different and non-commutative, but with equal and
-                # commutative exponents: A**x*B**x == (A*B)**x.
-                if nc_part:
-                    b1, e1 = nc_part[-1].as_base_exp()
-                    b2, e2 = term.as_base_exp()
-                    if (e1 == e2 and e2.is_commutative):
-                        nc_part[-1] = Pow(b1*b2, e1)
-                        continue
                 nc_part.append(term)
 
         # Pull out numerical coefficients from exponent if assumptions allow

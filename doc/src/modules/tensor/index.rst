@@ -12,6 +12,7 @@ Contents
 .. toctree::
     :maxdepth: 3
 
+    array.rst
     indexed.rst
     index_methods.rst
     tensor.rst

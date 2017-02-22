@@ -81,6 +81,38 @@ Usage::
 
 .. autofunction:: sympy.printing.ccode.print_ccode
 
+RCodePrinter
+------------
+
+.. module:: sympy.printing.rcode
+
+This class implements R code printing (i.e. it converts Python expressions
+to strings of R code).
+
+Usage::
+
+    >>> from sympy.printing import print_rcode
+    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.abc import x
+    >>> print_rcode(sin(x)**2 + cos(x)**2)
+    sin(x)^2 + cos(x)^2
+    >>> print_rcode(2*x + cos(x), assign_to="result")
+    result = 2*x + cos(x);
+    >>> print_rcode(Abs(x**2))
+    abs(x^2)
+
+.. autodata:: sympy.printing.rcode.known_functions
+
+.. autoclass:: sympy.printing.rcode.RCodePrinter
+   :members:
+
+   .. autoattribute:: RCodePrinter.printmethod
+
+
+.. autofunction:: sympy.printing.rcode.rcode
+
+.. autofunction:: sympy.printing.rcode.print_rcode
+
 Fortran Printing
 ----------------
 
@@ -203,11 +235,11 @@ be defined as 'Fortran parameters', (ii) a list functions that can not be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), set([gamma(x)]), '      -gamma(x)**2 + 1')
+    (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
     >>> fcode(1 - sin(x)**2, human=False)
     (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
-    (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
+    ({(pi, '3.14159265358979d0')}, set(), '      x - pi**2')
 
 Mathematica code printing
 -------------------------
@@ -223,14 +255,72 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Javascript Code printing
+------------------------
+
+.. module:: sympy.printing.jscode
+
+.. autodata:: sympy.printing.jscode.known_functions
+
+.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+   :members:
+
+   .. autoattribute:: JavascriptCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.jscode.jscode
+
+Julia code printing
+---------------------------------
+
+.. module:: sympy.printing.julia
+
+.. autodata:: sympy.printing.julia.known_fcns_src1
+
+.. autodata:: sympy.printing.julia.known_fcns_src2
+
+.. autoclass:: sympy.printing.julia.JuliaCodePrinter
+   :members:
+
+   .. autoattribute:: JuliaCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.julia.julia_code
+
+Octave (and Matlab) Code printing
+---------------------------------
+
+.. module:: sympy.printing.octave
+
+.. autodata:: sympy.printing.octave.known_fcns_src1
+
+.. autodata:: sympy.printing.octave.known_fcns_src2
+
+.. autoclass:: sympy.printing.octave.OctaveCodePrinter
+   :members:
+
+   .. autoattribute:: OctaveCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.octave.octave_code
+
+Theano Code printing
+--------------------
+
+.. module:: sympy.printing.theanocode
+
+.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+   :members:
+
+   .. autoattribute:: TheanoPrinter.printmethod
+
+.. autofunction:: sympy.printing.theanocode.theano_function
+
 Gtk
 ---
 
 .. module:: sympy.printing.gtk
 
-You can print to a grkmathview widget using the function ``print_gtk``
+You can print to a gtkmathview widget using the function ``print_gtk``
 located in ``sympy.printing.gtk`` (it requires to have installed
-gtkmatmatview and libgtkmathview-bin in some systems).
+gtkmathview and libgtkmathview-bin in some systems).
 
 GtkMathView accepts MathML, so this rendering depends on the MathML
 representation of the expression.
@@ -307,13 +397,31 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 
-ReprPrinter
------------
+srepr
+-----
 
 .. module:: sympy.printing.repr
 
 This printer generates executable code. This code satisfies the identity
 ``eval(srepr(expr)) == expr``.
+
+``srepr()`` gives more low level textual output than ``repr()``
+
+Example::
+
+  >>> repr(5*x**3 + sin(x))
+  '5*x**3 + sin(x)'
+
+  >>> srepr(5*x**3 + sin(x))
+  "Add(Mul(Integer(5), Pow(Symbol('x'), Integer(3))), sin(Symbol('x')))"
+
+``srepr()`` gives the ``repr`` form, which is what ``repr()`` would normally give
+but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s
+is so verbose, it is unlikely that anyone would want it called by default.
+Another reason is that lists call repr on their elements, like ``print([a, b, c])``
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with
+SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
+
 
 .. autoclass:: ReprPrinter
    :members:
@@ -376,6 +484,8 @@ CodePrinter
 This class is a base class for other classes that implement code-printing
 functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.Assignment
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
 

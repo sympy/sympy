@@ -50,6 +50,11 @@ class MatrixExpr(Basic):
         Inverse
     """
 
+    # Should not be considered iterable by the
+    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # iterable (i.e., explicit matrices) should set this to True.
+    _iterable = False
+
     _op_priority = 11.0
 
     is_Matrix = True
@@ -101,8 +106,18 @@ class MatrixExpr(Basic):
         return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __matmul__(self, other):
+        return MatMul(self, other).doit()
+
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
+        return MatMul(other, self).doit()
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmatmul__(self, other):
         return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
@@ -110,7 +125,9 @@ class MatrixExpr(Basic):
     def __pow__(self, other):
         if not self.is_square:
             raise ShapeError("Power of non-square matrix %s" % self)
-        if other is S.NegativeOne:
+        elif self.is_Identity:
+            return self
+        elif other is S.NegativeOne:
             return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
@@ -153,6 +170,12 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.adjoint import Adjoint
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
+
+    def as_real_imag(self):
+        from sympy import I
+        real = (S(1)/2) * (self + self._eval_conjugate())
+        im = (self - self._eval_conjugate())/(2*I)
+        return (real, im)
 
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
@@ -321,6 +344,18 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_symbol = True
+    is_commutative = True
+
+    def __new__(cls, name, n, m):
+        n, m = map(sympify, (n, m))
+        from sympy import MatrixBase
+        if isinstance(name, (MatrixBase,)):
+            if n.is_Integer and m.is_Integer:
+                return name[n, m]
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, n, m)
+        return obj
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -329,6 +364,19 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixElement):
+            from sympy import MatrixBase
+            if isinstance(self.parent, MatrixBase):
+                return self.parent.diff(v)[self.i, self.j]
+            return S.Zero
+
+        if self.args[0] != v.args[0]:
+            return S.Zero
+
+        from sympy import KroneckerDelta
+        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
 
 class MatrixSymbol(MatrixExpr):
@@ -465,6 +513,8 @@ class ZeroMatrix(MatrixExpr):
             raise ShapeError("Power of non-square matrix %s" % self)
         if other == 0:
             return Identity(self.rows)
+        if other < 1:
+            raise ValueError("Matrix det == 0; not invertible.")
         return self
 
     def _eval_transpose(self):

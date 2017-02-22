@@ -1,6 +1,7 @@
 from sympy import (
     symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
-    S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root)
+    S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
+    Rational)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -117,24 +118,24 @@ def test_powsimp_nc():
     assert powsimp(A**x*A**y, combine='base') == A**x*A**y
     assert powsimp(A**x*A**y, combine='exp') == A**(x + y)
 
-    assert powsimp(A**x*B**x, combine='all') == (A*B)**x
-    assert powsimp(A**x*B**x, combine='base') == (A*B)**x
+    assert powsimp(A**x*B**x, combine='all') == A**x*B**x
+    assert powsimp(A**x*B**x, combine='base') == A**x*B**x
     assert powsimp(A**x*B**x, combine='exp') == A**x*B**x
 
-    assert powsimp(B**x*A**x, combine='all') == (B*A)**x
-    assert powsimp(B**x*A**x, combine='base') == (B*A)**x
+    assert powsimp(B**x*A**x, combine='all') == B**x*A**x
+    assert powsimp(B**x*A**x, combine='base') == B**x*A**x
     assert powsimp(B**x*A**x, combine='exp') == B**x*A**x
 
     assert powsimp(A**x*A**y*A**z, combine='all') == A**(x + y + z)
     assert powsimp(A**x*A**y*A**z, combine='base') == A**x*A**y*A**z
     assert powsimp(A**x*A**y*A**z, combine='exp') == A**(x + y + z)
 
-    assert powsimp(A**x*B**x*C**x, combine='all') == (A*B*C)**x
-    assert powsimp(A**x*B**x*C**x, combine='base') == (A*B*C)**x
+    assert powsimp(A**x*B**x*C**x, combine='all') == A**x*B**x*C**x
+    assert powsimp(A**x*B**x*C**x, combine='base') == A**x*B**x*C**x
     assert powsimp(A**x*B**x*C**x, combine='exp') == A**x*B**x*C**x
 
-    assert powsimp(B**x*A**x*C**x, combine='all') == (B*A*C)**x
-    assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
+    assert powsimp(B**x*A**x*C**x, combine='all') == B**x*A**x*C**x
+    assert powsimp(B**x*A**x*C**x, combine='base') == B**x*A**x*C**x
     assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
 
 
@@ -281,3 +282,20 @@ def test_issue_from_PR1599():
     assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
         -(-1)**(S(1)/3)*
         (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
+
+
+def test_issue_10195():
+    a = Symbol('a', integer=True)
+    l = Symbol('l', even=True, nonzero=True)
+    n = Symbol('n', odd=True)
+    e_x = (-1)**(n/2 - Rational(1, 2)) - (-1)**(3*n/2 - Rational(1, 2))
+    assert powsimp((-1)**(l/2)) == I**l
+    assert powsimp((-1)**(n/2)) == I**n
+    assert powsimp((-1)**(3*n/2)) == -I**n
+    assert powsimp(e_x) == (-1)**(n/2 - Rational(1, 2)) + (-1)**(3*n/2 +
+            Rational(1,2))
+    assert powsimp((-1)**(3*a/2)) == (-I)**a
+
+def test_issue_11981():
+    x, y = symbols('x y', commutative=False)
+    assert powsimp((x*y)**2 * (y*x)**2) == (x*y)**2 * (y*x)**2

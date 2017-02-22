@@ -130,7 +130,10 @@ Formal manipulation of roots of polynomials
 
 .. currentmodule:: sympy.polys.rootoftools
 
+.. autofunction:: rootof
 .. autoclass:: RootOf
+   :members:
+.. autoclass:: ComplexRootOf
 .. autoclass:: RootSum
 
 Symbolic root-finding algorithms

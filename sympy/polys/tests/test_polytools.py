@@ -52,12 +52,13 @@ from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr, diff)
+    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.simplify import simplify
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 from sympy import MatrixSymbol
@@ -461,21 +462,21 @@ def test_Poly__unify():
 
 
 def test_Poly_free_symbols():
-    assert Poly(x**2 + 1).free_symbols == set([x])
-    assert Poly(x**2 + y*z).free_symbols == set([x, y, z])
-    assert Poly(x**2 + y*z, x).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z)).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z), x).free_symbols == set([x, y, z])
-    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([x, y, z])
+    assert Poly(x**2 + 1).free_symbols == {x}
+    assert Poly(x**2 + y*z).free_symbols == {x, y, z}
+    assert Poly(x**2 + y*z, x).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z)).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z), x).free_symbols == {x, y, z}
+    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == {x, y, z}
 
 
 def test_PurePoly_free_symbols():
     assert PurePoly(x**2 + 1).free_symbols == set([])
     assert PurePoly(x**2 + y*z).free_symbols == set([])
-    assert PurePoly(x**2 + y*z, x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + y*z, x).free_symbols == {y, z}
     assert PurePoly(x**2 + sin(y*z)).free_symbols == set([])
-    assert PurePoly(x**2 + sin(y*z), x).free_symbols == set([y, z])
-    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z), x).free_symbols == {y, z}
+    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == {y, z}
 
 
 def test_Poly__eq__():
@@ -2118,6 +2119,35 @@ def test_compose():
 def test_shift():
     assert Poly(x**2 - 2*x + 1, x).shift(2) == Poly(x**2 + 2*x + 1, x)
 
+def test_transform():
+    # Also test that 3-way unification is done correctly
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1), Poly(x - 1)) == \
+        Poly(4, x) == \
+        cancel((x - 1)**2*(x**2 - 2*x + 1).subs(x, (x + 1)/(x - 1)))
+
+    assert Poly(x**2 - x/2 + 1, x).transform(Poly(x + 1), Poly(x - 1)) == \
+        Poly(3*x**2/2 + S(5)/2, x) == \
+        cancel((x - 1)**2*(x**2 - x/2 + 1).subs(x, (x + 1)/(x - 1)))
+
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + S(1)/2), Poly(x - 1)) == \
+        Poly(S(9)/4, x) == \
+        cancel((x - 1)**2*(x**2 - 2*x + 1).subs(x, (x + S(1)/2)/(x - 1)))
+
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1), Poly(x - S(1)/2)) == \
+        Poly(S(9)/4, x) == \
+        cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1)/(x - S(1)/2)))
+
+    # Unify ZZ, QQ, and RR
+    assert Poly(x**2 - 2*x + 1, x).transform(Poly(x + 1.0), Poly(x - S(1)/2)) == \
+        Poly(9/4, x) == \
+        cancel((x - S(1)/2)**2*(x**2 - 2*x + 1).subs(x, (x + 1.0)/(x - S(1)/2)))
+
+    raises(ValueError, lambda: Poly(x*y).transform(Poly(x + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(y + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(y - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x*y + 1), Poly(x - 1)))
+    raises(ValueError, lambda: Poly(x).transform(Poly(x + 1), Poly(x*y - 1)))
+
 
 def test_sturm():
     f, F = x, Poly(x, domain='QQ')
@@ -2264,7 +2294,7 @@ def test_factor():
 
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
-    assert factor_list(sqrt(3), x) == (1, [(3, S.Half)])
+    assert factor_list(sqrt(3), x) == (sqrt(3), [])
     assert factor_list((-1)**x, x) == (1, [(-1, x)])
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
@@ -2630,7 +2660,7 @@ def test_Poly_root():
     assert f.root(2) == 2
     raises(IndexError, lambda: f.root(3))
 
-    assert Poly(x**5 + x + 1).root(0) == RootOf(x**3 - x**2 + 1, 0)
+    assert Poly(x**5 + x + 1).root(0) == rootof(x**3 - x**2 + 1, 0)
 
 
 def test_real_roots():
@@ -2640,20 +2670,20 @@ def test_real_roots():
     assert real_roots(x**3) == [0, 0, 0]
     assert real_roots(x**3, multiple=False) == [(0, 3)]
 
-    assert real_roots(x*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0]
-    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(RootOf(
+    assert real_roots(x*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0]
+    assert real_roots(x*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 1)]
 
     assert real_roots(
-        x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
-    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(
+        x**3*(x**3 + x + 3)) == [rootof(x**3 + x + 3, 0), 0, 0, 0]
+    assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 3)]
 
     f = 2*x**3 - 7*x**2 + 4*x + 4
     g = x**3 + x + 1
 
     assert Poly(f).real_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).real_roots() == [RootOf(g, 0)]
+    assert Poly(g).real_roots() == [rootof(g, 0)]
 
 
 def test_all_roots():
@@ -2661,7 +2691,7 @@ def test_all_roots():
     g = x**3 + x + 1
 
     assert Poly(f).all_roots() == [-S(1)/2, 2, 2]
-    assert Poly(g).all_roots() == [RootOf(g, 0), RootOf(g, 1), RootOf(g, 2)]
+    assert Poly(g).all_roots() == [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
 
 
 def test_nroots():
@@ -2881,8 +2911,7 @@ def test_cancel():
     M = MatrixSymbol('M', 5, 5)
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
-    assert cancel(expr) == expr
-
+    assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -3038,6 +3067,7 @@ def test_GroebnerBasis():
     H = [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     P = [ Poly(h, x, y) for h in H ]
 
+    assert groebner(F + [0], x, y, order='grevlex') == G
     assert isinstance(G, GroebnerBasis) is True
 
     assert len(G) == 3
@@ -3157,3 +3187,14 @@ def test_noncommutative():
 def test_to_rational_coeffs():
     assert to_rational_coeffs(
         Poly(x**3 + y*x**2 + sqrt(y), x, domain='EX')) == None
+
+
+def test_factor_terms():
+    # issue 7067
+    assert factor_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+    assert sqf_list(x*(x + y)) == (1, [(x, 1), (x + y, 1)])
+
+
+def test_issue_11198():
+    assert factor_list(sqrt(2)*x) == (sqrt(2), [(x, 1)])
+    assert factor_list(sqrt(2)*sin(x), sin(x)) == (sqrt(2), [(sin(x), 1)])

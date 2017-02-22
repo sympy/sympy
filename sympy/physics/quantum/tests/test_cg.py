@@ -171,6 +171,7 @@ def test_cg_simp_sum():
 def test_doit():
     assert Wigner3j(1/2, -1/2, 1/2, 1/2, 0, 0).doit() == -sqrt(2)/2
     assert Wigner6j(1, 2, 3, 2, 1, 2).doit() == sqrt(21)/105
+    assert Wigner6j(3, 1, 2, 2, 2, 1).doit() == sqrt(21) / 105
     assert Wigner9j(
         2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0).doit() == sqrt(2)/12
     assert CG(1/2, 1/2, 1/2, -1/2, 1, 0).doit() == sqrt(2)/2

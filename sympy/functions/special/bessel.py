@@ -1,8 +1,11 @@
 from __future__ import print_function, division
 
+from functools import wraps
+
 from sympy import S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.power import Pow
+from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
@@ -10,7 +13,8 @@ from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-from sympy.core.compatibility import range
+from sympy.polys.orthopolys import spherical_bessel_fn as fn
+
 
 # TODO
 # o Scorer functions G1 and G2
@@ -555,7 +559,13 @@ class hankel2(BesselBase):
         if (z.is_real and z.is_negative) is False:
             return hankel1(self.order.conjugate(), z.conjugate())
 
-from sympy.polys.orthopolys import spherical_bessel_fn as fn
+
+def assume_integer_order(fn):
+    @wraps(fn)
+    def g(self, nu, z):
+        if nu.is_integer:
+            return fn(self, nu, z)
+    return g
 
 
 class SphericalBesselBase(BesselBase):
@@ -580,17 +590,26 @@ class SphericalBesselBase(BesselBase):
     def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
             return self._expand(**hints)
-        else:
-            return self
+        return self
 
     def _eval_evalf(self, prec):
-        return self._rewrite()._eval_evalf(prec)
+        if self.order.is_Integer:
+            return self._rewrite()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
         return self.__class__(self.order - 1, self.argument) - \
             self * (self.order + 1)/self.argument
+
+
+def _jn(n, z):
+    return fn(n, z)*sin(z) + (-1)**(n + 1)*fn(-n - 1, z)*cos(z)
+
+
+def _yn(n, z):
+    # (-1)**(n + 1) * _jn(-n - 1, z)
+    return (-1)**(n + 1) * fn(-n - 1, z)*sin(z) - fn(n, z)*cos(z)
 
 
 class jn(SphericalBesselBase):
@@ -610,43 +629,62 @@ class jn(SphericalBesselBase):
 
     where :math:`J_\nu(z)` is the Bessel function of the first kind.
 
-    Examples
-    ========
-
-    >>> from sympy import Symbol, jn, sin, cos, expand_func
-    >>> z = Symbol("z")
-    >>> print(jn(0, z).expand(func=True))
-    sin(z)/z
-    >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
-    True
-    >>> expand_func(jn(3, z))
-    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
-
-    The spherical Bessel functions of integral order
-    are calculated using the formula:
+    The spherical Bessel functions of integral order are
+    calculated using the formula:
 
     .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},
 
     where the coefficients :math:`f_n(z)` are available as
     :func:`polys.orthopolys.spherical_bessel_fn`.
 
+    Examples
+    ========
+
+    >>> from sympy import Symbol, jn, sin, cos, expand_func, besselj, bessely
+    >>> from sympy import simplify
+    >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
+    >>> print(expand_func(jn(0, z)))
+    sin(z)/z
+    >>> expand_func(jn(1, z)) == sin(z)/z**2 - cos(z)/z
+    True
+    >>> expand_func(jn(3, z))
+    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    >>> jn(nu, z).rewrite(besselj)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(nu + 1/2, z)/2
+    >>> jn(nu, z).rewrite(bessely)
+    (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-nu - 1/2, z)/2
+    >>> jn(2, 5.2+0.3j).evalf(20)
+    0.099419756723640344491 - 0.054525080242173562897*I
+
     See Also
     ========
 
     besselj, bessely, besselk, yn
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
 
     """
 
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
 
+    @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z):
-        return sqrt(pi/(2*z)) * besselj(nu + S('1/2'), z)
+        return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
+
+    @assume_integer_order
+    def _eval_rewrite_as_bessely(self, nu, z):
+        return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+
+    def _eval_rewrite_as_yn(self, nu, z):
+        return (-1)**(nu) * yn(-nu - 1, z)
 
     def _expand(self, **hints):
-        n = self.order
-        z = self.argument
-        return fn(n, z) * sin(z) + (-1)**(n + 1) * fn(-n - 1, z) * cos(z)
+        return _jn(self.order, self.argument)
 
 
 class yn(SphericalBesselBase):
@@ -657,42 +695,221 @@ class yn(SphericalBesselBase):
     linearly independent from :math:`j_n`. It can be defined as
 
     .. math ::
-        j_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
+        y_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),
 
     where :math:`Y_\nu(z)` is the Bessel function of the second kind.
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, yn, sin, cos, expand_func
-    >>> z = Symbol("z")
-    >>> print(expand_func(yn(0, z)))
-    -cos(z)/z
-    >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
-    True
 
     For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
 
     .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, yn, sin, cos, expand_func, besselj, bessely
+    >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
+    >>> print(expand_func(yn(0, z)))
+    -cos(z)/z
+    >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
+    True
+    >>> yn(nu, z).rewrite(besselj)
+    (-1)**(nu + 1)*sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(-nu - 1/2, z)/2
+    >>> yn(nu, z).rewrite(bessely)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(nu + 1/2, z)/2
+    >>> yn(2, 5.2+0.3j).evalf(20)
+    0.18525034196069722536 + 0.014895573969924817587*I
 
     See Also
     ========
 
     besselj, bessely, besselk, jn
 
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
     """
 
     def _rewrite(self):
         return self._eval_rewrite_as_bessely(self.order, self.argument)
 
+    @assume_integer_order
+    def _eval_rewrite_as_besselj(self, nu, z):
+        return (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+
+    @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z):
-        return sqrt(pi/(2*z)) * bessely(nu + S('1/2'), z)
+        return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
+
+    def _eval_rewrite_as_jn(self, nu, z):
+        return (-1)**(nu + 1) * jn(-nu - 1, z)
+
+    def _expand(self, **hints):
+        return _yn(self.order, self.argument)
+
+
+class SphericalHankelBase(SphericalBesselBase):
+
+    def _rewrite(self):
+        return self._eval_rewrite_as_besselj(self.order, self.argument)
+
+    @assume_integer_order
+    def _eval_rewrite_as_besselj(self, nu, z):
+        # jn +- I*yn
+        # jn as beeselj: sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
+        # yn as besselj: (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        hks = self._hankel_kind_sign
+        return sqrt(pi/(2*z))*(besselj(nu + S.Half, z) +
+                               hks*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
+
+    @assume_integer_order
+    def _eval_rewrite_as_bessely(self, nu, z):
+        # jn +- I*yn
+        # jn as bessely: (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+        # yn as bessely: sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
+        hks = self._hankel_kind_sign
+        return sqrt(pi/(2*z))*((-1)**nu*bessely(-nu - S.Half, z) +
+                               hks*I*bessely(nu + S.Half, z))
+
+    def _eval_rewrite_as_yn(self, nu, z):
+        hks = self._hankel_kind_sign
+        return jn(nu, z).rewrite(yn) + hks*I*yn(nu, z)
+
+    def _eval_rewrite_as_jn(self, nu, z):
+        hks = self._hankel_kind_sign
+        return jn(nu, z) + hks*I*yn(nu, z).rewrite(jn)
+
+    def _eval_expand_func(self, **hints):
+        if self.order.is_Integer:
+            return self._expand(**hints)
+        else:
+            nu = self.order
+            z = self.argument
+            hks = self._hankel_kind_sign
+            return jn(nu, z) + hks*I*yn(nu, z)
 
     def _expand(self, **hints):
         n = self.order
         z = self.argument
-        return (-1)**(n + 1) * \
-               (fn(-n - 1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
+        hks = self._hankel_kind_sign
+
+        # fully expanded version
+        # return ((fn(n, z) * sin(z) +
+        #          (-1)**(n + 1) * fn(-n - 1, z) * cos(z)) +  # jn
+        #         (hks * I * (-1)**(n + 1) *
+        #          (fn(-n - 1, z) * hk * I * sin(z) +
+        #           (-1)**(-n) * fn(n, z) * I * cos(z)))  # +-I*yn
+        #         )
+
+        return (_jn(n, z) + hks*I*_yn(n, z)).expand()
+
+
+class hn1(SphericalHankelBase):
+    r"""
+    Spherical Hankel function of the first kind.
+
+    This function is defined as
+
+    .. math:: h_\nu^(1)(z) = j_\nu(z) + i y_\nu(z),
+
+    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    Bessel function of the first and second kinds.
+
+    For integral orders :math:`n`, :math:`h_n^(1)` is calculated using the formula:
+
+    .. math:: h_n^(1)(z) = j_{n}(z) + i (-1)^{n+1} j_{-n-1}(z)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hn1, hankel1, expand_func, yn, jn
+    >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
+    >>> print(expand_func(hn1(nu, z)))
+    jn(nu, z) + I*yn(nu, z)
+    >>> print(expand_func(hn1(0, z)))
+    sin(z)/z - I*cos(z)/z
+    >>> print(expand_func(hn1(1, z)))
+    -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
+    >>> hn1(nu, z).rewrite(jn)
+    (-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    >>> hn1(nu, z).rewrite(yn)
+    (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
+    >>> hn1(nu, z).rewrite(hankel1)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel1(nu, z)/2
+
+    See Also
+    ========
+
+    hn2, jn, yn, hankel1, hankel2
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
+    """
+
+    _hankel_kind_sign = S.One
+
+    @assume_integer_order
+    def _eval_rewrite_as_hankel1(self, nu, z):
+        return sqrt(pi/(2*z))*hankel1(nu, z)
+
+
+class hn2(SphericalHankelBase):
+    r"""
+    Spherical Hankel function of the second kind.
+
+    This function is defined as
+
+    .. math:: h_\nu^(2)(z) = j_\nu(z) - i y_\nu(z),
+
+    where :math:`j_\nu(z)` and :math:`y_\nu(z)` are the spherical
+    Bessel function of the first and second kinds.
+
+    For integral orders :math:`n`, :math:`h_n^(2)` is calculated using the formula:
+
+    .. math:: h_n^(2)(z) = j_{n} - i (-1)^{n+1} j_{-n-1}(z)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hn2, hankel2, expand_func, jn, yn
+    >>> z = Symbol("z")
+    >>> nu = Symbol("nu", integer=True)
+    >>> print(expand_func(hn2(nu, z)))
+    jn(nu, z) - I*yn(nu, z)
+    >>> print(expand_func(hn2(0, z)))
+    sin(z)/z + I*cos(z)/z
+    >>> print(expand_func(hn2(1, z)))
+    I*sin(z)/z - cos(z)/z + sin(z)/z**2 + I*cos(z)/z**2
+    >>> hn2(nu, z).rewrite(hankel2)
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
+    >>> hn2(nu, z).rewrite(jn)
+    -(-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    >>> hn2(nu, z).rewrite(yn)
+    (-1)**nu*yn(-nu - 1, z) - I*yn(nu, z)
+
+    See Also
+    ========
+
+    hn1, jn, yn, hankel1, hankel2
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/10.47
+
+    """
+
+    _hankel_kind_sign = -S.One
+
+    @assume_integer_order
+    def _eval_rewrite_as_hankel2(self, nu, z):
+        return sqrt(pi/(2*z))*hankel2(nu, z)
 
 
 def jn_zeros(n, k, method="sympy", dps=15):

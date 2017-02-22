@@ -1,5 +1,5 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
+                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
                    exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
@@ -146,7 +146,7 @@ def test_meijerint():
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
-    assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
+    assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
@@ -168,6 +168,7 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x - 3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x - mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+    assert meijerint_definite(sinc(x)**2, x, -oo, oo) == (pi, True)
 
     # Test one of the extra conditions for 2 g-functinos
     assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
@@ -642,6 +643,33 @@ def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
 
 
+def test_issue_7337():
+    f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
+    assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
+    assert f._eval_interval(x, S(-1), S(1)) == S(2)/5
+
+
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
+
+
+def test_issue_10211():
+    from sympy.abc import h, w
+    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+        2*sqrt(1 + w**2/h**2)/h - 2/h
+
+
+def test_issue_11806():
+    from sympy import symbols
+    y, L = symbols('y L', positive=True)
+    assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
+        2*L/(y**2*sqrt(L**2 + y**2))
+
+def test_issue_10681():
+    from sympy import RR
+    from sympy.abc import R, r
+    f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
+    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
+                                  r**2*exp_polar(2*I*pi)/R**2)
+    assert RR.almosteq((f/g).n(), 1.0, 1e-12)

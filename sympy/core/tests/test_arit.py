@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
-        sign, im, nan, Dummy, factorial, comp
+        sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
 from sympy.utilities.iterables import cartes
@@ -117,8 +117,6 @@ def test_pow():
     assert e == Rational(0)
     e = a**(b - b)
     assert e == Rational(1)
-    e = (a - a)**b
-    assert e == Rational(0)
     e = (a + Rational(1) - a)**b
     assert e == Rational(1)
 
@@ -171,8 +169,6 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (2*x)**k  # we choose not to auto expand this
-    assert (-2*x)**o == -(2*x)**o  # but we do handle coefficient sign
     assert (-1)**k == 1
 
 
@@ -264,7 +260,7 @@ def test_pow_im():
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -292,7 +288,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
@@ -1183,7 +1179,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
-    assert ((-k)**n).is_nonnegative is None
+
     assert ((-k)**m).is_nonnegative is None
 
     assert (2**x).is_nonpositive is False
@@ -1197,7 +1193,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonpositive is None
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
-    assert ((-k)**m).is_nonpositive is None
+
 
     assert (x**2).is_nonnegative is True
     i = symbols('i', imaginary=True)
@@ -1206,6 +1202,9 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (i**3).is_nonpositive is False
     assert (I**i).is_nonnegative is True
     assert (exp(I)**i).is_nonnegative is True
+
+    assert ((-k)**n).is_nonnegative is True
+    assert ((-k)**m).is_nonpositive is True
 
 
 def test_Mul_is_imaginary_real():
@@ -1503,6 +1502,9 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+    assert Mod(nan, 1) == nan
+    assert Mod(1, nan) == nan
+    assert Mod(nan, nan) == nan
 
     # Float handling
     point3 = Float(3.3) % 1
@@ -1594,6 +1596,9 @@ def test_Mod():
     assert Mod(n, 2) == 0
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
+
+    # issue 10963
+    assert (x**6000%400).args[1] == 400
 
 
 def test_Mod_is_integer():
@@ -1885,3 +1890,8 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+
+def test_Add_is_zero():
+    x, y = symbols('x y', zero=True)
+    assert (x + y).is_zero

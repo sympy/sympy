@@ -22,7 +22,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
 from sympy.polys.specialpolys import cyclotomic_poly
 
@@ -500,7 +500,7 @@ def _minpoly_exp(ex, x):
 
 def _minpoly_rootof(ex, x):
     """
-    Returns the minimal polynomial of a ``RootOf`` object.
+    Returns the minimal polynomial of a ``CRootOf`` object.
     """
     p = ex.expr
     p = p.subs({ex.poly.gens[0]:x})
@@ -572,7 +572,7 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_cos(ex, x)
     elif ex.__class__ is exp:
         res = _minpoly_exp(ex, x)
-    elif ex.__class__ is RootOf:
+    elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
     else:
         raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)

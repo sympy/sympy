@@ -50,6 +50,9 @@ class ReprPrinter(Printer):
         args = map(self._print, args)
         return "Add(%s)" % ", ".join(args)
 
+    def _print_Cycle(self, expr):
+        return expr.__repr__()
+
     def _print_Function(self, expr):
         r = self._print(expr.func)
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])

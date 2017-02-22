@@ -1,7 +1,10 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign)
+                             gamma, sign, Max)
+from sympy.sets import Range
+from sympy.logic import ITE
+from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -38,6 +41,16 @@ def test_ccode_Pow():
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
     assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+    _cond_cfunc2 = [(lambda base, exp: base == 2, lambda base, exp: 'exp2(%s)' % exp),
+                    (lambda base, exp: base != 2, 'pow')]
+    # Related to gh-11353
+    assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
+    assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
+
+
+def test_ccode_Max():
+    # Test for gh-11926
+    assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
 
 def test_ccode_constants_mathh():
@@ -117,6 +130,16 @@ def test_ccode_boolean():
     assert ccode((x | y) & z) == "z && (x || y)"
 
 
+def test_ccode_Relational():
+    from sympy import Eq, Ne, Le, Lt, Gt, Ge
+    assert ccode(Eq(x, y)) == "x == y"
+    assert ccode(Ne(x, y)) == "x != y"
+    assert ccode(Le(x, y)) == "x <= y"
+    assert ccode(Lt(x, y)) == "x < y"
+    assert ccode(Gt(x, y)) == "x > y"
+    assert ccode(Ge(x, y)) == "x >= y"
+
+
 def test_ccode_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
     assert ccode(expr) == (
@@ -159,6 +182,18 @@ def test_ccode_Piecewise():
     raises(ValueError, lambda: ccode(expr))
 
 
+def test_ccode_sinc():
+    from sympy import sinc
+    expr = sinc(x)
+    assert ccode(expr) == (
+            "((x != 0) ? (\n"
+            "   sin(x)/x\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            "))")
+
+
 def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
     assert p == (
@@ -186,6 +221,17 @@ def test_ccode_Piecewise_deep():
             ": (\n"
             "   1\n"
             ")) + cos(z) - 1;")
+
+
+def test_ccode_ITE():
+    expr = ITE(x < 1, x, x**2)
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            "))")
 
 
 def test_ccode_settings():
@@ -235,7 +281,7 @@ def test_ccode_loops_matrix_vector():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = A[%s]*x[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -275,7 +321,7 @@ def test_ccode_loops_add():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = A[%s]*x[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -303,7 +349,7 @@ def test_ccode_loops_multiple_contractions():
         '   for (int j=0; j<n; j++){\n'
         '      for (int k=0; k<o; k++){\n'
         '         for (int l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        '            y[i] = a[%s]*b[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -373,14 +419,14 @@ def test_ccode_loops_multiple_terms():
     s2 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
+        '      y[i] = a[%s]*b[k] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = a[%s]*b[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )
@@ -434,8 +480,8 @@ def test_Matrix_printing():
         "M[3] = q[1] + q[2];\n"
         "M[4] = q[3];\n"
         "M[5] = 5;\n"
-        "M[6] = 2*q[4]*1.0/q[1];\n"
-        "M[7] = 4 + sqrt(q[0]);\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
 
 
@@ -464,3 +510,15 @@ def test_ccode_sign():
 
     expr = sign(cos(x))
     assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'
+
+def test_ccode_Assignment():
+    assert ccode(Assignment(x, y + z)) == 'x = y + z;'
+    assert ccode(aug_assign(x, '+', y + z)) == 'x += y + z;'
+
+
+def test_ccode_For():
+    f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
+    sol = ccode(f)
+    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
+                   "   y *= x;\n"
+                   "}")

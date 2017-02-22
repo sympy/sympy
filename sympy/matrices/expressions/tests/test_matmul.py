@@ -117,3 +117,17 @@ def test_collapse_MatrixBase():
 
 def test_refine():
     assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
+
+    kC = k*C
+    assert refine(kC*C.T, Q.orthogonal(C)).doit() == k*Identity(n)
+    assert refine(kC* kC.T, Q.orthogonal(C)).doit() == (k**2)*Identity(n)
+
+def test_matmul_no_matrices():
+    assert MatMul(1) == 1
+    assert MatMul(n, m) == n*m
+    assert not isinstance(MatMul(n, m), MatMul)
+
+def test_matmul_args_cnc():
+    a, b = symbols('a b', commutative=False)
+    assert MatMul(n, a, b, A, A.T).args_cnc() == ([n], [a, b, A, A.T])
+    assert MatMul(A, A.T).args_cnc() == ([], [A, A.T])

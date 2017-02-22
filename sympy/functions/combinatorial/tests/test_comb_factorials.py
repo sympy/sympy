@@ -1,15 +1,19 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product)
+                   oo, zoo, simplify, expand_func, Product, I, Piecewise, Mod, Eq, sqrt)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
+#Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
+    n, k = symbols('n k', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
 
     assert rf(nan, y) == nan
+    assert rf(x, nan) == nan
 
     assert rf(x, y) == rf(x, y)
 
@@ -37,9 +41,6 @@ def test_rf_eval_apply():
     assert rf(x**2 + 3*x, 2) == x**4 + 8*x**3 + 19*x**2 + 12*x
     assert rf(x**3 + x, -2) == 1/(x**6 - 9*x**5 + 35*x**4 - 75*x**3 + 94*x**2 - 66*x + 20)
 
-    n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True)
-    m = Symbol('m', integer=True, nonnegative=True)
     assert rf(x, m).is_integer is None
     assert rf(n, k).is_integer is None
     assert rf(n, m).is_integer is True
@@ -47,11 +48,19 @@ def test_rf_eval_apply():
     assert rf(n, m + pi).is_integer is False
     assert rf(pi, m).is_integer is False
 
+    assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
+    assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
+    assert rf(n, k).rewrite(factorial) == \
+        factorial(n + k - 1) / factorial(n - 1)
+
 
 def test_ff_eval_apply():
     x, y = symbols('x,y')
+    n, k = symbols('n k', integer=True)
+    m = Symbol('m', integer=True, nonnegative=True)
 
     assert ff(nan, y) == nan
+    assert ff(x, nan) == nan
 
     assert ff(x, y) == ff(x, y)
 
@@ -79,15 +88,20 @@ def test_ff_eval_apply():
     assert ff(2*x**2 - 5*x, 2) == 4*x**4 - 28*x**3 + 59*x**2 - 35*x
     assert ff(x**2 + 3*x, -2) == 1/(x**4 + 12*x**3 + 49*x**2 + 78*x + 40)
 
-    n = Symbol('n', integer=True)
-    k = Symbol('k', integer=True)
-    m = Symbol('m', integer=True, nonnegative=True)
     assert ff(x, m).is_integer is None
     assert ff(n, k).is_integer is None
     assert ff(n, m).is_integer is True
     assert ff(n, k + pi).is_integer is False
     assert ff(n, m + pi).is_integer is False
     assert ff(pi, m).is_integer is False
+
+    assert isinstance(ff(x, x), ff)
+    assert ff(n, n) == factorial(n)
+
+    assert ff(x, k).rewrite(rf) == rf(x - k + 1, k)
+    assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
+    assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
+    assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
 
 
 def test_factorial():
@@ -103,6 +117,8 @@ def test_factorial():
     assert factorial(-2) == zoo
     assert factorial(0) == 1
     assert factorial(7) == 5040
+    assert factorial(19) == 121645100408832000
+    assert factorial(31) == 8222838654177922817725562880000000
     assert factorial(n).func == factorial
     assert factorial(2*n).func == factorial
 
@@ -166,7 +182,6 @@ def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
-    assert factorial2(n).func == factorial2
 
     # The following is exhaustive
     tt = Symbol('tt', integer=True, nonnegative=True)
@@ -182,7 +197,9 @@ def test_factorial2():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
-
+    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+    raises (ValueError, lambda: factorial2(oo))
+    raises (ValueError, lambda: factorial2(S(5)/2))
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
@@ -230,6 +247,14 @@ def test_factorial2():
     assert factorial2(tfo).is_even is False
     assert factorial2(tfo).is_odd is None
 
+
+def test_factorial2_rewrite():
+    n = Symbol('n', integer=True)
+    assert factorial2(n).rewrite(gamma) == \
+        2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
+    assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
+    assert factorial2(2*n + 1).rewrite(gamma) == \
+        sqrt(2)*2**(n + 1/2)*gamma(n + 3/2)/sqrt(pi)
 
 
 def test_binomial():
@@ -306,6 +331,7 @@ def test_binomial_rewrite():
         factorial) == factorial(n)/(factorial(k)*factorial(n - k))
     assert binomial(
         n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
+    assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
 
 
 @XFAIL

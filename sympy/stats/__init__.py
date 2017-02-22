@@ -58,13 +58,17 @@ from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
-    Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
-    StudentT, Triangular, Uniform, UniformSum, VonMises, Weibull,
-    WignerSemicircle
+    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
+    Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
+    ShiftedGompertz, StudentT, Triangular, Uniform, UniformSum, VonMises,
+    Weibull, WignerSemicircle
 )
 __all__.extend(crv_types.__all__)
 
 from . import drv_types
 from .drv_types import (Geometric, Poisson)
 __all__.extend(drv_types.__all__)
+
+from . import symbolic_probability
+from .symbolic_probability import Probability, Expectation, Variance, Covariance
+__all__.extend(symbolic_probability.__all__)

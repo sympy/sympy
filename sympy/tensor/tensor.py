@@ -386,8 +386,8 @@ class TIDS(CantSympify):
         dum = TIDS._check_matrix_indices(f_free, g_free, nc1)
 
         # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in f_free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in g_free])
+        free_dict1 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in f_free}
+        free_dict2 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in g_free}
         free_names = set(free_dict1.keys()) & set(free_dict2.keys())
         # find the new `free` and `dum`
 
@@ -739,40 +739,6 @@ class TIDS(CantSympify):
         return tids, sign
 
 
-class VTIDS(TIDS):
-    """
-    DEPRECATED: DO NOT USE.
-    """
-
-    @deprecated(useinstead="TIDS")
-    def __init__(self, components, free, dum, data):
-        super(VTIDS, self).__init__(components, free, dum)
-        self.data = data
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def parse_data(data):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator.parse_data(data)
-
-    @deprecated(useinstead="TIDS")
-    def correct_signature_from_indices(self, data, indices, free, dum):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def flip_index_by_metric(data, metric, pos):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._flip_index_by_metric(data, metric, pos)
-
-
 class _TensorDataLazyEvaluator(CantSympify):
     """
     EXPERIMENTAL: do not rely on this class, it may change without deprecation
@@ -856,14 +822,29 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         if isinstance(key, TensAdd):
             sumvar = S.Zero
-            data_list = [i.data for i in key.args]
+            data_list = []
+            free_args_list = []
+            for arg in key.args:
+                if isinstance(arg, TensExpr):
+                    data_list.append(arg.data)
+                    free_args_list.append([x[0] for x in arg.free])
+                else:
+                    data_list.append(arg)
+                    free_args_list.append([])
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
-            for i in data_list:
-                sumvar += i
+
+            numpy = import_module("numpy")
+            for data, free_args in zip(data_list, free_args_list):
+                if len(free_args) < 2:
+                    sumvar += data
+                else:
+                    free_args_pos = {y: x for x, y in enumerate(free_args)}
+                    axes = [free_args_pos[arg] for arg in key.free_args]
+                    sumvar += numpy.transpose(data, axes)
             return sumvar
 
         return None
@@ -1000,7 +981,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         numpy = import_module('numpy')
 
         def ikey(x):
-            return x[1:]
+            # sort by component number , then by position in component
+            return x[2], x[1]
 
         free1 = free1[:]
         free2 = free2[:]
@@ -2700,17 +2682,21 @@ class TensAdd(TensExpr):
         # flatten TensAdd, coerce terms which are not tensors to tensors
 
         if not all(isinstance(x, TensExpr) for x in args):
-            args1 = []
+            args_expanded = []
             for x in args:
-                if isinstance(x, TensExpr):
-                    if isinstance(x, TensAdd):
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if isinstance(x, TensExpr) and x.coeff]
-            args2 = [x for x in args if not isinstance(x, TensExpr)]
-            t1 = TensMul.from_data(Add(*args2), [], [], [])
-            args = [t1] + args1
+                if isinstance(x, TensAdd):
+                    args_expanded.extend(list(x.args))
+                else:
+                    args_expanded.append(x)
+            args_tensor = []
+            args_scalar = []
+            for x in args_expanded:
+                if isinstance(x, TensExpr) and x.coeff:
+                    args_tensor.append(x)
+                if not isinstance(x, TensExpr):
+                    args_scalar.append(x)
+            t1 = TensMul.from_data(Add(*args_scalar), [], [], [])
+            args = [t1] + args_tensor
         a = []
         for x in args:
             if isinstance(x, TensAdd):
@@ -2760,8 +2746,8 @@ class TensAdd(TensExpr):
     @staticmethod
     def _tensAdd_check(args):
         # check that all addends have the same free indices
-        indices0 = set([x[0] for x in get_tids(args[0]).free])
-        list_indices = [set([y[0] for y in get_tids(x).free]) for x in args[1:]]
+        indices0 = {x[0] for x in get_tids(args[0]).free}
+        list_indices = [{y[0] for y in get_tids(x).free} for x in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 

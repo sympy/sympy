@@ -31,7 +31,6 @@ from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
-from sympy.galgebra.ga import MV
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
 from sympy.polys.rings import vring
@@ -51,6 +50,7 @@ from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range
 from itertools import islice, takewhile
+from sympy.series.fourier import fourier_series
 
 
 R = Rational
@@ -75,8 +75,8 @@ def test_B2():
     d, e = FiniteSet(i), FiniteSet(j, k, l)
 
     assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
-            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, e))))
-    # {j} U Intersection({m}, {j, k} U Intersection({i}, {j, k, l}))
+            FiniteSet(j, m, j)) == Union(a, Intersection(b, Union(c, Intersection(d, FiniteSet(l)))))
+    # {j} U Intersection({m}, {j, k} U Intersection({i}, {l}))
 
 
 
@@ -185,7 +185,7 @@ def test_C18():
 
 @XFAIL
 def test_C19():
-    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 34*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
 def test_C20():
@@ -494,8 +494,8 @@ def test_H17():
 @XFAIL
 def test_H18():
     # Factor over complex rationals.
-    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 53)
-    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)(x + 1 + 4*I)
+    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 153)
+    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)*(x + 1 + 4*I)
     assert test == good
 
 
@@ -867,7 +867,7 @@ def test_M5():
 
 def test_M6():
     assert set(solveset(x**7 - 1, x)) == \
-        set([cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)])
+        {cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)}
     # The paper asks for exp terms, but sin's and cos's may be acceptable;
     # if the results are simplified, exp terms appear for all but
     # -sin(pi/14) - I*cos(pi/14) and -sin(pi/14) + I*cos(pi/14) which
@@ -1197,6 +1197,7 @@ def test_N8():
                Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
+@XFAIL
 def test_N9():
     x = Symbol('x')
     assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
@@ -1216,16 +1217,14 @@ def test_N11():
     assert solveset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
-@XFAIL
 def test_N12():
     x = Symbol('x')
     assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
 
 
-@XFAIL
 def test_N13():
     x = Symbol('x')
-    assert solveset(sin(x) < 2, S.Reals) == S.Reals
+    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 @XFAIL
@@ -1236,14 +1235,12 @@ def test_N14():
                                          Interval(pi/2, oo, True, True))
 
 
-@XFAIL
 def test_N15():
     r, t = symbols('r t')
     # raises NotImplementedError: only univariate inequalities are supported
     solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
 
 
-@XFAIL
 def test_N16():
     r, t = symbols('r t')
     solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
@@ -1265,27 +1262,24 @@ def test_O2():
                                                                   [-5],
                                                                   [4]])
 
-
-@slow
+# The vector module has no way of representing vectors symbolically (without
+# respect to a basis)
+@XFAIL
 def test_O3():
-    (va, vb, vc, vd) = MV.setup('va vb vc vd')
     assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
 
-
 def test_O4():
-    (ex, ey, ez, grad) = MV.setup('e*x|y|z', metric='[1,1,1]',
-                                  coords=(x, y, z))
-    F = ex*(x*y*z) + ey*((x*y*z)**2) + ez*((y**2)*(z**3))
-    assert (grad^F -(x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez +
-            (2*y*z*(-x**2*y + z**2))*ey^ez) == 0
+    from sympy.vector import CoordSysCartesian
+    N = CoordSysCartesian("N")
+    i, j, k = N.base_vectors()
+    x, y, z = N.base_scalars()
+    F = i*(x*y*z) + j*((x*y*z)**2) + k*((y**2)*(z**3))
+    assert N.delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
 
-
+# The vector module has no way of representing vectors symbolically (without
+# respect to a basis)
 @XFAIL
-@slow
 def test_O5():
-    (_, _, _, grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x, y, z))
-    f = MV('f','vector',fct=True)
-    g = MV('g','vector',fct=True)
     assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
 
 #testO8-O9 MISSING!!
@@ -1830,7 +1824,7 @@ def test_R4():
 #Time= 2690 msecs
 #                      (- n + k - 1) binomial(n + 1, k)
 #(d15)               - --------------------------------
-#				                       n
+#                                     n
 #                                   2 2  (n + 1)
 #
 #(c16) factcomb(makefact(%));
@@ -2255,11 +2249,8 @@ def test_U10():
     # see issue 2519:
     assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
 
-
+@XFAIL
 def test_U11():
-    (dx, dy, dz) = MV.setup('dx dy dz')
-    # answer is correct, but SymPy doc does not indicate how/if differential
-    # forms are supported
     assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx ^ dy ^dz
 
 
@@ -2269,8 +2260,8 @@ def test_U12():
     # (c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
     #    => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
     # factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
-    # 				       4
-    # (d41) 			 (10 x y + 15 x  + 8) dx dy dz
+    #                      4
+    # (d41)              (10 x y + 15 x  + 8) dx dy dz
     raise NotImplementedError(
         "External diff of differential form not supported")
 
@@ -2829,37 +2820,22 @@ def test_X20():
     raise NotImplementedError("Symbolic Pade approximant not supported")
 
 
-@XFAIL
 def test_X21():
-    # (c48) /* Fourier series of f(x) of period 2 p over the interval [-p, p]
-    #    => - (2 p / pi) sum( (-1)^n sin(n pi x / p) / n, n = 1..infinity ) */
-    # assume(p > 0)$
-    # Time= 0 msecs
-    #
-    # (c49) fourier_series(x, x, p);
-    # /aquarius/data2/opt/local/macsyma_422/share/fourier.so being loaded.
-    # (e49)                      a  = 0
-    #                       0
-    #
-    # (e50)                     a    = 0
-    #                      %nn
-    #
-    #                          %nn
-    #                       2 (- 1)    p
-    # (e51)                  b      = - ------------
-    #                   %nn       %pi %nn
-    #
-    # Time= 4540 msecs
-    #                inf            %nn     %pi %nn x
-    #                ====       (- 1)    sin(---------)
-    #                \                p
-    #                2 p  >       -----------------------
-    #                /             %nn
-    #                ====
-    #                %nn = 1
-    # (d51)              - -----------------------------------
-    #                        %pi
-    raise NotImplementedError("Fourier series not supported")
+    """
+    Test whether `fourier_series` of x periodical on the [-p, p] interval equals
+    `- (2 p / pi) sum( (-1)^n / n sin(n pi x / p), n = 1..infinity )`.
+    """
+    p = symbols('p', positive=True)
+    n = symbols('n', positive=True, integer=True)
+    s = fourier_series(x, (x, -p, p))
+
+    # All cosine coefficients are equal to 0
+    assert s.an.formula == 0
+
+    # Check for sine coefficients
+    assert s.bn.formula.subs(s.bn.variables[0], 0) == 0
+    assert s.bn.formula.subs(s.bn.variables[0], n) == \
+        -2*p/pi * (-1)**n / n * sin(n*pi*x/p)
 
 
 @XFAIL

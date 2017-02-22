@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import inspect
+import sys
 
 from sympy.external import import_module
 
@@ -190,6 +191,8 @@ class TheanoPrinter(Printer):
 global_cache = {}
 
 def theano_code(expr, cache=global_cache, **kwargs):
+    if not theano:
+        raise ImportError("theano is required for theano_code")
     return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
@@ -212,11 +215,17 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
 
 def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     """ Create Theano function from SymPy expressions """
+    if not theano:
+        raise ImportError("theano is required for theano_function")
     cache = {} if cache == None else cache
     broadcastables = dim_handling(inputs, **kwargs)
 
     # Remove keyword arguments corresponding to dim_handling
-    dim_names = inspect.getargspec(dim_handling)[0]
+    if sys.version_info < (3,):
+        dim_names = inspect.getargspec(dim_handling)[0]
+    else:
+        param = inspect.signature(dim_handling).parameters.items()
+        dim_names = [n for n,p in param if p.kind == p.POSITIONAL_OR_KEYWORD]
     theano_kwargs = dict((k, v) for k, v in kwargs.items()
                                 if k not in dim_names)
 

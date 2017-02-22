@@ -24,7 +24,9 @@ import string
 from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.sets import Range
+from sympy.codegen.ast import Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
 known_functions = {
@@ -91,7 +93,7 @@ class FCodePrinter(CodePrinter):
         else:
             raise ValueError("Unknown source format: %s" % self._settings[
                              'source_format'])
-        standards = set([66, 77, 90, 95, 2003, 2008])
+        standards = {66, 77, 90, 95, 2003, 2008}
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
@@ -269,6 +271,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _print_For(self, expr):
+        target = self._print(expr.target)
+        if isinstance(expr.iterable, Range):
+            start, stop, step = expr.iterable.args
+        else:
+            raise NotImplementedError("Only iterable currently supported is Range")
+        body = self._print(expr.body)
+        return ('do {target} = {start}, {stop}, {step}\n'
+                '{body}\n'
+                'end do').format(target=target, start=start, stop=stop,
+                        step=step, body=body)
 
     def _pad_leading_columns(self, lines):
         result = []

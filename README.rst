@@ -1,17 +1,19 @@
 SymPy
 =====
 
-|pypi version| |pypi download| |Build status| |Gitter Badge|
+|pypi version| |pypi download| |Build status| |Gitter Badge| |Zenodo Badge|
 
-.. |pypi version| image:: https://img.shields.io/pypi/v/sympy.png
+.. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
-.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.png
+.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
+.. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
+   :target: http://travis-ci.org/sympy/sympy
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/sympy/sympy
    :target: https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.png?branch=master
-    :target: http://travis-ci.org/sympy/sympy
+.. |Zenodo Badge| image:: https://zenodo.org/badge/18918/sympy/sympy.svg
+   :target: https://zenodo.org/badge/latestdoi/18918/sympy/sympy
 
 A Python library for symbolic mathematics.
 
@@ -69,7 +71,7 @@ From this directory, start python and::
     >>> x = Symbol('x')
     >>> e = 1/cos(x)
     >>> print e.series(x, 0, 10)
-    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the
@@ -103,6 +105,20 @@ If you install it system-wide, you may need to prefix the previous command with 
     $ sudo python setup.py install
 
 See http://docs.sympy.org/dev/install.html for more information.
+
+Contributing
+------------
+
+We welcome contributions from anyone, even if you are new to open
+source. Please read our `introduction to contributing
+<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_. If you
+are new and looking for some way to contribute a good place to start is to
+look at the issues tagged `Easy to Fix
+<https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22>`_.
+
+Please note that all participants of this project are expected to follow our
+Code of Conduct. By participating in this project you agree to abide by its
+terms. See `CODE_OF_CONDUCT.md <CODE_OF_CONDUCT.md>`_.
 
 Tests
 -----
@@ -174,7 +190,7 @@ during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
-Fredrik Johansson has wrote mpmath and contributed a lot of patches.
+Fredrik Johansson has written mpmath and contributed a lot of patches.
 
 SymPy has participated in every Google Summer of Code since 2007. You can see
 https://github.com/sympy/sympy/wiki#google-summer-of-code for full details.
@@ -184,7 +200,7 @@ from Google Summer of Code students.
 In 2011, Ondřej Čertík stepped down as lead developer, with Aaron Meurer, who
 also started as a Google Summer of Code student, taking his place. Ondřej
 Čertík is still active in the community, but is too busy with work and family
-to play a lead development role
+to play a lead development role.
 
 Since then, a lot more people have joined the development and some people have
 also left. You can see the full list in doc/src/aboutus.rst, or online at:
@@ -207,18 +223,34 @@ will show the top developers from the last year.
 Citation
 --------
 
-To cite SymPy in publications use::
+To cite SymPy in publications use
 
-    SymPy Development Team (2014). SymPy: Python library for symbolic mathematics
-    URL http://www.sympy.org.
+    Meurer A, Smith CP, Paprocki M, Čertík O, Kirpichev SB, Rocklin M, Kumar A,
+    Ivanov S, Moore JK, Singh S, Rathnayake T, Vig S, Granger BE, Muller RP,
+    Bonazzi F, Gupta H, Vats S, Johansson F, Pedregosa F, Curry MJ, Terrel AR,
+    Roučka Š, Saboo A, Fernando I, Kulal S, Cimrman R, Scopatz A. (2017) SymPy:
+    symbolic computing in Python. *PeerJ Computer Science* 3:e103
+    https://doi.org/10.7717/peerj-cs.103
 
-A BibTeX entry for LaTeX users is::
+A BibTeX entry for LaTeX users is
 
-    @Manual{,
-    title = {SymPy: Python library for symbolic mathematics},
-    author = {{SymPy Development Team}},
-    year = {2014},
-    url = {http://www.sympy.org},
+.. code-block:: none
+
+    @article{10.7717/peerj-cs.103,
+     title = {SymPy: symbolic computing in Python},
+     author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, AMiT and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},
+     year = 2017,
+     month = jan,
+     keywords = {Python, Computer algebra system, Symbolics},
+     abstract = {
+                SymPy is an open source computer algebra system written in pure Python. It is built with a focus on extensibility and ease of use, through both interactive and programmatic applications. These characteristics have led SymPy to become a popular symbolic library for the scientific Python ecosystem. This paper presents the architecture of SymPy, a description of its features, and a discussion of select submodules. The supplementary material provide additional examples and further outline details of the architecture and features of SymPy.
+             },
+     volume = 3,
+     pages = {e103},
+     journal = {PeerJ Computer Science},
+     issn = {2376-5992},
+     url = {https://doi.org/10.7717/peerj-cs.103},
+     doi = {10.7717/peerj-cs.103}
     }
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be it

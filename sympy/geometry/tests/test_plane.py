@@ -1,39 +1,16 @@
 from __future__ import division
 
-from sympy import (Abs, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sin, sqrt, symbols, Derivative, asin, acos)
-from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
-                            Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection,
-                            Point3D, Line3D, Ray3D, Segment3D, Plane, centroid)
+from sympy import Dummy, S, Symbol, pi, sqrt, asin
+from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
 from sympy.utilities.pytest import raises, slow
-
-x = Symbol('x', real=True)
-y = Symbol('y', real=True)
-z = Symbol('z', real=True)
-t = Symbol('t', real=True)
-k = Symbol('k', real=True)
-x1 = Symbol('x1', real=True)
-x2 = Symbol('x2', real=True)
-x3 = Symbol('x3', real=True)
-y1 = Symbol('y1', real=True)
-y2 = Symbol('y2', real=True)
-y3 = Symbol('y3', real=True)
-z1 = Symbol('z1', real=True)
-z2 = Symbol('z2', real=True)
-z3 = Symbol('z3', real=True)
-half = Rational(1, 2)
-
-
-def feq(a, b):
-    """Test if two floating point values are 'equal'."""
-    t = Float("1.0E-10")
-    return -t < a - b < t
 
 
 @slow
 def test_plane():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    z = Symbol('z', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
@@ -199,3 +176,16 @@ def test_plane():
 
     assert str([i.n(2) for i in p2.intersection(l2)]) == \
            '[Point3D(4.0, -0.89, 2.3)]'
+
+
+def test_dimension_normalization():
+    A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
+    b = Point(1, 1)
+    assert A.projection(b) == Point(5/3, 5/3, 2/3)
+
+    a, b = Point(0, 0), Point3D(0, 1)
+    Z = (0, 0, 1)
+    p = Plane(a, normal_vector=Z)
+    assert p.perpendicular_plane(a, b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
+    assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
+        ).intersection((2, 1)) == [Point(2, 1, 0)]

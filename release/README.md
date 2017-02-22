@@ -1,3 +1,5 @@
+TODO Fix release script to stop support for Python 2.6 and 3.2 (Issue #10463)
+
 # Prepare the VM
 
 First execute:
@@ -102,7 +104,7 @@ everything is right before pushing.
 
 Before you release, you need to push the tag up, as described above.
 
-Release candidates should only be uploaded to GitHub only.
+Release candidates should be uploaded to GitHub only.
 
     fab vagrant GitHub_release
 

@@ -21,7 +21,17 @@ from sympy.core.containers import Dict
 import random
 
 class FiniteDensity(dict):
+    """
+    A domain with Finite Density.
+    """
     def __call__(self, item):
+        """
+        Make instance of a class callable.
+
+        If item belongs to current instance of a class, return it.
+
+        Otherwise, return 0.
+        """
         item = sympify(item)
         if item in self:
             return self[item]
@@ -30,6 +40,9 @@ class FiniteDensity(dict):
 
     @property
     def dict(self):
+        """
+        Return item as dictionary.
+        """
         return dict(self)
 
 class FiniteDomain(RandomDomain):
@@ -124,6 +137,9 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
 
     def __new__(cls, domain, condition):
+        """
+        Create a new instance of ConditionalFiniteDomain class
+        """
         if condition is True:
             return domain
         cond = rv_subs(condition)
@@ -140,6 +156,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
 
     def _test(self, elem):
+        """
+        Test the value. If value is boolean, return it. If value is equality
+        relational (two objects are equal), return it with left-hand side
+        being equal to right-hand side. Otherwise, raise ValueError exception.
+        """
         val = self.condition.xreplace(dict(elem))
         if val in [True, False]:
             return val
@@ -215,7 +236,7 @@ class FinitePSpace(PSpace):
 
     @property
     def density(self):
-        return self.args[0]
+        return self.args[1]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -227,6 +248,7 @@ class FinitePSpace(PSpace):
         return obj
 
     def prob_of(self, elem):
+        elem = sympify(elem)
         return self._density.get(elem, 0)
 
     def where(self, condition):
@@ -279,7 +301,7 @@ class FinitePSpace(PSpace):
         domain = self.where(condition)
         prob = self.probability(condition)
         density = dict((key, val / prob)
-                for key, val in self._density.items() if key in domain)
+                for key, val in self._density.items() if domain._test(key))
         return FinitePSpace(domain, density)
 
     def sample(self):
@@ -319,7 +341,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property
     @cacheit
     def _density(self):
-        return dict((frozenset(((self.symbol, val),)), prob)
+        return dict((FiniteSet((self.symbol, val)), prob)
                     for val, prob in self.distribution.dict.items())
 
 

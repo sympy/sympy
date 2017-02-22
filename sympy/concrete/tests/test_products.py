@@ -316,6 +316,14 @@ def test_reorder():
         Product(x*y, (y, c, d), (x, a, b))
 
 
+def test_Product_is_convergent():
+    assert Product(1/n**2, (n, 1, oo)).is_convergent() is S.false
+    assert Product(exp(1/n**2), (n, 1, oo)).is_convergent() is S.true
+    assert Product(1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n, (n, 1, oo)).is_convergent() is S.false
+    assert Product(1 + 1/n**2, (n, 1, oo)).is_convergent() is S.true
+
+
 def test_reverse_order():
     x, y, a, b, c, d= symbols('x, y, a, b, c, d', integer = True)
 
@@ -338,6 +346,13 @@ def test_reverse_order():
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+
+def test_issue_9983():
+    n = Symbol('n', integer=True, positive=True)
+    p = Product(1 + 1/n**(S(2)/3), (n, 1, oo))
+    assert p.is_convergent() is S.false
+    assert product(1 + 1/n**(S(2)/3), (n, 1, oo)) == p.doit()
 
 
 def test_rewrite_Sum():

@@ -95,10 +95,17 @@ except ImportError:
                     retval = func(*args, **kwargs)
                 return retval
 
-            wrapper.__wrapped__ = cfunc.__wrapped__
             wrapper.cache_info = cfunc.cache_info
             wrapper.cache_clear = cfunc.cache_clear
+
+            # Some versions of update_wrapper erroneously assign the final
+            # function of the wrapper chain to __wrapped__, see
+            # https://bugs.python.org/issue17482 .
+            # To work around this, we need to call update_wrapper first, then
+            # assign to wrapper.__wrapped__.
             update_wrapper(wrapper, func)
+            wrapper.__wrapped__ = cfunc.__wrapped__
+
             CACHE.append(wrapper)
             return wrapper
 

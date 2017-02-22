@@ -1,12 +1,14 @@
-"""SymPy is a Python library for symbolic mathematics. It aims to become a
-full-featured computer algebra system (CAS) while keeping the code as
-simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external
-libraries, except optionally for plotting support.
+"""
+SymPy is a Python library for symbolic mathematics. It aims to become a
+full-featured computer algebra system (CAS) while keeping the code as simple
+as possible in order to be comprehensible and easily extensible.  SymPy is
+written entirely in Python. It depends on mpmath, and other external libraries
+may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
     http://sympy.org
+
 """
 
 from __future__ import absolute_import, print_function
@@ -18,7 +20,18 @@ except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
     "See http://docs.sympy.org/latest/install.html#mpmath for more information.")
 
+del mpmath
+
 from sympy.release import __version__
+
+if 'dev' in __version__:
+    def enable_warnings():
+        import warnings
+        warnings.filterwarnings('default',   '.*',   DeprecationWarning, module='sympy.*')
+        del warnings
+    enable_warnings()
+    del enable_warnings
+
 
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
@@ -66,8 +79,8 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, mathematica_code, octave_code, \
-    latex, preview
+from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code, \
+    octave_code, latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 

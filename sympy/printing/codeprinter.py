@@ -1,15 +1,17 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Pow, S
+from sympy.core import Add, Mul, Pow, S, sympify
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
-from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
-from sympy.core.sympify import _sympify, sympify
+
+# Backwards compatibility
+from sympy.codegen.ast import Assignment
 
 
 class AssignmentError(Exception):
@@ -17,72 +19,6 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
-
-
-class Assignment(Relational):
-    """
-    Represents variable assignment for code generation.
-
-    Parameters
-    ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assignment
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assignment(x, y)
-    x := y
-    >>> Assignment(x, 0)
-    x := 0
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> mat = Matrix([x, y, z]).T
-    >>> Assignment(A, mat)
-    A := Matrix([[x, y, z]])
-    >>> Assignment(A[0, 1], x)
-    A[0, 1] := x
-    """
-
-    rel_op = ':='
-    __slots__ = []
-
-    def __new__(cls, lhs, rhs=0, **assumptions):
-        from sympy.matrices.expressions.matexpr import (
-            MatrixElement, MatrixSymbol)
-        from sympy.tensor.indexed import Indexed
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
-
 
 class CodePrinter(StrPrinter):
     """
@@ -317,6 +253,10 @@ class CodePrinter(StrPrinter):
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
 
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join([self._print(i) for i in expr.args])
+
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -377,12 +317,17 @@ class CodePrinter(StrPrinter):
                     if cond(*expr.args):
                         break
             if func is not None:
-                return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                try:
+                    return func(*[self.parenthesize(item, 0) for item in expr.args])
+                except TypeError:
+                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
             return self._print_not_supported(expr)
+
+    _print_Expr = _print_Function
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
@@ -490,6 +435,7 @@ class CodePrinter(StrPrinter):
     _print_Infinity = _print_not_supported
     _print_Integral = _print_not_supported
     _print_Interval = _print_not_supported
+    _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
     _print_list = _print_not_supported
     _print_Matrix = _print_not_supported

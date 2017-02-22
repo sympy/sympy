@@ -10,7 +10,7 @@ from sympy.integrals.transforms import (mellin_transform,
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
-    EulerGamma, erf, besselj, bessely, besseli, besselk,
+    EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
     combsimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
@@ -33,8 +33,8 @@ def test_undefined_function():
 def test_free_symbols():
     from sympy import Function
     f = Function('f')
-    assert mellin_transform(f(x), x, s).free_symbols == set([s])
-    assert mellin_transform(f(x)*a, x, s).free_symbols == set([s, a])
+    assert mellin_transform(f(x), x, s).free_symbols == {s}
+    assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
 
 
 def test_as_integral():
@@ -110,7 +110,8 @@ def test_mellin_transform():
 
     # TODO also the conditions should be simplified
     assert MT(abs(1 - x)**(-rho), x, s) == (
-        cos(pi*(rho/2 - s))*gamma(s)*gamma(rho - s)/(cos(pi*rho/2)*gamma(rho)),
+        2*sin(pi*rho/2)*gamma(1 - rho)*
+        cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
         (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
@@ -126,6 +127,7 @@ def test_mellin_transform():
     assert MT(expr.subs(b, bpos), x, s) == \
         (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
          (0, -re(a)/2), True)
+
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
     assert MT(expr.subs(b, bpos), x, s) == \
         (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s)
@@ -478,7 +480,7 @@ def test_laplace_transform():
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
-    assert LT(erf(t), t, s) == ((-erf(s/2) + 1)*exp(s**2/4)/s, 0, True)
+    assert LT(erf(t), t, s) == ((erfc(s/2))*exp(s**2/4)/s, 0, True)
 
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(cos(a*t), t, s) == (s/(a**2 + s**2), 0, True)

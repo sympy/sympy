@@ -1050,6 +1050,13 @@ class Ei(Function):
 
     @classmethod
     def eval(cls, z):
+        if z is S.Zero:
+            return S.NegativeInfinity
+        elif z is S.Infinity:
+            return S.Infinity
+        elif z is S.NegativeInfinity:
+            return S.Zero
+
         if not z.is_polar and z.is_negative:
             # Note: is this a good idea?
             return Ei(polar_lift(z)) - pi*I
@@ -1159,7 +1166,7 @@ class expint(Function):
     At half-integers it reduces to error functions:
 
     >>> expint(S(1)/2, z)
-    -sqrt(pi)*erf(sqrt(z))/sqrt(z) + sqrt(pi)/sqrt(z)
+    sqrt(pi)*erfc(sqrt(z))/sqrt(z)
 
     At positive integer orders it can be rewritten in terms of exponentials
     and expint(1, z). Use expand_func() to do this:

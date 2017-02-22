@@ -219,4 +219,4 @@ def test_scalar_potential_difference():
                         (P.x*cos(q) - P.y*sin(q))**2)
     assert (scalar_potential_difference(grad_field, P, P.origin,
                                         genericpointP).simplify() ==
-            potential_diff_P)
+            potential_diff_P.simplify())
