@@ -93,6 +93,7 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 
 def test_hyperexpand_bases():
