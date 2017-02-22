@@ -61,9 +61,6 @@ def uvpretty(expr):
 def test_vpretty_basic():
     """ASCII, Unicode basic testing"""
 
-    # TODO : The pretty print division does not print correctly here:
-    # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
-
     expr = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
     ascii_str = """\
  2
@@ -98,6 +95,20 @@ b         a         b\
 a      b + c       c
 ─ nₓ + ───── n_y + ── n_z
 b        a         b\
+""")
+    assert vpretty(expr) == ascii_str
+    assert uvpretty(expr) == ucode_str
+
+    expr = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
+    ascii_str = """\
+                             alpha
+alpha n_x + sin(omega) n_y + ----- n_z
+                              beta\
+"""
+    ucode_str = u("""\
+                    α
+α nₓ + sin(ω) n_y + ─ n_z
+                    β\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
