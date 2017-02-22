@@ -1278,6 +1278,10 @@ def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
     assert check_assumptions(1, x) == True
+    x = symbols('x', positive=False)
+    assert check_assumptions(1, True, x) == (False, ('positive',))
+    assert check_assumptions(-5, True, integer=True, positive=True) == (False, ('positive',))
+    assert check_assumptions(-5, True, integer=False, positive=True)  == (False,('integer', 'positive')) 
 
 
 def test_issue_6056():

@@ -341,7 +341,7 @@ def check_assumptions(expr, get=False, against=None, **assumptions):
         assumptions = against.assumptions0
 
     expr = sympify(expr)
-
+    wrong_list = []
     result = True
     for key, expected in assumptions.items():
         if expected is None:
@@ -351,12 +351,16 @@ def check_assumptions(expr, get=False, against=None, **assumptions):
             continue
         elif test is not None:
             if get is True:
-                return False, key
+                wrong_list.append(key)
+                continue
             else:
                 return False
 
         result = None  # Can't conclude, unless an other test fails.
-    return result
+    if not wrong_list:
+        return result
+    else:
+        return False, tuple(wrong_list)
 
 
 def solve(f, *symbols, **flags):
