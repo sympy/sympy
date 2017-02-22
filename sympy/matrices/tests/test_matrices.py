@@ -1786,6 +1786,8 @@ def test_errors():
     raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
            ]).QRdecomposition())
     raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
+    raises(
+        NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))

@@ -3888,61 +3888,22 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUdecompositionFF
         LUsolve
         """
-
         combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
-
-        L = self.zeros(combined.rows)
-        U = self.zeros(combined.rows, combined.cols)
-
-        # L is lower triangular self.rows x self.rows
-        # U is upper triangular self.rows x self.cols
-        # L has unit diagonal. For each column in combined, the subcolumn below the diagonal of combined is shared by L.
-        # If L has more columns than combined, then the remaining subcolumns below the diagonal of L are zero.
-        # The upper triangular portion of L and combined are equal.
-
-        max_index = min(self.rows, self.cols)
-
-        # Set diagonal entry to 1, and subdiagonal entries of L to subdiagonal entries of combined
-        for col_i in range(max_index):
-
-            L[col_i, col_i] = 1
-
-            for row_i in range(col_i + 1, L.rows):
-
-                L[row_i, col_i] = combined[row_i, col_i]
-
-                row_i += 1
-
-        # Fill in the remaining diagonal entries of L
-        for col_i in range(max_index, L.cols):
-
-            L[col_i, col_i] = 1
-
-        # Set upper triangular portion of U to upper triangular portion of combined
-        for row_i in range(max_index):
-
-            for col_i in range(row_i, U.cols):
-
-                U[row_i, col_i] = combined[row_i, col_i]
-
+        L = self.zeros(self.rows)
+        U = self.zeros(self.rows)
+        for i in range(self.rows):
+            for j in range(self.rows):
+                if i > j:
+                    L[i, j] = combined[i, j]
+                else:
+                    if i == j:
+                        L[i, i] = 1
+                    U[i, j] = combined[i, j]
         return L, U, p
 
-
     def LUdecomposition_Simple(self, iszerofunc=_iszero):
-
-        """Compute an lu decomposition of m x n matrix A, where
-        P*A = L*U
-        L is m x m lower triangular with unit diagonal
-        U is m x n upper triangular
-        P is an m x m permutation matrix
-        Returns an m x n matrix lu, and m element list perm where each element of perm is a two element list of row
-        exchange indices.
-        The factors L and U are encoded in lu.
-        The subdiagonal elements of L are stored in the subdiagonal elements of lu, that is lu[i, j] = L[i, j]
-        whenever i > j.
-        The diagonal of L, which is the identity matrix, is not explicitly stored.
-        U is stored in the upper triangular portion of lu, that is lu[i ,j] = U[i, j] whenever i >= j.
-        perm contains the integers in range(0, m), where each integer occurs exactly once.
+        """Returns A comprised of L, U (L's diag entries are 1) and
+        p which is the list of the row swaps (in order).
 
         See Also
         ========
@@ -3951,100 +3912,35 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUdecompositionFF
         LUsolve
         """
-
-        if self.rows == 0 or self.cols == 0:
-
-            raise ValueError('Matrix must have at least one row and one column to apply LUdecomposition_Simple().')
-
-        lu = self.as_mutable()
-
-        pivot_col = 0
-
-        # If the input matrix is rank deficient, then the indices of the pivot column and the pivot row will eventually
-        # differ.
-        # When they do differ, the entries below the (pivot_row, pivot_row) will be zero until Gaussian elimination
-        # completes.
-        lin_combo_col_start = 1
-
-        row_swaps = []
-
-        for pivot_row in range(0, lu.rows-1):
-
-            if iszerofunc(lu[pivot_row, pivot_col]):
-                # Search for non-zero pivot.
-                pivot_row_cand = pivot_row
-
-                while True:
-
-                    # Guarantee at top of loop: pivot_row_cand < lu.rows and pivot_col < lu.cols
-                    pivot_row_cand += 1
-
-                    if pivot_row_cand == lu.rows:
-
-                        # All candidate pivots in the pivot column are zero.
-                        # New pivot column is next column to the right.
-                        pivot_row_cand = pivot_row
-                        pivot_col += 1
-
-                        if pivot_col == lu.cols:
-
-                            # All candidate pivots are zero implies that Gaussian elimination is complete.
-                            return lu, row_swaps
-
-                    if not iszerofunc(lu[pivot_row_cand, pivot_col]):
-
-                        break
-
-                    lin_combo_col_start = pivot_col
-
-                if pivot_row != pivot_row_cand:
-                    # Row swap book keeping:
-                    # Record which rows were swapped.
-                    # Update stored portion of L factor by multiplying L on the left and right with the current
-                    # permutation.
-                    # Swap rows of U.
-                    row_swaps.append([pivot_row, pivot_row_cand])
-
-                    # Update L.
-                    for col in range(0, pivot_row):
-                        tmp = lu[pivot_row, col]
-                        lu[pivot_row, col] = lu[pivot_row_cand, col]
-                        lu[pivot_row_cand, col] = tmp
-
-                    # Swap rows of U in the pivot column.
-                    lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
-                    lu[pivot_row_cand, pivot_col] = 0
-
-                    for col in range(pivot_col+1, lu.shape[1]):
-
-                        tmp = lu[pivot_row, col]
-                        lu[pivot_row, col] = lu[pivot_row_cand, col]
-                        lu[pivot_row_cand, col] = tmp
-
-            else:
-
-                lin_combo_col_start += 1
-
-            for row in range(pivot_row+1, lu.rows):
-
-                # Compute subdiagonal factor of L, and store below the diagonal.
-                lu[row, pivot_row] = lu[row, pivot_col]/lu[pivot_row, pivot_col]
-
-                # Add multiple of pivot row to row below it.
-                # Two loops to handle case where pivot_col > pivot_row
-
-                for col in range(1 + pivot_row if pivot_row == pivot_col else pivot_col, lu.cols):
-
-                    lu[row, col] -= lu[row, pivot_row] * lu[pivot_row, col]
-
-            pivot_col += 1
-
-            if pivot_col == lu.cols:
-                # All candidate pivots are zero implies that Gaussian elimination is complete.
-                return lu, row_swaps
-
-        return lu, row_swaps
-
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "A Matrix must be square to apply LUdecomposition_Simple().")
+        n = self.rows
+        A = self.as_mutable()
+        p = []
+        # factorization
+        for j in range(n):
+            for i in range(j):
+                for k in range(i):
+                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
+            pivot = -1
+            for i in range(j, n):
+                for k in range(j):
+                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
+                # find the first non-zero pivot, includes any expression
+                if pivot == -1 and not iszerofunc(A[i, j]):
+                    pivot = i
+            if pivot < 0:
+                # this result is based on iszerofunc's analysis of the possible pivots, so even though
+                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
+                raise ValueError("No nonzero pivot found; inversion failed.")
+            if pivot != j:  # row must be swapped
+                A.row_swap(pivot, j)
+                p.append([pivot, j])
+            scale = 1 / A[j, j]
+            for i in range(j + 1, n):
+                A[i, j] = A[i, j] * scale
+        return A, p
 
     def LUdecompositionFF(self):
         """Compute a fraction-free LU decomposition.
@@ -4117,10 +4013,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         if rhs.rows != self.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-
-        if self.rows == 0 or self.cols == 0 or self.rows != self.cols:
-            raise NonSquareMatrixError("`self` must be a square matrix with no zero length dimenstions"
-                                       "to apply LUSolve().")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
