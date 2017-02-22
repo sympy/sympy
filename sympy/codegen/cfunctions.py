@@ -161,7 +161,7 @@ class exp2(Function):
     """
     Represents the exponential function with base two.
 
-    The benefit of using ``exp2(x)`` over ``2**(x + 1)``
+    The benefit of using ``exp2(x)`` over ``2**x``
     is that the latter is not as efficient under finite precision
     arithmetic.
 

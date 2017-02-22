@@ -101,8 +101,8 @@ To generate code with some math functions provided by e.g. the C99 standard we n
 to import functions from :mod:`sympy.codegen.cfunctions`::
 
     >>> from sympy.codegen.cfunctions import expm1
-    >>> ccode(expm1(x))
-    'expm1(x)'
+    >>> ccode(expm1(x), standard='c99')
+    expm1(x)
 
 ``Piecewise`` expressions are converted into conditionals. If an ``assign_to``
 variable is provided an if statement is created, otherwise the ternary operator
