@@ -283,8 +283,8 @@ class Vector(object):
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
                             if isinstance(ar[i][0][j], Add):
-                                pform = vp._print(
-                                    ar[i][0][j]).parens()
+                                pform = prettyForm(*vp._print(
+                                    ar[i][0][j]).parens())
                             else:
                                 pform = vp._print(
                                     ar[i][0][j])
