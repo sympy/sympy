@@ -97,6 +97,13 @@ Here is a simple example of printing a C version of a SymPy expression::
     >>> ccode(expr, assign_to="E")
     E = -1.0L/2.0L*Z*pow(e, 2)*k/r;
 
+To generate code with some math functions provided by e.g. the C99 standard we need
+to import functions from :mod:`sympy.codegen.cfunctions`::
+
+    >>> from sympy.codegen.cfunctions import expm1
+    >>> ccode(expm1(x))
+    'expm1(x)'
+
 ``Piecewise`` expressions are converted into conditionals. If an ``assign_to``
 variable is provided an if statement is created, otherwise the ternary operator
 is used. Note that if the ``Piecewise`` lacks a default term, represented by
@@ -542,3 +549,9 @@ available with ``autowrap``.
 
 There are other facilities available with Sympy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
+
+Special (finite precision arithmetic) math functions
+----------------------------------------------------
+
+.. automodule:: sympy.codegen.cfunctions
+    :members:
