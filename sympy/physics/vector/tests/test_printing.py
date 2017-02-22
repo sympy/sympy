@@ -61,9 +61,6 @@ def uvpretty(expr):
 def test_vpretty_basic():
     """ASCII, Unicode basic testing"""
 
-    # TODO : The unit vectors should print with subscripts but they just
-    # print as `n_x` instead of making `x` a subscript with unicode.
-
     # TODO : The pretty print division does not print correctly here:
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 
@@ -74,7 +71,7 @@ a  n_x + b n_y + c*sin(alpha) n_z\
 """
     ucode_str = u("""\
  2
-a  n_x + b n_y + c⋅sin(α) n_z\
+a  nₓ + b n_y + c⋅sin(α) n_z\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -84,7 +81,7 @@ a  n_x + b n_y + c⋅sin(α) n_z\
 alpha n_x + sin(omega) n_y + alpha*beta n_z\
 """
     ucode_str = u("""\
-α n_x + sin(ω) n_y + α⋅β n_z\
+α nₓ + sin(ω) n_y + α⋅β n_z\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -97,10 +94,10 @@ a       b + c       c
 b         a         b\
 """
     ucode_str = u("""\
-                     2
-a       b + c       c
-─ n_x + ───── n_y + ── n_z
-b         a         b\
+                    2
+a      b + c       c
+─ nₓ + ───── n_y + ── n_z
+b        a         b\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -166,7 +163,7 @@ a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
     ucode_str = u("""\
  2
-a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
+a  nₓ⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """)
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
@@ -174,7 +171,7 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
     expr = (alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) +
             alpha * beta * (N.z | N.x))
     ascii_str = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x')
-    ucode_str = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x')
+    ucode_str = u('α nₓ⊗nₓ + sin(ω) n_y⊗n_z + α⋅β n_z⊗nₓ')
     assert vpretty(expr) == ascii_str
     assert uvpretty(expr) == ucode_str
 
