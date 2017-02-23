@@ -1309,7 +1309,7 @@ class ComplexFloat(Number):
                 u = u._as_mpf_val(u._prec)
                 v = v._as_mpf_val(v._prec)
                 (x, y) = mlib.mpc_pow(self._mpc_, (u, v), self._prec)
-            return ComplexFloat(x, y)
+            return ComplexFloat._new((x, y), self._prec)
         return None
 
     def _eval_conjugate(self):
@@ -1340,53 +1340,65 @@ class ComplexFloat(Number):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if other is S.ImaginaryUnit:
-            return ComplexFloat(self.real, self.imag + 1)
+            return self + ComplexFloat(0, 1, self._prec)
         if other.is_Mul:
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag + c)
-        if isinstance(other, Number):
-            # TODO: hardcoded 15
-            (r,i) = other.n(15).as_real_imag()
-            return ComplexFloat(self.real + r, self.imag + i)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_add(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        elif isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_add_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
         return Expr.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if other is S.ImaginaryUnit:
-            return ComplexFloat(self.real, self.imag - 1)
+            return self - ComplexFloat(0, 1, self._prec)
         if other.is_Mul:
             c, e = other.as_coeff_Mul()
             if e is S.ImaginaryUnit:
                 return ComplexFloat(self.real, self.imag - c)
-        if isinstance(other, Number):
-            # TODO: hardcoded 15
-            (r,i) = other.n(15).as_real_imag()
-            return ComplexFloat(self.real - r, self.imag - i)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_sub(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_sub_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
         return Expr.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(-self.imag, self.real)
-        if isinstance(other, Number):
-            # TODO: hardcode 15 for now, as self._prec gives 53 (this is base 2 vs 10)
-            (r,i) = other.n(15).as_real_imag()
-            return ComplexFloat(self.real*r - self.imag*i,
-                                self.real*i + self.imag*r)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_mul(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_mul_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if other is S.ImaginaryUnit:
             return ComplexFloat(self.imag, -self.real)
-        if isinstance(other, Number):
-            # TODO: hardcoded 15
-            (u, v) = other.n(15).as_real_imag()
-            u = u._as_mpf_val(u._prec)
-            v = v._as_mpf_val(v._prec)
-            (x, y) = mlib.mpc_div(self._mpc_, (u, v), self._prec)
-            return ComplexFloat(x, y)
+        if isinstance(other, ComplexFloat):
+            prec = min(self._prec, other._prec)
+            x, y = mlib.mpc_div(self._mpc_, other._mpc_, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
+        if isinstance(other, Number) and other.is_real:
+            r, prec = other._as_mpf_op(self._prec)
+            x, y = mlib.mpc_div_mpf(self._mpc_, r, prec, rnd)
+            return ComplexFloat._new((x, y), prec)
         return Number.__div__(self, other)
 
     __truediv__ = __div__

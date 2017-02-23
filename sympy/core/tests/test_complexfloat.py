@@ -1,4 +1,5 @@
-from sympy import (ComplexFloat, Number, Rational, Symbol, Float, I, S, Pow)
+from sympy import (ComplexFloat, Number, Rational, Symbol, Float, I,
+                   S, Pow, re, im)
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
@@ -46,7 +47,6 @@ def test_ComplexFloat_from_mpc():
 
 
 def test_ComplexFloat_re_im():
-    from sympy import re, im
     z = S(2.0 + 3.0j)
     assert re(z) == Float(2)
     assert im(z) == Float(3)
@@ -105,6 +105,14 @@ def test_ComplexFloat_arithmetic():
     assert isinstance(r/u, ComplexFloat)
 
 
+def test_ComplexFloat_Mul_I_NumberSymbol():
+    x = Symbol('x')
+    a = 0.15*I*S.Pi*x
+    b = 0.15*(I*S.Pi*x)
+    assert a == b
+    assert a.args == b.args
+
+
 def test_ComplexFloat_ops():
     from sympy import sqrt, conjugate, Abs
     u = S(2+3j)
@@ -115,6 +123,37 @@ def test_ComplexFloat_ops():
     assert u.adjoint() == conjugate(u)
     assert isinstance(Abs(u), Float)
     assert Abs(S(3 + 4j)) == Float(5)
+
+
+def test_ComplexFloat_zero_is_Zero():
+    a = ComplexFloat(-1, 1)
+    assert a - a is S.Zero
+    assert ComplexFloat(0, -1) + I is S.Zero
+    assert ComplexFloat(0, 1) - I is S.Zero
+
+
+def test_ComplexFloat_precision_hi_low():
+    x, y = Float(1, 32), Float(1, 15)
+    preclo = y._prec
+    prechi = x._prec
+    u = ComplexFloat(x, y)
+    assert u._prec == preclo
+    # TODO: desirable?
+    assert re(u)._prec == prechi
+    assert im(u)._prec == preclo
+    u = ComplexFloat(x, y, 5)
+    assert u._prec != preclo
+    assert u._prec != prechi
+    # operations give the minimum precision (TODO: different from Float)
+    u = ComplexFloat(x, y)
+    v = ComplexFloat(y, x)
+    w = u + v
+    assert w._prec == preclo
+    assert re(w)._prec == preclo
+    assert im(w)._prec == preclo
+    u = x + y*I
+    assert re(u)._prec == preclo
+    assert im(u)._prec == preclo
 
 
 def test_ComplexFloat_printing():

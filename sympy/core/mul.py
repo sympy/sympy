@@ -604,10 +604,12 @@ class Mul(Expr, AssocOp):
         # order commutative part canonically
         _mulsort(c_part)
 
-        # check if we have Float*I
-        if c_part and c_part[0] is S.ImaginaryUnit:
-            if coeff.is_Float or coeff.is_ComplexFloat:
+        # check if we have Float*I or Float*pi*I
+        if coeff.is_Float or coeff.is_ComplexFloat:
+            if c_part and c_part[0] is S.ImaginaryUnit:
                 coeff *= c_part.pop(0)
+            elif tuple(c_part[0:2]) == (S.Pi, S.ImaginaryUnit):
+                coeff *= c_part.pop(1)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
