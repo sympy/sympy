@@ -224,6 +224,28 @@ def test_power():
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
+    # test issue 11964
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
+    assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[8, 1], [3, 2]])
+    assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
+    A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
+    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    n = Symbol('n', integer=True)
+    raises(ValueError, lambda: A**n)
+    n = Symbol('n', integer=True, nonnegative=True)
+    raises(ValueError, lambda: A**n)
+    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
+    assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
+    assert A**5.0 == A**5
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
@@ -2450,6 +2472,36 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_issue_11434():
+    ax, ay, bx, by, cx, cy, dx, dy, ex, ey, t0, t1 = \
+        symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
+    M = Matrix([[ax, ay, ax*t0, ay*t0, 0],
+                [bx, by, bx*t0, by*t0, 0],
+                [cx, cy, cx*t0, cy*t0, 1],
+                [dx, dy, dx*t0, dy*t0, 1],
+                [ex, ey, 2*ex*t1 - ex*t0, 2*ey*t1 - ey*t0, 0]])
+    assert M.rank() == 4
+
+def test_rank_regression_from_so():
+    # see:
+    # http://stackoverflow.com/questions/19072700/why-does-sympy-give-me-the-wrong-answer-when-i-row-reduce-a-symbolic-matrix
+
+    nu, lamb = symbols('nu, lambda')
+    A = Matrix([[-3*nu,         1,                  0,  0],
+                [ 3*nu, -2*nu - 1,                  2,  0],
+                [    0,      2*nu, (-1*nu) - lamb - 2,  3],
+                [    0,         0,          nu + lamb, -3]])
+    expected_reduced = Matrix([[1, 0, 0, 1/(nu**2*(-lamb - nu))],
+                               [0, 1, 0,    3/(nu*(-lamb - nu))],
+                               [0, 0, 1,         3/(-lamb - nu)],
+                               [0, 0, 0,                      0]])
+    expected_pivots = [0, 1, 2]
+
+    reduced, pivots = A.rref()
+
+    assert simplify(expected_reduced - reduced) == zeros(*A.shape)
+    assert pivots == expected_pivots
 
 def test_replace():
     from sympy import symbols, Function, Matrix

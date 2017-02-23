@@ -646,7 +646,7 @@ def test_issue_6860():
 def test_issue_7337():
     f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
     assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
-    assert f._eval_interval(x, -1, 1) == S(2)/5
+    assert f._eval_interval(x, S(-1), S(1)) == S(2)/5
 
 
 def test_issue_8368():
