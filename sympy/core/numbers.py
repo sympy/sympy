@@ -1109,6 +1109,11 @@ class Float(Number):
             return other.__eq__(self)
         if isinstance(other, Float):
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
+        if isinstance(other, ComplexFloat):
+            # TODO: currently ComplexFloat != Float, but Float does not behave that way
+            if other.is_real:
+                return self.__eq__(other.real)
+            return False
         if isinstance(other, Number):
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide

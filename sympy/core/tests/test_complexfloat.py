@@ -32,8 +32,8 @@ def test_evalf_makes_ComplexFloat():
     z = ComplexFloat(S(1)/3, S(2)/3)
     a = z.n(3)
     assert isinstance(a, ComplexFloat)
-    #assert str(a) == '0.333 + 0.667*I'
-    assert str(a) == '0.333 + 0.667j'
+    assert str(a) == '0.333 + 0.667*I'
+    #assert str(a) == '0.333 + 0.667j'
 
 
 def test_ComplexFloat_from_mpc():
@@ -161,17 +161,24 @@ def test_ComplexFloat_printing():
     z = ComplexFloat('1.25', '2.5')
     assert srepr(z) == \
         "ComplexFloat(Float('1.25', prec=15), Float('2.5', prec=15))"
-    assert str(z) == "1.25 + 2.5j"
+    assert str(z) == "1.25 + 2.5*I"
     assert pretty(z) == "1.25 + 2.5ⅈ"
     assert latex(z) == "1.25 + 2.5i"
     z = ComplexFloat('1.25', '-2.5')
-    assert str(z) == "1.25 - 2.5j"
+    assert str(z) == "1.25 - 2.5*I"
     assert pretty(z) == "1.25 - 2.5ⅈ"
     assert latex(z) == "1.25 - 2.5i"
-    assert str(Pow(z, 2, evaluate=False)) == '(1.25 - 2.5j)**2'
+    assert str(Pow(z, 2, evaluate=False)) == '(1.25 - 2.5*I)**2'
     assert latex(Pow(z, 2, evaluate=False)) == r'\left(1.25 - 2.5i\right)^{2}'
     x = Symbol('x')
-    assert str(z*x) == '(1.25 - 2.5j)*x'
+    assert str(z*x) == '(1.25 - 2.5*I)*x'
+
+
+@XFAIL
+def test_ComplexFloat_printing_FAILS():
+    z = ComplexFloat('1.25', '-2.5')
+    x = Symbol('x')
+    assert pretty(z*x) == '(1.25 - 2.5ⅈ)*x'
 
 
 def test_Float_greedy_make_ComplexFloat():

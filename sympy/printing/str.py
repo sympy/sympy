@@ -573,8 +573,8 @@ class StrPrinter(Printer):
         return rv
 
     def _print_ComplexFloat(self, expr):
-        #istr = self._print(S.ImaginaryUnit)
-        istr = 'j'
+        #istr = 'j'
+        istr = '*' + self._print(S.ImaginaryUnit)
         if expr.imag.is_negative:
             return '%s - %s%s' % (self._print(expr.real),
                                   self._print(-expr.imag), istr)

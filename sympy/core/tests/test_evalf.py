@@ -54,7 +54,7 @@ def test_evalf_rump():
 
 
 def test_evalf_complex():
-    assert NS('2*sqrt(pi)*I', 10) == '3.544907702*I'
+    assert NS('2*sqrt(pi)*I', 10) == '0.0 + 3.544907702*I'
     assert NS('3+3*I', 15) == '3.00000000000000 + 3.00000000000000*I'
     assert NS('E+pi*I', 15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)', 15) == '9.42477796076938 + 12.5663706143592*I'
@@ -72,7 +72,7 @@ def test_evalf_complex_powers():
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
     # XXX: rewrite if a+a*I simplification introduced in sympy
     #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
-    assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
+    assert NS('(pi + pi*I)**2', chop=True) == '0.0 + 19.7392088021787*I'
     assert NS(
         '(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
@@ -90,7 +90,7 @@ def test_evalf_complex_powers_bug():
 
 
 def test_evalf_exponentiation():
-    assert NS(sqrt(-pi)) == '1.77245385090552*I'
+    assert NS(sqrt(-pi)) == '0.0 + 1.77245385090552*I'
     assert NS(Pow(pi*I, Rational(
         1, 2), evaluate=False)) == '1.25331413731550 + 1.25331413731550*I'
     assert NS(pi**I) == '0.413292116101594 + 0.910598499212615*I'
@@ -129,7 +129,7 @@ def test_evalf_logs():
     assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
     assert NS('log(-1 + 0.00001)', 2) == '-1.0e-5 + 3.1*I'
     assert NS('log(100, 10, evaluate=False)', 15) == '2.00000000000000'
-    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185'
+    assert NS('-2*I*log(-(-1)**(S(1)/9))', 15) == '-5.58505360638185 + 0.0*I'
 
 
 def test_evalf_trig():
@@ -393,7 +393,7 @@ def test_issue_4956_5204():
 
 def test_old_docstring():
     a = (E + pi*I)*(E - pi*I)
-    assert NS(a) == '17.2586605000200'
+    assert NS(a) == '17.2586605000200 + 0.0*I'
     assert a.n() == 17.25866050002001
 
 
