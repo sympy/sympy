@@ -351,10 +351,10 @@ class LatexPrinter(Printer):
         #return self._print(expr.real + expr.imag*I)
         istr = self._print(S.ImaginaryUnit)
         if expr.imag.is_negative:
-            return '%s - %s%s' % (self._print(expr.real),
+            return '%s - %s %s' % (self._print(expr.real),
                                   self._print(-expr.imag), istr)
         else:
-            return '%s + %s%s' % (self._print(expr.real),
+            return '%s + %s %s' % (self._print(expr.real),
                                   self._print(expr.imag), istr)
 
     def _print_Mul(self, expr):

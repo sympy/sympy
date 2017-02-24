@@ -188,13 +188,13 @@ def test_ComplexFloat_printing():
         "ComplexFloat(Float('1.25', prec=15), Float('2.5', prec=15))"
     assert str(z) == "1.25 + 2.5*I"
     assert pretty(z) == "1.25 + 2.5ⅈ"
-    assert latex(z) == "1.25 + 2.5i"
+    assert latex(z) == "1.25 + 2.5 i"
     z = ComplexFloat('1.25', '-2.5')
     assert str(z) == "1.25 - 2.5*I"
     assert pretty(z) == "1.25 - 2.5ⅈ"
-    assert latex(z) == "1.25 - 2.5i"
+    assert latex(z) == "1.25 - 2.5 i"
     assert str(Pow(z, 2, evaluate=False)) == '(1.25 - 2.5*I)**2'
-    assert latex(Pow(z, 2, evaluate=False)) == r'\left(1.25 - 2.5i\right)^{2}'
+    assert latex(Pow(z, 2, evaluate=False)) == r'\left(1.25 - 2.5 i\right)^{2}'
     x = Symbol('x')
     assert str(z*x) == '(1.25 - 2.5*I)*x'
 
