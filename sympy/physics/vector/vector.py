@@ -265,7 +265,7 @@ class Vector(object):
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
-                        # get pretty form of unit vector (e.g. nₓ for n_x)
+                        # get pretty form of unit vector (e.g. subscripted x for n_x)
                         uvpform = vp._print(
                             Symbol(ar[i][1].pretty_vecs[j])
                             if vp._use_unicode
