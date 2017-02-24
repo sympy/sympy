@@ -156,9 +156,9 @@ def test_Integral():
 
 def test_Interval():
     a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "Interval(0, a, False, False)"
-    assert str(Interval(0, a, False, False)) == "Interval(0, a, False, False)"
-    assert str(Interval(0, a, True, False)) == "Interval(0, a, True, False)"
+    assert str(Interval(0, a)) == "Interval(0, a)"
+    assert str(Interval(0, a, False, False)) == "Interval(0, a)"
+    assert str(Interval(0, a, True, False)) == "Interval(0, a, True)"
     assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
     assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
 
@@ -743,7 +743,7 @@ def test_Complement():
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
-           'SymmetricDifference(Interval(2, 3, False, False), Interval(3, 4, False, False))'
+           'SymmetricDifference(Interval(2, 3), Interval(3, 4))'
 
 
 def test_UnevaluatedExpr():

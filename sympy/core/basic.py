@@ -1143,7 +1143,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> from sympy.sets import Interval
         >>> i = Interval.Lopen(0, 5); i
-        (0, 5]
+        Interval(0, 5, True)
         >>> i.args
         (0, 5, True, False)
         >>> i.has(4)  # there is no "4" in the arguments
