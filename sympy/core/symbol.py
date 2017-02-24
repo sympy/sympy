@@ -207,6 +207,7 @@ class Dummy(Symbol):
 
     _count = 0
     _dummyorder = {}
+    _prng = random.Random()
 
     __slots__ = ['dummy_index']
 
@@ -226,7 +227,7 @@ class Dummy(Symbol):
             # The dummy_index that *we* generate will be a smallish positive
             # integers (at least Codeprinter assumes this).  But we do not
             # impose this if dummy_index was passed in.
-            dummy_index = random.randint(10**6, 10**7-1)
+            dummy_index = Dummy._prng.randint(10**6, 10**7-1)
             if dummy_index in Dummy._dummyorder:
                 dummy_index = None
 
