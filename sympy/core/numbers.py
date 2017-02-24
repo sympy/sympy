@@ -1338,8 +1338,12 @@ class ComplexFloat(Number):
         if isinstance(other, ComplexFloat):
             return self.real == other.real and \
                    self.imag == other.imag
-        # TODO: try converting other to ComplexFloat (see Float)
-        return False
+        #return False
+        # Try comparing across type.  I don't think this is good behaviour but
+        # for now it is consistent with Float's behaviour.  See discussion
+        # in https://github.com/sympy/sympy/issues/11707 for example.
+        r, i = other.as_real_imag()
+        return self.real == r and self.imag == i
 
     def __ne__(self, other):
         return not self.__eq__(other)
