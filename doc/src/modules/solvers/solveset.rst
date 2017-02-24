@@ -520,9 +520,9 @@ How are symbolic parameters handled in solveset?
     >>> from sympy import Symbol, FiniteSet, Interval, not_empty_in, sqrt, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
-    [0, 2]
+    Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    [-sqrt(2), -1] U [1, 2]
+    Union(Interval(-sqrt(2), -1), Interval(1, 2))
 
 
 References
