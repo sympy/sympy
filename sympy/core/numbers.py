@@ -1229,6 +1229,8 @@ class ComplexFloat(Number):
         obj = Expr.__new__(cls)
         obj.real = Float(real, prec)
         obj.imag = Float(imag, prec)
+        if obj.real is S.NaN or obj.imag is S.NaN:
+            return S.NaN
         return obj
 
     @classmethod

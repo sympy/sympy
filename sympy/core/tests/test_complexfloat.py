@@ -125,6 +125,31 @@ def test_ComplexFloat_ops():
     assert Abs(S(3 + 4j)) == Float(5)
 
 
+def test_ComplexFloat_nan():
+    fnan = float('nan')
+    assert ComplexFloat(fnan, 0) is S.NaN
+    assert ComplexFloat(0, fnan) is S.NaN
+    assert ComplexFloat('nan', 1) is S.NaN
+    assert ComplexFloat(1, 'nan') is S.NaN
+
+
+def test_ComplexFloat_inf():
+    from sympy import pretty, latex
+    finf = float('inf')
+    u = ComplexFloat(finf, finf)
+    v = ComplexFloat(-finf, -finf)
+    assert re(u) == Float(S.Infinity)
+    assert im(u) == Float(S.Infinity)
+    assert re(v) == Float(S.NegativeInfinity)
+    assert im(v) == Float(S.NegativeInfinity)
+    assert str(u) == 'inf + inf*I'
+    assert str(v) == '-inf - inf*I'
+    assert latex(u) == r'\infty + \infty i'
+    assert latex(v) == r'- \infty - \infty i'
+    assert pretty(u) == 'inf + infⅈ'
+    assert pretty(v) == '-inf - infⅈ'
+
+
 def test_ComplexFloat_zero_is_Zero():
     a = ComplexFloat(-1, 1)
     assert a - a is S.Zero
