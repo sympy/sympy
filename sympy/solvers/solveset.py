@@ -31,7 +31,7 @@ from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.calculus.util import periodicity
+from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key
 
 
@@ -539,10 +539,11 @@ def _solve_abs(f, symbol, domain):
     pattern_match = f.match(p*Abs(q) + r) or {}
     if not pattern_match.get(p, S.Zero).is_zero:
         f_p, f_q, f_r = pattern_match[p], pattern_match[q], pattern_match[r]
+
+        domain = continuous_domain(f_q, symbol, domain)
         q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
-                                                 relational=False)
-        q_neg_cond = solve_univariate_inequality(f_q < 0, symbol,
-                                                 relational=False)
+                                                 relational=False, domain=domain, cont_domain=True)
+        q_neg_cond = q_pos_cond.complement(domain)
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,
                                            symbol).intersect(q_pos_cond)
@@ -630,6 +631,7 @@ def _solveset(f, symbol, domain, _check=False):
     that has already been sympify'ed and is known to contain the
     given symbol."""
     # _check controls whether the answer is checked or not
+    from sympy import limit
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
@@ -713,6 +715,18 @@ def _solveset(f, symbol, domain, _check=False):
 
         elif rhs_s is not S.EmptySet:
             result = ConditionSet(symbol, Eq(f, 0), domain)
+
+	if isinstance(result, ConditionSet):
+	    num, den = f.as_numer_denom()
+	    if not isinstance(den, Number):
+		    _result = _solveset(num, symbol, domain)
+		    singularities = _solveset(den, symbol, domain)
+		    to_check = Intersection(result, singularities)
+		    if isinstance(to_check, EmptySet):
+		        result = _result
+		    elif isinstance(to_check, FiniteSet):
+			    to_remove = FiniteSet([s for s in to_check if not (limit(f,symbol,s) == 0)])
+			    result = _result - to_remove
 
     if _check:
         if isinstance(result, ConditionSet):
