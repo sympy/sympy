@@ -716,17 +716,17 @@ def _solveset(f, symbol, domain, _check=False):
         elif rhs_s is not S.EmptySet:
             result = ConditionSet(symbol, Eq(f, 0), domain)
 
-	if isinstance(result, ConditionSet):
-	    num, den = f.as_numer_denom()
-	    if not isinstance(den, Number):
-		    _result = _solveset(num, symbol, domain)
-		    singularities = _solveset(den, symbol, domain)
-		    to_check = Intersection(result, singularities)
-		    if isinstance(to_check, EmptySet):
-		        result = _result
-		    elif isinstance(to_check, FiniteSet):
-			    to_remove = FiniteSet([s for s in to_check if not (limit(f,symbol,s) == 0)])
-			    result = _result - to_remove
+    if isinstance(result, ConditionSet):
+        num, den = f.as_numer_denom()
+        if not isinstance(den, Number):
+            _result = _solveset(num, symbol, domain)
+            singularities = _solveset(den, symbol, domain)
+            to_check = Intersection(result, singularities)
+            if isinstance(to_check, EmptySet):
+                result = _result
+            elif isinstance(to_check, FiniteSet):
+                to_remove = FiniteSet([s for s in to_check if not (limit(f,symbol,s) == 0)])
+                result = _result - to_remove
 
     if _check:
         if isinstance(result, ConditionSet):
