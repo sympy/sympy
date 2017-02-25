@@ -3904,25 +3904,18 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         # Set diagonal entry to 1, and subdiagonal entries of L to subdiagonal entries of combined
         for col_i in range(max_index):
-
             L[col_i, col_i] = 1
-
             for row_i in range(col_i + 1, L.rows):
-
                 L[row_i, col_i] = combined[row_i, col_i]
-
                 row_i += 1
 
         # Fill in the remaining diagonal entries of L
         for col_i in range(max_index, L.cols):
-
             L[col_i, col_i] = 1
 
         # Set upper triangular portion of U to upper triangular portion of combined
         for row_i in range(max_index):
-
             for col_i in range(row_i, U.cols):
-
                 U[row_i, col_i] = combined[row_i, col_i]
 
         return L, U, p
@@ -3952,15 +3945,14 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         """
 
         if self.rows == 0 or self.cols == 0:
-
-            raise ValueError('Matrix must have at least one entry to apply LUdecomposition_Simple().')
+            # Define LU decomposition of a matrix with no entries as a matrix of the same dimensions with all zero
+            # entries.
+            return self.zeros(self.rows, self.cols), []
 
         lu = self.as_mutable()
-
-        pivot_col = 0
-
         row_swaps = []
 
+        pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
 
             if iszerofunc(lu[pivot_row, pivot_col]):
@@ -3968,24 +3960,20 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 pivot_row_cand = pivot_row
 
                 while True:
-
                     # Guarantee at top of loop: pivot_row_cand < lu.rows and pivot_col < lu.cols
                     pivot_row_cand += 1
 
                     if pivot_row_cand == lu.rows:
-
                         # All candidate pivots in the pivot column are zero.
                         # New pivot column is next column to the right.
                         pivot_row_cand = pivot_row
                         pivot_col += 1
 
                         if pivot_col == lu.cols:
-
                             # All candidate pivots are zero implies that Gaussian elimination is complete.
                             return lu, row_swaps
 
                     if not iszerofunc(lu[pivot_row_cand, pivot_col]):
-
                         break
 
                 if pivot_row != pivot_row_cand:
@@ -4006,26 +3994,22 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
                     lu[pivot_row_cand, pivot_col] = 0
 
-                    for col in range(pivot_col+1, lu.shape[1]):
-
+                    for col in range(pivot_col+1, lu.cols):
                         tmp = lu[pivot_row, col]
                         lu[pivot_row, col] = lu[pivot_row_cand, col]
                         lu[pivot_row_cand, col] = tmp
 
             for row in range(pivot_row + 1, lu.rows):
-
                 # Store factors of L in the subcolumn below (pivot_row, pivot_row).
                 lu[row, pivot_row] = lu[row, pivot_col]/lu[pivot_row, pivot_col]
 
                 # Add multiple of pivot row to row below it.
                 # Two loops to handle case where pivot_col > pivot_row
 
-                for col in range(1 + pivot_row if pivot_row == pivot_col else pivot_col, lu.cols):
-
+                for col in range(pivot_row + 1 if pivot_row == pivot_col else pivot_col, lu.cols):
                     lu[row, col] -= lu[row, pivot_row] * lu[pivot_row, col]
 
             pivot_col += 1
-
             if pivot_col == lu.cols:
                 # All candidate pivots are zero implies that Gaussian elimination is complete.
                 return lu, row_swaps
